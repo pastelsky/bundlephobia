@@ -1,0 +1,255 @@
+@import '~style/helpers';
+
+body {
+  background: url('../../assets/grilled.png') repeat;
+}
+
+.home {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  max-width: 968px;
+  margin: auto;
+  padding: 24px;
+}
+
+.searchSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  flex-direction: column;
+
+  h1 {
+    font-size: 3rem;
+    //width: 60%;
+    margin-top: 0;
+    text-align: center;
+  }
+
+  form {
+    margin-bottom: 2.5rem;
+  }
+}
+
+.displaySection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 24px;
+  flex-grow: 1;
+}
+
+.searchInput {
+  font-size: 2.4rem;
+  width: 50vw;
+  min-width: 260px;
+  padding: 12px 24px;
+  border-image-source: url('../../assets/border-image.png');
+  border-image-slice: 216;
+  border-image-width: 36px;
+  border-image-outset: 1;
+  border-image-repeat: stretch;
+  background: transparent;
+  line-height: 1;
+  text-align: center;
+
+  &:focus {
+    outline: none;
+    caret-color: #51b7ad;
+    //filter: hue-rotate(180deg);
+  }
+}
+
+.panelContainer {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0;
+  justify-content: center;
+  flex: 0 1 auto;
+  margin-right: -.5rem;
+  margin-left: -.5rem;
+}
+
+.panel {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  flex: 0 0 auto;
+  padding-right: .5rem;
+  padding-left: .5rem;
+}
+
+.panelLabel {
+  margin: 0;
+}
+
+.panelUnit {
+  font-size: 2rem;
+  color: #4eaca4;
+  padding-left: 2px;
+}
+
+.panelData {
+  font-size: 3.5rem;
+  flex-grow: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.suggestion {
+  padding: 6px 12px;
+  color: #333;
+  font-size: 15px;
+  cursor: pointer;
+
+  &:not(:last-of-type) {
+    border-bottom: 1px solid #EEE;
+  }
+
+  em {
+    font-weight: bold;
+    font-style: normal;
+  }
+}
+
+.highlightedSuggestion {
+  background: #76d6cb;
+}
+
+.suggestionDescription {
+  padding-top: 4px;
+  width: 48vw;
+  min-width: 260px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@scale-factor: 12vmin;
+@scale-factor-inner: @scale-factor / 1.5;
+
+.gauge {
+  position: relative;
+  bottom: -@scale-factor-inner;
+}
+
+.circleOuter {
+  width: @scale-factor-inner * 2;
+  height: @scale-factor-inner * 2;
+  border-radius: 50%;
+  background: fade(#EB5D58, 90%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  //&::before {
+  //  content: '';
+  //  width: 20vmin;
+  //  height: 20vmin;
+  //  border-radius: 50%;
+  //  background: fade(#EB5D58, 90%);
+  //  //animation: pulse 2s infinite;
+  //  position: absolute;
+  //}
+}
+
+.circleInner {
+  width: @scale-factor-inner * 0.8;
+  height: @scale-factor-inner * 0.8;
+  border-radius: 50%;
+  background: fade(#303F53, 90%);
+  border: @scale-factor-inner * 0.2 solid shade(#EB5D58, 3%);
+}
+
+.needle {
+  width: @scale-factor-inner * 0.25;
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: auto;
+  transform-origin: 50% 98%;
+  bottom: @scale-factor-inner * 0.95;
+  transition: transform 1.5s cubic-bezier(0.075, 0.005, 0.000, 1.280);
+
+  //filter: drop-shadow(0 0 2px rgba(0,0,0,0.4));
+  //animation : rotate 1s infinite alternate;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.guageContainer {
+  position: relative;
+}
+
+.guageMeter {
+  width: @scale-factor * 4;
+  height: @scale-factor  * 2;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  overflow: hidden;
+  left: 50%;
+  transform: translate(-50%, 0%);
+}
+
+.meterFragmentA {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.1);
+  width: @scale-factor  * 4;
+  height: @scale-factor  * 2;
+  top: 0%;
+  border-radius: @scale-factor * 2.5 @scale-factor * 2.5 0px 0px;
+}
+
+.meterFragmentB {
+  position: absolute;
+  background: url('../../assets/grilled.png');
+  width: @scale-factor * 2.5;
+  height: @scale-factor * 1.25;
+  top: @scale-factor * 0.75;
+  margin-left: @scale-factor* 0.75;
+  margin-right: auto;
+  border-radius: @scale-factor * 2.5 @scale-factor * 2.5 0px 0px;
+}
+
+.meterFragmentC {
+  position: absolute;
+  background-color: #424455;
+  width: @scale-factor * 4;
+  height: @scale-factor * 2;
+  top: @scale-factor * 2;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 0px 0px @scale-factor * 2 @scale-factor * 2;
+  transform-origin: center top;
+  transition: all 1.5s cubic-bezier(0.075, 0.005, 0.000, 1.280);
+}

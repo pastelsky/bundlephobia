@@ -1,0 +1,12 @@
+/node_modules
+/npm-debug.log
+/build
+.DS_Store
+/coverage
+/.idea
+/tmp
+/tmp-build
+yarn.lock
+err.log
+out.log
+.env
