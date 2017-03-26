@@ -1,0 +1,76 @@
+@import 'helpers';
+@import '../../node_modules/normalize.css/normalize.css';
+
+html, body {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  background: #FAFAFA;
+  font-family: 'Delius Swash Caps', arial, sans-serif;
+  font-weight: 400;
+  color: #444;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
+::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+  color: #bbb;
+  text-align: center;
+}
+::-moz-placeholder { /* Firefox 19+ */
+  color: #bbb;
+  text-align: center;
+}
+:-ms-input-placeholder { /* IE 10+ */
+  color: #bbb;
+  text-align: center;
+}
+:-moz-placeholder { /* Firefox 18- */
+  color: #bbb;
+  text-align: center;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Montserrat', arial, sans-serif;
+}
+
+input {
+  font-family: 'Delius Swash Caps', arial, sans-serif;
+}
+
+::selection {
+  background: #ffb7b7; /* WebKit/Blink Browsers */
+}
+::-moz-selection {
+  background: #ffb7b7; /* Gecko Browsers */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#app {
+  height: 100%;
+}
+
+@media (max-width: 576px) {
+  html {
+    font-size: 11px;
+  }
+}
+
+// Medium devices (tablets, 768px and up)
+@media (max-width: 768px) {
+  font-size: 14px;
+
+}
+
+// Large devices (desktops, 992px and up)
+@media (max-width: 992px) {
+  font-size: 16px;
+}
