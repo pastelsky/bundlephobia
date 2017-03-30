@@ -5,6 +5,8 @@
 
 A tool uses rollup to give the performance impact of including an npm package in your app's bundle.
 
+![demo walkthrough](https://s27.postimg.org/w3q87398j/ezgif-1-7e0a7ec11c.gif)
+
 ## Getting started locally
  -  Use `yarn run dev` to debug the frontend
  - Use `yarn start` to run production build and test along with the server backend (no hot compilation yet!)
