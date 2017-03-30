@@ -13,5 +13,5 @@ A tool uses rollup to give the performance impact of including an npm package in
   ```
 FIREBASE_API_KEY=<apiKey>
 FIREBASE_AUTH_DOMAIN=<domain>
-FIREBASE_DATABASE_URL==<url>
+FIREBASE_DATABASE_URL=<url>
   ```
