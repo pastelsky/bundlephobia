@@ -1,9 +1,8 @@
 [cost-of-modules.herokuapp.com]()
 
 # Cost of NPM Modules
-#### WIP
 
-A tool uses rollup to give the performance impact of including an npm package in your app's bundle.
+Know the performance impact of including an npm package in your app's bundle.
 
 ![demo walkthrough](https://s27.postimg.org/w3q87398j/ezgif-1-7e0a7ec11c.gif)
 
