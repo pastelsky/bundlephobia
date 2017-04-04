@@ -1,6 +1,6 @@
 [cost-of-modules.herokuapp.com]()
 
-# Cost of NPM Modules
+## 🏋️ Cost of NPM Modules
 
 Know the performance impact of including an npm package in your app's bundle.
 
