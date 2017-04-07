@@ -84,7 +84,7 @@ function build (entry, peerDeps) {
       }),
       replace({
         ENV: 'production',
-        'process.env.NODE_ENV': 'production'
+        'process.env.NODE_ENV': "'production'"
       }),
       // babel({
       //  babelrc: false,
