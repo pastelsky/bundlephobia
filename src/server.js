@@ -78,13 +78,13 @@ function build (entry, peerDeps) {
         skip: peerDeps
       }),
       json(),
-      commonjs({
-        exclude: peerDeps,
-        sourceMap: false
-      }),
       replace({
         ENV: 'production',
         'process.env.NODE_ENV': "'production'"
+      }),
+      commonjs({
+        exclude: peerDeps,
+        sourceMap: false
       }),
       // babel({
       //  babelrc: false,
