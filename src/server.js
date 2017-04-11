@@ -255,7 +255,6 @@ router.get('/package', async (ctx, next) => {
     } catch(err) {
       console.log(err)
     }
-    console.log('i\'m here?')
     const rootPath = path.join(__dirname, '..')
     const packagePath = path.join(rootPath, 'tmp', 'node_modules', packageName)
     const bundlePath = path.join(rootPath, 'tmp-build', 'bundle.js')
