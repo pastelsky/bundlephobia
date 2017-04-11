@@ -35,8 +35,8 @@ export default class App extends Component {
                     fill-rule="evenodd" />
             </svg>
 
-            by &nbsp;
-            <a href="https://github.com/pastelsky">
+            by
+            <a href="https://github.com/pastelsky" style={{ paddingLeft: '8px'}}>
               @pastelsky
             </a>
           </p>
