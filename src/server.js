@@ -19,10 +19,21 @@ const compress = require('koa-compress')
 //const del = require('del')
 const camelcase = require('camelcase')
 //const babel = require('rollup-plugin-babel')
-const cache = require('./cache')
+const Cache = require('./cache')
 const cacheControl = require('koa-cache-control')
 const now = require('performance-now')
 const koaStatic = require('koa-static')
+const firebase = require('firebase')
+
+const firebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.FIREBASE_DATABASE_URL,
+}
+
+firebase.initializeApp(firebaseConfig)
+
+const cache = new Cache(firebase)
 
 app.use(cacheControl())
 
