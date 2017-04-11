@@ -42,7 +42,7 @@ app.use(compress({
     return /(text|json|javascript|svg)/.test(contentType)
   },
   threshold: 2048,
-  flush: require('zlib').Z_SYNC_FLUSH
+  flush: require('zlib').Z_SYNC_FLUSH,
 }))
 
 app
@@ -60,10 +60,10 @@ router.get('/sw.js', async (ctx) => {
 })
 
 app.use(koaStatic(path.join(__dirname, '..', 'build'), {
-  maxage: 24 * 60 * 60 * 1000
+  maxage: 24 * 60 * 60 * 1000,
 }))
 
-function execPromise (command, options) {
+function execPromise(command, options) {
   return new Promise((resolve, reject) => {
     exec(command, options, function (error, stdout, stderr) {
       if (error) {
@@ -75,7 +75,7 @@ function execPromise (command, options) {
   })
 }
 
-function build (entry, peerDeps) {
+function build(entry, peerDeps) {
   console.log('externals are', peerDeps)
   return rollup.rollup({
     entry: entry,
@@ -86,23 +86,22 @@ function build (entry, peerDeps) {
         main: true,
         browser: true,
         extensions: ['.js', '.json'],
-        skip: peerDeps
+        skip: peerDeps,
       }),
       json(),
       replace({
-        ENV: 'production',
-        'process.env.NODE_ENV': "'production'"
+        'process.env.NODE_ENV': JSON.stringify('production'),
       }),
       commonjs({
         exclude: peerDeps,
-        sourceMap: false
+        sourceMap: false,
       }),
       // babel({
       //  babelrc: false,
-      //  presets: ["es2015-rollup"],
+      //  presets: ['es2015-rollup'],
       // }),
-      uglify({}, minify)
-    ]
+      uglify({}, minify),
+    ],
   })
     .catch(err => {
       log.error('Build Error')
@@ -111,7 +110,7 @@ function build (entry, peerDeps) {
     })
 }
 
-function getFileSize (file) {
+function getFileSize(file) {
   return new Promise((resolve, reject) => {
     bytesize.fileSize(file, false, (error, size) => {
       if (error) {
@@ -123,7 +122,7 @@ function getFileSize (file) {
   })
 }
 
-function getGZIPFileSize (file) {
+function getGZIPFileSize(file) {
   return new Promise((resolve, reject) => {
     bytesize.gzipSize(file, false, (error, size) => {
       if (error) {
@@ -135,16 +134,16 @@ function getGZIPFileSize (file) {
   })
 }
 
-function getDependencies (packagePath) {
+function getDependencies(packagePath) {
   const { dependencies = {}, devDependencies = {} } = require(packagePath + '/package.json')
 
   return {
     dependencies: Object.keys(dependencies).length,
-    devDependencies: Object.keys(devDependencies).length
+    devDependencies: Object.keys(devDependencies).length,
   }
 }
 
-async function parsePackageString (packageString) {
+async function parsePackageString(packageString) {
   let packageName, version
   const lastAtIndex = packageString.lastIndexOf('@')
 
@@ -167,11 +166,11 @@ async function parsePackageString (packageString) {
   version = Array.isArray(versionInfo) ? versionInfo[0] : versionInfo
 
   return {
-    packageName, version
+    packageName, version,
   }
 }
 
-function getEntryPoint (packagePath) {
+function getEntryPoint(packagePath) {
   const packageJSON = require(path.join(packagePath, 'package.json'))
   const entryFile = packageJSON.main ||
     packageJSON.module ||
@@ -180,11 +179,27 @@ function getEntryPoint (packagePath) {
   return require.resolve(path.join(packagePath, entryFile))
 }
 
-function getPeerDeps (packagePath) {
+function getPeerDeps(packagePath) {
   const packageJSON = require(path.join(packagePath, 'package.json'))
   return 'peerDependencies' in packageJSON
     ? Object.keys(packageJSON.peerDependencies) : []
 }
+
+router.get('/recent', async (ctx) => {
+  const searches = firebase.database().ref().child('searches')
+
+  const snapshot = await searches
+    .limitToLast(Number(ctx.query.limit) || 5)
+    .once('value')
+
+  ctx.cacheControl = {
+    maxAge: 0,
+  }
+
+  ctx.status = 200
+  ctx.headers['Content-Type'] = 'application/json; charset=utf-8'
+  ctx.body = snapshot.val()
+})
 
 router.get('/package', async (ctx, next) => {
   const startTime = now()
@@ -193,8 +208,16 @@ router.get('/package', async (ctx, next) => {
   log.debug(`Package: Name: ${packageName} | Version ${version}`)
 
   const replyWithSuccess = (data) => {
+
+    if (ctx.query.record) {
+      const searches = firebase.database().ref().child('searches')
+      searches
+        .child(Cache.cleanKeyForFirebase(packageName))
+        .set({ time: new Date().getTime(), name: packageName, version: version })
+    }
+
     ctx.cacheControl = {
-      maxAge: 60
+      maxAge: 60,
     }
 
     ctx.status = 200
@@ -210,7 +233,7 @@ router.get('/package', async (ctx, next) => {
     ctx.body = {
       package: packageName,
       version: version,
-      error: `Version ${version} is invalid for package '${packageName}'`
+      error: `Version ${version} is invalid for package '${packageName}'`,
     }
 
     return
@@ -227,8 +250,12 @@ router.get('/package', async (ctx, next) => {
 
   try {
     // @TODO: ADD some sort of queuing here, or it's gonna suck.
-    await execPromise(`yarn add ${ctx.query.name} --ignore-flags --exact`, { cwd: './tmp' })
-
+    try {
+      await execPromise(`yarn add ${ctx.query.name} --ignore-flags --exact`, { cwd: './tmp' })
+    } catch(err) {
+      console.log(err)
+    }
+    console.log('i\'m here?')
     const rootPath = path.join(__dirname, '..')
     const packagePath = path.join(rootPath, 'tmp', 'node_modules', packageName)
     const bundlePath = path.join(rootPath, 'tmp-build', 'bundle.js')
@@ -241,21 +268,21 @@ router.get('/package', async (ctx, next) => {
       await bundle.write({
         moduleName: camelcase(packageName),
         dest: bundlePath,
-        format: 'iife'
+        format: 'iife',
       })
 
       const [fileSize, gzipSize] = await Promise.all([
         getFileSize(bundlePath),
-        getGZIPFileSize(bundlePath)
+        getGZIPFileSize(bundlePath),
       ])
 
       if (fileSize !== 0) {
         const dataToSend = Object.assign({}, {
-          package: packageName,
-          version: version || null,
-          size: fileSize,
-          gzipSize: gzipSize
-        },
+            package: packageName,
+            version: version || null,
+            size: fileSize,
+            gzipSize: gzipSize,
+          },
           getDependencies(packagePath)
         )
 
@@ -270,7 +297,7 @@ router.get('/package', async (ctx, next) => {
       ctx.body = {
         package: packageName,
         version: version,
-        error: 'Oops. Something went wrong while fetching or building the package.'
+        error: 'Oops. Something went wrong while fetching or building the package.',
       }
 
       console.error(err)
@@ -285,7 +312,7 @@ router.get('/package', async (ctx, next) => {
     ctx.body = {
       package: packageName,
       version: version,
-      error: 'Package not found / Build failed'
+      error: 'Package not found / Build failed',
     }
     ctx.headers['Content-Type'] = 'application/json; charset=utf-8'
     console.error(err.toString())
