@@ -37,6 +37,7 @@ export default class SearchTags extends Component {
           {
             recents.map(recent => (
               <li
+                key={ recent }
                 tabIndex="0"
                 className={ style.searchTag }
                 onClick={ () => onSelect(recent) }
