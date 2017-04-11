@@ -1,6 +1,5 @@
 import { h, Component } from 'preact'
 import prettyBytes from '../../lib/prettyBytes'
-import P from 'proptypes'
 import AutoComplete from 'react-autocomplete'
 import debounce from 'debounce'
 import cx from 'classnames'
@@ -21,7 +20,6 @@ export default class Home extends Component {
   handleInputChange = ({ target }) => {
     this.setState({ value: target.value })
     const trimmedValue = target.value.trim()
-    console.log(trimmedValue)
     const { name } = this.getPackageNameAndVersion(trimmedValue)
 
     if (trimmedValue.length > 1) {
@@ -62,8 +60,6 @@ export default class Home extends Component {
     const startTime = performance.now()
     const packageString = this.state.value.toLowerCase().trim()
     this.setState({ promiseState: 'pending', results: [] })
-    console.log(this.state.value)
-
 
     ga &&
     ga('send', {
