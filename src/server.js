@@ -65,7 +65,10 @@ app.use(koaStatic(path.join(__dirname, '..', 'build'), {
 
 function execPromise(command, options) {
   return new Promise((resolve, reject) => {
+    console.log('in promise', command)
     exec(command, options, function (error, stdout, stderr) {
+      console.log(command, error, stdout, stderr)
+
       if (error) {
         reject(error)
       } else {
