@@ -1,0 +1,41 @@
+.searchTagsWrap {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: all 0.3s;
+
+  h4 {
+    margin: 0;
+    padding: 4px;
+  }
+}
+
+.searchTagsWrapVisible {
+  opacity: 1;
+  transform: translateY(0px);
+}
+
+.searchTagsContainer {
+ list-style: none;
+  margin: 0 0 0 6px;
+  padding: 0;
+  display: flex;
+}
+
+.searchTag {
+  background: #DDD;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:not(:last-of-type) {
+    margin-right: 12px;
+  }
+
+  &:hover, &:focus {
+    outline: none;
+    background: #222;
+    color: white;
+  }
+}
