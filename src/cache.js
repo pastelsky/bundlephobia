@@ -1,25 +1,21 @@
-const firebase = require('firebase')
 const LRU = require('lru-cache')
 const log = require('pretty-log')
 const now = require('performance-now')
 require('dotenv').config()
 
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.FIREBASE_DATABASE_URL,
-}
-
-firebase.initializeApp(firebaseConfig)
-
 const lruCache = LRU({ max: 500 })
 
 module.exports = class Cache {
+
+  constructor(firebaseInstance) {
+    this.firebase = firebaseInstance
+  }
+
   static cleanKeyForFirebase(key) {
     return key.replace(/[.#$/\[\]]/g, '__')
   }
 
-  static async get(packageName, version) {
+  async get(packageName, version) {
     const startTime = now()
     const lruCacheCacheEntry = lruCache.get(`${packageName}@${version}`)
 
@@ -29,7 +25,7 @@ module.exports = class Cache {
 
       return lruCacheCacheEntry
     } else if (process.env.FIREBASE_API_KEY) {
-      const ref = firebase.database().ref()
+      const ref = this.firebase.database().ref()
         .child('modules')
         .child(Cache.cleanKeyForFirebase(packageName))
         .child(Cache.cleanKeyForFirebase(version))
@@ -49,11 +45,11 @@ module.exports = class Cache {
     }
   }
 
-  static async set(packageName, version, result) {
+  async set(packageName, version, result) {
     lruCache.set(`${packageName}@${version}`, result)
 
     if (process.env.FIREBASE_API_KEY) {
-      const modules = firebase.database().ref().child('modules')
+      const modules = this.firebase.database().ref().child('modules')
       return modules
         .child(Cache.cleanKeyForFirebase(packageName))
         .child(Cache.cleanKeyForFirebase(version))
