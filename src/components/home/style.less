@@ -1,8 +1,5 @@
 @import '~style/helpers';
 
-body {
-  background: url('../../assets/grilled.png') repeat;
-}
 
 .home {
   display: flex;
@@ -44,25 +41,54 @@ body {
   flex-grow: 1;
 }
 
-.searchInput {
-  font-size: 2.4rem;
+.searchInputContainer {
+  position: relative;
   width: 50vw;
   min-width: 260px;
+}
+
+.dummySearchInput {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+   font-size: 2.4rem;
   padding: 12px 24px;
-  border-image-source: url('../../assets/border-image.png');
-  border-image-slice: 216;
-  border-image-width: 36px;
-  border-image-outset: 1;
-  border-image-repeat: stretch;
+    // line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center
+}
+
+.searchInput {
+  width: 100%;
+  font-size: 2.4rem;
+  padding: 12px 24px;
+  border: 4px solid lighten(#2d3d46, 15%);
   background: transparent;
   line-height: 1;
   text-align: center;
+  color: transparent;
 
   &:focus {
     outline: none;
     caret-color: #51b7ad;
     //filter: hue-rotate(180deg);
   }
+}
+
+.packageName {
+  color: black;
+}
+
+.packageVersion {
+  color: #444;
+}
+
+.atSeparator {
+  color: #888;
 }
 
 .panelContainer {
@@ -88,6 +114,9 @@ body {
 
 .panelLabel {
   margin: 0;
+  background: lighten(#2d3d46, 10%);
+  color: #fefefe;
+  padding: 3px 8px;
 }
 
 .panelUnit {
@@ -103,6 +132,22 @@ body {
   align-items: baseline;
   justify-content: center;
   margin-bottom: 0;
+  font-family: 'Montserrat';
+}
+
+.suggestionsMenu {
+  border: 2px solid lighten(#2d3d46, 15%);
+  border-top: 0;
+  background: rgba(255,255,255,0.95);
+  font-size: 90%;
+  position: absolute;
+  overflow: auto;
+  z-index: 10;
+  max-height: 35vh;
+
+  &:empty {
+    border: 0;
+  }
 }
 
 .suggestion {
@@ -110,6 +155,7 @@ body {
   color: #333;
   font-size: 15px;
   cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 
   &:not(:last-of-type) {
     border-bottom: 1px solid #EEE;
@@ -128,10 +174,12 @@ body {
 .suggestionDescription {
   padding-top: 4px;
   width: 48vw;
+  width: calc(48vw - 2px); // subtract border width
   min-width: 260px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: 13px;
 }
 
 @scale-factor: 12vmin;
@@ -232,7 +280,7 @@ body {
 
 .meterFragmentB {
   position: absolute;
-  background: url('../../assets/grilled.png');
+  background: #fafafa;
   width: @scale-factor * 2.5;
   height: @scale-factor * 1.25;
   top: @scale-factor * 0.75;
@@ -243,7 +291,7 @@ body {
 
 .meterFragmentC {
   position: absolute;
-  background-color: #424455;
+  background-color: lighten(#2d3d46, 5%);
   width: @scale-factor * 4;
   height: @scale-factor * 2;
   top: @scale-factor * 2;

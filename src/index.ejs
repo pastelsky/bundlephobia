@@ -1,36 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<% for (var chunk in htmlWebpackPlugin.files.css) { %>
-		<link rel="preload" href="<%= htmlWebpackPlugin.files.css[chunk] %>"  as="style">
-	<% } %>
-	<% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
-		<link rel="preload" href="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>" as="script">
-	<% } %>
+  <% for (var chunk in htmlWebpackPlugin.files.css) { %>
+    <link rel="preload" href="<%= htmlWebpackPlugin.files.css[chunk] %>"  as="style">
+  <% } %>
+  <% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
+    <link rel="preload" href="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>" as="script">
+  <% } %>
 
-	<meta charset="utf-8">
-	<title>What does my npm module cost?</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
-	<meta name="description" content="Calculates the size of an npm module after bundling. Also shows how the effect of the module on the page speed.">
-	<meta name="msapplication-TileColor" content="#2d3d46">
-	<meta name="msapplication-TileImage" content="./assets/icons/mstile-150x150.png">
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-	<meta name="apple-mobile-web-app-title" content="What does my npm module cost?">
-	<meta name="application-name" content="What does my npm module cost?">
-	<meta name="format-detection" content="telephone=no">
-	<meta name="theme-color" content="#2d3d46">
+  <meta charset="utf-8">
+  <title>What does my npm module cost?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <meta name="description" content="Calculates the size of an npm module after bundling. Also shows how the effect of the module on the page speed.">
+  <meta name="msapplication-TileColor" content="#2d3d46">
+  <meta name="msapplication-TileImage" content="./assets/icons/mstile-150x150.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="What does my npm module cost?">
+  <meta name="application-name" content="What does my npm module cost?">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#2d3d46">
     <meta property="og:url" content="https://cost-of-modules.herokuapp.com" />
     <meta property="og:title" content="What is the cost of my npm module ?" />
     <meta property="og:description" content="Find out the performance impact of adding a npm module to your build." />
     <meta property="og:image" content="https://cost-of-modules.herokuapp.com/assets/icons/android-chrome-512x512.png" />
-	<link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon.png">
-	<link rel="icon" type="image/png" href="/assets/icons/favicon-32x32.png" sizes="32x32">
-	<link rel="icon" type="image/png" href="/assets/icons/favicon-16x16.png" sizes="16x16">
-	<link rel="mask-icon" href="/assets/icons/safari-pinned-tab.svg" color="#5bbad5">
-<link href="https://fonts.googleapis.com/css?family=Delius+Swash+Caps" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css?family=Montserrat:700" rel="stylesheet">
-	<link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/icons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/assets/icons/favicon-16x16.png" sizes="16x16">
+  <link rel="mask-icon" href="/assets/icons/safari-pinned-tab.svg" color="#5bbad5">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Space+Mono:700" rel="stylesheet">
+  <link rel="manifest" href="./manifest.json">
 </head>
 <body></body>
 <script async defer src="https://buttons.github.io/buttons.js"></script>
