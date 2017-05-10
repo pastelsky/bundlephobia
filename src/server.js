@@ -192,6 +192,7 @@ router.get('/recent', async (ctx) => {
   const searches = firebase.database().ref().child('searches')
 
   const snapshot = await searches
+    .orderByChild('time')
     .limitToLast(Number(ctx.query.limit) || 5)
     .once('value')
 
@@ -216,7 +217,9 @@ router.get('/package', async (ctx, next) => {
       const searches = firebase.database().ref().child('searches')
       searches
         .child(Cache.cleanKeyForFirebase(packageName))
-        .set({ time: new Date().getTime(), name: packageName, version: version })
+        .set({
+          time: new Date().getTime(), name: packageName, version: version,
+        })
     }
 
     ctx.cacheControl = {
