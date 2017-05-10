@@ -1,4 +1,5 @@
 import { h, Component } from 'preact'
+import { route } from 'preact-router'
 import prettyBytes from '../../lib/prettyBytes'
 import AutoComplete from 'react-autocomplete'
 import debounce from 'debounce'
@@ -15,6 +16,15 @@ export default class Home extends Component {
     suggestions: [],
     rotation: 0,
     results: {},
+  }
+
+  componentDidMount() {
+    const query = this.props.p;
+
+    if (query && query.trim()) {
+      this.setState({ value: query })
+      this.performSearch(query)
+    }
   }
 
   handleInputChange = ({ target }) => {
@@ -52,28 +62,27 @@ export default class Home extends Component {
     200,
   )
 
-  handleSubmit = e => {
-    if (e) {
-      e.preventDefault()
+  fireEvent = (category, action, label) => {
+    if (typeof ga === 'function') {
+      ga('send', {
+        hitType: 'event',
+        eventCategory: category,
+        eventAction: action,
+        eventLabel: label,
+      })
     }
+  }
 
+  performSearch = (query) => {
     const startTime = performance.now()
-    const packageString = this.state.value.toLowerCase().trim()
+    const packageString = query.toLowerCase().trim()
     this.setState({ promiseState: 'pending', results: [] })
-
-    ga &&
-    ga('send', {
-      hitType: 'event',
-      eventCategory: 'Search',
-      eventAction: 'Perform Search',
-      eventLabel: packageString,
-    })
+    this.fireEvent('Search', 'Perform Search', packageString)
 
     fetch(`/package?name=${packageString}&record=true`)
       .then(result => {
         ga && ga('send', {
           hitType: 'timing',
-
           timingCategory: 'Response time',
           timingVar: 'fetchTime',
           timingValue: (performance.now() - startTime) / 1000,
@@ -87,54 +96,28 @@ export default class Home extends Component {
               'Uh-oh. This is taking longer than expected. We\'ve queued your request. Check back in a minute?',
             )
 
-            ga &&
-            ga('send', {
-              hitType: 'event',
-              eventCategory: 'Search',
-              eventAction: 'Search Failure 503',
-              eventLabel: packageString,
-            })
+            this.fireEvent('Search', 'Search Failure 503', packageString)
           } else if (result.status === 404) {
             alert(`Package '${packageString}' not found.`)
-
-            ga &&
-            ga('send', {
-              hitType: 'event',
-              eventCategory: 'Search',
-              eventAction: 'Search Failure 404',
-              eventLabel: this.state.value,
-            })
+            this.fireEvent('Search', 'Search Failure 404', this.state.value)
           } else {
             alert(
               `Could not create a bundle for the package '${packageString}'. If you're sure this package is meant to be used in a browser, the package may not have a correct entry point and peerDependencies specified.`,
             )
-
-            ga &&
-            ga('send', {
-              hitType: 'event',
-              eventCategory: 'Search',
-              eventAction: 'Search Failure Other',
-              eventLabel: packageString,
-            })
+            this.fireEvent('Search', 'Search Failure Other', packageString)
           }
-
           return Promise.reject(result.json())
         }
       })
       .then(data => {
-        ga &&
-        ga('send', {
-          hitType: 'event',
-          eventCategory: 'Search',
-          eventAction: 'Search Success',
-          eventLabel: packageString,
-        })
-
+        this.fireEvent('Search', 'Search Success', packageString)
         this.setState({
           results: data,
           value: `${data.package}@${data.version}`,
           rotation: 0,
         })
+
+        history.replaceState(0,0,`/?p=${data.package}@${data.version}`);
       })
       .catch(err => {
         this.setState({
@@ -166,6 +149,15 @@ export default class Home extends Component {
     )
   }
 
+  handleSubmit = e => {
+    if (e) {
+      e.preventDefault()
+    }
+
+    this.performSearch(this.state.value)
+    route(`/?p=${this.state.value}`)
+  }
+
   getPackageNameAndVersion(packageString) {
     // Scoped packages
     let name, version
@@ -193,14 +185,7 @@ export default class Home extends Component {
   }
 
   handleSearchTagSelect = (name) => {
-    ga &&
-    ga('send', {
-      hitType: 'event',
-      eventCategory: 'Search',
-      eventAction: 'Search Tag Click',
-      eventLabel: name,
-    })
-
+    this.fireEvent('Search', 'Search Tag Click', name)
     this.setState({ value: name })
     this.handleSubmit()
   }
@@ -235,10 +220,10 @@ export default class Home extends Component {
                   this.handleSubmit()
                 }}
                 renderMenu={
-                  (items, value, inbuiltStyles) =>  {
+                  (items, value, inbuiltStyles) => {
                     return (
                       <div
-                        style={{minWidth: inbuiltStyles.minWidth}}
+                        style={{ minWidth: inbuiltStyles.minWidth }}
                         className={ style.suggestionsMenu }
                         children={items}
                       />
