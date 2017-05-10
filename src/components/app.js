@@ -41,7 +41,7 @@ export default class App extends Component {
             </a>
           </p>
           <p>
-            <a className="github-button" href="https://github.com/pastelsky/npm-cost" data-style="mega" aria-label="Star pastelsky/npm-cost on GitHub">Fork on Github</a>
+            <a className="github-button" href="https://github.com/pastelsky/npm-cost" data-style="mega" aria-label="Star pastelsky/npm-cost on GitHub">Star on Github</a>
           </p>
         </footer>
       </div>
