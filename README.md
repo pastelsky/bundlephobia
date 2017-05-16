@@ -4,7 +4,8 @@
 
 Know the performance impact of including an npm package in your app's bundle.
 
-![demo walkthrough](https://s27.postimg.org/w3q87398j/ezgif-1-7e0a7ec11c.gif)
+![demo walkthrough](https://s22.postimg.org/4y8chh1bl/ezgif-2-821142b33c.gif)
+
 
 ## Getting started locally
  -  Use `yarn run dev` to debug the frontend
