@@ -2,6 +2,7 @@
   "name": "cost-of-npm-modules",
   "version": "1.0.0",
   "main": "src/server.js",
+  "description": "Find out the cost of adding a front end dependency to your project",
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot --progress",
     "start": "forever -o out.log -e err.log src/server.js",
