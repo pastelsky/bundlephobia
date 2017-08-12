@@ -17,3 +17,6 @@ FIREBASE_API_KEY=<apiKey>
 FIREBASE_AUTH_DOMAIN=<domain>
 FIREBASE_DATABASE_URL=<url>
   ```
+  
+  ## Feature Requests
+  Think you've got an idea to make this better? Raise your opinion for v2 [here](https://github.com/pastelsky/npm-cost/issues/1).
