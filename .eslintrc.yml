@@ -1,4 +1,0 @@
-extends: standard
-plugins:
-  - standard
-  - promise
