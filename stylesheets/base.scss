@@ -1,0 +1,43 @@
+@import './colors';
+@import './variables';
+@import '../node_modules/normalize.css/normalize';
+@import '../node_modules/balloon-css/balloon';
+
+* > * {
+  box-sizing: border-box;
+}
+
+body, html {
+  background: white;
+  font-family: $font-family-body;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+::-moz-selection {
+  background: rgba(0, 170, 255, 0.2);
+}
+
+::selection {
+  background: rgba(0, 170, 255, 0.2);
+}
+
+a {
+  text-decoration: none;
+}
+
+// Tooltips
+
+[data-balloon]::before,
+[data-balloon]::after {
+  transition-delay: 0.15s;
+}
+
+[data-balloon]::after {
+  background: rgba(60,60,60,0.9);
+}
+
+
+[data-balloon]:hover::before {
+  opacity: 0.82;
+}

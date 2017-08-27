@@ -1,0 +1,113 @@
+@import '../../../stylesheets/colors';
+@import '../../../stylesheets/variables';
+
+$bar-width: 1.6vw;
+$min-bar-width: 15px;
+
+.bar-graph-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 48vh;
+}
+
+.bar-graph {
+  height: 35vh;
+  display: flex;
+  align-items: baseline;
+  margin: 0;
+}
+
+.bar-graph__bar-group {
+  height: 100%;
+  position: relative;
+  width: $bar-width;
+  min-width: $min-bar-width;
+  margin: 0 5px;
+}
+
+.bar-graph__bar,
+.bar-graph__bar2 {
+  width: 100%;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  transition: background 0.2s;
+  animation: grow 0.4s cubic-bezier(0.305, 0.420, 0.205, 1.200);
+  transform-origin: 100% 100%;
+  cursor: pointer;
+}
+
+.bar-graph__bar {
+  background: $maya-blue;
+
+  .bar-graph__bar-group:not(.bar-graph__bar-group--disabled):hover & {
+    background: darken($maya-blue, 5%);
+  }
+
+  .bar-graph__bar-group--disabled & {
+    background: lighten($raven, 45%);
+
+    &:hover {
+      background: lighten($raven, 35%);
+    }
+  }
+}
+
+.bar-graph__bar2 {
+  background: $cornflower-blue;
+  z-index: 1;
+  pointer-events: none;
+
+  .bar-graph__bar-group:hover & {
+    background: darken($cornflower-blue, 5%);
+  }
+}
+
+.bar-graph__bar-version {
+  @include font-size-xs;
+  position: absolute;
+  bottom: -45px;
+  font-weight: $font-weight-light;
+  display: block;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  width: 100%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: $raven;
+  transition: opacity 0.2s, color 0.2s;
+  animation: fade-in 0.5s 0.1s forwards cubic-bezier(0.305, 0.420, 0.205, 1.200);
+  font-family: $font-family-code;
+  letter-spacing: -1px;
+
+  .bar-graph-container:hover & {
+    opacity: 1;
+    color: darken($raven, 50%);
+
+  }
+
+  .bar-graph__bar-group:hover & {
+    color: darken($raven, 50%);
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.7;
+  }
+}
