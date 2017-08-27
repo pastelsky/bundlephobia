@@ -1,0 +1,175 @@
+@import '../../../stylesheets/colors';
+@import '../../../stylesheets/variables';
+
+.autocomplete-input__container {
+  position: relative;
+}
+
+.autocomplete-input {
+  width: 40vw;
+  border: none;
+  border-bottom: 1px solid transparentize(black, 0.85);
+  background: transparent;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0);
+
+  &:focus {
+    outline: none;
+    caret-color: $pastel-green;
+  }
+}
+
+// Safari's caret color is equal to the
+// text color. Hence, we need to set a
+// text color targeting just Safari :(
+@media not all and (min-resolution: .001dpcm) {
+  @supports (-webkit-appearance:none) {
+    .autocomplete-input {
+      color: #CCC;
+      -webkit-text-stroke: 2px white;
+
+      &::placeholder {
+        -webkit-text-stroke: 0px white;
+      }
+    }
+  }
+}
+
+.autocomplete-input,
+.autocomplete-input__dummy-input {
+  @include font-size-lg;
+  padding: $global-spacing (30px + $global-spacing * 2) $global-spacing $global-spacing * 2;
+  font-family: $font-family-code;
+  font-weight: $font-weight-thin;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media screen and (max-width: 40em) {
+    padding: $global-spacing / 2 (20px + $global-spacing) $global-spacing / 2 $global-spacing;
+  }
+}
+
+.autocomplete-input__dummy-input {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.dummy-input__package-name {
+  color: #1d1d1d;
+}
+
+.dummy-input__package-version {
+  color: #636363;
+}
+
+.dummy-input__at-separator {
+  color: $pastel-green;
+}
+
+.autocomplete-input__suggestions-menu {
+  border: 1px solid lighten(black, 85%);
+  border-top: 0;
+  background: rgba(255, 255, 255, 0.96);
+  font-size: 90%;
+  position: absolute;
+  overflow: auto;
+  z-index: 10;
+  max-height: 35vh;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:empty {
+    border: 0;
+  }
+}
+
+
+.autocomplete-input__suggestion {
+  padding: 10px 22px;
+  color: #333;
+  font-size: 15px;
+  cursor: pointer;
+  font-family: "Source Code Pro", monospace;
+  font-weight: $font-weight-light;
+
+  &:not(:last-of-type) {
+    border-bottom: 1px solid #f5f5f5;
+  }
+
+  em {
+    font-weight: $font-weight-bold;
+    font-style: normal;
+  }
+}
+
+.autocomplete-input__suggestion--highlight {
+  background: rgb(187, 242, 250);
+}
+
+.autocomplete-input__suggestion-description {
+  @include font-size-xs;
+
+  padding-top: 4px;
+  width: 100%;
+  min-width: 260px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: $font-family-body;
+  font-weight: $font-weight-thin;
+  color: #666;
+  padding-top: 5px;
+
+  @media screen and (max-width: 40em) {
+    font-weight: $font-weight-light;
+  }
+}
+
+.autocomplete-input__form {
+  display: flex;
+  align-items: baseline;
+}
+
+.autocomplete-input__search-icon {
+  position: relative;
+  margin-left: -30px;
+  z-index: 1;
+  cursor: pointer;
+
+  @media screen and (max-width: 40em) {
+    margin-left: -20px + -5px;
+  }
+
+  svg {
+    width: 30px;
+    height: 30px;
+    overflow: visible;
+
+    @media screen and (max-width: 40em) {
+      width: 20px;
+      height: 20px;
+    }
+
+    path {
+      transition: all 0.2s;
+      fill: #666;
+    }
+  }
+
+  &:hover {
+    path {
+      fill: $pastel-green;
+      stroke: $pastel-green;
+      stroke-width: 4px;
+    }
+  }
+}
+

@@ -1,0 +1,90 @@
+// Font related
+
+@mixin font-size-xl {
+  font-size: 3rem;
+
+  @media screen and (max-width: 48em) {
+    font-size: 2.5rem;
+  }
+
+  @media screen and (max-width: 40em) {
+    font-size: 2rem;
+  }
+}
+
+@mixin font-size-lg {
+  font-size: 2.4rem;
+
+  @media screen and (max-width: 40em) {
+    font-size: 1.4rem;
+  }
+}
+
+@mixin font-size-md {
+  font-size: 1.35rem;
+
+  @media screen and (max-width: 48em) {
+    font-size: 1.25rem;
+  }
+
+  @media screen and (max-width: 40em) {
+    font-size: 1.05rem;
+  }
+}
+
+@mixin font-size-md-2 {
+  font-size: 1.7rem;
+
+  @media screen and (max-width: 40em) {
+    font-size: 1.25rem;
+  }
+}
+
+@mixin font-size-reg {
+  font-size: 1rem;
+
+  @media screen and (max-width: 48em) {
+    font-size: 0.9rem;
+  }
+
+  @media screen and (max-width: 40em) {
+    font-size: 0.8rem;
+  }
+}
+
+@mixin font-size-sm {
+  font-size: 0.9rem;
+
+  @media screen and (max-width: 48em) {
+    font-size: 0.8rem;
+  }
+
+  @media screen and (max-width: 40em) {
+    font-size: 0.75rem;
+  }
+}
+
+
+@mixin font-size-xs {
+  font-size: 0.8rem;
+
+  @media screen and (max-width: 48em) {
+    font-size: 0.75rem;
+  }
+
+  @media screen and (max-width: 40em) {
+    font-size: 0.7rem;
+  }
+}
+
+
+$font-weight-thin: 200;
+$font-weight-light: 400;
+$font-weight-bold: 600;
+$font-weight-very-bold: 700;
+
+$font-family-body: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+$font-family-code: 'Source Code Pro', "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+
+// Padding / Spacing
+$global-spacing: 10px;
