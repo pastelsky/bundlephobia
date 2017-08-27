@@ -1,12 +1,5 @@
-/node_modules
-/npm-debug.log
-/build
-.DS_Store
-/coverage
-/.idea
-/tmp
-/tmp-build
-yarn.lock
-err.log
-out.log
+.next
 .env
+cache
+node_modules
+yarn-error.log
