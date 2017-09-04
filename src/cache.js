@@ -1,21 +1,34 @@
-const LRU = require('lru-cache')
-const log = require('pretty-log')
-const now = require('performance-now')
 require('dotenv').config()
 
-const lruCache = LRU({ max: 500 })
+const now = require('performance-now')
+const lruRam = require('lru-ram')
+const log = require('pretty-log')
+const LRU = require('lru-cache')
+const {totalmem} = require('os')
+
+const fixture = {
+  dependencies: 5,
+  devDependencies: 0,
+  gzipSize: 7083,
+  package: 'react',
+  size: 20259,
+  version: '15.6.1'
+}
+
+const totalBytes = totalmem() * 0.8
+const max = lruRam(fixture, totalBytes)
+const lruCache = LRU({ max: max })
 
 module.exports = class Cache {
-
-  constructor(firebaseInstance) {
+  constructor (firebaseInstance) {
     this.firebase = firebaseInstance
   }
 
-  static cleanKeyForFirebase(key) {
+  static cleanKeyForFirebase (key) {
     return key.replace(/[.#$/\[\]]/g, '__')
   }
 
-  async get(packageName, version) {
+  async get (packageName, version) {
     const startTime = now()
     const lruCacheCacheEntry = lruCache.get(`${packageName}@${version}`)
 
@@ -45,7 +58,7 @@ module.exports = class Cache {
     }
   }
 
-  async set(packageName, version, result) {
+  async set (packageName, version, result) {
     lruCache.set(`${packageName}@${version}`, result)
 
     if (process.env.FIREBASE_API_KEY) {

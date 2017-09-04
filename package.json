@@ -43,6 +43,7 @@
     "koa-router": "^7.1.0",
     "koa-static": "^3.0.0",
     "lru-cache": "^4.0.2",
+    "lru-ram": "~1.1.0",
     "normalize.css": "^5.0.0",
     "performance-now": "^2.1.0",
     "preact": "^7.1.0",
