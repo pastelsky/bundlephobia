@@ -200,7 +200,7 @@ export default class ResultPage extends PureComponent {
               </Link>
             </section>
             <section className="result-header--right-section">
-              <a target="_blank" href="https://github.com/pastelsky/npm-cost">
+              <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
                 <GithubLogo />
               </a>
             </section>

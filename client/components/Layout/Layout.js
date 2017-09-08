@@ -86,7 +86,7 @@ export default class Layout extends Component {
               <OutboundLink
                 eventLabel="Footer Repo Click"
                 target="_blank"
-                to="https://github.com/pastelsky/npm-cost"
+                to="https://github.com/pastelsky/bundlephobia"
               >
                 <button className="footer__credits-fork-button">
                   Fork on GitHub
