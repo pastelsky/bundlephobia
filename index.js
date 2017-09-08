@@ -11,6 +11,7 @@ const debug = require('debug')('bp:request')
 const { TimeoutError } = require('workerpool/lib/Promise')
 
 const Koa = require('koa')
+const cors = require('kcors')
 const serve = require('koa-static')
 const koaCache = require('koa-cash')
 const Router = require('koa-router')
@@ -50,6 +51,7 @@ app.prepare()
     const router = new Router()
 
     server.use(cacheControl())
+    server.use(cors())
 
     server.use(compress({
       filter: function (contentType) {
