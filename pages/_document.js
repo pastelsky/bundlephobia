@@ -38,7 +38,7 @@ export default class MyDocument extends Document {
           rel="icon"
           type="image/png"
           sizes="32x32"
-          href="/favicc.png?l=3ds66"
+          href="/favicon-32x32.png?l=4"
         />
         <link
           rel="icon"
