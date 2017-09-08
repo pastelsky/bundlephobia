@@ -2,7 +2,9 @@ import fetch from 'unfetch'
 
 export default class API {
   static get(url) {
-    return fetch(url)
+    const fullURL = process.env.NODE_ENV === 'production' ? process.env.API_ENDPOINT + url : url
+
+    return fetch(fullURL)
       .then(res => {
         if (!res.ok) {
           return res.json()
