@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "holiday": "0.0.1",
-    "react": "15.6.1",
-    "react-router-redux": "4.0.8",
-    "redux": "3.7.2"
-  }
-}

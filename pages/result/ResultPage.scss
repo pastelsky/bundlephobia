@@ -62,6 +62,43 @@
   }
 }
 
+.flash-message {
+  @include font-size-sm;
+  padding: $global-spacing / 3 $global-spacing * 2;
+  text-align: center;
+  color: darken($pastel-green, 20%);
+  align-self: center;
+  margin-top: $global-spacing;
+  background: transparentize($maya-blue, 0.95);
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  code {
+    color: darken($pastel-green, 25%);
+    font-size: 95%;
+  }
+
+  a {
+    text-decoration: underline;
+    color: inherit;
+  }
+}
+
+.flash-message__info-icon {
+  margin-left: $global-spacing / 2;
+  border: 1px solid currentColor;
+  width: 12px;
+  height: 13px;
+  font-family: $font-family-code;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  margin-right: $global-spacing;
+}
+
 .result-error {
   width: 100%;
   display: flex;

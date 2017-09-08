@@ -19,14 +19,12 @@ class Cache {
       debug('cache hit: memory')
       return lruCacheEntry
     } else if (process.env.FIREBASE_API_KEY) {
-      return this.firebaseUtils
-        .getPackageResult({ name, version })
-        .then(result => {
-          if (result) {
-            debug('cache hit: firebase')
-            lruCache.set(`${name}@${version}`, result)
-          }
-        })
+      const result = await this.firebaseUtils.getPackageResult({ name, version })
+      if (result) {
+        debug('cache hit: firebase')
+        lruCache.set(`${name}@${version}`, result)
+      }
+      return result
     }
   }
 

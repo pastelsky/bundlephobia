@@ -6,7 +6,7 @@ import stylesheet from './AutocompleteInput.scss'
 import fetch from 'unfetch'
 import debounce from 'debounce'
 
-import { parsePackageString } from 'utils/index'
+import { parsePackageString } from 'utils/common.utils'
 
 export default class AutocompleteInput extends PureComponent {
 
