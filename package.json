@@ -55,7 +55,7 @@
     "test:watch": "jest --watch",
     "postinstall": "yarn run build",
     "export": "next export",
-    "deploy": "yarn run build && yarn run export && cp -R out/* . "
+    "deploy": "git branch -D gh-pages && gco -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
