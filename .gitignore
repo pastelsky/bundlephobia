@@ -1,5 +1,12 @@
 .next
 .env
-cache
+out
+
+# package directories
 node_modules
+
+# Serverless directories
+.serverless
+
+# Logs
 yarn-error.log

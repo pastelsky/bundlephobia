@@ -5,6 +5,10 @@
   "main": "index.js",
   "author": "Shubham Kanodia <shubham.kanodia10@gmail.com>",
   "license": "MIT",
+  "engines": {
+    "node": "8.4.0",
+    "npm": "5.4.x"
+  },
   "dependencies": {
     "balloon-css": "^0.4.0",
     "classnames": "^2.2.5",
@@ -23,10 +27,11 @@
     "lodash.sortby": "^4.7.0",
     "lru-cache": "^4.1.1",
     "memory-fs": "^0.4.1",
-    "next": "^3.0.6",
+    "next": "^3.2.1",
     "node-fetch": "^1.7.2",
     "normalize.css": "^7.0.0",
     "opbeat": "^4.15.1",
+    "package-build-stats": "^1.0.3",
     "promise.series": "^0.2.0",
     "prop-types": "^15.5.10",
     "react": "^15.6.1",
@@ -35,7 +40,7 @@
     "react-ga": "^2.2.0",
     "semver": "^5.4.1",
     "trending-github": "^1.0.2",
-    "uglifyjs-webpack-plugin": "next",
+    "uglifyjs-webpack-plugin": "^1.0.0-beta.2",
     "unfetch": "^3.0.0",
     "webpack": "^3.5.5",
     "workerpool": "^2.2.4"
@@ -43,9 +48,12 @@
   "scripts": {
     "dev": "node index",
     "build": "next build",
-    "start": "NODE_ENV=production DEBUG=bp:* node index",
+    "start": "NODE_ENV=production DEBUG=bp:* node --optimize_for_size --max_old_space_size=460 index",
+    "prod": "yarn run build && yarn start",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "postinstall": "yarn run build",
+    "export": "next export"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

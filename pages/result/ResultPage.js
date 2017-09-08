@@ -157,7 +157,13 @@ export default class ResultPage extends PureComponent {
 
     const packageString = `${results.name}@${reading.version}`
     this.setState({ inputInitialValue: packageString })
-    this.handleSearchSubmit(`${results.name}@${reading.version}`)
+    this.handleSearchSubmit(packageString)
+
+    Analytics.event({
+      category: 'Graph',
+      action: reading.disabled ? 'Graph Disabled Bar Click' : 'Graph Bar Click',
+      label: packageString,
+    })
   }
 
   render() {
@@ -213,6 +219,25 @@ export default class ResultPage extends PureComponent {
                 isDone={ !!results.version }
                 onDone={ this.handleProgressDone }
               />
+            )
+          }
+          {
+            resultsPromiseState === 'fulfilled' &&
+            (results.hasJSModule || results.hasJSNext) && (
+              <div className="flash-message">
+                <span className="flash-message__info-icon">
+                  i
+                </span>
+                <span>
+                supports the&nbsp;
+                  <code>
+                  { results.hasJSModule ? 'module' : 'jsnext:main' }
+                </code>
+                  &nbsp;field. You can get smaller sizes with
+                  &nbsp;
+                  <a href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
+                </span>
+              </div>
             )
           }
           {

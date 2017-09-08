@@ -1,7 +1,7 @@
 const workerpool = require('workerpool');
-const getPackageSize = require('./getPackageSize')
+const getPackageStats = require('package-build-stats')
 
 // create a worker and register public functions
 workerpool.worker({
-  getPackageSize,
+  getPackageStats,
 })

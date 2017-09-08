@@ -1,4 +1,4 @@
-import { parsePackageString } from '../utils'
+import { parsePackageString } from '../utils/common.utils'
 
 describe('parsePackageString', () => {
 
