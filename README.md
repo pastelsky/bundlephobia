@@ -1,21 +1,44 @@
-[bundlephobia.com](https://bundlephobia.com)
 
-![logo](https://cdn.rawgit.com/pastelsky/bundlephobia/bundlephobia/assets/logo.svg)
+<p align="center">
+    <img src="https://cdn.rawgit.com/pastelsky/bundlephobia/bundlephobia/assets/site-logo.svg" alt="" width="310" height="250" />
+</p>
+<p align="center">
+  <a href="https://bundlephobia.com"> bundlephobia.com </a>
+</p>
+<p align="center">
+  Know the performance impact of including an npm package in your app's bundle.
+</p>
 
-## Bundlephobia
+## Features
+- Works with ES6 packages
+- Can build css and scss packages as well
+- Reports historical trends
 
-Know the performance impact of including an npm package in your app's bundle.
+<p align="center">
+    <img src="https://s26.postimg.org/6yfqxgsex/ezgif-1-6c5c883f13.gif" width="600" height="300"/>
+</p>
 
-## Getting started locally
- -  Use `yarn run dev` to debug the frontend
- - Use `yarn start` to run production build and test along with the server backend (no hot compilation yet!)
- - [Optional] Add a `.env` file to the root with firebase credentials for caching to work.
+
+## Running locally
+### Commands
+| script        | descriptioj  |
+| ------------- |:-------------:|
+| `yarn run dev`  | Start a development server locally |
+| `yarn run build`    | Build for production      |
+| `yarn run prod` | Start a production server locally      | 
+
+### Optional steps
+Add a `.env` file to the root with firebase credentials for caching to work.
   
-  ```
+  ```ini
 FIREBASE_API_KEY=<apiKey>
 FIREBASE_AUTH_DOMAIN=<domain>
 FIREBASE_DATABASE_URL=<url>
   ```
   
-  ## Feature Requests
-  Think you've got an idea to make this better? Raise your opinion for v2 [here](https://github.com/pastelsky/npm-cost/issues/1).
+  Also, one can add a link to an AWS Lambda cloud function by adding: 
+  ```ini
+AWS_LAMBDA_ENDPOINT=<some-endpoint/>
+```
+
+In the absence of such an endpoint, packages will be build locally using the [`getPackageStats` function](https://github.com/pastelsky/package-build-stats)

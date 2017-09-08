@@ -54,7 +54,6 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "postinstall": "yarn run build",
-    "export": "next export",
     "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
   },
   "devDependencies": {
