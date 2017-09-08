@@ -3,7 +3,6 @@ const semver = require('semver')
 const fetch = require('node-fetch')
 const debug = require('debug')('bp:firebase-util')
 
-
 class FirebaseUtils {
   constructor(firebaseInstance) {
     this.firebase = firebaseInstance
