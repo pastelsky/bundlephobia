@@ -1,16 +1,10 @@
 const path = require('path')
 const glob = require('glob')
+const webpack = require('webpack')
 
-const isProd = process.env.NODE_ENV === 'production'
+require('dotenv').config()
 
 module.exports = {
-  assetPrefix: isProd ? '/bundlephobia' : '',
-  exportPathMap: function () {
-    return {
-      '/': { page: '/' },
-      '/result': { page: '/result' },
-    }
-  },
   webpack: (config, { dev }) => {
     config.module.rules.push(
       {
@@ -40,7 +34,7 @@ module.exports = {
         ],
       },
     )
-
+    
     return config
   },
 }
