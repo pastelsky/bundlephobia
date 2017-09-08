@@ -38,7 +38,7 @@ FIREBASE_DATABASE_URL=<url>
   
   Also, one can add a link to an AWS Lambda cloud function by adding: 
   ```ini
-AWS_LAMBDA_ENDPOINT=<some-endpoint/>
+AWS_LAMBDA_ENDPOINT=<some-endpoint>
 ```
 
 In the absence of such an endpoint, packages will be build locally using the [`getPackageStats` function](https://github.com/pastelsky/package-build-stats)
