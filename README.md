@@ -3,7 +3,12 @@
     <img src="https://cdn.rawgit.com/pastelsky/bundlephobia/bundlephobia/assets/site-logo.svg" alt="" width="310" height="250" />
 </p>
 <p align="center">
-  <a href="https://bundlephobia.com"> bundlephobia.com </a>
+  <img src="https://img.shields.io/travis/pastelsky/bundlephobia/bundlephobia.svg" />
+  <img src="https://img.shields.io/npm/v/package-build-stats.svg" />
+  <img src="https://img.shields.io/npm/l/package-build-stats.svg" />
+</p>
+<p align="center">
+  <a href="https://bundlephobia.com"> bundlephobia.com </a> <br />
 </p>
 <p align="center">
   Know the performance impact of including an npm package in your app's bundle.
@@ -22,7 +27,7 @@
 ## Running locally
 ### Commands
 | script        | descriptioj  |
-| ------------- |:-------------:|
+| ------------- |:-------------|
 | `yarn run dev`  | Start a development server locally |
 | `yarn run build`    | Build for production      |
 | `yarn run prod` | Start a production server locally      | 
