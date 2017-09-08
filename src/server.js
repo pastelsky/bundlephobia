@@ -49,6 +49,10 @@ app
   .use(router.routes())
   .use(router.allowedMethods())
 
+router.get('/.well-known/acme-challenge/ZoHfUtpAm8bRntTdwd5GMIVq5_Wu-GKdaSyIV2cRjzw', function(ctx) {
+  ctx.body = 'ZoHfUtpAm8bRntTdwd5GMIVq5_Wu-GKdaSyIV2cRjzw.MgmPPtzLPzFo6ciewhZh_rGDl4INQ6voqSDAeDbjBCQ'
+})
+
 router.get('/sw.js', async (ctx) => {
   const swPath = path.join(__dirname, '..', 'build', 'sw.js')
 
