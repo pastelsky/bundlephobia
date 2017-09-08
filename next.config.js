@@ -4,7 +4,7 @@ const glob = require('glob')
 const isProd = process.env.NODE_ENV === 'production'
 
 module.exports = {
-  assetPrefix: isProd ? 'bundlephobia' : '',
+  assetPrefix: isProd ? '/bundlephobia' : '',
   exportPathMap: function () {
     return {
       '/': { page: '/' },
