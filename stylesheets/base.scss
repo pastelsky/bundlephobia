@@ -14,6 +14,10 @@ body, html {
   overflow-x: hidden;
 }
 
+code {
+  font-family: $font-family-code;
+}
+
 ::-moz-selection {
   background: rgba(0, 170, 255, 0.2);
 }

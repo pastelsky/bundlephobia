@@ -1,42 +1,7 @@
-const childProcess = require('child_process')
-const path = require('path')
 const semver = require('semver')
 const fetch = require('node-fetch')
 
 const CustomError = require('../server/CustomError')
-const config = require('../server/config')
-
-function exec(command, options) {
-  return new Promise((resolve, reject) => {
-    childProcess
-      .exec(command, options, function (error, stdout, stderr) {
-        if (error) {
-          reject(stderr)
-        } else {
-          resolve(stdout)
-        }
-      })
-  })
-}
-
-/**
- * Gets external peerDeps that shouldn't be a
- * part of the build in the format -
- * {  peerDep: 'peerDep' }
- */
-function getExternals(packageName) {
-  const externals = {}
-  const packageJSONPath = path.join(config.tmp, 'node_modules', packageName, 'package.json')
-  const packageJSON = require(packageJSONPath)
-
-  if (packageJSON.peerDependencies) {
-    Object.keys(packageJSON.peerDependencies)
-      .forEach(peerDep => {
-        externals[peerDep] = peerDep
-      })
-  }
-  return externals
-}
 
 /**
  * Given a package name and optionally a version
@@ -80,4 +45,4 @@ async function resolvePackage({ scoped, name, version }) {
   }
 }
 
-module.exports = { exec, getExternals, resolvePackage }
+module.exports = { resolvePackage }

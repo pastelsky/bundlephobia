@@ -4,6 +4,7 @@ const opbeat = require('opbeat').start({
   loglevel: 'warning',
 })
 const next = require('next')
+const fetch = require('node-fetch')
 const firebase = require('firebase')
 const workerpool = require('workerpool')
 const debug = require('debug')('bp:request')
@@ -17,9 +18,10 @@ const compress = require('koa-compress')
 const cacheControl = require('koa-cache-control')
 
 const Cache = require('./utils/cache.utils')
-const { parsePackageString } = require('./utils')
+const { parsePackageString } = require('./utils/common.utils')
 const FirebaseUtils = require('./utils/firebase.utils')
 const { resolvePackage } = require('./utils/server.utils')
+const CustomError = require('./server/CustomError')
 
 const config = require('./server/config')
 
@@ -83,6 +85,7 @@ app.prepare()
         const {
           package: packageString,
           record,
+          force,
         } = ctx.query
         debug('Package %s', packageString)
 
@@ -92,24 +95,39 @@ app.prepare()
           ctx.state.package = { name, version }
           debug('resolved to %s@%s', name, version)
 
-          const isCached = await ctx.cashed()
-          if (isCached) {
-            firebaseUtils.setRecentSearch(name, { name, version })
-            return
+          if (!force) {
+            const isCached = await ctx.cashed()
+            if (isCached) {
+              firebaseUtils.setRecentSearch(name, { name, version })
+              return
+            }
           }
 
-          const { size, gzip } =
-            await pool.exec('getPackageSize', [packageString, name])
-              .timeout(config.WORKER_TIMEOUT)
+          let result
 
-          pool.clear()
-          ctx.body = { scoped, name, version, size, gzip }
+          if (process.env.AWS_LAMBDA_ENDPOINT) {
+            result = await fetch(`${process.env.AWS_LAMBDA_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
+              .then(async res => {
+                if (!res.ok) {
+                  throw new CustomError('BuildError', await res.json())
+                } else {
+                  return res.json()
+                }
+              })
+          } else {
+            result = await pool.exec('getPackageStats', [packageString, name])
+              .timeout(config.WORKER_TIMEOUT)
+            pool.clear()
+          }
+
+          ctx.body = { scoped, name, version, ...result }
 
           if (record === 'true') {
             firebaseUtils.setRecentSearch(name, { name, version })
           }
         } catch (err) {
           opbeat.captureError(err, { request: ctx.req })
+          console.error(err)
 
           if (err instanceof TimeoutError) {
             ctx.status = 503
@@ -154,7 +172,6 @@ app.prepare()
               break
 
             case 'EntryPointError':
-              console.log('matched entry point error')
               ctx.status = 500
               ctx.body = {
                 error: {
