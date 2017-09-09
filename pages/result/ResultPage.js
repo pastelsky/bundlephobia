@@ -44,6 +44,17 @@ export default class ResultPage extends PureComponent {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    if(this.props.query.p !== nextProps.query.p) {
+      Analytics.pageview(window.location.pathname)
+      const { url: { query } } = this.props
+
+      if (query.p && query.p.trim()) {
+        this.handleSearchSubmit(query.p.trim())
+      }
+    }
+  }
+
   fetchResults = (packageString) => {
     const startTime = Date.now()
 
@@ -61,14 +72,14 @@ export default class ResultPage extends PureComponent {
         Analytics.event({
           category: 'Search',
           action: 'Search Success',
-          label: packageString,
+          label: packageString.replace(/@/g, '[at]'),
         })
 
         Analytics.timing({
           category: 'Search',
           variable: 'result',
           value: Date.now() - startTime,
-          label: packageString,
+          label: packageString.replace(/@/g, '[at]'),
         });
       })
       .catch(err => {
@@ -81,7 +92,7 @@ export default class ResultPage extends PureComponent {
         Analytics.event({
           category: 'Search',
           action: 'Search Failure',
-          label: packageString,
+          label: packageString.replace(/@/g, '[at]'),
         })
 
         Analytics.exception({
@@ -108,7 +119,7 @@ export default class ResultPage extends PureComponent {
     Analytics.event({
       category: 'Search',
       action: 'Searched',
-      label: packageString,
+      label: packageString.replace(/@/g, '[at]'),
     })
 
     this.setState({
@@ -162,7 +173,7 @@ export default class ResultPage extends PureComponent {
     Analytics.event({
       category: 'Graph',
       action: reading.disabled ? 'Graph Disabled Bar Click' : 'Graph Bar Click',
-      label: packageString,
+      label: packageString.replace(/@/g, '[at]'),
     })
   }
 
@@ -235,7 +246,7 @@ export default class ResultPage extends PureComponent {
                 </code>
                   &nbsp;field. You can get smaller sizes with
                   &nbsp;
-                  <a href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
+                  <a target="_blank" href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
                 </span>
               </div>
             )

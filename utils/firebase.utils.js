@@ -110,12 +110,23 @@ class FirebaseUtils {
 
   getRecentSearches(limit = 10) {
     const searches = this.firebase.database().ref().child('searches-v2')
+    const recentSearches = {}
 
     return searches
       .orderByChild('lastSearched')
       .limitToLast(limit)
       .once('value')
       .then(snapshot => snapshot.val())
+      .then(result => {
+        if (!result) {
+          return recentSearches
+        }
+
+        Object.keys(result).forEach(search => {
+          recentSearches[decodeFirebaseKey(search)] = recentSearches[search]
+        })
+        return recentSearches
+      })
   }
 
   async getDailySearches() {

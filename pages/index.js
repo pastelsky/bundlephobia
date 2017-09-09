@@ -15,7 +15,7 @@ export default class Home extends PureComponent {
     Analytics.event({
       category: 'Search',
       action: 'Searched',
-      label: value.trim(),
+      label: value.trim().replace(/@/g, '[at]'),
     })
 
     Router.push(`/result?p=${value.trim()}`)
