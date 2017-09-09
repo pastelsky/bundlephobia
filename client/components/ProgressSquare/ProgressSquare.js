@@ -46,7 +46,7 @@ export default class ProgressSquare extends Component {
       resolving: 3 + Math.random() * 2,
       building: 5 + Math.random() * 3,
       minifying: 3 + Math.random() * 2,
-      calculating: 0,
+      calculating: 20,
     }
 
     const order = [
