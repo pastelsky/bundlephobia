@@ -1,6 +1,6 @@
 {
   "name": "bundlephobia",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Find the cost of adding new frontend dependencies",
   "main": "index.js",
   "author": "Shubham Kanodia <shubham.kanodia10@gmail.com>",
