@@ -10,6 +10,7 @@ import Router from 'next/router'
 import Link from 'next/link'
 import isEmptyObject from 'is-empty-object'
 import sortBy from 'lodash.sortby'
+import { parsePackageString } from 'utils/common.utils'
 import Stat from './Stat'
 
 import API from 'client/api'
@@ -34,9 +35,9 @@ export default class ResultPage extends PureComponent {
     TWO_G: 30,     // 2G Edge
     THREE_G: 50    // Emerging markets 3G
   }
+  i = 0
 
   componentDidMount() {
-    Analytics.pageview(window.location.pathname)
     const { url: { query } } = this.props
 
     if (query.p && query.p.trim()) {
@@ -45,13 +46,18 @@ export default class ResultPage extends PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
-    if(this.props.query.p !== nextProps.query.p) {
-      Analytics.pageview(window.location.pathname)
-      const { url: { query } } = this.props
+    const { url: { query } } = this.props
+    const { url: { query: nextQuery } } = nextProps
 
-      if (query.p && query.p.trim()) {
-        this.handleSearchSubmit(query.p.trim())
-      }
+    if (!nextQuery || !nextQuery.p.trim()) {
+      return
+    }
+
+    const currentPackage = parsePackageString(query.p)
+    const nextPackage = parsePackageString(nextQuery.p)
+
+    if (currentPackage.name !== nextPackage.name && (this.i++ < 5)) {
+      this.handleSearchSubmit(nextQuery.p.trim())
     }
   }
 
@@ -211,7 +217,8 @@ export default class ResultPage extends PureComponent {
               </Link>
             </section>
             <section className="result-header--right-section">
-              <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
+              <a target="_blank"
+                 href="https://github.com/pastelsky/bundlephobia">
                 <GithubLogo />
               </a>
             </section>
@@ -246,7 +253,8 @@ export default class ResultPage extends PureComponent {
                 </code>
                   &nbsp;field. You can get smaller sizes with
                   &nbsp;
-                  <a target="_blank" href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
+                  <a target="_blank"
+                     href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
                 </span>
               </div>
             )

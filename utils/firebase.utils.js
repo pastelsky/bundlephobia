@@ -123,7 +123,7 @@ class FirebaseUtils {
         }
 
         Object.keys(result).forEach(search => {
-          recentSearches[decodeFirebaseKey(search)] = recentSearches[search]
+          recentSearches[decodeFirebaseKey(search)] = result[search]
         })
         return recentSearches
       })
