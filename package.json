@@ -47,7 +47,7 @@
     "workerpool": "^2.2.4"
   },
   "scripts": {
-    "dev": "node index",
+    "dev": "DEBUG=bp:* node index",
     "build": "next build",
     "start": "NODE_ENV=production DEBUG=bp:* node --optimize_for_size --max_old_space_size=460 index",
     "prod": "yarn run build && yarn start",
