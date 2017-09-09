@@ -56,9 +56,21 @@
   align-items: center;
   justify-content: center;
 
-
   @media screen and (max-width: 40em) {
     padding: 0 $global-spacing * 2;
+  }
+}
+
+.result-header__search-input {
+  width: 45vw;
+  max-width: 580px;
+
+  @media screen and (max-width: 48em) {
+    width: 70vw;
+  }
+
+  @media screen and (max-width: 40em) {
+    width: 85vw;
   }
 }
 
