@@ -12,6 +12,7 @@ const { TimeoutError } = require('workerpool/lib/Promise')
 
 const Koa = require('koa')
 const cors = require('kcors')
+const proxy = require('koa-proxy')
 const serve = require('koa-static')
 const koaCache = require('koa-cash')
 const Router = require('koa-router')
@@ -63,6 +64,11 @@ app.prepare()
 
 
     server.use(serve('./assets/public'))
+
+    server.use(proxy({
+      match: /^\/-\/search/,
+      host: 'https://www.npmjs.com',
+    }));
 
     server.use(koaCache({
       async get(key) {
