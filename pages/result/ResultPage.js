@@ -134,7 +134,7 @@ export default class ResultPage extends PureComponent {
       resultsPromiseState: 'pending',
     })
 
-    Router.replace(`/result?p=${packageString}`)
+    Router.push(`/result?p=${packageString}`)
 
     this.fetchResults(packageString)
     this.fetchHistory(packageString)
