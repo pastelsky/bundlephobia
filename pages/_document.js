@@ -18,13 +18,14 @@ export default class MyDocument extends Document {
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
         <title>
-          BundlePhobia | find the cost of adding a npm package to your bundle
+          BundlePhobia | cost of adding a npm package
         </title>
         <meta name="application-name" content="BundlePhobia" />
         <meta
           name="description"
-          content="find the performance impact of adding a npm package to your frontend bundle"
+          content="Bundlephobia helps you find the performance impact of adding a npm package to your front-end bundle"
         />
+        <link rel="canonical" href="https://bundlephobia.com" />
         <link
           href="https://fonts.googleapis.com/css?family=Source+Code+Pro:300,400,600"
           rel="stylesheet"
@@ -51,6 +52,16 @@ export default class MyDocument extends Document {
         <meta name="apple-mobile-web-app-title" content="BundlePhobia" />
         <meta name="application-name" content="BundlePhobia" />
         <meta name="theme-color" content="#212121" />
+
+        <meta property="og:title" content="BundlePhobia" />
+        <meta property="og:description"
+              content="Find the performance impact of adding a npm package to your bundle." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://bundlephobia.com" />
+        <meta property="og:image"
+              content="https://s26.postimg.org/xpl91y8op/Group_13.png" />
+        <meta property="twitter:creator" content="@_pastelsky" />
+
         <script
           dangerouslySetInnerHTML={ {
             __html: `
