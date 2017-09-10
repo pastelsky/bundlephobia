@@ -21,7 +21,7 @@
   @include font-size-md;
   font-family: $font-family-code;
   letter-spacing: -1px;
-  font-weight: 100;
+  font-weight: $font-weight-thin;
   color: #777;
   margin-top: $global-spacing;
   text-align: center;
