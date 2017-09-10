@@ -184,6 +184,18 @@ app.prepare()
               }
               break
 
+            case 'MissingDependencyError':
+              ctx.status = 500
+              ctx.body = {
+                error: {
+                  code: 'MissingDependencyError',
+                  message: `Package uses <code>\`${err.extra.missingModule}\`</code>, ` +
+                  'but does not specify it<br /> either as a dependency or a peer dependency',
+                  details: err,
+                },
+              }
+              break
+
             case 'BuildError':
             default:
               ctx.status = 500

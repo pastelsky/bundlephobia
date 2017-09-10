@@ -4689,13 +4689,14 @@ p-map@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/p-map/-/p-map-1.1.1.tgz#05f5e4ae97a068371bc2a5cc86bfbdbc19c4ae7a"
 
-package-build-stats@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/package-build-stats/-/package-build-stats-1.0.3.tgz#32a63a1d84d9c6fce5c327362b8a1c45665f007d"
+package-build-stats@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/package-build-stats/-/package-build-stats-1.2.0.tgz#02726391e10d7285edfbf73c0536c7dbd71cc419"
   dependencies:
     autoprefixer "^7.1.3"
     css-loader "^0.28.7"
     debug "^3.0.1"
+    escape-string-regexp "^1.0.5"
     extract-text-webpack-plugin "^3.0.0"
     memory-fs "^0.4.1"
     mkdir-promise "^1.0.0"
