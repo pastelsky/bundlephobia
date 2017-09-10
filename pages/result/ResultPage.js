@@ -316,10 +316,13 @@ export default class ResultPage extends PureComponent {
                 <h2 className="result-error__code">
                   { resultsError.error.code }
                 </h2>
-                <p className="result-error__message">
-                  { resultsError.error ? resultsError.error.message :
-                    'Something went wrong!' }
-                </p>
+                <p
+                  className="result-error__message"
+                  dangerouslySetInnerHTML={ {
+                    __html: resultsError.error ? resultsError.error.message :
+                      'Something went wrong!',
+                  } }
+                />
               </div>
             )
           }
