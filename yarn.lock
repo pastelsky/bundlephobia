@@ -1369,6 +1369,12 @@ clone@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.2.tgz#260b7a99ebb1edfe247538175f783243cb19d149"
 
+co-request@^0.2.0:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/co-request/-/co-request-0.2.1.tgz#6428c002ad4229b3eda6725022aeccf273bee3fb"
+  dependencies:
+    request "*"
+
 co@^4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/co/-/co-4.6.0.tgz#6ea6bdf3d853ae54ccb8e47bfa0bf3f9031fb184"
@@ -2890,6 +2896,10 @@ iconv-lite@0.4.13:
   version "0.4.13"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.13.tgz#1f88aba4ab0b1508e8312acc39345f36e992e2f2"
 
+iconv-lite@^0.2.11:
+  version "0.2.11"
+  resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.2.11.tgz#1ce60a3a57864a292d1321ff4609ca4bb965adc8"
+
 iconv-lite@~0.4.13:
   version "0.4.18"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.18.tgz#23d8656b16aae6742ac29732ea8f0336a4789cf2"
@@ -3695,6 +3705,13 @@ koa-convert@^1.2.0:
 koa-is-json@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/koa-is-json/-/koa-is-json-1.0.0.tgz#273c07edcdcb8df6a2c1ab7d59ee76491451ec14"
+
+koa-proxy@^0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/koa-proxy/-/koa-proxy-0.9.0.tgz#4fd13b0f2eea9be097445bf7b7b4398856a22ef6"
+  dependencies:
+    co-request "^0.2.0"
+    iconv-lite "^0.2.11"
 
 koa-router@^7.2.1:
   version "7.2.1"
@@ -5826,7 +5843,7 @@ repeating@^2.0.0:
   dependencies:
     is-finite "^1.0.0"
 
-request@2, request@^2.79.0, request@^2.81.0:
+request@*, request@2, request@^2.79.0, request@^2.81.0:
   version "2.81.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.81.0.tgz#c6928946a0e06c5f8d6f8a9333469ffda46298a0"
   dependencies:

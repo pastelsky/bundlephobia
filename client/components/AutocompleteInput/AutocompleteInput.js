@@ -1,9 +1,8 @@
 import React, { PureComponent } from 'react'
+import API from 'client/api'
 import AutoComplete from 'react-autocomplete'
 import cx from 'classnames'
 import stylesheet from './AutocompleteInput.scss'
-
-import fetch from 'unfetch'
 import debounce from 'debounce'
 
 import { parsePackageString } from 'utils/common.utils'
@@ -19,30 +18,11 @@ export default class AutocompleteInput extends PureComponent {
     suggestions: [],
   }
 
-  suggestionComparator(packageA, packageB) {
-    // Rank closely matching packages followed
-    // by most popular ones
-    if (
-      Math.abs(
-        Math.log(packageB.searchScore) -
-        Math.log(packageA.searchScore),
-      ) > 1
-    ) {
-      return packageB.searchScore - packageA.searchScore
-    } else {
-      return packageB.score.detail.popularity -
-        packageA.score.detail.popularity
-    }
-  }
-
   getSuggestions = debounce(
     value => {
-      fetch(`https://api.npms.io/v2/search/suggestions?q=${value}`)
-        .then(result => result.json())
+      API.getSuggestions(value)
         .then(result => {
-          this.setState({
-            suggestions: result.sort(this.suggestionComparator),
-          })
+          this.setState({ suggestions: result })
         })
     },
     200,
@@ -86,8 +66,10 @@ export default class AutocompleteInput extends PureComponent {
     const { className, containerClass } = this.props
     const { suggestions, value } = this.state
     const { name, version } = parsePackageString(value)
-    const baseFontSize = (typeof window !== 'undefined'  && window.innerWidth < 640) ? 22 : 35
-    const maxFullSizeChars = (typeof window !== 'undefined'  && window.innerWidth < 640) ? 15 : 20
+    const baseFontSize = (typeof window !== 'undefined' && window.innerWidth < 640) ?
+      22 : 35
+    const maxFullSizeChars = (typeof window !== 'undefined' && window.innerWidth < 640) ?
+      15 : 20
     const searchFontSize = value.length < maxFullSizeChars ? null :
       `${baseFontSize - (value.length - maxFullSizeChars) * 0.8}px`
 
