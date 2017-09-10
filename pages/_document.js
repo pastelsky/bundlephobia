@@ -59,7 +59,7 @@ export default class MyDocument extends Document {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://bundlephobia.com" />
         <meta property="og:image"
-              content="https://s26.postimg.org/xpl91y8op/Group_13.png" />
+              content="https://s26.postimg.org/4s64v24c9/Artboard_4.png" />
         <meta property="twitter:creator" content="@_pastelsky" />
 
         <script
