@@ -20,13 +20,13 @@
 - Reports historical trends
 
 <p align="center">
-    <img src="https://s26.postimg.org/6yfqxgsex/ezgif-1-6c5c883f13.gif" width="600" height="300"/>
+    <img src="https://s26.postimg.org/6yfqxgsex/ezgif-1-6c5c883f13.gif" width="600" height="auto"/>
 </p>
 
 
 ## Running locally
 ### Commands
-| script        | descriptioj  |
+| script        | description  |
 | ------------- |:-------------|
 | `yarn run dev`  | Start a development server locally |
 | `yarn run build`    | Build for production      |
