@@ -32,7 +32,7 @@
     "node-fetch": "^1.7.2",
     "normalize.css": "^7.0.0",
     "opbeat": "^4.15.1",
-    "package-build-stats": "^1.0.3",
+    "package-build-stats": "^1.2.0",
     "promise.series": "^0.2.0",
     "prop-types": "^15.5.10",
     "react": "^15.6.1",
