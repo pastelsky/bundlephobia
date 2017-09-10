@@ -16,6 +16,7 @@ export default class Home extends Component {
     suggestions: [],
     rotation: 0,
     results: {},
+    showBanner: true,
   }
 
   componentDidMount() {
@@ -117,7 +118,7 @@ export default class Home extends Component {
           rotation: 0,
         })
 
-        history.replaceState(0,0,`/?p=${data.package}@${data.version}`);
+        history.replaceState(0, 0, `/?p=${data.package}@${data.version}`);
       })
       .catch(err => {
         this.setState({
@@ -191,78 +192,103 @@ export default class Home extends Component {
   }
 
   render() {
-    const { results, suggestions, value, promiseState, rotation } = this.state
+    const { results, suggestions, value, promiseState, rotation, showBanner } = this.state
     const { name, version } = this.getPackageNameAndVersion(value)
 
     return (
-      <div class={style.home}>
-        <section className={style.searchSection}>
+      <div className={ style.home }>
+        {
+          showBanner && (
+            <div className={ style.banner }>
+              Test drive a new and improved beta at bundlephobia.com
+              <a href="https://github.com/pastelsky/bundlephobia/releases/tag/v1.0.1">
+                what's new →
+              </a>
+
+              <a href="https://bundlephobia.com">
+                go there →
+              </a>
+
+              <svg className={ style.closeBannerIcon }
+                   onClick={ () => { this.setState({ showBanner: false })} }
+                   fill="#fff"
+                   height="24"
+                   viewBox="0 0 24 24"
+                   width="24"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                <path d="M0 0h24v24H0z" fill="none" />
+              </svg>
+            </div>
+          )
+        }
+        <section className={ style.searchSection }>
           <h1> What is the cost <br /> of my npm package ? </h1>
           <form
-            onSubmit={this.handleSubmit}
+            onSubmit={ this.handleSubmit }
           >
-            <div className={style.searchInputContainer}>
+            <div className={ style.searchInputContainer }>
               <AutoComplete
-                getItemValue={item => item.package.name}
-                inputProps={{
+                getItemValue={ item => item.package.name }
+                inputProps={ {
                   placeholder: 'find package',
                   className: style.searchInput,
                   autocorrect: 'off',
                   autocapitalize: 'off',
-                }}
-                onChange={this.handleInputChange}
-                autoHighlight={false}
-                ref={s => this.searchInput = s}
-                value={value}
-                items={suggestions}
-                onSelect={(value, item) => {
+                } }
+                onChange={ this.handleInputChange }
+                autoHighlight={ false }
+                ref={ s => this.searchInput = s }
+                value={ value }
+                items={ suggestions }
+                onSelect={ (value, item) => {
                   this.setState({ value, suggestions: [item] })
                   this.handleSubmit()
-                }}
+                } }
                 renderMenu={
                   (items, value, inbuiltStyles) => {
                     return (
                       <div
-                        style={{ minWidth: inbuiltStyles.minWidth }}
+                        style={ { minWidth: inbuiltStyles.minWidth } }
                         className={ style.suggestionsMenu }
-                        children={items}
+                        children={ items }
                       />
                     )
                   }
                 }
-                wrapperStyle={{
+                wrapperStyle={ {
                   display: 'inline-block',
                   width: '100%',
                   position: 'relative',
-                }}
-                renderItem={(item, isHighlighted) => (
+                } }
+                renderItem={ (item, isHighlighted) => (
                   <div
-                    className={cx(style.suggestion, {
+                    className={ cx(style.suggestion, {
                       [style.highlightedSuggestion]: isHighlighted,
-                    })}
+                    }) }
                   >
-                    <div dangerouslySetInnerHTML={{ __html: item.highlight }} />
+                    <div dangerouslySetInnerHTML={ { __html: item.highlight } } />
 
-                    <div className={style.suggestionDescription}>
-                      {item.package.description}
+                    <div className={ style.suggestionDescription }>
+                      { item.package.description }
                     </div>
 
                   </div>
-                )}
+                ) }
               />
-              <div className={style.dummySearchInput}>
-              <span className={style.packageName}>
-                {name}
+              <div className={ style.dummySearchInput }>
+              <span className={ style.packageName }>
+                { name }
               </span>
                 {
                   version !== null && (
-                    <span className={style.atSeparator}>
+                    <span className={ style.atSeparator }>
                 @
               </span>
                   )
                 }
-                <span className={style.packageVersion}>
-                {version}
+                <span className={ style.packageVersion }>
+                { version }
               </span>
               </div>
             </div>
@@ -274,109 +300,109 @@ export default class Home extends Component {
             )
           }
 
-          {promiseState &&
+          { promiseState &&
           promiseState === 'pending' &&
           <ProgressBar
-            isDone={!!results.version}
-            onDone={this.handleProgressDone}
-          />}
+            isDone={ !!results.version }
+            onDone={ this.handleProgressDone }
+          /> }
 
         </section>
-        {promiseState &&
+        { promiseState &&
         promiseState === 'fulfilled' &&
-        <section className={style.displaySection}>
-          <div className={style.guageContainer}>
-            <div className={style.guageMeter}>
-              <div className={style.meterFragmentA} />
+        <section className={ style.displaySection }>
+          <div className={ style.guageContainer }>
+            <div className={ style.guageMeter }>
+              <div className={ style.meterFragmentA } />
               <div
-                className={style.meterFragmentC}
-                style={{
+                className={ style.meterFragmentC }
+                style={ {
                   transform: `rotate(${rotation}deg)`,
-                }}
+                } }
               />
-              <div className={style.meterFragmentB} />
+              <div className={ style.meterFragmentB } />
             </div>
-            <div className={style.gauge}>
+            <div className={ style.gauge }>
               <img
-                className={style.needle}
+                className={ style.needle }
                 src="../../assets/needle.svg"
                 alt=""
-                style={{
+                style={ {
                   transform: `rotate(${rotation - 90}deg)`,
-                }}
+                } }
               />
-              <div className={style.circleOuter}>
-                <div className={style.circleInner} />
+              <div className={ style.circleOuter }>
+                <div className={ style.circleInner } />
               </div>
             </div>
           </div>
 
-          <ul className={style.panelContainer}>
-            <li className={style.panel}>
-              <h2 className={style.panelData}>
+          <ul className={ style.panelContainer }>
+            <li className={ style.panel }>
+              <h2 className={ style.panelData }>
 
-                {prettyBytes(results.size).split(' ')[0]}
+                { prettyBytes(results.size).split(' ')[0] }
 
-                <span className={style.panelUnit}>
-                    {prettyBytes(results.size).split(' ')[1]}
+                <span className={ style.panelUnit }>
+                    { prettyBytes(results.size).split(' ')[1] }
                   </span>
 
               </h2>
 
-              <h4 className={style.panelLabel}> Minified </h4>
+              <h4 className={ style.panelLabel }> Minified </h4>
 
             </li>
-            <li className={style.panel}>
-              <h2 className={style.panelData}>
+            <li className={ style.panel }>
+              <h2 className={ style.panelData }>
 
-                {prettyBytes(results.gzipSize).split(' ')[0]}
+                { prettyBytes(results.gzipSize).split(' ')[0] }
 
-                <span className={style.panelUnit}>
-                    {prettyBytes(results.gzipSize).split(' ')[1]}
+                <span className={ style.panelUnit }>
+                    { prettyBytes(results.gzipSize).split(' ')[1] }
                   </span>
 
               </h2>
 
-              <h4 className={style.panelLabel}> Minified + Gzipped </h4>
+              <h4 className={ style.panelLabel }> Minified + Gzipped </h4>
 
             </li>
 
-            <li className={style.panel}>
-              <h2 className={style.panelData}>
+            <li className={ style.panel }>
+              <h2 className={ style.panelData }>
 
-                {(results.gzipSize / (250 * 1024 / 8)).toFixed(2)}
+                { (results.gzipSize / (250 * 1024 / 8)).toFixed(2) }
 
-                <span className={style.panelUnit}> s </span>
+                <span className={ style.panelUnit }> s </span>
 
               </h2>
 
-              <h4 className={style.panelLabel}>
+              <h4 className={ style.panelLabel }>
                 Download Over 2G
               </h4>
             </li>
-            <li className={style.panel}>
-              <h2 className={style.panelData}>
+            <li className={ style.panel }>
+              <h2 className={ style.panelData }>
 
-                {(results.gzipSize / (400 * 1024 / 8)).toFixed(2)}
+                { (results.gzipSize / (400 * 1024 / 8)).toFixed(2) }
 
-                <span className={style.panelUnit}> s </span>
+                <span className={ style.panelUnit }> s </span>
 
               </h2>
 
-              <h4 className={style.panelLabel}>
+              <h4 className={ style.panelLabel }>
                 Download Over 3G
               </h4>
             </li>
 
-            <li className={style.panel}>
-              <h2 className={style.panelData}> {results.dependencies} </h2>
+            <li className={ style.panel }>
+              <h2 className={ style.panelData }> { results.dependencies } </h2>
 
-              <h4 className={style.panelLabel}>
+              <h4 className={ style.panelLabel }>
                 Dependencies
               </h4>
             </li>
           </ul>
-        </section>}
+        </section> }
       </div>
     )
   }
