@@ -192,11 +192,16 @@ app.prepare()
 
             case 'MissingDependencyError':
               ctx.status = 500
+              const missingModules = err.extra
+                .missingModules
+                .map(module => `\`<code>${module}</code>\``)
+                .join(' and ')
+
               ctx.body = {
                 error: {
                   code: 'MissingDependencyError',
-                  message: `Package uses <code>\`${err.extra.missingModule}\`</code>, ` +
-                  'but does not specify it<br /> either as a dependency or a peer dependency',
+                  message: `Package uses ${missingModules}, ` +
+                  `but does not specify ${missingModules.length > 1 ? 'them' : 'it' }<br /> either as a dependency or a peer dependency`,
                   details: err,
                 },
               }
