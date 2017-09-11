@@ -46,35 +46,37 @@ export default class API {
       }
     }
 
-    return API.get(`/-/search?text=${query}`)
-      .then(result => result.objects
-        .sort(suggestionSort)
-        .map(suggestion => {
-          const name = suggestion.package.name
-          const hasMatch = name.indexOf(query) > -1
-          const startIndex = name.indexOf(query)
-          const endIndex = startIndex + query.length
-          let highlight
 
-          if (hasMatch) {
-            highlight =
-              name.substring(0, startIndex) +
-              '<em>' + name.substring(startIndex, endIndex) + '</em>' +
-              name.substring(endIndex)
-          } else {
-            highlight = name
-          }
+    return API
+      .get(`https://api.npms.io/v2/search/suggestions?q=${query}`)
+      .then(result => result.sort(suggestionSort))
 
-          return {
-            ...suggestion,
-            highlight,
-          }
-        }),
-      )
+    // backup when npms.io is down
 
-    // npms.io seems to be down
-    //return API
-    //  .get(`https://api.npms.io/v2/search/suggestions?q=${query}`)
-    //  .then(result => result.sort(suggestionSort))
+    //return API.get(`/-/search?text=${query}`)
+    //  .then(result => result.objects
+    //    .sort(suggestionSort)
+    //    .map(suggestion => {
+    //      const name = suggestion.package.name
+    //      const hasMatch = name.indexOf(query) > -1
+    //      const startIndex = name.indexOf(query)
+    //      const endIndex = startIndex + query.length
+    //      let highlight
+    //
+    //      if (hasMatch) {
+    //        highlight =
+    //          name.substring(0, startIndex) +
+    //          '<em>' + name.substring(startIndex, endIndex) + '</em>' +
+    //          name.substring(endIndex)
+    //      } else {
+    //        highlight = name
+    //      }
+    //
+    //      return {
+    //        ...suggestion,
+    //        highlight,
+    //      }
+    //    }),
+    //  )
   }
 }
