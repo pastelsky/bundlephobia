@@ -117,7 +117,8 @@ app.prepare()
             result = await fetch(`${process.env.AWS_LAMBDA_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
               .then(async res => {
                 if (!res.ok) {
-                  throw new CustomError('BuildError', await res.json())
+                  const error = await res.json()
+                  throw new CustomError(error.name || 'BuildError', error.originalError, error.extra)
                 } else {
                   return res.json()
                 }
