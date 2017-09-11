@@ -25,7 +25,7 @@ export default class AutocompleteInput extends PureComponent {
           this.setState({ suggestions: result })
         })
     },
-    200,
+    150,
   )
 
   renderSuggestionItem = (item, isHighlighted) => (
