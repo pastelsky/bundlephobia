@@ -44,7 +44,8 @@ app.use(limit({
   //blackList: ['127.0.0.1']
 }))
 
-router.get('*', function (ctx) {
+router.get('/', function (ctx) {
+  ctx.status = 301
   ctx.redirect('https://bundlephobia.com/')
 })
 
@@ -208,23 +209,32 @@ function getPeerDeps(packagePath) {
 }
 
 router.get('/recent', async (ctx) => {
-  const searches = firebase.database().ref().child('searches')
 
-  const snapshot = await searches
-    .orderByChild('time')
-    .limitToLast(Number(ctx.query.limit) || 5)
-    .once('value')
+  ctx.status = 301
+  ctx.redirect('https://bundlephobia.com/api/recent')
 
-  ctx.cacheControl = {
-    maxAge: 0,
-  }
-
-  ctx.status = 200
-  ctx.headers['Content-Type'] = 'application/json; charset=utf-8'
-  ctx.body = snapshot.val()
+  //const searches = firebase.database().ref().child('searches')
+  //
+  //const snapshot = await searches
+  //  .orderByChild('time')
+  //  .limitToLast(Number(ctx.query.limit) || 5)
+  //  .once('value')
+  //
+  //ctx.cacheControl = {
+  //  maxAge: 0,
+  //}
+  //
+  //ctx.status = 200
+  //ctx.headers['Content-Type'] = 'application/json; charset=utf-8'
+  //ctx.body = snapshot.val()
 })
 
 router.get('/package', async (ctx, next) => {
+
+  ctx.status = 301
+  ctx.redirect(`https://bundlephobia.com/api/size?package=${ctx.query.name}`)
+
+  return
   const startTime = now()
 
   const { packageName, version } = await parsePackageString(ctx.query.name)
