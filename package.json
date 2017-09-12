@@ -38,6 +38,7 @@
     "fs-promise": "^2.0.2",
     "isomorphic-fetch": "^2.2.1",
     "koa": "^2.0.0",
+    "koa-better-ratelimit": "^2.1.2",
     "koa-cache-control": "^2.0.0",
     "koa-compress": "^2.0.0",
     "koa-router": "^7.1.0",
