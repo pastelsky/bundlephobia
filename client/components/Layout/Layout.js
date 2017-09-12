@@ -89,7 +89,7 @@ export default class Layout extends Component {
                 to="https://github.com/pastelsky/bundlephobia"
               >
                 <button className="footer__credits-fork-button">
-                  Fork on GitHub
+                  Star on GitHub
                 </button>
               </OutboundLink>
             </div>
