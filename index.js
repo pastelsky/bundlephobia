@@ -103,6 +103,10 @@ app.prepare()
         } = ctx.query
         debug('Package %s', packageString)
 
+        ctx.cacheControl = {
+          maxAge: 15,
+        }
+
         try {
           const { scoped, name, version } = await resolvePackage(parsePackageString(packageString))
 
@@ -208,7 +212,8 @@ app.prepare()
                 error: {
                   code: 'MissingDependencyError',
                   message: `This package (or this version) uses ${missingModules}, ` +
-                  `but does not specify ${missingModules.length > 1 ? 'them' : 'it' }<br /> either as a dependency or a peer dependency`,
+                  `but does not specify ${missingModules.length > 1 ? 'them' :
+                    'it' }<br /> either as a dependency or a peer dependency`,
                   details: err,
                 },
               }
