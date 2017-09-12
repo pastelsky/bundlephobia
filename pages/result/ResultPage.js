@@ -41,7 +41,7 @@ export default class ResultPage extends PureComponent {
     const { url: { query } } = this.props
 
     if (query.p && query.p.trim()) {
-      this.handleSearchSubmit(query.p.trim())
+      this.handleSearchSubmit(query.p)
     }
   }
 
@@ -57,7 +57,7 @@ export default class ResultPage extends PureComponent {
     const nextPackage = parsePackageString(nextQuery.p)
 
     if (currentPackage.name !== nextPackage.name && (this.i++ < 5)) {
-      this.handleSearchSubmit(nextQuery.p.trim())
+      this.handleSearchSubmit(nextQuery.p)
     }
   }
 
@@ -134,10 +134,12 @@ export default class ResultPage extends PureComponent {
       resultsPromiseState: 'pending',
     })
 
-    Router.push(`/result?p=${packageString}`)
+    const normalizedQuery = packageString.trim().toLowerCase()
 
-    this.fetchResults(packageString)
-    this.fetchHistory(packageString)
+    Router.push(`/result?p=${normalizedQuery}`)
+
+    this.fetchResults(normalizedQuery)
+    this.fetchHistory(normalizedQuery)
   }
 
   handleProgressDone = () => {
