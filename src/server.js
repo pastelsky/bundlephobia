@@ -3,6 +3,7 @@
 const Koa = require('koa')
 const app = new Koa()
 const router = require('koa-router')()
+const limit = require('koa-better-ratelimit')
 const exec = require('child_process').exec
 const fs = require('fs-promise')
 const path = require('path')
@@ -36,6 +37,12 @@ firebase.initializeApp(firebaseConfig)
 const cache = new Cache(firebase)
 
 app.use(cacheControl())
+
+app.use(limit({
+  duration: 1000 * 60 * 3, // 3 mins
+  max: 50
+  //blackList: ['127.0.0.1']
+}))
 
 app.use(compress({
   filter: function (contentType) {
