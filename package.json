@@ -20,6 +20,7 @@
     "is-empty-object": "^1.1.1",
     "kcors": "2",
     "koa": "^2.3.0",
+    "koa-better-ratelimit": "^2.1.2",
     "koa-cache-control": "^2.0.0",
     "koa-cash": "3.0.1-0",
     "koa-compress": "^2.0.0",
