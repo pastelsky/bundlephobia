@@ -44,6 +44,10 @@ app.use(limit({
   //blackList: ['127.0.0.1']
 }))
 
+router.get('*', function (ctx) {
+  ctx.redirect('https://bundlephobia.com/')
+})
+
 app.use(compress({
   filter: function (contentType) {
     return /(text|json|javascript|svg)/.test(contentType)
