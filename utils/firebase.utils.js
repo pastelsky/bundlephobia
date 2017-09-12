@@ -66,7 +66,9 @@ class FirebaseUtils {
       .child(encodeFirebaseKey(name))
       .limitToLast(limit)
 
-    const response = await fetch(`https://registry.yarnpkg.com/${name}`)
+    // Scoped packages have a / which needs to be escaped (but not the @)!
+    const normalizedName = name.replace(/\//g, '%2F')
+    const response = await fetch(`https://registry.yarnpkg.com/${normalizedName}`)
     const packageInfo = await response.json()
     const versions = Object.keys(packageInfo.versions)
 
