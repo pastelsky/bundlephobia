@@ -6,6 +6,7 @@ const opbeat = require('opbeat').start({
 const next = require('next')
 const fetch = require('node-fetch')
 const firebase = require('firebase')
+const limit = require('koa-better-ratelimit')
 const workerpool = require('workerpool')
 const debug = require('debug')('bp:request')
 const { TimeoutError } = require('workerpool/lib/Promise')
@@ -53,6 +54,11 @@ app.prepare()
 
     server.use(cacheControl())
     server.use(cors())
+    server.use(limit({
+      duration: 1000 * 60 * 3, //3 mins
+      max: 40,
+      //blackList: ['127.0.0.1']
+    }));
 
     server.use(compress({
       filter: function (contentType) {

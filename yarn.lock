@@ -2977,6 +2977,10 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
+ipchecker@*:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/ipchecker/-/ipchecker-0.0.2.tgz#9606ebf7bb3cd23419b149a704e17c1532f0b679"
+
 is-absolute-url@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/is-absolute-url/-/is-absolute-url-2.1.0.tgz#50530dfb84fcc9aa7dbe7852e83a37b93b9f2aa6"
@@ -3661,6 +3665,12 @@ kind-of@^4.0.0:
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-4.0.0.tgz#20813df3d712928b207378691a45066fae72dd57"
   dependencies:
     is-buffer "^1.1.5"
+
+koa-better-ratelimit@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/koa-better-ratelimit/-/koa-better-ratelimit-2.1.2.tgz#cf884e332ad00ccf85cc67dab2bb8e29775a290d"
+  dependencies:
+    ipchecker "*"
 
 koa-cache-control@^2.0.0:
   version "2.0.0"
