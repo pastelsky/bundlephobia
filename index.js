@@ -118,6 +118,7 @@ app.prepare()
               .then(async res => {
                 if (!res.ok) {
                   const error = await res.json()
+                  console.log('WOARD', res.status)
                   throw new CustomError(error.name || 'BuildError', error.originalError, error.extra)
                 } else {
                   return res.json()
@@ -201,7 +202,7 @@ app.prepare()
               ctx.body = {
                 error: {
                   code: 'MissingDependencyError',
-                  message: `Package uses ${missingModules}, ` +
+                  message: `This package (or this version) uses ${missingModules}, ` +
                   `but does not specify ${missingModules.length > 1 ? 'them' : 'it' }<br /> either as a dependency or a peer dependency`,
                   details: err,
                 },
