@@ -9,6 +9,17 @@ export default class API {
     })
       .then(res => {
         if (!res.ok) {
+          // Heroku might have timed out / shut down
+          if (res.status === 503) {
+            return Promise.reject({
+                error: {
+                  code: 'TimeoutError',
+                  message: 'This is taking unusually long. Check back in a couple of minutes?'
+                },
+              },
+            )
+          }
+
           return res.json()
             .then(err => Promise.reject(err))
         }
