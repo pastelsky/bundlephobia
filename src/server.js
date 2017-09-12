@@ -40,7 +40,7 @@ app.use(cacheControl())
 
 app.use(limit({
   duration: 1000 * 60 * 3, // 3 mins
-  max: 50
+  max: 50,
   //blackList: ['127.0.0.1']
 }))
 
@@ -56,7 +56,11 @@ app
   .use(router.routes())
   .use(router.allowedMethods())
 
-router.get('/.well-known/acme-challenge/ZoHfUtpAm8bRntTdwd5GMIVq5_Wu-GKdaSyIV2cRjzw', function(ctx) {
+router.get('*', function (ctx) {
+  ctx.redirect('https://bundlephobia.com/')
+})
+
+router.get('/.well-known/acme-challenge/ZoHfUtpAm8bRntTdwd5GMIVq5_Wu-GKdaSyIV2cRjzw', function (ctx) {
   ctx.body = 'ZoHfUtpAm8bRntTdwd5GMIVq5_Wu-GKdaSyIV2cRjzw.MgmPPtzLPzFo6ciewhZh_rGDl4INQ6voqSDAeDbjBCQ'
 })
 
@@ -269,7 +273,7 @@ router.get('/package', async (ctx, next) => {
     // @TODO: ADD some sort of queuing here, or it's gonna suck.
     try {
       await execPromise(`yarn add ${ctx.query.name} --ignore-flags --exact`, { cwd: './tmp' })
-    } catch(err) {
+    } catch (err) {
       console.log(err)
     }
     const rootPath = path.join(__dirname, '..')
@@ -299,7 +303,7 @@ router.get('/package', async (ctx, next) => {
             size: fileSize,
             gzipSize: gzipSize,
           },
-          getDependencies(packagePath)
+          getDependencies(packagePath),
         )
 
         replyWithSuccess(dataToSend)
