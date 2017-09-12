@@ -124,7 +124,6 @@ app.prepare()
               .then(async res => {
                 if (!res.ok) {
                   const error = await res.json()
-                  console.log('WOARD', res.status)
                   throw new CustomError(error.name || 'BuildError', error.originalError, error.extra)
                 } else {
                   return res.json()
