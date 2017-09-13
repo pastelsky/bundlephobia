@@ -1,5 +1,6 @@
 .next
 .env
+build
 out
 
 # package directories
