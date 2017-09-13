@@ -6,7 +6,7 @@ const opbeat = require('opbeat').start({
 const next = require('next')
 const fetch = require('node-fetch')
 const firebase = require('firebase')
-const limit = require('koa-better-ratelimit')
+const limit = require('./server/rate-limit-middleware')
 const workerpool = require('workerpool')
 const debug = require('debug')('bp:request')
 const { TimeoutError } = require('workerpool/lib/Promise')
@@ -56,7 +56,7 @@ app.prepare()
     server.use(cors())
     server.use(limit({
       duration: 1000 * 60 * 3, //3 mins
-      max: 40,
+      max: 30,
       //blackList: ['127.0.0.1']
     }));
 
