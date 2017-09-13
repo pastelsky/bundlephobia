@@ -47,18 +47,29 @@ const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
+const CACHE_CONFIG = {
+  PUBLIC_ASSETS: dev ? 0 : 24 * 60 * 60,
+  RECENTS_API: dev ? 0 : 20 * 60,
+  PACKAGE_HISTORY_API: dev ? 0 : 60 * 60,
+  SIZE_API: dev ? 0 : 60 * 60,
+}
+
 app.prepare()
   .then(() => {
     const server = new Koa()
     const router = new Router()
 
     server.use(cacheControl())
+
     server.use(cors())
-    server.use(limit({
-      duration: 1000 * 60 * 3, //3 mins
-      max: 30,
-      //blackList: ['127.0.0.1']
-    }));
+
+    if (!dev) {
+      server.use(limit({
+        duration: 1000 * 60 * 3, // 3 mins
+        max: 35,
+        //blackList: ['127.0.0.1']
+      }));
+    }
 
     server.use(compress({
       filter: function (contentType) {
@@ -68,8 +79,9 @@ app.prepare()
       flush: require('zlib').Z_SYNC_FLUSH,
     }))
 
-
-    server.use(serve('./assets/public'))
+    server.use(serve('./assets/public', {
+      maxage: CACHE_CONFIG.PUBLIC_ASSETS * 1000,
+    }))
 
     server.use(proxy({
       match: /^\/-\/search/,
@@ -102,9 +114,10 @@ app.prepare()
           force,
         } = ctx.query
         debug('Package %s', packageString)
+        console.log('IP IS', ctx.req.headers['cf-connecting-ip'])
 
         ctx.cacheControl = {
-          maxAge: 15,
+          maxAge: CACHE_CONFIG.SIZE_API,
         }
 
         try {
@@ -236,13 +249,12 @@ app.prepare()
     )
 
     router.get('/api/recent', async (ctx) => {
-      ctx.cacheControl = {
-        maxAge: 15,
-      }
-
       try {
+        ctx.cacheControl = {
+          maxAge: CACHE_CONFIG.RECENTS_API,
+        }
         ctx.body = await firebaseUtils
-          .getRecentSearches(Number(ctx.query.limit))
+          .getRecentSearches(ctx.query.limit)
       } catch (err) {
         opbeat.captureError(err)
         ctx.status = 422
@@ -253,6 +265,9 @@ app.prepare()
     router.get('/api/package-history', async (ctx) => {
       const { name } = parsePackageString(ctx.query.package)
       try {
+        ctx.cacheControl = {
+          maxAge: CACHE_CONFIG.PACKAGE_HISTORY_API,
+        }
         ctx.body = await firebaseUtils.getPackageHistory(name)
       } catch (err) {
         opbeat.captureError(err)
