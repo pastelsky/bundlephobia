@@ -19,7 +19,7 @@ const defaults = {
  * @param {Object} options
  * @api public
  */
-module.export = function betterlimit(options = {}) {
+module.exports = function betterlimit(options = {}) {
   const db = {}
 
   for (const key in defaults) {
