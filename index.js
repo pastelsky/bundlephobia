@@ -4,6 +4,7 @@ const opbeat = require('opbeat').start({
   loglevel: 'warning',
 })
 const next = require('next')
+const semver = require('semver')
 const fetch = require('node-fetch')
 const firebase = require('firebase')
 const limit = require('./server/rate-limit-middleware')
@@ -51,7 +52,8 @@ const CACHE_CONFIG = {
   PUBLIC_ASSETS: dev ? 0 : 24 * 60 * 60,
   RECENTS_API: dev ? 0 : 20 * 60,
   PACKAGE_HISTORY_API: dev ? 0 : 60 * 60,
-  SIZE_API: dev ? 0 : 60 * 60,
+  SIZE_API_DEFAULT: dev ? 0 : 60 * 2,
+  SIZE_API_HAS_VERSION: dev ? 0 : 12 * 60 * 60,
 }
 
 app.prepare()
@@ -116,12 +118,16 @@ app.prepare()
         debug('Package %s', packageString)
         console.log('IP IS', ctx.req.headers['cf-connecting-ip'])
 
+        const parsedPackage = parsePackageString(packageString)
+
         ctx.cacheControl = {
-          maxAge: CACHE_CONFIG.SIZE_API,
+          maxAge: semver.valid(parsedPackage.version) ?
+            CACHE_CONFIG.SIZE_API_HAS_VERSION :
+            (force ? 0 : CACHE_CONFIG.SIZE_API_DEFAULT),
         }
 
         try {
-          const { scoped, name, version } = await resolvePackage(parsePackageString(packageString))
+          const { scoped, name, version } = await resolvePackage(parsedPackage)
 
           ctx.state.package = { name, version }
           debug('resolved to %s@%s', name, version)
