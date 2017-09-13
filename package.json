@@ -6,7 +6,7 @@
   "author": "Shubham Kanodia <shubham.kanodia10@gmail.com>",
   "license": "MIT",
   "engines": {
-    "node": "8.4.0",
+    "node": ">=8.4.0",
     "npm": "5.4.x"
   },
   "dependencies": {
@@ -17,6 +17,7 @@
     "dotenv": "^4.0.0",
     "firebase": "^4.2.0",
     "github": "^10.0.0",
+    "ipchecker": "^0.0.2",
     "is-empty-object": "^1.1.1",
     "kcors": "2",
     "koa": "^2.3.0",
