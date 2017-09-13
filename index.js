@@ -120,12 +120,6 @@ app.prepare()
 
         const parsedPackage = parsePackageString(packageString)
 
-        ctx.cacheControl = {
-          maxAge: semver.valid(parsedPackage.version) ?
-            CACHE_CONFIG.SIZE_API_HAS_VERSION :
-            (force ? 0 : CACHE_CONFIG.SIZE_API_DEFAULT),
-        }
-
         try {
           const { scoped, name, version } = await resolvePackage(parsedPackage)
 
@@ -158,6 +152,12 @@ app.prepare()
             pool.clear()
           }
 
+          ctx.cacheControl = {
+            maxAge: semver.valid(parsedPackage.version) ?
+              CACHE_CONFIG.SIZE_API_HAS_VERSION :
+              (force ? 0 : CACHE_CONFIG.SIZE_API_DEFAULT),
+          }
+
           ctx.body = { scoped, name, version, ...result }
 
           if (record === 'true') {
@@ -166,6 +166,10 @@ app.prepare()
         } catch (err) {
           opbeat.captureError(err, { request: ctx.req })
           console.error(err)
+
+          ctx.cacheControl = {
+            maxAge: force ? 0 : CACHE_CONFIG.SIZE_API_DEFAULT,
+          }
 
           if (err instanceof TimeoutError) {
             ctx.status = 503
