@@ -108,7 +108,10 @@ class FirebaseUtils {
 
         debug('searched history %s %o', name, Object.keys(versionHistory))
         Object.keys(versionHistory).forEach(version => {
-          packageHistory[decodeFirebaseKey(version)] = versionHistory[version]
+          const decodedVersion = decodeFirebaseKey(version)
+          if (limitedVersions.includes(decodedVersion)) {
+            packageHistory[decodedVersion] = versionHistory[version]
+          }
         })
         return packageHistory
       })
@@ -121,7 +124,7 @@ class FirebaseUtils {
 
     return searches
       .orderByChild('lastSearched')
-      .limitToLast(limit)
+      .limitToLast(Number(limit))
       .once('value')
       .then(snapshot => snapshot.val())
       .then(result => {
