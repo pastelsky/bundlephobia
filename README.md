@@ -25,13 +25,15 @@
 
 ## FAQ
 
-**1. Why does search for package X throw `MissingDependencyError` ?**
+#### 1. Why does search for package X throw `MissingDependencyError` ?
+
 This error is thrown if a package `require`s a dependency without adding it in its depdencies or peerDependencies list. In the absence of such a definition, we cannot reliably report the size of the package - since we cannot resolve any information about the package.
 
 In such a case, it's best to report an issue with the package author asking the missing package to be added to its `package.json`
 
-**2. I see a `BuildError` for package X, but I'm not sure why.**
-There can be multiple reasons behind this. You can see a detailed stack trace in your devtools console, and [open an issue](https://github.com/pastelsky/bundlephobia/issues/new) with the relevant details. Working on a more ideal solution for this.
+#### 2. I see a `BuildError` for package X, but I'm not sure why.
+
+You can see a detailed stack trace in your devtools console, and [open an issue](https://github.com/pastelsky/bundlephobia/issues/new) with the relevant details. Working on a more ideal solution for this.
 
 ## Running locally
 ### Commands
