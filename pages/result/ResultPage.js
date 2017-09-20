@@ -166,7 +166,11 @@ export default class ResultPage extends PureComponent {
           gzip: totalVersions[version].gzip,
         }
       })
-    const sorted = sortBy(formattedResults, ['version'])
+    const sorted = formattedResults.sort((packageA, packageB) => {
+      const versionA =  packageA.version.replace(/\D/g, '')
+      const versionB =  packageB.version.replace(/\D/g, '')
+      return parseInt(versionA) > parseInt(versionB)
+    })
     return (typeof window !== 'undefined' && window.innerWidth < 640) ?
       sorted.slice(-10) : sorted
   }
