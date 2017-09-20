@@ -23,6 +23,17 @@
     <img src="https://s26.postimg.org/6yfqxgsex/ezgif-1-6c5c883f13.gif" width="600" height="auto"/>
 </p>
 
+## FAQ
+
+#### 1. Why does search for package X throw `MissingDependencyError` ?
+
+This error is thrown if a package `require`s a dependency without adding it in its depdencies or peerDependencies list. In the absence of such a definition, we cannot reliably report the size of the package - since we cannot resolve any information about the package.
+
+In such a case, it's best to report an issue with the package author asking the missing package to be added to its `package.json`
+
+#### 2. I see a `BuildError` for package X, but I'm not sure why.
+
+You can see a detailed stack trace in your devtools console, and [open an issue](https://github.com/pastelsky/bundlephobia/issues/new) with the relevant details. Working on a more ideal solution for this.
 
 ## Running locally
 ### Commands
@@ -46,4 +57,4 @@ FIREBASE_DATABASE_URL=<url>
 AWS_LAMBDA_ENDPOINT=<some-endpoint>
 ```
 
-In the absence of such an endpoint, packages will be build locally using the [`getPackageStats` function](https://github.com/pastelsky/package-build-stats)
+In the absence of such an endpoint, packages will be built locally using the [`getPackageStats` function](https://github.com/pastelsky/package-build-stats)
