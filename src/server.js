@@ -70,7 +70,7 @@ router.get('/.well-known/acme-challenge/ZoHfUtpAm8bRntTdwd5GMIVq5_Wu-GKdaSyIV2cR
 })
 
 router.get('/sw.js', async (ctx) => {
-  const swPath = path.join(__dirname, '..', 'build', 'sw.js')
+  const swPath = path.join(__dirname, '..', 'src', 'sw.js')
 
   if (fs.existsSync(swPath)) {
     const content = fs.readFileSync(swPath, 'utf-8')
