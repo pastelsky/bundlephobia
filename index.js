@@ -204,6 +204,12 @@ app.prepare()
 
             case 'InstallError':
               ctx.status = 500
+              // Installing can fail for various reasons,
+              // let's not cache this since it will
+              // likely be resolved on a retry
+              ctx.cacheControl = {
+                maxAge: 0
+              }
               ctx.body = {
                 error: {
                   code: 'InstallError',
