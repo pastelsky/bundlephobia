@@ -10,6 +10,7 @@
     "npm": "5.4.x"
   },
   "dependencies": {
+    "array-to-sentence": "^1.1.0",
     "balloon-css": "^0.4.0",
     "classnames": "^2.2.5",
     "debounce": "^1.0.2",
