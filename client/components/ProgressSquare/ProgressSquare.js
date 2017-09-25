@@ -16,10 +16,7 @@ export default class ProgressSquare extends Component {
   componentWillReceiveProps(nextProps) {
     if (nextProps.isDone) {
       this.stage = 3
-
-      setTimeout(() => {
-        this.props.onDone()
-      }, 1000)
+      this.props.onDone()
     }
   }
 
@@ -57,7 +54,7 @@ export default class ProgressSquare extends Component {
     ]
 
     if (this.stage === order.length) {
-      this.props.onDone()
+      //this.props.onDone()
       return
     }
 
