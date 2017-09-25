@@ -9,6 +9,7 @@ const fetch = require('node-fetch')
 const firebase = require('firebase')
 const limit = require('./server/rate-limit-middleware')
 const workerpool = require('workerpool')
+const arrayToSentence = require('array-to-sentence')
 const debug = require('debug')('bp:request')
 const { TimeoutError } = require('workerpool/lib/Promise')
 
@@ -236,10 +237,11 @@ app.prepare()
 
             case 'MissingDependencyError':
               ctx.status = 500
-              const missingModules = err.extra
-                .missingModules
-                .map(module => `\`<code>${module}</code>\``)
-                .join(' and ')
+              const missingModules = arrayToSentence(
+                err.extra
+                  .missingModules
+                  .map(module => `\`<code>${module}</code>\``),
+              )
 
               ctx.body = {
                 error: {
