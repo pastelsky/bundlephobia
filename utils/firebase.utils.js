@@ -5,11 +5,17 @@ const debug = require('debug')('bp:firebase-util')
 
 
 class FirebaseUtils {
-  constructor(firebaseInstance) {
-    this.firebase = firebaseInstance
+  constructor(firebaseInstance, enable = true) {
+    if (enable) {
+      this.firebase = firebaseInstance
+    }
   }
 
   async getPackageResult({ name, version }) {
+    if(!this.firebase) {
+      return {}
+    }
+
     const ref = this.firebase.database().ref()
       .child('modules-v2')
       .child(encodeFirebaseKey(name))
@@ -20,6 +26,10 @@ class FirebaseUtils {
   }
 
   setPackageResult({ name, version }, result) {
+    if(!this.firebase) {
+      return
+    }
+
     const modules = this.firebase.database().ref().child('modules-v2')
     return modules
       .child(encodeFirebaseKey(name))
@@ -28,6 +38,10 @@ class FirebaseUtils {
   }
 
   setRecentSearch(name, packageInfo) {
+    if(!this.firebase) {
+      return
+    }
+
     const searches = this.firebase.database().ref().child('searches-v2')
     searches
       .child(encodeFirebaseKey(name))
@@ -59,6 +73,10 @@ class FirebaseUtils {
   }
 
   async getPackageHistory(name, limit = 15) {
+    if(!this.firebase) {
+      return {}
+    }
+
     debug('package history %s', name)
     const packageHistory = {}
     const ref = this.firebase.database().ref()
@@ -119,6 +137,10 @@ class FirebaseUtils {
   }
 
   getRecentSearches(limit = 10) {
+    if(!this.firebase) {
+      return {}
+    }
+
     const searches = this.firebase.database().ref().child('searches-v2')
     const recentSearches = {}
 
@@ -140,6 +162,10 @@ class FirebaseUtils {
   }
 
   async getDailySearches() {
+    if(!this.firebase) {
+      return {}
+    }
+
     const dailySearches = {}
     const searches = this.firebase.database().ref().child('searches-v2')
 
