@@ -18,7 +18,7 @@ class Cache {
     if (lruCacheEntry) {
       debug('cache hit: memory')
       return lruCacheEntry
-    } else if (process.env.FIREBASE_API_KEY) {
+    } else if (process.env.FIREBASE_DATABASE_URL) {
       const result = await this.firebaseUtils.getPackageResult({ name, version })
       if (result) {
         debug('cache hit: firebase')
@@ -32,7 +32,7 @@ class Cache {
     debug('set %O to %O', { name, version }, result)
     lruCache.set(`${name}@${version}`, result)
 
-    if (process.env.FIREBASE_API_KEY) {
+    if (process.env.FIREBASE_DATABASE_URL) {
       return this.firebaseUtils.setPackageResult({ name, version }, result)
     }
   }

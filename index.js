@@ -34,16 +34,18 @@ const pool = workerpool.pool(__dirname + '/server/worker.js', {
   maxWorkers: config.MAX_WORKERS,
 });
 
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.FIREBASE_DATABASE_URL,
+if (process.env.FIREBASE_DATABASE_URL) {
+  const firebaseConfig = {
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
+  }
+
+  firebase.initializeApp(firebaseConfig)
 }
 
-firebase.initializeApp(firebaseConfig)
-
 const cache = new Cache(firebase)
-const firebaseUtils = new FirebaseUtils(firebase)
+const firebaseUtils = new FirebaseUtils(firebase, !!process.env.FIREBASE_DATABASE_URL)
 const port = parseInt(process.env.PORT) || config.DEFAULT_DEV_PORT
 const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
@@ -141,7 +143,7 @@ app.prepare()
             result = await fetch(`${process.env.AWS_LAMBDA_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
               .then(async res => {
                 if (!res.ok) {
-                  if(res.status === 504) { // Gateway timeout error
+                  if (res.status === 504) { // Gateway timeout error
                     throw new TimeoutError()
                   } else {
                     const error = await res.json()
@@ -213,7 +215,7 @@ app.prepare()
               // let's not cache this since it will
               // likely be resolved on a retry
               ctx.cacheControl = {
-                maxAge: 0
+                maxAge: 0,
               }
               ctx.body = {
                 error: {
