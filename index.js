@@ -47,7 +47,7 @@ if (process.env.FIREBASE_DATABASE_URL) {
 
 const failureCache = LRU({
   max: config.MAX_FAILURE_CACHE_ENTRIES,
-  maxAge: 6 * 60 * 60,
+  maxAge: 6 * 1000 * 60 * 60,
 })
 
 const cache = new Cache(firebase)
