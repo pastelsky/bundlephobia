@@ -278,6 +278,7 @@ app.prepare()
               ctx.status = status
               ctx.body = body
 
+              debug('saved %s to failure cache', `${name}@${version}`)
               failureCache.set(
                 `${resolvedPackage.name}@${resolvedPackage.version}`,
                 { status, body },
@@ -299,6 +300,7 @@ app.prepare()
               ctx.status = status
               ctx.body = body
 
+              debug('saved %s to failure cache', `${name}@${version}`)
               failureCache.set(
                 `${resolvedPackage.name}@${resolvedPackage.version}`,
                 { status, body },
