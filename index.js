@@ -62,6 +62,7 @@ const CACHE_CONFIG = {
   RECENTS_API: dev ? 0 : 20 * 60,
   PACKAGE_HISTORY_API: dev ? 0 : 60 * 60,
   SIZE_API_DEFAULT: dev ? 0 : 60 * 2,
+  SIZE_API_TIMEOUT: dev ? 0 : 60 * 30,
   SIZE_API_HAS_VERSION: dev ? 0 : 12 * 60 * 60,
 }
 
@@ -195,6 +196,9 @@ app.prepare()
 
           if (err instanceof TimeoutError) {
             ctx.status = 503
+            ctx.cacheControl = {
+              maxAge: force ? 0 : CACHE_CONFIG.SIZE_API_TIMEOUT,
+            }
             ctx.body = {
               error: {
                 code: 'TimeoutError',
