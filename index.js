@@ -21,6 +21,7 @@ const koaCache = require('koa-cash')
 const Router = require('koa-router')
 const compress = require('koa-compress')
 const cacheControl = require('koa-cache-control')
+const LRU = require('lru-cache')
 
 const Cache = require('./utils/cache.utils')
 const { parsePackageString } = require('./utils/common.utils')
@@ -43,6 +44,11 @@ if (process.env.FIREBASE_DATABASE_URL) {
 
   firebase.initializeApp(firebaseConfig)
 }
+
+const failureCache = LRU({
+  max: config.MAX_FAILURE_CACHE_ENTRIES,
+  maxAge: 6 * 60 * 60,
+})
 
 const cache = new Cache(firebase)
 const firebaseUtils = new FirebaseUtils(firebase, !!process.env.FIREBASE_DATABASE_URL)
@@ -119,12 +125,13 @@ app.prepare()
           force,
         } = ctx.query
         debug('Package %s', packageString)
-        console.log('IP IS', ctx.req.headers['cf-connecting-ip'])
 
         const parsedPackage = parsePackageString(packageString)
+        let resolvedPackage
 
         try {
-          const { scoped, name, version } = await resolvePackage(parsedPackage)
+          resolvedPackage = await resolvePackage(parsedPackage)
+          const { scoped, name, version } = resolvedPackage
 
           ctx.state.package = { name, version }
           debug('resolved to %s@%s', name, version)
@@ -133,6 +140,14 @@ app.prepare()
             const isCached = await ctx.cashed()
             if (isCached) {
               firebaseUtils.setRecentSearch(name, { name, version })
+              return
+            }
+
+            const failureCacheEntry = failureCache.get(`${name}@${version}`)
+            if (failureCacheEntry) {
+              debug('fetched %s from failure cache', `${name}@${version}`)
+              ctx.status = failureCacheEntry.status
+              ctx.body = failureCacheEntry.body
               return
             }
           }
@@ -237,15 +252,16 @@ app.prepare()
               }
               break
 
-            case 'MissingDependencyError':
-              ctx.status = 500
+            case 'MissingDependencyError': {
+              const status = 500
+
               const missingModules = arrayToSentence(
                 err.extra
                   .missingModules
                   .map(module => `\`<code>${module}</code>\``),
               )
 
-              ctx.body = {
+              const body = {
                 error: {
                   code: 'MissingDependencyError',
                   message: `This package (or this version) uses ${missingModules}, ` +
@@ -254,19 +270,37 @@ app.prepare()
                   details: err,
                 },
               }
+
+              ctx.status = status
+              ctx.body = body
+
+              failureCache.set(
+                `${resolvedPackage.name}@${resolvedPackage.version}`,
+                { status, body },
+              )
               break
+            }
 
             case 'BuildError':
-            default:
-              ctx.status = 500
-              ctx.body = {
+            default: {
+              const status = 500
+              const body = {
                 error: {
                   code: 'BuildError',
                   message: 'Failed to build this package.',
                   details: err,
                 },
               }
+
+              ctx.status = status
+              ctx.body = body
+
+              failureCache.set(
+                `${resolvedPackage.name}@${resolvedPackage.version}`,
+                { status, body },
+              )
               break
+            }
           }
         }
       },
