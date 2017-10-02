@@ -3,7 +3,6 @@
 const Koa = require('koa')
 const app = new Koa()
 const router = require('koa-router')()
-const limit = require('koa-better-ratelimit')
 const exec = require('child_process').exec
 const fs = require('fs-promise')
 const path = require('path')
@@ -38,12 +37,6 @@ const cache = new Cache(firebase)
 
 app.use(cacheControl())
 
-app.use(limit({
-  duration: 1000 * 60 * 3, // 3 mins
-  max: 50,
-  //blackList: ['127.0.0.1']
-}))
-
 router.get('/', function (ctx) {
   ctx.status = 301
   ctx.redirect('https://bundlephobia.com/')
@@ -61,9 +54,6 @@ app
   .use(router.routes())
   .use(router.allowedMethods())
 
-router.get('*', function (ctx) {
-  ctx.redirect('https://bundlephobia.com/')
-})
 
 router.get('/.well-known/acme-challenge/ZoHfUtpAm8bRntTdwd5GMIVq5_Wu-GKdaSyIV2cRjzw', function (ctx) {
   ctx.body = 'ZoHfUtpAm8bRntTdwd5GMIVq5_Wu-GKdaSyIV2cRjzw.MgmPPtzLPzFo6ciewhZh_rGDl4INQ6voqSDAeDbjBCQ'
@@ -210,8 +200,10 @@ function getPeerDeps(packagePath) {
 
 router.get('/recent', async (ctx) => {
 
-  ctx.status = 301
-  ctx.redirect('https://bundlephobia.com/api/recent')
+  ctx.status = 403
+  ctx.body = {
+    message: 'Deprecated.'
+  }
 
   //const searches = firebase.database().ref().child('searches')
   //
@@ -231,8 +223,10 @@ router.get('/recent', async (ctx) => {
 
 router.get('/package', async (ctx, next) => {
 
-  ctx.status = 301
-  ctx.redirect(`https://bundlephobia.com/api/size?package=${ctx.query.name}`)
+  ctx.status = 403
+  ctx.body = {
+    message: 'Deprecated.'
+  }
 
   return
   const startTime = now()
