@@ -56,7 +56,7 @@ export default class Layout extends Component {
             <div className="footer__description">
               <h3> What does this thing do? </h3>
               <p>
-                JavsScript bloat is more real today than it ever was.
+                JavaScript bloat is more real today than it ever was.
                 Sites continuously get bigger as more (often
                 redundant) libraries are thrown to
                 solve new problems. Until of-course, the <i> big rewrite </i>
@@ -65,7 +65,7 @@ export default class Layout extends Component {
               <p>
                 This thing lets you understand the performance cost of
                 <code>npm&nbsp;install</code> ing
-                a new npm package before actually adding it to our bundle.
+                a new npm package before actually adding it to your bundle.
               </p>
               <p>
                 Credits to <a href="https://twitter.com/thekitze" target="_blank"> @thekitze </a>
