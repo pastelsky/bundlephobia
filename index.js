@@ -31,7 +31,7 @@ const CustomError = require('./server/CustomError')
 
 const config = require('./server/config')
 
-const pool = workerpool.pool(__dirname + '/server/worker.js', {
+const pool = workerpool.pool(`${__dirname}/server/worker.js`, {
   maxWorkers: config.MAX_WORKERS,
 });
 
