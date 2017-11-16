@@ -9,19 +9,28 @@ export default class API {
     })
       .then(res => {
         if (!res.ok) {
-          // Heroku might have timed out / shut down
-          if (res.status === 503) {
-            return Promise.reject({
+
+          try {
+            return res.json()
+              .then(err => Promise.reject(err))
+          } catch (e) {
+            // Heroku might have timed out / shut down
+            if (res.status === 503) {
+              return Promise.reject({
                 error: {
                   code: 'TimeoutError',
-                  message: 'This is taking unusually long. Check back in a couple of minutes?'
+                  message: 'This is taking unusually long. Check back in a couple of minutes?',
                 },
-              },
-            )
-          }
+              })
+            }
 
-          return res.json()
-            .then(err => Promise.reject(err))
+            return Promise.reject({
+              error: {
+                code: 'BuildError',
+                message: 'Oops, something went wrong and we don\'t have an appropriate error for this. Open an issue maybe?'
+              }
+            })
+          }
         }
         return res.json()
       })
@@ -62,7 +71,7 @@ export default class API {
       .get(`https://api.npms.io/v2/search/suggestions?q=${query}`)
       .then(result => result.sort(suggestionSort))
 
-     //backup when npms.io is down
+    //backup when npms.io is down
 
     //return API.get(`/-/search?text=${query}`)
     //  .then(result => result.objects

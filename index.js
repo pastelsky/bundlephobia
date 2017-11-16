@@ -159,7 +159,7 @@ app.prepare()
             result = await fetch(`${process.env.AWS_LAMBDA_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
               .then(async res => {
                 if (!res.ok) {
-                  if (res.status === 504) { // Gateway timeout error
+                  if (res.status === 504 || res.status === 502) { // Gateway timeout error
                     throw new TimeoutError()
                   } else {
                     const error = await res.json()
