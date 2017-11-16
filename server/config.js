@@ -11,7 +11,7 @@ module.exports = {
 
   MAX_FAILURE_CACHE_ENTRIES: 50,
 
-  WORKER_TIMEOUT: 60 * 1000, //ms,
+  WORKER_TIMEOUT: 30 * 1000, //ms,
 
   DEFAULT_DEV_PORT: 5000,
 }
