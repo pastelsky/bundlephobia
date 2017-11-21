@@ -76,11 +76,11 @@ app.prepare()
     server.use(cors())
 
     if (!dev) {
-      server.use(limit({
-        duration: 1000 * 60 * 3, // 3 mins
-        max: 35,
-        // blackList: ['127.0.0.1']
-      }));
+      //server.use(limit({
+      //  duration: 1000 * 60 * 3, // 3 mins
+      //  max: 35,
+      //  // blackList: ['127.0.0.1']
+      //}));
     }
 
     server.use(compress({
