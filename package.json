@@ -6,7 +6,7 @@
   "author": "Shubham Kanodia <shubham.kanodia10@gmail.com>",
   "license": "MIT",
   "engines": {
-    "node": ">=8.4.0",
+    "node": "9.2.0",
     "npm": "5.4.x"
   },
   "dependencies": {
