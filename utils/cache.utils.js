@@ -1,39 +1,41 @@
-const LRU = require('lru-cache')
-const debug = require('debug')('bp:cache')
-const CacheUtils = require('./firebase.utils')
-const config = require('../server/config')
 require('dotenv').config()
+const debug = require('debug')('bp:cache')
+const axios = require('axios')
+const Logger = require('le_node')
 
-const lruCache = LRU({ max: config.MAX_MEMORY_CACHE_ENTRIES })
+const log = new Logger({
+  token: process.env.LOGENTRIES_TOKEN,
+});
+
+const API = axios.create({
+  baseURL: process.env.CACHE_SERVICE_ENDPOINT,
+  timeout: 5000,
+});
 
 class Cache {
-  constructor(firebaseInstance) {
-    this.firebaseUtils = new CacheUtils(firebaseInstance)
-  }
-
   async get({ name, version }) {
     debug('get %s@%s', name, version)
-    const lruCacheEntry = lruCache.get(`${name}@${version}`)
-
-    if (lruCacheEntry) {
-      debug('cache hit: memory')
-      return lruCacheEntry
-    } else if (process.env.FIREBASE_DATABASE_URL) {
-      const result = await this.firebaseUtils.getPackageResult({ name, version })
-      if (result) {
-        debug('cache hit: firebase')
-        lruCache.set(`${name}@${version}`, result)
-      }
-      return result
+    try {
+      const result = await API.get('/cache', { params: { name, version } })
+      debug('cache hit')
+      return result.data
+    } catch (err) {
+      log.err({
+        type: 'CACHE_ERROR',
+        value: err,
+      })
     }
   }
 
   async set({ name, version }, result) {
     debug('set %O to %O', { name, version }, result)
-    lruCache.set(`${name}@${version}`, result)
-
-    if (process.env.FIREBASE_DATABASE_URL) {
-      return this.firebaseUtils.setPackageResult({ name, version }, result)
+    try {
+      await API.post('/cache', { name, version, result })
+    } catch (err) {
+      log.err({
+        type: 'CACHE_ERROR',
+        value: err,
+      })
     }
   }
 }

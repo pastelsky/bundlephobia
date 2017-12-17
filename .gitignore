@@ -2,6 +2,7 @@
 .env
 build
 out
+now.json
 
 # package directories
 node_modules
