@@ -1,6 +1,7 @@
 const { decodeFirebaseKey, encodeFirebaseKey } = require('./index')
 const semver = require('semver')
 const fetch = require('node-fetch')
+const axios = require('axios')
 const debug = require('debug')('bp:firebase-util')
 
 
@@ -11,34 +12,8 @@ class FirebaseUtils {
     }
   }
 
-  async getPackageResult({ name, version }) {
-    if(!this.firebase) {
-      return {}
-    }
-
-    const ref = this.firebase.database().ref()
-      .child('modules-v2')
-      .child(encodeFirebaseKey(name))
-      .child(encodeFirebaseKey(version))
-
-    const snapshot = await ref.once('value')
-    return snapshot.val()
-  }
-
-  setPackageResult({ name, version }, result) {
-    if(!this.firebase) {
-      return
-    }
-
-    const modules = this.firebase.database().ref().child('modules-v2')
-    return modules
-      .child(encodeFirebaseKey(name))
-      .child(encodeFirebaseKey(version))
-      .set(result)
-  }
-
   setRecentSearch(name, packageInfo) {
-    if(!this.firebase) {
+    if (!this.firebase) {
       return
     }
 
@@ -73,7 +48,7 @@ class FirebaseUtils {
   }
 
   async getPackageHistory(name, limit = 15) {
-    if(!this.firebase) {
+    if (!this.firebase) {
       return {}
     }
 
@@ -82,18 +57,20 @@ class FirebaseUtils {
     const ref = this.firebase.database().ref()
       .child('modules-v2')
       .child(encodeFirebaseKey(name))
-      .limitToLast(limit)
 
-    // Scoped packages have a / which needs to be escaped (but not the @)!
-    const normalizedName = name.replace(/\//g, '%2F')
-    const response = await fetch(`https://registry.yarnpkg.com/${normalizedName}`)
+    const firebasePromise = ref.once('value').then(snapshot => snapshot.val())
+    const yarnPromise = axios.get(`https://${process.env.ALGOLIA_APP_ID}-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(name)}`, {
+      params: {
+        'x-algolia-agent': 'bundlephobia',
+        'x-algolia-application-id': process.env.ALGOLIA_APP_ID,
+        'x-algolia-api-key': process.env.ALGOLIA_API_KEY,
+      },
+    })
 
-    if (!response.ok) {
-      return Promise.reject({ status: response.status })
-    }
+    const [firebaseHistory, yarnInfo] =
+      await Promise.all([firebasePromise, yarnPromise])
 
-    const packageInfo = await response.json()
-    const versions = Object.keys(packageInfo.versions)
+    const versions = Object.keys(yarnInfo.data.versions)
 
     const filteredVersions = versions
     // We *may not* want all tagged alpha/beta versions
@@ -116,28 +93,22 @@ class FirebaseUtils {
       packageHistory[version] = {}
     })
 
-    return ref
-      .once('value')
-      .then(snapshot => snapshot.val())
-      .then(versionHistory => {
-        if (!versionHistory) {
-          return packageHistory
-        }
+    if (!firebaseHistory) {
+      return packageHistory
+    }
 
-        debug('searched history %s %o', name, Object.keys(versionHistory))
-        Object.keys(versionHistory).forEach(version => {
-          const decodedVersion = decodeFirebaseKey(version)
-          if (limitedVersions.includes(decodedVersion)) {
-            packageHistory[decodedVersion] = versionHistory[version]
-          }
-        })
-        return packageHistory
-      })
-
+    debug('searched history %s %o', name, Object.keys(firebaseHistory))
+    Object.keys(firebaseHistory).forEach(version => {
+      const decodedVersion = decodeFirebaseKey(version)
+      if (limitedVersions.includes(decodedVersion)) {
+        packageHistory[decodedVersion] = firebaseHistory[version]
+      }
+    })
+    return packageHistory
   }
 
   getRecentSearches(limit = 10) {
-    if(!this.firebase) {
+    if (!this.firebase) {
       return {}
     }
 
@@ -162,17 +133,18 @@ class FirebaseUtils {
   }
 
   async getDailySearches() {
-    if(!this.firebase) {
+    if (!this.firebase) {
       return {}
     }
 
     const dailySearches = {}
     const searches = this.firebase.database().ref().child('searches-v2')
 
-    const snapshot = await searches
-      .orderByChild('lastSearched')
-      .startAt(Date.now() - 1000 * 60 * 60 * 24 * 4, 'lastSearched')
-      .once('value')
+    const snapshot = await
+      searches
+        .orderByChild('lastSearched')
+        .startAt(Date.now() - 1000 * 60 * 60 * 24 * 4, 'lastSearched')
+        .once('value')
     const packages = snapshot.val()
 
     if (packages) {

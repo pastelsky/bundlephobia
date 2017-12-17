@@ -6,16 +6,19 @@ $min-bar-width: 15px;
 
 .bar-graph-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   width: 100%;
   height: 48vh;
 }
 
 .bar-graph {
-  height: 35vh;
+  height: 45vh;
+  padding-bottom: 10vh;
   display: flex;
   align-items: baseline;
   margin: 0;
+  justify-content: center;
 }
 
 .bar-graph__bar-group {
@@ -67,7 +70,7 @@ $min-bar-width: 15px;
 .bar-graph__bar-version {
   @include font-size-xs;
   position: absolute;
-  bottom: -45px;
+  bottom: -50px;
   font-weight: $font-weight-light;
   display: block;
   transform: rotate(-90deg);
@@ -90,6 +93,39 @@ $min-bar-width: 15px;
   .bar-graph__bar-group:hover & {
     color: darken($raven, 50%);
   }
+}
+
+.bar-graph__legend {
+  @include font-size-xs;
+  padding-top: $global-spacing;
+  display: flex;
+  text-transform: uppercase;
+  justify-content: center;
+  color: lighten($raven, 20%);
+}
+
+.bar-graph__legend__colorbox {
+  width: $global-spacing * 1.5;
+  height: $global-spacing * 1.5;
+  margin-right: $global-spacing;
+
+  .bar-graph__legend__bar1 & {
+    background: $maya-blue;
+  }
+
+  .bar-graph__legend__bar2 & {
+    background: $cornflower-blue;
+  }
+}
+
+.bar-graph__legend__bar1,
+.bar-graph__legend__bar2 {
+  display: flex;
+  align-items: center;
+}
+
+.bar-graph__legend__bar1 {
+  margin-right: $global-spacing * 4;
 }
 
 @keyframes grow {

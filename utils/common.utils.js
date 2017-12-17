@@ -1,8 +1,5 @@
-// Used by the server as well as the cloud function
-// Use ES6 supported by Node v6.10 only!
-
-const path = require('path')
-const config = require('../server/config')
+// Used by the server as well as the client
+// Use ES5 only
 
 function parsePackageString(packageString) {
   // Scoped packages

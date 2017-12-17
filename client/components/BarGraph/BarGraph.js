@@ -83,6 +83,16 @@ export default class BarGraph extends PureComponent {
             ))
           }
         </figure>
+        <div className="bar-graph__legend">
+          <div className="bar-graph__legend__bar1">
+            <div className="bar-graph__legend__colorbox"/>
+            Min
+          </div>
+          <div className="bar-graph__legend__bar2">
+            <div className="bar-graph__legend__colorbox"/>
+            GZIP
+          </div>
+        </div>
       </div>
     )
   }

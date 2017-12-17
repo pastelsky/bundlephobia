@@ -1,0 +1,17 @@
+{
+  "name": "cache",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "debug": "^3.1.0",
+    "dotenv": "^4.0.0",
+    "firebase": "^4.8.0",
+    "lru-cache": "^4.1.1",
+    "now-logs": "^0.0.7",
+    "server": "^1.0.12"
+  },
+  "scripts": {
+    "start": "DEBUG=bp* node index"
+  }
+}

@@ -8,8 +8,8 @@ import AutocompleteInput from 'client/components/AutocompleteInput'
 import ProgressSquare from 'client/components/ProgressSquare/ProgressSquare'
 import Router from 'next/router'
 import Link from 'next/link'
+import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
-import sortBy from 'lodash.sortby'
 import { parsePackageString } from 'utils/common.utils'
 import Stat from './Stat'
 
@@ -56,12 +56,13 @@ export default class ResultPage extends PureComponent {
     const currentPackage = parsePackageString(query.p)
     const nextPackage = parsePackageString(nextQuery.p)
 
-    if (currentPackage.name !== nextPackage.name && (this.i++ < 5)) {
+    if (currentPackage.name !== nextPackage.name) {
       this.handleSearchSubmit(nextQuery.p)
     }
   }
 
   fetchResults = (packageString) => {
+    console.log('fetch results', packageString)
     const startTime = Date.now()
 
     API.getInfo(packageString)
@@ -166,11 +167,9 @@ export default class ResultPage extends PureComponent {
           gzip: totalVersions[version].gzip,
         }
       })
-    const sorted = formattedResults.sort((packageA, packageB) => {
-      const versionA =  packageA.version.replace(/\D/g, '')
-      const versionB =  packageB.version.replace(/\D/g, '')
-      return parseInt(versionA) > parseInt(versionB)
-    })
+    const sorted =
+      formattedResults.sort((packageA, packageB) =>
+        semver.compare(packageA.version, packageB.version))
     return (typeof window !== 'undefined' && window.innerWidth < 640) ?
       sorted.slice(-10) : sorted
   }
