@@ -38,7 +38,7 @@
 .autocomplete-input,
 .autocomplete-input__dummy-input {
   @include font-size-lg;
-  padding: $global-spacing (30px + $global-spacing * 2) $global-spacing $global-spacing * 2;
+  padding: $global-spacing (30px + $global-spacing * 2) $global-spacing $global-spacing;
   font-family: $font-family-code;
   font-weight: $font-weight-thin;
   width: 100%;
