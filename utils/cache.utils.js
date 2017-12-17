@@ -21,8 +21,9 @@ class Cache {
       return result.data
     } catch (err) {
       log.err({
-        type: 'CACHE_ERROR',
-        value: err,
+        type: 'ERROR',
+        errorType: 'CACHE_ERROR',
+        value: err.data,
       })
     }
   }
@@ -33,8 +34,9 @@ class Cache {
       await API.post('/cache', { name, version, result })
     } catch (err) {
       log.err({
-        type: 'CACHE_ERROR',
-        value: err,
+        type: 'ERROR',
+        errorType: 'CACHE_ERROR',
+        value: err.data,
       })
     }
   }
