@@ -5,51 +5,54 @@ const axios = require('axios')
 const CustomError = require('../server/CustomError')
 
 async function resolveFromAlgolia({ name, version, scoped }) {
+  let results
   try {
-    const { data: results } = await axios.get(`https://${process.env.ALGOLIA_APP_ID}-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(name)}`, {
-      params: {
-        'x-algolia-agent': 'bundlephobia',
-        'x-algolia-application-id': process.env.ALGOLIA_APP_ID,
-        'x-algolia-api-key': process.env.ALGOLIA_API_KEY,
-      },
-    })
-
-    if (version in results.tags) {
-      return { scoped, name, version: results.tags[version] }
-    }
-
-    if (version in results.versions) {
-      return { scoped, name, version }
-    }
-
-    const [major, minor, patch] = version.split('.')
-
-    // Find the closest valid match (if exists)
-    const matches = Object.keys(results.versions)
-      .filter((resultVersion) => {
-        const parsedSemver = semver(resultVersion)
-        if (!minor) {
-          return major == parsedSemver.major
-        }
-
-        if (minor && !patch) {
-          return major == parsedSemver.major && minor == parsedSemver.minor
-        }
-
-        return false
+    const response =
+      await axios.get(`https://${process.env.ALGOLIA_APP_ID}-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(name)}`, {
+        params: {
+          'x-algolia-agent': 'bundlephobia',
+          'x-algolia-application-id': process.env.ALGOLIA_APP_ID,
+          'x-algolia-api-key': process.env.ALGOLIA_API_KEY,
+        },
       })
-      .filter(v => !v.includes('-'))
-
-    if (!matches.length) {
-      throw new CustomError('PackageVersionMismatchError', null, {
-        validVersions: Object.keys(results.tags)
-          .concat(Object.keys(results.versions)),
-      })
-    } else {
-      return matches[0]
-    }
+    results = response.data
   } catch (err) {
     throw new CustomError('PackageNotFoundError', err)
+  }
+
+  if (version in results.tags) {
+    return { scoped, name, version: results.tags[version] }
+  }
+
+  if (version in results.versions) {
+    return { scoped, name, version }
+  }
+
+  const [major, minor, patch] = version.split('.')
+
+  // Find the closest valid match (if exists)
+  const matches = Object.keys(results.versions)
+    .filter((resultVersion) => {
+      const parsedSemver = semver(resultVersion)
+      if (!minor) {
+        return major == parsedSemver.major
+      }
+
+      if (minor && !patch) {
+        return major == parsedSemver.major && minor == parsedSemver.minor
+      }
+
+      return false
+    })
+    .filter(v => !v.includes('-'))
+
+  if (!matches.length) {
+    throw new CustomError('PackageVersionMismatchError', null, {
+      validVersions: Object.keys(results.tags)
+        .concat(Object.keys(results.versions)),
+    })
+  } else {
+    return matches[0]
   }
 }
 

@@ -147,6 +147,8 @@ app.prepare().then(() => {
             log.info({ type: 'CACHE_HIT_TIME', value: now() - cacheFetchStart })
             firebaseUtils.setRecentSearch(name, { name, version })
             return
+          } else {
+            log.info({ type: 'CACHE_MISS' })
           }
 
           const failureCacheEntry = failureCache.get(`${name}@${version}`)
@@ -195,9 +197,10 @@ app.prepare().then(() => {
       } catch (err) {
         console.error(err)
         log.err({
-          type: err.name,
-          name: resolvedPackage ? resolvedPackage.name : packageString,
-          version: resolvedPackage ? resolvedPackage.version : '',
+          type: 'ERROR',
+          errorType: err.name,
+          name: parsedPackage.name,
+          version: parsedPackage.version,
           details: err,
         })
 

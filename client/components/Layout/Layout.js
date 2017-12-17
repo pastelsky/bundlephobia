@@ -1,12 +1,10 @@
 import React, { Component } from 'react'
 import Link from 'next/link'
-import Analytics from 'react-ga'
 import API from '../../api'
 import stylesheet from './Layout.scss'
 
 import Heart from '../../../assets/heart.svg'
 
-const OutboundLink = Analytics.OutboundLink
 export default class Layout extends Component {
   state = {
     recentSearches: [],
@@ -68,30 +66,41 @@ export default class Layout extends Component {
                 a new npm package before actually adding it to your bundle.
               </p>
               <p>
-                Credits to <a href="https://twitter.com/thekitze" target="_blank"> @thekitze </a>
+                Credits to <a href="https://twitter.com/thekitze"
+                              target="_blank"> @thekitze </a>
                 for suggesting the name.
               </p>
+              <div className="footer__hosting-credits">
+              <a href="https://zeit.co" target="_blank">
+                Hosted on
+                <svg className="footer__zeit-logo" width="60" height="57"
+                     viewBox="0 0 60 57"
+                     xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path fill="#FFF" d="M30 0l30 57H0" fill-rule="evenodd" />
+                </svg>
+                ZEIT Now
+              </a>
+            </div>
             </div>
             <div className="footer__credits">
               <Heart className="footer__credits__heart" />️
-              <OutboundLink
+              <a
                 className="footer__credits-profile"
-                eventLabel="Footer Profile Click"
                 target="_blank"
-                to="https://github.com/pastelsky"
+                href="https://github.com/pastelsky"
               >
                 @pastelsky
-              </OutboundLink>
+              </a>
 
-              <OutboundLink
-                eventLabel="Footer Repo Click"
+              <a
                 target="_blank"
-                to="https://github.com/pastelsky/bundlephobia"
+                href="https://github.com/pastelsky/bundlephobia"
               >
                 <button className="footer__credits-fork-button">
                   Star on GitHub
                 </button>
-              </OutboundLink>
+              </a>
             </div>
           </section>
         </footer>
