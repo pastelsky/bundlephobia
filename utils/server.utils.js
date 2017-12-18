@@ -20,6 +20,19 @@ async function resolveFromAlgolia({ name, version, scoped }) {
     throw new CustomError('PackageNotFoundError', err)
   }
 
+
+  if(results.tags) {
+    results.tags = {
+      latest: results.version,
+      ...results.tags,
+    }
+  } else {
+    results.tags = {
+      latest: results.version,
+    }
+  }
+  results.versions  = results.versions || {}
+
   if (version in results.tags) {
     return { scoped, name, version: results.tags[version] }
   }

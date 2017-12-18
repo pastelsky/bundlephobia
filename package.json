@@ -37,7 +37,7 @@
     "next": "^3.2.1",
     "node-fetch": "^1.7.2",
     "normalize.css": "^7.0.0",
-    "package-build-stats": "^1.2.0",
+    "package-build-stats": "2.0.7",
     "performance-now": "^2.1.0",
     "promise.series": "^0.2.0",
     "prop-types": "^15.5.10",

@@ -70,6 +70,7 @@ class FirebaseUtils {
     const [firebaseHistory, yarnInfo] =
       await Promise.all([firebasePromise, yarnPromise])
 
+    yarnInfo.data.versions = { [yarnInfo.data.version]: '', ...yarnInfo.data.versions }
     const versions = Object.keys(yarnInfo.data.versions)
 
     const filteredVersions = versions
