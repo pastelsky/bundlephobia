@@ -55,7 +55,7 @@
   "scripts": {
     "dev": "DEBUG=bp:* node index",
     "build": "next build",
-    "start": "NODE_ENV=production DEBUG=bp:* node --optimize_for_size --max_old_space_size=460 index",
+    "start": "NODE_ENV=production DEBUG=bp:* node index",
     "prod": "yarn run build && yarn start",
     "test": "jest",
     "test:watch": "jest --watch",
