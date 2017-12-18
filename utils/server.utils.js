@@ -52,7 +52,7 @@ async function resolveFromAlgolia({ name, version, scoped }) {
         .concat(Object.keys(results.versions)),
     })
   } else {
-    return matches[0]
+    return { name, version: matches[0], scoped }
   }
 }
 
@@ -101,6 +101,7 @@ async function resolvePackage({ scoped, name, version }) {
   }
 
   if (process.env.ALGOLIA_APP_ID && process.env.ALGOLIA_API_KEY) {
+    console.log('RESOLVED', await resolveFromAlgolia({ scoped, name, version: tempVersion }))
     return await resolveFromAlgolia({ scoped, name, version: tempVersion })
   } else {
     return await resolveFromYarn({ scoped, name, version: tempVersion })

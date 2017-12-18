@@ -77,7 +77,7 @@ export default class Layout extends Component {
                      viewBox="0 0 60 57"
                      xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path fill="#FFF" d="M30 0l30 57H0" fill-rule="evenodd" />
+                  <path fill="#FFF" d="M30 0l30 57H0" fillRule="evenodd" />
                 </svg>
                 ZEIT Now
               </a>

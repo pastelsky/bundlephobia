@@ -19,13 +19,7 @@ class Cache {
       const result = await API.get('/cache', { params: { name, version } })
       debug('cache hit')
       return result.data
-    } catch (err) {
-      log.err({
-        type: 'ERROR',
-        errorType: 'CACHE_ERROR',
-        value: err.data,
-      })
-    }
+    } catch (err) {}
   }
 
   async set({ name, version }, result) {
@@ -33,6 +27,7 @@ class Cache {
     try {
       await API.post('/cache', { name, version, result })
     } catch (err) {
+      console.log(err.data)
       log.err({
         type: 'ERROR',
         errorType: 'CACHE_ERROR',
