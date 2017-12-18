@@ -24,7 +24,7 @@
 </p>
 
 ## Built using bundlephobia
-- Size in browser - As seen on package searches at [yarnpkg.com](yarnpkg.com)
+- Size in browser - As seen on package searches at [yarnpkg.com](https://yarnpkg.com)
 - [bundlephobia-cli](https://github.com/AdrieanKhisbe/bundle-phobia-cli) - A Command Line client for bundlephobia
 - [importcost](https://atom.io/packages/importcost) - An Atom plugin to display size of imported packages
 
