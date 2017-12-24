@@ -5,11 +5,12 @@
   "license": "MIT",
   "dependencies": {
     "now-logs": "^0.0.7",
-    "package-build-stats": "2.0.7",
+    "package-build-stats": "2.4.0",
     "server": "^1.0.12"
   },
   "engines": {
-    "node": "9.x.x"
+    "node": "9.x.x",
+    "npm": "5.5.x"
   },
   "scripts": {
     "start": "DEBUG=bp* node index"

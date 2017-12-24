@@ -7,9 +7,9 @@ module.exports = {
 
   MAX_WORKERS: require('os').cpus().length,
 
-  MAX_FAILURE_CACHE_ENTRIES: 50,
+  MAX_FAILURE_CACHE_ENTRIES: 600,
 
-  WORKER_TIMEOUT: 60 * 1000, //ms,
+  WORKER_TIMEOUT: 600 * 1000, //ms,
 
   DEFAULT_DEV_PORT: 5000,
 }
