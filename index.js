@@ -269,7 +269,8 @@ app.prepare().then(() => {
             ctx.body = {
               error: {
                 code: 'EntryPointError',
-                message: 'We had trouble building the package',
+                message: 'We could not guess a valid entry point for this package. ' +
+                'Perhaps the author hasn\'t specified one in its package.json ?',
                 details: {},
               },
             }

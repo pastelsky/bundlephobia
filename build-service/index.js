@@ -4,13 +4,15 @@ const { get } = server.router;
 const { json, status } = server.reply;
 
 const getBuiltPackageStats = require('package-build-stats/getPackageStats')
-const port = 7001
+const port = 7000
 
 server({ port }, [
   get('/size', async ctx => {
     const packageString = decodeURIComponent(ctx.query.p)
     try {
-      const result = await getBuiltPackageStats(packageString)
+      const result = await getBuiltPackageStats(packageString, {
+        client: 'npm',
+      })
       return json(result)
     } catch (err) {
       console.log(err)
