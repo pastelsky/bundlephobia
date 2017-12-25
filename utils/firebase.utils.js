@@ -76,12 +76,11 @@ class FirebaseUtils {
     const filteredVersions = versions
     // We *may not* want all tagged alpha/beta versions
       .filter(version => !version.includes('-'))
-      .sort((versionA, versionB) => semver.gte(versionA, versionB))
+      .sort((versionA, versionB) => semver.compare(versionA, versionB))
 
     const limitedVersions = filteredVersions
       .splice(filteredVersions.length - limit)
     debug('last npm  %d %s versions %o', limit, name, limitedVersions)
-
 
     // Although if the most recent version is tagged,
     // including it might be of interest
