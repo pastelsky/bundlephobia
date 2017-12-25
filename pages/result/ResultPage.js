@@ -197,12 +197,24 @@ export default class ResultPage extends PureComponent {
       results,
     } = this.state
 
+    const { url } = this.props
+
     return (
       <Layout className="result-page">
         <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
+        <Head>
+          <meta
+            property="og:title"
+            content={ `${url.query.p} | BundlePhobia` }
+          />
+        </Head>
         {
           resultsPromiseState === 'fulfilled' && (
             <Head>
+              <meta
+                property="og:title"
+                content={ `${results.name}@${results.version} | BundlePhobia` }
+              />
               <title>
                 { results.name }@{ results.version } | BundlePhobia
               </title>
