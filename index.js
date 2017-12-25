@@ -129,7 +129,7 @@ app.prepare().then(() => {
       log.info({ type: 'SIZE_SEARCH', string: packageString })
 
       const parsedPackage = parsePackageString(packageString)
-      let resolvedPackage
+      let resolvedPackage = {}
 
       try {
         const resolveStartTime = now()
@@ -151,10 +151,14 @@ app.prepare().then(() => {
             log.info({ type: 'CACHE_MISS' })
           }
 
-          const failureCacheEntry = failureCache.get(`${name}@${version}`)
+          const failureCacheEntry = failureCache.get(`${resolvedPackage.name}@${resolvedPackage.version}`)
           if (failureCacheEntry) {
-            log.info({ type: 'FAILURE_CACHE_HIT', name, version })
-            debug('fetched %s from failure cache', `${name}@${version}`)
+            log.info({
+              type: 'FAILURE_CACHE_HIT',
+              name: resolvedPackage.name,
+              version: resolvedPackage.version,
+            })
+            debug('fetched %s from failure cache', `${resolvedPackage.name}@${resolvedPackage.version}`)
 
             ctx.status = failureCacheEntry.status
             ctx.body = failureCacheEntry.body
@@ -168,7 +172,7 @@ app.prepare().then(() => {
         if (process.env.BUILD_SERVICE_ENDPOINT) {
           try {
             const response = await axios.get(`${process.env.BUILD_SERVICE_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
-              result = response.data
+            result = response.data
           } catch (error) {
             const contents = error.response.data
             throw new CustomError(contents.name || 'BuildError', contents.originalError, contents.extra)
@@ -201,6 +205,7 @@ app.prepare().then(() => {
           errorType: err.name,
           name: parsedPackage.name,
           version: parsedPackage.version,
+          resolvedVersion: resolvedPackage.version,
           details: err,
         })
 
