@@ -5,6 +5,7 @@ export default class API {
     return fetch(url, {
       headers: {
         Accept: 'application/json',
+        'X-Bundlephobia-User': 'bundlephobia website'
       },
     })
       .then(res => {
