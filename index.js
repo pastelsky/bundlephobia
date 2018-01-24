@@ -20,6 +20,7 @@ const compress = require('koa-compress')
 const cacheControl = require('koa-cache-control')
 const LRU = require('lru-cache')
 
+const Queue = require('./server/Queue')
 const Cache = require('./utils/cache.utils')
 const { parsePackageString } = require('./utils/common.utils')
 const FirebaseUtils = require('./utils/firebase.utils')
@@ -35,6 +36,26 @@ const config = require('./server/config')
 const pool = workerpool.pool(`${__dirname}/server/worker.js`, {
   maxWorkers: config.MAX_WORKERS,
 });
+
+const requestQueue = new Queue({
+  concurrency: 15,
+  maxAge: 60 * 2,
+})
+
+requestQueue.setExecutor(async ({ packageString, name }) => {
+  if (process.env.BUILD_SERVICE_ENDPOINT) {
+    try {
+      const response = await axios.get(`${process.env.BUILD_SERVICE_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
+      return response.data
+    } catch (error) {
+      const contents = error.response.data
+      throw new CustomError(contents.name || 'BuildError', contents.originalError, contents.extra)
+    }
+  } else {
+    return await pool.exec('getPackageStats', [packageString, name])
+      .timeout(config.WORKER_TIMEOUT)
+  }
+})
 
 if (process.env.FIREBASE_DATABASE_URL) {
   const firebaseConfig = {
@@ -111,7 +132,6 @@ app.prepare().then(() => {
     set(key, value) {
       // We only need the body part from what
       // koa-cash gives us
-      console.log('settting value', value)
       cache.set(key, JSON.parse(value.body))
     },
     hash(ctx) {
@@ -169,19 +189,19 @@ app.prepare().then(() => {
         let result
 
         const buildStartTime = now()
-        if (process.env.BUILD_SERVICE_ENDPOINT) {
-          try {
-            const response = await axios.get(`${process.env.BUILD_SERVICE_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
-            result = response.data
-          } catch (error) {
-            const contents = error.response.data
-            throw new CustomError(contents.name || 'BuildError', contents.originalError, contents.extra)
-          }
-        } else {
-          result = await pool.exec('getPackageStats', [packageString, name])
-            .timeout(config.WORKER_TIMEOUT)
-          pool.clear()
+        let priority = Queue.priority.MEDIUM
+        const client = ctx.headers['x-bundlephobia-user']
+
+        if (client === 'bundlephobia website') {
+          priority = Queue.priority.HIGH
+        } else if (client === 'yarn website') {
+          priority = Queue.priority.LOW
         }
+
+        result = await requestQueue.process(packageString, {
+          packageString, name,
+        }, { priority })
+
         log.info({
           type: 'BUILD_TIME',
           time: now() - buildStartTime,
