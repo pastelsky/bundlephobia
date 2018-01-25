@@ -48,8 +48,22 @@ requestQueue.setExecutor(async ({ packageString, name }) => {
       const response = await axios.get(`${process.env.BUILD_SERVICE_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
       return response.data
     } catch (error) {
-      const contents = error.response.data
-      throw new CustomError(contents.name || 'BuildError', contents.originalError, contents.extra)
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        const contents = error.response.data
+        throw new CustomError(contents.name || 'BuildError', contents.originalError, contents.extra)
+      } else if (error.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        debug('No response received from build server. Is the server down?')
+        throw new CustomError('BuildError', error.request)
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        throw new CustomError('BuildError', error.message)
+      }
+
     }
   } else {
     return await pool.exec('getPackageStats', [packageString, name])
@@ -152,6 +166,11 @@ app.prepare().then(() => {
       let resolvedPackage = {}
 
       try {
+        // If package is blacklisted, fail fast
+        if (config.blackList.some(entry => entry.test(parsedPackage.name))) {
+          throw new CustomError('BlacklistedPackageError', { ...parsedPackage })
+        }
+
         const resolveStartTime = now()
         resolvedPackage = await resolvePackage(parsedPackage)
         const { scoped, name, version } = resolvedPackage
@@ -164,6 +183,11 @@ app.prepare().then(() => {
           const cacheFetchStart = now()
           const isCached = await ctx.cashed()
           if (isCached) {
+            ctx.cacheControl = {
+              maxAge: force ? 0 : semver.valid(parsedPackage.version) ?
+                CACHE_CONFIG.SIZE_API_HAS_VERSION : CACHE_CONFIG.SIZE_API_DEFAULT,
+            }
+
             log.info({ type: 'CACHE_HIT_TIME', value: now() - cacheFetchStart })
             firebaseUtils.setRecentSearch(name, { name, version })
             return
@@ -242,6 +266,17 @@ app.prepare().then(() => {
         }
 
         switch (err.name) {
+          case 'BlacklistedPackageError':
+            ctx.status = 403
+            ctx.body = {
+              error: {
+                code: 'BlacklistedPackageError',
+                message: 'The package you were looking for is blacklisted due to suspicious activity in the past',
+                details: {},
+              },
+            }
+            break
+
           case 'PackageNotFoundError':
             ctx.status = 404
             ctx.body = {
