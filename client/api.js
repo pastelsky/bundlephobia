@@ -1,16 +1,17 @@
 import fetch from 'unfetch'
 
 export default class API {
-  static get(url) {
-    return fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        'X-Bundlephobia-User': 'bundlephobia website'
-      },
-    })
+  static get(url, isInternal = true) {
+    const headers = {
+      Accept: 'application/json',
+    }
+
+    if(isInternal) {
+      headers['X-Bundlephobia-User'] =  'bundlephobia website'
+    }
+    return fetch(url, { headers })
       .then(res => {
         if (!res.ok) {
-
           try {
             return res.json()
               .then(err => Promise.reject(err))
@@ -69,7 +70,7 @@ export default class API {
 
 
     return API
-      .get(`https://api.npms.io/v2/search/suggestions?q=${query}`)
+      .get(`https://api.npms.io/v2/search/suggestions?q=${query}`, false)
       .then(result => result.sort(suggestionSort))
 
     //backup when npms.io is down
