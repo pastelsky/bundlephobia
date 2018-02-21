@@ -1,6 +1,7 @@
 require('dotenv').config()
 const semver = require('semver')
 const axios = require('axios')
+const fetch = require('node-fetch')
 
 const CustomError = require('../server/CustomError')
 
@@ -77,7 +78,7 @@ async function resolveFromYarn({ scoped, name, version }) {
     // @see https://github.com/npm/registry/issues/34
     if (scoped) {
       const [scopePart, namePart] = name.split('/')
-      const response = await fetch(`https://registry.yarnpkg.com/${scopePart}${encodeURIComponent('/')}${namePart}`)
+      const response = await axios.get(`https://registry.yarnpkg.com/${scopePart}${encodeURIComponent('/')}${namePart}`)
       const packageInfo = await response.json()
 
       if (!response.ok || !packageInfo['dist-tags'] || !packageInfo['dist-tags'][version]) {
@@ -106,6 +107,7 @@ async function resolveFromYarn({ scoped, name, version }) {
  * this function resolves to a valid version and name.
  */
 async function resolvePackage({ scoped, name, version }) {
+
   const tempVersion = version || 'latest'
   const parsedVersion = semver.valid(tempVersion)
 
@@ -114,7 +116,6 @@ async function resolvePackage({ scoped, name, version }) {
   }
 
   if (process.env.ALGOLIA_APP_ID && process.env.ALGOLIA_API_KEY) {
-    console.log('RESOLVED', await resolveFromAlgolia({ scoped, name, version: tempVersion }))
     return await resolveFromAlgolia({ scoped, name, version: tempVersion })
   } else {
     return await resolveFromYarn({ scoped, name, version: tempVersion })

@@ -62,7 +62,6 @@ export default class ResultPage extends PureComponent {
   }
 
   fetchResults = (packageString) => {
-    console.log('fetch results', packageString)
     const startTime = Date.now()
 
     API.getInfo(packageString)

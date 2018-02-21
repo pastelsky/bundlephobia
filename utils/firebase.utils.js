@@ -67,11 +67,20 @@ class FirebaseUtils {
       },
     })
 
-    const [firebaseHistory, yarnInfo] =
-      await Promise.all([firebasePromise, yarnPromise])
+    let firebaseHistory, versions
+    try {
+      const [firebaseResult, yarnInfo] =
+        await Promise.all([firebasePromise, yarnPromise])
 
-    yarnInfo.data.versions = { [yarnInfo.data.version]: '', ...yarnInfo.data.versions }
-    const versions = Object.keys(yarnInfo.data.versions)
+      firebaseHistory = firebaseResult
+      yarnInfo.data.versions = { [yarnInfo.data.version]: '', ...yarnInfo.data.versions }
+      versions = Object.keys(yarnInfo.data.versions)
+    } catch(err) {
+      console.error(err)
+      firebaseHistory = await firebasePromise
+      versions = Object.keys(firebaseHistory)
+        .map(version => decodeFirebaseKey(version))
+    }
 
     const filteredVersions = versions
     // We *may not* want all tagged alpha/beta versions
