@@ -5,7 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "now-logs": "^0.0.7",
-    "package-build-stats": "3.0.0",
+    "package-build-stats": "3.1.1",
     "server": "^1.0.12"
   },
   "engines": {

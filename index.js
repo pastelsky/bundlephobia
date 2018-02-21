@@ -219,8 +219,15 @@ app.prepare().then(() => {
         if (client === 'bundlephobia website') {
           priority = Queue.priority.HIGH
         } else if (client === 'yarn website') {
+        } else if (client === 'yarn website') {
           priority = Queue.priority.LOW
+          // Temporarily disable yarn traffic
+          ctx.status = 503
+          ctx.body = { error: 'Service under maintenance' }
+          debug('Yarn traffic: Service under maintenance')
+          return
         }
+
 
         result = await requestQueue.process(packageString, {
           packageString, name,

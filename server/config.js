@@ -15,6 +15,8 @@ module.exports = {
 
   blackList: [
     /hack-cheats/,
+    /hacks?-cheats?/,
     /hack-unlimited/,
-  ]
+    /hack-\d+/,
+  ],
 }
