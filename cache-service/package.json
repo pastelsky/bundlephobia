@@ -12,6 +12,7 @@
     "server": "^1.0.12"
   },
   "scripts": {
-    "start": "DEBUG=bp* node index"
+    "start": "node index",
+    "dev": "DEBUG=bp* node index"
   }
 }
