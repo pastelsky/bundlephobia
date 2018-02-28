@@ -1,24 +1,20 @@
-const server = require('server');
-require('now-logs')('bundlephobia:build');
-const { get } = server.router;
-const { json, status } = server.reply;
-
+const fastify = require('fastify')()
 const getBuiltPackageStats = require('package-build-stats/getPackageStats')
-const port = 7000
 
-server({ port }, [
-  get('/size', async ctx => {
-    const packageString = decodeURIComponent(ctx.query.p)
-    try {
-      const result = await getBuiltPackageStats(packageString, {
-        client: 'npm',
-      })
-      return json(result)
-    } catch (err) {
-      console.log(err)
-      return status(500).send(err)
-    }
-  })
-]);
+fastify.get('/size', async(req, res) => {
+  const packageString = decodeURIComponent(req.query.p)
+  try {
+    const result = await getBuiltPackageStats(packageString, {
+      client: 'npm',
+    })
+    return res.code(200).send(result)
+  } catch (err) {
+    console.log(err)
+    return res.send(500).send(err)
+  }
+})
 
-console.log('Bundlephobia: Build server running at port ' + port)
+fastify.listen(7002, '127.0.0.1', function (err) {
+  if (err) throw err
+  console.log(`server listening on ${fastify.server.address().port}`)
+})
