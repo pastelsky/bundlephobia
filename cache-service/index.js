@@ -64,7 +64,6 @@ async function loadStoreToCache() {
     })
   })
   debug('loaded %d out of %d entries into memory cache', LRUCache.itemCount, totalItemCount)
-  console.log(LRUCache.dump())
 }
 
 try {
