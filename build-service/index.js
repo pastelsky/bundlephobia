@@ -10,7 +10,7 @@ fastify.get('/size', async(req, res) => {
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
-    return res.send(500).send(err)
+    return res.code(500).send(err)
   }
 })
 
