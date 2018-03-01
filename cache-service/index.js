@@ -4,7 +4,7 @@ const LRU = require('lru-cache')
 const debug = require('debug')('bp:cache')
 const fastify = require('fastify')()
 
-const LRUCache = LRU({ max: 5000 })
+const LRUCache = LRU({ max: 500 })
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -64,7 +64,7 @@ async function loadStoreToCache() {
 }
 
 try {
-  loadStoreToCache()
+  //loadStoreToCache()
 } catch (err) {
   console.log('Load error: ', err)
 }

@@ -7,7 +7,7 @@ apps:
       NODE_ENV: production
   - script: build-service/index.js
     name: build-service
-    instances: 1
+    instances: 2
     max_memory_restart: 300M
     env:
       NODE_ENV: production
