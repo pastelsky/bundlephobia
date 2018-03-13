@@ -2,21 +2,21 @@ apps:
   - script: index.js
     name: main
     instances: 1
-    max_memory_restart: 120M
-    env:
-      NODE_ENV: production
-      DEBUG: bp:*
-  - script: build-service/index.js
-    name: build-service
-    instances: 3
     max_memory_restart: 300M
     env:
       NODE_ENV: production
-      DEBUG: bp:*
+      DEBUG: *
+  - script: build-service/index.js
+    name: build-service
+    instances: 3
+    max_memory_restart: 500M
+    env:
+      NODE_ENV: production
+      DEBUG: *
   - script: cache-service/index.js
     name: cache-service
     instances: 1
-    max_memory_restart: 120M
+    max_memory_restart: 300M
     env:
       NODE_ENV: production
-      DEBUG: bp:*
+      DEBUG: *
