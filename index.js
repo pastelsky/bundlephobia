@@ -38,7 +38,7 @@ const pool = workerpool.pool(`${__dirname}/server/worker.js`, {
 });
 
 const requestQueue = new Queue({
-  concurrency: 15,
+  concurrency: 4,
   maxAge: 60 * 2,
 })
 
