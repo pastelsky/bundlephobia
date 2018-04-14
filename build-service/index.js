@@ -1,3 +1,6 @@
+var apm = require('elastic-apm-node').start({
+  serviceName: 'bundlephobia-build',
+})
 const fastify = require('fastify')()
 const getBuiltPackageStats = require('package-build-stats/getPackageStats')
 
