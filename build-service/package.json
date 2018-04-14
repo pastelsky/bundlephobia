@@ -6,6 +6,7 @@
   "dependencies": {
     "elastic-apm-node": "^1.4.0",
     "fastify": "^1.0.0-rc.2",
+    "fastify-url-data": "^2.0.0",
     "now-logs": "^0.0.7",
     "package-build-stats": "3.2.0"
   },

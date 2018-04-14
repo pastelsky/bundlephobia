@@ -1575,6 +1575,19 @@ fast-safe-stringify@^2.0.3:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/fast-safe-stringify/-/fast-safe-stringify-2.0.4.tgz#4fe828718aa61dbcf9119c3c24e79cc4dea973b2"
 
+fastify-plugin@^0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/fastify-plugin/-/fastify-plugin-0.2.2.tgz#e01b67685fd02e87edc98670ce2acfe251a2c715"
+  dependencies:
+    semver "^5.4.1"
+
+fastify-url-data@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/fastify-url-data/-/fastify-url-data-2.0.0.tgz#06293953159afc9cf8de637387143ca2c1629434"
+  dependencies:
+    fastify-plugin "^0.2.2"
+    uri-js "^3.0.2"
+
 fastify@^1.0.0-rc.2:
   version "1.0.0-rc.2"
   resolved "https://registry.yarnpkg.com/fastify/-/fastify-1.0.0-rc.2.tgz#68c45fea7902779bb59f7a22966095ebfddbe7ef"
@@ -3756,6 +3769,10 @@ punycode@^1.2.4, punycode@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-1.4.1.tgz#c0d5a63b2718800ad8e1eb0fa5269c84dd41845e"
 
+punycode@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.0.tgz#5f863edc89b96db09074bad7947bf09056ca4e7d"
+
 q@^1.1.2:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/q/-/q-1.5.1.tgz#7e32f75b41381291d04611f1bf14109ac00651d7"
@@ -4200,6 +4217,10 @@ scss-tokenizer@^0.2.3:
 "semver@2 || 3 || 4 || 5", semver@^5.3.0:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.4.1.tgz#e059c09d8571f0540823733433505d3a2f00b18e"
+
+semver@^5.4.1:
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-5.5.0.tgz#dc4bbc7a6ca9d916dee5d43516f0092b58f7b8ab"
 
 semver@~5.3.0:
   version "5.3.0"
@@ -4840,6 +4861,12 @@ uniqs@^2.0.0:
 unpipe@1.0.0, unpipe@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/unpipe/-/unpipe-1.0.0.tgz#b2bf4ee8514aae6165b4817829d21b2ef49904ec"
+
+uri-js@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/uri-js/-/uri-js-3.0.2.tgz#f90b858507f81dea4dcfbb3c4c3dbfa2b557faaa"
+  dependencies:
+    punycode "^2.1.0"
 
 url@^0.11.0:
   version "0.11.0"
