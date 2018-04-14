@@ -1,3 +1,7 @@
+var apm = require('elastic-apm-node').start({
+  serviceName: 'bundlephobia-build',
+})
+
 require('dotenv').config()
 const firebase = require('firebase')
 const LRU = require('lru-cache')
