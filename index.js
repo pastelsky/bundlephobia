@@ -163,7 +163,6 @@ app.prepare().then(() => {
         force,
       } = ctx.query
       debug('Package %s', packageString)
-      apm.setTag('Package String', packageString)
 
       const parsedPackage = parsePackageString(packageString)
       let resolvedPackage = {}
@@ -256,10 +255,12 @@ app.prepare().then(() => {
         console.error(err)
         apm.captureError(err, {
           request: ctx.req,
-          errorType: err.name,
-          name: parsedPackage.name,
-          version: parsedPackage.version,
-          resolvedVersion: resolvedPackage.version,
+          custom: {
+            type: err.name,
+            name: parsedPackage.name,
+            version: parsedPackage.version,
+            resolvedVersion: resolvedPackage.version,
+          },
         })
 
         ctx.cacheControl = {
