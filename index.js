@@ -1,4 +1,6 @@
-require('elastic-apm-node/start')
+var apm = require('elastic-apm-node').start({
+  serviceName: 'bundlephobia-main',
+})
 require('dotenv').config()
 const next = require('next')
 const semver = require('semver')
