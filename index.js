@@ -255,7 +255,7 @@ app.prepare().then(() => {
       } catch (err) {
         console.error(err)
         apm.captureError(err, {
-          request: req,
+          request: ctx.req,
           errorType: err.name,
           name: parsedPackage.name,
           version: parsedPackage.version,
