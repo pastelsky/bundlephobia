@@ -3,7 +3,8 @@ apps:
     name: main
     instances: 1
     max_memory_restart: 300M
-    log_file: logs/index.log
+    error_file: logs/index.log
+    out_file: logs/index.log
     env:
       NODE_ENV: production
       DEBUG: *
@@ -12,7 +13,8 @@ apps:
     name: build-service
     instances: 3
     max_memory_restart: 500M
-    log_file: logs/build-service.log
+    error_file: logs/build-service.log
+    out_file: logs/build-service.log
     env:
       NODE_ENV: production
       DEBUG: *
@@ -21,7 +23,8 @@ apps:
     name: cache-service
     instances: 1
     max_memory_restart: 300M
-    log_file: logs/cache-service.log
+    error_file: logs/cache-service.log
+    out_file: logs/cache-service.log
     env:
       NODE_ENV: production
       DEBUG: *
