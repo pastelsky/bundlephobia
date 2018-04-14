@@ -163,7 +163,7 @@ app.prepare().then(() => {
         force,
       } = ctx.query
       debug('Package %s', packageString)
-      log.info({ type: 'SIZE_SEARCH', string: packageString })
+      apm.setTag('Package String', packageString)
 
       const parsedPackage = parsePackageString(packageString)
       let resolvedPackage = {}
@@ -254,13 +254,12 @@ app.prepare().then(() => {
         }
       } catch (err) {
         console.error(err)
-        log.err({
-          type: 'ERROR',
+        apm.captureError(err, {
+          request: req,
           errorType: err.name,
           name: parsedPackage.name,
           version: parsedPackage.version,
           resolvedVersion: resolvedPackage.version,
-          details: err,
         })
 
         ctx.cacheControl = {

@@ -1,13 +1,7 @@
-var apm = require('elastic-apm-node').start({
-  serviceName: 'bundlephobia-build',
-})
 const fastify = require('fastify')()
-fastify.register(require('fastify-url-data'))
 const getBuiltPackageStats = require('package-build-stats/getPackageStats')
 
 fastify.get('/size', async(req, res) => {
-  apm.setTransactionName(`GET ${req.urlData('path')}`)
-
   const packageString = decodeURIComponent(req.query.p)
   try {
     const result = await getBuiltPackageStats(packageString, {
