@@ -1,3 +1,4 @@
+require('elastic-apm-node/start')
 require('dotenv').config()
 const next = require('next')
 const semver = require('semver')
