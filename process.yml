@@ -7,7 +7,7 @@ apps:
     out_file: logs/index.log
     env:
       NODE_ENV: production
-      DEBUG: *
+      DEBUG: "*"
 
   - script: build-service/index.js
     name: build-service
@@ -17,7 +17,7 @@ apps:
     out_file: logs/build-service.log
     env:
       NODE_ENV: production
-      DEBUG: *
+      DEBUG: "*"
 
   - script: cache-service/index.js
     name: cache-service
@@ -27,4 +27,4 @@ apps:
     out_file: logs/cache-service.log
     env:
       NODE_ENV: production
-      DEBUG: *
+      DEBUG: "*"
