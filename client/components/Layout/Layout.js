@@ -4,6 +4,7 @@ import API from '../../api'
 import stylesheet from './Layout.scss'
 
 import Heart from '../../../assets/heart.svg'
+import DigitalOceanLogo from '../../../assets/digital-ocean-logo.svg'
 
 export default class Layout extends Component {
   state = {
@@ -71,15 +72,9 @@ export default class Layout extends Component {
                 for suggesting the name.
               </p>
               <div className="footer__hosting-credits">
-              <a href="https://zeit.co" target="_blank">
                 Hosted on
-                <svg className="footer__zeit-logo" width="60" height="57"
-                     viewBox="0 0 60 57"
-                     xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path fill="#FFF" d="M30 0l30 57H0" fillRule="evenodd" />
-                </svg>
-                ZEIT Now
+                <a href="https://digitalocean.com" target="_blank">
+                <DigitalOceanLogo className="footer__sponsor-logo"/>
               </a>
             </div>
             </div>
