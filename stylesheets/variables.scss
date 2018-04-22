@@ -1,6 +1,6 @@
 // Font related
 
-@mixin font-size-xl {
+@mixin font-size-xxl {
   font-size: 3rem;
 
   @media screen and (max-width: 48em) {
@@ -12,11 +12,19 @@
   }
 }
 
-@mixin font-size-lg {
+@mixin font-size-xl {
   font-size: 2.4rem;
 
   @media screen and (max-width: 40em) {
     font-size: 1.4rem;
+  }
+}
+
+@mixin font-size-lg {
+  font-size: 2rem;
+
+  @media screen and (max-width: 40em) {
+    font-size: 1.35rem;
   }
 }
 
@@ -77,6 +85,17 @@
   }
 }
 
+@mixin font-size-xxs {
+  font-size: 0.7rem;
+
+  @media screen and (max-width: 48em) {
+    font-size: 0.65rem;
+  }
+
+  @media screen and (max-width: 40em) {
+    font-size: 0.65rem;
+  }
+}
 
 $font-weight-thin: 300;
 $font-weight-light: 400;
@@ -88,3 +107,6 @@ $font-family-code: 'Source Code Pro', "SFMono-Regular", Consolas, "Liberation Mo
 
 // Padding / Spacing
 $global-spacing: 10px;
+
+// Content width
+$max-content-width: $global-spacing * 85;

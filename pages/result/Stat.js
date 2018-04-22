@@ -8,13 +8,17 @@ const Type = {
   TIME: 'time',
 }
 
-export default function Stat({ value, label, type, infoText }) {
+export default function Stat({
+  value, label, type, infoText, compact, className
+}) {
   const roundedValue = type === Type.SIZE ?
     parseFloat((formatSize(value).size).toFixed(1)) :
     parseFloat((formatTime(value).size).toFixed(2))
 
   return (
-    <div className="stat-container">
+    <div className={
+      cx("stat-container", className, { "stat-container--compact": compact }) }
+    >
       <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
       <div className="stat-container__value-container">
         <div className="stat-container__value-wrap">
@@ -34,7 +38,9 @@ export default function Stat({ value, label, type, infoText }) {
         <div className="stat-container__label">{ label }</div>
         {
           infoText && (
-            <div className="stat-container__info-text" data-balloon-pos="right" data-balloon={ infoText } >
+            <div className="stat-container__info-text"
+                 data-balloon-pos="right"
+                 data-balloon={ infoText }>
               i
             </div>
           )

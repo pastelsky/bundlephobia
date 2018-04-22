@@ -2,12 +2,11 @@ import React, { PureComponent } from 'react'
 import Analytics from 'react-ga'
 import Head from 'next/head'
 
-import Layout from 'client/components/Layout'
+import ResultLayout from 'client/components/ResultLayout'
 import BarGraph from 'client/components/BarGraph'
 import AutocompleteInput from 'client/components/AutocompleteInput'
 import ProgressSquare from 'client/components/ProgressSquare/ProgressSquare'
 import Router from 'next/router'
-import Link from 'next/link'
 import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
 import { parsePackageString } from 'utils/common.utils'
@@ -15,7 +14,6 @@ import Stat from './Stat'
 
 import API from 'client/api'
 
-import GithubLogo from '../../assets/github-logo.svg'
 import EmptyBox from '../../assets/empty-box.svg'
 import stylesheet from './ResultPage.scss'
 
@@ -199,7 +197,7 @@ export default class ResultPage extends PureComponent {
     const { url } = this.props
 
     return (
-      <Layout className="result-page">
+      <ResultLayout>
         <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
         <Head>
           <meta
@@ -220,130 +218,108 @@ export default class ResultPage extends PureComponent {
             </Head>
           )
         }
-        <div className="page-container">
-          <header className="result-header">
-            <section className="result-header--left-section">
-              <Link href="/">
-                <a>
-                  <div className="logo-small">
-                    <span>Bundle</span>
-                    <span className="logo-small__alt">Phobia</span>
-                  </div>
-                </a>
-              </Link>
-            </section>
-            <section className="result-header--right-section">
-              <a target="_blank"
-                 href="https://github.com/pastelsky/bundlephobia">
-                <GithubLogo />
-              </a>
-            </section>
-          </header>
-          <div className="result__search-container">
-            <AutocompleteInput
-              key={ inputInitialValue }
-              initialValue={ inputInitialValue }
-              className="result-header__search-input"
-              onSearchSubmit={ this.handleSearchSubmit }
+        <AutocompleteInput
+          key={ inputInitialValue }
+          initialValue={ inputInitialValue }
+          className="result-page__search-input"
+          onSearchSubmit={ this.handleSearchSubmit }
+        />
+        {
+          resultsPromiseState === 'pending' && (
+            <ProgressSquare
+              isDone={ !!results.version }
+              onDone={ this.handleProgressDone }
             />
-          </div>
-          {
-            resultsPromiseState === 'pending' && (
-              <ProgressSquare
-                isDone={ !!results.version }
-                onDone={ this.handleProgressDone }
-              />
-            )
-          }
-          {
-            resultsPromiseState === 'fulfilled' &&
-            (results.hasJSModule || results.hasJSNext) && (
-              <div className="flash-message">
+          )
+        }
+        {
+          resultsPromiseState === 'fulfilled' &&
+          (results.hasJSModule || results.hasJSNext) && (
+            <div className="flash-message">
                 <span className="flash-message__info-icon">
                   i
                 </span>
-                <span>
+              <span>
                 supports the&nbsp;
-                  <code>
+                <code>
                   { results.hasJSModule ? 'module' : 'jsnext:main' }
                 </code>
-                  &nbsp;field. You can get smaller sizes with
-                  &nbsp;
-                  <a target="_blank"
-                     href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
+                &nbsp;field. You can get smaller sizes with
+                &nbsp;
+                <a target="_blank"
+                   href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
                 </span>
-              </div>
-            )
-          }
-          {
-            resultsPromiseState === 'fulfilled' && (
-              <section className="content-container">
-                <div className="stats-container">
-                  <div className="size-container">
-                    <h3> Bundle Size </h3>
-                    <div className="size-stats">
-                      <Stat
-                        value={ results.size }
-                        type={ Stat.type.SIZE }
-                        label="Minified"
-                      />
-                      <Stat
-                        value={ results.gzip }
-                        type={ Stat.type.SIZE }
-                        label="Minified + Gzipped"
-                      />
-                    </div>
-                  </div>
-                  <div className="time-container">
-                    <h3> Download Time </h3>
-                    <div className="time-stats">
-                      <Stat
-                        value={ results.gzip / 1024 / ResultPage.downloadSpeed.TWO_G }
-                        type={ Stat.type.TIME }
-                        label="2G Edge"
-                        infoText={ `Download Speed: ⬇️ ${ResultPage.downloadSpeed.TWO_G} kB/s` }
-                      />
-                      <Stat
-                        value={ results.gzip / 1024 / ResultPage.downloadSpeed.THREE_G }
-                        type={ Stat.type.TIME }
-                        label="Emerging 3G"
-                        infoText={ `Download Speed: ⬇️ ${ResultPage.downloadSpeed.THREE_G} kB/s` }
-                      />
-                    </div>
+            </div>
+          )
+        }
+        {
+          resultsPromiseState === 'fulfilled' && (
+            <section className="content-container">
+              <div className="stats-container">
+                <div className="size-container">
+                  <h3> Bundle Size </h3>
+                  <div className="size-stats">
+                    <Stat
+                      value={ results.size }
+                      type={ Stat.type.SIZE }
+                      label="Minified"
+                    />
+                    <Stat
+                      value={ results.gzip }
+                      type={ Stat.type.SIZE }
+                      label="Minified + Gzipped"
+                    />
                   </div>
                 </div>
-                <div className="chart-container">
-                  {
-                    historicalResultsPromiseState === 'fulfilled' && (
-                      <BarGraph
-                        onBarClick={ this.handleBarClick }
-                        readings={ this.formatHistoricalResults() }
-                      />
-                    )
-                  }
+                <div className="time-container">
+                  <h3> Download Time </h3>
+                  <div className="time-stats">
+                    <Stat
+                      value={ results.gzip / 1024 / ResultPage.downloadSpeed.TWO_G }
+                      type={ Stat.type.TIME }
+                      label="2G Edge"
+                      infoText={ `Download Speed: ⬇️ ${ResultPage.downloadSpeed.TWO_G} kB/s` }
+                    />
+                    <Stat
+                      value={ results.gzip / 1024 / ResultPage.downloadSpeed.THREE_G }
+                      type={ Stat.type.TIME }
+                      label="Emerging 3G"
+                      infoText={ `Download Speed: ⬇️ ${ResultPage.downloadSpeed.THREE_G} kB/s` }
+                    />
+                  </div>
                 </div>
-              </section>
-            )
-          }
-          {
-            resultsPromiseState === 'rejected' && (
-              <div className="result-error">
-                <EmptyBox className="result-error__img" />
-                <h2 className="result-error__code">
-                  { resultsError.error.code }
-                </h2>
-                <p
-                  className="result-error__message"
-                  dangerouslySetInnerHTML={ {
-                    __html: resultsError.error ? resultsError.error.message :
-                      'Something went wrong!',
-                  } }
-                />
               </div>
-            )
-          }
-        </div>
-      </Layout>
+              <div className="chart-container">
+                {
+                  historicalResultsPromiseState === 'fulfilled' && (
+                    <BarGraph
+                      onBarClick={ this.handleBarClick }
+                      readings={ this.formatHistoricalResults() }
+                    />
+                  )
+                }
+              </div>
+            </section>
+          )
+        }
+        {
+          resultsPromiseState === 'rejected' && (
+            <div className="result-error">
+              <EmptyBox className="result-error__img" />
+              <h2 className="result-error__code">
+                { resultsError.error.code }
+              </h2>
+              <p
+                className="result-error__message"
+                dangerouslySetInnerHTML={ {
+                  __html: resultsError.error ? resultsError.error.message :
+                    'Something went wrong!',
+                } }
+              />
+            </div>
+          )
+        }
+      </ResultLayout>
     )
   }
 }

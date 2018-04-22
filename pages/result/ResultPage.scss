@@ -1,67 +1,7 @@
 @import '../../stylesheets/base';
 @import '../../stylesheets/variables';
 
-.result-header {
-  padding: $global-spacing * 3;
-  padding-bottom: $global-spacing;
-  display: flex;
-  align-items: center;
-
-  @media screen and (max-width: 40em) {
-    padding: $global-spacing * 2;
-  }
-}
-
-.result-header--right-section {
-  margin-left: auto;
-}
-
-.github-logo {
-  width: 30px;
-  height: 30px;
-
-  @media screen and (max-width: 40em) {
-    width: 20px;
-    height: 20px;
-  }
-
-  path {
-    fill: #666;
-    transition: fill 0.2s;
-  }
-
-  &:hover {
-    path {
-      fill: black;
-    }
-  }
-}
-
-.logo-small {
-  @include font-size-reg;
-  text-transform: uppercase;
-  font-weight: $font-weight-very-bold;
-  letter-spacing: 3px;
-  user-select: none;
-  cursor: pointer;
-  color: #212121;
-}
-
-.logo-small__alt {
-  color: #888;
-}
-
-.result__search-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  @media screen and (max-width: 40em) {
-    padding: 0 $global-spacing * 2;
-  }
-}
-
-.result-header__search-input {
+.result-page__search-input {
   width: 45vw;
   max-width: 580px;
 
@@ -157,6 +97,7 @@
   flex-grow: 1;
   padding: 0 10%;
   animation: fade-in-full 0.2s;
+  width: 100%;
 
   @media screen and (max-width: 48em) {
     flex-direction: column;

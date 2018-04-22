@@ -70,7 +70,6 @@
 }
 
 .homepage__search-input {
-  margin-bottom: 22vh;
   margin-top: $global-spacing;
   width: 100%;
 
@@ -85,6 +84,36 @@
   .autocomplete-input__dummy-input {
     display: flex;
     justify-content: center;
+  }
+}
+
+.homepage__or-divider {
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  color: $raven;
+  margin-top: 4vh;
+  letter-spacing: 3px;
+}
+
+.homepage__scan-link {
+  margin-top: 4vh;
+  margin-bottom: 14vh;
+  letter-spacing: 0.5px;
+
+  a {
+    color: inherit;
+
+    span {
+      border-bottom: 1px dashed $raven;
+    }
+
+    sup {
+      color: $cornflower-blue;
+    }
+  }
+
+  @media screen and (max-width: 40em) {
+    margin-bottom: 20vh;
   }
 }
 
