@@ -9,19 +9,32 @@
   }
 }
 
+.stat-container--compact {
+  margin: 0;
+}
+
 .stat-container__value-container {
   display: flex;
   align-items: baseline;
   justify-content: center;
   padding: 5px 15px;
+
+  .stat-container--compact & {
+    padding-top: 0;
+  }
 }
 
 .stat-container__value {
-  @include font-size-xl;
+  @include font-size-xxl;
   font-weight: bold;
   color: #212121;
-  background: white;
+  background: inherit;
   position: relative;
+
+  .stat-container--compact & {
+    @include font-size-lg;
+    font-weight: $font-weight-light;
+  }
 }
 
 .stat-container__value.time::before {
@@ -41,36 +54,15 @@
 }
 
 .stat-container__unit {
-  @include font-size-lg;
+  @include font-size-xl;
   color: $raven;
   font-weight: bold;
   margin-left: 4px;
-}
 
-.stat-container__divider {
-  height: 1px;
-  width: 100%;
-  background: white;
-  opacity: 0.15;
-  position: relative;
-}
-
-.stat-container__divider::after,
-.stat-container__divider::before {
-  content: '';
-  height: 8px;
-  width: 1px;
-  background: white;
-  position: absolute;
-  bottom: 0;
-}
-
-.stat-container__divider::before {
-  left: 0;
-}
-
-.stat-container__divider::after {
-  right: 0;
+  .stat-container--compact & {
+    @include font-size-sm;
+    font-weight: $font-weight-thin;
+  }
 }
 
 .stat-container__footer {
@@ -78,6 +70,10 @@
   justify-content: center;
   align-items: center;
   margin-top: 10px;
+
+  .stat-container--compact & {
+    margin-top: 0;
+  }
 }
 
 .stat-container__label {
@@ -86,6 +82,11 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   text-align: center;
+
+  .stat-container--compact & {
+    @include font-size-sm;
+    letter-spacing: 1px;
+  }
 }
 
 .stat-container__info-text {

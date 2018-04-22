@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react'
 import AutocompleteInput from 'client/components/AutocompleteInput'
 import Layout from 'client/components/Layout'
 import Router from 'next/router'
+import Link from 'next/link'
 import Analytics from 'react-ga'
 import stylesheet from './index.scss'
 
@@ -116,6 +117,17 @@ export default class Home extends PureComponent {
             className="homepage__search-input"
             onSearchSubmit={ this.handleSearchSubmit }
           />
+          <div className="homepage__or-divider">
+            or
+          </div>
+          <div className="homepage__scan-link">
+            <Link href="/scan">
+              <a>
+                <span>Scan a <code>package.json</code> file</span>&nbsp;
+                <sup>beta</sup>
+              </a>
+            </Link>
+          </div>
         </div>
       </Layout>
     )
