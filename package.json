@@ -51,7 +51,7 @@
     "react-ga": "^2.2.0",
     "semver": "^5.4.1",
     "trending-github": "^1.0.2",
-    "uglifyjs-webpack-plugin": "^1.0.0-beta.2",
+    "uglifyjs-webpack-plugin": "^1.2.5",
     "unfetch": "^3.0.0",
     "webpack": "^3.5.5",
     "workerpool": "^2.2.4"
