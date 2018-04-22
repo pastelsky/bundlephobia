@@ -116,7 +116,7 @@ app.prepare().then(() => {
   if (!dev) {
     server.use(limit({
       duration: 1000 * 60 * 1, // 1 min
-      max: 25,
+      max: 30,
     }));
   }
 
@@ -138,7 +138,7 @@ app.prepare().then(() => {
   }));
 
   server.use(koaCache({
-    async get(key) {
+    async get (key) {
       // Emulate koa-cash cache value
       const value = await cache.get(key)
       return {
@@ -363,7 +363,7 @@ app.prepare().then(() => {
                 code: 'MissingDependencyError',
                 message: `This package (or this version) uses ${missingModules}, ` +
                 `but does not specify ${missingModules.length > 1 ? 'them' :
-                  'it' }<br /> either as a dependency or a peer dependency`,
+                  'it' } either as a dependency or a peer dependency`,
                 details: err,
               },
             }
