@@ -307,7 +307,7 @@ export default class ResultPage extends PureComponent {
             <div className="result-error">
               <EmptyBox className="result-error__img" />
               <h2 className="result-error__code">
-                { resultsError.error.code }
+                { resultsError.error ? resultsError.error.code : 'InternalServerError' }
               </h2>
               <p
                 className="result-error__message"
