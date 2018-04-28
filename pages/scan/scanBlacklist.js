@@ -34,6 +34,9 @@ export default [
   /**** Server libraries ****/
   /koa/,
   /express/,
+  /pm2/,
+  /nodemon/,
+  /supervisor/,
 
   /**** Common dev dependencies ****/
   /prop-types/,
