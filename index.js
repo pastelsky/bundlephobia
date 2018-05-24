@@ -221,7 +221,6 @@ app.prepare().then(() => {
         if (client === 'bundlephobia website') {
           priority = Queue.priority.HIGH
         } else if (client === 'yarn website') {
-        } else if (client === 'yarn website') {
           priority = Queue.priority.LOW
           // Temporarily disable yarn traffic
           ctx.status = 503
