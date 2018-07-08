@@ -93,11 +93,18 @@
 
 .content-container {
   display: flex;
-  justify-content: space-around;
-  flex-grow: 1;
-  padding: 0 10%;
-  animation: fade-in-full 0.2s;
   width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 5vh 0;
+}
+
+.content-split-container {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-top: 5vh;
 
   @media screen and (max-width: 48em) {
     flex-direction: column;
@@ -107,6 +114,22 @@
   @media screen and (max-width: 40em) {
     padding: 0 $global-spacing * 2;
   }
+}
+
+.content-container-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0 10%;
+  flex-grow: 1;
+  animation: fade-in-full 0.2s;
+}
+
+.result-pending, .result-error {
+  min-height: 75vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chart-container {
@@ -192,4 +215,93 @@
   to {
     opacity: 1;
   }
+}
+
+// Treemap section
+
+.treemap__section {
+  width: 100%;
+}
+
+.treemap {
+  @include font-size-sm;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.treemap__square {
+  transition: all 0.3s;
+  position: relative;
+
+  &:hover {
+    //transform:scale(1.05);
+    z-index: 1;
+    color: rgba(0, 0, 0, 0.8);
+    //box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12);
+    filter: brightness(105%);
+  }
+}
+
+.treemap__label {
+  font-family: $font-family-code;
+
+  a {
+    color: inherit;
+
+    &:hover {
+      text-decoration: underline;
+
+      &::after {
+        position: absolute;
+        content: '↗';
+      }
+    }
+  }
+}
+
+.treemap__section-heading {
+  text-align: center;
+  position: relative;
+
+  &::after {
+    @include font-size-xs;
+    content: 'NEW';
+    font-family: $font-family-code;
+    padding: $global-spacing / 5 $global-spacing / 1.5;
+    position: absolute;
+    top: 0;
+    margin-left: $global-spacing;
+    background: #ffbc40;
+    border-radius: 2px;
+    line-height: 1.2;
+  }
+}
+
+.treemap__percent {
+  @include font-size-xl;
+  display: block;
+  font-weight: $font-weight-bold;
+  letter-spacing: -1px;
+  color: rgba(0, 0, 0, 0.5);
+
+  .treemap__square:hover & {
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  //color: black;
+  mix-blend-mode: soft-light;
+}
+
+.treemap__percent-sign {
+  font-size: 50%;
+  padding-left: 2px;
+}
+
+.treemap__ellipsis {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.treemap__note {
+  @include font-size-xs;
+  color: $raven;
+  margin: $global-spacing * 3 0;
 }
