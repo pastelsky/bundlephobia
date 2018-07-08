@@ -5,7 +5,7 @@ import Separator from 'client/components/Separator'
 import scanBlacklist from './scanBlacklist'
 import Dropzone from 'react-dropzone'
 import Router from 'next/router'
-import { Range } from 'semver'
+import * as semver from 'semver'
 import stylesheet from './Scan.scss'
 
 export default class Scan extends Component {
@@ -20,7 +20,7 @@ export default class Scan extends Component {
 
 
   resolveVersionFromRange = (range) => {
-    const rangeSet = new Range(range).set
+    const rangeSet = new semver.Range(range).set
     return rangeSet[0][0].semver.version
   }
 
@@ -46,15 +46,21 @@ export default class Scan extends Component {
     reader.onload = () => {
       try {
         const json = JSON.parse(reader.result)
-        const packages = Object.keys(json.dependencies).map(packageName => {
-          const versionRange = json.dependencies[packageName]
+        const packages = Object.keys(json.dependencies)
+          .filter(packageName => {
+            const versionRange = json.dependencies[packageName]
+            return semver.valid(versionRange) || semver.validRange(versionRange)
+          })
+          .map(packageName => {
+            const versionRange = json.dependencies[packageName]
 
-          return {
-            name: packageName,
-            versionRange,
-            resolvedVersion: this.resolveVersionFromRange(versionRange),
-          }
-        })
+            return {
+              name: packageName,
+              versionRange,
+              resolvedVersion: this.resolveVersionFromRange(versionRange),
+            }
+          })
+
         this.setState({ packages }, this.setSelectedPackages)
 
         Analytics.event({
