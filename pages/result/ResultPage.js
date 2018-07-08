@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react'
+import React, {PureComponent} from 'react'
 import Analytics from 'react-ga'
 import Head from 'next/head'
 
@@ -9,11 +9,12 @@ import ProgressSquare from 'client/components/ProgressSquare/ProgressSquare'
 import Router from 'next/router'
 import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
-import { parsePackageString } from 'utils/common.utils'
+import {parsePackageString} from 'utils/common.utils'
 import Stat from './Stat'
 
 import API from 'client/api'
 
+import TreemapSection from './TreemapSection'
 import EmptyBox from '../../assets/empty-box.svg'
 import stylesheet from './ResultPage.scss'
 
@@ -33,10 +34,9 @@ export default class ResultPage extends PureComponent {
     TWO_G: 30,     // 2G Edge
     THREE_G: 50    // Emerging markets 3G
   }
-  i = 0
 
   componentDidMount() {
-    const { url: { query } } = this.props
+    const {url: {query}} = this.props
 
     if (query.p && query.p.trim()) {
       this.handleSearchSubmit(query.p)
@@ -44,8 +44,8 @@ export default class ResultPage extends PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { url: { query } } = this.props
-    const { url: { query: nextQuery } } = nextProps
+    const {url: {query}} = this.props
+    const {url: {query: nextQuery}} = nextProps
 
     if (!nextQuery || !nextQuery.p.trim()) {
       return
@@ -114,7 +114,7 @@ export default class ResultPage extends PureComponent {
         })
       })
       .catch(err => {
-        this.setState({ historicalResultsPromiseState: 'rejected' })
+        this.setState({historicalResultsPromiseState: 'rejected'})
         console.error(err)
       })
   }
@@ -147,7 +147,7 @@ export default class ResultPage extends PureComponent {
   }
 
   formatHistoricalResults = () => {
-    const { results, historicalResults } = this.state
+    const {results, historicalResults} = this.state
     const totalVersions = {
       ...historicalResults,
       [results.version]: results,
@@ -156,7 +156,7 @@ export default class ResultPage extends PureComponent {
     const formattedResults = Object.keys(totalVersions)
       .map(version => {
         if (isEmptyObject(totalVersions[version])) {
-          return { version, disabled: true }
+          return {version, disabled: true}
         }
         return {
           version,
@@ -172,10 +172,10 @@ export default class ResultPage extends PureComponent {
   }
 
   handleBarClick = (reading) => {
-    const { results } = this.state
+    const {results} = this.state
 
     const packageString = `${results.name}@${reading.version}`
-    this.setState({ inputInitialValue: packageString })
+    this.setState({inputInitialValue: packageString})
     this.handleSearchSubmit(packageString)
 
     Analytics.event({
@@ -194,15 +194,15 @@ export default class ResultPage extends PureComponent {
       results,
     } = this.state
 
-    const { url } = this.props
+    const {url} = this.props
 
     return (
       <ResultLayout>
-        <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
+        <style dangerouslySetInnerHTML={{__html: stylesheet}}/>
         <Head>
           <meta
             property="og:title"
-            content={ `${url.query.p} | BundlePhobia` }
+            content={`${url.query.p} | BundlePhobia`}
           />
         </Head>
         {
@@ -210,115 +210,135 @@ export default class ResultPage extends PureComponent {
             <Head>
               <meta
                 property="og:title"
-                content={ `${results.name}@${results.version} | BundlePhobia` }
+                content={`${results.name}@${results.version} | BundlePhobia`}
               />
               <title>
-                { results.name }@{ results.version } | BundlePhobia
+                {results.name}@{results.version} | BundlePhobia
               </title>
             </Head>
           )
         }
-        <AutocompleteInput
-          key={ inputInitialValue }
-          initialValue={ inputInitialValue }
-          className="result-page__search-input"
-          onSearchSubmit={ this.handleSearchSubmit }
-        />
-        {
-          resultsPromiseState === 'pending' && (
-            <ProgressSquare
-              isDone={ !!results.version }
-              onDone={ this.handleProgressDone }
+        <section className="content-container-wrap">
+          <div className="content-container">
+
+            <AutocompleteInput
+              key={inputInitialValue}
+              initialValue={inputInitialValue}
+              className="result-page__search-input"
+              onSearchSubmit={this.handleSearchSubmit}
             />
-          )
-        }
-        {
-          resultsPromiseState === 'fulfilled' &&
-          (results.hasJSModule || results.hasJSNext) && (
-            <div className="flash-message">
+            {
+              resultsPromiseState === 'pending' && (
+                <div className="result-pending">
+                <ProgressSquare
+                  isDone={!!results.version}
+                  onDone={this.handleProgressDone}
+                />
+                </div>
+              )
+            }
+            {
+              resultsPromiseState === 'fulfilled' &&
+              (results.hasJSModule || results.hasJSNext) && (
+                <div className="flash-message">
                 <span className="flash-message__info-icon">
                   i
                 </span>
-              <span>
+                  <span>
                 supports the&nbsp;
-                <code>
-                  { results.hasJSModule ? 'module' : 'jsnext:main' }
+                    <code>
+                  {results.hasJSModule ? 'module' : 'jsnext:main'}
                 </code>
-                &nbsp;field. You can get smaller sizes with
-                &nbsp;
-                <a target="_blank"
-                   href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
+                    &nbsp;field. You can get smaller sizes with
+                    &nbsp;
+                    <a target="_blank"
+                       href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
                 </span>
-            </div>
-          )
-        }
-        {
-          resultsPromiseState === 'fulfilled' && (
-            <section className="content-container">
-              <div className="stats-container">
-                <div className="size-container">
-                  <h3> Bundle Size </h3>
-                  <div className="size-stats">
-                    <Stat
-                      value={ results.size }
-                      type={ Stat.type.SIZE }
-                      label="Minified"
-                    />
-                    <Stat
-                      value={ results.gzip }
-                      type={ Stat.type.SIZE }
-                      label="Minified + Gzipped"
-                    />
+                </div>
+              )
+            }
+            {
+              resultsPromiseState === 'fulfilled' && (
+                <div className="content-split-container">
+                  <div className="stats-container">
+                    <div className="size-container">
+                      <h3> Bundle Size </h3>
+                      <div className="size-stats">
+                        <Stat
+                          value={results.size}
+                          type={Stat.type.SIZE}
+                          label="Minified"
+                        />
+                        <Stat
+                          value={results.gzip}
+                          type={Stat.type.SIZE}
+                          label="Minified + Gzipped"
+                        />
+                      </div>
+                    </div>
+                    <div className="time-container">
+                      <h3> Download Time </h3>
+                      <div className="time-stats">
+                        <Stat
+                          value={results.gzip / 1024 / ResultPage.downloadSpeed.TWO_G}
+                          type={Stat.type.TIME}
+                          label="2G Edge"
+                          infoText={`Download Speed: ⬇️ ${ResultPage.downloadSpeed.TWO_G} kB/s`}
+                        />
+                        <Stat
+                          value={results.gzip / 1024 / ResultPage.downloadSpeed.THREE_G}
+                          type={Stat.type.TIME}
+                          label="Emerging 3G"
+                          infoText={`Download Speed: ⬇️ ${ResultPage.downloadSpeed.THREE_G} kB/s`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="chart-container">
+                    {
+                      historicalResultsPromiseState === 'fulfilled' && (
+                        <BarGraph
+                          onBarClick={this.handleBarClick}
+                          readings={this.formatHistoricalResults()}
+                        />
+                      )
+                    }
                   </div>
                 </div>
-                <div className="time-container">
-                  <h3> Download Time </h3>
-                  <div className="time-stats">
-                    <Stat
-                      value={ results.gzip / 1024 / ResultPage.downloadSpeed.TWO_G }
-                      type={ Stat.type.TIME }
-                      label="2G Edge"
-                      infoText={ `Download Speed: ⬇️ ${ResultPage.downloadSpeed.TWO_G} kB/s` }
-                    />
-                    <Stat
-                      value={ results.gzip / 1024 / ResultPage.downloadSpeed.THREE_G }
-                      type={ Stat.type.TIME }
-                      label="Emerging 3G"
-                      infoText={ `Download Speed: ⬇️ ${ResultPage.downloadSpeed.THREE_G} kB/s` }
-                    />
-                  </div>
-                </div>
+              )
+            }
+          </div>
+
+          {
+            resultsPromiseState === 'rejected' && (
+              <div className="result-error">
+                <EmptyBox className="result-error__img"/>
+                <h2 className="result-error__code">
+                  {resultsError.error ? resultsError.error.code : 'InternalServerError'}
+                </h2>
+                <p
+                  className="result-error__message"
+                  dangerouslySetInnerHTML={{
+                    __html: resultsError.error ? resultsError.error.message :
+                      'Something went wrong!',
+                  }}
+                />
               </div>
-              <div className="chart-container">
-                {
-                  historicalResultsPromiseState === 'fulfilled' && (
-                    <BarGraph
-                      onBarClick={ this.handleBarClick }
-                      readings={ this.formatHistoricalResults() }
-                    />
-                  )
-                }
+            )
+          }
+          {
+            resultsPromiseState === 'fulfilled' &&
+            results.dependencySizes &&
+            results.dependencySizes.length && (
+              <div className="content-container">
+                <TreemapSection
+                  packageName={results.name}
+                  packageSize={results.size}
+                  dependencySizes={results.dependencySizes}
+                />
               </div>
-            </section>
-          )
-        }
-        {
-          resultsPromiseState === 'rejected' && (
-            <div className="result-error">
-              <EmptyBox className="result-error__img" />
-              <h2 className="result-error__code">
-                { resultsError.error ? resultsError.error.code : 'InternalServerError' }
-              </h2>
-              <p
-                className="result-error__message"
-                dangerouslySetInnerHTML={ {
-                  __html: resultsError.error ? resultsError.error.message :
-                    'Something went wrong!',
-                } }
-              />
-            </div>
-          )
-        }
+            )}
+        </section>
       </ResultLayout>
     )
   }
