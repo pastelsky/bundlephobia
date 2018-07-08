@@ -35,6 +35,7 @@ a {
 [data-balloon]::before,
 [data-balloon]::after {
   transition-delay: 0.15s;
+  white-space: pre;
 }
 
 [data-balloon]::after {
