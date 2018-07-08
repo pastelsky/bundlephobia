@@ -1,5 +1,7 @@
 var apm = require('elastic-apm-node').start({
   serviceName: 'bundlephobia-main',
+  active: false,
+  instrument: false
 })
 require('dotenv').config()
 const next = require('next')
