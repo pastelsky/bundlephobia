@@ -47,9 +47,9 @@ class TreemapSection extends Component {
     let height = 250 * heightMultiplier
 
     if (window.innerWidth <= 640) {
-      height = window.innerHeight * 0.6 * heightMultiplier
+      height = window.innerHeight * 0.65 * heightMultiplier
     } else if (window.innerWidth <= 768) {
-      height = window.innerHeight * 0.4 * heightMultiplier
+      height = window.innerHeight * 0.45 * heightMultiplier
     }
     this.setState({
       width,
@@ -127,7 +127,7 @@ class TreemapSection extends Component {
 
     return (
       <section className="treemap__section" ref={ts => (this.treemapSection = ts)}>
-        <h1 className="treemap__section-heading"> Constituents </h1>
+        <h1 className="treemap__section-heading"> Composition </h1>
         <Treemap width={width} height={height} className="treemap">
           {
             compactedDependencies.map((dep, index) => (
@@ -164,7 +164,7 @@ class TreemapSection extends Component {
         <p className="treemap__note">
           <b>Note: </b> These sizes respresent contribution made by dependencies (direct or
           transitive) to <code>{packageName}</code>'s size. These may be different from the dependencies' standalone
-          package sizes.</p>
+          sizes.</p>
       </section>
     )
   }

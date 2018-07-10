@@ -98,13 +98,17 @@
   align-items: center;
   justify-content: center;
   margin: 5vh 0;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
 }
 
 .content-split-container {
   display: flex;
   justify-content: space-around;
   width: 100%;
-  margin-top: 5vh;
+  margin-top: 10vh;
 
   @media screen and (max-width: 48em) {
     flex-direction: column;
@@ -289,6 +293,12 @@
 
   //color: black;
   mix-blend-mode: soft-light;
+
+  // Disabling this for mobiles and tablets
+  // since text seems to glitch due to it
+  @media screen and (max-width: 48em) {
+    mix-blend-mode: normal;
+  }
 }
 
 .treemap__percent-sign {
@@ -304,4 +314,5 @@
   @include font-size-xs;
   color: $raven;
   margin: $global-spacing * 3 0;
+  line-height: 1.2;
 }
