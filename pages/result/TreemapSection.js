@@ -101,6 +101,7 @@ class TreemapSection extends Component {
     let compactedDependencies = []
 
     const compactLimit = window.innerWidth <= 768 ? 8 : 16
+    const ellipsizeLimit = window.innerWidth <= 768 ? 3.5 : 1.5
     if (depdendenciesCopy.length > compactLimit) {
       const otherDependencies = depdendenciesCopy.slice(compactLimit)
       compactedDependencies = depdendenciesCopy.slice(0, compactLimit)
@@ -124,7 +125,6 @@ class TreemapSection extends Component {
       compactedDependencies = depdendenciesCopy
     }
 
-
     return (
       <section className="treemap__section" ref={ts => (this.treemapSection = ts)}>
         <h1 className="treemap__section-heading"> Composition </h1>
@@ -137,7 +137,7 @@ class TreemapSection extends Component {
                 data-balloon={dep.tooltip}
                 className="treemap__square"
               >
-                {(dep.percentShare > 1.5) ? (
+                {(dep.percentShare > ellipsizeLimit) ? (
                   <div>
                     <div className="treemap__label">
                       {
