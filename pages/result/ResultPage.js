@@ -64,6 +64,9 @@ export default class ResultPage extends PureComponent {
 
     API.getInfo(packageString)
       .then(results => {
+        if (this.activeQuery !== packageString)
+          return
+
         const newPackageString = `${results.name}@${results.version}`
         this.setState({
           inputInitialValue: newPackageString,
@@ -108,6 +111,9 @@ export default class ResultPage extends PureComponent {
   fetchHistory = (packageString) => {
     API.getHistory(packageString)
       .then(results => {
+        if (this.activeQuery !== packageString)
+          return
+
         this.setState({
           historicalResultsPromiseState: 'fulfilled',
           historicalResults: results,
@@ -136,6 +142,7 @@ export default class ResultPage extends PureComponent {
 
     Router.push(`/result?p=${normalizedQuery}`)
 
+    this.activeQuery = normalizedQuery
     this.fetchResults(normalizedQuery)
     this.fetchHistory(normalizedQuery)
   }
@@ -230,10 +237,10 @@ export default class ResultPage extends PureComponent {
             {
               resultsPromiseState === 'pending' && (
                 <div className="result-pending">
-                <ProgressSquare
-                  isDone={!!results.version}
-                  onDone={this.handleProgressDone}
-                />
+                  <ProgressSquare
+                    isDone={!!results.version}
+                    onDone={this.handleProgressDone}
+                  />
                 </div>
               )
             }
