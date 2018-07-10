@@ -100,7 +100,7 @@ class TreemapSection extends Component {
 
     let compactedDependencies = []
 
-    const compactLimit = 16
+    const compactLimit = window.innerWidth <= 768 ? 8 : 16
     if (depdendenciesCopy.length > compactLimit) {
       const otherDependencies = depdendenciesCopy.slice(compactLimit)
       compactedDependencies = depdendenciesCopy.slice(0, compactLimit)
