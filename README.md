@@ -1,6 +1,6 @@
 
 <p align="center">
-    <img src="https://cdn.rawgit.com/pastelsky/bundlephobia/bundlephobia/assets/site-logo.svg" alt="" width="310" height="250" />
+    <img src="https://cdn.rawgit.com/pastelsky/bundlephobia/bundlephobia/assets/site-logo.svg" alt="" width="290" height="235" />
 </p>
 <p align="center">
   <img src="https://img.shields.io/travis/pastelsky/bundlephobia/bundlephobia.svg" />
@@ -18,15 +18,21 @@
 - Works with ES6 packages
 - Can build css and scss packages as well
 - Reports historical trends
-
-<p align="center">
-    <img src="https://s26.postimg.org/6yfqxgsex/ezgif-1-6c5c883f13.gif" width="600" height="auto"/>
-</p>
+- See package composition
 
 ## Built using bundlephobia
 - Size in browser - As seen on package searches at [yarnpkg.com](https://yarnpkg.com)
 - [bundlephobia-cli](https://github.com/AdrieanKhisbe/bundle-phobia-cli) - A Command Line client for bundlephobia
 - [importcost](https://atom.io/packages/importcost) - An Atom plugin to display size of imported packages
+
+## Support 
+Liked bundlephobia? Used it's API to build something cool? Let us know! 
+
+We could use some 💛 on our opencollective page – 
+
+<a href="https://opencollective.com/bundlephobia">
+  <img src="https://opencollective.com/bundlephobia/tiers/backer.svg"/>
+</a>
 
 ## FAQ
 
