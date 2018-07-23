@@ -46,38 +46,5 @@ In such a case, it's best to report an issue with the package author asking the 
 
 You can see a detailed stack trace in your devtools console, and [open an issue](https://github.com/pastelsky/bundlephobia/issues/new) with the relevant details. Working on a more ideal solution for this.
 
-## Running locally
-### Commands
-| script        | description  |
-| ------------- |:-------------|
-| `yarn run dev`  | Start a development server locally |
-| `yarn run build`    | Build for production      |
-| `yarn run prod` | Start a production server locally      | 
-
-### Adding the necessary keys
-Add a `.env` file to the root with Algolia credentials. The server should still run without this, but some features might be disabled.
-  
-  
-  ```ini
-# App Id for NPM Registry
-ALGOLIA_APP_ID=OFCNCOG2CU
-
-# API Key
-ALGOLIA_API_KEY=<api-key-obtained-from-algolia>
-```
-
-In addition, one can specify - 
-```ini
-BUILD_SERVICE_ENDPOINT=<endpoint-to-service>
-```
-In the absence of such an endpoint, packages will be built locally using the [`getPackageStats` function](https://github.com/pastelsky/package-build-stats)
-and 
-
-  ```ini
-CACHE_SERVICE_ENDPOINT=<endpoint-to-service>
-
-FIREBASE_API_KEY=<apiKey>
-FIREBASE_AUTH_DOMAIN=<domain>
-FIREBASE_DATABASE_URL=<url>
-  ```
-  for caching to work (optional).
+## Contributing
+See [Contributing](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/CONTRIBUTING.md)
