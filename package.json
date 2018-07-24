@@ -10,6 +10,7 @@
     "npm": ">= 5.4.x"
   },
   "dependencies": {
+    "@koa/cors": "^2.2.2",
     "array-to-sentence": "^1.1.0",
     "axios": "^0.17.1",
     "balloon-css": "^0.4.0",
@@ -22,7 +23,6 @@
     "github": "^10.0.0",
     "ipchecker": "^0.0.2",
     "is-empty-object": "^1.1.1",
-    "kcors": "2",
     "koa": "^2.3.0",
     "koa-better-ratelimit": "^2.1.2",
     "koa-cache-control": "^2.0.0",

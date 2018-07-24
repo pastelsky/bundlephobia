@@ -16,7 +16,7 @@ const debug = require('debug')('bp:request')
 const Logger = require('le_node')
 
 const Koa = require('koa')
-const cors = require('kcors')
+const cors = require('@koa/cors')
 const proxy = require('koa-proxy')
 const serve = require('koa-static')
 const koaCache = require('koa-cash')
@@ -113,7 +113,9 @@ app.prepare().then(() => {
   const router = new Router()
 
   server.use(cacheControl())
-  server.use(cors())
+  server.use(cors({
+    origin: '*',
+  }))
 
   if (!dev) {
     server.use(limit({
