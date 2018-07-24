@@ -6,7 +6,7 @@
   "dependencies": {
     "fastify": "^1.0.0-rc.2",
     "now-logs": "^0.0.7",
-    "package-build-stats": "^3.5.4"
+    "package-build-stats": "^3.5.5"
   },
   "engines": {
     "node": ">= 9.x.x",
