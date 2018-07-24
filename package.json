@@ -10,7 +10,6 @@
     "npm": ">= 5.4.x"
   },
   "dependencies": {
-    "@koa/cors": "^2.2.2",
     "array-to-sentence": "^1.1.0",
     "axios": "^0.17.1",
     "balloon-css": "^0.4.0",
