@@ -27,9 +27,9 @@ const LRU = require('lru-cache')
 
 const Queue = require('./server/Queue')
 const Cache = require('./utils/cache.utils')
-const { parsePackageString } = require('./utils/common.utils')
+const {parsePackageString} = require('./utils/common.utils')
 const FirebaseUtils = require('./utils/firebase.utils')
-const { resolvePackage } = require('./utils/server.utils')
+const {resolvePackage} = require('./utils/server.utils')
 const CustomError = require('./server/CustomError')
 
 const log = new Logger({
@@ -47,7 +47,7 @@ const requestQueue = new Queue({
   maxAge: 60 * 2,
 })
 
-requestQueue.setExecutor(async ({ packageString, name }) => {
+requestQueue.setExecutor(async ({packageString, name}) => {
   if (process.env.BUILD_SERVICE_ENDPOINT) {
     try {
       const response = await axios.get(`${process.env.BUILD_SERVICE_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
@@ -95,15 +95,15 @@ const cache = new Cache(firebase)
 const firebaseUtils = new FirebaseUtils(firebase, !!process.env.FIREBASE_DATABASE_URL)
 const port = parseInt(process.env.PORT) || config.DEFAULT_DEV_PORT
 const dev = process.env.NODE_ENV !== 'production'
-const app = next({ dev })
+const app = next({dev})
 const handle = app.getRequestHandler()
 
 const CACHE_CONFIG = {
   PUBLIC_ASSETS: dev ? 0 : 24 * 60 * 60,
   RECENTS_API: dev ? 0 : 20 * 60,
   PACKAGE_HISTORY_API: dev ? 0 : 60 * 60,
-  SIZE_API_DEFAULT: dev ? 0 : 60 * 2,
-  SIZE_API_ERROR: dev ? 0 : 60 * 5,
+  SIZE_API_DEFAULT: dev ? 0 : 30,
+  SIZE_API_ERROR: dev ? 0 : 60,
   SIZE_API_ERROR_FATAL: dev ? 0 : 60 * 60,
   SIZE_API_HAS_VERSION: dev ? 0 : 12 * 60 * 60,
 }
@@ -118,7 +118,7 @@ app.prepare().then(() => {
   if (!dev) {
     server.use(limit({
       duration: 1000 * 60 * 1, // 1 min
-      max: 30,
+      max: 45,
     }));
   }
 
@@ -140,7 +140,7 @@ app.prepare().then(() => {
   }));
 
   server.use(koaCache({
-    async get (key) {
+    async get(key) {
       // Emulate koa-cash cache value
       const value = await cache.get(key)
       return {
@@ -172,16 +172,16 @@ app.prepare().then(() => {
       try {
         // If package is blacklisted, fail fast
         if (config.blackList.some(entry => entry.test(parsedPackage.name))) {
-          throw new CustomError('BlacklistedPackageError', { ...parsedPackage })
+          throw new CustomError('BlacklistedPackageError', {...parsedPackage})
         }
 
         const resolveStartTime = now()
         resolvedPackage = await resolvePackage(parsedPackage)
-        const { scoped, name, version } = resolvedPackage
+        const {scoped, name, version} = resolvedPackage
 
-        ctx.state.package = { name, version }
+        ctx.state.package = {name, version}
         debug('resolved to %s@%s', name, version)
-        log.info({ type: 'RESOLVE_TIME', value: now() - resolveStartTime })
+        log.info({type: 'RESOLVE_TIME', value: now() - resolveStartTime})
 
         if (!force) {
           const cacheFetchStart = now()
@@ -192,11 +192,11 @@ app.prepare().then(() => {
                 CACHE_CONFIG.SIZE_API_HAS_VERSION : CACHE_CONFIG.SIZE_API_DEFAULT,
             }
 
-            log.info({ type: 'CACHE_HIT_TIME', value: now() - cacheFetchStart })
-            firebaseUtils.setRecentSearch(name, { name, version })
+            log.info({type: 'CACHE_HIT_TIME', value: now() - cacheFetchStart})
+            firebaseUtils.setRecentSearch(name, {name, version})
             return
           } else {
-            log.info({ type: 'CACHE_MISS' })
+            log.info({type: 'CACHE_MISS'})
           }
 
           const failureCacheEntry = failureCache.get(`${resolvedPackage.name}@${resolvedPackage.version}`)
@@ -223,19 +223,17 @@ app.prepare().then(() => {
         if (client === 'bundlephobia website') {
           priority = Queue.priority.HIGH
         } else if (client === 'yarn website') {
-        } else if (client === 'yarn website') {
           priority = Queue.priority.LOW
-          // Temporarily disable yarn traffic
-          ctx.status = 503
-          ctx.body = { error: 'Service under maintenance' }
-          debug('Yarn traffic: Service under maintenance')
-          return
+          // ctx.status = 503
+          // ctx.body = {error: 'Service under maintenance'}
+          // debug('Yarn traffic: Service under maintenance')
+          // return
         }
 
 
         result = await requestQueue.process(packageString, {
           packageString, name,
-        }, { priority })
+        }, {priority})
 
         log.info({
           type: 'BUILD_TIME',
@@ -248,10 +246,15 @@ app.prepare().then(() => {
             CACHE_CONFIG.SIZE_API_HAS_VERSION : CACHE_CONFIG.SIZE_API_DEFAULT,
         }
 
-        ctx.body = { scoped, name, version, ...result }
+        const body = {scoped, name, version, ...result}
+        ctx.body = body
 
         if (record === 'true') {
-          firebaseUtils.setRecentSearch(name, { name, version })
+          firebaseUtils.setRecentSearch(name, {name, version})
+        }
+
+        if (force === 'true') {
+          cache.set({name, version}, body)
         }
       } catch (err) {
         console.error(err)
@@ -272,7 +275,7 @@ app.prepare().then(() => {
         if (!('name' in err)) {
           ctx.status = 500
           ctx.body = {
-            error: { code: 'UnkownError', message: '', details: err },
+            error: {code: 'UnkownError', message: '', details: err},
           }
           return
         }
@@ -342,7 +345,7 @@ app.prepare().then(() => {
               error: {
                 code: 'EntryPointError',
                 message: 'We could not guess a valid entry point for this package. ' +
-                'Perhaps the author hasn\'t specified one in its package.json ?',
+                  'Perhaps the author hasn\'t specified one in its package.json ?',
                 details: {},
               },
             }
@@ -364,8 +367,8 @@ app.prepare().then(() => {
               error: {
                 code: 'MissingDependencyError',
                 message: `This package (or this version) uses ${missingModules}, ` +
-                `but does not specify ${missingModules.length > 1 ? 'them' :
-                  'it' } either as a dependency or a peer dependency`,
+                  `but does not specify ${missingModules.length > 1 ? 'them' :
+                    'it' } either as a dependency or a peer dependency`,
                 details: err,
               },
             }
@@ -376,7 +379,7 @@ app.prepare().then(() => {
             debug('saved %s to failure cache', `${resolvedPackage.name}@${resolvedPackage.version}`)
             failureCache.set(
               `${resolvedPackage.name}@${resolvedPackage.version}`,
-              { status, body },
+              {status, body},
             )
             break
           }
@@ -398,7 +401,7 @@ app.prepare().then(() => {
             debug('saved %s to failure cache', `${resolvedPackage.name}@${resolvedPackage.version}`)
             failureCache.set(
               `${resolvedPackage.name}@${resolvedPackage.version}`,
-              { status, body },
+              {status, body},
             )
             break
           }
@@ -416,14 +419,14 @@ app.prepare().then(() => {
         .getRecentSearches(ctx.query.limit)
     } catch (err) {
       console.error(err)
-      log.err({ type: 'RECENT_API_ERROR', details: err })
+      log.err({type: 'RECENT_API_ERROR', details: err})
       ctx.status = 422
-      ctx.body = { type: err.name, message: err.message }
+      ctx.body = {type: err.name, message: err.message}
     }
   })
 
   router.get('/api/package-history', async (ctx) => {
-    const { name } = parsePackageString(ctx.query.package)
+    const {name} = parsePackageString(ctx.query.package)
     try {
       ctx.cacheControl = {
         maxAge: CACHE_CONFIG.PACKAGE_HISTORY_API,
@@ -431,9 +434,9 @@ app.prepare().then(() => {
       ctx.body = await firebaseUtils.getPackageHistory(name)
     } catch (err) {
       console.error(err)
-      log.err({ type: 'HISTORY_API_ERROR', details: err })
+      log.err({type: 'HISTORY_API_ERROR', details: err})
       ctx.status = 422
-      ctx.body = { type: err.name, message: err.message }
+      ctx.body = {type: err.name, message: err.message}
     }
   })
 
