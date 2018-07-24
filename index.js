@@ -176,6 +176,7 @@ app.prepare().then(() => {
         const resolveStartTime = now()
         resolvedPackage = await resolvePackage(parsedPackage)
         const {scoped, name, version} = resolvedPackage
+        const resolvedPackageString = `${name}@${version}`
 
         ctx.state.package = {name, version}
         debug('resolved to %s@%s', name, version)
@@ -228,9 +229,8 @@ app.prepare().then(() => {
           // return
         }
 
-
-        result = await requestQueue.process(packageString, {
-          packageString, name,
+        result = await requestQueue.process(resolvedPackageString, {
+          packageString: resolvedPackageString, name,
         }, {priority})
 
         log.info({
