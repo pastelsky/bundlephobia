@@ -87,6 +87,7 @@ export default class AutocompleteInput extends PureComponent {
               className: 'autocomplete-input',
               autoCorrect: 'off',
               autoCapitalize: 'off',
+              autoFocus: true,
               spellCheck: false,
               style: { fontSize: searchFontSize },
             } }
