@@ -162,7 +162,7 @@ class TreemapSection extends Component {
           }
         </Treemap>
         <p className="treemap__note">
-          <b>Note: </b> These sizes respresent contribution made by dependencies (direct or
+          <b>Note: </b> These sizes represent the contribution made by dependencies (direct or
           transitive) to <code>{packageName}</code>'s size. These may be different from the dependencies' standalone
           sizes.</p>
       </section>
