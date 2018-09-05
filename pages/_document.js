@@ -52,6 +52,10 @@ export default class MyDocument extends Document {
         <meta name="apple-mobile-web-app-title" content="BundlePhobia" />
         <meta name="application-name" content="BundlePhobia" />
         <meta name="theme-color" content="#212121" />
+        <link rel="search"
+              type="application/opensearchdescription+xml"
+              href="/open-search-description.xml"
+              title="bundlephobia" />
 
         <meta property="og:title" content="BundlePhobia" />
         <meta property="og:description"
