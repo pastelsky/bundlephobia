@@ -3,9 +3,12 @@ const debug = require('debug')('bp:cache')
 const axios = require('axios')
 const Logger = require('le_node')
 
-const log = new Logger({
+const log = process.env.LOGENTRIES_TOKEN ? new Logger({
   token: process.env.LOGENTRIES_TOKEN,
-});
+}) : {
+  info: console.log,
+  err: console.error
+};
 
 const API = axios.create({
   baseURL: process.env.CACHE_SERVICE_ENDPOINT,

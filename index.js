@@ -31,9 +31,12 @@ const FirebaseUtils = require('./utils/firebase.utils')
 const {resolvePackage} = require('./utils/server.utils')
 const CustomError = require('./server/CustomError')
 
-const log = new Logger({
+const log = process.env.LOGENTRIES_TOKEN ? new Logger({
   token: process.env.LOGENTRIES_TOKEN,
-});
+}) : {
+  info: console.log,
+  err: console.error
+};
 
 const config = require('./server/config')
 
