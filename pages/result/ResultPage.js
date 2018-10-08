@@ -246,7 +246,7 @@ export default class ResultPage extends PureComponent {
             }
             {
               resultsPromiseState === 'fulfilled' &&
-              (results.hasJSModule || results.hasJSNext) && (
+              (results.hasJSModule || results.hasJSNext) && result.hasSideEffects && (
                 <div className="flash-message">
                 <span className="flash-message__info-icon">
                   i
