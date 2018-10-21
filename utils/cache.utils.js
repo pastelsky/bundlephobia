@@ -1,11 +1,7 @@
 require('dotenv').config()
 const debug = require('debug')('bp:cache')
 const axios = require('axios')
-const Logger = require('le_node')
-
-const log = new Logger({
-  token: process.env.LOGENTRIES_TOKEN,
-});
+const logger = require('../server/Logger')
 
 const API = axios.create({
   baseURL: process.env.CACHE_SERVICE_ENDPOINT,
@@ -19,7 +15,8 @@ class Cache {
       const result = await API.get('/cache', { params: { name, version } })
       debug('cache hit')
       return result.data
-    } catch (err) {}
+    } catch (err) {
+    }
   }
 
   async set({ name, version }, result) {
@@ -28,11 +25,11 @@ class Cache {
       await API.post('/cache', { name, version, result })
     } catch (err) {
       console.log(err.data)
-      log.err({
-        type: 'ERROR',
-        errorType: 'CACHE_ERROR',
-        value: err.data,
-      })
+      logger.error('CACHE_SET_ERROR', {
+        name,
+        version,
+        error: err.data
+      }, `CACHE ERROR for package ${name}@${version}`)
     }
   }
 }

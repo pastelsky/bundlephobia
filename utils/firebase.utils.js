@@ -2,8 +2,18 @@ const { decodeFirebaseKey, encodeFirebaseKey } = require('./index')
 const semver = require('semver')
 const fetch = require('node-fetch')
 const axios = require('axios')
+const firebase = require('firebase')
 const debug = require('debug')('bp:firebase-util')
 
+if (process.env.FIREBASE_DATABASE_URL) {
+  const firebaseConfig = {
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
+  }
+
+  firebase.initializeApp(firebaseConfig)
+}
 
 class FirebaseUtils {
   constructor(firebaseInstance, enable = true) {
@@ -167,4 +177,4 @@ class FirebaseUtils {
 }
 
 
-module.exports = FirebaseUtils
+module.exports = new FirebaseUtils(firebase, !!process.env.FIREBASE_DATABASE_URL)
