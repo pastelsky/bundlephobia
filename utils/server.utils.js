@@ -16,9 +16,15 @@ async function resolveFromAlgolia({ name, version, scoped }) {
           'x-algolia-api-key': process.env.ALGOLIA_API_KEY,
         },
       })
+
     results = response.data
   } catch (err) {
-    throw new CustomError('PackageNotFoundError', err)
+    let details = err
+
+    if(err && err.response &&  err.response.request && err.response.request.data) {
+      details = err.response.request.data
+    }
+    throw new CustomError('PackageNotFoundError', details)
   }
 
 
@@ -35,11 +41,11 @@ async function resolveFromAlgolia({ name, version, scoped }) {
   results.versions  = results.versions || {}
 
   if (version in results.tags) {
-    return { scoped, name, version: results.tags[version] }
+    return { ...results, scoped, version: results.tags[version] }
   }
 
   if (version in results.versions) {
-    return { scoped, name, version }
+    return {  ...results, scoped, version }
   }
 
   const [major, minor, patch] = version.split('.')
@@ -66,7 +72,7 @@ async function resolveFromAlgolia({ name, version, scoped }) {
         .concat(Object.keys(results.versions)),
     })
   } else {
-    return { name, version: matches[0], scoped }
+    return { ...results, version: matches[0], scoped }
   }
 }
 
@@ -85,7 +91,7 @@ async function resolveFromYarn({ scoped, name, version }) {
         throw new CustomError('PackageNotFoundError', { statusText: response.statusText })
       }
 
-      return { scoped, name, version: packageInfo['dist-tags'][version] }
+      return { ...packageInfo, scoped, name, version: packageInfo['dist-tags'][version] }
 
     } else {
       const response = await fetch(`https://registry.yarnpkg.com/${name}/${version}`)
@@ -95,7 +101,7 @@ async function resolveFromYarn({ scoped, name, version }) {
       }
 
       const packageInfo = await response.json()
-      return { scoped, name, version: packageInfo.version }
+      return { ...packageInfo, scoped }
     }
   } catch (err) {
     throw new CustomError('PackageNotFoundError', err)
@@ -109,12 +115,6 @@ async function resolveFromYarn({ scoped, name, version }) {
 async function resolvePackage({ scoped, name, version }) {
 
   const tempVersion = version || 'latest'
-  const parsedVersion = semver.valid(tempVersion)
-
-  if (parsedVersion) {
-    return { scoped, name, version: parsedVersion }
-  }
-
   if (process.env.ALGOLIA_APP_ID && process.env.ALGOLIA_API_KEY) {
     return await resolveFromAlgolia({ scoped, name, version: tempVersion })
   } else {
