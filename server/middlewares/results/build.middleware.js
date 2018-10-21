@@ -8,6 +8,9 @@ const CustomError = require('../../CustomError')
 const debug = require('debug')('bp:build')
 const now = require('performance-now')
 const logger = require('../../Logger')
+const Cache = require('../../../utils/cache.utils')
+
+const cache = new Cache()
 
 requestQueue.setExecutor(async ({packageString, name}) => {
   if (process.env.BUILD_SERVICE_ENDPOINT) {
