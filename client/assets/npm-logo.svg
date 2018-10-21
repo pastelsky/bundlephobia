@@ -1,1 +1,6 @@
-<svg aria-labelledby="simpleicons-npm-icon" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title id="simpleicons-npm-icon">NPM icon</title><path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331z"/><path d="M10.665 10H12v2.667h-1.335V10z"/></svg>
+<svg width="31" height="13" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#90DD97" fill-rule="nonzero">
+        <path d="M0 .43v10.33h8.61v1.73h6.89v-1.73H31V.43H0zm8.61 8.6H6.89V3.88H5.17v5.17H1.72V2.15h6.89v6.89zm5.17 0v1.73h-3.45v-8.6h6.9v6.88h-3.45zm15.5 0h-1.72V3.88h-1.73v5.17h-1.72V3.87h-1.72v5.17h-3.45V2.15h10.34v6.89z"/>
+        <path d="M13.78 3.88h1.72v3.44h-1.72z"/>
+    </g>
+</svg>

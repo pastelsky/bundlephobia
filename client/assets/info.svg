@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="7px" height="10px" viewBox="0 0 7 10" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.1 (67048) - http://www.bohemiancoding.com/sketch -->
+    <title>Group 13</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard-6" transform="translate(-821.000000, -191.000000)">
+            <g id="Group-13" transform="translate(821.000000, 191.000000)">
+                <polygon id="Path" fill="#C8CDD3" points="0.126 8.46 2.59 8.46 2.59 4.54 0.126 4.54 0.126 3 4.41 3 4.41 8.46 7 8.46 7 10 0.126 10"></polygon>
+                <path d="M2.254,1.096 C2.254,0.80666522 2.36133226,0.55933436 2.576,0.354 C2.79066774,0.14866564 3.08933142,0.046 3.472,0.046 C3.86400196,0.046 4.1766655,0.14866564 4.41,0.354 C4.6433345,0.55933436 4.76,0.80666522 4.76,1.096 C4.76,1.39466816 4.6433345,1.63966571 4.41,1.831 C4.1766655,2.02233429 3.86400196,2.118 3.472,2.118 C3.08933142,2.118 2.79066774,2.02233429 2.576,1.831 C2.36133226,1.63966571 2.254,1.39466816 2.254,1.096 Z" id="Path" fill="#90DD97"></path>
+            </g>
+        </g>
+    </g>
+</svg>
