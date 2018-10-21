@@ -7,6 +7,7 @@ async function cachedResponse(ctx, next) {
   const { force } = ctx.query
   if (force) {
     await next()
+    return
   }
   const { name, version, packageString } = ctx.state.resolved
 

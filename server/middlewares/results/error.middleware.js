@@ -24,6 +24,7 @@ async function errorHandler(ctx, next) {
   try {
     await next()
   } catch (err) {
+    console.error(err)
     ctx.cacheControl = {
       maxAge: force ? 0 : CONFIG.CACHE.SIZE_API_ERROR,
     }
