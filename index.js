@@ -44,7 +44,7 @@ app.prepare().then(() => {
   if (!dev) {
     server.use(limit({
       duration: 1000 * 60 * 2, //  2 mins
-      max: 40,
+      max: 60,
     }));
   }
 
