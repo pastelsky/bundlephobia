@@ -1,6 +1,6 @@
 
 <p align="center">
-    <img src="https://cdn.rawgit.com/pastelsky/bundlephobia/bundlephobia/assets/site-logo.svg" alt="" width="290" height="235" />
+    <img src="https://cdn.rawgit.com/pastelsky/bundlephobia/bundlephobia/client/assets/site-logo.svg" alt="" width="290" height="235" />
 </p>
 <p align="center">
   <img src="https://img.shields.io/travis/pastelsky/bundlephobia/bundlephobia.svg" />
