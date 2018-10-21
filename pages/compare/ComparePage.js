@@ -13,36 +13,11 @@ import { parsePackageString } from 'utils/common.utils'
 
 import API from 'client/api'
 
-import GithubLogo from '../../assets/github-logo.svg'
-import EmptyBox from '../../assets/empty-box.svg'
+import GithubLogo from '../../client/assets/github-logo.svg'
+import EmptyBox from '../../client/assets/empty-box.svg'
 import stylesheet from './ComparePage.scss'
 
 export default class ResultPage extends PureComponent {
-  //
-  //componentDidMount() {
-  //  const { url: { query } } = this.props
-  //
-  //  if (query.p1 && query.p1.trim() && query.p2 && query.p2.trim()) {
-  //    this.handleSearchSubmit(query.p1, query.p2)
-  //  }
-  //}
-  //
-  //componentWillReceiveProps(nextProps) {
-  //  const { url: { query } } = this.props
-  //  const { url: { query: nextQuery } } = nextProps
-  //
-  //  if (!nextQuery || !nextQuery.p.trim()) {
-  //    return
-  //  }
-  //
-  //  const currentPackage = parsePackageString(query.p)
-  //  const nextPackage = parsePackageString(nextQuery.p)
-  //
-  //  if (currentPackage.name !== nextPackage.name && (this.i++ < 5)) {
-  //    this.handleSearchSubmit(nextQuery.p)
-  //  }
-  //}
-
   fetchResults = (packageString) => {
     const startTime = Date.now()
 

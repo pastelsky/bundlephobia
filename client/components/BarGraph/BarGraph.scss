@@ -2,7 +2,7 @@
 @import '../../../stylesheets/variables';
 
 $bar-width: 1.6vw;
-$min-bar-width: 15px;
+$min-bar-width: 20px;
 
 .bar-graph-container {
   display: flex;
@@ -13,7 +13,7 @@ $min-bar-width: 15px;
 }
 
 .bar-graph {
-  height: 45vh;
+  height: 40vh;
   padding-bottom: 10vh;
   display: flex;
   align-items: baseline;
@@ -26,7 +26,7 @@ $min-bar-width: 15px;
   position: relative;
   width: $bar-width;
   min-width: $min-bar-width;
-  margin: 0 5px;
+  margin: 0 3px;
 }
 
 .bar-graph__bar,
@@ -43,6 +43,7 @@ $min-bar-width: 15px;
 
 .bar-graph__bar {
   background: $maya-blue;
+  border-radius: 5px;
 
   .bar-graph__bar-group:not(.bar-graph__bar-group--disabled):hover & {
     background: darken($maya-blue, 5%);
@@ -61,6 +62,7 @@ $min-bar-width: 15px;
   background: $cornflower-blue;
   z-index: 1;
   pointer-events: none;
+  border-radius: 0 0 5px 5px;
 
   .bar-graph__bar-group:hover & {
     background: darken($cornflower-blue, 5%);
@@ -108,6 +110,7 @@ $min-bar-width: 15px;
   width: $global-spacing * 1.5;
   height: $global-spacing * 1.5;
   margin-right: $global-spacing;
+  border-radius: 3px;
 
   .bar-graph__legend__bar1 & {
     background: $maya-blue;
