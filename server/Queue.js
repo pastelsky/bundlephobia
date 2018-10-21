@@ -213,6 +213,7 @@ class Queue {
   process(id, jobParams, options = {}) {
     log('added new job %s %o %o', id, jobParams, options)
     const { priority = Job.priority.LOW, maxAge = this.options.maxAge } = options
+    this.pruneQueue();
 
     return new Promise((resolve, reject) => {
 
