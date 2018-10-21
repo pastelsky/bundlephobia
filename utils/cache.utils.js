@@ -24,7 +24,7 @@ class Cache {
     try {
       await API.post('/cache', { name, version, result })
     } catch (err) {
-      console.log(err.data)
+      console.error(err.data)
       logger.error('CACHE_SET_ERROR', {
         name,
         version,

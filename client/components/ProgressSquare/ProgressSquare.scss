@@ -15,8 +15,9 @@
   display: inline-block;
   width: 40px;
   height: 40px;
-  border: 1px solid #595959;
+  border: 1px solid lighten($raven, 20);
   top: 50%;
+  border-radius: 5px;
   animation: loader 2s infinite ease;
 }
 

@@ -5,8 +5,9 @@ import Head from 'next/head'
 import ResultLayout from 'client/components/ResultLayout'
 import BarGraph from 'client/components/BarGraph'
 import AutocompleteInput from 'client/components/AutocompleteInput'
+import AutocompleteInputBox from 'client/components/AutocompleteInputBox'
 import ProgressSquare from 'client/components/ProgressSquare/ProgressSquare'
-import Router from 'next/router'
+import Router, {withRouter} from 'next/router';
 import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
 import {parsePackageString} from 'utils/common.utils'
@@ -15,17 +16,22 @@ import Stat from './Stat'
 import API from 'client/api'
 
 import TreemapSection from './TreemapSection'
-import EmptyBox from '../../assets/empty-box.svg'
+import EmptyBox from '../../client/assets/empty-box.svg'
+import TreeShakeIcon from '../../client/assets/tree-shake.svg'
 import stylesheet from './ResultPage.scss'
+import SimilarPackagesSection from "./SimilarPackagesSection/SimilarPackagesSection";
+import QuickStatsBar from 'client/components/QuickStatsBar/QuickStatsBar'
 
-export default class ResultPage extends PureComponent {
+class ResultPage extends PureComponent {
   state = {
     results: {},
     resultsPromiseState: null,
     resultsError: null,
     historicalResultsPromiseState: null,
-    inputInitialValue: this.props.url.query.p || '',
+    inputInitialValue: this.props.router.query.p || '',
     historicalResults: [],
+    similarPackages: [],
+    similarPackagesCategory: '',
   }
 
   // Picked up from http://www.webpagetest.org/
@@ -36,7 +42,7 @@ export default class ResultPage extends PureComponent {
   }
 
   componentDidMount() {
-    const {url: {query}} = this.props
+    const { router: { query } } = this.props
 
     if (query.p && query.p.trim()) {
       this.handleSearchSubmit(query.p)
@@ -44,8 +50,8 @@ export default class ResultPage extends PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
-    const {url: {query}} = this.props
-    const {url: {query: nextQuery}} = nextProps
+    const { router: { query } } = this.props
+    const { url: { query: nextQuery } } = nextProps
 
     if (!nextQuery || !nextQuery.p.trim()) {
       return
@@ -120,7 +126,38 @@ export default class ResultPage extends PureComponent {
         })
       })
       .catch(err => {
-        this.setState({historicalResultsPromiseState: 'rejected'})
+        this.setState({ historicalResultsPromiseState: 'rejected' })
+        console.error(err)
+      })
+  }
+
+  fetchSimilarPackages = (packageString) => {
+    const { name } = parsePackageString(packageString)
+    const promises = []
+
+    API.getSimilar(name)
+      .then(result => {
+        if (result.category.label) {
+          if (result.category.score < 12) return
+
+          result.category.similar.forEach(packageName => {
+            promises.push(API.getInfo(packageName))
+          })
+
+          Promise.all(promises)
+            .then((results) => {
+              if (this.activeQuery !== packageString)
+                return
+
+              this.setState({
+                similarPackagesCategory: result.category.label,
+                similarPackages: results
+              })
+            })
+        }
+      })
+      .catch(err => {
+        this.setState({ historicalResultsPromiseState: 'rejected' })
         console.error(err)
       })
   }
@@ -132,19 +169,24 @@ export default class ResultPage extends PureComponent {
       label: packageString.replace(/@/g, '[at]'),
     })
 
+    const normalizedQuery = packageString.trim().toLowerCase()
+
     this.setState({
       results: {},
       historicalResultsPromiseState: 'pending',
       resultsPromiseState: 'pending',
+      inputInitialValue: normalizedQuery,
+      similarPackages: [],
+      historicalResults: [],
     })
 
-    const normalizedQuery = packageString.trim().toLowerCase()
 
     Router.push(`/result?p=${normalizedQuery}`)
 
     this.activeQuery = normalizedQuery
     this.fetchResults(normalizedQuery)
     this.fetchHistory(normalizedQuery)
+    this.fetchSimilarPackages(normalizedQuery)
   }
 
   handleProgressDone = () => {
@@ -154,7 +196,7 @@ export default class ResultPage extends PureComponent {
   }
 
   formatHistoricalResults = () => {
-    const {results, historicalResults} = this.state
+    const { results, historicalResults } = this.state
     const totalVersions = {
       ...historicalResults,
       [results.version]: results,
@@ -163,7 +205,7 @@ export default class ResultPage extends PureComponent {
     const formattedResults = Object.keys(totalVersions)
       .map(version => {
         if (isEmptyObject(totalVersions[version])) {
-          return {version, disabled: true}
+          return { version, disabled: true }
         }
         return {
           version,
@@ -179,10 +221,10 @@ export default class ResultPage extends PureComponent {
   }
 
   handleBarClick = (reading) => {
-    const {results} = this.state
+    const { results } = this.state
 
     const packageString = `${results.name}@${reading.version}`
-    this.setState({inputInitialValue: packageString})
+    this.setState({ inputInitialValue: packageString })
     this.handleSearchSubmit(packageString)
 
     Analytics.event({
@@ -199,17 +241,29 @@ export default class ResultPage extends PureComponent {
       resultsError,
       historicalResultsPromiseState,
       results,
+      similarPackages,
+      similarPackagesCategory,
     } = this.state
 
-    const {url} = this.props
+    const { router } = this.props
+    const getQuickStatsBar = () => resultsPromiseState === 'fulfilled' && (
+      <QuickStatsBar
+        description={results.description}
+        dependencyCount={results.dependencyCount}
+        hasSideEffects={results.hasSideEffects}
+        isTreeShakeable={results.hasJSModule || results.hasJSNext}
+        repository={results.repository}
+        name={results.name}
+      />
+    )
 
     return (
       <ResultLayout>
-        <style dangerouslySetInnerHTML={{__html: stylesheet}}/>
+        <style dangerouslySetInnerHTML={{ __html: stylesheet }}/>
         <Head>
           <meta
             property="og:title"
-            content={`${url.query.p} | BundlePhobia`}
+            content={`${router.query.p} | BundlePhobia`}
           />
         </Head>
         {
@@ -228,12 +282,14 @@ export default class ResultPage extends PureComponent {
         <section className="content-container-wrap">
           <div className="content-container">
 
-            <AutocompleteInput
-              key={inputInitialValue}
-              initialValue={inputInitialValue}
-              className="result-page__search-input"
-              onSearchSubmit={this.handleSearchSubmit}
-            />
+            <AutocompleteInputBox footer={getQuickStatsBar()}>
+              <AutocompleteInput
+                key={inputInitialValue}
+                initialValue={inputInitialValue}
+                className="result-page__search-input"
+                onSearchSubmit={this.handleSearchSubmit}
+              />
+            </AutocompleteInputBox>
             {
               resultsPromiseState === 'pending' && (
                 <div className="result-pending">
@@ -244,26 +300,7 @@ export default class ResultPage extends PureComponent {
                 </div>
               )
             }
-            {
-              resultsPromiseState === 'fulfilled' &&
-              (results.hasJSModule || results.hasJSNext) && (
-                <div className="flash-message">
-                <span className="flash-message__info-icon">
-                  i
-                </span>
-                  <span>
-                supports the&nbsp;
-                    <code>
-                  {results.hasJSModule ? 'module' : 'jsnext:main'}
-                </code>
-                    &nbsp;field. You can get smaller sizes with
-                    &nbsp;
-                    <a target="_blank"
-                       href="http://2ality.com/2017/04/setting-up-multi-platform-packages.html#support-by-bundlers">tree shaking</a>.
-                </span>
-                </div>
-              )
-            }
+
             {
               resultsPromiseState === 'fulfilled' && (
                 <div className="content-split-container">
@@ -330,6 +367,20 @@ export default class ResultPage extends PureComponent {
                       'Something went wrong!',
                   }}
                 />
+                {
+                  resultsError.error && resultsError.error.details && resultsError.error.details.originalError && (
+                    <details className="result-error__details">
+                      <summary> Stacktrace </summary>
+                      <pre>
+                        {
+                          Array.isArray(resultsError.error.details.originalError) ?
+                            resultsError.error.details.originalError[0] :
+                            resultsError.error.details.originalError.toString()
+                        }
+                      </pre>
+                    </details>
+                  )
+                }
               </div>
             )
           }
@@ -345,8 +396,21 @@ export default class ResultPage extends PureComponent {
                 />
               </div>
             )}
+
+          {
+            resultsPromiseState === 'fulfilled' &&
+            similarPackages.length > 0 && (
+              <SimilarPackagesSection
+                category={similarPackagesCategory}
+                packs={similarPackages}
+                comparisonGzip={results.gzip}
+              />
+            )
+          }
         </section>
       </ResultLayout>
-    )
+    );
   }
-}
+};
+
+export default withRouter(ResultPage)

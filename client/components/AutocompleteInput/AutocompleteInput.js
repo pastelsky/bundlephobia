@@ -16,6 +16,7 @@ export default class AutocompleteInput extends PureComponent {
   state = {
     value: this.props.initialValue,
     suggestions: [],
+    isMenuVisible: false,
   }
 
   getSuggestions = debounce(
@@ -62,9 +63,13 @@ export default class AutocompleteInput extends PureComponent {
     }
   }
 
+  handleMenuVisibilityChange = (isOpen) => {
+    this.setState({ isMenuVisible: isOpen })
+  }
+
   render() {
-    const { className, containerClass } = this.props
-    const { suggestions, value } = this.state
+    const { className, containerClass, autoFocus } = this.props
+    const { suggestions, value, isMenuVisible } = this.state
     const { name, version } = parsePackageString(value)
     const baseFontSize = (typeof window !== 'undefined' && window.innerWidth < 640) ?
       22 : 35
@@ -79,20 +84,23 @@ export default class AutocompleteInput extends PureComponent {
         onSubmit={ this.handleSubmit }
       >
         <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
-        <div className={ cx("autocomplete-input__container", className) }>
+        <div className={ cx("autocomplete-input__container", className, {
+          "autocomplete-input__container--menu-visible": isMenuVisible && !!suggestions.length
+        }) }>
           <AutoComplete
             getItemValue={ item => item.package.name }
             inputProps={ {
               placeholder: 'find package',
               className: 'autocomplete-input',
               autoCorrect: 'off',
+              autoFocus: autoFocus,
               autoCapitalize: 'off',
               autoFocus: true,
               spellCheck: false,
               style: { fontSize: searchFontSize },
             } }
+            onMenuVisibilityChange={ this.handleMenuVisibilityChange }
             onChange={ this.handleInputChange }
-            autoHighlight={ false }
             ref={ s => this.searchInput = s }
             value={ value }
             items={ suggestions }
