@@ -3,8 +3,8 @@ import Link from 'next/link'
 import API from '../../api'
 import stylesheet from './Layout.scss'
 
-import Heart from '../../../assets/heart.svg'
-import DigitalOceanLogo from '../../../assets/digital-ocean-logo.svg'
+import Heart from '../../assets/heart.svg'
+import DigitalOceanLogo from '../../assets/digital-ocean-logo.svg'
 
 export default class Layout extends Component {
   state = {

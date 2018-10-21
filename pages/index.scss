@@ -15,17 +15,18 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  max-width: 100%;
 }
 
 .homepage__tagline {
   @include font-size-md;
-  font-family: $font-family-code;
-  letter-spacing: -1px;
-  font-weight: $font-weight-thin;
+  font-family: $font-family-body;
+  font-weight: $font-weight-hairline;
   color: #777;
   margin-top: $global-spacing;
   text-align: center;
   line-height: 1.4;
+  letter-spacing: 1px;
 }
 
 .logo {

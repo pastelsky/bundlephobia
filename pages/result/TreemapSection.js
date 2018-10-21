@@ -127,11 +127,12 @@ class TreemapSection extends Component {
 
     return (
       <section className="treemap__section" ref={ts => (this.treemapSection = ts)}>
-        <h1 className="treemap__section-heading"> Composition </h1>
+        <h2 className="treemap__section-heading"> Composition </h2>
         <Treemap width={width} height={height} className="treemap">
           {
             compactedDependencies.map((dep, index) => (
               <Treemap.Square
+                key={dep.name}
                 value={dep.percentShare}
                 style={{background: colors[index % colors.length]}}
                 data-balloon={dep.tooltip}

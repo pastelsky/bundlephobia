@@ -1,0 +1,105 @@
+@import '../../../stylesheets/colors';
+@import '../../../stylesheets/variables';
+
+.quick-stats-bar {
+  display: flex;
+  align-content: center;
+  @include font-size-xs;
+  color: lighten($raven, 15%);
+  background: lighten($raven, 55%);
+  border-radius: 0 0 10px 10px;
+}
+
+.quick-stats-bar__stat {
+  padding: $global-spacing/1.5 $global-spacing * 1.5;
+  display: flex;
+  align-content: center;
+  position: relative;
+  justify-content: center;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  margin: auto 0;
+
+  & > * {
+    margin: auto 0;
+  }
+
+  &:not(:first-of-type)::before {
+    content: '';
+    width: 1px;
+    height: 60%;
+    position: absolute;
+    background: transparentize(black, 0.95);
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    left: 0;
+  }
+
+  &:first-of-type,
+  &:last-of-type  {
+    //padding-left: $global-spacing;
+  }
+}
+
+.quick-stats-bar__stat--optional {
+  @media screen and (max-width: 48em) {
+    display: none;
+  }
+
+  @media screen and (max-width: 40em) {
+    display: none;
+  }
+}
+
+.quick-stats-bar__stat--description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  flex-grow: 1;
+
+  @media screen and (max-width: 40em) {
+    display: none;
+  }
+}
+
+.quick-stats-bar__stat-icon {
+  margin-right: $global-spacing;
+}
+
+.quick-stats-bar__logo-icon {
+  vertical-align: middle;
+
+  &.quick-stats-bar__logo-icon--npm {
+    width: 36px;
+  }
+
+
+  &.quick-stats-bar__logo-icon--github {
+    height: 18px;
+    width: 18px;
+  }
+
+  path {
+    transition: fill 0.2s;
+    fill: lighten($raven, 15%);
+  }
+}
+
+.quick-stats-bar__link {
+  margin: auto $global-spacing /2;
+
+  &:hover {
+    .quick-stats-bar__logo-icon--github {
+      path {
+        fill: #333;
+      }
+    }
+    .quick-stats-bar__logo-icon--npm {
+      path {
+        fill: #cb3837;
+      }
+    }
+
+  }
+}

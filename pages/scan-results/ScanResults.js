@@ -1,3 +1,4 @@
+import { withRouter } from "next/router";
 import React, { Component } from 'react'
 import Analytics from 'react-ga'
 import FlipMove from 'react-flip-move';
@@ -102,12 +103,12 @@ class ResultCard extends Component {
   }
 }
 
-export default class ScanResults extends Component {
+class ScanResults extends Component {
   constructor(props) {
     super(props)
 
-    const { url } = this.props
-    const packageStrings = url.query.packages
+    const { router } = this.props
+    const packageStrings = router.query.packages
     const packages = packageStrings.split(',')
       .map(str => str.trim())
       .map(str => ({
@@ -299,3 +300,5 @@ export default class ScanResults extends Component {
     )
   }
 }
+
+export default withRouter(ScanResults)

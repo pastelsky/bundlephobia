@@ -2,16 +2,7 @@
 @import '../../stylesheets/variables';
 
 .result-page__search-input {
-  width: 45vw;
-  max-width: 580px;
-
-  @media screen and (max-width: 48em) {
-    width: 70vw;
-  }
-
-  @media screen and (max-width: 40em) {
-    width: 85vw;
-  }
+  width: 100%;
 }
 
 .flash-message {
@@ -21,10 +12,10 @@
   color: darken($pastel-green, 20%);
   align-self: center;
   margin-top: $global-spacing;
-  background: transparentize($maya-blue, 0.95);
   position: relative;
   display: flex;
   align-items: center;
+
 
   code {
     color: darken($pastel-green, 25%);
@@ -37,18 +28,11 @@
   }
 }
 
-.flash-message__info-icon {
+.flash-message__icon {
   margin-left: $global-spacing / 2;
-  border: 1px solid currentColor;
-  width: 12px;
-  height: 13px;
-  font-family: $font-family-code;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 2px;
   margin-right: $global-spacing;
+  height: $global-spacing * 2.5;
+  width: auto;
 }
 
 .result-error {
@@ -58,6 +42,33 @@
   justify-content: center;
   flex-direction: column;
   flex-grow: 1;
+}
+
+.result-error__details {
+  font-family: $font-family-code;
+  text-transform: none;
+
+  summary {
+    text-align: center;
+    color: lighten($raven, 10%);
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  pre {
+    max-width: 600px;
+    @include font-size-sm;
+    font-weight: $font-weight-light;
+    text-align: left;
+    color: $raven;
+    line-height: 1.5;
+    background: transparentize($raven, 0.94);
+    padding: $global-spacing $global-spacing * 2;
+    white-space: normal;
+    border-radius: 10px;
+  }
 }
 
 .result-error__img {
@@ -86,9 +97,6 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 6px);
-  //border-top: 3px dashed #333;
-  //border-bottom: 3px dashed #333;
-  //border-width: 3px 0;
 }
 
 .content-container {
@@ -263,21 +271,9 @@
 }
 
 .treemap__section-heading {
+  @include font-size-md-2;
   text-align: center;
   position: relative;
-
-  &::after {
-    @include font-size-xs;
-    content: 'NEW';
-    font-family: $font-family-code;
-    padding: $global-spacing / 5 $global-spacing / 1.5;
-    position: absolute;
-    top: 0;
-    margin-left: $global-spacing;
-    background: #ffbc40;
-    border-radius: 2px;
-    line-height: 1.2;
-  }
 }
 
 .treemap__percent {

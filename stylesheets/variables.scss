@@ -1,4 +1,15 @@
 // Font related
+@mixin font-size-xxxl {
+  font-size: 5.5rem;
+
+  @media screen and (max-width: 48em) {
+    font-size: 4rem;
+  }
+
+  @media screen and (max-width: 40em) {
+    font-size: 3rem;
+  }
+}
 
 @mixin font-size-xxl {
   font-size: 3rem;
@@ -24,7 +35,7 @@
   font-size: 2rem;
 
   @media screen and (max-width: 40em) {
-    font-size: 1.35rem;
+    font-size: 1.45rem;
   }
 }
 
@@ -97,6 +108,7 @@
   }
 }
 
+$font-weight-hairline: 200;
 $font-weight-thin: 300;
 $font-weight-light: 400;
 $font-weight-bold: 600;
