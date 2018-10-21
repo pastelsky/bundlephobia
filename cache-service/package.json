@@ -6,7 +6,6 @@
   "dependencies": {
     "debug": "^3.1.0",
     "dotenv": "^4.0.0",
-    "elastic-apm-node": "^1.4.0",
     "fastify": "^1.0.0-rc.2",
     "firebase": "^4.8.0",
     "lru-cache": "^4.1.1"
