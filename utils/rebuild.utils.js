@@ -21,7 +21,7 @@ function commit() {
   }
 }
 
-const queue = new Queue(20, {
+const queue = new Queue(15, {
   retry: 0,               //Number of retries
   retryIsJump: false,     //retry now?
   timeout: 0,
@@ -87,7 +87,7 @@ function filterBlacklistedPackages() {
 async function run() {
   const packages = []
 
-  const packs = require('../db2.json')//await getFirebaseStore()
+  const packs = require('../db3.json')//await getFirebaseStore()
   // fs.writeFileSync('./db.json', JSON.stringify(packs, null, 2))
 
 
@@ -112,7 +112,7 @@ async function run() {
           }
 
           try {
-            truncatedDescription = description.length > 300 ? description.substring(0, 300) + '…' : description
+            truncatedDescription = description.length > 330 ? description.substring(0, 330) + '…' : description
           } catch (e) {
             console.error('failed to parse description', description)
           }

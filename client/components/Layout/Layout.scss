@@ -216,7 +216,7 @@ footer {
   margin-top: $global-spacing;
   border: 2px solid lighten($raven, 30%);
   background: transparent;
-  border-radius: 0;
+  border-radius: 10px;
   padding: $global-spacing / 1.5 $global-spacing;
   display: block;
   transition: background 0.2s;

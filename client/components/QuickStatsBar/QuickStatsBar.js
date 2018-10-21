@@ -9,6 +9,9 @@ import NPMIcon from '../../assets/npm-logo.svg'
 import InfoIcon from '../../assets/info.svg'
 
 class QuickStatsBar extends Component {
+  static defaultProps = {
+    description: ''
+  }
 
   getStatItemCount = () => {
     const { isTreeShakeable, hasSideEffects } = this.props
