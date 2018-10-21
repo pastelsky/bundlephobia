@@ -50,6 +50,10 @@ export default class API {
     return API.get(`/api/recent?limit=${limit}`)
   }
 
+  static getSimilar(packageName) {
+    return API.get(`/api/similar-packages?package=${packageName}`)
+  }
+
   static getSuggestions(query) {
 
     const suggestionSort = (packageA, packageB) => {
