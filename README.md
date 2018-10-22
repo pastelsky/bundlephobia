@@ -19,6 +19,7 @@
 - Can build css and scss packages as well
 - Reports historical trends
 - See package composition
+- Display bundle size as a badge with [shields.io](https://shields.io/#/examples/size) or [badgen.net](https://badgen.net/#bundlephobia)
 
 ## Built using bundlephobia
 - Size in browser - As seen on package searches at [yarnpkg.com](https://yarnpkg.com)
