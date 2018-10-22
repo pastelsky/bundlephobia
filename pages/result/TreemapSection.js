@@ -136,6 +136,7 @@ class TreemapSection extends Component {
                 value={dep.percentShare}
                 style={{background: colors[index % colors.length]}}
                 data-balloon={dep.tooltip}
+                data-balloon-pos="top"
                 className="treemap__square"
               >
                 {(dep.percentShare > ellipsizeLimit) ? (
