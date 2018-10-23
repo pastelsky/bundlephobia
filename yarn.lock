@@ -1613,9 +1613,9 @@ balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
 
-balloon-css@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/balloon-css/-/balloon-css-0.5.0.tgz#6a3c065efab9ea5f509a95d4315df00aae114fa3"
+balloon-css@^0.4.0:
+  version "0.4.0"
+  resolved "http://registry.npmjs.org/balloon-css/-/balloon-css-0.4.0.tgz#0d6edf8bf595f16b21ef88a6a676caa5a418b955"
 
 base64-arraybuffer@0.1.5:
   version "0.1.5"

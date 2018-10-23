@@ -163,6 +163,16 @@ const categories = {
     ],
     similar: ['d3', 'chart.js', 'echarts', 'frappe-charts', 'highcharts']
   },
+  'react-autocomplete': {
+    name: 'React based autocomplete components',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'autocomplete', weight: Weight.NORMAL },
+      { tag: 'autosuggest', weight: Weight.NORMAL },
+      { tag: 'typeahead', weight: Weight.NORMAL }
+    ],
+    similar: ['react-autosuggest', 'downshift', 'react-autowhatever', 'react-autocomplete']
+  },
   'image-color-extraction': {
     name: 'Image color extraction',
     tags: [
