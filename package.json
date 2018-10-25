@@ -28,6 +28,7 @@
     "koa": "^2.5.3",
     "koa-basic-auth": "^3.0.0",
     "koa-better-ratelimit": "^2.1.2",
+    "koa-bodyparser": "^4.2.1",
     "koa-cache-control": "^2.0.0",
     "koa-cash": "3.0.1-0",
     "koa-compress": "^3.0.0",

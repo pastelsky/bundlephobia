@@ -12,6 +12,7 @@ const compress = require('koa-compress')
 const cacheControl = require('koa-cache-control')
 const requestId = require('koa-requestid')
 const auth = require('koa-basic-auth')
+const bodyParser = require('koa-bodyparser')
 const Cache = require('./utils/cache.utils')
 const { parsePackageString } = require('./utils/common.utils')
 const firebaseUtils = require('./utils/firebase.utils')
@@ -38,6 +39,7 @@ app.prepare().then(() => {
   const router = new Router()
 
   server.use(requestId());
+  server.use(bodyParser());
   server.use(requestLoggerMiddleware)
   server.use(cacheControl())
 
@@ -152,6 +154,20 @@ app.prepare().then(() => {
       }
     }
   )
+
+  router.post('/admin/restart', async (ctx, next) => {
+    console.log('got', ctx.request.body)
+    const { name, pass } = ctx.request.body
+    if (name !== 'bundlephobia' || pass !== process.env.BASIC_AUTH_PASSWORD) {
+      console.error('Failed to restart')
+      ctx.status = 500
+      ctx.body = 'Failed to restart'
+    } else {
+      const { stdout, stderr } = await exec.shell('pm2 reload all');
+      ctx.body = 'Server restarted' + stdout;
+      console.error(stderr)
+    }
+  })
 
   router.get('/admin/clear-cache',
     auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD }),
