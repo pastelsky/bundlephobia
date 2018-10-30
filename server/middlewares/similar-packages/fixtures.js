@@ -192,6 +192,14 @@ const categories = {
     ],
     similar: ['react-date-picker', 'react-datepicker', 'react-dates']
   },
+  'react-pdf': {
+    name: 'React based PDF utilies',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'pdf', weight: Weight.NORMAL },
+    ],
+    similar: ['react-pdf', 'react-pdf-js']
+  },
   'image-color-extraction': {
     name: 'Image color extraction',
     tags: [
