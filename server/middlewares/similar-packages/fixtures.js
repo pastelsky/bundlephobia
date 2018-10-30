@@ -174,22 +174,23 @@ const categories = {
     similar: ['react-autosuggest', 'downshift', 'react-autowhatever', 'react-autocomplete']
   },
   'react-calendar': {
-    name: 'React based date pickers',
+    name: 'React based calendars',
     tags: [
       { tag: 'react', weight: Weight.NORMAL },
       { tag: 'date', weight: Weight.NORMAL },
-      { tag: 'calendar', weight: Weight.NORMAL },
+      { tag: 'calendar', weight: Weight.HIGH },
     ],
-    similar: ['rc-calendar', 'simple-react-calendar']
+    similar: ['react-calendar', 'rc-calendar', 'simple-react-calendar']
   },
   'react-date-picker': {
     name: 'React based date pickers',
     tags: [
       { tag: 'react', weight: Weight.NORMAL },
       { tag: 'date', weight: Weight.NORMAL },
-      { tag: 'picker', weight: Weight.NORMAL }
+      { tag: 'picker', weight: Weight.NORMAL },
+      { tag: 'date-picker', weight: Weight.HIGH }
     ],
-    similar: ['react-datepicker', 'react-dates']
+    similar: ['react-date-picker', 'react-datepicker', 'react-dates']
   },
   'image-color-extraction': {
     name: 'Image color extraction',
@@ -269,12 +270,15 @@ const categories = {
     ],
     similar: ['cookie', 'tough-cookie', 'js-cookie', 'tiny-cookie']
   },
-  'classnames': {
+  'class-names-manipulation': {
     name: 'Class names manipulation',
     tags: [
+      { tag: 'class', weight: Weight.LOW },
       { tag: 'classname', weight: Weight.HIGH },
+      { tag: 'class-names', weight: Weight.HIGH },
+      { tag: 'class-list', weight: Weight.MID },
     ],
-    similar: ['merge-class-names']
+    similar: ['classnames', 'merge-class-names']
   },
   'deep-equality': {
     name: 'Deep Equality Check',
