@@ -35,14 +35,14 @@ const categories = {
   'markdown-parser': {
     name: 'Markdown parsers',
     tags: [
-      { tag: 'markdown', weight: Weight.HIGH },
-      { tag: 'parse', weight: Weight.NORMAL },
-      { tag: 'parser', weight: Weight.NORMAL },
+      { tag: 'markdown', weight: Weight.MAX },
+      { tag: 'md', weight: Weight.HIGH },
       { tag: 'ast', weight: Weight.MID },
       { tag: 'abstract syntax tree', weight: Weight.MID },
-      { tag: 'md', weight: Weight.HIGH }
+      { tag: 'parse', weight: Weight.NORMAL },
+      { tag: 'parser', weight: Weight.NORMAL }
     ],
-    similar: ['markdown', 'markdown-it', 'marked', 'commonmark', 'snarkdown']
+    similar: ['marked', 'remark', 'markdown-it', 'remarkable', 'showdown', 'commonmark', 'markdown', 'snarkdown']
   },
   'http-request': {
     name: 'HTTP client libraries',
