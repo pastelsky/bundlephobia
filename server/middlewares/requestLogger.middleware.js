@@ -2,6 +2,11 @@ const logger = require('../Logger')
 const now = require('performance-now')
 
 async function requestLoggerMiddleware(ctx, next) {
+  if (!ctx.request.url.includes('/api/')) {
+    await next();
+    return
+  }
+
   const requestStart = now()
   await next()
   const requestEnd = now()

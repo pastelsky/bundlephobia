@@ -27,6 +27,15 @@ class Queue {
       maxAge: Number.POSITIVE_INFINITY,
       ...options,
     }
+
+    setInterval(() => {
+      log('current jobs are %O', this.jobs.map(({ id, status, priority, addedTime }) => ({
+        id,
+        status,
+        priority,
+        addedTime
+      })))
+    }, 10000)
   }
 
   /**
@@ -162,7 +171,7 @@ class Queue {
       this.pruneQueue()
       this.executeNextJob()
     } else {
-      log('waiting... job queue is full')
+      log('waiting... all workers ain quere are occupied')
     }
   }
 

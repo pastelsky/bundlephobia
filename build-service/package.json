@@ -4,9 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "fastify": "^1.0.0-rc.2",
+    "fastify": "^1.13.0",
     "now-logs": "^0.0.7",
-    "package-build-stats": "^3.5.6"
+    "package-build-stats": "^4.0.1"
   },
   "engines": {
     "node": ">= 9.x.x",
