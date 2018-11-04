@@ -6905,10 +6905,10 @@ p-try@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/p-try/-/p-try-2.0.0.tgz#85080bb87c64688fa47996fe8f7dfbe8211760b1"
 
-package-build-stats@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/package-build-stats/-/package-build-stats-4.0.1.tgz#5b6ebc7e8ed45dff334863e1c78d18aa40a54715"
-  integrity sha512-iTz+7IehZ0eiOS4q04HuDrYbyB/B56c6iYFmIbUiQFGDd1S6K4ZQ/XTo2A3XExi0UFM0yn1Icx8f1vit2R4zPA==
+package-build-stats@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/package-build-stats/-/package-build-stats-4.0.2.tgz#b943f84ce8fa3bd4e8d7063c5e0dd00e15f1b9bd"
+  integrity sha512-Z76pzlAirK4umgiFq0nlB2Xkt/xpD3+omcHxLChleHgUyIHvjaqLnJOcOUrXsLaRz+oKvOkuMMys5tB7Dj7I6w==
   dependencies:
     autoprefixer "^9.3.1"
     builtin-modules "^3.0.0"

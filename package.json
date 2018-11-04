@@ -44,7 +44,7 @@
     "node-fetch": "^2.2.0",
     "normalize.css": "^7.0.0",
     "p-queue": "^3.0.0",
-    "package-build-stats": "^4.0.1",
+    "package-build-stats": "^4.0.2",
     "performance-now": "^2.1.0",
     "promise-queue-plus": "^1.1.0",
     "promise.series": "^0.2.0",
