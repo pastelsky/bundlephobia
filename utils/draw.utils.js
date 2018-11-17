@@ -69,7 +69,8 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
     fontFamily: 'Source Code Pro',
     fontSize: 45,
     fill: selectedTheme.nameColor,
-    opcity: 0.8,
+    opacity: 0.8,
+    top: 19,
   })
 
   const packageAtText = new fabric.Text('@', {
@@ -77,10 +78,11 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
     fontSize: 35,
     fill: '#91D396',
     left: packageNameText.width + pad * 2,
+    top: 24,
   })
 
-  packageAtText.top =
-    packageNameText.top + (packageNameText.height - packageAtText.height) / 2
+  // packageAtText.top =
+  //   packageNameText.top + (packageNameText.height - packageAtText.height) / 2
 
   const packageVersionText = new fabric.Text(version, {
     fontFamily: 'Source Code Pro',
@@ -88,16 +90,17 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
     fill: selectedTheme.versionColor,
     opacity: selectedTheme.versionOpacity,
     left: packageNameText.width + packageAtText.width + +pad * 4,
+    top: 28,
   })
 
-  packageVersionText.top =
-    packageNameText.top +
-    (packageNameText.height - packageVersionText.height) / 2 +
-    pad / 2
+  // packageVersionText.top =
+  //   packageNameText.top +
+  //   (packageNameText.height - packageVersionText.height) / 2 +
+  //   pad / 2
 
   const packageNameGroup = new fabric.Group(
     [packageNameText, packageAtText, packageVersionText],
-    { selectable: false, top: 91 / 2, originY: 'center' },
+    { selectable: false, /* top: 91 / 2, originY: 'center'*/ },
   )
 
   function createStatGroup(number, unit, label, opts) {
@@ -141,31 +144,41 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
   const threeGTime = formatTime(times.threeG)
 
   const minGroup = createStatGroup(minSize.size.toFixed(2), minSize.unit, 'minified', {
-    originY: 'center',
+    // originY: 'center',
     originX: 'center',
-    top: 91 + (height - 91) / 4,
+    // top: 91 + (height - 91) / 4,
+    top: 106,
     left: width / 4,
   })
 
   const gzipGroup = createStatGroup(gzipSize.size.toFixed(2), gzipSize.unit, 'gzipped', {
-    originY: 'center',
+    // originY: 'center',
     originX: 'center',
-    top: 91 + (height - 91) / 4,
+    // top: 91 + (height - 91) / 4,
+    top: 106,
     left: width * (3 / 4),
   })
 
-  const twogGroup = createStatGroup(twoGTime.size.toFixed(1), twoGTime.unit, '2G', {
-    originY: 'center',
+  const twogGroup = createStatGroup(
+    twoGTime.unit === 'ms' ? twoGTime.size : twoGTime.size.toFixed(1),
+    twoGTime.unit,
+    '2G', {
+    // originY: 'center',
     originX: 'center',
-    top: 91 + (height - 91) * (3 / 4),
-    left: width / 4,
+    // top: 91 + (height - 91) * (3 / 4),
+      top: 235,
+      left: width / 4,
   })
 
-  const threegGroup = createStatGroup(threeGTime.size.toFixed(1), threeGTime.unit, 'emerging 3G', {
-    originY: 'center',
+  const threegGroup = createStatGroup(
+    threeGTime.unit === 'ms' ? threeGTime.size : threeGTime.size.toFixed(1),
+    threeGTime.unit,
+    'emerging 3G', {
+    // originY: 'center',
     originX: 'center',
-    top: 91 + (height - 91) * (3 / 4),
-    left: width * (3 / 4),
+    // top: 91 + (height - 91) * (3 / 4),
+      top: 235,
+      left: width * (3 / 4),
   })
 
   canvas
