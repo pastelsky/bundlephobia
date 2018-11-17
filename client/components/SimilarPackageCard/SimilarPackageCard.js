@@ -2,11 +2,12 @@ import React, {Component} from 'react'
 import cx from 'classnames'
 import {formatSize} from "utils";
 import Link from "next/link";
+import DOMPurify from 'dompurify';
 
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import PlusIcon from '../../assets/plus.svg'
 import GithubIcon from '../../assets/github-logo.svg'
-import stylesheet from './SimilarPackageCard.scss'
+import './SimilarPackageCard.scss'
 
 export default class SimilarPackageCard extends Component {
   render() {
@@ -19,8 +20,7 @@ export default class SimilarPackageCard extends Component {
            target="_blank"
            rel="noreferrer noopener"
         >
-          <style dangerouslySetInnerHTML={{ __html: stylesheet }}/>
-          <div className="similar-package-card__wrap">
+                    <div className="similar-package-card__wrap">
             <PlusIcon className="similar-package-card__plus"/>
             <p className="similar-package-card__description">
               Suggest another
@@ -95,8 +95,7 @@ export default class SimilarPackageCard extends Component {
     return (
       <Link href={`/result?p=${pack.name}`}>
         <a className="similar-package-card">
-          <style dangerouslySetInnerHTML={{ __html: stylesheet }}/>
-          <div className="similar-package-card__wrap">
+                    <div className="similar-package-card__wrap">
             <div className="similar-package-card__header">
               <h3 className="similar-package-card__name">{pack.name}</h3>
               <a href={pack.repository} onClick={e => {
@@ -106,9 +105,10 @@ export default class SimilarPackageCard extends Component {
                 <GithubIcon className="similar-package-card__github-icon"/>
               </a>
             </div>
-            <p className="similar-package-card__description">
-              {pack.description}
-            </p>
+            <p
+              className="similar-package-card__description"
+              dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(pack.description)}}
+            />
           </div>
           {footer}
         </a>

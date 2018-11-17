@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react'
 import API from 'client/api'
 import AutoComplete from 'react-autocomplete'
 import cx from 'classnames'
-import stylesheet from './AutocompleteInput.scss'
+import './AutocompleteInput.scss'
 import debounce from 'debounce'
 
 import { parsePackageString } from 'utils/common.utils'
@@ -83,7 +83,6 @@ export default class AutocompleteInput extends PureComponent {
         className={ cx(containerClass, "autocomplete-input__form") }
         onSubmit={ this.handleSubmit }
       >
-        <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
         <div className={ cx("autocomplete-input__container", className, {
           "autocomplete-input__container--menu-visible": isMenuVisible && !!suggestions.length
         }) }>
@@ -95,7 +94,6 @@ export default class AutocompleteInput extends PureComponent {
               autoCorrect: 'off',
               autoFocus: autoFocus,
               autoCapitalize: 'off',
-              autoFocus: true,
               spellCheck: false,
               style: { fontSize: searchFontSize },
             } }

@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import { formatSize } from 'utils/index'
-import stylesheet from './BarGraph.scss'
+import './BarGraph.scss'
 
 
 export default class BarGraph extends PureComponent {
@@ -37,7 +37,7 @@ export default class BarGraph extends PureComponent {
 
     return (
       <div className="bar-graph-container">
-        <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
+
         <figure className="bar-graph">
           {
             readings.map((reading, i) => (

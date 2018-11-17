@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Link from 'next/link'
 import API from '../../api'
-import stylesheet from './Layout.scss'
+import './Layout.scss'
 
 import Heart from '../../assets/heart.svg'
 import DigitalOceanLogo from '../../assets/digital-ocean-logo.svg'
@@ -26,7 +26,7 @@ export default class Layout extends Component {
 
     return (
       <section className="layout">
-        <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
+
         <section className={ className }>
           { children }
         </section>

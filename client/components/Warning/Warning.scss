@@ -1,0 +1,21 @@
+@import '../../../stylesheets/colors';
+@import '../../../stylesheets/variables';
+
+
+.warning-bar {
+  @include font-size-xs;
+  background:lighten($dandelion, 5%);
+  padding: $global-spacing / 2 $global-spacing;
+  border-radius: 4px;
+  margin-top: 2vh;
+  color: darken(desaturate($dandelion, 35%), 35%);
+
+  a {
+    @include font-size-xxs;
+    color: inherit;
+    font-weight: $font-weight-bold;
+    opacity: 0.8;
+    padding-left: $global-spacing;
+    text-transform: uppercase;
+  }
+}

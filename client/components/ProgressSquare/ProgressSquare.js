@@ -1,6 +1,6 @@
-import React, { Component } from 'react'
+import React, {Component} from 'react'
 
-import stylesheet from './ProgressSquare.scss'
+import './ProgressSquare.scss'
 
 export default class ProgressSquare extends Component {
   constructor(props) {
@@ -76,12 +76,11 @@ export default class ProgressSquare extends Component {
     const { progressText } = this.state
     return (
       <div className="progress-square">
-        <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
         <span className="progress-square__loader">
-          <span className="progress-square__loader-inner" />
+          <span className="progress-square__loader-inner"/>
         </span>
         <p className="progress-square__text">
-          { progressText }
+          {progressText}
         </p>
       </div>
     )

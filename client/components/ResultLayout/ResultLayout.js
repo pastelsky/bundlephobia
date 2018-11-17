@@ -5,15 +5,14 @@ import Link from 'next/link'
 import Layout from 'client/components/Layout'
 
 import GithubLogo from '../../assets/github-logo.svg'
-import stylesheet from './ResultLayout.scss'
+import './ResultLayout.scss'
 
 export default class ResultLayout extends Component {
   render() {
     const { children, className } = this.props
     return (
       <Layout>
-        <style dangerouslySetInnerHTML={{ __html: stylesheet }}/>
-        <div className={cx('page-container', className)}>
+                <div className={cx('page-container', className)}>
           <header className="page-header">
             <section className="result-header--left-section">
               <Link href="/">

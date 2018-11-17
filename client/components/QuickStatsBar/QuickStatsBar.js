@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import stylesheet from './QuickStatsBar.scss'
+import DOMPurify from 'dompurify';
+import './QuickStatsBar.scss'
 
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import SideEffectIcon from '../../assets/side-effect.svg'
@@ -23,12 +24,15 @@ class QuickStatsBar extends Component {
   }
 
   getTrimmedDescription = () => {
+    let trimmed
     const { description } = this.props
     if (description.trim().endsWith('.')) {
-      return description.substring(0, description.length - 1);
+      trimmed = description.substring(0, description.length - 1);
     } else {
-      return description.trim()
+      trimmed = description.trim()
     }
+
+    return DOMPurify.sanitize(trimmed)
   }
 
   render() {
@@ -37,23 +41,21 @@ class QuickStatsBar extends Component {
 
     return (
       <div className="quick-stats-bar">
-        <style dangerouslySetInnerHTML={{ __html: stylesheet }}/>
-
-        {/* Obvious target for XSS :\ */}
-        {statItemCount < 2 && (
-          <div
-            className="quick-stats-bar__stat quick-stats-bar__stat--description "
-            title={ this.getTrimmedDescription() }
-          >
-            <InfoIcon className="quick-stats-bar__stat-icon"/>
+        <div
+          className="quick-stats-bar__stat quick-stats-bar__stat--description "
+          title={this.getTrimmedDescription()}
+        >
+          <InfoIcon />
+          {statItemCount < 2 && (
             <span
+              className="quick-stats-bar__stat--description-content"
               dangerouslySetInnerHTML={{ __html: this.getTrimmedDescription() }}
               style={{
                 maxWidth: `${500 - statItemCount * 280}px`
               }}
             />
-          </div>
-        )}
+          )}
+        </div>
 
         {isTreeShakeable && (
           <div className="quick-stats-bar__stat">

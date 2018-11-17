@@ -1,5 +1,6 @@
-@import '../../../stylesheets/base';
 @import '../../../stylesheets/variables';
+@import '../../../stylesheets/base';
+@import '../../../stylesheets/colors';
 
 $footer-content-max-width: 800px;
 
@@ -15,6 +16,7 @@ footer {
   justify-content: center;
   padding: 0 0 $global-spacing * 5;
   color: lighten($raven, 27%);
+  flex-direction: column;
 
   a {
     color: lighten($raven, 27%);
