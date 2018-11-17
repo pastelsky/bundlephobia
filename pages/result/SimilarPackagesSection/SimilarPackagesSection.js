@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import SimilarPackageCard from "client/components/SimilarPackageCard/SimilarPackageCard";
-import stylesheet from './SimilarPackagesSection.scss'
+import './SimilarPackagesSection.scss'
 
 class SimilarPackagesSection extends Component {
   render() {
@@ -9,8 +9,6 @@ class SimilarPackagesSection extends Component {
       <div className="similar-packages-section">
         <h2 className="similar-packages-section__heading"> Similar Packages </h2>
         <h5 className="similar-packages-section__subheading"> {category} </h5>
-
-        <style dangerouslySetInnerHTML={{ __html: stylesheet }}/>
 
         <div className="similar-packages-section__list">
           {packs.map(pack => (

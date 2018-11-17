@@ -11,16 +11,19 @@ import Router, {withRouter} from 'next/router';
 import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
 import {parsePackageString} from 'utils/common.utils'
+import {getTimeFromSize, DownloadSpeed} from 'utils'
 import Stat from './Stat'
 
 import API from 'client/api'
 
 import TreemapSection from './TreemapSection'
 import EmptyBox from '../../client/assets/empty-box.svg'
-import TreeShakeIcon from '../../client/assets/tree-shake.svg'
-import stylesheet from './ResultPage.scss'
 import SimilarPackagesSection from "./SimilarPackagesSection/SimilarPackagesSection";
 import QuickStatsBar from 'client/components/QuickStatsBar/QuickStatsBar'
+
+import './ResultPage.scss'
+import Warning from 'client/components/Warning/Warning'
+import arrayToSentence from 'array-to-sentence'
 
 class ResultPage extends PureComponent {
   state = {
@@ -32,13 +35,6 @@ class ResultPage extends PureComponent {
     historicalResults: [],
     similarPackages: [],
     similarPackagesCategory: '',
-  }
-
-  // Picked up from http://www.webpagetest.org/
-  // Speed in KB/s
-  static downloadSpeed = {
-    TWO_G: 30,     // 2G Edge
-    THREE_G: 50    // Emerging markets 3G
   }
 
   componentDidMount() {
@@ -127,7 +123,7 @@ class ResultPage extends PureComponent {
       })
       .catch(err => {
         this.setState({ historicalResultsPromiseState: 'rejected' })
-        console.error(err)
+        console.error('Fetching history failed:', err)
       })
   }
 
@@ -178,15 +174,14 @@ class ResultPage extends PureComponent {
       inputInitialValue: normalizedQuery,
       similarPackages: [],
       historicalResults: [],
+    }, () => {
+      Router.push(`/result?p=${normalizedQuery}`)
+      this.activeQuery = normalizedQuery
+      this.fetchResults(normalizedQuery)
+      console.log('fetching history triggered')
+      this.fetchHistory(normalizedQuery)
+      this.fetchSimilarPackages(normalizedQuery)
     })
-
-
-    Router.push(`/result?p=${normalizedQuery}`)
-
-    this.activeQuery = normalizedQuery
-    this.fetchResults(normalizedQuery)
-    this.fetchHistory(normalizedQuery)
-    this.fetchSimilarPackages(normalizedQuery)
   }
 
   handleProgressDone = () => {
@@ -234,6 +229,40 @@ class ResultPage extends PureComponent {
     })
   }
 
+  getMetaTags = () => {
+    const { url } = this.props
+    const { resultsPromiseState, results } = this.state
+    let name, version
+
+    if (resultsPromiseState === 'fulfilled') {
+      name = results.name
+      version = results.version
+    } else {
+      name = parsePackageString(url.query.p).name
+      version = parsePackageString(url.query.p).version
+    }
+
+    const packageString = `${name}@${version}`
+    const origin = typeof window === 'undefined' ? 'http://bphobia.ngrok.io' : window.location.origin
+
+    return (
+      <Head>
+        <meta
+          property="og:title"
+          content={`${packageString} ❘ BundlePhobia`}
+        />
+        <title>
+          {packageString} | BundlePhobia
+        </title>
+        <meta
+          property="og:image"
+          content={origin + `/api/stats-image?name=${name}&version=${version}&wide=true`}
+        />
+        <meta name="twitter:card" content="summary_large_image"/>
+      </Head>
+    )
+  }
+
   render() {
     const {
       inputInitialValue,
@@ -245,7 +274,6 @@ class ResultPage extends PureComponent {
       similarPackagesCategory,
     } = this.state
 
-    const { router } = this.props
     const getQuickStatsBar = () => resultsPromiseState === 'fulfilled' && (
       <QuickStatsBar
         description={results.description}
@@ -257,28 +285,10 @@ class ResultPage extends PureComponent {
       />
     )
 
+
     return (
       <ResultLayout>
-        <style dangerouslySetInnerHTML={{ __html: stylesheet }}/>
-        <Head>
-          <meta
-            property="og:title"
-            content={`${router.query.p} | BundlePhobia`}
-          />
-        </Head>
-        {
-          resultsPromiseState === 'fulfilled' && (
-            <Head>
-              <meta
-                property="og:title"
-                content={`${results.name}@${results.version} | BundlePhobia`}
-              />
-              <title>
-                {results.name}@{results.version} | BundlePhobia
-              </title>
-            </Head>
-          )
-        }
+        {this.getMetaTags()}
         <section className="content-container-wrap">
           <div className="content-container">
 
@@ -300,7 +310,23 @@ class ResultPage extends PureComponent {
                 </div>
               )
             }
-
+            {
+              resultsPromiseState === 'fulfilled' &&
+              results.ignoredMissingDependencies &&
+              results.ignoredMissingDependencies.length && (
+                <Warning>
+                  Ignoring the size of
+                  missing {results.ignoredMissingDependencies.length > 1 ? 'dependencies' : 'dependency'} &nbsp;
+                  <code>{arrayToSentence(results.ignoredMissingDependencies)}</code>.
+                  <a
+                    href="https://github.com/pastelsky/bundlephobia#1-why-does-search-for-package-x-throw-missingdependencyerror-"
+                    target="_blank"
+                  >
+                    Read more
+                  </a>
+                </Warning>
+              )
+            }
             {
               resultsPromiseState === 'fulfilled' && (
                 <div className="content-split-container">
@@ -324,16 +350,16 @@ class ResultPage extends PureComponent {
                       <h3> Download Time </h3>
                       <div className="time-stats">
                         <Stat
-                          value={results.gzip / 1024 / ResultPage.downloadSpeed.TWO_G}
+                          value={getTimeFromSize(results.gzip).twoG}
                           type={Stat.type.TIME}
                           label="2G Edge"
-                          infoText={`Download Speed: ⬇️ ${ResultPage.downloadSpeed.TWO_G} kB/s`}
+                          infoText={`Download Speed: ⬇️ ${DownloadSpeed.TWO_G} kB/s`}
                         />
                         <Stat
-                          value={results.gzip / 1024 / ResultPage.downloadSpeed.THREE_G}
+                          value={getTimeFromSize(results.gzip).threeG}
                           type={Stat.type.TIME}
                           label="Emerging 3G"
-                          infoText={`Download Speed: ⬇️ ${ResultPage.downloadSpeed.THREE_G} kB/s`}
+                          infoText={`Download Speed: ⬇️ ${DownloadSpeed.THREE_G} kB/s`}
                         />
                       </div>
                     </div>
@@ -370,7 +396,7 @@ class ResultPage extends PureComponent {
                 {
                   resultsError.error && resultsError.error.details && resultsError.error.details.originalError && (
                     <details className="result-error__details">
-                      <summary> Stacktrace </summary>
+                      <summary> Stacktrace</summary>
                       <pre>
                         {
                           Array.isArray(resultsError.error.details.originalError) ?
@@ -411,6 +437,6 @@ class ResultPage extends PureComponent {
       </ResultLayout>
     );
   }
-};
+}
 
 export default withRouter(ResultPage)
