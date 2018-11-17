@@ -21,7 +21,7 @@ class Logger {
 
     winston.remove(winston.transports.Console);
     this.logger = winston.createLogger({
-      transports: process.env.NODE_ENV !== 'production' ? [] : [logzioTransport, sumologicTransport]
+      transports: process.env.NODE_ENV !== 'production' ? [] : [logzioTransport, /*sumologicTransport*/]
     });
   }
 
