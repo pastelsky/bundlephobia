@@ -22,6 +22,8 @@ module.exports = {
     /hack-\d+/,
     /cheat-\d+/,
     /-hacks?-/,
+    /nuxt/,
+    /react-scripts/
   ],
   CACHE: {
     PUBLIC_ASSETS: dev ? 0 : 24 * 60 * 60,
