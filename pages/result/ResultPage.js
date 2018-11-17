@@ -243,22 +243,24 @@ class ResultPage extends PureComponent {
     }
 
     const packageString = `${name}@${version}`
-    const origin = typeof window === 'undefined' ? 'http://bphobia.ngrok.io' : window.location.origin
+    const origin = typeof window === 'undefined' ? 'https://bundlephobia.com' : window.location.origin
 
     return (
       <Head>
         <meta
           property="og:title"
+          key="og:title"
           content={`${packageString} ❘ BundlePhobia`}
         />
-        <title>
+        <title key="title">
           {packageString} | BundlePhobia
         </title>
         <meta
           property="og:image"
+          key="og:image"
           content={origin + `/api/stats-image?name=${name}&version=${version}&wide=true`}
         />
-        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:card" key="twitter:card" content="summary_large_image"/>
       </Head>
     )
   }

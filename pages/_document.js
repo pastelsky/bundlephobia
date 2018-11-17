@@ -1,5 +1,6 @@
 import React from "react"
-import Document, {Head, Main, NextScript} from "next/document"
+import Document, {Head as DocumentHead, Main, NextScript} from "next/document"
+import Head from "next/head"
 
 export default class MyDocument extends Document {
   static getInitialProps({ renderPage }) {
@@ -17,8 +18,8 @@ export default class MyDocument extends Document {
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
-        <title>
-          BundlePhobia | cost of adding a npm package
+        <title key="title">
+          BundlePhobia ❘ cost of adding a npm package
         </title>
         <meta name="application-name" content="BundlePhobia"/>
         <meta
@@ -59,15 +60,16 @@ export default class MyDocument extends Document {
         <meta name="application-name" content="BundlePhobia"/>
         <meta name="theme-color" content="#212121"/>
 
-        <meta property="og:title" content="BundlePhobia"/>
-        <meta property="og:description"
+        <meta property="og:title" key="og:title" content="BundlePhobia" />
+        <meta property="og:description" key="og:description"
               content="Find the performance impact of adding a npm package to your bundle."/>
         <meta property="og:type" content="website"/>
         <meta property="og:url" content="https://bundlephobia.com"/>
-        <meta property="og:image"
+        <meta property="og:image" key="og:image"
               content="https://s26.postimg.org/4s64v24c9/Artboard_4.png"/>
         <meta property="twitter:creator" content="@_pastelsky"/>
-
+      </Head>
+      <DocumentHead>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -77,7 +79,7 @@ export default class MyDocument extends Document {
           }}
         />
         <script async src="https://www.google-analytics.com/analytics.js"/>
-      </Head>
+      </DocumentHead>
       <body>
       <Main/>
       <NextScript/>
