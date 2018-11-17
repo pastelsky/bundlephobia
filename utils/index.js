@@ -41,9 +41,26 @@ const formatTime = (value) => {
   return { unit, size }
 }
 
+
+// Picked up from http://www.webpagetest.org/
+// Speed in KB/s
+
+const DownloadSpeed = {
+  TWO_G: 30,     // 2G Edge
+  THREE_G: 50    // Emerging markets 3G
+}
+const getTimeFromSize = (sizeInBytes) => {
+  return {
+    twoG: sizeInBytes / 1024 / DownloadSpeed.TWO_G,
+    threeG: sizeInBytes / 1024 / DownloadSpeed.THREE_G,
+  }
+}
+
 module.exports = {
   encodeFirebaseKey,
   decodeFirebaseKey,
   formatTime,
   formatSize,
+  getTimeFromSize,
+  DownloadSpeed,
 }
