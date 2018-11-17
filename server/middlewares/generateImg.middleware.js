@@ -31,6 +31,7 @@ async function generateImgMiddleware(ctx, next) {
       wide,
     })
   } catch(err) {
+    console.error(err)
     await send(ctx, 'client/assets/public/android-chrome-192x192.png')
   }
 }
