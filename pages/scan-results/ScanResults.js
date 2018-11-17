@@ -10,8 +10,9 @@ import Link from 'next/link'
 import ResultLayout from '../../client/components/ResultLayout'
 import { parsePackageString } from 'utils/common.utils'
 
-import stylesheet from './ScanResults.scss'
+import './ScanResults.scss'
 import API from 'client/api'
+import {getTimeFromSize} from 'utils'
 
 class ResultCard extends Component {
   render() {
@@ -47,14 +48,14 @@ class ResultCard extends Component {
             />
             <Stat
               className="scan-results__stat-item"
-              value={ pack.result.gzip / 1024 / 30 }
+              value={ getTimeFromSize(pack.result.gzip) }
               type={ Stat.type.TIME }
               label="2G Edge"
               compact
             />
             <Stat
               className="scan-results__stat-item"
-              value={ pack.result.gzip / 1024 / 50 }
+              value={ getTimeFromSize(pack.result.gzip) }
               type={ Stat.type.TIME }
               label="Emerging 3G"
               compact
@@ -224,7 +225,7 @@ class ScanResults extends Component {
 
     return (
       <ResultLayout className="scan-results">
-        <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
+
         <h1> Results</h1>
         <div className="scan-results__sort-panel">
           <label> Sort By: </label>

@@ -27,7 +27,7 @@ const prefixURL = (url, { base, user, project, head, path }) => {
 async function getPackageDetails(packageName) {
   let readme
   const { body } = await got(
-    `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${packageName}?x-algolia-application-id=OFCNCOG2CU&x-algolia-api-key=f54e21fa3a2a0160595bb058179bfb1e`,
+    `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(packageName)}?x-algolia-application-id=OFCNCOG2CU&x-algolia-api-key=f54e21fa3a2a0160595bb058179bfb1e`,
     { json: true }
   )
 
@@ -107,7 +107,8 @@ async function stripMarkdown(readme) {
 }
 
 function getScore(categoryTokens, packageTokens) {
-  return packageTokens.reduce((acc, curToken) => {
+  const packageTokenWithoutDupes = Array.from(new Set(packageTokens))
+  return packageTokenWithoutDupes.reduce((acc, curToken) => {
     const match = categoryTokens.find(token => token.tag === curToken)
     if (match) {
       return acc + match.weight
@@ -161,10 +162,6 @@ async function getCategory(packageName) {
             })
           ))
     )
-
-    // if (label === 'deep-equality' && packageName === 'lodash.isequal') {
-    //   console.log(categoryTokens, packageTokens)
-    // }
 
     const score = getScore(categoryTokens, packageTokens)
     scores[label] = score
@@ -223,8 +220,8 @@ async function similarPackagesMiddleware(ctx) {
         },
       }
     }
-  } catch
-    (err) {
+  } catch (err) {
+    console.error(err)
     ctx.status = 500
     ctx.body = {
       error: err,
