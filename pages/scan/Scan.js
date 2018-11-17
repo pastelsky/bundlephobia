@@ -6,7 +6,7 @@ import scanBlacklist from './scanBlacklist'
 import Dropzone from 'react-dropzone'
 import Router from 'next/router'
 import * as semver from 'semver'
-import stylesheet from './Scan.scss'
+import './Scan.scss'
 
 export default class Scan extends Component {
   state = {
@@ -179,7 +179,7 @@ export default class Scan extends Component {
     }
     return (
       <ResultLayout className="scan-page">
-        <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
+
         { content }
       </ResultLayout>
     )

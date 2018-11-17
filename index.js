@@ -25,6 +25,7 @@ const errorMiddleware = require('./server/middlewares/results/error.middleware')
 const blockBlacklistMiddleware = require('./server/middlewares/results/blockBlacklist.middleware')
 const requestLoggerMiddleware = require('./server/middlewares/requestLogger.middleware')
 const similarPackagesMiddleware = require('./server/middlewares/similar-packages/similarPackages.middleware')
+const generateImgMiddleware = require('./server/middlewares/generateImg.middleware')
 
 const config = require('./server/config')
 
@@ -140,6 +141,8 @@ app.prepare().then(() => {
   })
 
   router.get('/api/similar-packages', similarPackagesMiddleware)
+
+  router.get('/api/stats-image', generateImgMiddleware)
 
   router.get('/admin/restart',
     auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD }),

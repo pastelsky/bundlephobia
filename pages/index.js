@@ -4,7 +4,7 @@ import Layout from 'client/components/Layout'
 import Router from 'next/router'
 import Link from 'next/link'
 import Analytics from 'react-ga'
-import stylesheet from './index.scss'
+import './index.scss'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox/AutocompleteInputBox'
 
 export default class Home extends PureComponent {
@@ -26,7 +26,6 @@ export default class Home extends PureComponent {
   render() {
     return (
       <Layout className="homepage">
-        <style dangerouslySetInnerHTML={{ __html: stylesheet }}/>
         <div className="homepage__container">
           <svg className="logo-graphic"
                width="137"

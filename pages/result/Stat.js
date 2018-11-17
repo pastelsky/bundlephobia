@@ -1,6 +1,6 @@
 import React from 'react'
 import cx from 'classnames'
-import stylesheet from './Stat.scss'
+import './Stat.scss'
 import { formatSize, formatTime } from 'utils'
 
 const Type = {
@@ -11,6 +11,7 @@ const Type = {
 export default function Stat({
   value, label, type, infoText, compact, className
 }) {
+
   const roundedValue = type === Type.SIZE ?
     parseFloat((formatSize(value).size).toFixed(1)) :
     parseFloat((formatTime(value).size).toFixed(2))
@@ -19,7 +20,7 @@ export default function Stat({
     <div className={
       cx("stat-container", className, { "stat-container--compact": compact }) }
     >
-      <style dangerouslySetInnerHTML={ { __html: stylesheet } } />
+
       <div className="stat-container__value-container">
         <div className="stat-container__value-wrap">
           <div
