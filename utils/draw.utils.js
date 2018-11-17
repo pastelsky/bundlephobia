@@ -98,13 +98,10 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
   //   (packageNameText.height - packageVersionText.height) / 2 +
   //   pad / 2
 
-  // const packageNameGroup = new fabric.Group(
-  //   [packageNameText, packageAtText, packageVersionText],
-  //   { selectable: false, /* top: 91 / 2, originY: 'center'*/ },
-  // )
-  canvas.add(packageNameText)
-    .add(packageAtText)
-    .add(packageVersionText)
+  const packageNameGroup = new fabric.Group(
+    [packageNameText, packageAtText, packageVersionText],
+    { selectable: false, /* top: 91 / 2, originY: 'center'*/ },
+  )
 
   // const packageNameGroup = new fabric.Group(
   //   [packageNameText, packageAtText, packageVersionText],
