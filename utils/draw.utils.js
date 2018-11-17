@@ -36,7 +36,7 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
   const width = 624
   const height = 350
   const pad = 5
-  const wideBy = 2
+  const wideBy = 25
 
   const selectedTheme = theme === 'light' ? lightTheme : darkTheme
   fabric.devicePixelRatio = 1.5

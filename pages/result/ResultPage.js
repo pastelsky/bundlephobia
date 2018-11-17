@@ -242,7 +242,7 @@ class ResultPage extends PureComponent {
       version = parsePackageString(url.query.p).version
     }
 
-    const packageString = `${name}@${version}`
+    const packageString = version ? `${name}@${version}` : name
     const origin = typeof window === 'undefined' ? 'https://bundlephobia.com' : window.location.origin
 
     return (
@@ -260,7 +260,9 @@ class ResultPage extends PureComponent {
           key="og:image"
           content={origin + `/api/stats-image?name=${name}&version=${version}&wide=true`}
         />
-        <meta name="twitter:card" key="twitter:card" content="summary_large_image"/>
+        {name && version && (
+          <meta name="twitter:card" key="twitter:card" content="summary_large_image"/>
+        )}
       </Head>
     )
   }

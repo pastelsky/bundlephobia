@@ -30,7 +30,9 @@ $min-bar-width: 20px;
 }
 
 .bar-graph__bar,
-.bar-graph__bar2 {
+.bar-graph__bar2,
+.bar-graph__bar[data-balloon],
+.bar-graph__bar2[data-balloon]{
   width: 100%;
   position: absolute;
   left: 0;
