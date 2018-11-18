@@ -48,14 +48,14 @@ class ResultCard extends Component {
             />
             <Stat
               className="scan-results__stat-item"
-              value={ getTimeFromSize(pack.result.gzip) }
+              value={ getTimeFromSize(pack.result.gzip).twoG }
               type={ Stat.type.TIME }
               label="2G Edge"
               compact
             />
             <Stat
               className="scan-results__stat-item"
-              value={ getTimeFromSize(pack.result.gzip) }
+              value={ getTimeFromSize(pack.result.gzip).threeG }
               type={ Stat.type.TIME }
               label="Emerging 3G"
               compact

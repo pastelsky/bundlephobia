@@ -260,6 +260,11 @@ class ResultPage extends PureComponent {
           key="og:image"
           content={origin + `/api/stats-image?name=${name}&version=${version}&wide=true`}
         />
+        <meta
+          property="twitter:title"
+          key="twitter:title"
+          content={`${name} v${version} ❘ BundlePhobia`}
+        />
         {name && version && (
           <meta name="twitter:card" key="twitter:card" content="summary_large_image"/>
         )}
