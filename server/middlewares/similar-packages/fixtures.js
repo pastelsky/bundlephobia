@@ -190,6 +190,29 @@ const categories = {
     ],
     similar: ['memoize', 'memoize-one', 'lodash.memoize', 'mem', 'fast-memoize']
   },
+  'number-manipulation': {
+    name: 'Number and Currency Formatting',
+    tags: [
+      { tag: 'format', weight: Weight.NORMAL },
+      { tag: 'manipulate', weight: Weight.NORMAL },
+      { tag: 'currency', weight: Weight.NORMAL },
+      { tag: 'money', weight: Weight.NORMAL },
+      { tag: 'number', weight: Weight.HIGH }
+    ],
+    similar: ['numeral', 'numbro', 'accounting', 'currency.js']
+  },
+  'pdf-generator': {
+    name: 'Client-side PDF Creation',
+    tags: [
+      { tag: 'pdf', weight: Weight.HIGH },
+      { tag: 'generate', weight: Weight.MID },
+      { tag: 'create', weight: Weight.MID },
+      { tag: 'document', weight: Weight.MID },
+      { tag: 'client', weight: Weight.NORMAL },
+      { tag: 'browser', weight: Weight.NORMAL },
+    ],
+    similar: ['jspdf','pdfkit', 'pdfmake','react-pdf']
+  },
   'promise-polyfill': {
     name: 'Promise polyfills',
     tags: [
@@ -224,7 +247,7 @@ const categories = {
       { tag: 'check', weight: Weight.SMALL },
       { tag: 'structure', weight: Weight.MID },
     ],
-    similar: ['jsonschema', 'joi', 'ajv', 'superstruct', 'yup']
+    similar: ['jsonschema', 'joi', 'ajv', 'superstruct', 'yup', '@cesium133/forgjs']
   },
   'querystring-parser': {
     name: 'Query String Parsers',
@@ -272,6 +295,17 @@ const categories = {
       { tag: 'two dimensional', weight: Weight.MID }
     ],
     similar: ['raphael', 'snapsvg', 'two.js']
+  },
+  'timezone-formatting': {
+    name: 'Timezone Formatting',
+    tags: [
+      { tag: 'date', weight: Weight.NORMAL },
+      { tag: 'time', weight: Weight.NORMAL },
+      { tag: 'timezone', weight: Weight.HIGH },
+      { tag: 'parse', weight: Weight.MID },
+      { tag: 'format', weight: Weight.MID }
+    ],
+    similar: ['moment-timezone', 'date-time-format-timezone', 'spacetime', 'date-fns-timezone']
   },
   'uuid': {
     name: 'Unique ID generators',
