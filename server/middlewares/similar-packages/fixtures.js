@@ -139,7 +139,7 @@ const categories = {
       { tag: 'styles', weight: Weight.NORMAL },
       { tag: 'inline', weight: Weight.NORMAL }
     ],
-    similar: ['styled-components', 'radium', 'emotion', 'glamor']
+    similar: ['styled-components', 'radium', 'emotion', 'glamor', 'jss']
   },
   'memoization': {
     name: 'Memoization',
