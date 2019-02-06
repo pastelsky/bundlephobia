@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv-defaults').config()
 const semver = require('semver')
 const axios = require('axios')
 const fetch = require('node-fetch')

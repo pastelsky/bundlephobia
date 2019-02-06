@@ -6,7 +6,7 @@ Note: This repository only contains the frontend, and the request server.
 If you're looking to make changes to the core logic – building of packages and size calculation, you need to look here instead - [package-build-stats](https://github.com/pastelsky/package-build-stats)
 
 ## Running locally
-### Adding the necessary keys
+### Adding the necessary keys (Optional)
 Add a `.env` file to the root with Algolia credentials. The server should still run without this, but some features might be disabled.
   
   ```ini

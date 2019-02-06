@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv-defaults').config()
 const firebase = require('firebase')
 const LRU = require('lru-cache')
 const debug = require('debug')('bp:cache')

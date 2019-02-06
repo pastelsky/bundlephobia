@@ -301,7 +301,7 @@ const categories = {
     tags: [
       { tag: 'date', weight: Weight.NORMAL },
       { tag: 'time', weight: Weight.NORMAL },
-      { tag: 'timezone', weight: Weight.HIGH },
+      { tag: 'timezone', weight: Weight.MAX },
       { tag: 'parse', weight: Weight.MID },
       { tag: 'format', weight: Weight.MID }
     ],

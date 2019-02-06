@@ -1,6 +1,6 @@
 const { blackList } = require("../server/config");
 
-require('dotenv').config()
+require('dotenv-defaults').config()
 const firebase = require('firebase')
 const axios = require('axios')
 const fetch = require('node-fetch')

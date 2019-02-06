@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv-defaults').config()
 const next = require('next')
 const limit = require('./server/rate-limit-middleware')
 const exec = require('execa')

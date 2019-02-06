@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv-defaults').config()
 const debug = require('debug')('bp:cache')
 const axios = require('axios')
 const logger = require('../server/Logger')

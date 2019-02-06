@@ -10,14 +10,20 @@ const sumoLogger = new SumoLogger({
 
 class Logger {
   constructor() {
-    const logzioTransport = new LogzioWinstonTransport({
-      name: 'bundlephobia',
-      token: process.env.LOGZIO_TOKEN,
-    })
+    let transports = []
 
-    const sumologicTransport = new SumoLogic({
-      url: process.env.SUMOLOGIC_URL,
-    });
+    if(process.env.NODE_ENV !== 'production') {
+      const logzioTransport = new LogzioWinstonTransport({
+        name: 'bundlephobia',
+        token: process.env.LOGZIO_TOKEN,
+      })
+
+      const sumologicTransport = new SumoLogic({
+        url: process.env.SUMOLOGIC_URL,
+      });
+
+      transports.push(logzioTransport)
+    }
 
     winston.remove(winston.transports.Console);
     this.logger = winston.createLogger({

@@ -6,9 +6,10 @@
   "dependencies": {
     "debug": "^3.1.0",
     "dotenv": "^4.0.0",
-    "fastify": "^1.0.0-rc.2",
-    "firebase": "^4.8.0",
-    "lru-cache": "^4.1.1"
+    "dotenv-defaults": "^1.0.2",
+    "fastify": "^1.14.1",
+    "firebase": "^5.8.2",
+    "lru-cache": "^4.1.5"
   },
   "scripts": {
     "start": "DEBUG=bp* node index"
