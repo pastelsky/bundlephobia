@@ -22,7 +22,7 @@ module.exports = {
     /hack-\d+/,
     /cheat-\d+/,
     /-hacks?-/,
-    /nuxt/,
+    /^nuxt$/,
     /react-scripts/
   ],
   CACHE: {
