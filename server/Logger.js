@@ -12,7 +12,7 @@ class Logger {
   constructor() {
     let transports = []
 
-    if(process.env.NODE_ENV !== 'production') {
+    if(process.env.NODE_ENV === 'production') {
       const logzioTransport = new LogzioWinstonTransport({
         name: 'bundlephobia',
         token: process.env.LOGZIO_TOKEN,
@@ -27,7 +27,7 @@ class Logger {
 
     winston.remove(winston.transports.Console);
     this.logger = winston.createLogger({
-      transports: process.env.NODE_ENV !== 'production' ? [] : [logzioTransport, /*sumologicTransport*/]
+      transports,
     });
   }
 
