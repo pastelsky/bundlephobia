@@ -211,7 +211,7 @@ const categories = {
       { tag: 'client', weight: Weight.NORMAL },
       { tag: 'browser', weight: Weight.NORMAL },
     ],
-    similar: ['jspdf','pdfkit', 'pdfmake','react-pdf']
+    similar: ['jspdf','pdfkit', 'pdfmake','@react-pdf/renderer']
   },
   'promise-polyfill': {
     name: 'Promise polyfills',
