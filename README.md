@@ -3,7 +3,7 @@
     <img src="https://cdn.rawgit.com/pastelsky/bundlephobia/bundlephobia/client/assets/site-logo.svg" alt="" width="290" height="235" />
 </p>
 <p align="center">
-  <img src="https://img.shields.io/travis/pastelsky/bundlephobia/bundlephobia.svg" />
+  <a href="https://travis-ci.org/pastelsky/bundlephobia"><img src="https://img.shields.io/travis/pastelsky/bundlephobia/bundlephobia.svg" /></a>
   <img src="https://img.shields.io/npm/v/package-build-stats.svg" />
   <img src="https://img.shields.io/npm/l/package-build-stats.svg" />
 </p>
