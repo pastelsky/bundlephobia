@@ -16,7 +16,7 @@
 
 ## Features
 - Works with ES6 packages
-- Can build css and scss packages as well
+- Can build css and scss packages as well (beta)
 - Reports historical trends
 - See package composition
 
