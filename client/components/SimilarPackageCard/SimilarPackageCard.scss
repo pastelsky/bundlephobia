@@ -70,6 +70,7 @@
   color: $raven;
   line-height: 1.5;
   margin: $global-spacing 0 0 0;
+  word-break: break-word;
 
   .similar-package-card--empty & {
     text-transform: uppercase;
