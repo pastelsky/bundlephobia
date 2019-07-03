@@ -43,7 +43,7 @@ We could use some 💛 on our opencollective page –
 
 #### 1. Why does search for package X throw `MissingDependencyError` ?
 
-This error is thrown if a package `require`s a dependency without adding it in its depdencies or peerDependencies list. In the absence of such a definition, we cannot reliably report the size of the package - since we cannot resolve any information about the package.
+This error is thrown if a package `require`s a dependency without adding it in its dependencies or peerDependencies list. In the absence of such a definition, we cannot reliably report the size of the package - since we cannot resolve any information about the package.
 
 In such a case, it's best to report an issue with the package author asking the missing package to be added to its `package.json`
 
