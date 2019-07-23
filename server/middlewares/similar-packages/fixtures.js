@@ -25,6 +25,13 @@ const categories = {
     ],
     similar: ['styled-components', 'radium', 'emotion', 'glamor']
   },
+  'color-manipulation': {
+    name: 'Color parsing and manipulation',
+    tags: [
+      { tag: 'color convert parse manipulate', weight: Weight.NORMAL }
+    ],
+    similar: ['chroma-js', 'color', 'tinycolor2', 'colors.js']
+  },
   'cookie': {
     name: 'Cookie Manipulation',
     tags: [
@@ -60,6 +67,25 @@ const categories = {
       { tag: 'compare', weight: Weight.NORMAL },
       { tag: 'isequal', weight: Weight.HIGH },
     ], similar: ['fast-deep-equal', 'deep-eql', 'deep-equal', 'lodash.isequal']
+  },
+  'drag-and-drop': {
+    name: 'Drag & Drop Libraries',
+    tags: [
+      { tag: 'drag drop', weight: Weight.NORMAL },
+      { tag: 'sort', weight: Weight.MID },
+      { tag: 'order', weight: Weight.MID }
+    ],
+    similar: ['@shopify/draggable', 'dragula', 'muuri', 'sortablejs', 'draggabilly', 'interactjs']
+  },
+  'full-text-search': {
+    name: 'Text search',
+    tags: [
+      { tag: 'search', weight: Weight.NORMAL },
+      { tag: 'solr', weight: Weight.HIGH },
+      { tag: 'fuzzy', weight: Weight.NORMAL },
+      { tag: 'text', weight: Weight.NORMAL }
+    ],
+    similar: ['flexsearch', 'lunr', 'wade', 'js-search', 'fuse.js']
   },
   'fetch-polyfill': {
     name: 'Fetch polyfills',
@@ -127,7 +153,7 @@ const categories = {
       { tag: 'client', weight: Weight.MID },
       { tag: 'js', weight: Weight.MID },
       { tag: 'javascript', weight: Weight.MID },
-    ], similar: ['apollo-client', 'graphql.js', 'lokka', 'graphql', 'relay-runtime']
+    ], similar: ['apollo-client', 'graphql.js', 'lokka', 'graphql', 'relay-runtime', 'urql']
   },
   'http-request': {
     name: 'HTTP client libraries',
@@ -141,7 +167,7 @@ const categories = {
       { tag: 'agent', weight: Weight.MID },
       { tag: 'xhr', weight: Weight.NORMAL },
     ],
-    similar: ['got', 'axios', 'request']
+    similar: ['got', 'axios', 'request', 'ky']
   },
   'image-color-extraction': {
     name: 'Image color extraction',
@@ -235,6 +261,27 @@ const categories = {
     ],
     similar: ['react-autosuggest', 'downshift', 'react-autowhatever', 'react-autocomplete']
   },
+  'react-head-meta': {
+    name: 'React based meta tags management',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'head', weight: Weight.MID },
+      { tag: 'document', weight: Weight.MID },
+      { tag: 'title', weight: Weight.MID },
+      { tag: 'meta tags', weight: Weight.MID}
+    ],
+    similar: ['react-helment', 'react-meta-tags', 'react-document-title']
+  },
+  'react-form': {
+    name: 'React based form builders',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'redux', weight: Weight.MID },
+      { tag: 'form', weight: Weight.NORMAL },
+      { tag: 'validate', weight: Weight.SMALL },
+    ],
+    similar: ['formik', 'react-final-form', 'rc-form', 'redux-form', 'react-jsonschema-form', 'formsy-react']
+  },
   'schema-validation': {
     name: 'JSON schema validation',
     tags: [
@@ -247,7 +294,7 @@ const categories = {
       { tag: 'check', weight: Weight.SMALL },
       { tag: 'structure', weight: Weight.MID },
     ],
-    similar: ['jsonschema', 'joi', 'ajv', 'superstruct', 'yup', '@cesium133/forgjs']
+    similar: ['jsonschema', 'joi', 'ajv', 'superstruct', 'yup', 'validate.js']
   },
   'querystring-parser': {
     name: 'Query String Parsers',
@@ -268,11 +315,23 @@ const categories = {
     name: 'Rich Text Editors',
     tags: [
       { tag: 'richtext rich text editor WYSIWYG contenteditable', weight: Weight.NORMAL },
-      { tag: '' }
     ],
     similar: ['slate', 'quill', 'draft-js', 'medium-editor', 'froala-editor']
   },
-  'state-management': {
+  'site-tour': {
+    name: 'Site Tours',
+    tags: [
+      { tag: 'walkthrough', weight: Weight.NORMAL },
+      { tag: 'focus', weight: Weight.MID },
+      { tag: 'tour', weight: Weight.NORMAL },
+      { tag: 'guide', weight: Weight.NORMAL },
+      { tag: 'user', weight: Weight.SMALL },
+      { tag: 'tutorial', weight: Weight.NORMAL },
+      { tag: 'step', weight: Weight.MID }
+    ],
+    similar: ['driver.js', 'shepherd.js', 'intro.js']
+  },
+    'state-management': {
     name: 'State Management Libraries',
     tags: [
       { tag: 'state management', weight: Weight.NORMAL },

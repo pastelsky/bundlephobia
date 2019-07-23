@@ -16,7 +16,7 @@ export default class SimilarPackageCard extends Component {
     if (isEmpty) {
       return (
         <a className="similar-package-card similar-package-card--empty"
-           href={`https://github.com/pastelsky/bundlephobia/issues/new`}
+           href="https://github.com/pastelsky/bundlephobia/issues/new?assignees=&labels=similar+suggestion&template=2-similar-package-suggestion.md&title=Package+suggestion%3A+<alternative>+for+<package+%2F+category>"
            target="_blank"
            rel="noreferrer noopener"
         >
