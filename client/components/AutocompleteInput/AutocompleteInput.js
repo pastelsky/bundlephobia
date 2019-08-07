@@ -5,7 +5,7 @@ import cx from 'classnames'
 import './AutocompleteInput.scss'
 import debounce from 'debounce'
 
-import { parsePackageString } from 'utils/common.utils'
+import { parsePackageString, isComparingPkgs } from 'utils/common.utils'
 
 export default class AutocompleteInput extends PureComponent {
 
@@ -21,13 +21,29 @@ export default class AutocompleteInput extends PureComponent {
 
   getSuggestions = debounce(
     value => {
-      API.getSuggestions(value)
+      if (isComparingPkgs(value)) {
+        const values = value.split(',');
+        const lastValue = values[values.length - 1];
+        if (!lastValue) return;
+        API.getSuggestions(lastValue)
         .then(result => {
           this.setState({ suggestions: result })
         })
+      }
+      else {
+        API.getSuggestions(value)
+        .then(result => {
+          this.setState({ suggestions: result })
+        })
+      }
     },
     150,
   )
+
+  hasPackageResult(item) {
+    var regex = new RegExp(`\\b${item.package.name}\\b`, "g");
+    return this.state.value.match(regex);
+  }
 
   renderSuggestionItem = (item, isHighlighted) => (
     <div
@@ -40,6 +56,17 @@ export default class AutocompleteInput extends PureComponent {
       <div className="autocomplete-input__suggestion-description">
         { item.package.description }
       </div>
+
+      {item.package.name && !this.hasPackageResult(item) && <button
+				className="autocomplete-input__compare-btn"
+				onClick={event => {
+          event.preventDefault();
+          event.stopPropagation();
+					this.comparePackages(item);
+				}}
+			>
+				compare
+			</button>}
     </div>
   )
 
@@ -53,15 +80,27 @@ export default class AutocompleteInput extends PureComponent {
     onSearchSubmit(value || this.state.value)
   }
 
+  comparePackages = (item) => {
+    const { value } = this.state;
+    if (value === item.package.name) return;
+    this.setState({ value: `${value},${item.package.name}` })
+  }
+
   handleInputChange = ({ target }) => {
-    this.setState({ value: target.value })
-    const trimmedValue = target.value.trim()
-    const { name } = parsePackageString(trimmedValue)
+    const { value } = target;
+    this.setState({ value: target.value  });
+		const trimmedValue = value.trim();
+    const { name } = parsePackageString(trimmedValue);
 
     if (trimmedValue.length > 1) {
-      this.getSuggestions(name)
-    }
-  }
+      if (isComparingPkgs(name)) {
+        this.getSuggestions(name);
+      }
+      else {
+        this.getSuggestions(name);
+      }
+		}
+	};
 
   handleMenuVisibilityChange = (isOpen) => {
     this.setState({ isMenuVisible: isOpen })
@@ -102,7 +141,7 @@ export default class AutocompleteInput extends PureComponent {
             ref={ s => this.searchInput = s }
             value={ value }
             items={ suggestions }
-            onSelect={ (value, item) => {
+            onSelect={ (value, item, e) => {
               this.setState({ value, suggestions: [item] })
               this.handleSubmit(null, null, value)
             } }

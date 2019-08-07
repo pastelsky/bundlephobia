@@ -150,7 +150,7 @@
 
 .autocomplete-input__suggestion-description {
   @include font-size-xs;
-  width: 100%;
+  max-width: 380px;
   min-width: 260px;
   overflow: hidden;
   white-space: nowrap;
@@ -209,3 +209,16 @@
   }
 }
 
+
+.autocomplete-input__compare-btn {
+  border: 1px solid;
+  height: 23px;
+  float: right;
+  margin-top: -30px;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ccc;
+  }
+}
