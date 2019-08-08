@@ -5,7 +5,7 @@ import cx from 'classnames'
 import './AutocompleteInput.scss'
 import debounce from 'debounce'
 
-import { parsePackageString, isComparingPkgs } from 'utils/common.utils'
+import { parsePackageString, isComparingPackages } from 'utils/common.utils'
 
 export default class AutocompleteInput extends PureComponent {
 
@@ -21,11 +21,10 @@ export default class AutocompleteInput extends PureComponent {
 
   getSuggestions = debounce(
     value => {
-      if (isComparingPkgs(value)) {
-        const values = value.split(',');
-        const lastValue = values[values.length - 1];
-        if (!lastValue) return;
-        API.getSuggestions(lastValue)
+      if (isComparingPackages(value)) {
+        const lastSearchedValue = this.getLastSearchedValue(value)
+        if (!lastSearchedValue) return;
+        API.getSuggestions(lastSearchedValue)
         .then(result => {
           this.setState({ suggestions: result })
         })
@@ -40,9 +39,14 @@ export default class AutocompleteInput extends PureComponent {
     150,
   )
 
-  hasPackageResult(item) {
-    var regex = new RegExp(`\\b${item.package.name}\\b`, "g");
-    return this.state.value.match(regex);
+  hasCompared(item) {
+    var packageName = new RegExp(`\\b${item.package.name}\\b`, "g");
+    return this.state.value.match(packageName);
+  }
+
+  getLastSearchedValue(value) {
+    const commaSeperatedValue = value.split(',');
+    return commaSeperatedValue[commaSeperatedValue.length - 1];
   }
 
   renderSuggestionItem = (item, isHighlighted) => (
@@ -57,7 +61,7 @@ export default class AutocompleteInput extends PureComponent {
         { item.package.description }
       </div>
 
-      {item.package.name && !this.hasPackageResult(item) && <button
+      {isComparingPackages(this.state.value) && !this.hasCompared(item) && <button
 				className="autocomplete-input__compare-btn"
 				onClick={event => {
           event.preventDefault();
@@ -82,8 +86,14 @@ export default class AutocompleteInput extends PureComponent {
 
   comparePackages = (item) => {
     const { value } = this.state;
-    if (value === item.package.name) return;
-    this.setState({ value: `${value},${item.package.name}` })
+
+    if (value === item.package.name) return
+
+    if (isComparingPackages(value)) {
+      const commaSeperatedValue = value.split(',');
+      commaSeperatedValue.pop();
+      this.setState({ value: `${commaSeperatedValue.join(',')},${item.package.name},` });
+    }
   }
 
   handleInputChange = ({ target }) => {
@@ -93,7 +103,7 @@ export default class AutocompleteInput extends PureComponent {
     const { name } = parsePackageString(trimmedValue);
 
     if (trimmedValue.length > 1) {
-      if (isComparingPkgs(name)) {
+      if (isComparingPackages(name)) {
         this.getSuggestions(name);
       }
       else {

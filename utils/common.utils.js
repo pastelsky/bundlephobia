@@ -28,9 +28,9 @@ function parsePackageString(packageString) {
   return { name, version, scoped }
 }
 
-function isComparingPkgs(searchText = []) {
+function isComparingPackages(searchText = '') {
   return searchText.split(',').length > 1;
 }
 
-module.exports = { parsePackageString, isComparingPkgs }
+module.exports = { parsePackageString, isComparingPackages }
 
