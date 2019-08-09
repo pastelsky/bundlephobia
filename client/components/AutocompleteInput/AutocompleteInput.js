@@ -85,20 +85,26 @@ export default class AutocompleteInput extends PureComponent {
   }
 
   comparePackages = (item) => {
-    const { value } = this.state;
+    const { value, suggestions } = this.state;
 
-    if (value === item.package.name) return
+    if (value === item.package.name) return;
 
     if (isComparingPackages(value)) {
       const commaSeperatedValue = value.split(',');
-      commaSeperatedValue.pop();
-      this.setState({ value: `${commaSeperatedValue.join(',')},${item.package.name},` });
+      const lastSearchedValue = commaSeperatedValue[commaSeperatedValue.length - 1];
+      if (lastSearchedValue === "") {
+        this.setState({ value: value.concat(item.package.name) });
+      }
+      else {
+        commaSeperatedValue.pop();
+        this.setState({ value: commaSeperatedValue.join(',').concat(`,${item.package.name}`) });
+      }
     }
   }
 
   handleInputChange = ({ target }) => {
     const { value } = target;
-    this.setState({ value: target.value  });
+    this.setState({ value });
 		const trimmedValue = value.trim();
     const { name } = parsePackageString(trimmedValue);
 

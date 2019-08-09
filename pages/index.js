@@ -22,9 +22,7 @@ export default class Home extends PureComponent {
     })
 
     if (isComparingPackages(value)) {
-      value = value.split(',');
-      value.pop();
-      Router.push(`/scan-results?packages=${value.join(',')}`)
+      Router.push(`/scan-results?packages=${value}`)
     }
     else {
       Router.push(`/result?p=${value.trim()}`)
