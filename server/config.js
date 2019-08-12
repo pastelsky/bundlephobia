@@ -23,7 +23,9 @@ module.exports = {
     /cheat-\d+/,
     /-hacks?-/,
     /^nuxt$/,
-    /react-scripts/
+    /react-scripts/,
+    /polymer-cli/,
+    /^parcel$/
   ],
   CACHE: {
     PUBLIC_ASSETS: dev ? 0 : 24 * 60 * 60,
