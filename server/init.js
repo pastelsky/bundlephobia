@@ -24,7 +24,6 @@ if(process.env.BUILD_SERVICE_ENDPOINT){
   pool.terminate()
 }
 
-
 module.exports = {
   failureCache,
   requestQueue,

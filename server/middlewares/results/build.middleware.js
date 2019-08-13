@@ -1,6 +1,6 @@
 const axios = require('axios')
 const Queue = require('./../../Queue')
-const { requestQueue, pool  } = require('../../init')
+const { requestQueue, pool } = require('../../init')
 const semver = require('semver')
 const CONFIG = require('../../config')
 const firebaseUtils = require('../../../utils/firebase.utils')
@@ -12,7 +12,7 @@ const Cache = require('../../../utils/cache.utils')
 
 const cache = new Cache()
 
-requestQueue.setExecutor(async ({packageString, name}) => {
+requestQueue.setExecutor(async ({ packageString, name }) => {
   if (process.env.BUILD_SERVICE_ENDPOINT) {
     try {
       const response = await axios.get(`${process.env.BUILD_SERVICE_ENDPOINT}/size?p=${encodeURIComponent(packageString)}`)
@@ -64,7 +64,12 @@ async function buildMiddleware(ctx, next) {
   }
 
   const buildStart = now()
-  result = await requestQueue.process(packageString, { packageString, name }, { priority })
+  logger.increment('active_queue_jobs');
+  result = await requestQueue.process(packageString, { packageString, name }, {
+    priority,
+    onSuccess: logger.decrement('active_queue_jobs'),
+    onFailure: logger.decrement('active_queue_jobs'),
+  })
   const buildEnd = now()
 
   ctx.cacheControl = {
@@ -75,7 +80,7 @@ async function buildMiddleware(ctx, next) {
   const body = { scoped, name, version, description, repository, ...result }
   ctx.body = body
   ctx.state.buildResult = body
-  const time =  buildEnd - buildStart;
+  const time = buildEnd - buildStart;
 
   logger.info('BUILD', {
     result,
