@@ -1,4 +1,5 @@
 const arrayToSentence = require('array-to-sentence')
+const now = require('performance-now')
 const { failureCache } = require('../../init')
 const CONFIG = require('../../config')
 const debug = require('debug')('bp:error')
@@ -6,6 +7,7 @@ const logger = require('../../Logger')
 
 async function errorHandler(ctx, next) {
   const { force } = ctx.query
+  const start = now()
 
   const respondWithError = (status, { code, message = '', details = {} }) => {
     ctx.status = status
@@ -16,6 +18,7 @@ async function errorHandler(ctx, next) {
     logger.error('BUILD_ERROR', {
       type: code,
       requestId: ctx.state.id,
+      time: now() - end,
       ...ctx.state.resolved,
       details,
     }, `${code} ${ctx.state.resolved.packageString}`)
