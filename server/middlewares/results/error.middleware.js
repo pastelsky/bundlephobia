@@ -42,6 +42,16 @@ async function errorHandler(ctx, next) {
         })
         break
 
+      case 'UnsupportedPackageError':
+        ctx.cacheControl = {
+          maxAge: force ? 0 : CONFIG.CACHE.SIZE_API_ERROR_UNSUPPORTED,
+        }
+        respondWithError(403, {
+          code: 'UnsupportedPackageError',
+          message: `The package you were looking for is unsupported and cannot be built by bundlephobia — ${err.extra.reason}`,
+        })
+        break
+
       case 'PackageNotFoundError':
         respondWithError(404, {
           code: 'PackageNotFoundError',

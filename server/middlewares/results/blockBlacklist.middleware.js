@@ -11,6 +11,12 @@ async function blockBlacklistMiddleware(ctx, next) {
     throw new CustomError('BlacklistedPackageError', { ...parsedPackage })
   }
 
+  // If package is unsupported, fail fast
+  const matchedUnsupportedRule = CONFIG.unsupported.find(rule => new RegExp(rule.test).test(parsedPackage.name))
+  if (matchedUnsupportedRule) {
+    throw new CustomError('UnsupportedPackageError', { ...parsedPackage }, { reason: matchedUnsupportedRule.reason })
+  }
+
   await next()
 }
 
