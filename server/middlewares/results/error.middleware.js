@@ -18,7 +18,7 @@ async function errorHandler(ctx, next) {
     logger.error('BUILD_ERROR', {
       type: code,
       requestId: ctx.state.id,
-      time: now() - end,
+      time: now() - start,
       ...ctx.state.resolved,
       details,
     }, `${code} ${ctx.state.resolved.packageString}`)
