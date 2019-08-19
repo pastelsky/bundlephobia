@@ -23,6 +23,8 @@ module.exports = {
     /cheat-\d+/,
     /-hacks?-/,
     /^nuxt$/,
+    /^next$/,
+    /^gatsby/,
     /react-scripts/,
     /polymer-cli/,
     /^parcel$/
