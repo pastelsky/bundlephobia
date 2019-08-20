@@ -60,22 +60,26 @@ export default class AutocompleteInput extends PureComponent {
         'autocomplete-input__suggestion--highlight': isHighlighted,
       }) }
     >
-      <div dangerouslySetInnerHTML={ { __html: item.highlight } } />
+      <div className="autocomplete-input__suggestion-detail">
+        <div dangerouslySetInnerHTML={ { __html: item.highlight } } />
 
-      <div className="autocomplete-input__suggestion-description">
-        { item.package.description }
+        <div className="autocomplete-input__suggestion-description">
+          { item.package.description }
+        </div>
       </div>
 
-      {this.shouldShowCompareBtn(item) && <button
-				className="autocomplete-input__compare-btn"
-				onClick={event => {
-          event.preventDefault();
-          event.stopPropagation();
-					this.comparePackages(item);
-				}}
-			>
-				compare
-			</button>}
+      <div className="autocomplete-input__compare">
+        {this.shouldShowCompareBtn(item) && <button
+          className="autocomplete-input__compare-btn"
+          onClick={event => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.comparePackages(item);
+          }}
+        >
+          compare
+        </button>}
+      </div>
     </div>
   )
 
