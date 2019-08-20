@@ -1,6 +1,14 @@
 // Used by the server as well as the client
 // Use ES5 only
 
+function getComparisonCount(searchText = '') {
+  return searchText.split(',').length;
+}
+
+function isComparingPackages(searchText = '') {
+  return getComparisonCount(searchText) > 1;
+}
+
 function parsePackageString(packageString) {
   // Scoped packages
   let name, version, scoped = false
@@ -28,9 +36,5 @@ function parsePackageString(packageString) {
   return { name, version, scoped }
 }
 
-function isComparingPackages(searchText = '') {
-  return searchText.split(',').length > 1;
-}
-
-module.exports = { parsePackageString, isComparingPackages }
+module.exports = { parsePackageString, isComparingPackages, getComparisonCount }
 

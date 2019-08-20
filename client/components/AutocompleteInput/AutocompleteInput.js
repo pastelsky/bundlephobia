@@ -5,12 +5,12 @@ import cx from 'classnames'
 import './AutocompleteInput.scss'
 import debounce from 'debounce'
 
-import { parsePackageString, isComparingPackages } from 'utils/common.utils'
+import { parsePackageString, getComparisonCount, isComparingPackages } from 'utils/common.utils'
 
 export default class AutocompleteInput extends PureComponent {
 
   static defaultProps = {
-    initialValue: '',
+    initialValue: ''
   }
 
   state = {
@@ -49,6 +49,11 @@ export default class AutocompleteInput extends PureComponent {
     return commaSeperatedValue[commaSeperatedValue.length - 1];
   }
 
+  shouldShowCompareBtn(item) {
+    const packageComparisonCount = getComparisonCount(this.state.value);
+    return packageComparisonCount > 1 && packageComparisonCount <= 3;
+  }
+
   renderSuggestionItem = (item, isHighlighted) => (
     <div
       className={ cx('autocomplete-input__suggestion', {
@@ -61,7 +66,7 @@ export default class AutocompleteInput extends PureComponent {
         { item.package.description }
       </div>
 
-      {isComparingPackages(this.state.value) && !this.hasCompared(item) && <button
+      {this.shouldShowCompareBtn(item) && <button
 				className="autocomplete-input__compare-btn"
 				onClick={event => {
           event.preventDefault();
