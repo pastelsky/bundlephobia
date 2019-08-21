@@ -3,12 +3,12 @@
 
 const ipchecker =require('ipchecker')
 const defaults = {
-  duration: 1000 * 60 * 60 * 24,
+  duration: 1000 * 60 * 60,
   whiteList: [],
   blackList: [],
   accessLimited: '429: Too Many Requests.',
   accessForbidden: '403: This is forbidden area for you.',
-  max: 500,
+  max: 85,
   env: null,
 }
 
