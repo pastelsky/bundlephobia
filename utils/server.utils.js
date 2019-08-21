@@ -21,14 +21,18 @@ async function resolveFromAlgolia({ name, version, scoped }) {
   } catch (err) {
     let details = err
 
-    if(err && err.response &&  err.response.request && err.response.request.data) {
-      details = err.response.request.data
+    if (err) {
+      if (err.response) {
+        details = err.response.data
+      } else if(err.request) {
+        details = error.request._currentUrl
+      }
     }
-    throw new CustomError('PackageNotFoundError', details)
+    throw new CustomError('PackageNotFoundError', { name, version, details })
   }
 
 
-  if(results.tags) {
+  if (results.tags) {
     results.tags = {
       latest: results.version,
       ...results.tags,
@@ -38,14 +42,14 @@ async function resolveFromAlgolia({ name, version, scoped }) {
       latest: results.version,
     }
   }
-  results.versions  = results.versions || {}
+  results.versions = results.versions || {}
 
   if (version in results.tags) {
     return { ...results, scoped, version: results.tags[version] }
   }
 
   if (version in results.versions) {
-    return {  ...results, scoped, version }
+    return { ...results, scoped, version }
   }
 
   const [major, minor, patch] = version.split('.')
