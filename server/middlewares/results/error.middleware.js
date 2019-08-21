@@ -90,33 +90,38 @@ async function errorHandler(ctx, next) {
         }
         break
 
-      case 'EntryPointError':
-        respondWithError(500, {
-          code: 'EntryPointError',
-          message: 'We could not guess a valid entry point for this package. ' +
-            'Perhaps the author hasn\'t specified one in its package.json ?',
-        })
-        break
-
-      case 'MissingDependencyError': {
+      case 'EntryPointError': {
         const status = 500
+        const body = {
+          error: {
+            code: 'EntryPointError',
+            message: 'We could not guess a valid entry point for this package. ' +
+              'Perhaps the author hasn\'t specified one in its package.json ?',
+          }
+        }
+
         ctx.cacheControl = {
           maxAge: force ? 0 : CONFIG.CACHE.SIZE_API_ERROR_FATAL,
         }
 
+        respondWithError(status, body.error)
+
+        debug('saved %s to failure cache', `${ctx.state.resolved.packageString}`)
+        failureCache.set(
+          `${ctx.state.packageString}`,
+          { status, body },
+        )
+
+        break
+      }
+
+      case 'MissingDependencyError': {
+        const status = 500
         const missingModules = arrayToSentence(
           err.extra
             .missingModules
             .map(module => `\`<code>${module}</code>\``),
         )
-
-        respondWithError(500, {
-          code: 'MissingDependencyError',
-          message: `This package (or this version) uses ${missingModules}, ` +
-            `but does not specify ${missingModules.length > 1 ? 'them' :
-              'it'} either as a dependency or a peer dependency`,
-          details: err,
-        })
         const body = {
           error: {
             code: 'MissingDependencyError',
@@ -127,8 +132,11 @@ async function errorHandler(ctx, next) {
           },
         }
 
-        ctx.status = status
-        ctx.body = body
+        ctx.cacheControl = {
+          maxAge: force ? 0 : CONFIG.CACHE.SIZE_API_ERROR_FATAL,
+        }
+
+        respondWithError(status, body.error)
 
         debug('saved %s to failure cache', `${ctx.state.resolved.packageString}`)
         failureCache.set(
