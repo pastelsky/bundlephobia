@@ -8919,10 +8919,10 @@ p-try@^2.0.0:
   resolved "https://registry.yarnpkg.com/p-try/-/p-try-2.0.0.tgz#85080bb87c64688fa47996fe8f7dfbe8211760b1"
   integrity sha512-hMp0onDKIajHfIkdRk3P4CdCmErkYAxxDtP3Wx/4nZ3aGlau2VKh3mZpcuFkH27WQkL/3WBCPOktzA9ZOAnMQQ==
 
-package-build-stats@5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/package-build-stats/-/package-build-stats-5.1.0.tgz#2e3092e6f9cf9a8f3709a5d073e4cccdf50b908f"
-  integrity sha512-Lot/dYUEjNXyk2K4UwuoxmDjqisXn7hXB80c24tHuJ0gNU+apzo0KSeTkNoEePg/wCODB6e92PtPAIJXv2WIwg==
+package-build-stats@5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/package-build-stats/-/package-build-stats-5.1.1.tgz#8b7fb7b9bdbeb3154b6063ed2fc39a383634ec90"
+  integrity sha512-NFauqVVinHIO4jlUXYQZ97Zhu+ymnqs8JGCwMhbAcqW+VmExBQcDfYcEnxe3VC8sQ6vpTd9k04FWtl3bpK2U7Q==
   dependencies:
     autoprefixer "^9.6.1"
     builtin-modules "^3.1.0"
@@ -8947,6 +8947,7 @@ package-build-stats@5.1.0:
     sanitize-filename "^1.6.2"
     sass-loader "^7.3.1"
     server "^1.0.19"
+    shebang-loader "^0.0.1"
     shortid "^2.2.14"
     stats-lite "^2.1.0"
     terser "^4.2.0"
@@ -11161,6 +11162,11 @@ shebang-command@^1.2.0:
   integrity sha1-RKrGW2lbAzmJaMOfNj/uXer98eo=
   dependencies:
     shebang-regex "^1.0.0"
+
+shebang-loader@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/shebang-loader/-/shebang-loader-0.0.1.tgz#a4000495d44cceefbec63435e7b1698569fa52ec"
+  integrity sha1-pAAEldRMzu++xjQ157FphWn6Uuw=
 
 shebang-regex@^1.0.0:
   version "1.0.0"
