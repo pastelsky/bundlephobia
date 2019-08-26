@@ -124,6 +124,10 @@ export default class BarGraph extends PureComponent {
     const firstTreeshakeableIndex = this.getFirstTreeshakeableIndex()
     const firstSideEffectFreeIndex = this.getFirstSideEffectFreeIndex()
 
+    console.log('firstTreeshakeableIndex', firstTreeshakeableIndex)
+    console.log('firstSideEffectFreeIndex', firstSideEffectFreeIndex)
+
+
     return (
       <div className="bar-graph-container">
         <figure className="bar-graph">
