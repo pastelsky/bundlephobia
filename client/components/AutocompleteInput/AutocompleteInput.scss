@@ -44,7 +44,7 @@
 .autocomplete-input,
 .autocomplete-input__dummy-input {
   @include font-size-lg;
-  padding: $global-spacing * 1.5 (25px + $global-spacing * 2) $global-spacing * 1.5 $global-spacing * 3;
+  padding: $global-spacing * 1.5 (35px + $global-spacing * 2) $global-spacing * 1.5 $global-spacing * 3;
   font-family: $font-family-code;
   font-weight: $font-weight-thin;
   width: 100%;
@@ -215,7 +215,7 @@
   border: 1px solid;
   height: 22px;
   float: right;
-  margin-top: -25px;
+  margin-top: -30px;
   border-radius: 4px;
   cursor: pointer;
 

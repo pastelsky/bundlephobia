@@ -36,5 +36,17 @@ function parsePackageString(packageString) {
   return { name, version, scoped }
 }
 
-module.exports = { parsePackageString, isComparingPackages, getComparisonCount }
+function parseComparedPackageString(packageString) {
+  const commaSeperatedStr = packageString.split(',');
+  const commas = Array(commaSeperatedStr.length - 1).fill(',');
+  return commaSeperatedStr.map(str => {
+    const [name, versionNumber] = str.split('@');
+    const hasAt = str.match(/@/) ? `@` : '';
+    const comma = commas.length ? commas.pop() : '';
+    const version = `${versionNumber ? versionNumber : ''}${comma}`;
+    return { name, version, hasAt };
+  });
+}
+
+module.exports = { parsePackageString, isComparingPackages, getComparisonCount, parseComparedPackageString }
 
