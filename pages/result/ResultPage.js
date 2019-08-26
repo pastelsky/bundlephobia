@@ -178,7 +178,6 @@ class ResultPage extends PureComponent {
       Router.push(`/result?p=${normalizedQuery}`)
       this.activeQuery = normalizedQuery
       this.fetchResults(normalizedQuery)
-      console.log('fetching history triggered')
       this.fetchHistory(normalizedQuery)
       this.fetchSimilarPackages(normalizedQuery)
     })
@@ -206,6 +205,9 @@ class ResultPage extends PureComponent {
           version,
           size: totalVersions[version].size,
           gzip: totalVersions[version].gzip,
+          hasSideEffects: totalVersions[version].hasSideEffects,
+          hasJSModule: totalVersions[version].hasJSModule,
+          hasJSNext: totalVersions[version].hasJSNext,
         }
       })
     const sorted =
