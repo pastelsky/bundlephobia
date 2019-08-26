@@ -8,6 +8,7 @@
   color: lighten($raven, 15%);
   background: lighten($raven, 55%);
   border-radius: 0 0 10px 10px;
+  overflow: hidden;
 }
 
 .quick-stats-bar__stat {
