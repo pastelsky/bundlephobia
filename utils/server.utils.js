@@ -25,7 +25,7 @@ async function resolveFromAlgolia({ name, version, scoped }) {
       if (err.response) {
         details = err.response.data
       } else if(err.request) {
-        details = error.request._currentUrl
+        details = err.request._currentUrl
       }
     }
     throw new CustomError('PackageNotFoundError', { name, version, details })
