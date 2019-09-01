@@ -42,14 +42,14 @@ export default class SimilarPackageCard extends Component {
             </div>
           </div>
         )
-      } else if (comparisonSizePercent > 100) {
+      } else if (Math.abs(comparisonSizePercent) > 100) {
         return (
           <div>
             <div className="similar-package-card__number">
               {1 + Math.abs(comparisonSizePercent).toFixed(0) / 100} <span className="similar-package-card__shrink">×</span>
             </div>
             <div className="similar-package-card__label">
-              Larger
+              {comparisonSizePercent > 0 ? 'Larger' : 'Smaller'}
             </div>
           </div>
         )
