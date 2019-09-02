@@ -46,7 +46,7 @@ export default class SimilarPackageCard extends Component {
         return (
           <div>
             <div className="similar-package-card__number">
-              {1 + Math.abs(comparisonSizePercent).toFixed(0) / 100} <span className="similar-package-card__shrink">×</span>
+              {(1 + Math.abs(comparisonSizePercent) / 100).toFixed(1)} <span className="similar-package-card__shrink">×</span>
             </div>
             <div className="similar-package-card__label">
               {comparisonSizePercent > 0 ? 'Larger' : 'Smaller'}
