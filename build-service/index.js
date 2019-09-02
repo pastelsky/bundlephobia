@@ -13,8 +13,8 @@ fastify.get('/size', async(req, res) => {
   }
 })
 
-fastify.get('/export-sizes', async ctx => {
-  const packageString = decodeURIComponent(ctx.query.p)
+fastify.get('/export-sizes', async(req, res) => {
+  const packageString = decodeURIComponent(req.query.p)
 
   try {
     const result = await getPackageExportSizes(packageString)
@@ -25,8 +25,8 @@ fastify.get('/export-sizes', async ctx => {
   }
 })
 
-fastify.get('/exports', async ctx => {
-  const packageString = decodeURIComponent(ctx.query.p)
+fastify.get('/exports', async(req, res) => {
+  const packageString = decodeURIComponent(req.query.p)
 
   try {
     const result = await getAllPackageExports(packageString)

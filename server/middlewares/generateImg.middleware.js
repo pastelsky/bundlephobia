@@ -11,7 +11,6 @@ async function generateImgMiddleware(ctx, next) {
 
   // See https://github.com/facebook/react/issues/13838
   const url = ctx.url.replace(/&amp;/g, '&')
-  console.log('getting', url)
 
   const { name, version, theme, wide } = queryString.parseUrl(url).query
 
