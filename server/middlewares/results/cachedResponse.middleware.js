@@ -15,7 +15,7 @@ async function cachedResponse(ctx, next) {
     name,
     version,
     packageString,
-    hit: true,
+    hit,
     type,
     requestId: ctx.state.id,
   }, message)
@@ -41,7 +41,6 @@ async function cachedResponse(ctx, next) {
     ctx.body = failureCacheEntry.body
     return
   }
-
 
   logCache({ hit: false, message: `CACHE MISS: ${packageString}`})
   await next()

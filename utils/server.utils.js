@@ -2,6 +2,7 @@ require('dotenv-defaults').config()
 const semver = require('semver')
 const axios = require('axios')
 const fetch = require('node-fetch')
+const Queue = require('../server/Queue')
 
 const CustomError = require('../server/CustomError')
 
@@ -126,4 +127,20 @@ async function resolvePackage({ scoped, name, version }) {
   }
 }
 
-module.exports = { resolvePackage }
+function getRequestPriority(ctx) {
+  const client = ctx.headers['x-bundlephobia-user']
+
+  switch (client) {
+    case 'bundlephobia website':
+      return Queue.priority.HIGH
+      break
+    case 'yarn website':
+      return Queue.priority.LOW
+      break
+
+    default:
+      return Queue.priority.MEDIUM
+  }
+}
+
+module.exports = { getRequestPriority, resolvePackage }

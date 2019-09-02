@@ -4,7 +4,7 @@ const workerpool = require('workerpool')
 const Queue = require('./Queue')
 const logger = require('./Logger')
 
-const failureCache = LRU({
+const failureCache = new LRU({
   max: config.MAX_FAILURE_CACHE_ENTRIES,
   maxAge: 6 * 1000 * 60 * 60,
 })

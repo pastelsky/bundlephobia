@@ -27,16 +27,18 @@ class Queue {
       maxAge: Number.POSITIVE_INFINITY,
       ...options,
     }
+    this.executorMap = {}
   }
 
   /**
    * Set a function (async or sync) that
    * executes the jobs sent to the queue.
-   * This function is passed a params object.
-   * @param executor
+   * The handler will be passed a params object.
+   * @param jobType
+   * @param handler
    */
-  setExecutor(executor) {
-    this.executor = executor
+  addExecutor(jobType, handler) {
+    this.executorMap[jobType] = handler
   }
 
   hasJob(id) {
@@ -107,7 +109,7 @@ class Queue {
         job.priority += 1
       })
     log('after aging, job queue is... %o',
-      this.jobs.map(({ id, priority }) => ({ id, priority })),
+      this.jobs.map(({ id, type, priority }) => ({ id, type, priority })),
     )
   }
 
@@ -168,10 +170,10 @@ class Queue {
 
   executeNextJob() {
     const nextJob = this.getNextJobToRun()
-    log('executing job ... %o', { id: nextJob.id, priority: nextJob.priority })
+    log('executing job ... %o', { id: nextJob.id, type: nextJob.type, priority: nextJob.priority })
 
     this.setJobToProcessing(nextJob.id)
-    const callResult = this.executor.call(this, nextJob.params)
+    const callResult = this.executorMap[nextJob.type].call(this, nextJob.params)
 
     Promise.resolve(callResult)
       .then((result) => {
@@ -206,12 +208,13 @@ class Queue {
   /**
    *
    * @param id
+   * @param type
    * @param jobParams
    * @param options
    * @return {Promise<any>}
    */
-  process(id, jobParams, options = {}) {
-    log('added new job %s %o %o', id, jobParams, options)
+  process(id, type, jobParams, options = {}) {
+    log('added new job %s %s %o %o', type, id, jobParams, options)
     const {
       priority = Job.priority.LOW,
       maxAge = this.options.maxAge,
@@ -233,6 +236,7 @@ class Queue {
 
       this.jobs.push({
         id,
+        type,
         maxAge,
         priority,
         addedTime: new Date(),

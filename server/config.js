@@ -24,10 +24,10 @@ module.exports = {
     /-hacks?-/,
     /^nuxt$/,
     /^next$/,
-    /^gatsby/,
     /react-scripts/,
     /polymer-cli/,
-    /^parcel$/
+    /^parcel$/,
+    /^devextreme$/
   ],
 
   unsupported: [
@@ -43,6 +43,6 @@ module.exports = {
     SIZE_API_ERROR: dev ? 0 : 60,
     SIZE_API_ERROR_FATAL: dev ? 0 : 60 * 60,
     SIZE_API_ERROR_UNSUPPORTED: dev ? 0 : 24 * 60 * 60,
-    SIZE_API_HAS_VERSION: dev ? 0 : 12 * 60 * 60,
+    SIZE_API_HAS_VERSION: dev ? 0 : 24 * 60 * 60,
   }
 }

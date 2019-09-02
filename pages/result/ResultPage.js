@@ -12,13 +12,13 @@ import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
 import {parsePackageString} from 'utils/common.utils'
 import {getTimeFromSize, DownloadSpeed} from 'utils'
-import Stat from './Stat'
+import Stat from 'client/components/Stat'
 
 import API from 'client/api'
 
-import TreemapSection from './TreemapSection'
+import TreemapSection from './components/TreemapSection'
 import EmptyBox from '../../client/assets/empty-box.svg'
-import SimilarPackagesSection from "./SimilarPackagesSection/SimilarPackagesSection";
+import SimilarPackagesSection from "./components/SimilarPackagesSection/SimilarPackagesSection";
 import QuickStatsBar from 'client/components/QuickStatsBar/QuickStatsBar'
 
 import './ResultPage.scss'

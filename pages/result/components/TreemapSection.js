@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import {formatSize} from 'utils'
 
-import Treemap from '../../client/components/Treemap'
+import Treemap from '../../../client/components/Treemap'
 
 const colors = [
   '#718af0',

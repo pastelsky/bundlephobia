@@ -14,7 +14,7 @@ describe('build api', () => {
     const errorJSON = await result.json()
 
     expect(result.status).toBe(200)
-    expect(result.headers.get('cache-control')).toBe('max-age=43200')
+    expect(result.headers.get('cache-control')).toBe('max-age=86400')
 
     expect(errorJSON).toEqual({
       scoped: false,
@@ -26,33 +26,30 @@ describe('build api', () => {
       hasJSNext: false,
       hasJSModule: false,
       hasSideEffects: true,
-      peerDependencies: [],
-      size: 5920,
-      gzip: 2513,
-      parse: {},
+      size: 5951,
+      gzip: 2528,
       dependencySizes: [{ name: 'react', approximateSize: 5957 }]
     })
 
     done()
   })
 
-  it('gives right error messages on build errors', async (done) => {
+  it('handles hash bang in the beginning of packages', async (done) => {
     const resultURL = baseURL + '@bundlephobia/test-build-error'
     const result = await fetch(resultURL)
-    const errorJSON = await result.json()
+    const resultJSON = await result.json()
 
-    expect(result.status).toBe(500)
-    expect(result.headers.get('cache-control')).toBe('max-age=60')
+    expect(result.status).toBe(200)
+    expect(result.headers.get('cache-control')).toBe('max-age=86400')
 
-    expect(errorJSON.error.code).toBe('BuildError')
-    expect(errorJSON.error.message).toBe('Failed to build this package.')
-    expect(errorJSON.error.details.originalError).toBeDefined()
+    expect(resultJSON.size).toBe(183)
+    expect(resultJSON.gzip).toBe(153)
 
     done()
   })
 
   it('gives right error messages on when trying to build blacklisted packages', async (done) => {
-    const resultURL = baseURL + 'fifa-19-coins-generator-unlimited-points-online-working'
+    const resultURL = baseURL + 'polymer-cli'
     const result = await fetch(resultURL)
     const errorJSON = await result.json()
 
@@ -71,7 +68,7 @@ describe('build api', () => {
     const errorJSON = await result.json()
 
     expect(result.status).toBe(500)
-    expect(result.headers.get('cache-control')).toBe('max-age=60')
+    expect(result.headers.get('cache-control')).toBe('max-age=3600')
 
     expect(errorJSON.error.code).toBe('EntryPointError')
     expect(errorJSON.error.message).toBe('We could not guess a valid entry point for this package. Perhaps the author hasn\'t specified one in its package.json ?')
@@ -79,33 +76,17 @@ describe('build api', () => {
     done()
   })
 
-  it('gives right error messages on when trying to build packages with missing dependency errors', async (done) => {
+  it('ignores errors when trying to build packages with missing dependency errors', async (done) => {
     const resultURL = baseURL + '@bundlephobia/missing-dependency-error'
     const result = await fetch(resultURL)
-    const errorJSON = await result.json()
+    const resultJSON = await result.json()
 
-    expect(result.status).toBe(500)
-    expect(result.headers.get('cache-control')).toBe('max-age=3600')
+    expect(result.status).toBe(200)
+    expect(result.headers.get('cache-control')).toBe('max-age=86400')
 
-    expect(errorJSON.error.code).toBe('MissingDependencyError')
-    expect(errorJSON.error.message).toBe('This package (or this version) uses `<code>missing-package</code>`, but does not specify them either as a dependency or a peer dependency')
-    expect(errorJSON.error.details.extra).toEqual({ missingModules: ['missing-package'] })
-
-    done()
-  })
-
-  it('gives right error messages on when trying to build packages with missing dependency errors', async (done) => {
-    const resultURL = baseURL + '@bundlephobia/missing-dependency-error'
-    const result = await fetch(resultURL)
-    const errorJSON = await result.json()
-
-    expect(result.status).toBe(500)
-    expect(result.headers.get('cache-control')).toBe('max-age=3600')
-
-    expect(errorJSON.error.code).toBe('MissingDependencyError')
-    expect(errorJSON.error.message).toBe('This package (or this version) uses `<code>missing-package</code>`, but does not specify them either as a dependency or a peer dependency')
-    expect(errorJSON.error.details.extra).toEqual({ missingModules: ['missing-package'] })
-
+    expect(resultJSON.size).toBe(243)
+    expect(resultJSON.gzip).toBe(178)
+    expect(resultJSON.ignoredMissingDependencies).toStrictEqual([ 'missing-package' ])
     done()
   })
 

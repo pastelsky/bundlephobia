@@ -16,7 +16,7 @@ async function generateImgMiddleware(ctx, next) {
   const { name, version, theme, wide } = queryString.parseUrl(url).query
 
   try {
-    const result = await cache.get({ name, version })
+    const result = await cache.getPackageSize({ name, version })
 
     ctx.type = 'png'
     ctx.cacheControl = {

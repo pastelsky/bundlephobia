@@ -33,7 +33,7 @@ async function errorHandler(ctx, next) {
     }
 
     if (!'name' in err) {
-      respondWithError(500, { code: 'UnkownError', details: err })
+      respondWithError(500, { code: 'UnknownError', details: err })
       return
     }
 

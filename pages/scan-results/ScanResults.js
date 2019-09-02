@@ -5,7 +5,7 @@ import FlipMove from 'react-flip-move';
 import cx from 'classnames'
 
 const PromiseQueue = require('p-queue');
-import Stat from '../result/Stat'
+import Stat from 'client/components/Stat'
 import Link from 'next/link'
 import ResultLayout from '../../client/components/ResultLayout'
 import { parsePackageString } from 'utils/common.utils'

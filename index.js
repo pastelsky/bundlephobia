@@ -1,6 +1,5 @@
 require('dotenv-defaults').config()
 const next = require('next')
-const limit = require('./server/rate-limit-middleware')
 const exec = require('execa')
 
 const Koa = require('koa')
@@ -18,6 +17,9 @@ const { parsePackageString } = require('./utils/common.utils')
 const firebaseUtils = require('./utils/firebase.utils')
 const logger = require('./server/Logger')
 
+const limit = require('./server/middlewares/rateLimit.middleware')
+const exportsMiddlware = require('./server/middlewares/exports.middleware')
+const exportsSizesMiddlware = require('./server/middlewares/exportsSizes.middleware')
 const resolvePackageMiddleware = require('./server/middlewares/results/resolvePackage.middleware')
 const cachedResponseMiddleware = require('./server/middlewares/results/cachedResponse.middleware')
 const buildMiddleware = require('./server/middlewares/results/build.middleware')
@@ -26,6 +28,7 @@ const blockBlacklistMiddleware = require('./server/middlewares/results/blockBlac
 const requestLoggerMiddleware = require('./server/middlewares/requestLogger.middleware')
 const similarPackagesMiddleware = require('./server/middlewares/similar-packages/similarPackages.middleware')
 const generateImgMiddleware = require('./server/middlewares/generateImg.middleware')
+const jsonCacheMiddleware = require('./server/middlewares/jsonCache.middleware')
 
 const config = require('./server/config')
 
@@ -82,32 +85,37 @@ app.prepare().then(() => {
     host: 'https://www.npmjs.com',
   }));
 
-  server.use(koaCache({
-    async get(key) {
-      // Emulate koa-cash cache value
-      const value = await cache.get(key)
-      return {
-        body: value,
-        type: 'application/json',
-      }
-    },
-    set(key, value) {
-      // We only need the body part from what
-      // koa-cash gives us
-      cache.set(key, JSON.parse(value.body))
-    },
-    hash(ctx) {
-      const { name, version } = ctx.state.resolved
-      return { name, version }
-    },
-  }))
-
   router.get('/api/size',
+    jsonCacheMiddleware({
+      get: (key) => cache.getPackageSize(key),
+      set: (key, value) => cache.setPackageSize(key, value),
+      hash: (ctx) => ({ name: ctx.state.resolved.name, version: ctx.state.resolved.version }),
+    }),
     errorMiddleware,
     resolvePackageMiddleware,
     blockBlacklistMiddleware,
     cachedResponseMiddleware,
     buildMiddleware,
+  )
+
+  router.get('/api/exports',
+    errorMiddleware,
+    resolvePackageMiddleware,
+    blockBlacklistMiddleware,
+    exportsMiddlware,
+  )
+
+  router.get('/api/exports-sizes',
+    jsonCacheMiddleware({
+      get: (key) => cache.getExportsSize(key),
+      set: (key, value) => cache.setExportsSize(key, value),
+      hash: (ctx) => ({ name: ctx.state.resolved.name, version: ctx.state.resolved.version }),
+    }),
+    errorMiddleware,
+    resolvePackageMiddleware,
+    blockBlacklistMiddleware,
+    cachedResponseMiddleware,
+    exportsSizesMiddlware,
   )
 
   router.get('/api/recent', async (ctx) => {
