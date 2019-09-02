@@ -20,7 +20,7 @@ export default class SimilarPackageCard extends Component {
            target="_blank"
            rel="noreferrer noopener"
         >
-                    <div className="similar-package-card__wrap">
+          <div className="similar-package-card__wrap">
             <PlusIcon className="similar-package-card__plus"/>
             <p className="similar-package-card__description">
               Suggest another
@@ -42,11 +42,11 @@ export default class SimilarPackageCard extends Component {
             </div>
           </div>
         )
-      } else if (comparisonSizePercent > 100) {
+      } else if (Math.abs(comparisonSizePercent) > 100) {
         return (
           <div>
             <div className="similar-package-card__number">
-              {Math.abs(comparisonSizePercent).toFixed(0) / 100} <span className="similar-package-card__shrink">×</span>
+              {1 + Math.abs(comparisonSizePercent).toFixed(0) / 100} <span className="similar-package-card__shrink">×</span>
             </div>
             <div className="similar-package-card__label">
               {comparisonSizePercent > 0 ? 'Larger' : 'Smaller'}
@@ -95,7 +95,7 @@ export default class SimilarPackageCard extends Component {
     return (
       <Link href={`/result?p=${pack.name}`}>
         <a className="similar-package-card">
-                    <div className="similar-package-card__wrap">
+          <div className="similar-package-card__wrap">
             <div className="similar-package-card__header">
               <h3 className="similar-package-card__name">{pack.name}</h3>
               <a href={pack.repository} onClick={e => {
