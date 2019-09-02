@@ -13,7 +13,7 @@ fastify.get('/size', async(req, res) => {
   }
 })
 
-fastify.get('/export-sizes', async(req, res) => {
+fastify.get('/exports-sizes', async(req, res) => {
   const packageString = decodeURIComponent(req.query.p)
 
   try {
