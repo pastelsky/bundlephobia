@@ -44,7 +44,7 @@
 .autocomplete-input,
 .autocomplete-input__dummy-input {
   @include font-size-lg;
-  padding: $global-spacing * 1.5 (25px + $global-spacing * 2) $global-spacing * 1.5 $global-spacing * 3;
+  padding: $global-spacing * 1.5 (35px + $global-spacing * 2) $global-spacing * 1.5 $global-spacing * 3;
   font-family: $font-family-code;
   font-weight: $font-weight-thin;
   width: 100%;
@@ -150,7 +150,7 @@
 
 .autocomplete-input__suggestion-description {
   @include font-size-xs;
-  width: 100%;
+  max-width: 380px;
   min-width: 260px;
   overflow: hidden;
   white-space: nowrap;
@@ -163,6 +163,8 @@
 
   @media screen and (max-width: 40em) {
     font-weight: $font-weight-light;
+    width: calc(100% - 80px);
+    min-width: calc(100% - 80px);
   }
 }
 
@@ -209,3 +211,20 @@
   }
 }
 
+.autocomplete-input__compare-btn {
+  border: 1px solid;
+  height: 22px;
+  float: right;
+  margin-top: -30px;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ccc;
+  }
+}
+
+.autocomplete-input__suggestion-detail {
+  display: flex;
+  flex-direction: column;
+}

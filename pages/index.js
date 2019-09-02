@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Analytics from 'react-ga'
 import './index.scss'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox/AutocompleteInputBox'
+import { isComparingPackages } from 'utils/common.utils'
 
 export default class Home extends PureComponent {
 
@@ -20,7 +21,13 @@ export default class Home extends PureComponent {
       label: value.trim().replace(/@/g, '[at]'),
     })
 
-    Router.push(`/result?p=${value.trim()}`)
+    if (isComparingPackages(value)) {
+      Router.push(`/scan-results?packages=${value}`)
+    }
+    else {
+      Router.push(`/result?p=${value.trim()}`)
+    }
+
   }
 
   render() {
