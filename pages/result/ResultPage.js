@@ -6,7 +6,7 @@ import ResultLayout from 'client/components/ResultLayout'
 import BarGraph from 'client/components/BarGraph'
 import AutocompleteInput from 'client/components/AutocompleteInput'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox'
-import ProgressSquare from 'client/components/ProgressSquare/ProgressSquare'
+import BuildProgressIndicator from 'client/components/BuildProgressIndicator'
 import Router, { withRouter } from 'next/router';
 import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
@@ -318,7 +318,7 @@ class ResultPage extends PureComponent {
             {
               resultsPromiseState === 'pending' && (
                 <div className="result-pending">
-                  <ProgressSquare
+                  <BuildProgressIndicator
                     isDone={!!results.version}
                     onDone={this.handleProgressDone}
                   />

@@ -140,9 +140,9 @@ class ExportAnalysisSection extends Component {
   }
 
   componentDidMount() {
-    const isIncompatible = !!this.getIncompatibleMessage()
+    const isCompatible = !this.getIncompatibleMessage()
 
-    if (isIncompatible) {
+    if (isCompatible) {
       this.startAnalysis()
     }
   }

@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 
-import './ProgressSquare.scss'
+import './BuildProgressIndicator.scss'
 import ProgressHex from '../ProgressHex'
 
 export default class BuildProgressIndicator extends Component {
