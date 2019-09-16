@@ -1,8 +1,9 @@
-import React, {Component} from 'react'
+import React, { Component } from 'react'
 
 import './ProgressSquare.scss'
+import ProgressHex from '../ProgressHex'
 
-export default class ProgressSquare extends Component {
+export default class BuildProgressIndicator extends Component {
   constructor(props) {
     super(props)
     this.stage = 0
@@ -75,11 +76,9 @@ export default class ProgressSquare extends Component {
   render() {
     const { progressText } = this.state
     return (
-      <div className="progress-square">
-        <span className="progress-square__loader">
-          <span className="progress-square__loader-inner"/>
-        </span>
-        <p className="progress-square__text">
+      <div className="build-progress-indicator">
+        <ProgressHex compact/>
+        <p className="build-progress-indicator__text">
           {progressText}
         </p>
       </div>

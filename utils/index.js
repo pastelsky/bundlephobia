@@ -56,11 +56,47 @@ const getTimeFromSize = (sizeInBytes) => {
   }
 }
 
+
+function randomFromArray(arr) {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function zeroToN(n) {
+  return Array.from(Array(n).keys())
+}
+
+function resolveBuildError(resultsError) {
+  if (!resultsError) {
+    return {
+      errorName: null,
+      errorBody: null,
+      errorDetails: null
+    }
+  }
+  const errorName = resultsError.error ? resultsError.error.code : 'InternalServerError'
+  const errorBody = resultsError.error ? resultsError.error.message :
+    'Something went wrong!'
+  const errorDetails = (resultsError.error && resultsError.error.details && resultsError.error.details.originalError) ?
+    (Array.isArray(resultsError.error.details.originalError) ?
+        resultsError.error.details.originalError[0] :
+        resultsError.error.details.originalError.toString()
+    ) : null
+
+  return {
+    errorName,
+    errorBody,
+    errorDetails
+  }
+}
+
 module.exports = {
   encodeFirebaseKey,
   decodeFirebaseKey,
   formatTime,
   formatSize,
   getTimeFromSize,
+  randomFromArray,
+  zeroToN,
+  resolveBuildError,
   DownloadSpeed,
 }

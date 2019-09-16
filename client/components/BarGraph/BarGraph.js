@@ -110,6 +110,7 @@ export default class BarGraph extends PureComponent {
           <div
             className="bar-graph__bar2"
             style={{ height: `${reading.gzip * scale}%` }}
+            data-balloon={getTooltipMessage(reading)}
           />
         <div className="bar-graph__bar-version" key={reading.version}>
                  {reading.version}

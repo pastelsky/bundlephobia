@@ -16,7 +16,6 @@ export default class API {
             return res.json()
               .then(err => Promise.reject(err))
           } catch (e) {
-            // Heroku might have timed out / shut down
             if (res.status === 503) {
               return Promise.reject({
                 error: {
@@ -40,6 +39,14 @@ export default class API {
 
   static getInfo(packageString) {
     return API.get(`/api/size?package=${packageString}&record=true`)
+  }
+
+  static getExports(packageString) {
+    return API.get(`/api/exports?package=${packageString}`)
+  }
+
+  static getExportsSizes(packageString) {
+    return API.get(`/api/exports-sizes?package=${packageString}`)
   }
 
   static getHistory(packageString) {

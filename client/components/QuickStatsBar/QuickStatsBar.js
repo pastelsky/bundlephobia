@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import DOMPurify from 'dompurify';
 import './QuickStatsBar.scss'
 
@@ -19,7 +19,7 @@ class QuickStatsBar extends Component {
     let statItemCount = 0
 
     if (isTreeShakeable) statItemCount += 1;
-    if (!hasSideEffects) statItemCount += 1;
+    if (hasSideEffects !== true) statItemCount += 1;
     return statItemCount
   }
 
@@ -45,7 +45,7 @@ class QuickStatsBar extends Component {
           className="quick-stats-bar__stat quick-stats-bar__stat--description "
           title={this.getTrimmedDescription()}
         >
-          <InfoIcon />
+          <InfoIcon/>
           {statItemCount < 2 && (
             <span
               className="quick-stats-bar__stat--description-content"
@@ -63,9 +63,11 @@ class QuickStatsBar extends Component {
           </div>
         )}
 
-        {!hasSideEffects && (
+        {!(hasSideEffects === true) && (
           <div className="quick-stats-bar__stat">
-            <SideEffectIcon className="quick-stats-bar__stat-icon"/> <span>side-effect free</span>
+            <SideEffectIcon className="quick-stats-bar__stat-icon"/> <span>
+            {hasSideEffects.length ? 'some side-effects' : 'side-effect free'}
+          </span>
           </div>
         )}
         <div className="quick-stats-bar__stat quick-stats-bar__stat--optional">

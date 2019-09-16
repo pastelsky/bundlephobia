@@ -16,7 +16,6 @@
   display: flex;
   align-items: center;
 
-
   code {
     color: darken($pastel-green, 25%);
     font-size: 95%;
@@ -105,7 +104,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 5vh 0;
+  margin: 4vh 0;
 
   &:first-of-type {
     margin-top: 0;
@@ -229,6 +228,30 @@
   }
 }
 
+
+.result__section-heading {
+  @include font-size-md-2;
+  text-align: center;
+  position: relative;
+  margin-top: 0;
+}
+
+
+.result__section-heading--new {
+  &::after {
+    @include font-size-xs;
+    content: 'NEW';
+    font-family: $font-family-code;
+    padding: $global-spacing / 5 $global-spacing / 1.5;
+    position: absolute;
+    top: 0;
+    margin-left: $global-spacing;
+    background: #ffbc40;
+    border-radius: 2px;
+    line-height: 1.2;
+  }
+}
+
 // Treemap section
 
 .treemap__section {
@@ -270,12 +293,6 @@
   }
 }
 
-.treemap__section-heading {
-  @include font-size-md-2;
-  text-align: center;
-  position: relative;
-}
-
 .treemap__percent {
   @include font-size-xl;
   display: block;
@@ -309,6 +326,6 @@
 .treemap__note {
   @include font-size-xs;
   color: $raven;
-  margin: $global-spacing * 3 0;
+  margin: $global-spacing * 3 0 0 0;
   line-height: 1.2;
 }

@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react'
+import React, { PureComponent } from 'react'
 import Analytics from 'react-ga'
 import Head from 'next/head'
 
@@ -7,18 +7,19 @@ import BarGraph from 'client/components/BarGraph'
 import AutocompleteInput from 'client/components/AutocompleteInput'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox'
 import ProgressSquare from 'client/components/ProgressSquare/ProgressSquare'
-import Router, {withRouter} from 'next/router';
+import Router, { withRouter } from 'next/router';
 import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
-import {parsePackageString} from 'utils/common.utils'
-import {getTimeFromSize, DownloadSpeed} from 'utils'
+import { parsePackageString } from 'utils/common.utils'
+import { getTimeFromSize, DownloadSpeed, resolveBuildError } from 'utils'
 import Stat from 'client/components/Stat'
 
 import API from 'client/api'
 
 import TreemapSection from './components/TreemapSection'
 import EmptyBox from '../../client/assets/empty-box.svg'
-import SimilarPackagesSection from "./components/SimilarPackagesSection/SimilarPackagesSection";
+import SimilarPackagesSection from './components/SimilarPackagesSection';
+import ExportAnalysisSection from './components/ExportAnalysisSection';
 import QuickStatsBar from 'client/components/QuickStatsBar/QuickStatsBar'
 
 import './ResultPage.scss'
@@ -66,6 +67,8 @@ class ResultPage extends PureComponent {
 
     API.getInfo(packageString)
       .then(results => {
+        this.fetchSimilarPackages(packageString)
+
         if (this.activeQuery !== packageString)
           return
 
@@ -179,7 +182,6 @@ class ResultPage extends PureComponent {
       this.activeQuery = normalizedQuery
       this.fetchResults(normalizedQuery)
       this.fetchHistory(normalizedQuery)
-      this.fetchSimilarPackages(normalizedQuery)
     })
   }
 
@@ -284,6 +286,8 @@ class ResultPage extends PureComponent {
       similarPackages,
       similarPackagesCategory,
     } = this.state
+
+    const { errorName, errorBody, errorDetails } = resolveBuildError(resultsError)
 
     const getQuickStatsBar = () => resultsPromiseState === 'fulfilled' && (
       <QuickStatsBar
@@ -395,25 +399,18 @@ class ResultPage extends PureComponent {
               <div className="result-error">
                 <EmptyBox className="result-error__img"/>
                 <h2 className="result-error__code">
-                  {resultsError.error ? resultsError.error.code : 'InternalServerError'}
+                  {errorName}
                 </h2>
                 <p
                   className="result-error__message"
-                  dangerouslySetInnerHTML={{
-                    __html: resultsError.error ? resultsError.error.message :
-                      'Something went wrong!',
-                  }}
+                  dangerouslySetInnerHTML={{ __html: errorBody }}
                 />
                 {
-                  resultsError.error && resultsError.error.details && resultsError.error.details.originalError && (
+                  errorDetails && (
                     <details className="result-error__details">
                       <summary> Stacktrace</summary>
                       <pre>
-                        {
-                          Array.isArray(resultsError.error.details.originalError) ?
-                            resultsError.error.details.originalError[0] :
-                            resultsError.error.details.originalError.toString()
-                        }
+                        {errorDetails}
                       </pre>
                     </details>
                   )
@@ -436,12 +433,23 @@ class ResultPage extends PureComponent {
 
           {
             resultsPromiseState === 'fulfilled' &&
-            similarPackages.length > 0 && (
-              <SimilarPackagesSection
-                category={similarPackagesCategory}
-                packs={similarPackages}
-                comparisonGzip={results.gzip}
+            <div className="content-container">
+              <ExportAnalysisSection
+                result={results}
               />
+            </div>
+          }
+
+          {
+            resultsPromiseState === 'fulfilled' &&
+            similarPackages.length > 0 && (
+              <div className="content-container">
+                <SimilarPackagesSection
+                  category={similarPackagesCategory}
+                  packs={similarPackages}
+                  comparisonGzip={results.gzip}
+                />
+              </div>
             )
           }
         </section>

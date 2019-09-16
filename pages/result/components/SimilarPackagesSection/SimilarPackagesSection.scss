@@ -14,23 +14,7 @@
 
 
 .similar-packages-section__heading {
-  @include font-size-md-2;
-  text-align: center;
-  position: relative;
   margin-bottom: 0;
-
-  &::after {
-    @include font-size-xs;
-    content: 'NEW';
-    font-family: $font-family-code;
-    padding: $global-spacing / 5 $global-spacing / 1.5;
-    position: absolute;
-    top: 0;
-    margin-left: $global-spacing;
-    background: #ffbc40;
-    border-radius: 2px;
-    line-height: 1.2;
-  }
 }
 
 .similar-packages-section__subheading {

@@ -1,28 +1,7 @@
 import React, {Component} from 'react'
 import {formatSize} from 'utils'
-
+import colors from 'client/config/colors'
 import Treemap from '../../../client/components/Treemap'
-
-const colors = [
-  '#718af0',
-  '#6e98e6',
-  '#79c0f2',
-  '#7dd6fa',
-  '#6ed0db',
-  '#59b3aa',
-  '#7ebf80',
-  '#9bc26b',
-  '#dee675',
-  '#fff080',
-  '#ffd966',
-  '#ffbf66',
-  '#ff8a66',
-  '#ed7872',
-  '#db6b8f',
-  '#bd66cc',
-  '#cae0eb',
-]
-
 
 class TreemapSection extends Component {
 
@@ -118,7 +97,7 @@ class TreemapSection extends Component {
         sizeShare,
         isOthers: true,
         tooltip: otherDependencies
-          .map(dep => `${dep.name} ｜ ${dep.percentShare.toFixed(1)}% ｜ ~ ${getFormattedSize(dep.sizeShare)}`)
+          .map(dep => `${dep.name} ｜ ${dep.percentShare.toFixed(1)}% ｜ ~ ${getFormattedSize(dep.sizeShare)} min`)
           .join(' \u000D\u000A  \u000D\u000A ')
       })
     } else {
@@ -127,7 +106,7 @@ class TreemapSection extends Component {
 
     return (
       <section className="treemap__section" ref={ts => (this.treemapSection = ts)}>
-        <h2 className="treemap__section-heading"> Composition </h2>
+        <h2 className="result__section-heading"> Composition </h2>
         <Treemap width={width} height={height} className="treemap">
           {
             compactedDependencies.map((dep, index) => (

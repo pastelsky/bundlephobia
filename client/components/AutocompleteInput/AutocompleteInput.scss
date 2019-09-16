@@ -10,35 +10,7 @@
   width: 40vw;
   border: none;
   border-radius: 50px;
-  background: transparent;
-  line-height: 1;
   color: rgba(0, 0, 0, 0);
-  transition: border-top-left-radius 0.1s, border-top-right-radius 0.1s;
-
-  &:focus {
-    outline: none;
-    caret-color: $pastel-green;
-  }
-
-  &::placeholder {
-    color: lighten($raven, 20%);
-  }
-}
-
-// Safari's caret color is equal to the
-// text color. Hence, we need to set a
-// text color targeting just Safari :(
-@media not all and (min-resolution: .001dpcm) {
-  @supports (-webkit-appearance:none) {
-    .autocomplete-input {
-      color: #CCC;
-      -webkit-text-stroke: 2px white;
-
-      &::placeholder {
-        -webkit-text-stroke: 0px white;
-      }
-    }
-  }
 }
 
 .autocomplete-input,
@@ -190,7 +162,6 @@
   }
 
   svg {
-    overflow: visible;
     width: 100%;
     height: 100%;
 
