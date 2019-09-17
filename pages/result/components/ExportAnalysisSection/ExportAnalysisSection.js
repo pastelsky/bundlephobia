@@ -299,10 +299,8 @@ class ExportAnalysisSection extends Component {
 
         {this.getIncompatibleMessage() && this.renderIncompatible()}
         {analysisState === State.REJECTED && this.renderFailure()}
-        {
-          (analysisState === State.EXPORTS_FULFILLED || analysisState === State.SIZES_FULFILLED) ?
-            this.renderSuccess() : this.renderProgress()
-        }
+        {(analysisState === State.EXPORTS_FULFILLED || analysisState === State.SIZES_FULFILLED) && this.renderSuccess()}
+        { analysisState === State.IN_PROGRESS }
       </div>
     );
   }
