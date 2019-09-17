@@ -41,8 +41,8 @@ class Queue {
     this.executorMap[jobType] = handler
   }
 
-  hasJob(id) {
-    return this.jobs.some(job => job.id === id)
+  hasJob(id, type) {
+    return this.jobs.some(job => job.id === id && type === job.type)
   }
 
   getRunningJobs() {
@@ -113,9 +113,9 @@ class Queue {
     )
   }
 
-  removeJob(id) {
+  removeJob(id, type) {
     this.jobs =
-      this.jobs.filter(job => job.id !== id)
+      this.jobs.filter(job => (job.id !== id && job.type !== type))
   }
 
   /**
@@ -138,9 +138,9 @@ class Queue {
     this.jobs = []
   }
 
-  setJobToProcessing(id) {
+  setJobToProcessing(id, type) {
     this.jobs.forEach((job) => {
-      if (job.id === id) {
+      if (job.id === id && job.type === type) {
         job.status = Job.status.PROCESSING
       }
     })
@@ -172,33 +172,33 @@ class Queue {
     const nextJob = this.getNextJobToRun()
     log('executing job ... %o', { id: nextJob.id, type: nextJob.type, priority: nextJob.priority })
 
-    this.setJobToProcessing(nextJob.id)
+    this.setJobToProcessing(nextJob.id, nextJob.type)
     const callResult = this.executorMap[nextJob.type].call(this, nextJob.params)
 
     Promise.resolve(callResult)
       .then((result) => {
-        log('job %s was a success, removing it', nextJob.id)
+        log('job %s was a success, removing it', nextJob.id, nextJob.type)
         nextJob.successListeners.forEach((listener) => {
           listener.call(this, result)
         })
 
-        this.removeJob(nextJob.id)
+        this.removeJob(nextJob.id, nextJob.type)
         this.executeNextJobIfPossible()
       })
       .catch((err) => {
-        log('job %s was a failure, removing it', nextJob.id)
+        log('job %s was a failure, removing it', nextJob.id, nextJob.type)
         nextJob.failureListeners.forEach((listener) => {
           listener.call(this, err)
         })
 
-        this.removeJob(nextJob.id)
+        this.removeJob(nextJob.id, nextJob.type)
         this.executeNextJobIfPossible()
       })
   }
 
-  addListenersToJob(id, { resolve, reject }) {
+  addListenersToJob(id, type, { resolve, reject }) {
     this.jobs.forEach((job) => {
-      if (job.id === id) {
+      if (job.id === id && job.type === type) {
         job.successListeners.push(resolve);
         job.failureListeners.push(reject);
       }
@@ -228,9 +228,9 @@ class Queue {
       // If a job with the given id already exists,
       // just add the success / failure callbacks to
       // that existing job (dedup)
-      if (this.hasJob(id)) {
+      if (this.hasJob(id, type)) {
         log('job id %s already present, adding callbacks', id)
-        this.addListenersToJob(id, { resolve, reject })
+        this.addListenersToJob(id, type,{ resolve, reject })
         return
       }
 

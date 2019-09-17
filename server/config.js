@@ -27,7 +27,8 @@ module.exports = {
     /react-scripts/,
     /polymer-cli/,
     /^parcel$/,
-    /^devextreme$/
+    /^devextreme$/,
+    /^yarn$/
   ],
 
   unsupported: [

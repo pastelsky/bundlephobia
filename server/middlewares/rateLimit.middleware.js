@@ -8,7 +8,7 @@ const defaults = {
   blackList: [],
   accessLimited: '429: Too Many Requests.',
   accessForbidden: '403: This is forbidden area for you.',
-  max: 85,
+  max: 100,
   env: null,
 }
 

@@ -12,7 +12,7 @@ apps:
   - script: build-service/index.js
     name: build-service
     instances: 3
-    max_memory_restart: 800M
+    max_memory_restart: 1000M
     error_file: logs/build-service.log
     out_file: logs/build-service.log
     env:

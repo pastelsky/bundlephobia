@@ -102,6 +102,7 @@ class Trailblaze {
 
   createTrail() {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    line.setAttribute('stroke-width', '0.5')
     line.setAttribute('class', 'progress-hex__trail')
     return line
   }
@@ -168,7 +169,7 @@ class Trailblaze {
     anime({
       targets: this.lines,
       opacity: [1, 0.9, 0],
-      strokeDashoffset: [(el) => anime.setDashoffset(el), 0],
+      strokeDashoffset: [(el) => el && anime.setDashoffset(el), 0],
       x1: el => lineMap.get(el).source.cx,
       x2: el => lineMap.get(el).destination.cx,
       y1: el => lineMap.get(el).source.cy,

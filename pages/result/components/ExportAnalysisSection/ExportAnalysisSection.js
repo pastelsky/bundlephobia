@@ -11,7 +11,8 @@ import './ExportAnalysisSection.scss'
 const State = {
   TBD: 'tbd',
   IN_PROGRESS: 'in-progress',
-  FULFILLED: 'fulfilled',
+  EXPORTS_FULFILLED: 'exports-fulfilled',
+  SIZES_FULFILLED: 'sizes-fulfilled',
   REJECTED: 'rejected'
 }
 
@@ -67,6 +68,7 @@ class ExportPill extends React.Component {
 function ExportList({ exports, totalSize, isLoading }) {
   const shouldShowLabels = exports.length > 20
   const exportDictionary = {}
+  let curIndex = 0
 
   exports.forEach(exp => {
     const firstLetter = exp.name[0].toLowerCase()
@@ -82,7 +84,7 @@ function ExportList({ exports, totalSize, isLoading }) {
       {
         Object.keys(exportDictionary)
           .sort()
-          .map((letter, letterIndex) => (
+          .map(letter => (
             <div className="export-analysis-section__letter-group" key={letter}
             >
               {shouldShowLabels && (
@@ -94,6 +96,7 @@ function ExportList({ exports, totalSize, isLoading }) {
                     name={exportDictionary[letter][0].name}
                     path={exportDictionary[letter][0].path}
                     key={exportDictionary[letter][0].name}
+                    isLoading={curIndex++ < 40 && isLoading}
                   />
                 </div>
               )}
@@ -104,7 +107,7 @@ function ExportList({ exports, totalSize, isLoading }) {
                   name={exp.name}
                   path={exp.path}
                   key={exp.name}
-                  isLoading={(letterIndex * expIndex) < 20 && isLoading}
+                  isLoading={curIndex++ < 40 && isLoading}
                 />
               ))}
             </div>
@@ -155,7 +158,10 @@ class ExportAnalysisSection extends Component {
 
     API.getExports(packageString)
       .then((results) => {
-        this.setState({ exports: results.exports })
+        this.setState({
+          exports: results.exports,
+          analysisState: State.EXPORTS_FULFILLED,
+        })
 
         Analytics.event({
           category: 'Export Analysis',
@@ -173,7 +179,7 @@ class ExportAnalysisSection extends Component {
       .then(() => API.getExportsSizes(packageString))
       .then((results) => {
         this.setState({
-          analysisState: State.FULFILLED,
+          analysisState: State.SIZES_FULFILLED,
           assets: results.assets.map(asset => ({ ...asset, path: this.state.exports[asset.name] }))
         })
 
@@ -233,9 +239,9 @@ class ExportAnalysisSection extends Component {
   renderSuccess() {
     const { result } = this.props
     const { gzip: totalSize } = result
-    const { exports, analysisState, assets, filterText, resultError } = this.state
+    const { exports, analysisState, assets, filterText } = this.state
 
-    const normalizedExports = analysisState === State.FULFILLED ? assets :
+    const normalizedExports = analysisState === State.SIZES_FULFILLED ? assets :
       Object.keys(exports)
         .filter(exp => !exp.startsWith('_'))
         .map((exp) => ({ name: exp }))
@@ -261,7 +267,7 @@ class ExportAnalysisSection extends Component {
         </div>
 
         <ExportList
-          isLoading={analysisState === State.IN_PROGRESS}
+          isLoading={analysisState === State.EXPORTS_FULFILLED}
           totalSize={totalSize}
           exports={matchedExports}
         />
@@ -290,12 +296,12 @@ class ExportAnalysisSection extends Component {
     return (
       <div className="export-analysis-section">
         <h2 className="result__section-heading result__section-heading--new"> Exports Analysis </h2>
+
+        {this.getIncompatibleMessage() && this.renderIncompatible()}
+        {analysisState === State.REJECTED && this.renderFailure()}
         {
-          this.getIncompatibleMessage() ? this.renderIncompatible() :
-            (analysisState === State.IN_PROGRESS ? this.renderProgress() :
-                analysisState === State.REJECTED ? this.renderFailure() :
-                  analysisState === State.FULFILLED ? this.renderSuccess() : null
-            )
+          (analysisState === State.EXPORTS_FULFILLED || analysisState === State.SIZES_FULFILLED) ?
+            this.renderSuccess() : this.renderProgress()
         }
       </div>
     );
