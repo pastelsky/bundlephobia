@@ -3,7 +3,9 @@ const CustomError = require('./../../CustomError')
 const CONFIG = require('../../config')
 
 async function blockBlacklistMiddleware(ctx, next) {
-  const { package: packageString } = ctx.query
+  const { package: packageString, force } = ctx.query
+  if(force) { await next(); return }
+
   const parsedPackage = parsePackageString(packageString)
 
   // If package is blacklisted, fail fast

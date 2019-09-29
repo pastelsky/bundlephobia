@@ -41,9 +41,9 @@ async function errorHandler(ctx, next) {
       case 'BlacklistedPackageError':
         respondWithError(403, {
           code: 'BlacklistedPackageError',
-          message: 'The package you were looking for is blacklisted due to suspicious activity in the past, ' +
-            'or because it\'s failed to build multiple times, ' +
-            'and isn\'t bundle size calculations might not apply here.',
+          message: 'The package you were looking for is blacklisted ' +
+            'because it failed to build multiple times in the past and further tries aren\'t likely to succeed. This can' +
+            'happen if the package in question wasn\'t meant to be bundled in a client side application.',
         })
         break
 
