@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
     <ShortName>bundlephobia</ShortName>
     <Description>Search npm packages on bundlephobia</Description>
+    <InputEncoding>UTF-8</InputEncoding>
+    <OutputEncoding>UTF-8</OutputEncoding>
+    <Language>en-us</Language>
+    <Image width="32" height="32" type="image/png">https://bundlephobia.com/favicon-32x32.png</Image>
     <Tags>bundlephobia</Tags>
     <Url type="text/html"
          template="https://bundlephobia.com/result?p={searchTerms}"/>
-</OpenSearchDescription> 
+    <moz:SearchForm>https://bundlephobia.com</moz:SearchForm>
+</OpenSearchDescription>
