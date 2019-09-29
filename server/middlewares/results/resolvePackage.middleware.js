@@ -16,10 +16,10 @@ async function resolvePackageMiddleware(ctx, next) {
   }
 
   const resolveStart = now()
-  resolvedPackage = await resolvePackage(parsedPackage)
+  resolvedPackage = await resolvePackage(packageString)
   const resolveEnd = now()
 
-  const { scoped, name, version, repository, description } = resolvedPackage
+  const { name, version, repository, description } = resolvedPackage
   let truncatedDescription = ''
   let repositoryURL = ''
 
@@ -36,7 +36,7 @@ async function resolvePackageMiddleware(ctx, next) {
   const result = {
     name,
     version,
-    scoped,
+    scoped: parsedPackage.scoped,
     packageString: `${name}@${version}`,
     description: truncatedDescription,
     repository: repositoryURL,
