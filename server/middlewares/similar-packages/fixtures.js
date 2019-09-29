@@ -23,7 +23,7 @@ const categories = {
       { tag: 'inline', weight: Weight.NORMAL },
       { tag: 'in', weight: Weight.MID }
     ],
-    similar: ['styled-components', 'radium', 'emotion', 'glamor']
+    similar: ['styled-components', 'jss', 'emotion', 'linaria']
   },
   'color-manipulation': {
     name: 'Color parsing and manipulation',
@@ -76,6 +76,17 @@ const categories = {
       { tag: 'order', weight: Weight.MID }
     ],
     similar: ['@shopify/draggable', 'dragula', 'muuri', 'sortablejs', 'draggabilly', 'interactjs']
+  },
+  'excel-parsers': {
+    name: 'Excel File Readers, Manipulators & Writers',
+    tags: [
+      { tag: 'excel', weight: Weight.MAX },
+      { tag: 'read', weight: Weight.SMALL },
+      { tag: 'write', weight: Weight.SMALL },
+      { tag: 'manipulate', weight: Weight.SMALL },
+      { tag: 'parse', weight: Weight.SMALL }
+    ],
+    similar: ['xlsx', 'exceljs', 'node-xlsx', 'excel4node']
   },
   'full-text-search': {
     name: 'Text search',
@@ -155,8 +166,8 @@ const categories = {
       { tag: 'javascript', weight: Weight.MID },
     ], similar: ['apollo-client', 'graphql.js', 'lokka', 'graphql', 'relay-runtime', 'urql']
   },
-  'http-request': {
-    name: 'HTTP client libraries',
+  'node-http-request': {
+    name: 'HTTP client libraries for Node.js',
     tags: [
       { tag: 'http', weight: Weight.NORMAL },
       { tag: 'get', weight: Weight.NORMAL },
@@ -166,8 +177,24 @@ const categories = {
       { tag: 'request', weight: Weight.HIGH },
       { tag: 'agent', weight: Weight.MID },
       { tag: 'xhr', weight: Weight.NORMAL },
+      { tag: 'node node.js', weight: Weight.NORMAL }
     ],
-    similar: ['got', 'axios', 'request', 'ky']
+    similar: ['got', 'phin', 'axios', 'node-fetch', 'superagent']
+  },
+  'browser-http-request': {
+    name: 'HTTP client libraries for Browser',
+    tags: [
+      { tag: 'http', weight: Weight.NORMAL },
+      { tag: 'get', weight: Weight.NORMAL },
+      { tag: 'post', weight: Weight.NORMAL },
+      { tag: 'ajax', weight: Weight.HIGH },
+      { tag: 'url', weight: Weight.SMALL },
+      { tag: 'request', weight: Weight.HIGH },
+      { tag: 'agent', weight: Weight.MID },
+      { tag: 'xhr', weight: Weight.NORMAL },
+      { tag: 'browser', weight: Weight.NORMAL }
+    ],
+    similar: ['axios', 'ky', 'superagent', 'whatwg-fetch', 'unfetch']
   },
   'image-color-extraction': {
     name: 'Image color extraction',
@@ -193,7 +220,7 @@ const categories = {
       { tag: 'freeze', weight: Weight.MID },
       { tag: 'cursor', weight: Weight.MID },
     ],
-    similar: ['immutable', 'seamless-immutable', 'freezer-js', 'baobab']
+    similar: ['immutable', 'seamless-immutable', 'immutability-helper', 'baobab']
   },
   'markdown-parser': {
     name: 'Markdown parsers',
@@ -205,7 +232,7 @@ const categories = {
       { tag: 'abstract syntax tree', weight: Weight.MID },
       { tag: 'md', weight: Weight.HIGH }
     ],
-    similar: ['markdown', 'markdown-it', 'marked', 'commonmark', 'snarkdown']
+    similar: [ 'marked', 'markdown-it', 'showdown', 'remarkable', 'snarkdown']
   },
   'memoization': {
     name: 'Memoization',
@@ -273,14 +300,14 @@ const categories = {
     similar: ['react-helment', 'react-meta-tags', 'react-document-title']
   },
   'react-form': {
-    name: 'React based form builders',
+    name: 'React based form builders & validators',
     tags: [
       { tag: 'react', weight: Weight.NORMAL },
       { tag: 'redux', weight: Weight.MID },
-      { tag: 'form', weight: Weight.NORMAL },
+      { tag: 'form', weight: Weight.HIGH },
       { tag: 'validate', weight: Weight.SMALL },
     ],
-    similar: ['formik', 'react-final-form', 'rc-form', 'redux-form', 'react-jsonschema-form', 'formsy-react']
+    similar: ['formik', 'react-final-form', 'rc-form', 'react-jsonschema-form', 'formsy-react', 'react-hook-form']
   },
   'schema-validation': {
     name: 'JSON schema validation',
