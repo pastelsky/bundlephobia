@@ -13,7 +13,7 @@ const CONFIG = require('../../config')
 const MIN_CUTOFF_SCORE = 12
 
 const prefixURL = (url, { base, user, project, head, path }) => {
-  if (url.indexOf('//') > 0) {
+  if (url.includes('//')) {
     return url;
   } else {
     return new URL(
