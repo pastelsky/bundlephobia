@@ -91,7 +91,7 @@ export default class API {
     //    .sort(suggestionSort)
     //    .map(suggestion => {
     //      const name = suggestion.package.name
-    //      const hasMatch = name.indexOf(query) > -1
+    //      const hasMatch = name.includes(query)
     //      const startIndex = name.indexOf(query)
     //      const endIndex = startIndex + query.length
     //      let highlight
