@@ -307,7 +307,7 @@ const categories = {
       { tag: 'form', weight: Weight.HIGH },
       { tag: 'validate', weight: Weight.SMALL },
     ],
-    similar: ['formik', 'react-final-form', 'rc-form', 'react-jsonschema-form', 'formsy-react', 'react-hook-form']
+    similar: ['formik', 'react-final-form', 'rc-form', 'react-jsonschema-form', 'formsy-react', 'react-hook-form', 'redux-form']
   },
   'schema-validation': {
     name: 'JSON schema validation',
