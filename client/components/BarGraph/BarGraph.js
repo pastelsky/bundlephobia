@@ -93,7 +93,7 @@ export default class BarGraph extends PureComponent {
             )}
             {options.isFirstSideEffectFree && (
               <div
-                data-balloon={`Was marked side-effect free. ${(reading.hasJSNext || reading.hasJSModule) ? 'Supports ES2015 exports also, hence fully tree-shakeable' : 'Doesn\t export ESM yet, limited tree-shake ability'}`}
+                data-balloon={`Was marked side-effect free. ${(reading.hasJSNext || reading.hasJSModule) ? 'Supports ES2015 exports also, hence fully tree-shakeable' : 'Doesn\'t export ESM yet, limited tree-shake ability'}`}
                 className="bar-graph__bar-symbol"
               >
                 <SideEffectIcon/>
