@@ -81,9 +81,7 @@ export default class ProgressHexAnimator {
     }
 
     timeline.add(fadeInRings)
-    for (let i = 0; i <= 50; i++) {
-      timeline.add(quakeCircles)
-    }
+    timeline.add(quakeCircles)
     return timeline
   }
 }
