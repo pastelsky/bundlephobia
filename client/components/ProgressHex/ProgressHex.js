@@ -10,11 +10,15 @@ class ProgressHex extends Component {
 
   componentDidMount() {
     this.animator = new ProgressHexAnimator({ svg: this.svgRef.current })
-    this.timeline = this.animator.createTimeline()
-    this.timeline.play()
+    this.animator.createTimeline()
+      .then(timeline => {
+        this.timeline = timeline
+        this.timeline.play()
+      })
   }
 
   componentWillUnmount() {
+    if (!this.timeline) return
     this.timeline.pause()
   }
 
