@@ -96,15 +96,17 @@ $bar-grow-duration: 0.4s;
 
 .bar-graph__bar-version {
   @include font-size-xs;
+  position: absolute;
   z-index: 33;
   font-weight: $font-weight-light;
-  transform: rotate(-90deg) translateX(#{-$global-spacing * 1.5});
+  white-space: nowrap;
+  transform-origin: right;
+  transform: translate(calc(-100% + #{-$global-spacing * 1.5}), #{-$global-spacing * 1.5}) rotate(-90deg);
   font-variant-numeric: tabular-nums;
   color: lighten($raven, 15%);
   transition: opacity 0.2s, color 0.2s;
   font-family: $font-family-code;
   letter-spacing: -1px;
-  direction: rtl;
   line-height: 1;
   cursor: pointer;
   max-height: $bar-width;
@@ -126,7 +128,7 @@ $bar-grow-duration: 0.4s;
 
 .bar-graph__legend {
   @include font-size-xs;
-  padding-top: $global-spacing;
+  padding-bottom: $global-spacing;
   display: flex;
   text-transform: uppercase;
   justify-content: center;
