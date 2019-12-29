@@ -166,6 +166,16 @@ const categories = {
       { tag: 'javascript', weight: Weight.MID },
     ], similar: ['apollo-client', 'graphql.js', 'lokka', 'graphql', 'relay-runtime', 'urql']
   },
+  'i18n': {
+    name: 'Internationalization',
+    tags: [
+      { tag: 'i18n', weight: Weight.HIGH },
+      { tag: 'intl', weight: Weight.HIGH },
+      { tag: 'internation', weight: Weight.HIGH },
+      { tag: 'language', weight: Weight.MID },
+    ],
+    similar: ['fbt','globalize', 'i18next', 'node-polyglot', '@lingui/core']
+  },
   'node-http-request': {
     name: 'HTTP client libraries for Node.js',
     tags: [
@@ -298,6 +308,16 @@ const categories = {
       { tag: 'meta tags', weight: Weight.MID}
     ],
     similar: ['react-helment', 'react-meta-tags', 'react-document-title']
+  },
+  'react-i18n': {
+    name: 'React based internationalization',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'i18n', weight: Weight.HIGH },
+      { tag: 'intl', weight: Weight.HIGH },
+      { tag: 'internation', weight: Weight.HIGH },
+    ],
+    similar: ['react-intl','react-i18next', 'react-intl-universal', 'eo-locale', '@lingui/react']
   },
   'react-form': {
     name: 'React based form builders & validators',
