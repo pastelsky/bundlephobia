@@ -288,6 +288,16 @@ const categories = {
     ],
     similar: ['promise', 'es6-promise', 'promise-polyfill', 'es6-promise-polyfill']
   },
+  'react-animation': {
+    name: 'React based animation',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'animation', weight: Weight.HIGH },
+      { tag: 'transform', weight: Weight.NORMAL },
+      { tag: 'motion', weight: Weight.NORMAL },
+    ],
+    similar: ['react-spring', 'framer-motion', 'react-motion', 'react-move']
+  },
   'react-autocomplete': {
     name: 'React based autocomplete components',
     tags: [
