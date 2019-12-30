@@ -5,21 +5,6 @@ import TreeShakeIcon from '../Icons/TreeShakeIcon'
 import SideEffectIcon from '../Icons/SideEffectIcon'
 import './BarGraph.scss'
 
-const BarLegend = () => {
-  return (
-    <div className="bar-graph__legend">
-      <div className="bar-graph__legend__bar1">
-        <div className="bar-graph__legend__colorbox"/>
-        Min
-      </div>
-      <div className="bar-graph__legend__bar2">
-        <div className="bar-graph__legend__colorbox"/>
-        GZIP
-      </div>
-    </div>
-  )
-}
-
 
 export default class BarGraph extends PureComponent {
   static propTypes = {
@@ -142,7 +127,6 @@ export default class BarGraph extends PureComponent {
 
     return (
       <div className="bar-graph-container">
-        <BarLegend/>
         <figure className="bar-graph">
           {
             readings.map((reading, index) => (
@@ -155,6 +139,16 @@ export default class BarGraph extends PureComponent {
             ))
           }
         </figure>
+        <div className="bar-graph__legend">
+          <div className="bar-graph__legend__bar1">
+            <div className="bar-graph__legend__colorbox"/>
+            Min
+          </div>
+          <div className="bar-graph__legend__bar2">
+            <div className="bar-graph__legend__colorbox"/>
+            GZIP
+          </div>
+        </div>
       </div>
     )
   }
