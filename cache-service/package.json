@@ -6,7 +6,7 @@
   "dependencies": {
     "debug": "^4.1.1",
     "dotenv": "^4.0.0",
-    "dotenv-defaults": "^1.0.2",
+    "dotenv-defaults": "^1.0.3",
     "fastify": "^2.8.0",
     "firebase": "^6.5.0",
     "lru-cache": "^5.1.1"
