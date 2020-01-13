@@ -10491,10 +10491,10 @@ p-try@^2.0.0:
   resolved "https://registry.yarnpkg.com/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==
 
-package-build-stats@6.1.0:
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/package-build-stats/-/package-build-stats-6.1.0.tgz#26323e23b829ab931f356f5a5ef6ae1d219d7ef8"
-  integrity sha512-83f0fnFEVIQvD1iDsjYYiaYsg217ZH2LXnMu4Za30VmMZkJLvGYqicwuNtJDjWhmhwuN8j4azPOBz+M3oTRCuA==
+package-build-stats@6.1.1:
+  version "6.1.1"
+  resolved "https://registry.yarnpkg.com/package-build-stats/-/package-build-stats-6.1.1.tgz#204f9f23f8dbd03cac97e752b26f8f73ecb967dc"
+  integrity sha512-NNQO8ppvWglpLET6vSWvTSfayr+bqdl+QULM/AYo9xPRQRy1a/LKd1YbjsnGX/lEMKp3KidJxp/BS8ERm1mR+w==
   dependencies:
     "@babel/parser" "^7.7.7"
     "@babel/plugin-proposal-export-default-from" "^7.7.4"
