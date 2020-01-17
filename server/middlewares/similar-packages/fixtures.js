@@ -201,8 +201,11 @@ const categories = {
       { tag: 'url', weight: Weight.SMALL },
       { tag: 'request', weight: Weight.HIGH },
       { tag: 'agent', weight: Weight.MID },
+      { tag: 'fetch', weight: Weight.NORMAL },
       { tag: 'xhr', weight: Weight.NORMAL },
-      { tag: 'browser', weight: Weight.NORMAL }
+      { tag: 'xdr', weight: Weight.NORMAL },
+      { tag: 'browser', weight: Weight.NORMAL },
+      { tag: 'client', weight: Weight.SMALL }
     ],
     similar: ['axios', 'ky', 'superagent', 'whatwg-fetch', 'unfetch']
   },
