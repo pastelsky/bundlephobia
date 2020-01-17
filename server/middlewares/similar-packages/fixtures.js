@@ -207,7 +207,7 @@ const categories = {
       { tag: 'browser', weight: Weight.NORMAL },
       { tag: 'client', weight: Weight.SMALL }
     ],
-    similar: ['axios', 'ky', 'superagent', 'whatwg-fetch', 'unfetch']
+    similar: ['axios', 'ky', 'superagent', 'whatwg-fetch', 'unfetch', 'cb-fetch']
   },
   'image-color-extraction': {
     name: 'Image color extraction',
