@@ -36,6 +36,7 @@ FIREBASE_DATABASE_URL=<url>
 ### Commands
 | script        | description  |
 | ------------- |:-------------|
+| `yarn`  | Install dependencies |
 | `yarn run dev`  | Start a development server locally |
 | `yarn run build`    | Build for production      |
 | `yarn run prod` | Start a production server locally      | 
