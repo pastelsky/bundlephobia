@@ -32,7 +32,7 @@ class QuickStatsBar extends Component {
       trimmed = description.trim()
     }
 
-    return DOMPurify.sanitize(trimmed)
+    return DOMPurify.sanitize(trimmed, { FORBID_TAGS: ['img']})
   }
 
   render() {
