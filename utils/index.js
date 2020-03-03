@@ -21,7 +21,7 @@ const formatSize = (value) => {
     unit = 'kB'
     size = value / 1024
   } else {
-    unit = 'mB'
+    unit = 'MB'
     size = value / 1024 / 1024
   }
 
