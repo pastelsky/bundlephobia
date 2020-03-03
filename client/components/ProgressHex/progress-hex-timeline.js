@@ -55,14 +55,12 @@ export default class ProgressHexAnimator {
   }
 
   createTimeline() {
-    const timeline = anime.timeline({ duration: DURATION, autoplay: false, loop: true });
-
     const fadeInRings = {
       targets: this.rings,
       opacity: [0, 1],
       delay: anime.stagger(DURATION / 5, { from: 'last' }),
       duration: DURATION / 2,
-      easing: 'linear'
+      easing: 'linear',
     }
 
     const quakeCircles = {
@@ -80,11 +78,12 @@ export default class ProgressHexAnimator {
       changeBegin: () => this.trailBlaze.start(),
     }
 
-    timeline.add(fadeInRings)
-    for (let i = 0; i <= 50; i++) {
-      timeline.add(quakeCircles)
-    }
-    return timeline
+    return anime(fadeInRings).finished
+      .then(() => {
+        const timeline = anime.timeline({ duration: DURATION, autoplay: true, loop: true });
+        timeline.add(quakeCircles)
+        return timeline
+      })
   }
 }
 
