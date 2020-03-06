@@ -42,6 +42,7 @@ $bar-grow-duration: 0.4s;
 
 .bar-graph__bar-symbol {
   text-align: center;
+  z-index: 1;
 
   svg {
     height: $global-spacing * 1.8;
