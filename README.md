@@ -25,6 +25,10 @@
 - [badgen.net](https://badgen.net/#bundlephobia) - example size of react: ![react](https://badgen.net/bundlephobia/minzip/react)
 - [shields.io](https://shields.io/#/examples/size) - example size of react: ![react](https://img.shields.io/bundlephobia/minzip/react.svg)
 
+## Github Actions
+
+- [check-my-bundlephobia](https://github.com/marketplace/actions/bundlephobia-checker) - Check new and modified added packages on bundlephobia
+
 ## Built using bundlephobia
 - Size in browser - As seen on package searches at [yarnpkg.com](https://yarnpkg.com)
 - [bundlephobia-cli](https://github.com/AdrieanKhisbe/bundle-phobia-cli) - A Command Line client for bundlephobia
