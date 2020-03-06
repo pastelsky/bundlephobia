@@ -295,7 +295,7 @@ class ResultPage extends PureComponent {
         dependencyCount={results.dependencyCount}
         hasSideEffects={results.hasSideEffects}
         isTreeShakeable={results.hasJSModule || results.hasJSNext}
-        repository={results.repository}
+        repository={results.links.repository}
         name={results.name}
       />
     )
