@@ -32,7 +32,7 @@ module.exports = {
   ],
 
   unsupported: [
-    { test: /@types/, reason: 'Type packages don\'t usually contain any runtime code.'}
+    { test: /^@types\//, reason: 'Type packages don\'t usually contain any runtime code.'}
   ],
 
   CACHE: {
