@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { withRouter } from 'next/router'
+=======
+import Router, { withRouter } from "next/router";
+>>>>>>> fad1869... includes alphabetical and size filters in url
 import React, { Component } from 'react'
 import Analytics from 'react-ga'
 import FlipMove from 'react-flip-move'
@@ -107,6 +111,7 @@ class ScanResults extends Component {
     super(props)
 
     const { router } = this.props
+    const sortMode = router.query.sortMode
     const packageStrings = router.query.packages
     const packages = packageStrings
       .split(',')
@@ -117,7 +122,7 @@ class ScanResults extends Component {
         ...parsePackageString(str),
       }))
 
-    this.state = { packages, sortMode: null }
+    this.state = { packages, sortMode: sortMode }
   }
 
   componentDidMount() {
@@ -195,33 +200,64 @@ class ScanResults extends Component {
     this.setState({ packages })
   }
 
-  handleSortAlphabetic = () => {
+  setParamsAndState = ( sortMode ) => {
     const { packages } = this.state
+<<<<<<< HEAD
     const sortedList = packages.sort((packA, packB) =>
       packA.name.localeCompare(packB.name)
     )
+=======
+    const query = packages
+        .map(pack => `${pack.name}@${pack.version}`)
+        .join(',')
+    Router.push(`/scan-results?packages=${query}&sortMode=${sortMode}`)
+>>>>>>> fad1869... includes alphabetical and size filters in url
 
-    this.setState({ packages: sortedList, sortMode: 'alphabetic' })
+    this.setState({ sortMode: sortMode })
+  }
+
+  handleSortAlphabetic = () => {
+    this.setParamsAndState('alphabetic')
   }
 
   handleSortSize = () => {
-    const { packages } = this.state
-    const sortedList = packages.sort((packA, packB) => {
-      const packASize = packA.result ? packA.result.gzip : 0
-      const packBSize = packB.result ? packB.result.gzip : 0
+    this.setParamsAndState('size')
+  }
 
-      return packBSize - packASize
-    })
+  sortPackages = () => {
+    const { packages, sortMode } = this.state
+    let sortedList
 
-    this.setState({ packages: sortedList, sortMode: 'size' })
+    if (sortMode === 'size'){
+      sortedList = packages.sort((packA, packB) => {
+        const packASize = packA.result ? packA.result.gzip : 0
+        const packBSize = packB.result ? packB.result.gzip : 0
+
+        return packBSize - packASize
+      })
+    } else {
+      sortedList = packages.sort((packA, packB) =>
+          packA.name.localeCompare(packB.name),
+      )
+    }
+    return sortedList
   }
 
   render() {
+<<<<<<< HEAD
     const { packages, sortMode } = this.state
     const totalMinSize = packages.reduce(
       (curTotal, pack) => curTotal + (pack.result ? pack.result.size : 0),
       0
     )
+=======
+    const { sortMode } = this.state
+    const packages = this.sortPackages()
+
+    const totalMinSize = packages
+      .reduce((curTotal, pack) =>
+        curTotal + (pack.result ? pack.result.size : 0), 0)
+>>>>>>> fad1869... includes alphabetical and size filters in url
 
     const totalGZIPSize = packages.reduce(
       (curTotal, pack) => curTotal + (pack.result ? pack.result.gzip : 0),
