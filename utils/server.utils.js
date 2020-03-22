@@ -13,7 +13,7 @@ const CustomError = require('../server/CustomError')
 async function resolvePackage(packageString) {
 
   try {
-    return await pacote.manifest(packageString, { 'full-metadata': true })
+    return await pacote.manifest(packageString, { fullMetadata: true })
   } catch (err) {
     if(err.code === 'ETARGET') {
       throw new CustomError('PackageVersionMismatchError', null, {
