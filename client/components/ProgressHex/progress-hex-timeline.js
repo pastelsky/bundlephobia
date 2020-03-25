@@ -38,7 +38,7 @@ export default class ProgressHexAnimator {
       cy,
       this.width / 2,
       this.height / 2,
-      distance,
+      distance
     )
 
     return { x: x - cx, y: y - cy }
@@ -49,13 +49,17 @@ export default class ProgressHexAnimator {
     if (curDistanceBetweenPoints === 0) return { x: x1, y: y1 }
 
     const t = d / curDistanceBetweenPoints
-    const x = (x1 - (t * x2)) / (1 - t)
-    const y = (y1 - (t * y2)) / (1 - t)
+    const x = (x1 - t * x2) / (1 - t)
+    const y = (y1 - t * y2) / (1 - t)
     return { x, y }
   }
 
   createTimeline() {
-    const timeline = anime.timeline({ duration: DURATION, autoplay: false, loop: true })
+    const timeline = anime.timeline({
+      duration: DURATION,
+      autoplay: false,
+      loop: true,
+    })
 
     const fadeInRings = {
       targets: this.rings,
@@ -67,14 +71,12 @@ export default class ProgressHexAnimator {
 
     const quakeCircles = {
       targets: this.circles,
-      scale: el => this.circlesMap.get(el).ringNumber === 0 ? 3 : 1.5,
+      scale: el => (this.circlesMap.get(el).ringNumber === 0 ? 3 : 1.5),
       translateY: circle => this.getTranslation(circle, 4).y,
       translateX: circle => this.getTranslation(circle, 4).x,
-      delay: (el, i) => (
-        Math.pow(this.circlesMap.get(el).ringNumber, 0.6) *
-        DURATION / 4 +
-        (this.circlesMap.get(el).ringNumber > 0 ? DURATION / 2.5 : 0)
-      ),
+      delay: (el, i) =>
+        (Math.pow(this.circlesMap.get(el).ringNumber, 0.6) * DURATION) / 4 +
+        (this.circlesMap.get(el).ringNumber > 0 ? DURATION / 2.5 : 0),
       duration: DURATION,
       easing: () => t => Math.sin(t * Math.PI),
       changeBegin: () => this.trailBlaze.start(),
@@ -116,7 +118,7 @@ class Trailblaze {
 
   getCirclesInRing(ringNumber) {
     const circles = []
-    this.circlesMap.forEach((value) => {
+    this.circlesMap.forEach(value => {
       if (value.ringNumber === ringNumber) {
         circles.push(value)
       }
@@ -136,19 +138,26 @@ class Trailblaze {
     const eligibleSourceCircles = this.getCirclesInRing(sourceRingNumber)
     const sourceCircle = randomFromArray(eligibleSourceCircles)
 
-    const eligibleDestinationCircles = this.getCirclesInRing(destinationRingNumber)
+    const eligibleDestinationCircles = this.getCirclesInRing(
+      destinationRingNumber
+    )
 
-    const destinationCircleDistances = eligibleDestinationCircles.map((circle, index) => ({
-      index,
-      distance: this.distanceBetweenCircles(sourceCircle, circle),
-    }))
+    const destinationCircleDistances = eligibleDestinationCircles.map(
+      (circle, index) => ({
+        index,
+        distance: this.distanceBetweenCircles(sourceCircle, circle),
+      })
+    )
 
-    const eligibleDistancesMin = Math.min(...destinationCircleDistances.map(a => a.distance))
-    const eligibleDestinationIndexes =
-      destinationCircleDistances.filter(c => Math.abs(eligibleDistancesMin - c.distance) < 2)
-        .map(d => d.index)
+    const eligibleDistancesMin = Math.min(
+      ...destinationCircleDistances.map(a => a.distance)
+    )
+    const eligibleDestinationIndexes = destinationCircleDistances
+      .filter(c => Math.abs(eligibleDistancesMin - c.distance) < 2)
+      .map(d => d.index)
 
-    const destinationCircle = eligibleDestinationCircles[randomFromArray(eligibleDestinationIndexes)]
+    const destinationCircle =
+      eligibleDestinationCircles[randomFromArray(eligibleDestinationIndexes)]
 
     return {
       source: sourceCircle,
@@ -170,17 +179,23 @@ class Trailblaze {
   start() {
     const lineMap = new WeakMap()
 
-    this.lines.forEach((line) => {
+    this.lines.forEach(line => {
       const { source, destination } = this.getRandomConnection()
       lineMap.set(line, { source, destination })
       line.setAttribute('stroke', randomFromArray(colors))
-      this.setLineCoords(line, source.cx, destination.cx, source.cy, destination.cy)
+      this.setLineCoords(
+        line,
+        source.cx,
+        destination.cx,
+        source.cy,
+        destination.cy
+      )
     })
 
     anime({
       targets: this.lines,
       opacity: [1, 0.9, 0],
-      strokeDashoffset: [(el) => this.getDashOffset(el), 0],
+      strokeDashoffset: [el => this.getDashOffset(el), 0],
       x1: el => lineMap.get(el).source.cx,
       x2: el => lineMap.get(el).destination.cx,
       y1: el => lineMap.get(el).source.cy,

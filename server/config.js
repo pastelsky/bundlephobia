@@ -28,11 +28,14 @@ module.exports = {
     /polymer-cli/,
     /^parcel$/,
     /^devextreme$/,
-    /^yarn$/
+    /^yarn$/,
   ],
 
   unsupported: [
-    { test: /@types/, reason: 'Type packages don\'t usually contain any runtime code.'}
+    {
+      test: /@types/,
+      reason: "Type packages don't usually contain any runtime code.",
+    },
   ],
 
   CACHE: {
@@ -45,5 +48,5 @@ module.exports = {
     SIZE_API_ERROR_FATAL: dev ? 0 : 60 * 60,
     SIZE_API_ERROR_UNSUPPORTED: dev ? 0 : 24 * 60 * 60,
     SIZE_API_HAS_VERSION: dev ? 0 : 24 * 60 * 60,
-  }
+  },
 }

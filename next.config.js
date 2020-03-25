@@ -3,6 +3,6 @@ const withCss = require('@zeit/next-css')
 
 module.exports = withSass({
   sassLoaderOptions: {
-    includePaths: ['pages/**', 'node_modules']
+    includePaths: ['pages/**', 'node_modules'],
   },
 })

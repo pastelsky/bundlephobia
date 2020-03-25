@@ -8,17 +8,21 @@ export default function Separator({ text = 'or' }) {
   }
 
   return (
-    <div style={ {
-      width: '100%',
-      position: 'relative',
-      margin: '6px 0',
-      opacity: '0.7'
-    } }>
-      <div style={ {
+    <div
+      style={{
         width: '100%',
-        ...commonStyles,
-      } }>
-        <div style={ commonStyles }>
+        position: 'relative',
+        margin: '6px 0',
+        opacity: '0.7',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          ...commonStyles,
+        }}
+      >
+        <div style={commonStyles}>
           <svg width="49" height="39" xmlns="http://www.w3.org/2000/svg">
             <g fill="#211915" fillRule="evenodd">
               <path d="M28.4 21c5.2-2.9 12.2-2.3 18.1-1-1.9.8-3.7 1.8-5.8 2.1a24.8 24.8 0 0 1-12.3-1zm-7.2 14.7c3 4.3 11.2 3.8 11.7-2.1.4-4.7-5.8-8-8.5-3.6-.7 1.3-.9 3 .3 4 1.5 1.3 3.5.5 4.1-1.2.3-.7-.8-.7-1.1-.4-1.1 1-2-.1-2-1 0-1.6 2-2 3.1-1.4 3 1.5 2.8 5.8-.4 6.7-2.6.7-5-1-6-3.3-1.2-2.3-.6-4.9.6-7 1-1.7 2.1-3 3.4-4l2.3.7c3.6 1 7.5 1.3 11.2.8 2.8-.4 6.4-1.3 8.4-3.5l.2-.3c.2-.2.3-.5 0-.6-6.8-3-15.3-3.2-21.7 1a15 15 0 0 1-6.3-4.8C17.5 12 17 4.4 22.7 2.6c2.4-.8 5.3.3 5.7 3 .3 2-1.1 4-3.3 4.2-.8 0-1.9-.3-2.2-1a.9.9 0 0 1 1.4-1.1c.5.4 1.3-.3 1-.8-1.4-1.8-3.4-1-3.9 1-.5 2.6 2 3.7 4 3.3 5.1-1 6.6-8.4 1.4-10.2-5.4-1.8-10 3.7-10.3 8.6-.4 5.7 3.7 9.9 8.5 12.2-4 3.4-7.1 9.1-3.8 14z" />
@@ -26,12 +30,8 @@ export default function Separator({ text = 'or' }) {
             </g>
           </svg>
         </div>
-        <div style={ commonStyles }>
-          <svg
-            width="249"
-            height="3"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+        <div style={commonStyles}>
+          <svg width="249" height="3" xmlns="http://www.w3.org/2000/svg">
             <path
               d="M1.5 2.3c31.4.7 62.9.2 94.3.3h144.8c1.3 0 .5-1.7-.5-1.7h-.3c-1.3 0-.4 1.7.5 1.7h8c1.3-.1.3-2-.8-1.6h.1c-1.2 0-.4 1.5.5 1.5.1 0 .2 0 0 0 1.2.4 1-1.5-.2-1.6h-8c-1.4 0-.5 1.7.4 1.7h.3c1.3 0 .5-1.7-.5-1.7H55.4c-18 0-36.2-.1-54.2.3-.9 0-.3 1.1.3 1.1"
               fill="#211915"
@@ -39,7 +39,7 @@ export default function Separator({ text = 'or' }) {
             />
           </svg>
         </div>
-        <div style={ commonStyles }>
+        <div style={commonStyles}>
           <svg width="49" height="39" xmlns="http://www.w3.org/2000/svg">
             <g fill="#211915" fillRule="evenodd">
               <path d="M16 22.2c-2.5.3-5 .3-7.4 0-2.1-.4-4-1.4-5.8-2.2 6-1.3 12.9-1.9 18.1 1-1.6.6-3.3 1-5 1.2zm8.2-.4c4.9-2.3 9-6.5 8.6-12.2C32.5 4.7 28-.8 22.5 1c-5.2 1.8-3.7 9.3 1.3 10.2 2.1.4 4.6-.7 4-3.2-.4-2.1-2.4-2.9-3.8-1-.3.4.5 1 1 .7a.9.9 0 0 1 1.4 1c-.3.8-1.4 1.2-2.2 1.1-2.2-.1-3.6-2.2-3.3-4.2.4-2.7 3.3-3.8 5.7-3 5.7 1.8 5.1 9.3 2.2 13.1a15 15 0 0 1-6.3 4.8c-6.4-4.2-15-4-21.7-1-.3 0-.2.4 0 .6l.2.3c2 2.3 5.6 3.1 8.4 3.5A27.8 27.8 0 0 0 23 22.4c1.3 1 2.4 2.3 3.4 4 1.2 2.1 1.7 4.7.6 7-1 2.2-3.4 4-6 3.3-3.2-.9-3.4-5.2-.5-6.7 1.3-.6 3.1-.2 3.1 1.4 0 .9-.8 2-1.9 1-.4-.3-1.4-.3-1.1.4.6 1.7 2.6 2.5 4 1.2 1.3-1 1.1-2.7.4-4-2.7-4.4-9-1-8.5 3.6.5 6 8.7 6.4 11.7 2.1 3.3-4.8.1-10.5-3.9-14z" />
@@ -48,20 +48,22 @@ export default function Separator({ text = 'or' }) {
           </svg>
         </div>
       </div>
-      <span style={ {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        margin: 'auto',
-        width: '42px',
-        height: '20px',
-        background: 'white',
-        padding: '0 15px',
-        borderRadius: '50%'
-      } }>
-      { text }
+      <span
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          margin: 'auto',
+          width: '42px',
+          height: '20px',
+          background: 'white',
+          padding: '0 15px',
+          borderRadius: '50%',
+        }}
+      >
+        {text}
       </span>
     </div>
   )

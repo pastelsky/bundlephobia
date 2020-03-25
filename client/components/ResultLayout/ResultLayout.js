@@ -27,12 +27,20 @@ export default class ResultLayout extends Component {
             <section className="page-header--right-section">
               <ul className="page-header__quicklinks">
                 <li>
-                  <a target="_blank" rel="noreferrer noopener" href="https://badgen.net/#bundlephobia">
+                  <a
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    href="https://badgen.net/#bundlephobia"
+                  >
                     Badges
                   </a>
                 </li>
                 <li>
-                  <a target="_blank" rel="noreferrer noopener" href="https://opencollective.com/bundlephobia">
+                  <a
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    href="https://opencollective.com/bundlephobia"
+                  >
                     Opencollective
                   </a>
                 </li>
@@ -44,15 +52,15 @@ export default class ResultLayout extends Component {
                   </Link>
                 </li>
               </ul>
-              <a target="_blank"
-                 href="https://github.com/pastelsky/bundlephobia">
-                <GithubLogo/>
+              <a
+                target="_blank"
+                href="https://github.com/pastelsky/bundlephobia"
+              >
+                <GithubLogo />
               </a>
             </section>
           </header>
-          <div className="page-content">
-            {children}
-          </div>
+          <div className="page-content">{children}</div>
         </div>
       </Layout>
     )

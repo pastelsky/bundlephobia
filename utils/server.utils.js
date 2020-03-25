@@ -11,14 +11,12 @@ const CustomError = require('../server/CustomError')
  * this function resolves to a valid version and name.
  */
 async function resolvePackage(packageString) {
-
   try {
     return await pacote.manifest(packageString, { fullMetadata: true })
   } catch (err) {
-    if(err.code === 'ETARGET') {
+    if (err.code === 'ETARGET') {
       throw new CustomError('PackageVersionMismatchError', null, {
-        validVersions: Object.keys(err.distTags)
-          .concat(err.versions),
+        validVersions: Object.keys(err.distTags).concat(err.versions),
       })
     } else {
       throw new CustomError('PackageNotFoundError', err)

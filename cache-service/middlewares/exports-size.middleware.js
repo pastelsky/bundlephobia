@@ -7,7 +7,9 @@ const { encodeFirebaseKey } = require('../cache.utils')
 const LRUCache = new LRU({ max: 1500 })
 
 async function getPackageResult({ name, version }) {
-  const ref = firebase.database().ref()
+  const ref = firebase
+    .database()
+    .ref()
     .child('exports')
     .child(encodeFirebaseKey(name))
     .child(encodeFirebaseKey(version))
@@ -48,11 +50,10 @@ async function getExportsSizeMiddlware(req, res) {
   return res.code(404).send()
 }
 
-async function postExportsSizeMiddleware (req, res) {
+async function postExportsSizeMiddleware(req, res) {
   const { name, version, result } = req.body
 
-  if (!name || !version || !result)
-    return res.code(422).send()
+  if (!name || !version || !result) return res.code(422).send()
 
   debug('set exports %O to %O', { name, version }, result)
   LRUCache.set(`${name}@${version}`, result)

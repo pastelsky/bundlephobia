@@ -1,1 +1,1 @@
-export { default }  from './ProgressHex'
+export { default } from './ProgressHex'

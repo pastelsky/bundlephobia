@@ -18,9 +18,9 @@ const requestQueue = new Queue({
 
 const pool = workerpool.pool(`./server/worker.js`, {
   maxWorkers: config.MAX_WORKERS,
-});
+})
 
-if(process.env.BUILD_SERVICE_ENDPOINT){
+if (process.env.BUILD_SERVICE_ENDPOINT) {
   pool.terminate()
 }
 

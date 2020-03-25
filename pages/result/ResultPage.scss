@@ -136,7 +136,8 @@
   animation: fade-in-full 0.2s;
 }
 
-.result-pending, .result-error {
+.result-pending,
+.result-error {
   min-height: 75vh;
   display: flex;
   align-items: center;
@@ -214,7 +215,7 @@
 }
 
 .ct-series-a .ct-bar {
-  stroke: #00B4AE;
+  stroke: #00b4ae;
   stroke-width: 40px;
 }
 
@@ -228,14 +229,12 @@
   }
 }
 
-
 .result__section-heading {
   @include font-size-md-2;
   text-align: center;
   position: relative;
   margin-top: 0;
 }
-
 
 .result__section-heading--new {
   &::after {

@@ -1,10 +1,9 @@
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
 
-
 .warning-bar {
   @include font-size-xs;
-  background:lighten($dandelion, 5%);
+  background: lighten($dandelion, 5%);
   padding: $global-spacing / 2 $global-spacing;
   border-radius: 4px;
   margin-top: 2vh;

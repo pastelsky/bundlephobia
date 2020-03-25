@@ -1,1 +1,1 @@
-console.log('I\'m not an entry point, hence will throw')
+console.log("I'm not an entry point, hence will throw")

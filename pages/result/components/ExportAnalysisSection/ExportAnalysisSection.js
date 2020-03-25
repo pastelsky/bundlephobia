@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 import Analytics from 'react-ga'
 import cx from 'classnames'
 import API from 'client/api'
@@ -13,7 +13,7 @@ const State = {
   IN_PROGRESS: 'in-progress',
   EXPORTS_FULFILLED: 'exports-fulfilled',
   SIZES_FULFILLED: 'sizes-fulfilled',
-  REJECTED: 'rejected'
+  REJECTED: 'rejected',
 }
 
 function getBGClass(ratio) {
@@ -38,26 +38,26 @@ class ExportPill extends React.Component {
   render() {
     const { name, size, path, totalSize, isLoading } = this.props
     return (
-      <li
-        className="export-analysis-section__pill export-analysis-section__dont-break"
-      >
+      <li className="export-analysis-section__pill export-analysis-section__dont-break">
         <div
           className={cx(
             'export-analysis-section__pill-fill',
-            `export-analysis-section__pill-fill--${getBGClass(size / totalSize)}`
+            `export-analysis-section__pill-fill--${getBGClass(
+              size / totalSize
+            )}`
           )}
           style={{
             transform: `scaleX(${Math.min((size || 0) / totalSize, 1)})`,
           }}
         />
         <div className="export-analysis-section__pill-name"> {name} </div>
-        {isLoading && (
-          <div className="export-analysis-section__pill-spinner"/>
-        )}
+        {isLoading && <div className="export-analysis-section__pill-spinner" />}
         {size && (
           <div className="export-analysis-section__pill-size">
             {formatSize(size).size.toFixed(1)}
-            <span className="export-analysis-section__pill-size-unit">{formatSize(size).unit}</span>
+            <span className="export-analysis-section__pill-size-unit">
+              {formatSize(size).unit}
+            </span>
           </div>
         )}
       </li>
@@ -81,26 +81,28 @@ function ExportList({ exports, totalSize, isLoading }) {
 
   return (
     <ul className="export-analysis-section__list">
-      {
-        Object.keys(exportDictionary)
-          .sort()
-          .map(letter => (
-            <div className="export-analysis-section__letter-group" key={letter}
-            >
-              {shouldShowLabels && (
-                <div className="export-analysis-section__dont-break">
-                  <h3 className="export-analysis-section__letter-heading">{letter}</h3>
-                  <ExportPill
-                    size={exportDictionary[letter][0].gzip}
-                    totalSize={totalSize}
-                    name={exportDictionary[letter][0].name}
-                    path={exportDictionary[letter][0].path}
-                    key={exportDictionary[letter][0].name}
-                    isLoading={curIndex++ < 40 && isLoading}
-                  />
-                </div>
-              )}
-              {exportDictionary[letter].slice(shouldShowLabels ? 1 : 0).map((exp, expIndex) => (
+      {Object.keys(exportDictionary)
+        .sort()
+        .map(letter => (
+          <div className="export-analysis-section__letter-group" key={letter}>
+            {shouldShowLabels && (
+              <div className="export-analysis-section__dont-break">
+                <h3 className="export-analysis-section__letter-heading">
+                  {letter}
+                </h3>
+                <ExportPill
+                  size={exportDictionary[letter][0].gzip}
+                  totalSize={totalSize}
+                  name={exportDictionary[letter][0].name}
+                  path={exportDictionary[letter][0].path}
+                  key={exportDictionary[letter][0].name}
+                  isLoading={curIndex++ < 40 && isLoading}
+                />
+              </div>
+            )}
+            {exportDictionary[letter]
+              .slice(shouldShowLabels ? 1 : 0)
+              .map((exp, expIndex) => (
                 <ExportPill
                   size={exp.gzip}
                   totalSize={totalSize}
@@ -110,10 +112,9 @@ function ExportList({ exports, totalSize, isLoading }) {
                   isLoading={curIndex++ < 40 && isLoading}
                 />
               ))}
-            </div>
-          ))
-      }
-      <div className="export-analysis-section__overflow-indicator"/>
+          </div>
+        ))}
+      <div className="export-analysis-section__overflow-indicator" />
     </ul>
   )
 }
@@ -125,13 +126,12 @@ function InputExportFilter({ onChange }) {
         placeholder="Filter methods"
         className="export-analysis-section__filter-input"
         type="text"
-        onChange={(e) => onChange(e.target.value.toLowerCase().trim())}
+        onChange={e => onChange(e.target.value.toLowerCase().trim())}
       />
-      <SearchIcon className="export-analysis-section__filter-input-search-icon"/>
+      <SearchIcon className="export-analysis-section__filter-input-search-icon" />
     </div>
   )
 }
-
 
 class ExportAnalysisSection extends Component {
   state = {
@@ -139,7 +139,7 @@ class ExportAnalysisSection extends Component {
     exports: {},
     assets: [],
     filterText: '',
-    resultError: {}
+    resultError: {},
   }
 
   componentDidMount() {
@@ -157,52 +157,61 @@ class ExportAnalysisSection extends Component {
     this.setState({ analysisState: State.IN_PROGRESS })
 
     API.getExports(packageString)
-      .then((results) => {
-        this.setState({
-          exports: results.exports,
-          analysisState: State.EXPORTS_FULFILLED,
-        })
+      .then(
+        results => {
+          this.setState({
+            exports: results.exports,
+            analysisState: State.EXPORTS_FULFILLED,
+          })
 
-        Analytics.event({
-          category: 'Export Analysis',
-          action: 'Exports Fetch Success',
-          label: packageString.replace(/@/g, '[at]'),
-        })
-      }, (err) => {
-        Analytics.event({
-          category: 'Export Analysis',
-          action: 'Exports Fetch Failed',
-          label: packageString.replace(/@/g, '[at]'),
-        })
-        return Promise.reject(err)
-      })
+          Analytics.event({
+            category: 'Export Analysis',
+            action: 'Exports Fetch Success',
+            label: packageString.replace(/@/g, '[at]'),
+          })
+        },
+        err => {
+          Analytics.event({
+            category: 'Export Analysis',
+            action: 'Exports Fetch Failed',
+            label: packageString.replace(/@/g, '[at]'),
+          })
+          return Promise.reject(err)
+        }
+      )
       .then(() => API.getExportsSizes(packageString))
-      .then((results) => {
-        this.setState({
-          analysisState: State.SIZES_FULFILLED,
-          assets: results.assets.map(asset => ({ ...asset, path: this.state.exports[asset.name] }))
-        })
+      .then(
+        results => {
+          this.setState({
+            analysisState: State.SIZES_FULFILLED,
+            assets: results.assets.map(asset => ({
+              ...asset,
+              path: this.state.exports[asset.name],
+            })),
+          })
 
-        Analytics.event({
-          category: 'Export Analysis',
-          action: 'Exports Sizes Success',
-          label: packageString.replace(/@/g, '[at]'),
-        })
-      }, (err) => {
-        Analytics.event({
-          category: 'Export Analysis',
-          action: 'Exports Sized Failed',
-          label: packageString.replace(/@/g, '[at]'),
-        })
-        return Promise.reject(err)
-      })
-      .catch((err) => {
+          Analytics.event({
+            category: 'Export Analysis',
+            action: 'Exports Sizes Success',
+            label: packageString.replace(/@/g, '[at]'),
+          })
+        },
+        err => {
+          Analytics.event({
+            category: 'Export Analysis',
+            action: 'Exports Sized Failed',
+            label: packageString.replace(/@/g, '[at]'),
+          })
+          return Promise.reject(err)
+        }
+      )
+      .catch(err => {
         this.setState({ analysisState: State.REJECTED, resultError: err })
         console.error('Export analysis failed due to ', err)
       })
   }
 
-  handleFilterInputChange = (value) => {
+  handleFilterInputChange = value => {
     this.setState({ filterText: value })
   }
 
@@ -210,7 +219,8 @@ class ExportAnalysisSection extends Component {
     const { result } = this.props
     return (
       <div className="export-analysis-section__progress-container">
-        Fetching all named exports in&nbsp;<code>{result.name}</code> <JumpingDots/>
+        Fetching all named exports in&nbsp;<code>{result.name}</code>{' '}
+        <JumpingDots />
       </div>
     )
   }
@@ -222,7 +232,8 @@ class ExportAnalysisSection extends Component {
     if (!(result.hasJSModule || result.hasJSNext)) {
       incompatibleMessage = 'This package does not export ES6 modules.'
     } else if (result.hasSideEffects === true) {
-      incompatibleMessage = 'This package exports ES6 modules, but isn\'t marked side-effect free.'
+      incompatibleMessage =
+        "This package exports ES6 modules, but isn't marked side-effect free."
     }
     return incompatibleMessage
   }
@@ -230,7 +241,8 @@ class ExportAnalysisSection extends Component {
   renderIncompatible() {
     return (
       <p className="export-analysis-section__subtext">
-        Exports analysis is available only for packages that export ES Modules and are side-effect free. <br/>
+        Exports analysis is available only for packages that export ES Modules
+        and are side-effect free. <br />
         {this.getIncompatibleMessage()}
       </p>
     )
@@ -241,17 +253,16 @@ class ExportAnalysisSection extends Component {
     const { gzip: totalSize } = result
     const { exports, analysisState, assets, filterText } = this.state
 
-    const normalizedExports = analysisState === State.SIZES_FULFILLED ? assets :
-      Object.keys(exports)
-        .filter(exp => !exp.startsWith('_'))
-        .map((exp) => ({ name: exp }))
+    const normalizedExports =
+      analysisState === State.SIZES_FULFILLED
+        ? assets
+        : Object.keys(exports)
+            .filter(exp => !exp.startsWith('_'))
+            .map(exp => ({ name: exp }))
 
-    const matchedExports = normalizedExports
-      .filter(asset => (
-        !!filterText ?
-          asset.name.toLowerCase().includes(filterText)
-          : true
-      ))
+    const matchedExports = normalizedExports.filter(asset =>
+      !!filterText ? asset.name.toLowerCase().includes(filterText) : true
+    )
 
     return (
       <>
@@ -260,9 +271,7 @@ class ExportAnalysisSection extends Component {
             GZIP sizes of individual exports
           </p>
           {normalizedExports.length > 15 && (
-            <InputExportFilter
-              onChange={this.handleFilterInputChange}
-            />
+            <InputExportFilter onChange={this.handleFilterInputChange} />
           )}
         </div>
 
@@ -276,16 +285,14 @@ class ExportAnalysisSection extends Component {
   }
 
   renderFailure() {
-    const { errorName, errorBody, errorDetails } = resolveBuildError(this.state.resultError)
+    const { errorName, errorBody, errorDetails } = resolveBuildError(
+      this.state.resultError
+    )
     return (
       <div className="export-analysis-section__error">
         <h4> {errorName}</h4>
-        <p dangerouslySetInnerHTML={{ __html: errorBody }}/>
-        {errorDetails && (
-          <pre>
-          {errorDetails}
-        </pre>
-        )}
+        <p dangerouslySetInnerHTML={{ __html: errorBody }} />
+        {errorDetails && <pre>{errorDetails}</pre>}
       </div>
     )
   }
@@ -295,15 +302,20 @@ class ExportAnalysisSection extends Component {
 
     return (
       <div className="export-analysis-section">
-        <h2 className="result__section-heading result__section-heading--new"> Exports Analysis </h2>
+        <h2 className="result__section-heading result__section-heading--new">
+          {' '}
+          Exports Analysis{' '}
+        </h2>
 
         {this.getIncompatibleMessage() && this.renderIncompatible()}
         {analysisState === State.REJECTED && this.renderFailure()}
-        {(analysisState === State.EXPORTS_FULFILLED || analysisState === State.SIZES_FULFILLED) && this.renderSuccess()}
-        { analysisState === State.IN_PROGRESS }
+        {(analysisState === State.EXPORTS_FULFILLED ||
+          analysisState === State.SIZES_FULFILLED) &&
+          this.renderSuccess()}
+        {analysisState === State.IN_PROGRESS}
       </div>
-    );
+    )
   }
 }
 
-export default ExportAnalysisSection;
+export default ExportAnalysisSection
