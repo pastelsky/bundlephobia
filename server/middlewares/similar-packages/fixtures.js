@@ -397,7 +397,7 @@ const categories = {
       { tag: 'flux', weight: Weight.HIGH },
       { tag: 'reducer', weight: Weight.HIGH },
     ],
-    similar: ['mobx', 'redux', 'immer', 'freactal']
+    similar: ['mobx', 'redux', 'immer', 'freactal', 'xstate']
   },
   'svg-manipulation': {
     name: 'SVG manipulation libraries',

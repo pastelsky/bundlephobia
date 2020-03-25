@@ -13,7 +13,7 @@ export default class ProgressHexAnimator {
       linesCount: 55,
       svg,
       circlesMap: this.circlesMap,
-      ringsCount: this.rings.length
+      ringsCount: this.rings.length,
     })
 
     Array.from(this.circles).forEach(circle => {
@@ -38,7 +38,7 @@ export default class ProgressHexAnimator {
       cy,
       this.width / 2,
       this.height / 2,
-      distance
+      distance,
     )
 
     return { x: x - cx, y: y - cy }
@@ -55,14 +55,14 @@ export default class ProgressHexAnimator {
   }
 
   createTimeline() {
-    const timeline = anime.timeline({ duration: DURATION, autoplay: false, loop: true });
+    const timeline = anime.timeline({ duration: DURATION, autoplay: false, loop: true })
 
     const fadeInRings = {
       targets: this.rings,
       opacity: [0, 1],
       delay: anime.stagger(DURATION / 5, { from: 'last' }),
       duration: DURATION / 2,
-      easing: 'linear'
+      easing: 'linear',
     }
 
     const quakeCircles = {
@@ -140,7 +140,7 @@ class Trailblaze {
 
     const destinationCircleDistances = eligibleDestinationCircles.map((circle, index) => ({
       index,
-      distance: this.distanceBetweenCircles(sourceCircle, circle)
+      distance: this.distanceBetweenCircles(sourceCircle, circle),
     }))
 
     const eligibleDistancesMin = Math.min(...destinationCircleDistances.map(a => a.distance))
@@ -153,6 +153,17 @@ class Trailblaze {
     return {
       source: sourceCircle,
       destination: destinationCircle,
+    }
+  }
+
+  getDashOffset = element => {
+    if (!element) return 0
+    try {
+      return anime.setDashoffset(element)
+    } catch (err) {
+      // Called before the element was rendered
+      console.error(err)
+      return 0
     }
   }
 
@@ -169,14 +180,14 @@ class Trailblaze {
     anime({
       targets: this.lines,
       opacity: [1, 0.9, 0],
-      strokeDashoffset: [(el) => el && anime.setDashoffset(el), 0],
+      strokeDashoffset: [(el) => this.getDashOffset(el), 0],
       x1: el => lineMap.get(el).source.cx,
       x2: el => lineMap.get(el).destination.cx,
       y1: el => lineMap.get(el).source.cy,
       y2: el => lineMap.get(el).destination.cy,
       duration: 500,
       delay: () => anime.random(0, DURATION / 5),
-      easing: 'easeOutCubic'
+      easing: 'easeOutCubic',
     })
   }
 }
