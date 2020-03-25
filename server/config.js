@@ -33,7 +33,7 @@ module.exports = {
 
   unsupported: [
     {
-      test: /@types/,
+      test: /^@types\//,
       reason: "Type packages don't usually contain any runtime code.",
     },
   ],

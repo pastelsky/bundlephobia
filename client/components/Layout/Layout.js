@@ -54,7 +54,7 @@ export default class Layout extends Component {
               </p>
               <p>
                 This thing lets you understand the performance cost of
-                <code>npm&nbsp;install</code> ing a new npm package before
+                <code>npm&nbsp;install</code> in a new npm package before
                 actually adding it to your bundle.
               </p>
               <p>
