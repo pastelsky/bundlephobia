@@ -40,13 +40,14 @@ const categories = {
   cookie: {
     name: 'Cookie Manipulation',
     tags: [
-      { tag: 'cookie', weight: Weight.HIGH },
+      { tag: 'cookie', weight: Weight.MAX },
       { tag: 'manipulate', weight: Weight.NORMAL },
       { tag: 'http', weight: Weight.MID },
       { tag: 'client', weight: Weight.MID },
       { tag: 'parse', weight: Weight.MID },
       { tag: 'parser', weight: Weight.MID },
       { tag: 'jar', weight: Weight.NORMAL },
+      { tag: 'browser', weight: Weight.SMALL },
     ],
     similar: ['cookie', 'tough-cookie', 'js-cookie', 'tiny-cookie'],
   },

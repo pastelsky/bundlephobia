@@ -47,8 +47,8 @@ async function errorHandler(ctx, next) {
           code: 'BlacklistedPackageError',
           message:
             'The package you were looking for is blacklisted ' +
-            "because it failed to build multiple times in the past and further tries aren't likely to succeed. This can" +
-            "happen if the package in question wasn't meant to be bundled in a client side application.",
+            "because it failed to build multiple times in the past and further tries aren't likely to succeed. This can " +
+            "happen if this package wasn't meant to be bundled in a client side application.",
         })
         break
 
