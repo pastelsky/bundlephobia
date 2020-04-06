@@ -2605,10 +2605,10 @@
     "@zeit/next-css" "1.0.1"
     sass-loader "6.0.6"
 
-"@zeit/next-source-maps@^0.0.3":
-  version "0.0.3"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/@zeit/next-source-maps/-/next-source-maps-0.0.3.tgz#d62e93b4f5ccdd542c8530d21f60dd2757d98e3c"
-  integrity sha1-1i6TtPXM3VQshTDSH2DdJ1fZjjw=
+"@zeit/next-source-maps@^0.0.4-canary.1":
+  version "0.0.4-canary.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@zeit/next-source-maps/-/next-source-maps-0.0.4-canary.1.tgz#5051ff8425e5f615da2d21dd08a99284fbb63d7d"
+  integrity sha1-UFH/hCXl9hXaLSHdCKmShPu2PX0=
 
 abab@^2.0.0:
   version "2.0.0"
