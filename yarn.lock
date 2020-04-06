@@ -2605,6 +2605,11 @@
     "@zeit/next-css" "1.0.1"
     sass-loader "6.0.6"
 
+"@zeit/next-source-maps@^0.0.3":
+  version "0.0.3"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@zeit/next-source-maps/-/next-source-maps-0.0.3.tgz#d62e93b4f5ccdd542c8530d21f60dd2757d98e3c"
+  integrity sha1-1i6TtPXM3VQshTDSH2DdJ1fZjjw=
+
 abab@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/abab/-/abab-2.0.0.tgz#aba0ab4c5eee2d4c79d3487d85450fb2376ebb0f"
