@@ -110,13 +110,6 @@ export default class MyDocument extends Document {
             })`,
           }}
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-          aa();
-        `,
-          }}
-        />
       </html>
     )
   }
