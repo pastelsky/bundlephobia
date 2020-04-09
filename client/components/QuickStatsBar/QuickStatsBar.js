@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import DOMPurify from 'dompurify'
 import './QuickStatsBar.scss'
 
 import TreeShakeIcon from '../../assets/tree-shake.svg'
@@ -32,7 +31,7 @@ class QuickStatsBar extends Component {
       trimmed = description.trim()
     }
 
-    return DOMPurify.sanitize(trimmed)
+    return trimmed
   }
 
   render() {
@@ -55,11 +54,12 @@ class QuickStatsBar extends Component {
           {statItemCount < 2 && (
             <span
               className="quick-stats-bar__stat--description-content"
-              dangerouslySetInnerHTML={{ __html: this.getTrimmedDescription() }}
               style={{
                 maxWidth: `${500 - statItemCount * 280}px`,
               }}
-            />
+            >
+              {this.getTrimmedDescription()}
+            </span>
           )}
         </div>
 

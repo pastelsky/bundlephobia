@@ -25,7 +25,6 @@
     "classnames": "^2.2.6",
     "debounce": "^1.2.0",
     "debug": "^4.1.1",
-    "dompurify": "^2.0.8",
     "dotenv": "^8.2.0",
     "dotenv-defaults": "^1.1.1",
     "execa": "^4.0.0",
