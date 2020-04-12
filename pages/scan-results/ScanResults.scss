@@ -66,10 +66,10 @@
 
 .scan-results__item {
   background: linear-gradient(
-          rgba(255, 255, 255, 0) 5%,
-          rgba(255, 255, 255, 1) 10%,
-          rgba(255, 255, 255, 1) 90%,
-          rgba(255, 255, 255, 0) 95%
+    rgba(255, 255, 255, 0) 5%,
+    rgba(255, 255, 255, 1) 10%,
+    rgba(255, 255, 255, 1) 90%,
+    rgba(255, 255, 255, 0) 95%
   );
   display: flex;
   list-style: none;
@@ -97,7 +97,8 @@
     width: 50%;
     height: 100%;
     background: rgba(60, 60, 70, 0.04);
-    animation: progress-bar 1s cubic-bezier(0.645, 0.045, 0.355, 1) alternate infinite;
+    animation: progress-bar 1s cubic-bezier(0.645, 0.045, 0.355, 1) alternate
+      infinite;
   }
 }
 
@@ -168,7 +169,6 @@
     font-family: $font-family-body;
     line-height: 1.5;
   }
-
 }
 
 @keyframes fade-in-result {
@@ -192,7 +192,7 @@ $index-width: 4rem;
 }
 
 .scan-results__name {
-  position:  relative;
+  position: relative;
   width: 15%;
   min-width: $global-spacing * 18;
   padding-left: $global-spacing;

@@ -38,7 +38,7 @@
   }
 
   &:first-of-type,
-  &:last-of-type  {
+  &:last-of-type {
     //padding-left: $global-spacing;
   }
 }
@@ -79,7 +79,6 @@
     width: 36px;
   }
 
-
   &.quick-stats-bar__logo-icon--github {
     height: 18px;
     width: 18px;
@@ -92,7 +91,7 @@
 }
 
 .quick-stats-bar__link {
-  margin: auto $global-spacing /2;
+  margin: auto $global-spacing / 2;
 
   &:hover {
     .quick-stats-bar__logo-icon--github {
@@ -105,6 +104,5 @@
         fill: #cb3837;
       }
     }
-
   }
 }

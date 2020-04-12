@@ -55,12 +55,11 @@
   list-style-type: none;
   overflow-y: scroll;
   height: 100%;
-  background-image: /* Shadows */
-          linear-gradient(to right, white, white),
-          linear-gradient(to right, white, white),
-            /* Shadow covers */
-          linear-gradient(to right, rgba(30, 30, 30, .08), rgba(255, 255, 255, 0)),
-          linear-gradient(to left, rgba(30, 30, 30, .08), rgba(255, 255, 255, 0));
+  background-image: /* Shadows */ linear-gradient(to right, white, white),
+    linear-gradient(to right, white, white),
+    /* Shadow covers */
+      linear-gradient(to right, rgba(30, 30, 30, 0.08), rgba(255, 255, 255, 0)),
+    linear-gradient(to left, rgba(30, 30, 30, 0.08), rgba(255, 255, 255, 0));
 
   background-position: left center, right center, left center, right center;
   background-repeat: no-repeat;
@@ -69,7 +68,7 @@
   /* Opera doesn't support this in the shorthand */
   background-attachment: local, local, scroll, scroll;
 
-  margin-top:  $global-spacing *3;
+  margin-top: $global-spacing * 3;
 }
 
 .export-analysis-section__filter-input-container {
@@ -147,10 +146,9 @@
   border-radius: inherit;
   z-index: -1;
   width: 100%;
-  transition: transform 0.4s cubic-bezier(0.635, 0.100, 0.000, 1.340);;
+  transition: transform 0.4s cubic-bezier(0.635, 0.1, 0, 1.34);
   transform-origin: 0 50%;
 }
-
 
 .export-analysis-section__pill-fill--low-1 {
   background: lighten(#7ebf80, 15%);
@@ -167,7 +165,6 @@
 .export-analysis-section__pill-fill--med-2 {
   background: lighten(#fff080, 0%);
 }
-
 
 .export-analysis-section__pill-fill--med-3 {
   background: lighten(#ffd966, 5%);

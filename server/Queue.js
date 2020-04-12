@@ -46,13 +46,11 @@ class Queue {
   }
 
   getRunningJobs() {
-    return this.jobs
-      .filter(job => job.status === Job.status.PROCESSING)
+    return this.jobs.filter(job => job.status === Job.status.PROCESSING)
   }
 
   getReadyJobs() {
-    return this.jobs
-      .filter(job => job.status === Job.status.READY)
+    return this.jobs.filter(job => job.status === Job.status.READY)
   }
 
   /**
@@ -61,20 +59,20 @@ class Queue {
    * their failure listeners notified of the same.
    */
   pruneQueue() {
-    this.getReadyJobs()
-      .forEach((job) => {
-        const { addedTime, maxAge, failureListeners } = job
-        const isJobExpired = (addedTime.getTime() + maxAge) * 1000 < Date.now()
+    this.getReadyJobs().forEach(job => {
+      const { addedTime, maxAge, failureListeners } = job
+      const isJobExpired = (addedTime.getTime() + maxAge) * 1000 < Date.now()
 
-        if (isJobExpired) {
-          failureListeners.forEach(listener => {
-            listener({
-              code: 'JOB_EXPIRED',
-              message: 'This job\'s age exceeded it\'s specified maxAge, and was dropped',
-            })
+      if (isJobExpired) {
+        failureListeners.forEach(listener => {
+          listener({
+            code: 'JOB_EXPIRED',
+            message:
+              "This job's age exceeded it's specified maxAge, and was dropped",
           })
-        }
-      })
+        })
+      }
+    })
   }
 
   /**
@@ -108,14 +106,14 @@ class Queue {
       .forEach(job => {
         job.priority += 1
       })
-    log('after aging, job queue is... %o',
-      this.jobs.map(({ id, type, priority }) => ({ id, type, priority })),
+    log(
+      'after aging, job queue is... %o',
+      this.jobs.map(({ id, type, priority }) => ({ id, type, priority }))
     )
   }
 
   removeJob(id, type) {
-    this.jobs =
-      this.jobs.filter(job => (job.id !== id && job.type !== type))
+    this.jobs = this.jobs.filter(job => job.id !== id && job.type !== type)
   }
 
   /**
@@ -126,8 +124,8 @@ class Queue {
   clear() {
     this.jobs
       .filter(job => job.status === Job.status.READY)
-      .forEach((job) => {
-        job.failureListeners.forEach((failureListener) => {
+      .forEach(job => {
+        job.failureListeners.forEach(failureListener => {
           failureListener({
             code: 'QUEUE_CLEARED',
             message: 'This job was terminated since the queue was cleared',
@@ -139,7 +137,7 @@ class Queue {
   }
 
   setJobToProcessing(id, type) {
-    this.jobs.forEach((job) => {
+    this.jobs.forEach(job => {
       if (job.id === id && job.type === type) {
         job.status = Job.status.PROCESSING
       }
@@ -170,24 +168,28 @@ class Queue {
 
   executeNextJob() {
     const nextJob = this.getNextJobToRun()
-    log('executing job ... %o', { id: nextJob.id, type: nextJob.type, priority: nextJob.priority })
+    log('executing job ... %o', {
+      id: nextJob.id,
+      type: nextJob.type,
+      priority: nextJob.priority,
+    })
 
     this.setJobToProcessing(nextJob.id, nextJob.type)
     const callResult = this.executorMap[nextJob.type].call(this, nextJob.params)
 
     Promise.resolve(callResult)
-      .then((result) => {
+      .then(result => {
         log('job %s was a success, removing it', nextJob.id, nextJob.type)
-        nextJob.successListeners.forEach((listener) => {
+        nextJob.successListeners.forEach(listener => {
           listener.call(this, result)
         })
 
         this.removeJob(nextJob.id, nextJob.type)
         this.executeNextJobIfPossible()
       })
-      .catch((err) => {
+      .catch(err => {
         log('job %s was a failure, removing it', nextJob.id, nextJob.type)
-        nextJob.failureListeners.forEach((listener) => {
+        nextJob.failureListeners.forEach(listener => {
           listener.call(this, err)
         })
 
@@ -197,10 +199,10 @@ class Queue {
   }
 
   addListenersToJob(id, type, { resolve, reject }) {
-    this.jobs.forEach((job) => {
+    this.jobs.forEach(job => {
       if (job.id === id && job.type === type) {
-        job.successListeners.push(resolve);
-        job.failureListeners.push(reject);
+        job.successListeners.push(resolve)
+        job.failureListeners.push(reject)
       }
     })
   }
@@ -221,16 +223,15 @@ class Queue {
       onSuccess = () => {},
       onFailure = () => {},
     } = options
-    this.pruneQueue();
+    this.pruneQueue()
 
     return new Promise((resolve, reject) => {
-
       // If a job with the given id already exists,
       // just add the success / failure callbacks to
       // that existing job (dedup)
       if (this.hasJob(id, type)) {
         log('job id %s already present, adding callbacks', id)
-        this.addListenersToJob(id, type,{ resolve, reject })
+        this.addListenersToJob(id, type, { resolve, reject })
         return
       }
 

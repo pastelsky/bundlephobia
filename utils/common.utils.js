@@ -3,7 +3,9 @@
 
 function parsePackageString(packageString) {
   // Scoped packages
-  let name, version, scoped = false
+  let name,
+    version,
+    scoped = false
   const lastAtIndex = packageString.lastIndexOf('@')
 
   if (packageString.startsWith('@')) {

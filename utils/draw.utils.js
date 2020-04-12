@@ -1,8 +1,14 @@
 const { formatSize, formatTime, getTimeFromSize } = require('./index')
 const { fabric } = require('fabric')
 
-function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }) {
-
+function drawStatsImg({
+  name,
+  version,
+  min,
+  gzip,
+  theme = 'dark',
+  wide = false,
+}) {
   const lightTheme = {
     backgroundColor: '#fff',
     separatorColor: '#E7E7E7',
@@ -44,7 +50,7 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
   const canvas = new fabric.StaticCanvas('c', {
     backgroundColor: selectedTheme.backgroundColor,
     width: wide ? width + wideBy : width,
-    height: height
+    height: height,
   })
 
   const x0 = wide ? wideBy / 2 : 0
@@ -55,14 +61,17 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
     opacity: selectedTheme.separatorOpacity,
   }
 
-  const lineTopHorizontal = new fabric.Line([x0, 91, width, 91], separatorOptions)
+  const lineTopHorizontal = new fabric.Line(
+    [x0, 91, width, 91],
+    separatorOptions
+  )
   const lineCenterVertical = new fabric.Line(
     [width / 2, 91, width / 2, height],
-    separatorOptions,
+    separatorOptions
   )
   const lineCenterHorizontal = new fabric.Line(
     [x0, 91 + (height - 91) / 2, width, 91 + (height - 91) / 2],
-    separatorOptions,
+    separatorOptions
   )
 
   const packageNameText = new fabric.Text(name, {
@@ -100,7 +109,7 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
 
   const packageNameGroup = new fabric.Group(
     [packageNameText, packageAtText, packageVersionText],
-    { selectable: false, /* top: 91 / 2, originY: 'center'*/ },
+    { selectable: false /* top: 91 / 2, originY: 'center'*/ }
   )
 
   // const packageNameGroup = new fabric.Group(
@@ -148,43 +157,57 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
   const twoGTime = formatTime(times.twoG)
   const threeGTime = formatTime(times.threeG)
 
-  const minGroup = createStatGroup(minSize.size.toFixed(2), minSize.unit, 'minified', {
-    // originY: 'center',
-    originX: 'center',
-    // top: 91 + (height - 91) / 4,
-    top: 106,
-    left: width / 4,
-  })
+  const minGroup = createStatGroup(
+    minSize.size.toFixed(2),
+    minSize.unit,
+    'minified',
+    {
+      // originY: 'center',
+      originX: 'center',
+      // top: 91 + (height - 91) / 4,
+      top: 106,
+      left: width / 4,
+    }
+  )
 
-  const gzipGroup = createStatGroup(gzipSize.size.toFixed(2), gzipSize.unit, 'gzipped', {
-    // originY: 'center',
-    originX: 'center',
-    // top: 91 + (height - 91) / 4,
-    top: 106,
-    left: width * (3 / 4),
-  })
+  const gzipGroup = createStatGroup(
+    gzipSize.size.toFixed(2),
+    gzipSize.unit,
+    'gzipped',
+    {
+      // originY: 'center',
+      originX: 'center',
+      // top: 91 + (height - 91) / 4,
+      top: 106,
+      left: width * (3 / 4),
+    }
+  )
 
   const twogGroup = createStatGroup(
     twoGTime.unit === 'ms' ? twoGTime.size : twoGTime.size.toFixed(1),
     twoGTime.unit,
-    '2G', {
-    // originY: 'center',
-    originX: 'center',
-    // top: 91 + (height - 91) * (3 / 4),
+    '2G',
+    {
+      // originY: 'center',
+      originX: 'center',
+      // top: 91 + (height - 91) * (3 / 4),
       top: 235,
       left: width / 4,
-  })
+    }
+  )
 
   const threegGroup = createStatGroup(
     threeGTime.unit === 'ms' ? threeGTime.size : threeGTime.size.toFixed(1),
     threeGTime.unit,
-    'emerging 3G', {
-    // originY: 'center',
-    originX: 'center',
-    // top: 91 + (height - 91) * (3 / 4),
+    'emerging 3G',
+    {
+      // originY: 'center',
+      originX: 'center',
+      // top: 91 + (height - 91) * (3 / 4),
       top: 235,
       left: width * (3 / 4),
-  })
+    }
+  )
 
   canvas
     .add(lineTopHorizontal)
@@ -199,7 +222,6 @@ function drawStatsImg({ name, version, min, gzip, theme = 'dark', wide = false }
   packageNameGroup.centerH()
   canvas.renderAll()
   return canvas.createJPEGStream()
-
 }
 
 module.exports = { drawStatsImg }

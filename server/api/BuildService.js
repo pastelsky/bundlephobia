@@ -17,17 +17,18 @@ class BuildService {
       {
         type: OpertationType.PACKAGE_BUILD_STATS,
         endpoint: '/size',
-        methodName: 'getPackageStats'
+        methodName: 'getPackageStats',
       },
       {
         type: OpertationType.PACKAGE_EXPORTS,
         endpoint: '/exports',
-        methodName: 'getAllPackageExports'
-      }, {
+        methodName: 'getAllPackageExports',
+      },
+      {
         type: OpertationType.PACKAGE_EXPORTS_SIZES,
         endpoint: '/exports-sizes',
-        methodName: 'getPackageExportSizes'
-      }
+        methodName: 'getPackageExportSizes',
+      },
     ]
 
     operations.forEach(operation => {
@@ -35,14 +36,17 @@ class BuildService {
         if (process.env.BUILD_SERVICE_ENDPOINT) {
           try {
             const response = await axios.get(
-              `${process.env.BUILD_SERVICE_ENDPOINT}${operation.endpoint}?p=${encodeURIComponent(packageString)}`
+              `${process.env.BUILD_SERVICE_ENDPOINT}${
+                operation.endpoint
+              }?p=${encodeURIComponent(packageString)}`
             )
             return response.data
           } catch (error) {
             this._handleError(error, operation.type)
           }
         } else {
-          return await pool.exec(operation.methodName, [packageString])
+          return await pool
+            .exec(operation.methodName, [packageString])
             .timeout(CONFIG.WORKER_TIMEOUT)
         }
       })
@@ -54,7 +58,11 @@ class BuildService {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
       const contents = error.response.data
-      throw new CustomError(contents.name || 'BuildError', contents.originalError, contents.extra)
+      throw new CustomError(
+        contents.name || 'BuildError',
+        contents.originalError,
+        contents.extra
+      )
     } else if (error.request) {
       // The request was made but no response was received
       // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
@@ -67,7 +75,9 @@ class BuildService {
       })
     } else {
       // Something happened in setting up the request that triggered an Error
-      throw new CustomError('BuildError', error.message, { operation: operationType })
+      throw new CustomError('BuildError', error.message, {
+        operation: operationType,
+      })
     }
   }
 
@@ -79,7 +89,6 @@ class BuildService {
       { priority }
     )
   }
-
 
   async getPackageExports(packageString, priority) {
     return await requestQueue.process(
