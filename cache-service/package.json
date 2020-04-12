@@ -5,9 +5,9 @@
   "license": "MIT",
   "dependencies": {
     "debug": "^4.1.1",
-    "dotenv": "^4.0.0",
-    "dotenv-defaults": "^1.0.3",
-    "fastify": "^2.8.0",
+    "dotenv": "^8.2.0",
+    "dotenv-defaults": "^1.1.1",
+    "fastify": "^2.13.0",
     "firebase": "^6.5.0",
     "lru-cache": "^5.1.1"
   },

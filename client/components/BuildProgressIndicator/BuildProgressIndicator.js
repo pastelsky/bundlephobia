@@ -29,7 +29,7 @@ export default class BuildProgressIndicator extends Component {
     clearTimeout(this.timeoutId)
   }
 
-  getProgressText = (stage) => {
+  getProgressText = stage => {
     const progressText = {
       resolving: 'Resolving version and dependencies',
       building: 'Bundling package',
@@ -47,12 +47,7 @@ export default class BuildProgressIndicator extends Component {
       calculating: 20,
     }
 
-    const order = [
-      'resolving',
-      'building',
-      'minifying',
-      'calculating',
-    ]
+    const order = ['resolving', 'building', 'minifying', 'calculating']
 
     if (this.stage === order.length) {
       //this.props.onDone()
@@ -72,15 +67,12 @@ export default class BuildProgressIndicator extends Component {
     }, timings[order[stage]] * 1000)
   }
 
-
   render() {
     const { progressText } = this.state
     return (
       <div className="build-progress-indicator">
-        <ProgressHex compact/>
-        <p className="build-progress-indicator__text">
-          {progressText}
-        </p>
+        <ProgressHex compact />
+        <p className="build-progress-indicator__text">{progressText}</p>
       </div>
     )
   }

@@ -1,4 +1,4 @@
-const { blackList } = require("../server/config");
+const { blackList } = require('../server/config')
 
 require('dotenv-defaults').config()
 const firebase = require('firebase')
@@ -11,8 +11,8 @@ const debug = require('debug')('rebuild:script')
 const debugWarning = require('debug')('rebuild:warning')
 const got = require('got')
 const gitURLParse = require('git-url-parse')
-const { resolvePackage } = require("./server.utils");
-const { parsePackageString } = require("./common.utils");
+const { resolvePackage } = require('./server.utils')
+const { parsePackageString } = require('./common.utils')
 const deepEqual = require('lodash.isequal')
 const childProcess = require('child_process')
 const mkdir = require('mkdir-promise')
@@ -22,15 +22,15 @@ const patchedDB = {}
 function commit() {
   try {
     const stringified = JSON.stringify(patchedDB, null, 2)
-    fs.writeFileSync('./db-patched.json', stringified, 'utf8');
+    fs.writeFileSync('./db-patched.json', stringified, 'utf8')
   } catch (err) {
     console.error(err)
   }
 }
 
 const queue = new Queue(10, {
-  retry: 2,               //Number of retries
-  retryIsJump: false,     //retry now?
+  retry: 2, //Number of retries
+  retryIsJump: false, //retry now?
   timeout: 0,
   // queueEnd: () => {
   //   try {
@@ -53,22 +53,16 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig)
 
 function encodeFirebaseKey(key) {
-  return key
-    .replace(/[.]/g, ',')
-    .replace(/\//g, '__')
+  return key.replace(/[.]/g, ',').replace(/\//g, '__')
 }
 
 function decodeFirebaseKey(key) {
-  return key
-    .replace(/[,]/g, '.')
-    .replace(/__/g, '/')
+  return key.replace(/[,]/g, '.').replace(/__/g, '/')
 }
 
 async function getFirebaseStore() {
   try {
-    const snapshot = await firebase.database()
-      .ref('modules-v2')
-      .once('value')
+    const snapshot = await firebase.database().ref('modules-v2').once('value')
     return snapshot.val()
   } catch (err) {
     console.log(err)
@@ -77,7 +71,9 @@ async function getFirebaseStore() {
 }
 
 async function getPackageResult({ name, version }) {
-  const ref = firebase.database().ref()
+  const ref = firebase
+    .database()
+    .ref()
     .child('modules-v2')
     .child(encodeFirebaseKey(name))
     .child(encodeFirebaseKey(version))
@@ -90,24 +86,22 @@ function filterBlacklistedPackages() {
   blackList
 }
 
-
 async function trim(packages) {
   let canTrim = 0
   const trimsMap = {}
   Object.keys(packages).forEach(name => {
-    const versions = Object.keys(packages[name]);
+    const versions = Object.keys(packages[name])
 
     if (versions.length > 15) {
-      canTrim += (versions.length - 15)
+      canTrim += versions.length - 15
 
-      versions.slice(-15)
-        .forEach((version) => {
-          if (name in trimsMap) {
-            trimsMap[name].push(version)
-          } else {
-            trimsMap[name] = [version]
-          }
-        })
+      versions.slice(-15).forEach(version => {
+        if (name in trimsMap) {
+          trimsMap[name].push(version)
+        } else {
+          trimsMap[name] = [version]
+        }
+      })
     }
   })
 
@@ -198,105 +192,136 @@ async function run() {
 
   console.log('package count is', packages.length)
 
-  packages
-    .slice(startIndex, endIndex)
-    .forEach((pack, index) => {
-        const packStr = `${decodeFirebaseKey(pack.packName)}@${decodeFirebaseKey(pack.version)}`
-        queue.push(() => got(`http://127.0.0.1:5000/api/size?package=${packStr}&force=true`, { json: true })
-          .then(async (r) => {
-            const res = r.body
-            const gzipDiff = Math.abs(res.gzip - packs[pack.packName][pack.version].gzip)
-            const minDiff = Math.abs(res.size - packs[pack.packName][pack.version].size)
-            debug('%d fetched %s, diff: %d KB', (startIndex + index), packStr, Math.round(gzipDiff / 1024))
+  packages.slice(startIndex, endIndex).forEach((pack, index) => {
+    const packStr = `${decodeFirebaseKey(pack.packName)}@${decodeFirebaseKey(
+      pack.version
+    )}`
+    queue.push(() =>
+      got(`http://127.0.0.1:5000/api/size?package=${packStr}&force=true`, {
+        json: true,
+      })
+        .then(async r => {
+          const res = r.body
+          const gzipDiff = Math.abs(
+            res.gzip - packs[pack.packName][pack.version].gzip
+          )
+          const minDiff = Math.abs(
+            res.size - packs[pack.packName][pack.version].size
+          )
+          debug(
+            '%d fetched %s, diff: %d KB',
+            startIndex + index,
+            packStr,
+            Math.round(gzipDiff / 1024)
+          )
 
-            if (((gzipDiff / packs[pack.packName][pack.version].gzip) > 0.05) && gzipDiff > 4000) {
-              debugWarning('GZIP sizes for %s vary more than %d. Old: %d KB, After rebuild: %d KB', packStr, gzipDiff, Math.round(packs[pack.packName][pack.version].gzip / 1024), Math.round(res.gzip / 1024))
-            }
-            if (((minDiff / packs[pack.packName][pack.version].size) > 0.05) && minDiff > 7000) {
-              debugWarning('MIN sizes for %s vary more than %d. Old: %d KB, After rebuild: %d KB', packStr, minDiff, Math.round(packs[pack.packName][pack.version].size / 1024), Math.round(res.size / 1024))
-            }
-          })
-          .catch((err) => {
-            failIndexes.push(startIndex + index)
-            console.log('fetch for ' + packStr + ' failed', err)
-            throw err
-          }))
-      }
+          if (
+            gzipDiff / packs[pack.packName][pack.version].gzip > 0.05 &&
+            gzipDiff > 4000
+          ) {
+            debugWarning(
+              'GZIP sizes for %s vary more than %d. Old: %d KB, After rebuild: %d KB',
+              packStr,
+              gzipDiff,
+              Math.round(packs[pack.packName][pack.version].gzip / 1024),
+              Math.round(res.gzip / 1024)
+            )
+          }
+          if (
+            minDiff / packs[pack.packName][pack.version].size > 0.05 &&
+            minDiff > 7000
+          ) {
+            debugWarning(
+              'MIN sizes for %s vary more than %d. Old: %d KB, After rebuild: %d KB',
+              packStr,
+              minDiff,
+              Math.round(packs[pack.packName][pack.version].size / 1024),
+              Math.round(res.size / 1024)
+            )
+          }
+        })
+        .catch(err => {
+          failIndexes.push(startIndex + index)
+          console.log('fetch for ' + packStr + ' failed', err)
+          throw err
+        })
     )
+  })
   queue.start()
   // fs.writeFileSync(`./failures-${startIndex}-${endIndex}.json`, JSON.stringify({failures: failIndexes}), 'utf8')
-
 }
 
 async function installPackage(packageName, installPath) {
   let flags, command
   flags = [
     // Setting cache is required for concurrent `npm install`s to work
-    "cache=/tmp/tmp-build/cache",
-    "no-package-lock",
-    "no-shrinkwrap",
-    "no-optional",
-    "no-bin-links",
-    "prefer-offline",
-    "progress false",
-    "loglevel error",
-    "ignore-scripts",
-    "save-exact",
+    'cache=/tmp/tmp-build/cache',
+    'no-package-lock',
+    'no-shrinkwrap',
+    'no-optional',
+    'no-bin-links',
+    'prefer-offline',
+    'progress false',
+    'loglevel error',
+    'ignore-scripts',
+    'save-exact',
     //"fetch-retry-factor 0",
     //"fetch-retries 0",
-    "json"
+    'json',
   ]
-  command = `npm install ${packageName} --${flags.join(" --")}`
+  command = `npm install ${packageName} --${flags.join(' --')}`
 
-  debug("install start %s", packageName)
+  debug('install start %s', packageName)
 
   try {
     await exec(command, {
-      cwd: installPath
+      cwd: installPath,
     })
-    debug("install finish %s", packageName)
+    debug('install finish %s', packageName)
   } catch (err) {
     console.log(err)
     if (err.includes('code E404')) {
-      throw new Error("PackageNotFoundError", err)
+      throw new Error('PackageNotFoundError', err)
     } else {
-      throw new Error("InstallError", err)
+      throw new Error('InstallError', err)
     }
   }
 }
 
 function exec(command, options) {
   return new Promise((resolve, reject) => {
-    childProcess
-      .exec(command, options, function (error, stdout, stderr) {
-        if (error) {
-          reject(stderr)
-        } else {
-          resolve(stdout)
-        }
-      })
+    childProcess.exec(command, options, function (error, stdout, stderr) {
+      if (error) {
+        reject(stderr)
+      } else {
+        resolve(stdout)
+      }
+    })
   })
 }
 
 async function getExports(name, version) {
   const packageName = `${name}@${version}`
-  const pathtmp = `/tmp/build/${packageName.replace(/@/g, '-').replace(/\//g, '-').replace(/\./g, '')}`
+  const pathtmp = `/tmp/build/${packageName
+    .replace(/@/g, '-')
+    .replace(/\//g, '-')
+    .replace(/\./g, '')}`
   console.log(pathtmp, 'pathtmp')
   await mkdir(pathtmp)
 
   fs.writeFileSync(
-    path.join(pathtmp, "package.json"),
+    path.join(pathtmp, 'package.json'),
     JSON.stringify({ dependencies: {} })
   )
 
   fs.writeFileSync(
-    path.join(pathtmp, "index.js"),
+    path.join(pathtmp, 'index.js'),
     JSON.stringify({ dependencies: {} })
   )
 
   await installPackage(packageName, pathtmp)
   const exprts = Object.keys(require(path.join(pathtmp, 'node_modules', name)))
-  return exprts;
+  return exprts
 }
 
 async function rebuildTopLevelExports() {
@@ -310,17 +335,22 @@ async function rebuildTopLevelExports() {
   })
 
   packages.forEach(pack => {
-    queue.push(() => getExports(decodeFirebaseKey(pack.name), decodeFirebaseKey(pack.version)).then((exprts) => {
-      debug("got exports for %s %s %o", pack.name, pack.version, exprts)
-      return axios.post('localhost:7001/cache', {
-        name: pack.name,
-        version: pack.version,
-        result: {
-          ...packs[pack.name][pack.version],
-          topLevelExports: exprts,
-        }
+    queue.push(() =>
+      getExports(
+        decodeFirebaseKey(pack.name),
+        decodeFirebaseKey(pack.version)
+      ).then(exprts => {
+        debug('got exports for %s %s %o', pack.name, pack.version, exprts)
+        return axios.post('localhost:7001/cache', {
+          name: pack.name,
+          version: pack.version,
+          result: {
+            ...packs[pack.name][pack.version],
+            topLevelExports: exprts,
+          },
+        })
       })
-    }))
+    )
   })
   queue.start()
 }

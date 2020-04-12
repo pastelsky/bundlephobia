@@ -30,7 +30,7 @@ $bar-grow-duration: 0.4s;
   min-width: $min-bar-width;
   justify-content: flex-end;
   flex-direction: column;
-  animation: grow $bar-grow-duration cubic-bezier(0.305, 0.420, 0.205, 1.200);
+  animation: grow $bar-grow-duration cubic-bezier(0.305, 0.42, 0.205, 1.2);
   transform-origin: 100% 100%;
 }
 
@@ -121,7 +121,8 @@ $bar-grow-duration: 0.4s;
 .bar-graph__bar-version,
 .bar-graph__bar-symbols,
 .bar-graph__legend {
-  animation: fade-in 0.5s $bar-grow-duration * 0.9 both cubic-bezier(0.305, 0.420, 0.205, 1.200);
+  animation: fade-in 0.5s $bar-grow-duration * 0.9 both
+    cubic-bezier(0.305, 0.42, 0.205, 1.2);
 }
 
 .bar-graph__legend {

@@ -12,8 +12,16 @@ const cache = new Cache()
 const buildService = new BuildService()
 
 async function buildMiddleware(ctx, next) {
-  let result, priority = getRequestPriority(ctx)
-  const { scoped, name, version, description, repository, packageString } = ctx.state.resolved
+  let result,
+    priority = getRequestPriority(ctx)
+  const {
+    scoped,
+    name,
+    version,
+    description,
+    repository,
+    packageString,
+  } = ctx.state.resolved
   const { force, record, package: packageQuery } = ctx.query
 
   const buildStart = now()
@@ -21,21 +29,30 @@ async function buildMiddleware(ctx, next) {
   const buildEnd = now()
 
   ctx.cacheControl = {
-    maxAge: force ? 0 : semver.valid(parsePackageString(packageQuery).version) ?
-      CONFIG.CACHE.SIZE_API_HAS_VERSION : CONFIG.CACHE.SIZE_API_DEFAULT,
+    maxAge: force
+      ? 0
+      : semver.valid(parsePackageString(packageQuery).version)
+      ? CONFIG.CACHE.SIZE_API_HAS_VERSION
+      : CONFIG.CACHE.SIZE_API_DEFAULT,
   }
 
   const body = { scoped, name, version, description, repository, ...result }
   ctx.body = body
   ctx.state.buildResult = body
-  const time = buildEnd - buildStart;
+  const time = buildEnd - buildStart
 
-  logger.info('BUILD', {
-    result,
-    requestId: ctx.state.id,
-    packageString,
-    time,
-  }, `BUILD: ${packageString} built in ${time.toFixed()}s and is ${result.size} bytes`)
+  logger.info(
+    'BUILD',
+    {
+      result,
+      requestId: ctx.state.id,
+      packageString,
+      time,
+    },
+    `BUILD: ${packageString} built in ${time.toFixed()}s and is ${
+      result.size
+    } bytes`
+  )
 
   if (record === 'true') {
     firebaseUtils.setRecentSearch(name, { name, version })

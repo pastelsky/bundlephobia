@@ -12,16 +12,20 @@ async function errorHandler(ctx, next) {
   const respondWithError = (status, { code, message = '', details = {} }) => {
     ctx.status = status
     ctx.body = {
-      error: { code, message, details }
+      error: { code, message, details },
     }
 
-    logger.error('BUILD_ERROR', {
-      type: code,
-      requestId: ctx.state.id,
-      time: now() - start,
-      ...ctx.state.resolved,
-      details,
-    }, `${code} ${ctx.state.resolved.packageString}`)
+    logger.error(
+      'BUILD_ERROR',
+      {
+        type: code,
+        requestId: ctx.state.id,
+        time: now() - start,
+        ...ctx.state.resolved,
+        details,
+      },
+      `${code} ${ctx.state.resolved.packageString}`
+    )
   }
 
   try {
@@ -41,9 +45,10 @@ async function errorHandler(ctx, next) {
       case 'BlacklistedPackageError':
         respondWithError(403, {
           code: 'BlacklistedPackageError',
-          message: 'The package you were looking for is blacklisted ' +
-            'because it failed to build multiple times in the past and further tries aren\'t likely to succeed. This can' +
-            'happen if the package in question wasn\'t meant to be bundled in a client side application.',
+          message:
+            'The package you were looking for is blacklisted ' +
+            "because it failed to build multiple times in the past and further tries aren't likely to succeed. This can " +
+            "happen if this package wasn't meant to be bundled in a client side application.",
         })
         break
 
@@ -60,15 +65,13 @@ async function errorHandler(ctx, next) {
       case 'PackageNotFoundError':
         respondWithError(404, {
           code: 'PackageNotFoundError',
-          message: 'The package you were looking for doesn\'t exist.',
+          message: "The package you were looking for doesn't exist.",
         })
         break
 
       case 'PackageVersionMismatchError': {
         const validVersions = arrayToSentence(
-          err.extra
-            .validVersions
-            .map(version => `\`<code>${version}</code>\``),
+          err.extra.validVersions.map(version => `\`<code>${version}</code>\``)
         )
 
         respondWithError(404, {
@@ -97,9 +100,10 @@ async function errorHandler(ctx, next) {
         const body = {
           error: {
             code: 'EntryPointError',
-            message: 'We could not guess a valid entry point for this package. ' +
-              'Perhaps the author hasn\'t specified one in its package.json ?',
-          }
+            message:
+              'We could not guess a valid entry point for this package. ' +
+              "Perhaps the author hasn't specified one in its package.json ?",
+          },
         }
 
         ctx.cacheControl = {
@@ -108,11 +112,11 @@ async function errorHandler(ctx, next) {
 
         respondWithError(status, body.error)
 
-        debug('saved %s to failure cache', `${ctx.state.resolved.packageString}`)
-        failureCache.set(
-          `${ctx.state.packageString}`,
-          { status, body },
+        debug(
+          'saved %s to failure cache',
+          `${ctx.state.resolved.packageString}`
         )
+        failureCache.set(`${ctx.state.packageString}`, { status, body })
 
         break
       }
@@ -120,16 +124,16 @@ async function errorHandler(ctx, next) {
       case 'MissingDependencyError': {
         const status = 500
         const missingModules = arrayToSentence(
-          err.extra
-            .missingModules
-            .map(module => `\`<code>${module}</code>\``),
+          err.extra.missingModules.map(module => `\`<code>${module}</code>\``)
         )
         const body = {
           error: {
             code: 'MissingDependencyError',
-            message: `This package (or this version) uses ${missingModules}, ` +
-              `but does not specify ${missingModules.length > 1 ? 'them' :
-                'it'} either as a dependency or a peer dependency`,
+            message:
+              `This package (or this version) uses ${missingModules}, ` +
+              `but does not specify ${
+                missingModules.length > 1 ? 'them' : 'it'
+              } either as a dependency or a peer dependency`,
             details: err,
           },
         }
@@ -140,11 +144,11 @@ async function errorHandler(ctx, next) {
 
         respondWithError(status, body.error)
 
-        debug('saved %s to failure cache', `${ctx.state.resolved.packageString}`)
-        failureCache.set(
-          `${ctx.state.packageString}`,
-          { status, body },
+        debug(
+          'saved %s to failure cache',
+          `${ctx.state.resolved.packageString}`
         )
+        failureCache.set(`${ctx.state.packageString}`, { status, body })
         break
       }
 
@@ -157,11 +161,14 @@ async function errorHandler(ctx, next) {
           details: err,
         }
         respondWithError(500, errorJSON)
-        debug('saved %s to failure cache', `${ctx.state.resolved.packageString}`)
-        failureCache.set(
-          `${ctx.state.packageString}`,
-          { status, body: { error: errorJSON } },
+        debug(
+          'saved %s to failure cache',
+          `${ctx.state.resolved.packageString}`
         )
+        failureCache.set(`${ctx.state.packageString}`, {
+          status,
+          body: { error: errorJSON },
+        })
         break
       }
     }

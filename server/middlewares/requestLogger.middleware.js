@@ -3,7 +3,7 @@ const now = require('performance-now')
 
 async function requestLoggerMiddleware(ctx, next) {
   if (!ctx.request.url.includes('/api/')) {
-    await next();
+    await next()
     return
   }
 
@@ -13,12 +13,16 @@ async function requestLoggerMiddleware(ctx, next) {
   const time = requestEnd - requestStart
 
   logger.info(
-    'REQUEST', {
+    'REQUEST',
+    {
       url: ctx.request.url,
       type: ctx.request.type,
       query: ctx.request.query,
       headers: ctx.request.headers,
-      ip: ctx.request.header['x-koaip'] || ctx.request.header['cf-connecting-ip'] || ctx.ip,
+      ip:
+        ctx.request.header['x-koaip'] ||
+        ctx.request.header['cf-connecting-ip'] ||
+        ctx.ip,
       requestId: ctx.state.id,
       method: ctx.request.method,
       origin: ctx.request.origin,
@@ -26,7 +30,9 @@ async function requestLoggerMiddleware(ctx, next) {
       status: ctx.response.status,
       time,
     },
-    `REQUEST: ${ctx.response.status}${time.toFixed(0)} ms ${ctx.req.method} ${ctx.request.url}`,
+    `REQUEST: ${ctx.response.status}${time.toFixed(0)} ms ${ctx.req.method} ${
+      ctx.request.url
+    }`
   )
 }
 

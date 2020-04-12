@@ -6,29 +6,29 @@ import GithubLogo from '../../assets/github-logo.svg'
 
 export default class Header extends Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       sidebarDocked: false,
-      sidebarOpen: false
-    };
+      sidebarOpen: false,
+    }
   }
 
   componentDidMount() {
-    this.mql = window.matchMedia(`(min-width: 800px)`);
+    this.mql = window.matchMedia(`(min-width: 800px)`)
     this.setState({ sidebarDocked: this.mql.matches })
-    this.mql.addListener(this.mediaQueryChanged);
+    this.mql.addListener(this.mediaQueryChanged)
   }
 
   componentWillUnmount() {
-    this.mql.removeListener(this.mediaQueryChanged);
+    this.mql.removeListener(this.mediaQueryChanged)
   }
 
   onSetSidebarOpen(open) {
-    this.setState({ sidebarOpen: open });
+    this.setState({ sidebarOpen: open })
   }
 
   mediaQueryChanged() {
-    this.setState({ sidebarDocked: this.mql.matches, sidebarOpen: false });
+    this.setState({ sidebarDocked: this.mql.matches, sidebarOpen: false })
   }
 
   render() {
@@ -53,12 +53,20 @@ export default class Header extends Component {
           <section className="page-header--right-section">
             <ul className="page-header__quicklinks">
               <li>
-                <a target="_blank" rel="noreferrer noopener" href="https://badgen.net/#bundlephobia">
+                <a
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  href="https://badgen.net/#bundlephobia"
+                >
                   Badges
                 </a>
               </li>
               <li>
-                <a target="_blank" rel="noreferrer noopener" href=" https://opencollective.com/bundlephobia">
+                <a
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  href=" https://opencollective.com/bundlephobia"
+                >
                   Opencollective
                 </a>
               </li>
@@ -70,14 +78,13 @@ export default class Header extends Component {
                 </Link>
               </li>
             </ul>
-            <a target="_blank"
-               href="https://github.com/pastelsky/bundlephobia">
-              <GithubLogo/>
+            <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
+              <GithubLogo />
             </a>
           </section>
         </header>
         <b>Main content</b>
       </Sidebar>
-    );
+    )
   }
 }
