@@ -4,7 +4,10 @@ const CONFIG = require('../../config')
 
 async function blockBlacklistMiddleware(ctx, next) {
   const { package: packageString, force } = ctx.query
-  if(force) { await next(); return }
+  if (force) {
+    await next()
+    return
+  }
 
   const parsedPackage = parsePackageString(packageString)
 
@@ -14,9 +17,15 @@ async function blockBlacklistMiddleware(ctx, next) {
   }
 
   // If package is unsupported, fail fast
-  const matchedUnsupportedRule = CONFIG.unsupported.find(rule => new RegExp(rule.test).test(parsedPackage.name))
+  const matchedUnsupportedRule = CONFIG.unsupported.find(rule =>
+    new RegExp(rule.test).test(parsedPackage.name)
+  )
   if (matchedUnsupportedRule) {
-    throw new CustomError('UnsupportedPackageError', { ...parsedPackage }, { reason: matchedUnsupportedRule.reason })
+    throw new CustomError(
+      'UnsupportedPackageError',
+      { ...parsedPackage },
+      { reason: matchedUnsupportedRule.reason }
+    )
   }
 
   await next()

@@ -16,7 +16,8 @@
 .autocomplete-input,
 .autocomplete-input__dummy-input {
   @include font-size-lg;
-  padding: $global-spacing * 1.5 (25px + $global-spacing * 2) $global-spacing * 1.5 $global-spacing * 3;
+  padding: $global-spacing * 1.5 (25px + $global-spacing * 2) $global-spacing *
+    1.5 $global-spacing * 3;
   font-family: $font-family-code;
   font-weight: $font-weight-thin;
   width: 100%;
@@ -24,7 +25,8 @@
   letter-spacing: -0.7px;
 
   @media screen and (max-width: 40em) {
-    padding: $global-spacing (20px + $global-spacing) $global-spacing $global-spacing;
+    padding: $global-spacing (20px + $global-spacing) $global-spacing
+      $global-spacing;
   }
 }
 
@@ -65,7 +67,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
-  animation: unroll 0.2s cubic-bezier(0.305, 0.420, 0.205, 1.200);
+  animation: unroll 0.2s cubic-bezier(0.305, 0.42, 0.205, 1.2);
   // align borders, negating nesting due to border on parent
   left: -1px;
   // hide rounded borders of the input
@@ -90,13 +92,12 @@
   }
 }
 
-
 .autocomplete-input__suggestion {
   padding: 10px 32px;
   color: #333;
   font-size: 15px;
   cursor: pointer;
-  font-family: "Source Code Pro", monospace;
+  font-family: 'Source Code Pro', monospace;
   font-weight: $font-weight-light;
   letter-spacing: -0.5px;
 
@@ -107,7 +108,6 @@
   @media screen and (max-width: 40em) {
     padding: $global-spacing / 1.5 $global-spacing * 1.5;
   }
-
 
   em {
     font-weight: $font-weight-bold;
@@ -179,4 +179,3 @@
     }
   }
 }
-

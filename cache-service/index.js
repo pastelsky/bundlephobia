@@ -3,9 +3,14 @@ const firebase = require('firebase')
 const LRU = require('lru-cache')
 const debug = require('debug')('bp:cache')
 const fastify = require('fastify')()
-const { getPackageSizeMiddlware, postPackageSizeMiddlware } = require('./middlewares/package-size.middleware')
-const { getExportsSizeMiddlware, postExportsSizeMiddleware } = require('./middlewares/exports-size.middleware')
-
+const {
+  getPackageSizeMiddlware,
+  postPackageSizeMiddlware,
+} = require('./middlewares/package-size.middleware')
+const {
+  getExportsSizeMiddlware,
+  postExportsSizeMiddleware,
+} = require('./middlewares/exports-size.middleware')
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,

@@ -1,3 +1,3 @@
-import ExportAnalysisSection  from './ExportAnalysisSection'
+import ExportAnalysisSection from './ExportAnalysisSection'
 
 export default ExportAnalysisSection

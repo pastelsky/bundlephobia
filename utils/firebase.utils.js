@@ -52,7 +52,6 @@ class FirebaseUtils {
               count: 1,
             })
             .catch(err => console.log(err))
-
         }
       })
   }
@@ -64,41 +63,55 @@ class FirebaseUtils {
 
     debug('package history %s', name)
     const packageHistory = {}
-    const ref = this.firebase.database().ref()
+    const ref = this.firebase
+      .database()
+      .ref()
       .child('modules-v2')
       .child(encodeFirebaseKey(name))
 
     const firebasePromise = ref.once('value').then(snapshot => snapshot.val())
-    const yarnPromise = axios.get(`https://${process.env.ALGOLIA_APP_ID}-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(name)}`, {
-      params: {
-        'x-algolia-agent': 'bundlephobia',
-        'x-algolia-application-id': process.env.ALGOLIA_APP_ID,
-        'x-algolia-api-key': process.env.ALGOLIA_API_KEY,
-      },
-    })
+    const yarnPromise = axios.get(
+      `https://${
+        process.env.ALGOLIA_APP_ID
+      }-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(name)}`,
+      {
+        params: {
+          'x-algolia-agent': 'bundlephobia',
+          'x-algolia-application-id': process.env.ALGOLIA_APP_ID,
+          'x-algolia-api-key': process.env.ALGOLIA_API_KEY,
+        },
+      }
+    )
 
     let firebaseHistory, versions
     try {
-      const [firebaseResult, yarnInfo] =
-        await Promise.all([firebasePromise, yarnPromise])
+      const [firebaseResult, yarnInfo] = await Promise.all([
+        firebasePromise,
+        yarnPromise,
+      ])
 
       firebaseHistory = firebaseResult
-      yarnInfo.data.versions = { [yarnInfo.data.version]: '', ...yarnInfo.data.versions }
+      yarnInfo.data.versions = {
+        [yarnInfo.data.version]: '',
+        ...yarnInfo.data.versions,
+      }
       versions = Object.keys(yarnInfo.data.versions)
-    } catch(err) {
+    } catch (err) {
       console.error(err)
       firebaseHistory = await firebasePromise
-      versions = Object.keys(firebaseHistory)
-        .map(version => decodeFirebaseKey(version))
+      versions = Object.keys(firebaseHistory).map(version =>
+        decodeFirebaseKey(version)
+      )
     }
 
     const filteredVersions = versions
-    // We *may not* want all tagged alpha/beta versions
+      // We *may not* want all tagged alpha/beta versions
       .filter(version => !version.includes('-'))
       .sort((versionA, versionB) => semver.compare(versionA, versionB))
 
-    const limitedVersions = filteredVersions
-      .splice(filteredVersions.length - limit)
+    const limitedVersions = filteredVersions.splice(
+      filteredVersions.length - limit
+    )
     debug('last npm  %d %s versions %o', limit, name, limitedVersions)
 
     // Although if the most recent version is tagged,
@@ -159,22 +172,22 @@ class FirebaseUtils {
     const dailySearches = {}
     const searches = this.firebase.database().ref().child('searches-v2')
 
-    const snapshot = await
-      searches
-        .orderByChild('lastSearched')
-        .startAt(Date.now() - 1000 * 60 * 60 * 24 * 4, 'lastSearched')
-        .once('value')
+    const snapshot = await searches
+      .orderByChild('lastSearched')
+      .startAt(Date.now() - 1000 * 60 * 60 * 24 * 4, 'lastSearched')
+      .once('value')
     const packages = snapshot.val()
 
     if (packages) {
-      Object.keys(packages)
-        .forEach(packageName => {
-          dailySearches[decodeFirebaseKey(packageName)] = packages[packageName]
-        })
+      Object.keys(packages).forEach(packageName => {
+        dailySearches[decodeFirebaseKey(packageName)] = packages[packageName]
+      })
     }
     return dailySearches
   }
 }
 
-
-module.exports = new FirebaseUtils(firebase, !!process.env.FIREBASE_DATABASE_URL)
+module.exports = new FirebaseUtils(
+  firebase,
+  !!process.env.FIREBASE_DATABASE_URL
+)

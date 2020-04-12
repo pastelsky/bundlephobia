@@ -1,3 +1,3 @@
-import SimilarPackagesSection  from './SimilarPackagesSection'
+import SimilarPackagesSection from './SimilarPackagesSection'
 
 export default SimilarPackagesSection

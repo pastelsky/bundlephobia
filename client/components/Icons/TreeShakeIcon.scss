@@ -27,7 +27,8 @@ svg.treeshake-icon-animated {
 }
 
 @keyframes shake {
-  10%, 100% {
+  10%,
+  100% {
     transform: translate3d(-0.5px, 0, 0);
   }
 
@@ -35,7 +36,8 @@ svg.treeshake-icon-animated {
     transform: translate3d(1px, 0, 0);
   }
 
-  30%, 70% {
+  30%,
+  70% {
     transform: translate3d(-1px, 0, 0);
   }
 
@@ -43,4 +45,3 @@ svg.treeshake-icon-animated {
     transform: translate3d(1px, 0, 0);
   }
 }
-

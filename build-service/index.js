@@ -1,8 +1,11 @@
 const fastify = require('fastify')()
 const getBuiltPackageStats = require('package-build-stats')
-const { getAllPackageExports, getPackageExportSizes } = require('package-build-stats/src/getPackageExportSizes')
+const {
+  getAllPackageExports,
+  getPackageExportSizes,
+} = require('package-build-stats/src/getPackageExportSizes')
 
-fastify.get('/size', async(req, res) => {
+fastify.get('/size', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
   try {
     const result = await getBuiltPackageStats(packageString)
@@ -13,7 +16,7 @@ fastify.get('/size', async(req, res) => {
   }
 })
 
-fastify.get('/exports-sizes', async(req, res) => {
+fastify.get('/exports-sizes', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
 
   try {
@@ -25,7 +28,7 @@ fastify.get('/exports-sizes', async(req, res) => {
   }
 })
 
-fastify.get('/exports', async(req, res) => {
+fastify.get('/exports', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
 
   try {

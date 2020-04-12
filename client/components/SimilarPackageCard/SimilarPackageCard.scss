@@ -25,12 +25,12 @@
 
   @media screen and (max-width: 64em) {
     margin: $global-spacing / 1.5;
-    width: calc(33.3% - #{$global-spacing * 2})
+    width: calc(33.3% - #{$global-spacing * 2});
   }
 
   @media screen and (max-width: 48em) {
     margin: $global-spacing / 1.5;
-    width: calc(50% - #{$global-spacing * 1.5})
+    width: calc(50% - #{$global-spacing * 1.5});
   }
 
   @media screen and (max-width: 40em) {
@@ -90,7 +90,7 @@
 
 .similar-package-card__stat {
   & + & {
-    margin-left: $global-spacing *  2;
+    margin-left: $global-spacing * 2;
   }
 }
 
@@ -142,7 +142,7 @@
   transition: all 0.2s;
   vertical-align: middle;
 
-  &:hover{
+  &:hover {
     opacity: 1;
   }
 }
@@ -155,4 +155,3 @@
     fill: transparentize($raven, 0.7);
   }
 }
-
