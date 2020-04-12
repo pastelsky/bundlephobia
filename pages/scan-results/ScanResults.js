@@ -1,14 +1,11 @@
-<<<<<<< HEAD
-import { withRouter } from 'next/router'
-=======
 import Router, { withRouter } from "next/router";
->>>>>>> fad1869... includes alphabetical and size filters in url
 import React, { Component } from 'react'
 import Analytics from 'react-ga'
 import FlipMove from 'react-flip-move'
 import cx from 'classnames'
 
-const PromiseQueue = require('p-queue')
+const PromiseQueue = require('p-queue');
+const queryString = require('query-string')
 import Stat from 'client/components/Stat'
 import Link from 'next/link'
 import ResultLayout from '../../client/components/ResultLayout'
@@ -201,17 +198,8 @@ class ScanResults extends Component {
   }
 
   setParamsAndState = ( sortMode ) => {
-    const { packages } = this.state
-<<<<<<< HEAD
-    const sortedList = packages.sort((packA, packB) =>
-      packA.name.localeCompare(packB.name)
-    )
-=======
-    const query = packages
-        .map(pack => `${pack.name}@${pack.version}`)
-        .join(',')
-    Router.push(`/scan-results?packages=${query}&sortMode=${sortMode}`)
->>>>>>> fad1869... includes alphabetical and size filters in url
+    const updatedQuery = { ...this.props.router.query, sortMode}
+    Router.replace(`/scan-results?${queryString.stringify(updatedQuery,{encode: false})}`)
 
     this.setState({ sortMode: sortMode })
   }
