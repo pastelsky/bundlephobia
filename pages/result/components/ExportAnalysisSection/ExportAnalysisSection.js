@@ -184,10 +184,12 @@ class ExportAnalysisSection extends Component {
         results => {
           this.setState({
             analysisState: State.SIZES_FULFILLED,
-            assets: results.assets.map(asset => ({
-              ...asset,
-              path: this.state.exports[asset.name],
-            })),
+            assets: results.assets
+              .filter(asset => asset.type === 'js')
+              .map(asset => ({
+                ...asset,
+                path: this.state.exports[asset.name],
+              })),
           })
 
           Analytics.event({
