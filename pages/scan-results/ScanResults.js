@@ -1,10 +1,10 @@
-import Router, { withRouter } from "next/router";
+import Router, { withRouter } from 'next/router'
 import React, { Component } from 'react'
 import Analytics from 'react-ga'
 import FlipMove from 'react-flip-move'
 import cx from 'classnames'
 
-const PromiseQueue = require('p-queue');
+const PromiseQueue = require('p-queue')
 const queryString = require('query-string')
 import Stat from 'client/components/Stat'
 import Link from 'next/link'
@@ -216,7 +216,7 @@ class ScanResults extends Component {
     const { packages, sortMode } = this.state
     let sortedList
 
-    if (sortMode === 'size'){
+    if (sortMode === 'size') {
       sortedList = packages.sort((packA, packB) => {
         const packASize = packA.result ? packA.result.gzip : 0
         const packBSize = packB.result ? packB.result.gzip : 0
@@ -225,27 +225,19 @@ class ScanResults extends Component {
       })
     } else {
       sortedList = packages.sort((packA, packB) =>
-          packA.name.localeCompare(packB.name),
+        packA.name.localeCompare(packB.name)
       )
     }
     return sortedList
   }
 
   render() {
-<<<<<<< HEAD
-    const { packages, sortMode } = this.state
-    const totalMinSize = packages.reduce(
-      (curTotal, pack) => curTotal + (pack.result ? pack.result.size : 0),
-      0
-    )
-=======
     const { sortMode } = this.state
     const packages = this.sortPackages()
 
     const totalMinSize = packages
       .reduce((curTotal, pack) =>
         curTotal + (pack.result ? pack.result.size : 0), 0)
->>>>>>> fad1869... includes alphabetical and size filters in url
 
     const totalGZIPSize = packages.reduce(
       (curTotal, pack) => curTotal + (pack.result ? pack.result.gzip : 0),
