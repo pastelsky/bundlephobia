@@ -1,10 +1,11 @@
-import { withRouter } from 'next/router'
+import Router, { withRouter } from 'next/router'
 import React, { Component } from 'react'
 import Analytics from 'react-ga'
 import FlipMove from 'react-flip-move'
 import cx from 'classnames'
 
 const PromiseQueue = require('p-queue')
+const queryString = require('query-string')
 import Stat from 'client/components/Stat'
 import Link from 'next/link'
 import ResultLayout from '../../client/components/ResultLayout'
@@ -107,6 +108,7 @@ class ScanResults extends Component {
     super(props)
 
     const { router } = this.props
+    const sortMode = router.query.sortMode
     const packageStrings = router.query.packages
     const packages = packageStrings
       .split(',')
@@ -117,7 +119,7 @@ class ScanResults extends Component {
         ...parsePackageString(str),
       }))
 
-    this.state = { packages, sortMode: null }
+    this.state = { packages, sortMode: sortMode }
   }
 
   componentDidMount() {
@@ -195,33 +197,47 @@ class ScanResults extends Component {
     this.setState({ packages })
   }
 
-  handleSortAlphabetic = () => {
-    const { packages } = this.state
-    const sortedList = packages.sort((packA, packB) =>
-      packA.name.localeCompare(packB.name)
-    )
+  setParamsAndState = ( sortMode ) => {
+    const updatedQuery = { ...this.props.router.query, sortMode}
+    Router.replace(`/scan-results?${queryString.stringify(updatedQuery,{encode: false})}`)
 
-    this.setState({ packages: sortedList, sortMode: 'alphabetic' })
+    this.setState({ sortMode: sortMode })
+  }
+
+  handleSortAlphabetic = () => {
+    this.setParamsAndState('alphabetic')
   }
 
   handleSortSize = () => {
-    const { packages } = this.state
-    const sortedList = packages.sort((packA, packB) => {
-      const packASize = packA.result ? packA.result.gzip : 0
-      const packBSize = packB.result ? packB.result.gzip : 0
+    this.setParamsAndState('size')
+  }
 
-      return packBSize - packASize
-    })
+  sortPackages = () => {
+    const { packages, sortMode } = this.state
+    let sortedList
 
-    this.setState({ packages: sortedList, sortMode: 'size' })
+    if (sortMode === 'size') {
+      sortedList = packages.sort((packA, packB) => {
+        const packASize = packA.result ? packA.result.gzip : 0
+        const packBSize = packB.result ? packB.result.gzip : 0
+
+        return packBSize - packASize
+      })
+    } else {
+      sortedList = packages.sort((packA, packB) =>
+        packA.name.localeCompare(packB.name)
+      )
+    }
+    return sortedList
   }
 
   render() {
-    const { packages, sortMode } = this.state
-    const totalMinSize = packages.reduce(
-      (curTotal, pack) => curTotal + (pack.result ? pack.result.size : 0),
-      0
-    )
+    const { sortMode } = this.state
+    const packages = this.sortPackages()
+
+    const totalMinSize = packages
+      .reduce((curTotal, pack) =>
+        curTotal + (pack.result ? pack.result.size : 0), 0)
 
     const totalGZIPSize = packages.reduce(
       (curTotal, pack) => curTotal + (pack.result ? pack.result.gzip : 0),
