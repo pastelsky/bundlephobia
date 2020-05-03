@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import cx from 'classnames'
 import { formatSize } from 'utils'
 import Link from 'next/link'
-import DOMPurify from 'dompurify'
 
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import PlusIcon from '../../assets/plus.svg'
@@ -113,12 +112,9 @@ export default class SimilarPackageCard extends Component {
                 <GithubIcon className="similar-package-card__github-icon" />
               </a>
             </div>
-            <p
-              className="similar-package-card__description"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(pack.description),
-              }}
-            />
+            <p className="similar-package-card__description">
+              {pack.description}
+            </p>
           </div>
           {footer}
         </a>
