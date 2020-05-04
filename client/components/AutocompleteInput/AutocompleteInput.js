@@ -32,7 +32,11 @@ export default class AutocompleteInput extends PureComponent {
         'autocomplete-input__suggestion--highlight': isHighlighted,
       })}
     >
-      <div dangerouslySetInnerHTML={{ __html: item.highlight }} />
+      {item.highlight != null ? (
+        <div dangerouslySetInnerHTML={{ __html: item.highlight }} />
+      ) : (
+        <div>{item.package.name}</div>
+      )}
 
       <div className="autocomplete-input__suggestion-description">
         {item.package.description}
