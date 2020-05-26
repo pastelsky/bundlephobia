@@ -7,13 +7,20 @@ const Weight = {
 }
 
 const categories = {
-  'clipboard': {
+  clipboard: {
     name: 'Clipboard Utilities',
     tags: [
       { tag: 'clipboard', weight: Weight.MAX },
       { tag: 'copy', weight: Weight.MID },
       { tag: 'cut', weight: Weight.MID },
-    ], similar: ['clipboard', 'clipboardy', 'clipboard-copy', 'copy-text-to-clipboard', 'clipboard-polyfill']
+    ],
+    similar: [
+      'clipboard',
+      'clipboardy',
+      'clipboard-copy',
+      'copy-text-to-clipboard',
+      'clipboard-polyfill',
+    ],
   },
   'css-in-js': {
     name: 'CSS in JS libraries',
@@ -21,22 +28,28 @@ const categories = {
       { tag: 'css js', weight: Weight.NORMAL },
       { tag: 'styles', weight: Weight.NORMAL },
       { tag: 'inline', weight: Weight.NORMAL },
-      { tag: 'in', weight: Weight.MID }
+      { tag: 'in', weight: Weight.MID },
     ],
-    similar: ['styled-components', 'radium', 'emotion', 'glamor']
+    similar: ['styled-components', 'jss', 'emotion', 'linaria'],
   },
-  'cookie': {
+  'color-manipulation': {
+    name: 'Color parsing and manipulation',
+    tags: [{ tag: 'color convert parse manipulate', weight: Weight.NORMAL }],
+    similar: ['chroma-js', 'color', 'tinycolor2', 'colors.js'],
+  },
+  cookie: {
     name: 'Cookie Manipulation',
     tags: [
-      { tag: 'cookie', weight: Weight.HIGH },
+      { tag: 'cookie', weight: Weight.MAX },
       { tag: 'manipulate', weight: Weight.NORMAL },
       { tag: 'http', weight: Weight.MID },
       { tag: 'client', weight: Weight.MID },
       { tag: 'parse', weight: Weight.MID },
       { tag: 'parser', weight: Weight.MID },
       { tag: 'jar', weight: Weight.NORMAL },
+      { tag: 'browser', weight: Weight.SMALL },
     ],
-    similar: ['cookie', 'tough-cookie', 'js-cookie', 'tiny-cookie']
+    similar: ['cookie', 'tough-cookie', 'js-cookie', 'tiny-cookie'],
   },
   'date-nlp': {
     name: 'Natural language date-time utilities',
@@ -48,9 +61,9 @@ const categories = {
       { tag: 'nlp', weight: Weight.HIGH },
       { tag: 'natural language', weight: Weight.HIGH },
       { tag: 'format', weight: Weight.MID },
-      { tag: 'human', weight: Weight.MID }
+      { tag: 'human', weight: Weight.MID },
     ],
-    similar: ['chrono-node', 'its-a-date', 'parse-messy-time']
+    similar: ['chrono-node', 'its-a-date', 'parse-messy-time'],
   },
   'deep-equality': {
     name: 'Deep Equality Check',
@@ -59,7 +72,45 @@ const categories = {
       { tag: 'object', weight: Weight.MID },
       { tag: 'compare', weight: Weight.NORMAL },
       { tag: 'isequal', weight: Weight.HIGH },
-    ], similar: ['fast-deep-equal', 'deep-eql', 'deep-equal', 'lodash.isequal']
+    ],
+    similar: ['fast-deep-equal', 'deep-eql', 'deep-equal', 'lodash.isequal'],
+  },
+  'drag-and-drop': {
+    name: 'Drag & Drop Libraries',
+    tags: [
+      { tag: 'drag drop', weight: Weight.NORMAL },
+      { tag: 'sort', weight: Weight.MID },
+      { tag: 'order', weight: Weight.MID },
+    ],
+    similar: [
+      '@shopify/draggable',
+      'dragula',
+      'muuri',
+      'sortablejs',
+      'draggabilly',
+      'interactjs',
+    ],
+  },
+  'excel-parsers': {
+    name: 'Excel File Readers, Manipulators & Writers',
+    tags: [
+      { tag: 'excel', weight: Weight.MAX },
+      { tag: 'read', weight: Weight.SMALL },
+      { tag: 'write', weight: Weight.SMALL },
+      { tag: 'manipulate', weight: Weight.SMALL },
+      { tag: 'parse', weight: Weight.SMALL },
+    ],
+    similar: ['xlsx', 'exceljs', 'node-xlsx', 'excel4node'],
+  },
+  'full-text-search': {
+    name: 'Text search',
+    tags: [
+      { tag: 'search', weight: Weight.NORMAL },
+      { tag: 'solr', weight: Weight.HIGH },
+      { tag: 'fuzzy', weight: Weight.NORMAL },
+      { tag: 'text', weight: Weight.NORMAL },
+    ],
+    similar: ['flexsearch', 'lunr', 'wade', 'js-search', 'fuse.js'],
   },
   'fetch-polyfill': {
     name: 'Fetch polyfills',
@@ -70,7 +121,7 @@ const categories = {
       { tag: 'http', weight: Weight.MID },
       { tag: 'request', weight: Weight.MID },
     ],
-    similar: ['whatwg-fetch', 'node-fetch', 'unfetch', 'make-fetch-happen']
+    similar: ['whatwg-fetch', 'node-fetch', 'unfetch', 'make-fetch-happen'],
   },
   'general-purpose-date-time': {
     name: 'General purpose date-time utilities',
@@ -79,9 +130,9 @@ const categories = {
       { tag: 'time', weight: Weight.HIGH },
       { tag: 'parse', weight: Weight.MID },
       { tag: 'parser', weight: Weight.MID },
-      { tag: 'format', weight: Weight.MID }
+      { tag: 'format', weight: Weight.MID },
     ],
-    similar: ['moment', 'luxon', 'dayjs', 'date-fns']
+    similar: ['moment', 'luxon', 'dayjs', 'date-fns'],
   },
   'general-purpose-3d': {
     name: 'General purpose 3D libraries',
@@ -90,7 +141,7 @@ const categories = {
       { tag: 'webgl', weight: Weight.MAX },
       { tag: 'gl', weight: Weight.HIGH },
     ],
-    similar: ['three', 'babylonjs']
+    similar: ['three', 'babylonjs'],
   },
   'general-purpose-animation': {
     name: 'General purpose animation libraries',
@@ -105,7 +156,7 @@ const categories = {
       { tag: 'physics', weight: Weight.MID },
       { tag: 'dom', weight: Weight.MID },
     ],
-    similar: ['gsap', 'animejs', 'mo-js', 'popmotion']
+    similar: ['gsap', 'animejs', 'mo-js', 'popmotion'],
   },
   'general-purpose-charting': {
     name: 'General purpose Charting libraries',
@@ -116,9 +167,9 @@ const categories = {
       { tag: 'svg', weight: Weight.SMALL },
       { tag: 'canvas', weight: Weight.MID },
       { tag: 'charts', weight: Weight.MAX },
-      { tag: 'data', weight: Weight.MID }
+      { tag: 'data', weight: Weight.MID },
     ],
-    similar: ['d3', 'chart.js', 'echarts', 'frappe-charts', 'highcharts']
+    similar: ['d3', 'chart.js', 'echarts', 'frappe-charts', 'highcharts'],
   },
   'graphql-client': {
     name: 'GraphQL Clients',
@@ -127,10 +178,28 @@ const categories = {
       { tag: 'client', weight: Weight.MID },
       { tag: 'js', weight: Weight.MID },
       { tag: 'javascript', weight: Weight.MID },
-    ], similar: ['apollo-client', 'graphql.js', 'lokka', 'graphql', 'relay-runtime']
+    ],
+    similar: [
+      'apollo-client',
+      'graphql.js',
+      'lokka',
+      'graphql',
+      'relay-runtime',
+      'urql',
+    ],
   },
-  'http-request': {
-    name: 'HTTP client libraries',
+  i18n: {
+    name: 'Internationalization',
+    tags: [
+      { tag: 'i18n', weight: Weight.HIGH },
+      { tag: 'intl', weight: Weight.HIGH },
+      { tag: 'internation', weight: Weight.HIGH },
+      { tag: 'language', weight: Weight.MID },
+    ],
+    similar: ['fbt', 'globalize', 'i18next', 'node-polyglot', '@lingui/core'],
+  },
+  'node-http-request': {
+    name: 'HTTP client libraries for Node.js',
     tags: [
       { tag: 'http', weight: Weight.NORMAL },
       { tag: 'get', weight: Weight.NORMAL },
@@ -140,8 +209,24 @@ const categories = {
       { tag: 'request', weight: Weight.HIGH },
       { tag: 'agent', weight: Weight.MID },
       { tag: 'xhr', weight: Weight.NORMAL },
+      { tag: 'node node.js', weight: Weight.NORMAL },
     ],
-    similar: ['got', 'axios', 'request']
+    similar: ['got', 'phin', 'axios', 'node-fetch', 'superagent'],
+  },
+  'browser-http-request': {
+    name: 'HTTP client libraries for Browser',
+    tags: [
+      { tag: 'http', weight: Weight.NORMAL },
+      { tag: 'get', weight: Weight.NORMAL },
+      { tag: 'post', weight: Weight.NORMAL },
+      { tag: 'ajax', weight: Weight.HIGH },
+      { tag: 'url', weight: Weight.SMALL },
+      { tag: 'request', weight: Weight.HIGH },
+      { tag: 'agent', weight: Weight.MID },
+      { tag: 'xhr', weight: Weight.NORMAL },
+      { tag: 'browser', weight: Weight.NORMAL },
+    ],
+    similar: ['axios', 'ky', 'superagent', 'whatwg-fetch', 'unfetch'],
   },
   'image-color-extraction': {
     name: 'Image color extraction',
@@ -151,9 +236,14 @@ const categories = {
       { tag: 'extract', weight: Weight.HIGH },
       { tag: 'dominant', weight: Weight.HIGH },
       { tag: 'palette', weight: Weight.HIGH },
-      { tag: 'pixels', weight: Weight.MID }
+      { tag: 'pixels', weight: Weight.MID },
     ],
-    similar: ['img-color-extractor', 'color-thief-browser', 'colority', 'node-vibrant']
+    similar: [
+      'img-color-extractor',
+      'color-thief-browser',
+      'colority',
+      'node-vibrant',
+    ],
   },
   'immutable-data-structures': {
     name: 'Immutable Data',
@@ -167,7 +257,12 @@ const categories = {
       { tag: 'freeze', weight: Weight.MID },
       { tag: 'cursor', weight: Weight.MID },
     ],
-    similar: ['immutable', 'seamless-immutable', 'freezer-js', 'baobab']
+    similar: [
+      'immutable',
+      'seamless-immutable',
+      'immutability-helper',
+      'baobab',
+    ],
   },
   'markdown-parser': {
     name: 'Markdown parsers',
@@ -177,18 +272,24 @@ const categories = {
       { tag: 'parser', weight: Weight.NORMAL },
       { tag: 'ast', weight: Weight.MID },
       { tag: 'abstract syntax tree', weight: Weight.MID },
-      { tag: 'md', weight: Weight.HIGH }
+      { tag: 'md', weight: Weight.HIGH },
     ],
-    similar: ['markdown', 'markdown-it', 'marked', 'commonmark', 'snarkdown']
+    similar: ['marked', 'markdown-it', 'showdown', 'remarkable', 'snarkdown'],
   },
-  'memoization': {
+  memoization: {
     name: 'Memoization',
     tags: [
       { tag: 'memoize', weight: Weight.HIGH },
       { tag: 'cache', weight: Weight.NORMAL },
-      { tag: 'performance', weight: Weight.MID }
+      { tag: 'performance', weight: Weight.MID },
     ],
-    similar: ['memoize', 'memoize-one', 'lodash.memoize', 'mem', 'fast-memoize']
+    similar: [
+      'memoize',
+      'memoize-one',
+      'lodash.memoize',
+      'mem',
+      'fast-memoize',
+    ],
   },
   'number-manipulation': {
     name: 'Number and Currency Formatting',
@@ -197,9 +298,9 @@ const categories = {
       { tag: 'manipulate', weight: Weight.NORMAL },
       { tag: 'currency', weight: Weight.NORMAL },
       { tag: 'money', weight: Weight.NORMAL },
-      { tag: 'number', weight: Weight.HIGH }
+      { tag: 'number', weight: Weight.HIGH },
     ],
-    similar: ['numeral', 'numbro', 'accounting', 'currency.js']
+    similar: ['numeral', 'numbro', 'accounting', 'currency.js'],
   },
   'pdf-generator': {
     name: 'Client-side PDF Creation',
@@ -211,7 +312,7 @@ const categories = {
       { tag: 'client', weight: Weight.NORMAL },
       { tag: 'browser', weight: Weight.NORMAL },
     ],
-    similar: ['jspdf','pdfkit', 'pdfmake','react-pdf']
+    similar: ['jspdf', 'pdfkit', 'pdfmake', '@react-pdf/renderer'],
   },
   'promise-polyfill': {
     name: 'Promise polyfills',
@@ -223,7 +324,22 @@ const categories = {
       { tag: 'async', weight: Weight.MID },
       { tag: 'implementation', weight: Weight.MID },
     ],
-    similar: ['promise', 'es6-promise', 'promise-polyfill', 'es6-promise-polyfill']
+    similar: [
+      'promise',
+      'es6-promise',
+      'promise-polyfill',
+      'es6-promise-polyfill',
+    ],
+  },
+  'react-animation': {
+    name: 'React based animation',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'animation', weight: Weight.HIGH },
+      { tag: 'transform', weight: Weight.NORMAL },
+      { tag: 'motion', weight: Weight.NORMAL },
+    ],
+    similar: ['react-spring', 'framer-motion', 'react-motion', 'react-move'],
   },
   'react-autocomplete': {
     name: 'React based autocomplete components',
@@ -231,9 +347,58 @@ const categories = {
       { tag: 'react', weight: Weight.NORMAL },
       { tag: 'autocomplete', weight: Weight.NORMAL },
       { tag: 'autosuggest', weight: Weight.NORMAL },
-      { tag: 'typeahead', weight: Weight.NORMAL }
+      { tag: 'typeahead', weight: Weight.NORMAL },
     ],
-    similar: ['react-autosuggest', 'downshift', 'react-autowhatever', 'react-autocomplete']
+    similar: [
+      'react-autosuggest',
+      'downshift',
+      'react-autowhatever',
+      'react-autocomplete',
+    ],
+  },
+  'react-head-meta': {
+    name: 'React based meta tags management',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'head', weight: Weight.MID },
+      { tag: 'document', weight: Weight.MID },
+      { tag: 'title', weight: Weight.MID },
+      { tag: 'meta tags', weight: Weight.MID },
+    ],
+    similar: ['react-helment', 'react-meta-tags', 'react-document-title'],
+  },
+  'react-i18n': {
+    name: 'React based internationalization',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'i18n', weight: Weight.HIGH },
+      { tag: 'intl', weight: Weight.HIGH },
+      { tag: 'internation', weight: Weight.HIGH },
+    ],
+    similar: [
+      'react-intl',
+      'react-i18next',
+      'react-intl-universal',
+      'eo-locale',
+      '@lingui/react',
+    ],
+  },
+  'react-form': {
+    name: 'React based form builders & validators',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'redux', weight: Weight.MID },
+      { tag: 'form', weight: Weight.HIGH },
+      { tag: 'validate', weight: Weight.SMALL },
+    ],
+    similar: [
+      'formik',
+      'react-final-form',
+      'rc-form',
+      'react-jsonschema-form',
+      'formsy-react',
+      'react-hook-form',
+    ],
   },
   'schema-validation': {
     name: 'JSON schema validation',
@@ -247,7 +412,7 @@ const categories = {
       { tag: 'check', weight: Weight.SMALL },
       { tag: 'structure', weight: Weight.MID },
     ],
-    similar: ['jsonschema', 'joi', 'ajv', 'superstruct', 'yup', '@cesium133/forgjs']
+    similar: ['jsonschema', 'joi', 'ajv', 'superstruct', 'yup', 'validate.js'],
   },
   'querystring-parser': {
     name: 'Query String Parsers',
@@ -260,17 +425,32 @@ const categories = {
       { tag: 'search params', weight: Weight.MID },
       { tag: 'qs', weight: Weight.MID },
       { tag: 'parameter', weight: Weight.NORMAL },
-      { tag: 'params', weight: Weight.NORMAL }
+      { tag: 'params', weight: Weight.NORMAL },
     ],
-    similar: ['qs', 'query-string', 'querystringify', 'querystring']
+    similar: ['qs', 'query-string', 'querystringify', 'querystring'],
   },
   'rich-text-editors': {
     name: 'Rich Text Editors',
     tags: [
-      { tag: 'richtext rich text editor WYSIWYG contenteditable', weight: Weight.NORMAL },
-      { tag: '' }
+      {
+        tag: 'richtext rich text editor WYSIWYG contenteditable',
+        weight: Weight.NORMAL,
+      },
     ],
-    similar: ['slate', 'quill', 'draft-js', 'medium-editor', 'froala-editor']
+    similar: ['slate', 'quill', 'draft-js', 'medium-editor', 'froala-editor'],
+  },
+  'site-tour': {
+    name: 'Site Tours',
+    tags: [
+      { tag: 'walkthrough', weight: Weight.NORMAL },
+      { tag: 'focus', weight: Weight.MID },
+      { tag: 'tour', weight: Weight.NORMAL },
+      { tag: 'guide', weight: Weight.NORMAL },
+      { tag: 'user', weight: Weight.SMALL },
+      { tag: 'tutorial', weight: Weight.NORMAL },
+      { tag: 'step', weight: Weight.MID },
+    ],
+    similar: ['driver.js', 'shepherd.js', 'intro.js'],
   },
   'state-management': {
     name: 'State Management Libraries',
@@ -281,7 +461,7 @@ const categories = {
       { tag: 'flux', weight: Weight.HIGH },
       { tag: 'reducer', weight: Weight.HIGH },
     ],
-    similar: ['mobx', 'redux', 'immer', 'freactal', 'effector']
+    similar: ['mobx', 'redux', 'immer', 'freactal', 'xstate', 'effector'],
   },
   'svg-manipulation': {
     name: 'SVG manipulation libraries',
@@ -292,9 +472,9 @@ const categories = {
       { tag: 'graphics', weight: Weight.MID },
       { tag: 'animation', weight: Weight.MID },
       { tag: 'javascript', weight: Weight.SMALL },
-      { tag: 'two dimensional', weight: Weight.MID }
+      { tag: 'two dimensional', weight: Weight.MID },
     ],
-    similar: ['raphael', 'snapsvg', 'two.js']
+    similar: ['raphael', 'snapsvg', 'two.js'],
   },
   'timezone-formatting': {
     name: 'Timezone Formatting',
@@ -303,11 +483,16 @@ const categories = {
       { tag: 'time', weight: Weight.NORMAL },
       { tag: 'timezone', weight: Weight.MAX },
       { tag: 'parse', weight: Weight.MID },
-      { tag: 'format', weight: Weight.MID }
+      { tag: 'format', weight: Weight.MID },
     ],
-    similar: ['moment-timezone', 'date-time-format-timezone', 'spacetime', 'date-fns-timezone']
+    similar: [
+      'moment-timezone',
+      'date-time-format-timezone',
+      'spacetime',
+      'date-fns-timezone',
+    ],
   },
-  'uuid': {
+  uuid: {
     name: 'Unique ID generators',
     tags: [
       { tag: 'uuid', weight: Weight.HIGH },
@@ -315,7 +500,8 @@ const categories = {
       { tag: 'random', weight: Weight.MID },
       { tag: 'unique', weight: Weight.NORMAL },
       { tag: 'id', weight: Weight.NORMAL },
-    ], similar: ['uuid', 'shortid', 'nanoid', 'cuid']
+    ],
+    similar: ['uuid', 'shortid', 'nanoid', 'cuid'],
   },
   'vanilla-tooltip': {
     name: 'Tooltip Libraries',
@@ -324,7 +510,7 @@ const categories = {
       { tag: 'popover', weight: Weight.NORMAL },
       { tag: 'hint', weight: Weight.NORMAL },
     ],
-    similar: ['tooltip.js', 'tippy.js', 'balloon-css', 'hint.css', 'microtip']
+    similar: ['tooltip.js', 'tippy.js', 'balloon-css', 'hint.css', 'microtip'],
   },
   'vanilla-carousel': {
     name: 'Vanilla JS Sliders & Carousels',
@@ -334,7 +520,7 @@ const categories = {
       { tag: 'carousel', weight: Weight.MAX },
       { tag: 'slider', weight: Weight.MAX },
     ],
-    similar: ['glider-js', 'slick-carousel', 'swiper','flickity']
+    similar: ['glider-js', 'slick-carousel', 'swiper', 'flickity'],
   },
   'virtual-dom-engine': {
     name: 'Virtual DOM implementations',
@@ -344,9 +530,9 @@ const categories = {
       { tag: 'render', weight: Weight.NORMAL },
       { tag: 'dominant', weight: Weight.HIGH },
       { tag: 'palette', weight: Weight.HIGH },
-      { tag: 'pixels', weight: Weight.MID }
+      { tag: 'pixels', weight: Weight.MID },
     ],
-    similar: ['hyperhtml', 'snabbdom', 'virtual-dom']
+    similar: ['hyperhtml', 'snabbdom', 'virtual-dom'],
   },
 }
 

@@ -4,14 +4,15 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "debug": "^3.1.0",
-    "dotenv": "^4.0.0",
-    "dotenv-defaults": "^1.0.2",
-    "fastify": "^1.14.1",
-    "firebase": "^5.8.2",
-    "lru-cache": "^4.1.5"
+    "debug": "^4.1.1",
+    "dotenv": "^8.2.0",
+    "dotenv-defaults": "^1.1.1",
+    "fastify": "^2.13.0",
+    "firebase": "^6.5.0",
+    "lru-cache": "^5.1.1"
   },
   "scripts": {
-    "start": "DEBUG=bp* node index"
+    "start": "DEBUG=bp* node index",
+    "dev": "DEBUG=bp* node index"
   }
 }

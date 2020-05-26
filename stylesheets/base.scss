@@ -7,15 +7,22 @@
   box-sizing: border-box;
 }
 
-body, html {
+body,
+html {
   background: white;
   font-family: $font-family-body;
   max-width: 100vw;
   overflow-x: hidden;
+  color: #212121;
 }
 
 code {
   font-family: $font-family-code;
+}
+
+// reset svg value received from normalize
+svg:not(:root) {
+  overflow: visible;
 }
 
 ::-moz-selection {
@@ -39,10 +46,43 @@ a {
 }
 
 [data-balloon]::after {
-  background: rgba(60,60,60,0.9);
+  background: rgba(60, 60, 60, 0.9);
 }
-
 
 [data-balloon]:hover::before {
   opacity: 0.82;
+}
+
+input {
+  background: transparent;
+  line-height: 1;
+  border: 1px solid $autocomplete-border-color;
+  transition: border-top-left-radius 0.1s, border-top-right-radius 0.1s;
+  border-radius: 0.3em;
+  padding: $global-spacing / 2 $global-spacing;
+
+  &:focus {
+    outline: none;
+    caret-color: $pastel-green;
+  }
+
+  &::placeholder {
+    color: lighten($raven, 20%);
+  }
+}
+
+// Safari's caret color is equal to the
+// text color. Hence, we need to set a
+// text color targeting just Safari :(
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
+    input {
+      color: #ccc;
+      -webkit-text-stroke: 2px white;
+
+      &::placeholder {
+        -webkit-text-stroke: 0px white;
+      }
+    }
+  }
 }

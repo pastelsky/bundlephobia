@@ -3,6 +3,7 @@
 
 $bar-width: 1.6vw;
 $min-bar-width: 20px;
+$bar-grow-duration: 0.4s;
 
 .bar-graph-container {
   display: flex;
@@ -14,38 +15,59 @@ $min-bar-width: 20px;
 
 .bar-graph {
   height: 40vh;
-  padding-bottom: 10vh;
+  padding-bottom: 6vh;
   display: flex;
-  align-items: baseline;
   margin: 0;
   justify-content: center;
 }
 
 .bar-graph__bar-group {
-  height: 100%;
   position: relative;
+  height: 100%;
+  margin: 0 3px;
+  display: flex;
   width: $bar-width;
   min-width: $min-bar-width;
-  margin: 0 3px;
+  justify-content: flex-end;
+  flex-direction: column;
+  animation: grow $bar-grow-duration cubic-bezier(0.305, 0.42, 0.205, 1.2);
+  transform-origin: 100% 100%;
+}
+
+.bar-graph__bar-symbols {
+  display: flex;
+  flex-direction: column;
+  margin-top: -500%; // don't know why this works :/
+}
+
+.bar-graph__bar-symbol {
+  text-align: center;
+
+  svg {
+    height: $global-spacing * 1.8;
+    width: auto;
+  }
+
+  & + & {
+    margin-top: $global-spacing / 3;
+  }
 }
 
 .bar-graph__bar,
 .bar-graph__bar2,
 .bar-graph__bar[data-balloon],
-.bar-graph__bar2[data-balloon]{
+.bar-graph__bar2[data-balloon] {
   width: 100%;
-  position: absolute;
   left: 0;
   bottom: 0;
   transition: background 0.2s;
-  animation: grow 0.4s cubic-bezier(0.305, 0.420, 0.205, 1.200);
-  transform-origin: 100% 100%;
   cursor: pointer;
 }
 
-.bar-graph__bar {
+.bar-graph__bar,
+.bar-graph__bar[data-balloon] {
   background: $maya-blue;
-  border-radius: 5px;
+  border-radius: 5px 5px 0 0;
 
   .bar-graph__bar-group:not(.bar-graph__bar-group--disabled):hover & {
     background: darken($maya-blue, 5%);
@@ -53,6 +75,7 @@ $min-bar-width: 20px;
 
   .bar-graph__bar-group--disabled & {
     background: lighten($raven, 45%);
+    border-radius: 5px;
 
     &:hover {
       background: lighten($raven, 35%);
@@ -73,30 +96,33 @@ $min-bar-width: 20px;
 
 .bar-graph__bar-version {
   @include font-size-xs;
-  position: absolute;
-  bottom: -50px;
+  z-index: 33;
   font-weight: $font-weight-light;
-  display: block;
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
-  width: 100%;
-  text-align: right;
+  transform: rotate(-90deg) translateX(#{-$global-spacing * 1.5});
   font-variant-numeric: tabular-nums;
-  color: $raven;
+  color: lighten($raven, 15%);
   transition: opacity 0.2s, color 0.2s;
-  animation: fade-in 0.5s 0.1s forwards cubic-bezier(0.305, 0.420, 0.205, 1.200);
   font-family: $font-family-code;
   letter-spacing: -1px;
+  direction: rtl;
+  line-height: 1;
+  cursor: pointer;
+  max-height: $bar-width;
 
   .bar-graph-container:hover & {
-    opacity: 1;
-    color: darken($raven, 50%);
-
+    color: $raven;
   }
 
   .bar-graph__bar-group:hover & {
-    color: darken($raven, 50%);
+    color: darken($raven, 20%);
   }
+}
+
+.bar-graph__bar-version,
+.bar-graph__bar-symbols,
+.bar-graph__legend {
+  animation: fade-in 0.5s $bar-grow-duration * 0.9 both
+    cubic-bezier(0.305, 0.42, 0.205, 1.2);
 }
 
 .bar-graph__legend {
@@ -146,9 +172,5 @@ $min-bar-width: 20px;
 @keyframes fade-in {
   from {
     opacity: 0;
-  }
-
-  to {
-    opacity: 0.7;
   }
 }

@@ -5,7 +5,7 @@ import Head from 'next/head'
 import Layout from 'client/components/Layout'
 import BarGraph from 'client/components/BarGraph'
 import AutocompleteInput from 'client/components/AutocompleteInput'
-import ProgressSquare from 'client/components/ProgressSquare/ProgressSquare'
+import BuildProgressIndicator from 'client/components/BuildProgressIndicator'
 import Router from 'next/router'
 import Link from 'next/link'
 import isEmptyObject from 'is-empty-object'
@@ -18,19 +18,22 @@ import EmptyBox from '../../client/assets/empty-box.svg'
 import './ComparePage.scss'
 
 export default class ResultPage extends PureComponent {
-  fetchResults = (packageString) => {
+  fetchResults = packageString => {
     const startTime = Date.now()
 
     API.getInfo(packageString)
       .then(results => {
         const newPackageString = `${results.name}@${results.version}`
-        this.setState({
-          inputInitialValue: newPackageString,
-          results,
-        }, () => {
-          Router.replace(`/result?p=${newPackageString}`)
-          Analytics.pageview(window.location.pathname)
-        })
+        this.setState(
+          {
+            inputInitialValue: newPackageString,
+            results,
+          },
+          () => {
+            Router.replace(`/result?p=${newPackageString}`)
+            Analytics.pageview(window.location.pathname)
+          }
+        )
 
         Analytics.event({
           category: 'Search',
@@ -43,7 +46,7 @@ export default class ResultPage extends PureComponent {
           variable: 'result',
           value: Date.now() - startTime,
           label: packageString.replace(/@/g, '[at]'),
-        });
+        })
       })
       .catch(err => {
         this.setState({
@@ -64,7 +67,7 @@ export default class ResultPage extends PureComponent {
       })
   }
 
-  fetchHistory = (packageString) => {
+  fetchHistory = packageString => {
     API.getHistory(packageString)
       .then(results => {
         this.setState({
@@ -78,7 +81,7 @@ export default class ResultPage extends PureComponent {
       })
   }
 
-  handleSearchSubmit = (packageString) => {
+  handleSearchSubmit = packageString => {
     Analytics.event({
       category: 'Search',
       action: 'Searched',
@@ -112,27 +115,27 @@ export default class ResultPage extends PureComponent {
       [results.version]: results,
     }
 
-    const formattedResults = Object.keys(totalVersions)
-      .map(version => {
-        if (isEmptyObject(totalVersions[version])) {
-          return { version, disabled: true }
-        }
-        return {
-          version,
-          size: totalVersions[version].size,
-          gzip: totalVersions[version].gzip,
-        }
-      })
+    const formattedResults = Object.keys(totalVersions).map(version => {
+      if (isEmptyObject(totalVersions[version])) {
+        return { version, disabled: true }
+      }
+      return {
+        version,
+        size: totalVersions[version].size,
+        gzip: totalVersions[version].gzip,
+      }
+    })
     const sorted = formattedResults.sort((packageA, packageB) => {
       const versionA = packageA.version.replace(/\D/g, '')
       const versionB = packageB.version.replace(/\D/g, '')
       return parseInt(versionA) > parseInt(versionB)
     })
-    return (typeof window !== 'undefined' && window.innerWidth < 640) ?
-      sorted.slice(-10) : sorted
+    return typeof window !== 'undefined' && window.innerWidth < 640
+      ? sorted.slice(-10)
+      : sorted
   }
 
-  handleBarClick = (reading) => {
+  handleBarClick = reading => {
     const { results } = this.state
 
     const packageString = `${results.name}@${reading.version}`
@@ -149,7 +152,6 @@ export default class ResultPage extends PureComponent {
   render() {
     return (
       <Layout className="compare-page">
-
         <div className="page-container">
           <header className="result-header">
             <section className="result-header--left-section">
@@ -163,8 +165,10 @@ export default class ResultPage extends PureComponent {
               </Link>
             </section>
             <section className="result-header--right-section">
-              <a target="_blank"
-                 href="https://github.com/pastelsky/bundlephobia">
+              <a
+                target="_blank"
+                href="https://github.com/pastelsky/bundlephobia"
+              >
                 <GithubLogo />
               </a>
             </section>
@@ -172,22 +176,20 @@ export default class ResultPage extends PureComponent {
           <div className="compare__search-container">
             <div className="compare__search-inputs">
               <AutocompleteInput
-                key={ '' }
+                key={''}
                 placeholder="package A"
-                initialValue={ '' }
-                onSearchSubmit={ this.handleSearchSubmit }
-                maxFullSizeCharsMultiplier={ 0.5 }
+                initialValue={''}
+                onSearchSubmit={this.handleSearchSubmit}
+                maxFullSizeCharsMultiplier={0.5}
                 hideSearchIcon
               />
-              <div className="compare__vs">
-                vs
-              </div>
+              <div className="compare__vs">vs</div>
               <AutocompleteInput
-                key={ '2' }
+                key={'2'}
                 placeholder="package B"
-                initialValue={ '' }
-                onSearchSubmit={ this.handleSearchSubmit }
-                maxFullSizeCharsMultiplier={ 0.5 }
+                initialValue={''}
+                onSearchSubmit={this.handleSearchSubmit}
+                maxFullSizeCharsMultiplier={0.5}
                 hideSearchIcon
               />
             </div>

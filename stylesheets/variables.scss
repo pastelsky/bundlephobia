@@ -83,7 +83,6 @@
   }
 }
 
-
 @mixin font-size-xs {
   font-size: 0.8rem;
 
@@ -114,8 +113,10 @@ $font-weight-light: 400;
 $font-weight-bold: 600;
 $font-weight-very-bold: 700;
 
-$font-family-body: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-$font-family-code: 'Source Code Pro', "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+$font-family-body: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+  Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+$font-family-code: 'Source Code Pro', 'SFMono-Regular', Consolas,
+  'Liberation Mono', Menlo, Courier, monospace;
 
 // Padding / Spacing
 $global-spacing: 10px;

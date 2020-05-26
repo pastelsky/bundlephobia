@@ -4,7 +4,7 @@ const workerpool = require('workerpool')
 const Queue = require('./Queue')
 const logger = require('./Logger')
 
-const failureCache = LRU({
+const failureCache = new LRU({
   max: config.MAX_FAILURE_CACHE_ENTRIES,
   maxAge: 6 * 1000 * 60 * 60,
 })
@@ -18,12 +18,11 @@ const requestQueue = new Queue({
 
 const pool = workerpool.pool(`./server/worker.js`, {
   maxWorkers: config.MAX_WORKERS,
-});
+})
 
-if(process.env.BUILD_SERVICE_ENDPOINT){
+if (process.env.BUILD_SERVICE_ENDPOINT) {
   pool.terminate()
 }
-
 
 module.exports = {
   failureCache,

@@ -1,0 +1,22 @@
+@import '../../../stylesheets/colors';
+@import '../../../stylesheets/variables';
+
+.build-progress-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 0 $global-spacing * 2;
+  text-align: center;
+}
+
+.build-progress-indicator__text {
+  font-size: 0.7rem;
+  margin-top: $global-spacing * 3;
+  color: lighten($raven, 15%);
+  text-transform: uppercase;
+  font-weight: $font-weight-bold;
+  letter-spacing: 2px;
+  line-height: 1.5;
+}

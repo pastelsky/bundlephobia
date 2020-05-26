@@ -1,14 +1,14 @@
 // Modified package `koa-better-ratelimit`
 // to accept original client ips from cloudflare
 
-const ipchecker =require('ipchecker')
+const ipchecker = require('ipchecker')
 const defaults = {
-  duration: 1000 * 60 * 60 * 24,
+  duration: 1000 * 60 * 60,
   whiteList: [],
   blackList: [],
   accessLimited: '429: Too Many Requests.',
   accessForbidden: '403: This is forbidden area for you.',
-  max: 500,
+  max: 100,
   env: null,
 }
 
@@ -23,7 +23,9 @@ module.exports = function betterlimit(options = {}) {
   const db = {}
 
   for (const key in defaults) {
-    if (!options[key]) {options[key] = defaults[key]}
+    if (!options[key]) {
+      options[key] = defaults[key]
+    }
   }
 
   if (options.message_429) {
@@ -38,7 +40,10 @@ module.exports = function betterlimit(options = {}) {
   const blackListMap = ipchecker.map(options.blackList)
 
   return function* ratelimit(next) {
-    const ip = this.request.header['x-koaip'] || this.request.header['cf-connecting-ip'] || this.ip
+    const ip =
+      this.request.header['x-koaip'] ||
+      this.request.header['cf-connecting-ip'] ||
+      this.ip
 
     if (!ip) {
       return yield* next
@@ -60,7 +65,7 @@ module.exports = function betterlimit(options = {}) {
     }
 
     const delta = db[ip].reset - now
-    const retryAfter = delta / 1000 | 0
+    const retryAfter = (delta / 1000) | 0
 
     db[ip].limit = db[ip].limit - 1
     this.response.set('X-RateLimit-Limit', options.max)

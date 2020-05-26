@@ -1,4 +1,4 @@
-import React, {Component} from 'react'
+import React, { Component } from 'react'
 import cx from 'classnames'
 import Link from 'next/link'
 
@@ -12,7 +12,7 @@ export default class ResultLayout extends Component {
     const { children, className } = this.props
     return (
       <Layout>
-                <div className={cx('page-container', className)}>
+        <div className={cx('page-container', className)}>
           <header className="page-header">
             <section className="result-header--left-section">
               <Link href="/">
@@ -27,18 +27,22 @@ export default class ResultLayout extends Component {
             <section className="page-header--right-section">
               <ul className="page-header__quicklinks">
                 <li>
-                  <Link href="https://badgen.net/#bundlephobia">
-                    <a target="_blank" rel="noreferrer noopener">
-                      Badges
-                    </a>
-                  </Link>
+                  <a
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    href="https://badgen.net/#bundlephobia"
+                  >
+                    Badges
+                  </a>
                 </li>
                 <li>
-                  <Link href=" https://opencollective.com/bundlephobia" >
-                    <a target="_blank" rel="noreferrer noopener">
-                      Opencollective
-                    </a>
-                  </Link>
+                  <a
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    href="https://opencollective.com/bundlephobia"
+                  >
+                    Opencollective
+                  </a>
                 </li>
                 <li>
                   <Link href="/scan">
@@ -48,15 +52,15 @@ export default class ResultLayout extends Component {
                   </Link>
                 </li>
               </ul>
-              <a target="_blank"
-                 href="https://github.com/pastelsky/bundlephobia">
-                <GithubLogo/>
+              <a
+                target="_blank"
+                href="https://github.com/pastelsky/bundlephobia"
+              >
+                <GithubLogo />
               </a>
             </section>
           </header>
-          <div className="page-content">
-            {children}
-          </div>
+          <div className="page-content">{children}</div>
         </div>
       </Layout>
     )

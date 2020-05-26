@@ -1,0 +1,41 @@
+svg.sideeffect-icon-animated {
+  overflow: hidden;
+
+  .side-effect-icon-svg__circle,
+  .side-effect-icon-svg__arrows {
+    transform-origin: 50% 50%;
+    transition: all 0.2s;
+  }
+
+  &:hover {
+    .side-effect-icon-svg__arrows {
+      transform: scale(1.3);
+      stroke-width: 0.3px;
+    }
+
+    .side-effect-icon-svg__circle {
+      transform: scale(1.2);
+      stroke-width: 0.6px;
+    }
+  }
+}
+
+@keyframes shrink-arrows {
+  from {
+    transform: scale(2);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes grow-circle {
+  from {
+    transform: scale(1.5);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}

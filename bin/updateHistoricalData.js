@@ -16,7 +16,7 @@ const github = new GithubAPI({
 })
 
 github.authenticate({
-  type: "oauth",
+  type: 'oauth',
   key: process.env.GITHUB_CLIENT_ID,
   secret: process.env.GITHUB_CLIENT_SECRET,
 })
@@ -33,21 +33,25 @@ const firebaseUtils = new FirebaseUtils(firebase)
 const port = process.env.PORT || 5000
 
 async function getPackageFromRepo(author, name) {
-  const { data: { content } } = await github.repos.getContent({
+  const {
+    data: { content },
+  } = await github.repos.getContent({
     repo: author,
     owner: name,
     path: 'package.json',
   })
 
   if (content) {
-    const decodedContent = Buffer.from(content, 'base64').toString("utf8")
+    const decodedContent = Buffer.from(content, 'base64').toString('utf8')
     return JSON.parse(decodedContent).name
   }
 }
 
 async function getGithubTrendingPackages() {
   const repos = await trending('daily', 'javascript')
-  const packages = await Promise.all(repos.map((repo) => getPackageFromRepo(repo.author, repo.name)))
+  const packages = await Promise.all(
+    repos.map(repo => getPackageFromRepo(repo.author, repo.name))
+  )
   return packages.filter(pack => pack)
 }
 
@@ -57,10 +61,11 @@ async function getTrendingSearches() {
   const searches = await firebaseUtils.getDailySearches()
 
   if (searches) {
-    trendingSearches = Object.keys(searches).sort((
-      packageA,
-      packageB,
-    ) => searches[packageB].count - searches[packageA].count)
+    trendingSearches = Object.keys(searches)
+      .sort(
+        (packageA, packageB) =>
+          searches[packageB].count - searches[packageA].count
+      )
       .slice(0, limit)
   }
 
@@ -69,10 +74,14 @@ async function getTrendingSearches() {
 
 async function updateHistoricalData() {
   try {
-    const [githubTrendingPackages, searchTrendingPackages] =
-      await Promise.all([getGithubTrendingPackages(), getTrendingSearches()])
+    const [githubTrendingPackages, searchTrendingPackages] = await Promise.all([
+      getGithubTrendingPackages(),
+      getTrendingSearches(),
+    ])
 
-    const popularPackages = [...new Set(githubTrendingPackages.concat(searchTrendingPackages))]
+    const popularPackages = [
+      ...new Set(githubTrendingPackages.concat(searchTrendingPackages)),
+    ]
     console.log('popular', popularPackages)
   } catch (err) {
     console.log(err)
@@ -81,7 +90,9 @@ async function updateHistoricalData() {
 
 async function getVersionsToBuild(name) {
   const versionsToBuild = []
-  const res = await fetch(`http://localhost:${port}/api/package-history?package=${name}`)
+  const res = await fetch(
+    `http://localhost:${port}/api/package-history?package=${name}`
+  )
   const versionInfo = await res.json()
 
   Object.keys(versionInfo).forEach(version => {
@@ -95,7 +106,9 @@ async function getVersionsToBuild(name) {
 
 async function getVersionsToBuild(name) {
   const versionsToBuild = []
-  const res = await fetch(`http://localhost:${port}/api/package-history?package=${name}`)
+  const res = await fetch(
+    `http://localhost:${port}/api/package-history?package=${name}`
+  )
   const versionInfo = await res.json()
 
   Object.keys(versionInfo).forEach(version => {
@@ -107,11 +120,12 @@ async function getVersionsToBuild(name) {
   return versionsToBuild
 }
 
-
 async function buildPackage(name, version) {
   debug('building package %s %s', name, version)
   const versionsToBuild = []
-  const res = await fetch(`http://localhost:${port}/api/size?package=${name + '@' + version}`)
+  const res = await fetch(
+    `http://localhost:${port}/api/size?package=${name + '@' + version}`
+  )
   debug('result %s %s %O', name, version, await res.json())
 }
 
@@ -126,7 +140,7 @@ async function buildPackageFromGithub(name, author) {
       versions.map(version => () => buildPackage(packageName, version))
     )
   } else {
-    debug('skipped repo %s', name);
+    debug('skipped repo %s', name)
   }
 }
 
@@ -138,11 +152,15 @@ async function mostPopuplarGithubRepos() {
     per_page: 10,
   })
 
-  debug('Popular GitHub Repos %o', repos.data.items.map(r => r.name))
+  debug(
+    'Popular GitHub Repos %o',
+    repos.data.items.map(r => r.name)
+  )
 
   try {
-    const promises = repos.data.items
-      .map(({ name, owner }) => () => buildPackageFromGithub(name, owner.login))
+    const promises = repos.data.items.map(({ name, owner }) => () =>
+      buildPackageFromGithub(name, owner.login)
+    )
     await promiseSeries(promises)
   } catch (err) {
     console.log(err)

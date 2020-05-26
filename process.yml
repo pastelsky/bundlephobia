@@ -7,24 +7,24 @@ apps:
     out_file: logs/index.log
     env:
       NODE_ENV: production
-      DEBUG: "bp*"
+      DEBUG: 'bp*'
 
   - script: build-service/index.js
     name: build-service
     instances: 3
-    max_memory_restart: 500M
+    max_memory_restart: 1000M
     error_file: logs/build-service.log
     out_file: logs/build-service.log
     env:
       NODE_ENV: production
-      DEBUG: "bp*"
+      DEBUG: 'bp*'
 
   - script: cache-service/index.js
     name: cache-service
     instances: 1
-    max_memory_restart: 300M
+    max_memory_restart: 200M
     error_file: logs/cache-service.log
     out_file: logs/cache-service.log
     env:
       NODE_ENV: production
-      DEBUG: "bp*"
+      DEBUG: 'bp*'

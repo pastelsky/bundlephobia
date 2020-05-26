@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react'
+import React, { PureComponent } from 'react'
 import Analytics from 'react-ga'
 import Head from 'next/head'
 
@@ -6,19 +6,20 @@ import ResultLayout from 'client/components/ResultLayout'
 import BarGraph from 'client/components/BarGraph'
 import AutocompleteInput from 'client/components/AutocompleteInput'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox'
-import ProgressSquare from 'client/components/ProgressSquare/ProgressSquare'
-import Router, {withRouter} from 'next/router';
+import BuildProgressIndicator from 'client/components/BuildProgressIndicator'
+import Router, { withRouter } from 'next/router'
 import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
-import {parsePackageString} from 'utils/common.utils'
-import {getTimeFromSize, DownloadSpeed} from 'utils'
-import Stat from './Stat'
+import { parsePackageString } from 'utils/common.utils'
+import { getTimeFromSize, DownloadSpeed, resolveBuildError } from 'utils'
+import Stat from 'client/components/Stat'
 
 import API from 'client/api'
 
-import TreemapSection from './TreemapSection'
+import TreemapSection from './components/TreemapSection'
 import EmptyBox from '../../client/assets/empty-box.svg'
-import SimilarPackagesSection from "./SimilarPackagesSection/SimilarPackagesSection";
+import SimilarPackagesSection from './components/SimilarPackagesSection'
+import ExportAnalysisSection from './components/ExportAnalysisSection'
 import QuickStatsBar from 'client/components/QuickStatsBar/QuickStatsBar'
 
 import './ResultPage.scss'
@@ -38,7 +39,9 @@ class ResultPage extends PureComponent {
   }
 
   componentDidMount() {
-    const { router: { query } } = this.props
+    const {
+      router: { query },
+    } = this.props
 
     if (query.p && query.p.trim()) {
       this.handleSearchSubmit(query.p)
@@ -46,8 +49,12 @@ class ResultPage extends PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { router: { query } } = this.props
-    const { url: { query: nextQuery } } = nextProps
+    const {
+      router: { query },
+    } = this.props
+    const {
+      url: { query: nextQuery },
+    } = nextProps
 
     if (!nextQuery || !nextQuery.p.trim()) {
       return
@@ -61,22 +68,26 @@ class ResultPage extends PureComponent {
     }
   }
 
-  fetchResults = (packageString) => {
+  fetchResults = packageString => {
     const startTime = Date.now()
 
     API.getInfo(packageString)
       .then(results => {
-        if (this.activeQuery !== packageString)
-          return
+        this.fetchSimilarPackages(packageString)
+
+        if (this.activeQuery !== packageString) return
 
         const newPackageString = `${results.name}@${results.version}`
-        this.setState({
-          inputInitialValue: newPackageString,
-          results,
-        }, () => {
-          Router.replace(`/result?p=${newPackageString}`)
-          Analytics.pageview(window.location.pathname)
-        })
+        this.setState(
+          {
+            inputInitialValue: newPackageString,
+            results,
+          },
+          () => {
+            Router.replace(`/result?p=${newPackageString}`)
+            Analytics.pageview(window.location.pathname)
+          }
+        )
 
         Analytics.event({
           category: 'Search',
@@ -89,7 +100,7 @@ class ResultPage extends PureComponent {
           variable: 'result',
           value: Date.now() - startTime,
           label: packageString.replace(/@/g, '[at]'),
-        });
+        })
       })
       .catch(err => {
         this.setState({
@@ -110,11 +121,10 @@ class ResultPage extends PureComponent {
       })
   }
 
-  fetchHistory = (packageString) => {
+  fetchHistory = packageString => {
     API.getHistory(packageString)
       .then(results => {
-        if (this.activeQuery !== packageString)
-          return
+        if (this.activeQuery !== packageString) return
 
         this.setState({
           historicalResultsPromiseState: 'fulfilled',
@@ -127,7 +137,7 @@ class ResultPage extends PureComponent {
       })
   }
 
-  fetchSimilarPackages = (packageString) => {
+  fetchSimilarPackages = packageString => {
     const { name } = parsePackageString(packageString)
     const promises = []
 
@@ -140,16 +150,14 @@ class ResultPage extends PureComponent {
             promises.push(API.getInfo(packageName))
           })
 
-          Promise.all(promises)
-            .then((results) => {
-              if (this.activeQuery !== packageString)
-                return
+          Promise.all(promises).then(results => {
+            if (this.activeQuery !== packageString) return
 
-              this.setState({
-                similarPackagesCategory: result.category.label,
-                similarPackages: results
-              })
+            this.setState({
+              similarPackagesCategory: result.category.label,
+              similarPackages: results,
             })
+          })
         }
       })
       .catch(err => {
@@ -158,7 +166,7 @@ class ResultPage extends PureComponent {
       })
   }
 
-  handleSearchSubmit = (packageString) => {
+  handleSearchSubmit = packageString => {
     Analytics.event({
       category: 'Search',
       action: 'Searched',
@@ -167,21 +175,22 @@ class ResultPage extends PureComponent {
 
     const normalizedQuery = packageString.trim().toLowerCase()
 
-    this.setState({
-      results: {},
-      historicalResultsPromiseState: 'pending',
-      resultsPromiseState: 'pending',
-      inputInitialValue: normalizedQuery,
-      similarPackages: [],
-      historicalResults: [],
-    }, () => {
-      Router.push(`/result?p=${normalizedQuery}`)
-      this.activeQuery = normalizedQuery
-      this.fetchResults(normalizedQuery)
-      console.log('fetching history triggered')
-      this.fetchHistory(normalizedQuery)
-      this.fetchSimilarPackages(normalizedQuery)
-    })
+    this.setState(
+      {
+        results: {},
+        historicalResultsPromiseState: 'pending',
+        resultsPromiseState: 'pending',
+        inputInitialValue: normalizedQuery,
+        similarPackages: [],
+        historicalResults: [],
+      },
+      () => {
+        Router.push(`/result?p=${normalizedQuery}`)
+        this.activeQuery = normalizedQuery
+        this.fetchResults(normalizedQuery)
+        this.fetchHistory(normalizedQuery)
+      }
+    )
   }
 
   handleProgressDone = () => {
@@ -197,25 +206,28 @@ class ResultPage extends PureComponent {
       [results.version]: results,
     }
 
-    const formattedResults = Object.keys(totalVersions)
-      .map(version => {
-        if (isEmptyObject(totalVersions[version])) {
-          return { version, disabled: true }
-        }
-        return {
-          version,
-          size: totalVersions[version].size,
-          gzip: totalVersions[version].gzip,
-        }
-      })
-    const sorted =
-      formattedResults.sort((packageA, packageB) =>
-        semver.compare(packageA.version, packageB.version))
-    return (typeof window !== 'undefined' && window.innerWidth < 640) ?
-      sorted.slice(-10) : sorted
+    const formattedResults = Object.keys(totalVersions).map(version => {
+      if (isEmptyObject(totalVersions[version])) {
+        return { version, disabled: true }
+      }
+      return {
+        version,
+        size: totalVersions[version].size,
+        gzip: totalVersions[version].gzip,
+        hasSideEffects: totalVersions[version].hasSideEffects,
+        hasJSModule: totalVersions[version].hasJSModule,
+        hasJSNext: totalVersions[version].hasJSNext,
+      }
+    })
+    const sorted = formattedResults.sort((packageA, packageB) =>
+      semver.compare(packageA.version, packageB.version)
+    )
+    return typeof window !== 'undefined' && window.innerWidth < 640
+      ? sorted.slice(-10)
+      : sorted
   }
 
-  handleBarClick = (reading) => {
+  handleBarClick = reading => {
     const { results } = this.state
 
     const packageString = `${results.name}@${reading.version}`
@@ -243,7 +255,10 @@ class ResultPage extends PureComponent {
     }
 
     const packageString = version ? `${name}@${version}` : name
-    const origin = typeof window === 'undefined' ? 'https://bundlephobia.com' : window.location.origin
+    const origin =
+      typeof window === 'undefined'
+        ? 'https://bundlephobia.com'
+        : window.location.origin
 
     return (
       <Head>
@@ -252,13 +267,14 @@ class ResultPage extends PureComponent {
           key="og:title"
           content={`${packageString} ❘ BundlePhobia`}
         />
-        <title key="title">
-          {packageString} | BundlePhobia
-        </title>
+        <title key="title">{packageString} | BundlePhobia</title>
         <meta
           property="og:image"
           key="og:image"
-          content={origin + `/api/stats-image?name=${name}&version=${version}&wide=true`}
+          content={
+            origin +
+            `/api/stats-image?name=${name}&version=${version}&wide=true`
+          }
         />
         <meta
           property="twitter:title"
@@ -266,7 +282,11 @@ class ResultPage extends PureComponent {
           content={`${name} v${version} ❘ BundlePhobia`}
         />
         {name && version && (
-          <meta name="twitter:card" key="twitter:card" content="summary_large_image"/>
+          <meta
+            name="twitter:card"
+            key="twitter:card"
+            content="summary_large_image"
+          />
         )}
       </Head>
     )
@@ -283,24 +303,27 @@ class ResultPage extends PureComponent {
       similarPackagesCategory,
     } = this.state
 
-    const getQuickStatsBar = () => resultsPromiseState === 'fulfilled' && (
-      <QuickStatsBar
-        description={results.description}
-        dependencyCount={results.dependencyCount}
-        hasSideEffects={results.hasSideEffects}
-        isTreeShakeable={results.hasJSModule || results.hasJSNext}
-        repository={results.repository}
-        name={results.name}
-      />
+    const { errorName, errorBody, errorDetails } = resolveBuildError(
+      resultsError
     )
 
+    const getQuickStatsBar = () =>
+      resultsPromiseState === 'fulfilled' && (
+        <QuickStatsBar
+          description={results.description}
+          dependencyCount={results.dependencyCount}
+          hasSideEffects={results.hasSideEffects}
+          isTreeShakeable={results.hasJSModule || results.hasJSNext}
+          repository={results.repository}
+          name={results.name}
+        />
+      )
 
     return (
       <ResultLayout>
         {this.getMetaTags()}
         <section className="content-container-wrap">
           <div className="content-container">
-
             <AutocompleteInputBox footer={getQuickStatsBar()}>
               <AutocompleteInput
                 key={inputInitialValue}
@@ -309,24 +332,27 @@ class ResultPage extends PureComponent {
                 onSearchSubmit={this.handleSearchSubmit}
               />
             </AutocompleteInputBox>
-            {
-              resultsPromiseState === 'pending' && (
-                <div className="result-pending">
-                  <ProgressSquare
-                    isDone={!!results.version}
-                    onDone={this.handleProgressDone}
-                  />
-                </div>
-              )
-            }
-            {
-              resultsPromiseState === 'fulfilled' &&
+            {resultsPromiseState === 'pending' && (
+              <div className="result-pending">
+                <BuildProgressIndicator
+                  isDone={!!results.version}
+                  onDone={this.handleProgressDone}
+                />
+              </div>
+            )}
+            {resultsPromiseState === 'fulfilled' &&
               results.ignoredMissingDependencies &&
               results.ignoredMissingDependencies.length && (
                 <Warning>
-                  Ignoring the size of
-                  missing {results.ignoredMissingDependencies.length > 1 ? 'dependencies' : 'dependency'} &nbsp;
-                  <code>{arrayToSentence(results.ignoredMissingDependencies)}</code>.
+                  Ignoring the size of missing{' '}
+                  {results.ignoredMissingDependencies.length > 1
+                    ? 'dependencies'
+                    : 'dependency'}{' '}
+                  &nbsp;
+                  <code>
+                    {arrayToSentence(results.ignoredMissingDependencies)}
+                  </code>
+                  .
                   <a
                     href="https://github.com/pastelsky/bundlephobia#1-why-does-search-for-package-x-throw-missingdependencyerror-"
                     target="_blank"
@@ -334,93 +360,72 @@ class ResultPage extends PureComponent {
                     Read more
                   </a>
                 </Warning>
-              )
-            }
-            {
-              resultsPromiseState === 'fulfilled' && (
-                <div className="content-split-container">
-                  <div className="stats-container">
-                    <div className="size-container">
-                      <h3> Bundle Size </h3>
-                      <div className="size-stats">
-                        <Stat
-                          value={results.size}
-                          type={Stat.type.SIZE}
-                          label="Minified"
-                        />
-                        <Stat
-                          value={results.gzip}
-                          type={Stat.type.SIZE}
-                          label="Minified + Gzipped"
-                        />
-                      </div>
-                    </div>
-                    <div className="time-container">
-                      <h3> Download Time </h3>
-                      <div className="time-stats">
-                        <Stat
-                          value={getTimeFromSize(results.gzip).twoG}
-                          type={Stat.type.TIME}
-                          label="2G Edge"
-                          infoText={`Download Speed: ⬇️ ${DownloadSpeed.TWO_G} kB/s`}
-                        />
-                        <Stat
-                          value={getTimeFromSize(results.gzip).threeG}
-                          type={Stat.type.TIME}
-                          label="Emerging 3G"
-                          infoText={`Download Speed: ⬇️ ${DownloadSpeed.THREE_G} kB/s`}
-                        />
-                      </div>
+              )}
+            {resultsPromiseState === 'fulfilled' && (
+              <div className="content-split-container">
+                <div className="stats-container">
+                  <div className="size-container">
+                    <h3> Bundle Size </h3>
+                    <div className="size-stats">
+                      <Stat
+                        value={results.size}
+                        type={Stat.type.SIZE}
+                        label="Minified"
+                      />
+                      <Stat
+                        value={results.gzip}
+                        type={Stat.type.SIZE}
+                        label="Minified + Gzipped"
+                      />
                     </div>
                   </div>
-                  <div className="chart-container">
-                    {
-                      historicalResultsPromiseState === 'fulfilled' && (
-                        <BarGraph
-                          onBarClick={this.handleBarClick}
-                          readings={this.formatHistoricalResults()}
-                        />
-                      )
-                    }
+                  <div className="time-container">
+                    <h3> Download Time </h3>
+                    <div className="time-stats">
+                      <Stat
+                        value={getTimeFromSize(results.gzip).twoG}
+                        type={Stat.type.TIME}
+                        label="2G Edge"
+                        infoText={`Download Speed: ⬇️ ${DownloadSpeed.TWO_G} kB/s`}
+                      />
+                      <Stat
+                        value={getTimeFromSize(results.gzip).threeG}
+                        type={Stat.type.TIME}
+                        label="Emerging 3G"
+                        infoText={`Download Speed: ⬇️ ${DownloadSpeed.THREE_G} kB/s`}
+                      />
+                    </div>
                   </div>
                 </div>
-              )
-            }
+                <div className="chart-container">
+                  {historicalResultsPromiseState === 'fulfilled' && (
+                    <BarGraph
+                      onBarClick={this.handleBarClick}
+                      readings={this.formatHistoricalResults()}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {
-            resultsPromiseState === 'rejected' && (
-              <div className="result-error">
-                <EmptyBox className="result-error__img"/>
-                <h2 className="result-error__code">
-                  {resultsError.error ? resultsError.error.code : 'InternalServerError'}
-                </h2>
-                <p
-                  className="result-error__message"
-                  dangerouslySetInnerHTML={{
-                    __html: resultsError.error ? resultsError.error.message :
-                      'Something went wrong!',
-                  }}
-                />
-                {
-                  resultsError.error && resultsError.error.details && resultsError.error.details.originalError && (
-                    <details className="result-error__details">
-                      <summary> Stacktrace</summary>
-                      <pre>
-                        {
-                          Array.isArray(resultsError.error.details.originalError) ?
-                            resultsError.error.details.originalError[0] :
-                            resultsError.error.details.originalError.toString()
-                        }
-                      </pre>
-                    </details>
-                  )
-                }
-              </div>
-            )
-          }
-          {
-            resultsPromiseState === 'fulfilled' &&
+          {resultsPromiseState === 'rejected' && (
+            <div className="result-error">
+              <EmptyBox className="result-error__img" />
+              <h2 className="result-error__code">{errorName}</h2>
+              <p
+                className="result-error__message"
+                dangerouslySetInnerHTML={{ __html: errorBody }}
+              />
+              {errorDetails && (
+                <details className="result-error__details">
+                  <summary> Stacktrace</summary>
+                  <pre>{errorDetails}</pre>
+                </details>
+              )}
+            </div>
+          )}
+          {resultsPromiseState === 'fulfilled' &&
             results.dependencySizes &&
             results.dependencySizes.length && (
               <div className="content-container">
@@ -432,19 +437,24 @@ class ResultPage extends PureComponent {
               </div>
             )}
 
-          {
-            resultsPromiseState === 'fulfilled' &&
-            similarPackages.length > 0 && (
+          {resultsPromiseState === 'fulfilled' && (
+            <div className="content-container">
+              <ExportAnalysisSection result={results} />
+            </div>
+          )}
+
+          {resultsPromiseState === 'fulfilled' && similarPackages.length > 0 && (
+            <div className="content-container">
               <SimilarPackagesSection
                 category={similarPackagesCategory}
                 packs={similarPackages}
                 comparisonGzip={results.gzip}
               />
-            )
-          }
+            </div>
+          )}
         </section>
       </ResultLayout>
-    );
+    )
   }
 }
 

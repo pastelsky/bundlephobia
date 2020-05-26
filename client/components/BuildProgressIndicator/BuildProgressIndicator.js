@@ -1,8 +1,9 @@
-import React, {Component} from 'react'
+import React, { Component } from 'react'
 
-import './ProgressSquare.scss'
+import ProgressHex from '../ProgressHex'
+import './BuildProgressIndicator.scss'
 
-export default class ProgressSquare extends Component {
+export default class BuildProgressIndicator extends Component {
   constructor(props) {
     super(props)
     this.stage = 0
@@ -28,7 +29,7 @@ export default class ProgressSquare extends Component {
     clearTimeout(this.timeoutId)
   }
 
-  getProgressText = (stage) => {
+  getProgressText = stage => {
     const progressText = {
       resolving: 'Resolving version and dependencies',
       building: 'Bundling package',
@@ -46,12 +47,7 @@ export default class ProgressSquare extends Component {
       calculating: 20,
     }
 
-    const order = [
-      'resolving',
-      'building',
-      'minifying',
-      'calculating',
-    ]
+    const order = ['resolving', 'building', 'minifying', 'calculating']
 
     if (this.stage === order.length) {
       //this.props.onDone()
@@ -71,17 +67,12 @@ export default class ProgressSquare extends Component {
     }, timings[order[stage]] * 1000)
   }
 
-
   render() {
     const { progressText } = this.state
     return (
-      <div className="progress-square">
-        <span className="progress-square__loader">
-          <span className="progress-square__loader-inner"/>
-        </span>
-        <p className="progress-square__text">
-          {progressText}
-        </p>
+      <div className="build-progress-indicator">
+        <ProgressHex compact />
+        <p className="build-progress-indicator__text">{progressText}</p>
       </div>
     )
   }

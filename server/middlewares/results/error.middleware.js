@@ -1,4 +1,5 @@
 const arrayToSentence = require('array-to-sentence')
+const now = require('performance-now')
 const { failureCache } = require('../../init')
 const CONFIG = require('../../config')
 const debug = require('debug')('bp:error')
@@ -6,19 +7,25 @@ const logger = require('../../Logger')
 
 async function errorHandler(ctx, next) {
   const { force } = ctx.query
+  const start = now()
 
   const respondWithError = (status, { code, message = '', details = {} }) => {
     ctx.status = status
     ctx.body = {
-      error: { code, message, details }
+      error: { code, message, details },
     }
 
-    logger.error('BUILD_ERROR', {
-      type: code,
-      requestId: ctx.state.id,
-      ...ctx.state.resolved,
-      details,
-    }, `${code} ${ctx.state.resolved.packageString}`)
+    logger.error(
+      'BUILD_ERROR',
+      {
+        type: code,
+        requestId: ctx.state.id,
+        time: now() - start,
+        ...ctx.state.resolved,
+        details,
+      },
+      `${code} ${ctx.state.resolved.packageString}`
+    )
   }
 
   try {
@@ -30,7 +37,7 @@ async function errorHandler(ctx, next) {
     }
 
     if (!'name' in err) {
-      respondWithError(500, { code: 'UnkownError', details: err })
+      respondWithError(500, { code: 'UnknownError', details: err })
       return
     }
 
@@ -38,22 +45,33 @@ async function errorHandler(ctx, next) {
       case 'BlacklistedPackageError':
         respondWithError(403, {
           code: 'BlacklistedPackageError',
-          message: 'The package you were looking for is blacklisted due to suspicious activity in the past',
+          message:
+            'The package you were looking for is blacklisted ' +
+            "because it failed to build multiple times in the past and further tries aren't likely to succeed. This can " +
+            "happen if this package wasn't meant to be bundled in a client side application.",
+        })
+        break
+
+      case 'UnsupportedPackageError':
+        ctx.cacheControl = {
+          maxAge: force ? 0 : CONFIG.CACHE.SIZE_API_ERROR_UNSUPPORTED,
+        }
+        respondWithError(403, {
+          code: 'UnsupportedPackageError',
+          message: `The package you were looking for is unsupported and cannot be built by bundlephobia — ${err.extra.reason}`,
         })
         break
 
       case 'PackageNotFoundError':
         respondWithError(404, {
           code: 'PackageNotFoundError',
-          message: 'The package you were looking for doesn\'t exist.',
+          message: "The package you were looking for doesn't exist.",
         })
         break
 
       case 'PackageVersionMismatchError': {
         const validVersions = arrayToSentence(
-          err.extra
-            .validVersions
-            .map(version => `\`<code>${version}</code>\``),
+          err.extra.validVersions.map(version => `\`<code>${version}</code>\``)
         )
 
         respondWithError(404, {
@@ -77,51 +95,60 @@ async function errorHandler(ctx, next) {
         }
         break
 
-      case 'EntryPointError':
-        respondWithError(500, {
-          code: 'EntryPointError',
-          message: 'We could not guess a valid entry point for this package. ' +
-            'Perhaps the author hasn\'t specified one in its package.json ?',
-        })
-        break
-
-      case 'MissingDependencyError': {
+      case 'EntryPointError': {
         const status = 500
+        const body = {
+          error: {
+            code: 'EntryPointError',
+            message:
+              'We could not guess a valid entry point for this package. ' +
+              "Perhaps the author hasn't specified one in its package.json ?",
+          },
+        }
+
         ctx.cacheControl = {
           maxAge: force ? 0 : CONFIG.CACHE.SIZE_API_ERROR_FATAL,
         }
 
-        const missingModules = arrayToSentence(
-          err.extra
-            .missingModules
-            .map(module => `\`<code>${module}</code>\``),
-        )
+        respondWithError(status, body.error)
 
-        respondWithError(500, {
-          code: 'MissingDependencyError',
-          message: `This package (or this version) uses ${missingModules}, ` +
-            `but does not specify ${missingModules.length > 1 ? 'them' :
-              'it'} either as a dependency or a peer dependency`,
-          details: err,
-        })
+        debug(
+          'saved %s to failure cache',
+          `${ctx.state.resolved.packageString}`
+        )
+        failureCache.set(`${ctx.state.packageString}`, { status, body })
+
+        break
+      }
+
+      case 'MissingDependencyError': {
+        const status = 500
+        const missingModules = arrayToSentence(
+          err.extra.missingModules.map(module => `\`<code>${module}</code>\``)
+        )
         const body = {
           error: {
             code: 'MissingDependencyError',
-            message: `This package (or this version) uses ${missingModules}, ` +
-              `but does not specify ${missingModules.length > 1 ? 'them' :
-                'it'} either as a dependency or a peer dependency`,
+            message:
+              `This package (or this version) uses ${missingModules}, ` +
+              `but does not specify ${
+                missingModules.length > 1 ? 'them' : 'it'
+              } either as a dependency or a peer dependency`,
             details: err,
           },
         }
 
-        ctx.status = status
-        ctx.body = body
+        ctx.cacheControl = {
+          maxAge: force ? 0 : CONFIG.CACHE.SIZE_API_ERROR_FATAL,
+        }
 
-        debug('saved %s to failure cache', `${ctx.state.resolved.packageString}`)
-        failureCache.set(
-          `${ctx.state.packageString}`,
-          { status, body },
+        respondWithError(status, body.error)
+
+        debug(
+          'saved %s to failure cache',
+          `${ctx.state.resolved.packageString}`
         )
+        failureCache.set(`${ctx.state.packageString}`, { status, body })
         break
       }
 
@@ -134,11 +161,14 @@ async function errorHandler(ctx, next) {
           details: err,
         }
         respondWithError(500, errorJSON)
-        debug('saved %s to failure cache', `${ctx.state.resolved.packageString}`)
-        failureCache.set(
-          `${ctx.state.packageString}`,
-          { status, body: { error: errorJSON } },
+        debug(
+          'saved %s to failure cache',
+          `${ctx.state.resolved.packageString}`
         )
+        failureCache.set(`${ctx.state.packageString}`, {
+          status,
+          body: { error: errorJSON },
+        })
         break
       }
     }

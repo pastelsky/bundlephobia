@@ -7,16 +7,13 @@ const queryString = require('query-string')
 const cache = new Cache()
 
 async function generateImgMiddleware(ctx, next) {
-
-
   // See https://github.com/facebook/react/issues/13838
   const url = ctx.url.replace(/&amp;/g, '&')
-  console.log('getting', url)
 
   const { name, version, theme, wide } = queryString.parseUrl(url).query
 
   try {
-    const result = await cache.get({ name, version })
+    const result = await cache.getPackageSize({ name, version })
 
     ctx.type = 'png'
     ctx.cacheControl = {
@@ -30,7 +27,7 @@ async function generateImgMiddleware(ctx, next) {
       theme,
       wide,
     })
-  } catch(err) {
+  } catch (err) {
     console.error(err)
     await send(ctx, 'client/assets/public/android-chrome-192x192.png')
   }

@@ -1,49 +1,81 @@
-const winston  = require('winston');
-const LogzioWinstonTransport = require('winston-logzio');
-const { SumoLogic } = require('winston-sumologic-transport');
-const SumoLogger = require('sumo-logger');
+const winston = require('winston')
+const StatsD = require('hot-shots')
+const WinstonGraylog2 = require('winston-graylog2')
 
+const statsClient = new StatsD({
+  port: 8086,
+  globalTags: { env: process.env.NODE_ENV },
+  errorHandler: (err, a) => console.error('error', err, a),
+  telegraf: true,
+})
 
-const sumoLogger = new SumoLogger({
-  endpoint: process.env.SUMOLOGIC_URL,
-});
+const graylogOptions = {
+  name: 'graylog',
+  level: 'debug',
+  silent: false,
+  handleExceptions: false,
+  graylog: {
+    servers: [
+      { host: process.env.GRAYLOG_HOST, port: process.env.GRAYLOG_PORT },
+    ],
+    hostname: 'bundlephobia',
+    bufferSize: 1400,
+  },
+}
 
 class Logger {
   constructor() {
     let transports = []
 
-    if(process.env.NODE_ENV === 'production') {
-      const logzioTransport = new LogzioWinstonTransport({
-        name: 'bundlephobia',
-        token: process.env.LOGZIO_TOKEN,
-      })
-
-      const sumologicTransport = new SumoLogic({
-        url: process.env.SUMOLOGIC_URL,
-      });
-
-      transports.push(logzioTransport)
+    if (process.env.NODE_ENV === 'production') {
+      transports.push(new WinstonGraylog2(graylogOptions))
     }
 
-    winston.remove(winston.transports.Console);
+    winston.remove(winston.transports.Console)
     this.logger = winston.createLogger({
       transports,
-    });
+    })
   }
 
   info(tag, json, message) {
-    this.logger.log('info', message, {
-      tag,
-      ...json
+    this.logger.info(message, {
+      metadata: {
+        message,
+        tag,
+        ...json,
+      },
     })
   }
 
   error(tag, json, message) {
-    console.log('JSON', json)
-    this.logger.log('error', message, {
-      tag,
-      ...json
+    this.logger.error(message, {
+      metadata: {
+        tag,
+        ...json,
+      },
     })
+  }
+
+  // statsd methods
+
+  increment(label) {
+    statsClient.increment(label)
+  }
+
+  decrement(label) {
+    statsClient.increment(label)
+  }
+
+  histogram(label, value) {
+    statsClient.histogram(label, value)
+  }
+
+  set(label, value) {
+    statsClient.set(label, value)
+  }
+
+  timing(label, value) {
+    statsClient.timing(label, value)
   }
 }
 

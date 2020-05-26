@@ -1,5 +1,5 @@
-@import '../../stylesheets/variables';
-@import '../../stylesheets/colors';
+@import '../../../stylesheets/variables';
+@import '../../../stylesheets/colors';
 
 .stat-container {
   margin: 0 24px;
@@ -91,8 +91,8 @@
 
 .stat-container__info-text {
   margin-left: $global-spacing / 2;
-  border: 1px solid rgba(40,40,40,0.5);
-  color: rgba(40,40,40,0.5);
+  border: 1px solid rgba(40, 40, 40, 0.5);
+  color: rgba(40, 40, 40, 0.5);
   width: 12px;
   height: 13px;
   font-family: $font-family-code;
@@ -104,8 +104,8 @@
   transition: background 0.2s;
   cursor: help;
 
-  &:hover{
-    background: rgba(40,40,40,0.6);
+  &:hover {
+    background: rgba(40, 40, 40, 0.6);
     color: white;
   }
 
@@ -114,8 +114,7 @@
     font-family: $font-family-body;
   }
 
-
   @media screen and (max-width: 40em) {
-   display: none;
+    display: none;
   }
 }

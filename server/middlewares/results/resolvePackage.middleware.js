@@ -16,10 +16,10 @@ async function resolvePackageMiddleware(ctx, next) {
   }
 
   const resolveStart = now()
-  resolvedPackage = await resolvePackage(parsedPackage)
+  resolvedPackage = await resolvePackage(packageString)
   const resolveEnd = now()
 
-  const { scoped, name, version, repository, description } = resolvedPackage
+  const { name, version, repository, description } = resolvedPackage
   let truncatedDescription = ''
   let repositoryURL = ''
 
@@ -30,13 +30,16 @@ async function resolvePackageMiddleware(ctx, next) {
   }
 
   if (description) {
-    truncatedDescription = description.length > 300 ? description.substring(0, 300) + '…' : description
+    truncatedDescription =
+      description.length > 300
+        ? description.substring(0, 300) + '…'
+        : description
   }
 
   const result = {
     name,
     version,
-    scoped,
+    scoped: parsedPackage.scoped,
     packageString: `${name}@${version}`,
     description: truncatedDescription,
     repository: repositoryURL,
@@ -45,7 +48,7 @@ async function resolvePackageMiddleware(ctx, next) {
   ctx.state.resolved = result
 
   debug('resolved to %s@%s', name, version)
-  const time =  resolveEnd - resolveStart
+  const time = resolveEnd - resolveStart
   logger.info(
     'RESOLVE_PACKAGE',
     { ...result, time, requestId: ctx.state.id },

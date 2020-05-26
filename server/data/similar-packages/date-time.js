@@ -1,3 +1,3 @@
-export default [
-  [{name: 'moment'}, {name: 'luxon'}, {name: 'date-fns'}],
-]
+// Ununsed file
+
+export default [[{ name: 'moment' }, { name: 'luxon' }, { name: 'date-fns' }]]

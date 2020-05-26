@@ -1,0 +1,47 @@
+svg.treeshake-icon-animated {
+  .tree-shake-icon-svg__bush {
+    transition: transform 0.3s;
+    transform-origin: 50% 100%;
+  }
+
+  &:hover {
+    .tree-shake-icon-svg__shake {
+      transform-origin: 50% 50%;
+      animation: move-to-sides 0.3s, shake 0.3s 0.15s;
+    }
+
+    .tree-shake-icon-svg__bush {
+      transform: scaleY(1.2);
+    }
+  }
+}
+
+@keyframes move-to-sides {
+  from {
+    transform: scale(0);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  10%,
+  100% {
+    transform: translate3d(-0.5px, 0, 0);
+  }
+
+  80% {
+    transform: translate3d(1px, 0, 0);
+  }
+
+  30%,
+  70% {
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  60% {
+    transform: translate3d(1px, 0, 0);
+  }
+}

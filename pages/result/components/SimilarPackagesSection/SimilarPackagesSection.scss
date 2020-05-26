@@ -1,0 +1,23 @@
+@import '../../../../stylesheets/variables';
+@import '../../../../stylesheets/colors';
+
+.similar-packages-section {
+  margin-bottom: 10vh;
+}
+
+.similar-packages-section__list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -$global-spacing;
+  margin-right: -$global-spacing;
+}
+
+.similar-packages-section__heading {
+  margin-bottom: 0;
+}
+
+.similar-packages-section__subheading {
+  color: lighten($raven, 15%);
+  text-align: center;
+  margin-top: $global-spacing;
+}
