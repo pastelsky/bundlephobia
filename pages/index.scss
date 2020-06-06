@@ -42,6 +42,14 @@
   color: #888;
 }
 
+.logo__skeleton-base {
+  stroke: black;
+}
+
+.logo__skeleton--filled-circle-mouth {
+  fill: #c0c0c0;
+}
+
 .logo__skeleton {
   animation: move 2s alternate infinite;
 

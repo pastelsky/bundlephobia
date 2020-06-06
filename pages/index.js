@@ -33,10 +33,15 @@ export default class Home extends PureComponent {
             viewBox="0 0 137 157"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <g stroke="#000" strokeWidth="1.5" fill="none" fillRule="evenodd">
+            <g
+              className="logo__skeleton-base"
+              strokeWidth="1.5"
+              fill="none"
+              fillRule="evenodd"
+            >
               <g transform="translate(37.21 45.73)">
                 <rect
-                  fill="#C0C0C0"
+                  className="logo__skeleton--filled-circle-mouth"
                   x="25.1"
                   y="56.58"
                   width="16.74"
