@@ -103,3 +103,22 @@
     }
   }
 }
+
+.dark-theme {
+  .scan__btn {
+    background-color: $spun-pearl;
+    color: $black-russian;
+
+    &:hover {
+      background: lighten($spun-pearl, 20%);
+    }
+  }
+
+  .scan__selection-header {
+    .scan__btn {
+      &:hover {
+        color: $black-russian;
+      }
+    }
+  }
+}

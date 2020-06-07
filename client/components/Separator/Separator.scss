@@ -18,3 +18,15 @@
   padding: 0 15px;
   border-radius: 50%;
 }
+
+.dark-theme {
+  .separator-flourish,
+  .separator-line {
+    fill: $spun-pearl;
+  }
+
+  .separator-text {
+    background: $black-russian;
+    color: $spun-pearl;
+  }
+}
