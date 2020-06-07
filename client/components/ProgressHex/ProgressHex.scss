@@ -1,3 +1,5 @@
+@import '../../../stylesheets/colors';
+
 .progress-hex {
   width: 8rem;
   height: 8rem;
@@ -13,4 +15,12 @@
 
 .progress-hex__trail {
   stroke-width: 1px;
+}
+
+.dark-theme {
+  .progress-hex {
+    circle {
+      fill: $ghost-white;
+    }
+  }
 }
