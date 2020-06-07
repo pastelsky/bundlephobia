@@ -179,3 +179,34 @@
     }
   }
 }
+
+.dark-theme {
+  .dummy-input__package-name {
+    color: $ghost-white;
+  }
+
+  .dummy-input__package-version {
+    color: $spun-pearl;
+  }
+
+  .autocomplete-input__suggestions-menu {
+    background: $black-russian;
+    border-color: $autocomplete-border-color-dark;
+  }
+
+  .autocomplete-input__suggestion {
+    color: $spun-pearl;
+
+    &:not(:last-of-type) {
+      border-bottom: 1px solid transparentize($spun-pearl, 0.6);
+    }
+
+    em {
+      color: $ghost-white;
+    }
+  }
+
+  .autocomplete-input__suggestion--highlight {
+    background-color: lighten($black-russian, 5%);
+  }
+}

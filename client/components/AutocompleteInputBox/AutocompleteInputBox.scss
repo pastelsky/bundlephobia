@@ -32,3 +32,9 @@
     height: 1px;
   }
 }
+
+.dark-theme {
+  .autocomplete-input-box {
+    border-color: $autocomplete-border-color-dark;
+  }
+}
