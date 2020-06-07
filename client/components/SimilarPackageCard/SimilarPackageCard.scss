@@ -155,3 +155,27 @@
     fill: transparentize($raven, 0.7);
   }
 }
+
+.dark-theme {
+  .similar-package-card {
+    background: lighten($black-russian, 10%);
+  }
+
+  .similar-package-card__name {
+    color: lighten($spun-pearl, 10%);
+  }
+
+  .similar-package-card__description {
+    color: darken($spun-pearl, 15%);
+  }
+
+  .similar-package-card__footer {
+    background: $black-russian;
+  }
+
+  .similar-package-card__github-icon {
+    path {
+      fill: $ghost-white;
+    }
+  }
+}
