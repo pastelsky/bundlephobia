@@ -30,6 +30,7 @@
   color: #212121;
   background: inherit;
   position: relative;
+  transition: none;
 
   .stat-container--compact & {
     @include font-size-lg;
@@ -116,5 +117,11 @@
 
   @media screen and (max-width: 40em) {
     display: none;
+  }
+}
+
+.dark-theme {
+  .stat-container__value {
+    color: $spun-pearl;
   }
 }
