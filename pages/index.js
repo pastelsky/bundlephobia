@@ -4,8 +4,10 @@ import Layout from 'client/components/Layout'
 import Router from 'next/router'
 import Link from 'next/link'
 import Analytics from 'react-ga'
-import './index.scss'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox/AutocompleteInputBox'
+import ThemeToggle from 'client/components/ThemeToggle'
+
+import './index.scss'
 
 export default class Home extends PureComponent {
   componentDidMount() {
@@ -170,6 +172,7 @@ export default class Home extends PureComponent {
             </Link>
           </div>
         </div>
+        <ThemeToggle className="homepage__theme-toggle" />
       </Layout>
     )
   }

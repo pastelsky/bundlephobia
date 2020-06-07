@@ -3,6 +3,7 @@ import cx from 'classnames'
 import Link from 'next/link'
 
 import Layout from 'client/components/Layout'
+import ThemeToggle from 'client/components/ThemeToggle'
 
 import GithubLogo from '../../assets/github-logo.svg'
 import './ResultLayout.scss'
@@ -58,6 +59,7 @@ export default class ResultLayout extends Component {
               >
                 <GithubLogo />
               </a>
+              <ThemeToggle />
             </section>
           </header>
           <div className="page-content">{children}</div>

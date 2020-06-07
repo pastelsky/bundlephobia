@@ -53,7 +53,7 @@ class ResultPage extends PureComponent {
       router: { query },
     } = this.props
     const {
-      url: { query: nextQuery },
+      router: { query: nextQuery },
     } = nextProps
 
     if (!nextQuery || !nextQuery.p.trim()) {
@@ -242,7 +242,7 @@ class ResultPage extends PureComponent {
   }
 
   getMetaTags = () => {
-    const { url } = this.props
+    const { query } = this.props.router
     const { resultsPromiseState, results } = this.state
     let name, version
 
@@ -250,8 +250,8 @@ class ResultPage extends PureComponent {
       name = results.name
       version = results.version
     } else {
-      name = parsePackageString(url.query.p).name
-      version = parsePackageString(url.query.p).version
+      name = parsePackageString(query.p).name
+      version = parsePackageString(query.p).version
     }
 
     const packageString = version ? `${name}@${version}` : name

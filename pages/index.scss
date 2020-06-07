@@ -149,3 +149,9 @@
     transform: translate(0.55px, -1px);
   }
 }
+
+.homepage__theme-toggle {
+  position: absolute;
+  top: $global-spacing * 3;
+  right: $global-spacing * 3;
+}

@@ -1,0 +1,25 @@
+@import '../../../stylesheets/variables';
+@import '../../../stylesheets/colors';
+
+.theme-toggle {
+  background: none;
+  border: none;
+  margin-left: $global-spacing * 2;
+  outline: none;
+  cursor: pointer;
+
+  .sun-icon,
+  .moon-icon {
+    height: 30px;
+    width: 30px;
+
+    @media screen and (max-width: 40em) {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .sun-icon {
+    fill: $dandelion;
+  }
+}
