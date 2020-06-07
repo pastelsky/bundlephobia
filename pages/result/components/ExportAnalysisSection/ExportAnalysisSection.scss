@@ -232,3 +232,32 @@
     color: $raven;
   }
 }
+
+.dark-theme {
+  .export-analysis-section__list {
+    background-image: none;
+  }
+
+  .export-analysis-section__filter-input {
+    background-color: $black-russian;
+    color: $spun-pearl;
+    border-color: $autocomplete-border-color-dark;
+
+    &:focus {
+      background: lighten($black-russian, 5%);
+      border-color: lighten($autocomplete-border-color-dark, 48%);
+    }
+  }
+
+  .export-analysis-section__pill {
+    color: $black-russian;
+
+    &::after {
+      background: $black-russian;
+    }
+  }
+
+  .export-analysis-section__pill-spinner {
+    background-color: $spun-pearl;
+  }
+}
