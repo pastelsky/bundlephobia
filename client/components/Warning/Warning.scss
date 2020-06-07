@@ -18,3 +18,10 @@
     text-transform: uppercase;
   }
 }
+
+.dark-theme {
+  .warning-bar {
+    background: $black-russian;
+    border: 1px solid $dandelion;
+  }
+}
