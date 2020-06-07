@@ -248,6 +248,7 @@
     background: #ffbc40;
     border-radius: 2px;
     line-height: 1.2;
+    color: black;
   }
 }
 
@@ -327,4 +328,14 @@
   color: $raven;
   margin: $global-spacing * 3 0 0 0;
   line-height: 1.2;
+}
+
+.dark-theme {
+  .result-error__img {
+    fill: $spun-pearl;
+  }
+
+  .time-container {
+    border-color: darken($spun-pearl, 25%);
+  }
 }
