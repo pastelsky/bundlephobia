@@ -155,3 +155,25 @@
   top: $global-spacing * 3;
   right: $global-spacing * 3;
 }
+
+.dark-theme {
+  .logo {
+    color: $ghost-white;
+  }
+
+  .logo__skeleton-base {
+    stroke: $spun-pearl;
+  }
+
+  .logo__skeleton--filled-circle-mouth {
+    fill: darken($spun-pearl, 25%);
+  }
+
+  .logo__skeleton-group {
+    stroke: $spun-pearl;
+  }
+
+  .logo__skeleton {
+    stroke: $ghost-white;
+  }
+}
