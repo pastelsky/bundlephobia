@@ -16,6 +16,11 @@ html {
   color: #212121;
 }
 
+body.dark-theme {
+  background-color: $black-russian;
+  color: $spun-pearl;
+}
+
 code {
   font-family: $font-family-code;
 }
