@@ -105,3 +105,23 @@
     overflow: scroll;
   }
 }
+
+.dark-theme {
+  .github-logo {
+    &:hover {
+      path {
+        fill: $ghost-white;
+      }
+    }
+  }
+
+  .logo-small {
+    color: $ghost-white;
+  }
+
+  .page-header__quicklinks {
+    a {
+      color: $spun-pearl;
+    }
+  }
+}
