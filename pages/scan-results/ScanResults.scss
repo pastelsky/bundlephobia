@@ -221,3 +221,22 @@ $index-width: 4rem;
     text-decoration: line-through;
   }
 }
+
+.dark-theme {
+  .scan-results__container {
+    border-color: $spun-pearl;
+    box-shadow: 0 0 4px lighten($black-russian, 20%);
+  }
+
+  .scan-results__item {
+    background: $black-russian;
+  }
+
+  .scan-results__item--total {
+    background: lighten($black-russian, 5%);
+  }
+
+  .scan-results__index {
+    color: lighten($black-russian, 10%);
+  }
+}
