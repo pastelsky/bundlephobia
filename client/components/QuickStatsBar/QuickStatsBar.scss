@@ -101,3 +101,26 @@
     }
   }
 }
+
+.dark-theme {
+  .quick-stats-bar {
+    background: lighten($black-russian, 10%);
+    color: $spun-pearl;
+  }
+
+  .quick-stats-bar__stat {
+    &:not(:first-of-type)::before {
+      background: darken($spun-pearl, 30%);
+    }
+  }
+
+  .quick-stats-bar__link {
+    &:hover {
+      .quick-stats-bar__logo-icon--github {
+        path {
+          fill: $ghost-white;
+        }
+      }
+    }
+  }
+}
