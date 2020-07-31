@@ -152,6 +152,36 @@ async function errorHandler(ctx, next) {
         break
       }
 
+      case 'MinifyError': {
+        const status = 500
+        console.log('err.originalError', err.originalError)
+        const body = {
+          error: {
+            code: 'MinifyError',
+            message:
+              'We could not minify one of the source files in this package or its dependencies. ' +
+              `Please verify if the contents of <code>${err.extra.filePath}</code> can be minified using <a href="https://try.terser.org/" target="_blank">terser</a>.`,
+            details: {
+              originalError: JSON.stringify(err.originalError, null, 2),
+            },
+          },
+        }
+
+        ctx.cacheControl = {
+          maxAge: force ? 0 : CONFIG.CACHE.SIZE_API_ERROR_FATAL,
+        }
+
+        respondWithError(status, body.error)
+
+        debug(
+          'saved %s to failure cache',
+          `${ctx.state.resolved.packageString}`
+        )
+        failureCache.set(`${ctx.state.packageString}`, { status, body })
+
+        break
+      }
+
       case 'BuildError':
       default: {
         const status = 500

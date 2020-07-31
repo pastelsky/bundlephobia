@@ -1529,7 +1529,7 @@
     globals "^11.1.0"
     lodash "^4.17.13"
 
-"@babel/traverse@^7.8.3", "@babel/traverse@^7.8.6":
+"@babel/traverse@^7.8.3", "@babel/traverse@^7.8.6", "@babel/traverse@^7.9.5":
   version "7.9.5"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/@babel/traverse/-/traverse-7.9.5.tgz#6e7c56b44e2ac7011a948c21e283ddd9d9db97a2"
   integrity sha1-bnxWtE4qxwEalIwh4oPd2dnbl6I=
@@ -3109,7 +3109,7 @@ autodll-webpack-plugin@0.4.2:
     webpack-merge "^4.1.0"
     webpack-sources "^1.0.1"
 
-autoprefixer@^9.7.5:
+autoprefixer@^9.7.5, autoprefixer@^9.7.6:
   version "9.7.6"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/autoprefixer/-/autoprefixer-9.7.6.tgz#63ac5bbc0ce7934e6997207d5bb00d68fa8293a4"
   integrity sha1-Y6xbvAznk05plyB9W7ANaPqCk6Q=
@@ -4791,23 +4791,24 @@ css-loader@^1.0.1:
     postcss-value-parser "^3.3.0"
     source-list-map "^2.0.0"
 
-css-loader@^3.4.2:
-  version "3.4.2"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/css-loader/-/css-loader-3.4.2.tgz#d3fdb3358b43f233b78501c5ed7b1c6da6133202"
-  integrity sha1-0/2zNYtD8jO3hQHF7XscbaYTMgI=
+css-loader@^3.5.2:
+  version "3.5.2"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/css-loader/-/css-loader-3.5.2.tgz#6483ae56f48a7f901fbe07dde2fc96b01eafab3c"
+  integrity sha1-ZIOuVvSKf5Afvgfd4vyWsB6vqzw=
   dependencies:
     camelcase "^5.3.1"
     cssesc "^3.0.0"
     icss-utils "^4.1.1"
     loader-utils "^1.2.3"
     normalize-path "^3.0.0"
-    postcss "^7.0.23"
+    postcss "^7.0.27"
     postcss-modules-extract-imports "^2.0.0"
     postcss-modules-local-by-default "^3.0.2"
-    postcss-modules-scope "^2.1.1"
+    postcss-modules-scope "^2.2.0"
     postcss-modules-values "^3.0.0"
-    postcss-value-parser "^4.0.2"
-    schema-utils "^2.6.0"
+    postcss-value-parser "^4.0.3"
+    schema-utils "^2.6.5"
+    semver "^6.3.0"
 
 css-modules-require-hook@^4.0.6:
   version "4.2.3"
@@ -10329,10 +10330,10 @@ now-logs@^0.0.7:
     socket.io-client "^1.7.2"
     yargs "^6.5.0"
 
-np@^6.2.0:
-  version "6.2.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/np/-/np-6.2.0.tgz#56f2106ddce19fd7b2683aae18cada2d74777027"
-  integrity sha1-VvIQbdzhn9eyaDquGMraLXR3cCc=
+np@^6.2.1:
+  version "6.2.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/np/-/np-6.2.1.tgz#b22fcb53708b213056465a86c48197395d84d836"
+  integrity sha1-si/LU3CLITBWRlqGxIGXOV2E2DY=
   dependencies:
     "@samverschueren/stream-to-observable" "^0.3.0"
     any-observable "^0.5.0"
@@ -10843,18 +10844,18 @@ p-try@^2.0.0:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha1-yyhoVA4xPWHeWPr741zpAE1VQOY=
 
-package-build-stats@6.2.1:
-  version "6.2.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/package-build-stats/-/package-build-stats-6.2.1.tgz#86ce9912a985ddff7bced8b1798ee2e8594522d8"
-  integrity sha1-hs6ZEqmF3f97ztixeY7i6FlFItg=
+package-build-stats@6.2.2:
+  version "6.2.2"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/package-build-stats/-/package-build-stats-6.2.2.tgz#e0b148aedcf4175042a6f0886cf9d05df2a92b42"
+  integrity sha1-4LFIrtz0F1BCpvCIbPnQXfKpK0I=
   dependencies:
     "@babel/parser" "^7.9.4"
     "@babel/plugin-proposal-export-default-from" "^7.8.3"
-    "@babel/traverse" "^7.9.0"
-    autoprefixer "^9.7.5"
+    "@babel/traverse" "^7.9.5"
+    autoprefixer "^9.7.6"
     babel-eslint "^10.1.0"
     builtin-modules "^3.1.0"
-    css-loader "^3.4.2"
+    css-loader "^3.5.2"
     cssnano "^4.1.10"
     csso-webpack-plugin "^2.0.0-beta.1"
     debug "^4.1.1"
@@ -10867,7 +10868,7 @@ package-build-stats@6.2.1:
     mkdir-promise "^1.0.0"
     node-fetch "^2.6.0"
     node-sass "^4.13.1"
-    np "^6.2.0"
+    np "^6.2.1"
     optimize-css-assets-webpack-plugin "^5.0.3"
     performance-now "^2.1.0"
     pify "^5.0.0"
@@ -10879,10 +10880,10 @@ package-build-stats@6.2.1:
     shebang-loader "^0.0.1"
     shortid "^2.2.15"
     stats-lite "^2.1.0"
-    terser "^4.6.7"
+    terser "^4.6.11"
     terser-webpack-plugin "^2.3.5"
     then-fs "^2.0.0"
-    vm2 "^3.9.0"
+    vm2 "^3.9.1"
     vue-loader "^15.9.1"
     vue-template-compiler "^2.6.11"
     webpack "^4.42.1"
@@ -11517,10 +11518,10 @@ postcss-modules-scope@^1.0.0, postcss-modules-scope@^1.1.0:
     css-selector-tokenizer "^0.7.0"
     postcss "^6.0.1"
 
-postcss-modules-scope@^2.1.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/postcss-modules-scope/-/postcss-modules-scope-2.1.1.tgz#33d4fc946602eb5e9355c4165d68a10727689dba"
-  integrity sha512-OXRUPecnHCg8b9xWvldG/jUpRIGPNRka0r4D4j0ESUU2/5IOnpsjfPPmDprM3Ih8CgZ8FXjWqaniK5v4rWt3oQ==
+postcss-modules-scope@^2.2.0:
+  version "2.2.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/postcss-modules-scope/-/postcss-modules-scope-2.2.0.tgz#385cae013cc7743f5a7d7602d1073a89eaae62ee"
+  integrity sha1-OFyuATzHdD9afXYC0Qc6iequYu4=
   dependencies:
     postcss "^7.0.6"
     postcss-selector-parser "^6.0.0"
@@ -11716,11 +11717,6 @@ postcss-value-parser@^4.0.0:
   resolved "https://registry.yarnpkg.com/postcss-value-parser/-/postcss-value-parser-4.0.0.tgz#99a983d365f7b2ad8d0f9b8c3094926eab4b936d"
   integrity sha512-ESPktioptiSUchCKgggAkzdmkgzKfmp0EU8jXH+5kbIUB+unr0Y4CY9SRMvibuvYUBjNh1ACLbxqYNpdTQOteQ==
 
-postcss-value-parser@^4.0.2:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/postcss-value-parser/-/postcss-value-parser-4.0.2.tgz#482282c09a42706d1fc9a069b73f44ec08391dc9"
-  integrity sha512-LmeoohTpp/K4UiyQCwuGWlONxXamGzCMtFxLq4W1nZVGIQLYvMCJx3yAF9qyyuFpflABI9yVdtJAqbihOsCsJQ==
-
 postcss-value-parser@^4.0.3:
   version "4.0.3"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/postcss-value-parser/-/postcss-value-parser-4.0.3.tgz#651ff4593aa9eda8d5d0d66593a2417aeaeb325d"
@@ -11748,15 +11744,6 @@ postcss@^7.0.14, postcss@^7.0.16, postcss@^7.0.6:
   version "7.0.17"
   resolved "https://registry.yarnpkg.com/postcss/-/postcss-7.0.17.tgz#4da1bdff5322d4a0acaab4d87f3e782436bad31f"
   integrity sha512-546ZowA+KZ3OasvQZHsbuEpysvwTZNGJv9EfyCQdsIDltPSWHAeTQ5fQy/Npi2ZDtLI3zs7Ps/p6wThErhm9fQ==
-  dependencies:
-    chalk "^2.4.2"
-    source-map "^0.6.1"
-    supports-color "^6.1.0"
-
-postcss@^7.0.23:
-  version "7.0.25"
-  resolved "https://registry.yarnpkg.com/postcss/-/postcss-7.0.25.tgz#dd2a2a753d50b13bed7a2009b4a18ac14d9db21e"
-  integrity sha512-NXXVvWq9icrm/TgQC0O6YVFi4StfJz46M1iNd/h6B26Nvh/HKI+q4YZtFN/EjcInZliEscO/WL10BXnc1E5nwg==
   dependencies:
     chalk "^2.4.2"
     source-map "^0.6.1"
@@ -13217,7 +13204,7 @@ schema-utils@^1.0.0:
     ajv-errors "^1.0.0"
     ajv-keywords "^3.1.0"
 
-schema-utils@^2.6.0, schema-utils@^2.6.1:
+schema-utils@^2.6.1:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/schema-utils/-/schema-utils-2.6.1.tgz#eb78f0b945c7bcfa2082b3565e8db3548011dc4f"
   integrity sha512-0WXHDs1VDJyo+Zqs9TKLKyD/h7yDpHUhEFsM2CzkICFdoX1av+GBq/J2xRTFfsQO5kBfhZzANf2VcIm84jqDbg==
@@ -14416,10 +14403,10 @@ terser@^4.4.3:
     source-map "~0.6.1"
     source-map-support "~0.5.12"
 
-terser@^4.6.7:
-  version "4.6.7"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/terser/-/terser-4.6.7.tgz#478d7f9394ec1907f0e488c5f6a6a9a2bad55e72"
-  integrity sha1-R41/k5TsGQfw5IjF9qaporrVXnI=
+terser@^4.6.11:
+  version "4.6.11"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/terser/-/terser-4.6.11.tgz#12ff99fdd62a26de2a82f508515407eb6ccd8a9f"
+  integrity sha1-Ev+Z/dYqJt4qgvUIUVQH62zNip8=
   dependencies:
     commander "^2.20.0"
     source-map "~0.6.1"
@@ -15158,10 +15145,10 @@ vm-browserify@^1.0.1:
   resolved "https://registry.yarnpkg.com/vm-browserify/-/vm-browserify-1.1.0.tgz#bd76d6a23323e2ca8ffa12028dc04559c75f9019"
   integrity sha512-iq+S7vZJE60yejDYM0ek6zg308+UZsdtPExWP9VZoCFCz1zkJoXFnAX7aZfd/ZwrkidzdUZL0C/ryW+JwAiIGw==
 
-vm2@^3.9.0:
-  version "3.9.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/vm2/-/vm2-3.9.0.tgz#00fd8c84bffcef3ce12df29a8db39171f4a485a2"
-  integrity sha1-AP2MhL/87zzhLfKajbORcfSkhaI=
+vm2@^3.9.1:
+  version "3.9.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/vm2/-/vm2-3.9.1.tgz#11b9390a07745fcfb0b682078e84fcad147aae97"
+  integrity sha1-Ebk5Cgd0X8+wtoIHjoT8rRR6rpc=
 
 void-elements@^2.0.1:
   version "2.0.1"
