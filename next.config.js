@@ -3,6 +3,7 @@ const withCss = require('@zeit/next-css')
 const withSourceMaps = require('@zeit/next-source-maps')()
 
 module.exports = {
+  pageExtensions: ['page.js'],
   ...withSass(
     withSourceMaps({
       sassLoaderOptions: {
