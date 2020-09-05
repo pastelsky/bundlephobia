@@ -1,24 +1,24 @@
 import React from 'react'
-import Document, { Head as DocumentHead, Main, NextScript } from 'next/document'
+import Document, {
+  Head as DocumentHead,
+  Main,
+  NextScript,
+  Html,
+} from 'next/document'
 import Head from 'next/head'
 
 export default class MyDocument extends Document {
-  static getInitialProps({ renderPage }) {
-    const { html, head, chunks } = renderPage()
-    return { html, head, chunks }
+  static async getInitialProps(ctx) {
+    const initialProps = await Document.getInitialProps(ctx)
+    return { ...initialProps }
   }
 
   render() {
     return (
-      <html>
-        <Head>
+      <Html>
+        <DocumentHead>
           <meta charSet="utf-8" />
           <meta httpEquiv="x-ua-compatible" content="ie=edge" />
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, shrink-to-fit=no"
-          />
-          <title key="title">BundlePhobia ❘ cost of adding a npm package</title>
           <meta name="application-name" content="BundlePhobia" />
           <meta
             name="description"
@@ -72,8 +72,6 @@ export default class MyDocument extends Document {
             content="https://s26.postimg.org/4s64v24c9/Artboard_4.png"
           />
           <meta property="twitter:creator" content="@_pastelsky" />
-        </Head>
-        <DocumentHead>
           <script
             dangerouslySetInnerHTML={{
               __html: `
@@ -110,7 +108,7 @@ export default class MyDocument extends Document {
             })`,
           }}
         />
-      </html>
+      </Html>
     )
   }
 }

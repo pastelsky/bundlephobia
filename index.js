@@ -1,6 +1,7 @@
 require('dotenv-defaults').config()
 const next = require('next')
 const exec = require('execa')
+const { parse } = require('url')
 
 const Koa = require('koa')
 const proxy = require('koa-proxy')
@@ -219,7 +220,8 @@ app.prepare().then(() => {
   )
 
   router.get('*', async ctx => {
-    await handle(ctx.req, ctx.res)
+    const parsedUrl = parse(ctx.req.url, true)
+    await handle(ctx.req, ctx.res, parsedUrl)
     ctx.respond = false
   })
 

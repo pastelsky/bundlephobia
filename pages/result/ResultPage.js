@@ -38,23 +38,23 @@ class ResultPage extends PureComponent {
     similarPackagesCategory: '',
   }
 
-  componentDidMount() {
-    const {
-      router: { query },
-    } = this.props
+  // Disables Next.js's Automatic Static Optimization
+  // which causes query params to be empty
+  // see https://nextjs.org/docs/routing/dynamic-routes#caveats
+  static async getInitialProps() {
+    return {}
+  }
 
+  componentDidMount() {
+    const query = this.props.router.query
     if (query.p && query.p.trim()) {
       this.handleSearchSubmit(query.p)
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    const {
-      router: { query },
-    } = this.props
-    const {
-      url: { query: nextQuery },
-    } = nextProps
+  componentDidUpdate(prevProps) {
+    const query = prevProps.router.query
+    const nextQuery = this.props.router.query
 
     if (!nextQuery || !nextQuery.p.trim()) {
       return
@@ -150,12 +150,14 @@ class ResultPage extends PureComponent {
             promises.push(API.getInfo(packageName))
           })
 
-          Promise.all(promises).then(results => {
+          Promise.allSettled(promises).then(results => {
             if (this.activeQuery !== packageString) return
 
             this.setState({
               similarPackagesCategory: result.category.label,
-              similarPackages: results,
+              similarPackages: results
+                .filter(result => result.status === 'fulfilled')
+                .map(result => result.value),
             })
           })
         }
@@ -242,7 +244,7 @@ class ResultPage extends PureComponent {
   }
 
   getMetaTags = () => {
-    const { url } = this.props
+    const { router } = this.props
     const { resultsPromiseState, results } = this.state
     let name, version
 
@@ -250,8 +252,8 @@ class ResultPage extends PureComponent {
       name = results.name
       version = results.version
     } else {
-      name = parsePackageString(url.query.p).name
-      version = parsePackageString(url.query.p).version
+      name = parsePackageString(router.query.p).name
+      version = parsePackageString(router.query.p).version
     }
 
     const packageString = version ? `${name}@${version}` : name

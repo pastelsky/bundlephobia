@@ -122,6 +122,13 @@ class ScanResults extends Component {
     this.state = { packages, sortMode: sortMode }
   }
 
+  // Disables Next.js's Automatic Static Optimization
+  // which causes query params to be empty
+  // see https://nextjs.org/docs/routing/dynamic-routes#caveats
+  static async getInitialProps() {
+    return {}
+  }
+
   componentDidMount() {
     const { packages } = this.state
     const queue = new PromiseQueue({ concurrency: 3 })
@@ -197,9 +204,11 @@ class ScanResults extends Component {
     this.setState({ packages })
   }
 
-  setParamsAndState = ( sortMode ) => {
-    const updatedQuery = { ...this.props.router.query, sortMode}
-    Router.replace(`/scan-results?${queryString.stringify(updatedQuery,{encode: false})}`)
+  setParamsAndState = sortMode => {
+    const updatedQuery = { ...this.props.router.query, sortMode }
+    Router.replace(
+      `/scan-results?${queryString.stringify(updatedQuery, { encode: false })}`
+    )
 
     this.setState({ sortMode: sortMode })
   }
@@ -235,9 +244,10 @@ class ScanResults extends Component {
     const { sortMode } = this.state
     const packages = this.sortPackages()
 
-    const totalMinSize = packages
-      .reduce((curTotal, pack) =>
-        curTotal + (pack.result ? pack.result.size : 0), 0)
+    const totalMinSize = packages.reduce(
+      (curTotal, pack) => curTotal + (pack.result ? pack.result.size : 0),
+      0
+    )
 
     const totalGZIPSize = packages.reduce(
       (curTotal, pack) => curTotal + (pack.result ? pack.result.gzip : 0),
