@@ -7,6 +7,17 @@ const Weight = {
 }
 
 const categories = {
+  'classname-strings': {
+    name: 'Classname string construction',
+    tags: [
+      { tag: 'class', weight: Weight.HIGH },
+      { tag: 'classnames', weight: Weight.HIGH },
+      { tag: 'string', weight: Weight.MID },
+      { tag: 'construct', weight: Weight.MID },
+      { tag: 'conditional', weight: Weight.MID },
+    ],
+    similar: ['clsx', 'classnames', 'classcat'],
+  },
   clipboard: {
     name: 'Clipboard Utilities',
     tags: [
@@ -35,7 +46,7 @@ const categories = {
   'color-manipulation': {
     name: 'Color parsing and manipulation',
     tags: [{ tag: 'color convert parse manipulate', weight: Weight.NORMAL }],
-    similar: ['chroma-js', 'color', 'tinycolor2', 'colors.js'],
+    similar: ['chroma-js', 'color', 'tinycolor2', 'colors.js', 'color2k'],
   },
   cookie: {
     name: 'Cookie Manipulation',
@@ -156,7 +167,7 @@ const categories = {
       { tag: 'physics', weight: Weight.MID },
       { tag: 'dom', weight: Weight.MID },
     ],
-    similar: ['gsap', 'animejs', 'mo-js', 'popmotion'],
+    similar: ['gsap', 'animejs', 'velocity-animate', 'popmotion'],
   },
   'general-purpose-charting': {
     name: 'General purpose Charting libraries',
@@ -169,7 +180,15 @@ const categories = {
       { tag: 'charts', weight: Weight.MAX },
       { tag: 'data', weight: Weight.MID },
     ],
-    similar: ['d3', 'chart.js', 'echarts', 'frappe-charts', 'highcharts'],
+    similar: [
+      'd3',
+      'chart.js',
+      'echarts',
+      'chartist',
+      'frappe-charts',
+      'highcharts',
+      'uplot',
+    ],
   },
   'graphql-client': {
     name: 'GraphQL Clients',
@@ -180,13 +199,27 @@ const categories = {
       { tag: 'javascript', weight: Weight.MID },
     ],
     similar: [
-      'apollo-client',
+      '@apollo/client',
       'graphql.js',
       'lokka',
       'graphql',
       'relay-runtime',
       'urql',
     ],
+  },
+  'html-sanitization': {
+    name: 'HTML Sanitization',
+    tags: [
+      { tag: 'html', weight: Weight.NORMAL },
+      { tag: 'dom', weight: Weight.NORMAL },
+      { tag: 'sanitize', weight: Weight.HIGH },
+      { tag: 'untrusted', weight: Weight.SMALL },
+      { tag: 'escape', weight: Weight.MID },
+      { tag: 'filter', weight: Weight.NORMAL },
+      { tag: 'xss', weight: Weight.HIGH },
+      { tag: 'whitelist', weight: Weight.SMALL },
+    ],
+    similar: ['sanitize-html', 'xss', 'dompurify', 'sanitizer'],
   },
   i18n: {
     name: 'Internationalization',
@@ -228,6 +261,18 @@ const categories = {
     ],
     similar: ['axios', 'ky', 'superagent', 'whatwg-fetch', 'unfetch'],
   },
+  'icu-message-fromatter': {
+    name: 'ICU message string formatters',
+    tags: [
+      { tag: 'icu', weight: Weight.HIGH },
+      { tag: 'message', weight: Weight.NORMAL },
+      { tag: 'format', weight: Weight.MID },
+      { tag: 'plural', weight: Weight.MID },
+      { tag: 'gender', weight: Weight.MID },
+      { tag: 'parse', weight: Weight.SMALL },
+    ],
+    similar: ['messageformat', 'intl-messageformat'],
+  },
   'image-color-extraction': {
     name: 'Image color extraction',
     tags: [
@@ -264,6 +309,18 @@ const categories = {
       'baobab',
     ],
   },
+  'lazy-load-content': {
+    name: 'Lazy Loading Content',
+    tags: [
+      { tag: 'lazy', weight: Weight.NORMAL },
+      { tag: 'load', weight: Weight.NORMAL },
+      { tag: 'lazyload', weight: Weight.HIGH },
+      { tag: 'image', weight: Weight.NORMAL },
+      { tag: 'iframe', weight: Weight.MID },
+      { tag: 'video', weight: Weight.MID },
+    ],
+    similar: ['lazysizes', 'lozad', 'vanilla-lazyload'],
+  },
   'markdown-parser': {
     name: 'Markdown parsers',
     tags: [
@@ -296,11 +353,11 @@ const categories = {
     tags: [
       { tag: 'format', weight: Weight.NORMAL },
       { tag: 'manipulate', weight: Weight.NORMAL },
-      { tag: 'currency', weight: Weight.NORMAL },
-      { tag: 'money', weight: Weight.NORMAL },
+      { tag: 'currency', weight: Weight.HIGH },
+      { tag: 'money', weight: Weight.HIGH },
       { tag: 'number', weight: Weight.HIGH },
     ],
-    similar: ['numeral', 'numbro', 'accounting', 'currency.js'],
+    similar: ['numeral', 'numbro', 'accounting', 'currency.js', 'dinero.js'],
   },
   'pdf-generator': {
     name: 'Client-side PDF Creation',
@@ -354,6 +411,7 @@ const categories = {
       'downshift',
       'react-autowhatever',
       'react-autocomplete',
+      'react-select',
     ],
   },
   'react-head-meta': {
@@ -394,8 +452,7 @@ const categories = {
     similar: [
       'formik',
       'react-final-form',
-      'rc-form',
-      'react-jsonschema-form',
+      'react-form',
       'formsy-react',
       'react-hook-form',
     ],
@@ -533,6 +590,21 @@ const categories = {
       { tag: 'pixels', weight: Weight.MID },
     ],
     similar: ['hyperhtml', 'snabbdom', 'virtual-dom'],
+  },
+  'vue-carousel': {
+    name: 'Vue JS Sliders & Carousels',
+    tags: [
+      { tag: 'vue', weight: Weight.HIGH },
+      { tag: 'touch swipe', weight: Weight.MID },
+      { tag: 'carousel', weight: Weight.NORMAL },
+      { tag: 'slider', weight: Weight.NORMAL },
+    ],
+    similar: [
+      'vue-awesome-swiper',
+      'vue-carousel',
+      'vue-slick',
+      'vue-tiny-slider',
+    ],
   },
 }
 
