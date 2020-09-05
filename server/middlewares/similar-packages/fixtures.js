@@ -16,7 +16,7 @@ const categories = {
       { tag: 'construct', weight: Weight.MID },
       { tag: 'conditional', weight: Weight.MID },
     ],
-    similar: ['clsx', 'classnames', 'classcat'],
+    similar: ['clsx', 'classnames', 'classcat', 'merge-class-names'],
   },
   clipboard: {
     name: 'Clipboard Utilities',
