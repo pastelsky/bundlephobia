@@ -23,7 +23,7 @@ class SimilarPackagesSection extends Component {
               }
             />
           ))}
-          <SimilarPackageCard isEmpty />
+          <SimilarPackageCard category={category} isEmpty />
         </div>
       </div>
     )

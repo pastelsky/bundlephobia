@@ -3,6 +3,7 @@ import cx from 'classnames'
 import { formatSize } from 'utils'
 import Link from 'next/link'
 import DOMPurify from 'dompurify'
+import queryString from 'query-string'
 
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import PlusIcon from '../../assets/plus.svg'
@@ -10,6 +11,15 @@ import GithubIcon from '../../assets/github-logo.svg'
 import './SimilarPackageCard.scss'
 
 export default class SimilarPackageCard extends Component {
+  getSuggestionIssueUrl = () => {
+    const params = queryString.stringify({
+      labels: 'similar suggestion',
+      template: '2-similar-package-suggestion.md',
+      title: `Package suggestion: <package-name> for \`${this.props.category}\``,
+    })
+
+    return `https://github.com/pastelsky/bundlephobia/issues/new?${params}`
+  }
   render() {
     const { pack, comparisonSizePercent, isEmpty } = this.props
 
@@ -17,7 +27,7 @@ export default class SimilarPackageCard extends Component {
       return (
         <a
           className="similar-package-card similar-package-card--empty"
-          href="https://github.com/pastelsky/bundlephobia/issues/new?assignees=&labels=similar+suggestion&template=2-similar-package-suggestion.md&title=Package+suggestion%3A+<alternative>+for+<package+%2F+category>"
+          href={this.getSuggestionIssueUrl()}
           target="_blank"
           rel="noreferrer noopener"
         >
