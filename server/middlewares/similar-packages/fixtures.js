@@ -143,7 +143,7 @@ const categories = {
       { tag: 'parser', weight: Weight.MID },
       { tag: 'format', weight: Weight.MID },
     ],
-    similar: ['moment', 'luxon', 'dayjs', 'date-fns'],
+    similar: ['moment', '@js-joda/core', 'luxon', 'dayjs', 'date-fns'],
   },
   'general-purpose-3d': {
     name: 'General purpose 3D libraries',
@@ -544,6 +544,7 @@ const categories = {
     ],
     similar: [
       'moment-timezone',
+      '@js-joda/timezone',
       'date-time-format-timezone',
       'spacetime',
       'date-fns-timezone',
