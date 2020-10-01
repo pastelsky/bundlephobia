@@ -1,9 +1,9 @@
 ---
 name: Feature request / Improvement
 about: Suggest an idea for this project
-title: ''
+title: <title>
 labels: Improvement
-assignees: ''
+assignees: <assignees>
 ---
 
 **Please describe the feature/suggestion**
