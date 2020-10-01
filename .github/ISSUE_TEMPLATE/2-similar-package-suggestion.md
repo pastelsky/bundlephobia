@@ -3,7 +3,7 @@ name: Similar package suggestion
 about: Suggest a better alternative to a popular package
 title: 'Package suggestion: <alternative> for <package / category>'
 labels: similar suggestion
-assignees: ''
+assignees: <assignees>
 ---
 
 **Package name**
