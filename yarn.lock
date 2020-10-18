@@ -11776,10 +11776,10 @@ p-try@^2.0.0:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha1-yyhoVA4xPWHeWPr741zpAE1VQOY=
 
-package-build-stats@7.0.1:
-  version "7.0.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/package-build-stats/-/package-build-stats-7.0.1.tgz#31d179505b2102c5b0760cd6fc9d8b0abb0e5671"
-  integrity sha1-MdF5UFshAsWwdgzW/J2LCrsOVnE=
+package-build-stats@7.0.2:
+  version "7.0.2"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/package-build-stats/-/package-build-stats-7.0.2.tgz#e23e7e6beb9b52c9566dcb983f3913acf5dcabf2"
+  integrity sha1-4j5+a+ubUslWbcuYPzkTrPXcq/I=
   dependencies:
     "@babel/core" "^7.12.1"
     "@babel/parser" "^7.12.2"
