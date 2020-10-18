@@ -1,7 +1,5 @@
 require('dotenv-defaults').config()
 const firebase = require('firebase')
-const LRU = require('lru-cache')
-const debug = require('debug')('bp:cache')
 const fastify = require('fastify')()
 const {
   getPackageSizeMiddlware,

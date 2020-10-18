@@ -5,7 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "dotenv-defaults": "^2.0.1",
-    "fastify": "^2.13.0",
+    "fastify": "^3.6.0",
     "now-logs": "^0.0.7",
     "package-build-stats": "7.0.1"
   },

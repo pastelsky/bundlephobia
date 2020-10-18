@@ -30,7 +30,7 @@
     "dotenv": "^8.2.0",
     "dotenv-defaults": "^2.0.1",
     "execa": "^4.0.3",
-    "fabric": "^3.6.3",
+    "fabric": "^4.2.0",
     "firebase": "^6.6.0",
     "flatten": "^1.0.3",
     "git-url-parse": "^11.3.0",

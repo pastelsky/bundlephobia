@@ -3103,15 +3103,15 @@ acorn@^6.0.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-6.0.4.tgz#77377e7353b72ec5104550aa2d2097a2fd40b754"
   integrity sha512-VY4i5EKSKkofY2I+6QLTbTTN/UvEQPCo6eiwzzSaSWfpaDhOmStMCMod6wmuPciNq+XS0faCglFu2lHZpdHUtg==
 
-acorn@^6.1.1:
-  version "6.3.0"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-6.3.0.tgz#0087509119ffa4fc0a0041d1e93a417e68cb856e"
-  integrity sha512-/czfa8BwS88b9gWQVhc8eknunSA2DoJpJyTQkhheIf5E48u1N0R4q/YxxsAeqRrmK9TQ/uYfgLDfZo91UlANIA==
-
 acorn@^6.4.1:
   version "6.4.1"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/acorn/-/acorn-6.4.1.tgz#531e58ba3f51b9dacb9a6646ca4debf5b14ca474"
   integrity sha1-Ux5Yuj9RudrLmmZGyk3r9bFMpHQ=
+
+acorn@^7.1.0:
+  version "7.4.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
+  integrity sha1-/q7SVZc9LndVW4PbwIhRpsY1IPo=
 
 acorn@^7.1.1:
   version "7.1.1"
@@ -3201,10 +3201,20 @@ ajv@^6.1.0:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ajv@^6.10.2, ajv@^6.11.0, ajv@^6.12.0, ajv@^6.5.5:
+ajv@^6.10.2, ajv@^6.11.0, ajv@^6.5.5:
   version "6.12.0"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/ajv/-/ajv-6.12.0.tgz#06d60b96d87b8454a5adaba86e7854da629db4b7"
   integrity sha1-BtYLlth7hFSlrauobnhU2mKdtLc=
+  dependencies:
+    fast-deep-equal "^3.1.1"
+    fast-json-stable-stringify "^2.0.0"
+    json-schema-traverse "^0.4.1"
+    uri-js "^4.2.2"
+
+ajv@^6.12.2, ajv@^6.12.5:
+  version "6.12.6"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/ajv/-/ajv-6.12.6.tgz#baf5a62e802b07d977034586f8c3baf5adf26df4"
+  integrity sha1-uvWmLoArB9l3A0WG+MO69a3ybfQ=
   dependencies:
     fast-deep-equal "^3.1.1"
     fast-json-stable-stringify "^2.0.0"
@@ -3215,16 +3225,6 @@ ajv@^6.12.4:
   version "6.12.4"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/ajv/-/ajv-6.12.4.tgz#0614facc4522127fa713445c6bfd3ebd376e2234"
   integrity sha1-BhT6zEUiEn+nE0Rca/0+vTduIjQ=
-  dependencies:
-    fast-deep-equal "^3.1.1"
-    fast-json-stable-stringify "^2.0.0"
-    json-schema-traverse "^0.4.1"
-    uri-js "^4.2.2"
-
-ajv@^6.12.5:
-  version "6.12.6"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/ajv/-/ajv-6.12.6.tgz#baf5a62e802b07d977034586f8c3baf5adf26df4"
-  integrity sha1-uvWmLoArB9l3A0WG+MO69a3ybfQ=
   dependencies:
     fast-deep-equal "^3.1.1"
     fast-json-stable-stringify "^2.0.0"
@@ -3639,14 +3639,15 @@ autoprefixer@^9.8.6:
     postcss "^7.0.32"
     postcss-value-parser "^4.1.0"
 
-avvio@^6.3.1:
-  version "6.4.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/avvio/-/avvio-6.4.1.tgz#bb4127ca8b9b9c322d742a9b40962dfdca5d68b1"
-  integrity sha1-u0EnyoubnDItdCqbQJYt/cpdaLE=
+avvio@^7.1.2:
+  version "7.2.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/avvio/-/avvio-7.2.0.tgz#b4bf4eaf4a0207a4e6a58a7859207250793cc81b"
+  integrity sha1-tL9Or0oCB6TmpYp4WSByUHk8yBs=
   dependencies:
     archy "^1.0.0"
     debug "^4.0.0"
-    fastq "^1.6.0"
+    fastq "^1.6.1"
+    queue-microtask "^1.1.2"
 
 aws-sign2@~0.7.0:
   version "0.7.0"
@@ -5648,22 +5649,29 @@ cssom@0.3.x, "cssom@>= 0.3.2 < 0.4.0":
   resolved "https://registry.yarnpkg.com/cssom/-/cssom-0.3.4.tgz#8cd52e8a3acfd68d3aed38ee0a640177d2f9d797"
   integrity sha512-+7prCSORpXNeR4/fUP3rL+TzqtiFfhMvTd7uEqMdgPvLPt4+uzFUeufx5RHjGTACCargg/DiEt/moMQmvnfkog==
 
-cssom@^0.3.6, cssom@~0.3.6:
-  version "0.3.8"
-  resolved "https://registry.yarnpkg.com/cssom/-/cssom-0.3.8.tgz#9f1276f5b2b463f2114d3f2c75250af8c1a36f4a"
-  integrity sha512-b0tGHbfegbhPJpxpiBPU2sCkigAqtM9O121le6bbOlgyV+NyGyCmVfJ6QW9eRjz8CpNfWEOYBIMIGRYkLwsIYg==
-
-cssom@^0.4.4:
+cssom@^0.4.1, cssom@^0.4.4:
   version "0.4.4"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/cssom/-/cssom-0.4.4.tgz#5a66cf93d2d0b661d80bf6a44fb65f5c2e4e0a10"
   integrity sha1-WmbPk9LQtmHYC/akT7ZfXC5OChA=
 
-cssstyle@^1.0.0, cssstyle@^1.2.2:
+cssom@~0.3.6:
+  version "0.3.8"
+  resolved "https://registry.yarnpkg.com/cssom/-/cssom-0.3.8.tgz#9f1276f5b2b463f2114d3f2c75250af8c1a36f4a"
+  integrity sha512-b0tGHbfegbhPJpxpiBPU2sCkigAqtM9O121le6bbOlgyV+NyGyCmVfJ6QW9eRjz8CpNfWEOYBIMIGRYkLwsIYg==
+
+cssstyle@^1.0.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/cssstyle/-/cssstyle-1.4.0.tgz#9d31328229d3c565c61e586b02041a28fccdccf1"
   integrity sha512-GBrLZYZ4X4x6/QEoBnIrqb8B/f5l4+8me2dkom/j1Gtbxy0kBv6OGzKuAsGM75bkGwGAFkt56Iwg28S3XTZgSA==
   dependencies:
     cssom "0.3.x"
+
+cssstyle@^2.0.0:
+  version "2.3.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/cssstyle/-/cssstyle-2.3.0.tgz#ff665a0ddbdc31864b09647f34163443d90b0852"
+  integrity sha1-/2ZaDdvcMYZLCWR/NBY0Q9kLCFI=
+  dependencies:
+    cssom "~0.3.6"
 
 cssstyle@^2.2.0:
   version "2.2.0"
@@ -6805,15 +6813,15 @@ eyes@0.1.x:
   resolved "https://registry.yarnpkg.com/eyes/-/eyes-0.1.8.tgz#62cf120234c683785d902348a800ef3e0cc20bc0"
   integrity sha1-Ys8SAjTGg3hdkCNIqADvPgzCC8A=
 
-fabric@^3.6.3:
-  version "3.6.3"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/fabric/-/fabric-3.6.3.tgz#c72b148911e4d180747f7bb0f12ad158a4508dfc"
-  integrity sha1-xysUiRHk0YB0f3uw8SrRWKRQjfw=
+fabric@^4.2.0:
+  version "4.2.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/fabric/-/fabric-4.2.0.tgz#c16daf5559a9ed457d51eeb938099565ef1b44ba"
+  integrity sha1-wW2vVVmp7UV9Ue65OAmVZe8bRLo=
   optionalDependencies:
     canvas "^2.6.1"
-    jsdom "^15.1.0"
+    jsdom "^15.2.1"
 
-fast-decode-uri-component@^1.0.0:
+fast-decode-uri-component@^1.0.1:
   version "1.0.1"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/fast-decode-uri-component/-/fast-decode-uri-component-1.0.1.tgz#46f8b6c22b30ff7a81357d4f59abfae938202543"
   integrity sha1-Rvi2wisw/3qBNX1PWav66TggJUM=
@@ -6833,10 +6841,10 @@ fast-json-stable-stringify@^2.0.0:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/fast-json-stable-stringify/-/fast-json-stable-stringify-2.1.0.tgz#874bf69c6f404c2b5d99c481341399fd55892633"
   integrity sha1-h0v2nG9ATCtdmcSBNBOZ/VWJJjM=
 
-fast-json-stringify@^1.18.0:
-  version "1.20.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/fast-json-stringify/-/fast-json-stringify-1.20.1.tgz#07e30057718d85c39a798d43678a4a91ea7fa30e"
-  integrity sha1-B+MAV3GNhcOaeY1DZ4pKkep/ow4=
+fast-json-stringify@^2.2.1:
+  version "2.2.9"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/fast-json-stringify/-/fast-json-stringify-2.2.9.tgz#6298eb0a78e540d74b7507afd55d1a456d584d96"
+  integrity sha1-YpjrCnjlQNdLdQev1V0aRW1YTZY=
   dependencies:
     ajv "^6.11.0"
     deepmerge "^4.2.2"
@@ -6847,10 +6855,10 @@ fast-levenshtein@~2.0.6:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
 
-fast-redact@^2.0.0:
-  version "2.0.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/fast-redact/-/fast-redact-2.0.0.tgz#17bb8f5e1f56ecf4a38c8455985e5eab4c478431"
-  integrity sha1-F7uPXh9W7PSjjIRVmF5eq0xHhDE=
+fast-redact@^3.0.0:
+  version "3.0.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/fast-redact/-/fast-redact-3.0.0.tgz#ac2f9e36c9f4976f5db9fb18c6ffbaf308cf316d"
+  integrity sha1-rC+eNsn0l29dufsYxv+68wjPMW0=
 
 fast-safe-stringify@^2.0.4:
   version "2.0.6"
@@ -6862,35 +6870,47 @@ fast-safe-stringify@^2.0.7:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/fast-safe-stringify/-/fast-safe-stringify-2.0.7.tgz#124aa885899261f68aedb42a7c080de9da608743"
   integrity sha1-EkqohYmSYfaK7bQqfAgN6dpgh0M=
 
-fastify@^2.13.0:
-  version "2.13.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/fastify/-/fastify-2.13.1.tgz#38d9a5b030ddbc472b4ab756b584c5f0cc538593"
-  integrity sha1-ONmlsDDdvEcrSrdWtYTF8MxThZM=
+fastify-error@^0.2.0:
+  version "0.2.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/fastify-error/-/fastify-error-0.2.0.tgz#9a1c28d4f42b6259e7a549671c8e5e2d85660634"
+  integrity sha1-mhwo1PQrYlnnpUlnHI5eLYVmBjQ=
+
+fastify-warning@^0.2.0:
+  version "0.2.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/fastify-warning/-/fastify-warning-0.2.0.tgz#e717776026a4493dc9a2befa44db6d17f618008f"
+  integrity sha1-5xd3YCakST3Jor76RNttF/YYAI8=
+
+fastify@^3.6.0:
+  version "3.6.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/fastify/-/fastify-3.6.0.tgz#b5fae09eccecb2be9e4ff24abc98cd7f0f0d10c3"
+  integrity sha1-tfrgnszssr6eT/JKvJjNfw8NEMM=
   dependencies:
     abstract-logging "^2.0.0"
-    ajv "^6.12.0"
-    avvio "^6.3.1"
-    fast-json-stringify "^1.18.0"
-    find-my-way "^2.2.2"
+    ajv "^6.12.2"
+    avvio "^7.1.2"
+    fast-json-stringify "^2.2.1"
+    fastify-error "^0.2.0"
+    fastify-warning "^0.2.0"
+    find-my-way "^3.0.0"
     flatstr "^1.0.12"
-    light-my-request "^3.7.3"
-    middie "^4.1.0"
-    pino "^5.17.0"
-    proxy-addr "^2.0.6"
-    readable-stream "^3.6.0"
-    rfdc "^1.1.2"
-    secure-json-parse "^2.1.0"
-    tiny-lru "^7.0.2"
+    light-my-request "^4.1.0"
+    pino "^6.2.1"
+    proxy-addr "^2.0.5"
+    readable-stream "^3.4.0"
+    rfdc "^1.1.4"
+    secure-json-parse "^2.0.0"
+    semver "^7.3.2"
+    tiny-lru "^7.0.0"
 
 fastparse@^1.1.1:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/fastparse/-/fastparse-1.1.2.tgz#91728c5a5942eced8531283c79441ee4122c35a9"
   integrity sha512-483XLLxTVIwWK3QTrMGRqUfUpoOs/0hbQrl2oz4J0pAcm3A3bu84wxTFqGqkJzewCLdME38xJLJAxBABfQT8sQ==
 
-fastq@^1.6.0:
-  version "1.7.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/fastq/-/fastq-1.7.0.tgz#fcd79a08c5bd7ec5b55cd3f5c4720db551929801"
-  integrity sha1-/NeaCMW9fsW1XNP1xHINtVGSmAE=
+fastq@^1.6.1:
+  version "1.8.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/fastq/-/fastq-1.8.0.tgz#550e1f9f59bbc65fe185cb6a9b4d95357107f481"
+  integrity sha1-VQ4fn1m7xl/hhctqm02VNXEH9IE=
   dependencies:
     reusify "^1.0.4"
 
@@ -7024,12 +7044,12 @@ find-cache-dir@^2.1.0:
     make-dir "^2.0.0"
     pkg-dir "^3.0.0"
 
-find-my-way@^2.2.2:
-  version "2.2.2"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/find-my-way/-/find-my-way-2.2.2.tgz#0d119a6daa354e20d61591a850a112d424c5bc06"
-  integrity sha1-DRGabao1TiDWFZGoUKES1CTFvAY=
+find-my-way@^3.0.0:
+  version "3.0.4"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/find-my-way/-/find-my-way-3.0.4.tgz#a485973d1a3fdafd989ac9f12fd2d88e83cda268"
+  integrity sha1-pIWXPRo/2v2YmsnxL9LYjoPNomg=
   dependencies:
-    fast-decode-uri-component "^1.0.0"
+    fast-decode-uri-component "^1.0.1"
     safe-regex2 "^2.0.0"
     semver-store "^0.3.0"
 
@@ -9247,22 +9267,22 @@ jsdom@^11.5.1:
     ws "^5.2.0"
     xml-name-validator "^3.0.0"
 
-jsdom@^15.1.0:
-  version "15.1.1"
-  resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-15.1.1.tgz#21ed01f81d95ef4327f3e564662aef5e65881252"
-  integrity sha512-cQZRBB33arrDAeCrAEWn1U3SvrvC8XysBua9Oqg1yWrsY/gYcusloJC3RZJXuY5eehSCmws8f2YeliCqGSkrtQ==
+jsdom@^15.2.1:
+  version "15.2.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/jsdom/-/jsdom-15.2.1.tgz#d2feb1aef7183f86be521b8c6833ff5296d07ec5"
+  integrity sha1-0v6xrvcYP4a+UhuMaDP/UpbQfsU=
   dependencies:
     abab "^2.0.0"
-    acorn "^6.1.1"
+    acorn "^7.1.0"
     acorn-globals "^4.3.2"
     array-equal "^1.0.0"
-    cssom "^0.3.6"
-    cssstyle "^1.2.2"
+    cssom "^0.4.1"
+    cssstyle "^2.0.0"
     data-urls "^1.1.0"
     domexception "^1.0.1"
     escodegen "^1.11.1"
     html-encoding-sniffer "^1.0.2"
-    nwsapi "^2.1.4"
+    nwsapi "^2.2.0"
     parse5 "5.1.0"
     pn "^1.1.0"
     request "^2.88.0"
@@ -9729,14 +9749,15 @@ levn@~0.3.0:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
 
-light-my-request@^3.7.3:
-  version "3.7.4"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/light-my-request/-/light-my-request-3.7.4.tgz#95d3ef96450cad0d643f7448ca7e81f9cdef8a40"
-  integrity sha1-ldPvlkUMrQ1kP3RIyn6B+c3vikA=
+light-my-request@^4.1.0:
+  version "4.1.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/light-my-request/-/light-my-request-4.1.1.tgz#71a4f5742affd21d54e70895b6c6cec08feb9bad"
+  integrity sha1-caT1dCr/0h1U5wiVtsbOwI/rm60=
   dependencies:
-    ajv "^6.10.2"
+    ajv "^6.12.2"
     cookie "^0.4.0"
-    readable-stream "^3.4.0"
+    fastify-warning "^0.2.0"
+    readable-stream "^3.6.0"
     set-cookie-parser "^2.4.1"
 
 lines-and-columns@^1.1.6:
@@ -10373,14 +10394,6 @@ micromatch@^3.1.10, micromatch@^3.1.4:
     regex-not "^1.0.0"
     snapdragon "^0.8.1"
     to-regex "^3.0.2"
-
-middie@^4.1.0:
-  version "4.1.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/middie/-/middie-4.1.0.tgz#0fe986c83d5081489514ca1a2daba5ca36263436"
-  integrity sha1-D+mGyD1QgUiVFMoaLaulyjYmNDY=
-  dependencies:
-    path-to-regexp "^4.0.0"
-    reusify "^1.0.2"
 
 miller-rabin@^4.0.0:
   version "4.0.1"
@@ -11400,7 +11413,7 @@ number-is-nan@^1.0.0:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/number-is-nan/-/number-is-nan-1.0.1.tgz#097b602b53422a522c1afb8790318336941a011d"
   integrity sha1-CXtgK1NCKlIsGvuHkDGDNpQaAR0=
 
-nwsapi@^2.0.7, nwsapi@^2.1.4:
+nwsapi@^2.0.7:
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/nwsapi/-/nwsapi-2.1.4.tgz#e006a878db23636f8e8a67d33ca0e4edf61a842f"
   integrity sha512-iGfd9Y6SFdTNldEy2L0GUhcarIutFmk+MPWIn9dmj8NMIup03G08uUF2KGbbmv/Ux4RT0VZJoP/sVbWA6d/VIw==
@@ -12057,11 +12070,6 @@ path-to-regexp@^1.1.1:
   dependencies:
     isarray "0.0.1"
 
-path-to-regexp@^4.0.0:
-  version "4.0.5"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/path-to-regexp/-/path-to-regexp-4.0.5.tgz#2d4fd140af9a369bf7b68f77a7fdc340490f4239"
-  integrity sha1-LU/RQK+aNpv3to93p/3DQEkPQjk=
-
 path-to-regexp@^6.1.0:
   version "6.2.0"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/path-to-regexp/-/path-to-regexp-6.2.0.tgz#f7b3803336104c346889adece614669230645f38"
@@ -12146,17 +12154,17 @@ pino-std-serializers@^2.4.2:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/pino-std-serializers/-/pino-std-serializers-2.4.2.tgz#cb5e3e58c358b26f88969d7e619ae54bdfcc1ae1"
   integrity sha1-y14+WMNYsm+Ilp1+YZrlS9/MGuE=
 
-pino@^5.17.0:
-  version "5.17.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/pino/-/pino-5.17.0.tgz#b9def314e82402154f89a25d76a31f20ca84b4c8"
-  integrity sha1-ud7zFOgkAhVPiaJddqMfIMqEtMg=
+pino@^6.2.1:
+  version "6.7.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/pino/-/pino-6.7.0.tgz#d5d96b7004fed78816b5694fda3eab02b5ca6d23"
+  integrity sha1-1dlrcAT+14gWtWlP2j6rArXKbSM=
   dependencies:
-    fast-redact "^2.0.0"
+    fast-redact "^3.0.0"
     fast-safe-stringify "^2.0.7"
     flatstr "^1.0.12"
     pino-std-serializers "^2.4.2"
-    quick-format-unescaped "^3.0.3"
-    sonic-boom "^0.7.5"
+    quick-format-unescaped "^4.0.1"
+    sonic-boom "^1.0.2"
 
 pirates@^4.0.1:
   version "4.0.1"
@@ -12863,7 +12871,7 @@ protocols@^1.1.0, protocols@^1.4.0:
   resolved "https://registry.yarnpkg.com/protocols/-/protocols-1.4.6.tgz#f8bb263ea1b5fd7a7604d26b8be39bd77678bf8a"
   integrity sha1-+LsmPqG1/Xp2BNJri+Ob13Z4v4o=
 
-proxy-addr@^2.0.6:
+proxy-addr@^2.0.5:
   version "2.0.6"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/proxy-addr/-/proxy-addr-2.0.6.tgz#fdc2336505447d3f2f2c638ed272caf614bbb2bf"
   integrity sha1-/cIzZQVEfT8vLGOO0nLK9hS7sr8=
@@ -13103,10 +13111,15 @@ querystring@0.2.0, querystring@^0.2.0:
   resolved "https://registry.yarnpkg.com/querystring/-/querystring-0.2.0.tgz#b209849203bb25df820da756e747005878521620"
   integrity sha1-sgmEkgO7Jd+CDadW50cAWHhSFiA=
 
-quick-format-unescaped@^3.0.3:
-  version "3.0.3"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/quick-format-unescaped/-/quick-format-unescaped-3.0.3.tgz#fb3e468ac64c01d22305806c39f121ddac0d1fb9"
-  integrity sha1-+z5GisZMAdIjBYBsOfEh3awNH7k=
+queue-microtask@^1.1.2:
+  version "1.1.4"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/queue-microtask/-/queue-microtask-1.1.4.tgz#40841ace4356b48b35b5ea61a2e1fe0a23c59ce1"
+  integrity sha1-QIQazkNWtIs1tephouH+CiPFnOE=
+
+quick-format-unescaped@^4.0.1:
+  version "4.0.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/quick-format-unescaped/-/quick-format-unescaped-4.0.1.tgz#437a5ea1a0b61deb7605f8ab6a8fd3858dbeb701"
+  integrity sha1-Q3peoaC2Het2Bfirao/ThY2+twE=
 
 quick-lru@^4.0.1:
   version "4.0.1"
@@ -13869,7 +13882,7 @@ retry@^0.10.0:
   resolved "https://registry.yarnpkg.com/retry/-/retry-0.10.1.tgz#e76388d217992c252750241d3d3956fed98d8ff4"
   integrity sha1-52OI0heZLCUnUCQdPTlW/tmNj/Q=
 
-reusify@^1.0.2, reusify@^1.0.4:
+reusify@^1.0.4:
   version "1.0.4"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/reusify/-/reusify-1.0.4.tgz#90da382b1e126efc02146e90845a88db12925d76"
   integrity sha1-kNo4Kx4SbvwCFG6QhFqI2xKSXXY=
@@ -13887,7 +13900,7 @@ rework@1.0.1:
     convert-source-map "^0.3.3"
     css "^2.0.0"
 
-rfdc@^1.1.2:
+rfdc@^1.1.4:
   version "1.1.4"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/rfdc/-/rfdc-1.1.4.tgz#ba72cc1367a0ccd9cf81a870b3b58bd3ad07f8c2"
   integrity sha1-unLME2egzNnPgahws7WL060H+MI=
@@ -14136,7 +14149,7 @@ scss-tokenizer@^0.2.3:
     js-base64 "^2.1.8"
     source-map "^0.4.2"
 
-secure-json-parse@^2.1.0:
+secure-json-parse@^2.0.0:
   version "2.1.0"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/secure-json-parse/-/secure-json-parse-2.1.0.tgz#ae76f5624256b5c497af887090a5d9e156c9fb20"
   integrity sha1-rnb1YkJWtcSXr4hwkKXZ4VbJ+yA=
@@ -14593,10 +14606,10 @@ socks@^2.3.3:
     ip "1.1.5"
     smart-buffer "^4.1.0"
 
-sonic-boom@^0.7.5:
-  version "0.7.7"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/sonic-boom/-/sonic-boom-0.7.7.tgz#d921de887428208bfa07b0ae32c278de043f350a"
-  integrity sha1-2SHeiHQoIIv6B7CuMsJ43gQ/NQo=
+sonic-boom@^1.0.2:
+  version "1.3.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/sonic-boom/-/sonic-boom-1.3.0.tgz#5c77c846ce6c395dddf2eb8e8e65f9cc576f2e76"
+  integrity sha1-XHfIRs5sOV3d8uuOjmX5zFdvLnY=
   dependencies:
     atomic-sleep "^1.0.0"
     flatstr "^1.0.12"
@@ -15383,10 +15396,10 @@ timsort@^0.3.0:
   resolved "https://registry.yarnpkg.com/timsort/-/timsort-0.3.0.tgz#405411a8e7e6339fe64db9a234de11dc31e02bd4"
   integrity sha1-QFQRqOfmM5/mTbmiNN4R3DHgK9Q=
 
-tiny-lru@^7.0.2:
-  version "7.0.2"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/tiny-lru/-/tiny-lru-7.0.2.tgz#6a8853deb1e355f4c8863bf1289337e3e3a7e973"
-  integrity sha1-aohT3rHjVfTIhjvxKJM34+On6XM=
+tiny-lru@^7.0.0:
+  version "7.0.6"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/tiny-lru/-/tiny-lru-7.0.6.tgz#b0c3cdede1e5882aa2d1ae21cb2ceccf2a331f24"
+  integrity sha1-sMPN7eHliCqi0a4hyyzszyozHyQ=
 
 tmp@^0.0.33:
   version "0.0.33"
