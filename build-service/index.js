@@ -1,14 +1,14 @@
 const fastify = require('fastify')()
-const getBuiltPackageStats = require('package-build-stats')
 const {
+  getPackageStats,
   getAllPackageExports,
   getPackageExportSizes,
-} = require('package-build-stats/src/getPackageExportSizes')
+} = require('package-build-stats')
 
 fastify.get('/size', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
   try {
-    const result = await getBuiltPackageStats(packageString)
+    const result = await getPackageStats(packageString)
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
