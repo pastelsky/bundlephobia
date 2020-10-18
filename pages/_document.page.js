@@ -31,8 +31,12 @@ e=(!e||e.length===0?"$default_instance":e).toLowerCase()
 ;if(!n._iq.hasOwnProperty(e)){n._iq[e]={_q:[]};v(n._iq[e])}return n._iq[e]}
 ;e.amplitude=n})(window,document);
 
-console.log('amplitude1', amplitude)
-  amplitude.getInstance().init("a9919b09b92f868530fb24f628bd35c0");
+  amplitude.getInstance()
+   .init(
+     "a9919b09b92f868530fb24f628bd35c0",
+      undefined, 
+      {includeReferrer: true, includeUtm: true, includeGclid: true}
+    );
 `
 
 export default class MyDocument extends Document {
