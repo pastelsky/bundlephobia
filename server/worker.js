@@ -1,9 +1,9 @@
 const workerpool = require('workerpool')
-const getPackageStats = require('package-build-stats')
 const {
+  getPackageStats,
   getAllPackageExports,
   getPackageExportSizes,
-} = require('package-build-stats/src/getPackageExportSizes')
+} = require('package-build-stats')
 
 // create a worker and register public functions
 workerpool.worker({
