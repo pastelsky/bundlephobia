@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import Analytics from 'react-ga'
+import Analytics from 'client/analytics'
 import cx from 'classnames'
 import API from 'client/api'
 import SearchIcon from 'client/components/Icons/SearchIcon'
@@ -154,7 +154,12 @@ class ExportAnalysisSection extends Component {
     const { result } = this.props
     const { name, version } = result
     const packageString = `${name}@${version}`
+    const startTime = Date.now()
+    let sizeStartTime
+
     this.setState({ analysisState: State.IN_PROGRESS })
+
+    Analytics.performedExportsAnalysis(packageString)
 
     API.getExports(packageString)
       .then(
@@ -164,22 +169,23 @@ class ExportAnalysisSection extends Component {
             analysisState: State.EXPORTS_FULFILLED,
           })
 
-          Analytics.event({
-            category: 'Export Analysis',
-            action: 'Exports Fetch Success',
-            label: packageString.replace(/@/g, '[at]'),
+          Analytics.exportsAnalysisSuccess({
+            packageName: packageString,
+            timeTaken: Date.now() - startTime,
           })
         },
         err => {
-          Analytics.event({
-            category: 'Export Analysis',
-            action: 'Exports Fetch Failed',
-            label: packageString.replace(/@/g, '[at]'),
+          Analytics.exportsAnalysisFailure({
+            packageName: packageString,
+            timeTaken: Date.now() - startTime,
           })
           return Promise.reject(err)
         }
       )
-      .then(() => API.getExportsSizes(packageString))
+      .then(() => {
+        sizeStartTime = Date.now()
+        return API.getExportsSizes(packageString)
+      })
       .then(
         results => {
           this.setState({
@@ -192,17 +198,15 @@ class ExportAnalysisSection extends Component {
               })),
           })
 
-          Analytics.event({
-            category: 'Export Analysis',
-            action: 'Exports Sizes Success',
-            label: packageString.replace(/@/g, '[at]'),
+          Analytics.exportsSizesSuccess({
+            packageName: packageString,
+            timeTaken: Date.now() - sizeStartTime,
           })
         },
         err => {
-          Analytics.event({
-            category: 'Export Analysis',
-            action: 'Exports Sized Failed',
-            label: packageString.replace(/@/g, '[at]'),
+          Analytics.exportsSizesFailure({
+            packageName: packageString,
+            timeTaken: Date.now() - sizeStartTime,
           })
           return Promise.reject(err)
         }

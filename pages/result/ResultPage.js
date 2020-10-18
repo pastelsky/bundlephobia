@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react'
-import Analytics from 'react-ga'
+import Analytics from 'client/analytics'
 import Head from 'next/head'
 
 import ResultLayout from 'client/components/ResultLayout'
@@ -46,6 +46,8 @@ class ResultPage extends PureComponent {
   }
 
   componentDidMount() {
+    Analytics.pageView('package result')
+
     const query = this.props.router.query
     if (query.p && query.p.trim()) {
       this.handleSearchSubmit(query.p)
@@ -85,21 +87,12 @@ class ResultPage extends PureComponent {
           },
           () => {
             Router.replace(`/result?p=${newPackageString}`)
-            Analytics.pageview(window.location.pathname)
           }
         )
 
-        Analytics.event({
-          category: 'Search',
-          action: 'Search Success',
-          label: packageString.replace(/@/g, '[at]'),
-        })
-
-        Analytics.timing({
-          category: 'Search',
-          variable: 'result',
-          value: Date.now() - startTime,
-          label: packageString.replace(/@/g, '[at]'),
+        Analytics.searchSuccess({
+          packageName: packageString,
+          timeTaken: Date.now() - startTime,
         })
       })
       .catch(err => {
@@ -109,14 +102,9 @@ class ResultPage extends PureComponent {
         })
         console.error(err)
 
-        Analytics.event({
-          category: 'Search',
-          action: 'Search Failure',
-          label: packageString.replace(/@/g, '[at]'),
-        })
-
-        Analytics.exception({
-          description: err.error ? err.error.code : err.toString(),
+        Analytics.searchFailure({
+          packageName: packageString,
+          timeTaken: Date.now() - startTime,
         })
       })
   }
@@ -169,12 +157,7 @@ class ResultPage extends PureComponent {
   }
 
   handleSearchSubmit = packageString => {
-    Analytics.event({
-      category: 'Search',
-      action: 'Searched',
-      label: packageString.replace(/@/g, '[at]'),
-    })
-
+    Analytics.performedSearch(packageString)
     const normalizedQuery = packageString.trim().toLowerCase()
 
     this.setState(
@@ -188,6 +171,7 @@ class ResultPage extends PureComponent {
       },
       () => {
         Router.push(`/result?p=${normalizedQuery}`)
+        Analytics.pageView('package result')
         this.activeQuery = normalizedQuery
         this.fetchResults(normalizedQuery)
         this.fetchHistory(normalizedQuery)
@@ -236,10 +220,9 @@ class ResultPage extends PureComponent {
     this.setState({ inputInitialValue: packageString })
     this.handleSearchSubmit(packageString)
 
-    Analytics.event({
-      category: 'Graph',
-      action: reading.disabled ? 'Graph Disabled Bar Click' : 'Graph Bar Click',
-      label: packageString.replace(/@/g, '[at]'),
+    Analytics.graphBarClicked({
+      packageName: packageString,
+      idDisabled: reading.disabled,
     })
   }
 

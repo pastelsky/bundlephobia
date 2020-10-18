@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import Analytics from 'react-ga'
+import Analytics from 'client/analytics'
 import ResultLayout from 'client/components/ResultLayout'
 import Separator from 'client/components/Separator'
 import scanBlacklist from '../../client/config/scanBlacklist'
@@ -15,7 +15,7 @@ export default class Scan extends Component {
   }
 
   componentDidMount() {
-    Analytics.pageview(window.location.pathname)
+    Analytics.pageView('scan')
   }
 
   resolveVersionFromRange = range => {
@@ -62,11 +62,7 @@ export default class Scan extends Component {
 
         this.setState({ packages }, this.setSelectedPackages)
 
-        Analytics.event({
-          category: 'scan',
-          action: 'package.json dropped',
-          value: packages.length,
-        })
+        Analytics.scanPackageJsonDropped(packages.length)
       } catch (err) {
         this.showInvalidFileError()
       }
@@ -91,10 +87,7 @@ export default class Scan extends Component {
       .join(',')
     Router.push(`/scan-results?packages=${query}`)
 
-    Analytics.event({
-      category: 'scan',
-      action: 'scan clicked',
-    })
+    Analytics.performedScan()
   }
 
   handleResetClick = () => {
@@ -104,9 +97,7 @@ export default class Scan extends Component {
   showInvalidFileError() {
     alert('Could not parse the `package.json` file.')
 
-    Analytics.exception({
-      description: 'Could not parse the `package.json` file',
-    })
+    Analytics.scanParseError()
   }
 
   render() {

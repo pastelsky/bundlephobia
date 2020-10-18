@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react'
-import Analytics from 'react-ga'
 import Head from 'next/head'
 
 import Layout from 'client/components/Layout'
@@ -31,22 +30,8 @@ export default class ResultPage extends PureComponent {
           },
           () => {
             Router.replace(`/result?p=${newPackageString}`)
-            Analytics.pageview(window.location.pathname)
           }
         )
-
-        Analytics.event({
-          category: 'Search',
-          action: 'Search Success',
-          label: packageString.replace(/@/g, '[at]'),
-        })
-
-        Analytics.timing({
-          category: 'Search',
-          variable: 'result',
-          value: Date.now() - startTime,
-          label: packageString.replace(/@/g, '[at]'),
-        })
       })
       .catch(err => {
         this.setState({
@@ -54,16 +39,6 @@ export default class ResultPage extends PureComponent {
           resultsPromiseState: 'rejected',
         })
         console.error(err)
-
-        Analytics.event({
-          category: 'Search',
-          action: 'Search Failure',
-          label: packageString.replace(/@/g, '[at]'),
-        })
-
-        Analytics.exception({
-          description: err.error ? err.error.code : err.toString(),
-        })
       })
   }
 
@@ -82,12 +57,6 @@ export default class ResultPage extends PureComponent {
   }
 
   handleSearchSubmit = packageString => {
-    Analytics.event({
-      category: 'Search',
-      action: 'Searched',
-      label: packageString.replace(/@/g, '[at]'),
-    })
-
     this.setState({
       results: {},
       historicalResultsPromiseState: 'pending',
@@ -141,12 +110,6 @@ export default class ResultPage extends PureComponent {
     const packageString = `${results.name}@${reading.version}`
     this.setState({ inputInitialValue: packageString })
     this.handleSearchSubmit(packageString)
-
-    Analytics.event({
-      category: 'Graph',
-      action: reading.disabled ? 'Graph Disabled Bar Click' : 'Graph Bar Click',
-      label: packageString.replace(/@/g, '[at]'),
-    })
   }
 
   render() {
