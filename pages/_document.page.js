@@ -5,7 +5,6 @@ import Document, {
   NextScript,
   Html,
 } from 'next/document'
-import Head from 'next/head'
 
 export default class MyDocument extends Document {
   static async getInitialProps(ctx) {
@@ -15,7 +14,7 @@ export default class MyDocument extends Document {
 
   render() {
     return (
-      <Html>
+      <Html lang="en">
         <DocumentHead>
           <meta charSet="utf-8" />
           <meta httpEquiv="x-ua-compatible" content="ie=edge" />
@@ -72,15 +71,19 @@ export default class MyDocument extends Document {
             content="https://s26.postimg.org/4s64v24c9/Artboard_4.png"
           />
           <meta property="twitter:creator" content="@_pastelsky" />
+          <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q4NKFFY42D"/>
+
           <script
             dangerouslySetInnerHTML={{
               __html: `
-          window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-          ga('create', 'UA-53900935-9', 'auto');
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+            
+              gtag('config', 'G-Q4NKFFY42D');
         `,
             }}
           />
-          <script async src="https://www.google-analytics.com/analytics.js" />
         </DocumentHead>
         <body>
           <Main />
