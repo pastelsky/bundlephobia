@@ -100,6 +100,10 @@ export default class MyDocument extends Document {
             content="https://s26.postimg.org/4s64v24c9/Artboard_4.png"
           />
           <meta property="twitter:creator" content="@_pastelsky" />
+          <meta
+            name="google-site-verification"
+            content="XizU-iXvsrtQJG5G4DWEGhD57SRRA8x3Y9FnSwk53X0"
+          />
           <script
             dangerouslySetInnerHTML={{
               __html: amplitudeScript,
