@@ -24,7 +24,12 @@ fastify.post('/package-cache', postPackageSizeMiddlware)
 fastify.get('/exports-cache', getExportsSizeMiddlware)
 fastify.post('/exports-cache', postExportsSizeMiddleware)
 
-fastify.listen(7001, '127.0.0.1', function (err) {
-  if (err) throw err
-  console.log(`server listening on ${fastify.server.address().port}`)
-})
+fastify
+  .listen(7001)
+  .then(() => {
+    console.log(`server listening on ${fastify.server.address().port}`)
+  })
+  .catch(err => {
+    console.error(err)
+    process.exit(1)
+  })
