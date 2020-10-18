@@ -1,4 +1,5 @@
 require('dotenv-defaults').config()
+
 const next = require('next')
 const exec = require('execa')
 const { parse } = require('url')
@@ -17,6 +18,7 @@ const Cache = require('./utils/cache.utils')
 const { parsePackageString } = require('./utils/common.utils')
 const firebaseUtils = require('./utils/firebase.utils')
 const logger = require('./server/Logger')
+require('newrelic')
 
 const limit = require('./server/middlewares/rateLimit.middleware')
 const exportsMiddlware = require('./server/middlewares/exports.middleware')
