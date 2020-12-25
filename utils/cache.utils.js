@@ -17,7 +17,9 @@ class Cache {
       })
       debug('cache hit')
       return result.data
-    } catch (err) {}
+    } catch (err) {
+      console.error(err.statusText)
+    }
   }
 
   async setPackageSize({ name, version }, result) {

@@ -1,6 +1,6 @@
 import Router, { withRouter } from 'next/router'
 import React, { Component } from 'react'
-import Analytics from 'react-ga'
+import Analytics from 'client/analytics'
 import FlipMove from 'react-flip-move'
 import cx from 'classnames'
 
@@ -134,8 +134,12 @@ class ScanResults extends Component {
     const queue = new PromiseQueue({ concurrency: 3 })
     const startTime = Date.now()
 
+    Analytics.pageView('scan results')
+
     packages.forEach(pack => {
-      queue.add(() =>
+      queue.add(() => {
+        const start = Date.now()
+
         API.getInfo(pack.packageString)
           .then(result => {
             this.updatePackageState(pack, {
@@ -144,10 +148,9 @@ class ScanResults extends Component {
               result,
             })
 
-            Analytics.event({
-              category: 'Search',
-              action: 'Search Success',
-              label: pack.packageString.replace(/@/g, '[at]'),
+            Analytics.searchSuccess({
+              packageName: pack.packageString,
+              timeTaken: Date.now() - start,
             })
           })
           .catch(({ error }) => {
@@ -156,13 +159,13 @@ class ScanResults extends Component {
               promiseState: 'rejected',
               error,
             })
-            Analytics.event({
-              category: 'Scan',
-              action: 'Search Failure',
-              label: pack.packageString.replace(/@/g, '[at]'),
+
+            Analytics.searchFailure({
+              packageName: pack.packageString,
+              timeTaken: Date.now() - start,
             })
           })
-      )
+      })
     })
 
     queue.onIdle().then(() => {
@@ -172,22 +175,11 @@ class ScanResults extends Component {
         0
       )
 
-      Analytics.set({ metric1: packages.length })
-      Analytics.set({ metric2: successfulBuildCount / packages.length })
-
-      Analytics.event({
-        category: 'scan',
-        action: 'calculation complete',
-      })
-
-      Analytics.timing({
-        category: 'scan',
-        variable: 'scan results',
-        value: Date.now() - startTime,
+      Analytics.scanCompleted({
+        successRatio: successfulBuildCount / packages.length,
+        timeTaken: Date.now() - startTime,
       })
     })
-
-    Analytics.pageview(window.location.pathname)
   }
 
   updatePackageState(pack, state) {
@@ -205,6 +197,7 @@ class ScanResults extends Component {
   }
 
   setParamsAndState = sortMode => {
+    debugger
     const updatedQuery = { ...this.props.router.query, sortMode }
     Router.replace(
       `/scan-results?${queryString.stringify(updatedQuery, { encode: false })}`

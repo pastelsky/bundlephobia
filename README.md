@@ -32,6 +32,7 @@
 - [importcost](https://atom.io/packages/importcost) - An Atom plugin to display size of imported packages
 - [JS Bundle Size Cross-Browser Extension](https://github.com/vicrazumov/js-bundle-size) - Chrome and Firefox extension automatically adding package size to the github and npm pages.
 - [npmcharts.com](https://npmcharts.com/compare/bundle-phobia-cli) - bundle size stats at top of page
+- [Rollpkg](https://github.com/rafgraph/rollpkg) - A build tool to create packages with Rollup and TypeScript
 
 ## Support
 

@@ -3,22 +3,17 @@ import AutocompleteInput from 'client/components/AutocompleteInput'
 import Layout from 'client/components/Layout'
 import Router from 'next/router'
 import Link from 'next/link'
-import Analytics from 'react-ga'
 import './index.scss'
+import Analytics from 'client/analytics'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox/AutocompleteInputBox'
 
 export default class Home extends PureComponent {
   componentDidMount() {
-    Analytics.pageview(window.location.pathname)
+    Analytics.pageView('home')
   }
 
   handleSearchSubmit = value => {
-    Analytics.event({
-      category: 'Search',
-      action: 'Searched',
-      label: value.trim().replace(/@/g, '[at]'),
-    })
-
+    Analytics.performedSearch(value.trim())
     Router.push(`/result?p=${value.trim()}`)
   }
 

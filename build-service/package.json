@@ -4,10 +4,10 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "dotenv-defaults": "^1.1.1",
-    "fastify": "^2.13.0",
+    "dotenv-defaults": "^2.0.1",
+    "fastify": "^3.6.0",
     "now-logs": "^0.0.7",
-    "package-build-stats": "6.2.2"
+    "package-build-stats": "7.0.2"
   },
   "engines": {
     "node": ">= 9.x.x",
