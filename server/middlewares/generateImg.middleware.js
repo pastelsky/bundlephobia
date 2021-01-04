@@ -29,6 +29,9 @@ async function generateImgMiddleware(ctx, next) {
     })
   } catch (err) {
     console.error(err)
+    ctx.cacheControl = {
+      noCache: true,
+    }
     await send(ctx, 'client/assets/public/android-chrome-192x192.png')
   }
 }
