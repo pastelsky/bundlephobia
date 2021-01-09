@@ -104,10 +104,13 @@ $bar-grow-duration: 0.4s;
   transition: opacity 0.2s, color 0.2s;
   font-family: $font-family-code;
   letter-spacing: -1px;
-  direction: rtl;
   line-height: 1;
   cursor: pointer;
-  max-height: $bar-width;
+  height: $bar-width;
+  text-align: end;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 
   .bar-graph-container:hover & {
     color: $raven;
