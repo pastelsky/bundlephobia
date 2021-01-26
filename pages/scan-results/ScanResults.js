@@ -314,7 +314,9 @@ class ScanResults extends Component {
         </ul>
         <div className="scan-results__note">
           <b>NOTE:</b> Sizes shown are when importing the complete package.
-          Actual sizes might be smaller if only parts of the package are used.
+          Actual sizes might be smaller if only parts of the package are used or
+          if packages share common dependencies. This is not a substitute for
+          bundle size.
         </div>
       </ResultLayout>
     )
