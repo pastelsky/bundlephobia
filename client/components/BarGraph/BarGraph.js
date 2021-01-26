@@ -51,7 +51,9 @@ export default class BarGraph extends PureComponent {
       reading => reading.hasJSModule
     )
     const firstTreeshakingIndex = readings.findIndex(
-      reading => !reading.disabled && (reading.hasJSModule || reading.hasJSNext)
+      reading =>
+        !reading.disabled &&
+        (reading.hasJSModule || reading.hasJSNext || reading.isModuleType)
     )
 
     return treeshakingIntroducedRecently ? firstTreeshakingIndex : -1
@@ -107,7 +109,7 @@ export default class BarGraph extends PureComponent {
           {options.isFirstSideEffectFree && (
             <div
               data-balloon={`Was marked side-effect free. ${
-                reading.hasJSNext || reading.hasJSModule
+                reading.hasJSNext || reading.hasJSModule || reading.isModuleType
                   ? 'Supports ES2015 exports also, hence fully tree-shakeable'
                   : "Doesn't export ESM yet, limited tree-shake ability"
               }`}

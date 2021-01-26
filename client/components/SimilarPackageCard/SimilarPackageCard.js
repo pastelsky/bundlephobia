@@ -101,7 +101,7 @@ export default class SimilarPackageCard extends Component {
           <div className="similar-package-card__label">Min + Gzip</div>
         </div>
 
-        {(pack.hasJSModule || pack.hasJSNext) && (
+        {(pack.hasJSModule || pack.hasJSNext || pack.isModuleType) && (
           <TreeShakeIcon className="similar-package-card__treeshake" />
         )}
       </div>

@@ -203,6 +203,7 @@ class ResultPage extends PureComponent {
         hasSideEffects: totalVersions[version].hasSideEffects,
         hasJSModule: totalVersions[version].hasJSModule,
         hasJSNext: totalVersions[version].hasJSNext,
+        isModuleType: totalVersions[version].isModuleType,
       }
     })
     const sorted = formattedResults.sort((packageA, packageB) =>
@@ -298,7 +299,9 @@ class ResultPage extends PureComponent {
           description={results.description}
           dependencyCount={results.dependencyCount}
           hasSideEffects={results.hasSideEffects}
-          isTreeShakeable={results.hasJSModule || results.hasJSNext}
+          isTreeShakeable={
+            results.hasJSModule || results.hasJSNext || results.isModuleType
+          }
           repository={results.repository}
           name={results.name}
         />

@@ -235,7 +235,7 @@ class ExportAnalysisSection extends Component {
     const { result } = this.props
     let incompatibleMessage = ''
 
-    if (!(result.hasJSModule || result.hasJSNext)) {
+    if (!(result.hasJSModule || result.hasJSNext || result.isModuleType)) {
       incompatibleMessage = 'This package does not export ES6 modules.'
     } else if (result.hasSideEffects === true) {
       incompatibleMessage =
