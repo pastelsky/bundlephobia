@@ -25,7 +25,7 @@ const prefixURL = (url, { base, user, project, head, path }) => {
 }
 
 async function getPackageDetails(packageName) {
-  let readme
+  let readme = ''
   const {
     body,
   } = await got(
@@ -38,8 +38,12 @@ async function getPackageDetails(packageName) {
   if ('readme' in body && body.readme.trim()) {
     readme = await stripMarkdown(body.readme)
   } else {
-    const readmeMD = await getReadme(body.repository)
-    readme = await stripMarkdown(readmeMD)
+    try {
+      let readmeMD = await getReadme(body.repository)
+      readme = await stripMarkdown(readmeMD)
+    } catch (e) {
+      console.error('error getting readme contents for ' + packageName, e)
+    }
   }
 
   return { ...body, readme }
@@ -63,8 +67,13 @@ async function getReadme(repository) {
       const { body } = await getGithubFile('README.md')
       return body
     } catch (e) {
-      const { body } = await getGithubFile('readme.md')
-      return body
+      try {
+        const { body } = await getGithubFile('readme.md')
+        return body
+      } catch (e) {
+        const { body } = await getGithubFile('Readme.md')
+        return body
+      }
     }
   } else if (host === 'gitlab.com') {
     const getGitlabFile = async ({ user, project, branch, filePath }) => {
