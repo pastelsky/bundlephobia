@@ -158,7 +158,7 @@ class ResultPage extends PureComponent {
 
   handleSearchSubmit = packageString => {
     Analytics.performedSearch(packageString)
-    const normalizedQuery = packageString.trim().toLowerCase()
+    const normalizedQuery = packageString.trim()
 
     this.setState(
       {
