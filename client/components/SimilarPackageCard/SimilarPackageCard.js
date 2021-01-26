@@ -113,15 +113,17 @@ export default class SimilarPackageCard extends Component {
           <div className="similar-package-card__wrap">
             <div className="similar-package-card__header">
               <h3 className="similar-package-card__name">{pack.name}</h3>
-              <a
-                href={pack.repository}
-                onClick={e => {
-                  e.stopPropagation()
-                  window.location = pack.repository
-                }}
-              >
-                <GithubIcon className="similar-package-card__github-icon" />
-              </a>
+              {pack.repository && (
+                <a
+                  href={pack.repository}
+                  onClick={e => {
+                    e.stopPropagation()
+                    window.location = pack.repository
+                  }}
+                >
+                  <GithubIcon className="similar-package-card__github-icon" />
+                </a>
+              )}
             </div>
             <p
               className="similar-package-card__description"

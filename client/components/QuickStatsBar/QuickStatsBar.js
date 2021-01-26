@@ -100,14 +100,16 @@ class QuickStatsBar extends Component {
           >
             <NPMIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon--npm" />
           </a>
-          <a
-            className="quick-stats-bar__link"
-            href={repository}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <GithubIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon quick-stats-bar__logo-icon--github" />
-          </a>
+          {repository && (
+            <a
+              className="quick-stats-bar__link"
+              href={repository}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <GithubIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon quick-stats-bar__logo-icon--github" />
+            </a>
+          )}
         </div>
       </div>
     )
