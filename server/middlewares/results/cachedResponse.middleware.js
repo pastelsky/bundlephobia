@@ -4,7 +4,7 @@ const { failureCache, debug } = require('../../init')
 const logger = require('../../Logger')
 
 async function cachedResponse(ctx, next) {
-  const { force } = ctx.query
+  const { force, peep } = ctx.query
   if (force) {
     await next()
     return
@@ -55,6 +55,13 @@ async function cachedResponse(ctx, next) {
   }
 
   logCache({ hit: false, message: `CACHE MISS: ${packageString}` })
+
+  // When peeping into the built results,
+  // we return a 404 if a build is required.
+  if (peep) {
+    ctx.status = 404
+    return
+  }
   await next()
 }
 
