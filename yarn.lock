@@ -5137,6 +5137,13 @@ cookies@~0.8.0:
     depd "~2.0.0"
     keygrip "~1.1.0"
 
+copy-anything@^2.0.1:
+  version "2.0.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/copy-anything/-/copy-anything-2.0.1.tgz#2afbce6da684bdfcbec93752fa762819cb480d9a"
+  integrity sha1-KvvObaaEvfy+yTdS+nYoGctIDZo=
+  dependencies:
+    is-what "^3.7.1"
+
 copy-concurrently@^1.0.0:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/copy-concurrently/-/copy-concurrently-1.0.5.tgz#92297398cae34937fcafd6ec8139c18051f0b5e0"
@@ -8701,6 +8708,11 @@ is-valid-npm-name@^0.0.5:
     is-string-and-not-blank "^0.0.2"
     speakingurl "^14.0.1"
 
+is-what@^3.7.1:
+  version "3.12.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/is-what/-/is-what-3.12.0.tgz#f4405ce4bd6dd420d3ced51a026fb90e03705e55"
+  integrity sha1-9EBc5L1t1CDTztUaAm+5DgNwXlU=
+
 is-whitespace-character@^1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/is-whitespace-character/-/is-whitespace-character-1.0.2.tgz#ede53b4c6f6fb3874533751ec9280d01928d03ed"
@@ -9705,20 +9717,22 @@ left-pad@^1.3.0:
   resolved "https://registry.yarnpkg.com/left-pad/-/left-pad-1.3.0.tgz#5b8a3a7765dfe001261dde915589e782f8c94d1e"
   integrity sha512-XI5MPzVNApjAyhQzphX8BkmKsKUxD4LdyK24iZeQGinBN9yTQT3bFlCBy/aVx2HrNcqQGsdot8ghrjyrvMCoEA==
 
-less-loader@^7.0.2:
-  version "7.0.2"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/less-loader/-/less-loader-7.0.2.tgz#0d73a49ec32a9d3ff12614598e6e2b47fb2a35c4"
-  integrity sha1-DXOknsMqnT/xJhRZjm4rR/sqNcQ=
+less-loader@^7.3.0:
+  version "7.3.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/less-loader/-/less-loader-7.3.0.tgz#f9d6d36d18739d642067a05fb5bd70c8c61317e5"
+  integrity sha1-+dbTbRhznWQgZ6Bftb1wyMYTF+U=
   dependencies:
     klona "^2.0.4"
     loader-utils "^2.0.0"
     schema-utils "^3.0.0"
 
-less@^3.12.2:
-  version "3.12.2"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/less/-/less-3.12.2.tgz#157e6dd32a68869df8859314ad38e70211af3ab4"
-  integrity sha1-FX5t0ypohp34hZMUrTjnAhGvOrQ=
+less@^4.1.0:
+  version "4.1.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/less/-/less-4.1.0.tgz#a12708d1951239db1c9d7eaa405f1ebac9a75b8d"
+  integrity sha1-oScI0ZUSOdscnX6qQF8eusmnW40=
   dependencies:
+    copy-anything "^2.0.1"
+    parse-node-version "^1.0.1"
     tslib "^1.10.0"
   optionalDependencies:
     errno "^0.1.1"
@@ -9726,7 +9740,7 @@ less@^3.12.2:
     image-size "~0.5.0"
     make-dir "^2.1.0"
     mime "^1.4.1"
-    native-request "^1.0.5"
+    needle "^2.5.2"
     source-map "~0.6.0"
 
 leven@^3.1.0:
@@ -10802,11 +10816,6 @@ nanomatch@^1.2.9:
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
 
-native-request@^1.0.5:
-  version "1.0.7"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/native-request/-/native-request-1.0.7.tgz#ff742dc555b4c8f2f1c14b548639ba174e573856"
-  integrity sha1-/3QtxVW0yPLxwUtUhjm6F05XOFY=
-
 native-url@0.3.4:
   version "0.3.4"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/native-url/-/native-url-0.3.4.tgz#29c943172aed86c63cee62c8c04db7f5756661f8"
@@ -10834,6 +10843,15 @@ needle@^2.2.1:
   version "2.4.1"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/needle/-/needle-2.4.1.tgz#14af48732463d7475696f937626b1b993247a56a"
   integrity sha1-FK9IcyRj10dWlvk3YmsbmTJHpWo=
+  dependencies:
+    debug "^3.2.6"
+    iconv-lite "^0.4.4"
+    sax "^1.2.4"
+
+needle@^2.5.2:
+  version "2.6.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/needle/-/needle-2.6.0.tgz#24dbb55f2509e2324b4a99d61f413982013ccdbe"
+  integrity sha1-JNu1XyUJ4jJLSpnWH0E5ggE8zb4=
   dependencies:
     debug "^3.2.6"
     iconv-lite "^0.4.4"
@@ -11776,10 +11794,10 @@ p-try@^2.0.0:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha1-yyhoVA4xPWHeWPr741zpAE1VQOY=
 
-package-build-stats@7.0.2:
-  version "7.0.2"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/package-build-stats/-/package-build-stats-7.0.2.tgz#e23e7e6beb9b52c9566dcb983f3913acf5dcabf2"
-  integrity sha1-4j5+a+ubUslWbcuYPzkTrPXcq/I=
+package-build-stats@7.1.0:
+  version "7.1.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/package-build-stats/-/package-build-stats-7.1.0.tgz#94a6242bebdc04d3fb2ddb3a4da91bb84ab24ed7"
+  integrity sha1-lKYkK+vcBNP7Lds6TakbuEqyTtc=
   dependencies:
     "@babel/core" "^7.12.1"
     "@babel/parser" "^7.12.2"
@@ -11797,8 +11815,8 @@ package-build-stats@7.0.2:
     fast-safe-stringify "^2.0.7"
     file-loader "^6.1.1"
     is-valid-npm-name "^0.0.5"
-    less "^3.12.2"
-    less-loader "^7.0.2"
+    less "^4.1.0"
+    less-loader "^7.3.0"
     memory-fs "^0.5.0"
     mini-css-extract-plugin "^1.0.0"
     node-fetch "^2.6.1"
@@ -11929,6 +11947,11 @@ parse-json@^5.0.0:
     error-ex "^1.3.1"
     json-parse-better-errors "^1.0.1"
     lines-and-columns "^1.1.6"
+
+parse-node-version@^1.0.1:
+  version "1.0.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/parse-node-version/-/parse-node-version-1.0.1.tgz#e2b5dbede00e7fa9bc363607f53327e8b073189b"
+  integrity sha1-4rXb7eAOf6m8NjYH9TMn6LBzGJs=
 
 parse-path@^4.0.0:
   version "4.0.1"
