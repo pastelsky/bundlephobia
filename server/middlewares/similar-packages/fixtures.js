@@ -48,19 +48,34 @@ const categories = {
     tags: [{ tag: 'color convert parse manipulate', weight: Weight.NORMAL }],
     similar: ['chroma-js', 'color', 'tinycolor2', 'colors.js', 'color2k'],
   },
-  cookie: {
-    name: 'Cookie Manipulation',
+  'cookie-browser': {
+    name: 'Cookie Manipulation for Node.js',
     tags: [
       { tag: 'cookie', weight: Weight.MAX },
       { tag: 'manipulate', weight: Weight.NORMAL },
-      { tag: 'http', weight: Weight.MID },
-      { tag: 'client', weight: Weight.MID },
       { tag: 'parse', weight: Weight.MID },
       { tag: 'parser', weight: Weight.MID },
       { tag: 'jar', weight: Weight.NORMAL },
+      { tag: 'node', weight: Weight.NORMAL },
+    ],
+    similar: [
+      'cookie',
+      'tough-cookie',
+      'js-cookie',
+      'tiny-cookie',
+      'universal-cookie',
+    ],
+  },
+  'cookie-node': {
+    name: 'Cookie Manipulation for Browsers',
+    tags: [
+      { tag: 'cookie', weight: Weight.MAX },
+      { tag: 'manipulate', weight: Weight.NORMAL },
+      { tag: 'parse', weight: Weight.MID },
+      { tag: 'parser', weight: Weight.MID },
       { tag: 'browser', weight: Weight.SMALL },
     ],
-    similar: ['cookie', 'tough-cookie', 'js-cookie', 'tiny-cookie'],
+    similar: ['js-cookie', 'browser-cookies', 'universal-cookie'],
   },
   'date-nlp': {
     name: 'Natural language date-time utilities',
@@ -259,7 +274,7 @@ const categories = {
       { tag: 'xhr', weight: Weight.NORMAL },
       { tag: 'browser', weight: Weight.NORMAL },
     ],
-    similar: ['axios', 'ky', 'superagent', 'whatwg-fetch', 'unfetch'],
+    similar: ['axios', 'ky', 'superagent', 'redaxios', 'unfetch'],
   },
   'icu-message-fromatter': {
     name: 'ICU message string formatters',
@@ -469,7 +484,7 @@ const categories = {
       { tag: 'check', weight: Weight.SMALL },
       { tag: 'structure', weight: Weight.MID },
     ],
-    similar: ['jsonschema', 'joi', 'ajv', 'superstruct', 'yup', 'validate.js'],
+    similar: ['jsonschema', 'joi', 'ajv', 'superstruct', 'yup', 'zod'],
   },
   'querystring-parser': {
     name: 'Query String Parsers',
