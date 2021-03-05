@@ -564,6 +564,17 @@ const categories = {
       'date-fns-timezone',
     ],
   },
+  'unit-conversion': {
+    name: 'Unit conversion',
+    tags: [
+      { tag: 'units', weight: Weight.NORMAL },
+      { tag: 'convert', weight: Weight.HIGH },
+      { tag: 'convert-units', weight: Weight.MAX },
+      { tag: 'unit-converter', weight: Weight.MAX },
+      { tag: 'measure', weight: Weight.MID },
+    ],
+    similar: ['convert-units', 'js-quantities', 'convert'],
+  },
   uuid: {
     name: 'Unique ID generators',
     tags: [
