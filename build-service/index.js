@@ -20,6 +20,10 @@ if (process.env.AMPLITUDE_API_KEY) {
       },
     })
   })
+
+  setInterval(() => {
+    client.flush()
+  }, 5000)
 }
 
 fastify.get('/size', async (req, res) => {
