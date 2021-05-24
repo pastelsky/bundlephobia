@@ -1,9 +1,26 @@
+require('dotenv-defaults').config()
 const fastify = require('fastify')()
 const {
   getPackageStats,
   getAllPackageExports,
   getPackageExportSizes,
+  eventQueue,
 } = require('package-build-stats')
+const Amplitude = require('@amplitude/node')
+
+if (process.env.AMPLITUDE_API_KEY) {
+  const client = Amplitude.init(process.env.AMPLITUDE_API_KEY)
+
+  eventQueue.on('*', (event, details) => {
+    client.logEvent({
+      event_type: event,
+      user_id: 'build-service',
+      event_properties: {
+        ...details,
+      },
+    })
+  })
+}
 
 fastify.get('/size', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
