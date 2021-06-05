@@ -371,16 +371,18 @@ class ResultPage extends PureComponent {
                     <h3> Download Time </h3>
                     <div className="time-stats">
                       <Stat
-                        value={getTimeFromSize(results.gzip).twoG}
-                        type={Stat.type.TIME}
-                        label="2G Edge"
-                        infoText={`Download Speed: ⬇️ ${DownloadSpeed.TWO_G} kB/s`}
-                      />
-                      <Stat
                         value={getTimeFromSize(results.gzip).threeG}
                         type={Stat.type.TIME}
-                        label="Emerging 3G"
+                        label="Slow 3G"
                         infoText={`Download Speed: ⬇️ ${DownloadSpeed.THREE_G} kB/s`}
+                      />
+                      <Stat
+                        value={getTimeFromSize(results.gzip).fourG}
+                        type={Stat.type.TIME}
+                        label="4G"
+                        infoText={`Download Speed: ⬇️ ${
+                          DownloadSpeed.FOUR_G / 1000
+                        } mB/s`}
                       />
                     </div>
                   </div>

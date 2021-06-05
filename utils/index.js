@@ -41,13 +41,13 @@ const formatTime = value => {
 // Speed in KB/s
 
 const DownloadSpeed = {
-  TWO_G: 30, // 2G Edge
-  THREE_G: 50, // Emerging markets 3G
+  THREE_G: 400, // Slow 3G
+  FOUR_G: 9000, // 4G
 }
 const getTimeFromSize = sizeInBytes => {
   return {
-    twoG: sizeInBytes / 1024 / DownloadSpeed.TWO_G,
     threeG: sizeInBytes / 1024 / DownloadSpeed.THREE_G,
+    fourG: sizeInBytes / 1024 / DownloadSpeed.FOUR_G,
   }
 }
 

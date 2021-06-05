@@ -154,8 +154,8 @@ function drawStatsImg({
   const minSize = formatSize(min)
   const gzipSize = formatSize(gzip)
   const times = getTimeFromSize(gzip)
-  const twoGTime = formatTime(times.twoG)
   const threeGTime = formatTime(times.threeG)
+  const fourGTime = formatTime(times.fourG)
 
   const minGroup = createStatGroup(
     minSize.size.toFixed(2),
@@ -183,10 +183,10 @@ function drawStatsImg({
     }
   )
 
-  const twogGroup = createStatGroup(
-    twoGTime.unit === 'ms' ? twoGTime.size : twoGTime.size.toFixed(1),
-    twoGTime.unit,
-    '2G',
+  const threeGGroup = createStatGroup(
+    threeGTime.unit === 'ms' ? threeGTime.size : threeGTime.size.toFixed(1),
+    threeGTime.unit,
+    'slow 3G',
     {
       // originY: 'center',
       originX: 'center',
@@ -196,10 +196,10 @@ function drawStatsImg({
     }
   )
 
-  const threegGroup = createStatGroup(
-    threeGTime.unit === 'ms' ? threeGTime.size : threeGTime.size.toFixed(1),
+  const fourGGroup = createStatGroup(
+    fourGTime.unit === 'ms' ? fourGTime.size : fourGTime.size.toFixed(1),
     threeGTime.unit,
-    'emerging 3G',
+    '4G',
     {
       // originY: 'center',
       originX: 'center',
@@ -216,8 +216,8 @@ function drawStatsImg({
     .add(packageNameGroup)
     .add(minGroup)
     .add(gzipGroup)
-    .add(twogGroup)
-    .add(threegGroup)
+    .add(threeGTime)
+    .add(fourGGroup)
 
   packageNameGroup.centerH()
   canvas.renderAll()
