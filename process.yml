@@ -9,7 +9,7 @@ apps:
     exec_mode: cluster
     env:
       NODE_ENV: production
-      DEBUG: 'bp*'
+      DEBUG: 'bp:*'
 
   - script: build-service/index.js
     name: build-service
@@ -33,4 +33,4 @@ apps:
     out_file: logs/cache-service.log
     env:
       NODE_ENV: production
-      DEBUG: 'bp*'
+      DEBUG: 'bp:*'
