@@ -216,7 +216,7 @@ function drawStatsImg({
     .add(packageNameGroup)
     .add(minGroup)
     .add(gzipGroup)
-    .add(threeGTime)
+    .add(threeGGroup)
     .add(fourGGroup)
 
   packageNameGroup.centerH()
