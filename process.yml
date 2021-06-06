@@ -21,7 +21,7 @@ apps:
     kill_timeout: 20000
     env:
       NODE_ENV: production
-      DEBUG: 'bp*'
+      DEBUG: 'bp:*'
 
   - script: cache-service/index.js
     name: cache-service

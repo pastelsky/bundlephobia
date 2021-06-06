@@ -216,7 +216,7 @@ class Queue {
    * @return {Promise<any>}
    */
   process(id, type, jobParams, options = {}) {
-    log('added new job %s %s %o %o', type, jobParams, options)
+    log('added new job %s %o %o', type, jobParams, options)
     const {
       priority = Job.priority.LOW,
       maxAge = this.options.maxAge,
