@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import Analytics from 'client/analytics'
 import ResultLayout from 'client/components/ResultLayout'
 import Separator from 'client/components/Separator'
+import MetaTags from '../../client/components/MetaTags'
 import scanBlacklist from '../../client/config/scanBlacklist'
 import Dropzone from 'react-dropzone'
 import Router from 'next/router'
@@ -164,6 +165,19 @@ export default class Scan extends Component {
         </div>
       )
     }
-    return <ResultLayout className="scan-page">{content}</ResultLayout>
+    return (
+      <ResultLayout className="scan-page">
+        <MetaTags
+          title="Scan package.json ❘ Bundlephobia"
+          canonicalPath="/scan"
+          description="Scan dependencies in your package.json to find the largest and heaviest npm packages in your frontend javascript bundle."
+        />
+        {content}
+      </ResultLayout>
+    )
   }
+}
+
+export const getServerSideProps = () => {
+  return { props: {} }
 }

@@ -51,12 +51,7 @@ export default class MyDocument extends Document {
         <DocumentHead>
           <meta charSet="utf-8" />
           <meta httpEquiv="x-ua-compatible" content="ie=edge" />
-          <meta name="application-name" content="BundlePhobia" />
-          <meta
-            name="description"
-            content="Bundlephobia helps you find the performance impact of adding a npm package to your front-end bundle"
-          />
-          <link rel="canonical" href="https://bundlephobia.com" />
+          <meta name="application-name" content="Bundlephobia" />
           <link
             href="https://fonts.googleapis.com/css?family=Source+Code+Pro:300,400,600"
             rel="stylesheet"
@@ -86,24 +81,10 @@ export default class MyDocument extends Document {
           />
           <link rel="manifest" href="/manifest.json" />
           <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5" />
-          <meta name="apple-mobile-web-app-title" content="BundlePhobia" />
-          <meta name="application-name" content="BundlePhobia" />
+          <meta name="apple-mobile-web-app-title" content="Bundlephobia" />
+          <meta name="application-name" content="Bundlephobia" />
           <meta name="theme-color" content="#212121" />
 
-          <meta property="og:title" key="og:title" content="BundlePhobia" />
-          <meta
-            property="og:description"
-            key="og:description"
-            content="Find the performance impact of adding a npm package to your bundle."
-          />
-          <meta property="og:type" content="website" />
-          <meta property="og:url" content="https://bundlephobia.com" />
-          <meta
-            property="og:image"
-            key="og:image"
-            content="https://s26.postimg.org/4s64v24c9/Artboard_4.png"
-          />
-          <meta property="twitter:creator" content="@_pastelsky" />
           <meta
             name="google-site-verification"
             content="XizU-iXvsrtQJG5G4DWEGhD57SRRA8x3Y9FnSwk53X0"

@@ -1,6 +1,7 @@
 # *
 User-agent: *
 Allow: /
+Disallow: /scan-results
 
 # Host
 Host: https://bundlephobia.com

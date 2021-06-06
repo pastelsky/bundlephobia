@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react'
 import Analytics from 'client/analytics'
-import Head from 'next/head'
 
 import ResultLayout from 'client/components/ResultLayout'
 import BarGraph from 'client/components/BarGraph'
@@ -11,10 +10,16 @@ import Router, { withRouter } from 'next/router'
 import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
 import { parsePackageString } from 'utils/common.utils'
-import { getTimeFromSize, DownloadSpeed, resolveBuildError } from 'utils'
+import {
+  getTimeFromSize,
+  DownloadSpeed,
+  resolveBuildError,
+  formatSize,
+} from 'utils'
 import Stat from 'client/components/Stat'
 
 import API from 'client/api'
+import MetaTags, { DEFAULT_DESCRIPTION_START } from 'client/components/MetaTags'
 import InterLinksSection from './components/InterLinksSection'
 
 import TreemapSection from './components/TreemapSection'
@@ -39,18 +44,7 @@ class ResultPage extends PureComponent {
     similarPackagesCategory: '',
   }
 
-  // Disables Next.js's Automatic Static Optimization
-  // which causes query params to be empty
-  // see https://nextjs.org/docs/routing/dynamic-routes#caveats
-  static async getInitialProps() {
-    return {}
-  }
-
   getPackageString(router) {
-    console.log(
-      'router.query.packageString.join()',
-      router.query.packageString.join('/')
-    )
     return router.query.packageString.join('/')
   }
 
@@ -239,51 +233,47 @@ class ResultPage extends PureComponent {
   getMetaTags = () => {
     const { router } = this.props
     const { resultsPromiseState, results } = this.state
-    let name, version
+    let name, version, formattedSizeText, formattedGZIPSizeText
 
     if (resultsPromiseState === 'fulfilled') {
       name = results.name
       version = results.version
+      const formattedSize = formatSize(results.size)
+      const formattedGZIPSize = formatSize(results.gzip)
+      formattedSizeText = `${formattedSize.size.toFixed(1)} ${
+        formattedSize.unit
+      }`
+      formattedGZIPSizeText = `${formattedGZIPSize.size.toFixed(1)} ${
+        formattedGZIPSize.unit
+      }`
     } else {
       name = parsePackageString(this.getPackageString(router)).name
       version = parsePackageString(this.getPackageString(router)).version
+      formattedSizeText = ''
+      formattedGZIPSizeText = ''
     }
 
-    const packageString = version ? `${name}@${version}` : name
     const origin =
       typeof window === 'undefined'
         ? 'https://bundlephobia.com'
         : window.location.origin
 
+    const title = version ? `${name} v${version}` : name
+    const description =
+      resultsPromiseState === 'fulfilled'
+        ? `Size of ${title} is ${formattedSizeText} (minified), and ${formattedGZIPSizeText} when compressed using GZIP. ${DEFAULT_DESCRIPTION_START}`
+        : `Find the size of javascript package ${title}. ${DEFAULT_DESCRIPTION_START}`
+
     return (
-      <Head>
-        <meta
-          property="og:title"
-          key="og:title"
-          content={`${packageString} ❘ BundlePhobia`}
-        />
-        <title key="title">{packageString} | BundlePhobia</title>
-        <meta
-          property="og:image"
-          key="og:image"
-          content={
-            origin +
-            `/api/stats-image?name=${name}&version=${version}&wide=true`
-          }
-        />
-        <meta
-          property="twitter:title"
-          key="twitter:title"
-          content={`${name} v${version} ❘ BundlePhobia`}
-        />
-        {name && version && (
-          <meta
-            name="twitter:card"
-            key="twitter:card"
-            content="summary_large_image"
-          />
-        )}
-      </Head>
+      <MetaTags
+        title={`${title} ❘ Bundlephobia`}
+        image={
+          origin + `/api/stats-image?name=${name}&version=${version}&wide=true`
+        }
+        description={description}
+        canonicalPath={`/package/${name}`}
+        isLargeImage={true}
+      />
     )
   }
 
@@ -460,6 +450,10 @@ class ResultPage extends PureComponent {
       </ResultLayout>
     )
   }
+}
+
+export const getServerSideProps = () => {
+  return { props: {} }
 }
 
 export default withRouter(ResultPage)

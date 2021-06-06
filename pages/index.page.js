@@ -6,6 +6,7 @@ import Link from 'next/link'
 import './index.scss'
 import Analytics from 'client/analytics'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox/AutocompleteInputBox'
+import MetaTags from '../client/components/MetaTags'
 
 export default class Home extends PureComponent {
   componentDidMount() {
@@ -20,6 +21,10 @@ export default class Home extends PureComponent {
   render() {
     return (
       <Layout className="homepage">
+        <MetaTags
+          title="Bundlephobia | Size of NPM dependencies"
+          canonicalPath=""
+        />
         <div className="homepage__container">
           <svg
             className="logo-graphic"
@@ -163,4 +168,8 @@ export default class Home extends PureComponent {
       </Layout>
     )
   }
+}
+
+export const getServerSideProps = () => {
+  return { props: {} }
 }

@@ -10,7 +10,7 @@ function App({ Component, pageProps }) {
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
-        <title key="title">BundlePhobia ❘ cost of adding a npm package</title>
+        <title key="title">Bundlephobia ❘ cost of adding a npm package</title>
       </Head>
       <Component {...pageProps} />
     </>
