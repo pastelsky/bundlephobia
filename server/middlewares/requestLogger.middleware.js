@@ -30,9 +30,9 @@ async function requestLoggerMiddleware(ctx, next) {
       status: ctx.response.status,
       time,
     },
-    `REQUEST: ${ctx.response.status}${time.toFixed(0)} ms ${ctx.req.method} ${
-      ctx.request.url
-    }`
+    `REQUEST: ${ctx.response.status} ${(time / 1000).toFixed(2)}s ${
+      ctx.req.method
+    } ${ctx.request.url}`
   )
 }
 
