@@ -28,20 +28,26 @@ export default function MetaTags({
         key="og:description"
         content={description || defaultDescription}
       />
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content={origin + canonicalPath} />
+      <meta property="og:type" key="og:type" content="website" />
+      <meta property="og:url" key="og:url" content={origin + canonicalPath} />
       <meta
         property="og:image"
         key="og:image"
         content={image || defaultImage}
       />
-      <meta property="twitter:creator" content="@_pastelsky" />
-      {isLargeImage && (
+      <meta
+        property="twitter:creator"
+        key="twitter:creator"
+        content="@_pastelsky"
+      />
+      {isLargeImage ? (
         <meta
           name="twitter:card"
           key="twitter:card"
           content="summary_large_image"
         />
+      ) : (
+        <meta name="twitter:card" content="summary" key="summary" />
       )}
       <link rel="canonical" href={origin + canonicalPath} />
     </Head>
