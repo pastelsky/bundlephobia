@@ -14,7 +14,7 @@ export default class Home extends PureComponent {
 
   handleSearchSubmit = value => {
     Analytics.performedSearch(value.trim())
-    Router.push(`/result?p=${value.trim()}`)
+    Router.push(`/package/${value.trim()}`)
   }
 
   render() {

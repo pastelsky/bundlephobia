@@ -109,7 +109,7 @@ export default class SimilarPackageCard extends Component {
     )
 
     return (
-      <Link href={`/result?p=${pack.name}`}>
+      <Link href={`/package/${pack.name}`}>
         <a className="similar-package-card">
           <div className="similar-package-card__wrap">
             <div className="similar-package-card__header">

@@ -34,7 +34,7 @@ export default class Layout extends Component {
               <ul className="footer__recent-search-list">
                 {recentSearches.map(search => (
                   <li key={search}>
-                    <Link href={`/result?p=${search}`}>
+                    <Link href={`/package/${search}`}>
                       <a>{search}</a>
                     </Link>
                   </li>

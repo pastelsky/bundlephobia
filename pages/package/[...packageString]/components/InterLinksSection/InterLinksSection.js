@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import {
-  parsePackageString,
-  daysFromToday,
-} from '../../../../utils/common.utils'
+import { parsePackageString, daysFromToday } from 'utils/common.utils'
 import API from 'client/api'
 import InterLinksSectionCard from './InterLinksSectionCard'
 import './InterLinksSection.scss'
@@ -47,6 +44,7 @@ const InterLinksSection = props => {
         <div className="interlinks-section__list">
           {morePackages.map(pack => (
             <InterLinksSectionCard
+              key={pack.package.name}
               name={pack.package.name}
               description={pack.package.description}
               date={pack.package.date}

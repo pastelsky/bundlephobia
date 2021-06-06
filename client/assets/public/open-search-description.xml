@@ -8,6 +8,6 @@
     <Image width="32" height="32" type="image/png">https://bundlephobia.com/favicon-32x32.png</Image>
     <Tags>bundlephobia</Tags>
     <Url type="text/html"
-         template="https://bundlephobia.com/result?p={searchTerms}"/>
+         template="https://bundlephobia.com/package/{searchTerms}"/>
     <moz:SearchForm>https://bundlephobia.com</moz:SearchForm>
 </OpenSearchDescription>

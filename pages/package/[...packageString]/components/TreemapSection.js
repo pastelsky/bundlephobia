@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { formatSize } from 'utils'
 import colors from 'client/config/colors'
-import Treemap from '../../../client/components/Treemap'
+import Treemap from 'client/components/Treemap'
 
 class TreemapSection extends Component {
   state = {
@@ -143,7 +143,7 @@ class TreemapSection extends Component {
                     {dep.isSelf || dep.isOthers ? (
                       <span> {dep.name} </span>
                     ) : (
-                      <a href={`/result?p=${dep.name}`} target="_blank">
+                      <a href={`/package/${dep.name}`} target="_blank">
                         {dep.name}
                       </a>
                     )}

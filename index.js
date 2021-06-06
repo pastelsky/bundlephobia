@@ -221,6 +221,12 @@ app.prepare().then(() => {
     }
   )
 
+  router.get('/result', async ctx => {
+    const packageString = ctx.query.p
+    ctx.redirect(`/package/${packageString.trim()}`)
+    ctx.status = 301
+  })
+
   router.get('*', async ctx => {
     const parsedUrl = parse(ctx.req.url, true)
     await handle(ctx.req, ctx.res, parsedUrl)

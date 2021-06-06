@@ -29,7 +29,7 @@ export default class ResultPage extends PureComponent {
             results,
           },
           () => {
-            Router.replace(`/result?p=${newPackageString}`)
+            Router.replace(`/package/${newPackageString}`)
           }
         )
       })
@@ -65,7 +65,7 @@ export default class ResultPage extends PureComponent {
 
     const normalizedQuery = packageString.trim().toLowerCase()
 
-    Router.push(`/result?p=${normalizedQuery}`)
+    Router.push(`/package/${normalizedQuery}`)
 
     this.fetchResults(normalizedQuery)
     this.fetchHistory(normalizedQuery)

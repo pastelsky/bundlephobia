@@ -84,7 +84,7 @@ class ResultCard extends Component {
           <span> {index + 1}. </span>
         </div>
         <div className="scan-results__name" data-name={pack.name}>
-          <Link href={`/result?p=${pack.packageString}`}>
+          <Link href={`/package/${pack.packageString}`}>
             <a>
               <span className="scan-results__package-name"> {pack.name}</span>
               <div>

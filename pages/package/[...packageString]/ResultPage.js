@@ -18,7 +18,7 @@ import API from 'client/api'
 import InterLinksSection from './components/InterLinksSection'
 
 import TreemapSection from './components/TreemapSection'
-import EmptyBox from '../../client/assets/empty-box.svg'
+import EmptyBox from 'client/assets/empty-box.svg'
 import SimilarPackagesSection from './components/SimilarPackagesSection'
 import ExportAnalysisSection from './components/ExportAnalysisSection'
 import QuickStatsBar from 'client/components/QuickStatsBar/QuickStatsBar'
@@ -33,7 +33,7 @@ class ResultPage extends PureComponent {
     resultsPromiseState: null,
     resultsError: null,
     historicalResultsPromiseState: null,
-    inputInitialValue: this.props.router.query.p || '',
+    inputInitialValue: this.getPackageString(this.props.router) || '',
     historicalResults: [],
     similarPackages: [],
     similarPackagesCategory: '',
@@ -46,28 +46,36 @@ class ResultPage extends PureComponent {
     return {}
   }
 
+  getPackageString(router) {
+    console.log(
+      'router.query.packageString.join()',
+      router.query.packageString.join('/')
+    )
+    return router.query.packageString.join('/')
+  }
+
   componentDidMount() {
     Analytics.pageView('package result')
 
-    const query = this.props.router.query
-    if (query.p && query.p.trim()) {
-      this.handleSearchSubmit(query.p)
+    const packageString = this.getPackageString(this.props.router)
+    if (packageString) {
+      this.handleSearchSubmit(packageString)
     }
   }
 
   componentDidUpdate(prevProps) {
-    const query = prevProps.router.query
-    const nextQuery = this.props.router.query
+    const packageString = this.getPackageString(prevProps.router)
+    const nextPackageString = this.getPackageString(this.props.router)
 
-    if (!nextQuery || !nextQuery.p.trim()) {
+    if (!nextPackageString) {
       return
     }
 
-    const currentPackage = parsePackageString(query.p)
-    const nextPackage = parsePackageString(nextQuery.p)
+    const currentPackage = parsePackageString(packageString)
+    const nextPackage = parsePackageString(nextPackageString)
 
     if (currentPackage.name !== nextPackage.name) {
-      this.handleSearchSubmit(nextQuery.p)
+      this.handleSearchSubmit(nextPackageString)
     }
   }
 
@@ -87,7 +95,7 @@ class ResultPage extends PureComponent {
             results,
           },
           () => {
-            Router.replace(`/result?p=${newPackageString}`)
+            Router.replace(`/package/${newPackageString}`)
           }
         )
 
@@ -171,7 +179,7 @@ class ResultPage extends PureComponent {
         historicalResults: [],
       },
       () => {
-        Router.push(`/result?p=${normalizedQuery}`)
+        Router.push(`/package/${normalizedQuery}`)
         Analytics.pageView('package result')
         this.activeQuery = normalizedQuery
         this.fetchResults(normalizedQuery)
@@ -237,8 +245,8 @@ class ResultPage extends PureComponent {
       name = results.name
       version = results.version
     } else {
-      name = parsePackageString(router.query.p).name
-      version = parsePackageString(router.query.p).version
+      name = parsePackageString(this.getPackageString(router)).name
+      version = parsePackageString(this.getPackageString(router)).version
     }
 
     const packageString = version ? `${name}@${version}` : name

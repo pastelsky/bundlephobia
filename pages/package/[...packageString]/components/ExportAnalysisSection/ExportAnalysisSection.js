@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import Analytics from 'client/analytics'
+import Analytics from 'client/analytics.js'
 import cx from 'classnames'
 import API from 'client/api'
 import SearchIcon from 'client/components/Icons/SearchIcon'

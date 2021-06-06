@@ -1,4 +1,4 @@
-import { sanitizeHTML, getDaysAgo } from 'utils/common.utils'
+import { sanitizeHTML } from 'utils/common.utils'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import React from 'react'
@@ -8,7 +8,7 @@ export default function InterLinksSectionCard(props) {
   const { description, name, date } = props
 
   return (
-    <Link href={`/result?p=${name}`}>
+    <Link href={`/package/${name}`}>
       <a className="interlinks-card">
         <div className="interlinks-card__wrap">
           <div className="interlinks-card__header">
