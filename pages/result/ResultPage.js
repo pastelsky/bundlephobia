@@ -15,6 +15,7 @@ import { getTimeFromSize, DownloadSpeed, resolveBuildError } from 'utils'
 import Stat from 'client/components/Stat'
 
 import API from 'client/api'
+import InterLinksSection from './components/InterLinksSection'
 
 import TreemapSection from './components/TreemapSection'
 import EmptyBox from '../../client/assets/empty-box.svg'
@@ -379,7 +380,7 @@ class ResultPage extends PureComponent {
                       <Stat
                         value={getTimeFromSize(results.gzip).fourG}
                         type={Stat.type.TIME}
-                        label="4G"
+                        label="Emerging 4G"
                         infoText={`Download Speed: ⬇️ ${
                           DownloadSpeed.FOUR_G / 1000
                         } mB/s`}
@@ -442,6 +443,11 @@ class ResultPage extends PureComponent {
               />
             </div>
           )}
+
+          {resultsPromiseState === 'fulfilled' &&
+            parsePackageString(results.name).scoped && (
+              <InterLinksSection packageName={results.name} />
+            )}
         </section>
       </ResultLayout>
     )

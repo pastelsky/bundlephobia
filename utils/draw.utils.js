@@ -199,7 +199,7 @@ function drawStatsImg({
   const fourGGroup = createStatGroup(
     fourGTime.unit === 'ms' ? fourGTime.size : fourGTime.size.toFixed(1),
     threeGTime.unit,
-    '4G',
+    'emerging 4G',
     {
       // originY: 'center',
       originX: 'center',

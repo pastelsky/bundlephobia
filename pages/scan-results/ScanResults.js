@@ -56,7 +56,7 @@ class ResultCard extends Component {
               className="scan-results__stat-item"
               value={getTimeFromSize(pack.result.gzip).fourG}
               type={Stat.type.TIME}
-              label="4G"
+              label="Emerging 4G"
               compact
             />
           </div>
@@ -306,7 +306,7 @@ class ScanResults extends Component {
                 className="scan-results__stat-item"
                 value={totalGZIPSize / 1024 / 50}
                 type={Stat.type.TIME}
-                label="Emerging 3G"
+                label="Slow 3G"
                 compact
               />
             </div>

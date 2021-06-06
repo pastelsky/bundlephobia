@@ -138,7 +138,7 @@ class TreemapSection extends Component {
             >
               {dep.percentShare > ellipsizeLimit &&
               dep.name.length < dep.percentShare * (12 / ellipsizeLimit) ? (
-                <div>
+                <div className="treemap__content">
                   <div className="treemap__label">
                     {dep.isSelf || dep.isOthers ? (
                       <span> {dep.name} </span>

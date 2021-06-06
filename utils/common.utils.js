@@ -1,15 +1,20 @@
 // Used by the server as well as the client
 // Use ES5 only
 
+import DOMPurify from 'dompurify'
+
 function parsePackageString(packageString) {
   // Scoped packages
   let name,
     version,
+    scope,
     scoped = false
   const lastAtIndex = packageString.lastIndexOf('@')
+  const firstSlashIndex = packageString.indexOf('/')
 
   if (packageString.startsWith('@')) {
     scoped = true
+    scope = packageString.substring(1, firstSlashIndex)
     if (lastAtIndex === 0) {
       name = packageString
       version = null
@@ -27,7 +32,22 @@ function parsePackageString(packageString) {
     }
   }
 
-  return { name, version, scoped }
+  return { name, version, scope, scoped }
 }
 
-module.exports = { parsePackageString }
+function daysFromToday(date) {
+  const date1 = new Date()
+  const date2 = new Date(date)
+  const diffTime = Math.abs(date2 - date1)
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
+}
+
+function sanitizeHTML(html) {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['b', 'i', 'div'],
+    ALLOWED_ATTR: [''],
+  })
+}
+
+module.exports = { parsePackageString, daysFromToday, sanitizeHTML }

@@ -12,19 +12,19 @@ const promiseSeries = require('promise.series')
 require('dotenv').config()
 
 const github = new GithubAPI({
-  debug: false,
+  debug: false
 })
 
 github.authenticate({
   type: 'oauth',
   key: process.env.GITHUB_CLIENT_ID,
-  secret: process.env.GITHUB_CLIENT_SECRET,
+  secret: process.env.GITHUB_CLIENT_SECRET
 })
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.FIREBASE_DATABASE_URL,
+  databaseURL: process.env.FIREBASE_DATABASE_URL
 }
 
 firebase.initializeApp(firebaseConfig)
@@ -34,11 +34,11 @@ const port = process.env.PORT || 5000
 
 async function getPackageFromRepo(author, name) {
   const {
-    data: { content },
+    data: { content }
   } = await github.repos.getContent({
     repo: author,
     owner: name,
-    path: 'package.json',
+    path: 'package.json'
   })
 
   if (content) {
@@ -76,11 +76,11 @@ async function updateHistoricalData() {
   try {
     const [githubTrendingPackages, searchTrendingPackages] = await Promise.all([
       getGithubTrendingPackages(),
-      getTrendingSearches(),
+      getTrendingSearches()
     ])
 
     const popularPackages = [
-      ...new Set(githubTrendingPackages.concat(searchTrendingPackages)),
+      ...new Set(githubTrendingPackages.concat(searchTrendingPackages))
     ]
     console.log('popular', popularPackages)
   } catch (err) {
@@ -149,7 +149,7 @@ async function mostPopuplarGithubRepos() {
     q: 'language:javascript+npm in:readme+size:1000..50000+mirror:false',
     sort: 'stars',
     page: 1,
-    per_page: 10,
+    per_page: 10
   })
 
   debug(

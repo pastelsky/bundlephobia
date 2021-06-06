@@ -275,9 +275,15 @@
   }
 }
 
+.treemap__content {
+  max-height: 100%;
+  max-width: 100%;
+}
 .treemap__label {
   font-family: $font-family-code;
-
+  max-height: 75%;
+  max-width: 100%;
+  overflow: hidden;
   a {
     color: inherit;
 

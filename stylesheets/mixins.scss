@@ -1,0 +1,30 @@
+@mixin horizontal-scroll-overflow-indicators {
+  overflow-y: scroll;
+  height: 100%;
+  background-image: /* Shadows */ linear-gradient(to right, white, white),
+    linear-gradient(to right, white, white),
+    /* Shadow covers */
+      linear-gradient(to right, rgba(30, 30, 30, 0.08), rgba(255, 255, 255, 0)),
+    linear-gradient(to left, rgba(30, 30, 30, 0.08), rgba(255, 255, 255, 0));
+
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size: 2vw 100%, 2vw 100%, 1vw 100%, 1vw 100%;
+
+  /* Opera doesn't support this in the shorthand */
+  background-attachment: local, local, scroll, scroll;
+}
+
+@mixin hide-scrollbars {
+  /* this will hide the scrollbar in mozilla based browsers */
+  overflow: -moz-scrollbars-none;
+  scrollbar-width: none;
+  /* this will hide the scrollbar in internet explorers */
+  -ms-overflow-style: none;
+
+  /* this will hide the scrollbar in webkit based browsers - safari, chrome, etc */
+  &::-webkit-scrollbar {
+    width: 0 !important;
+    display: none;
+  }
+}

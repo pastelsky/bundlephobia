@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import DOMPurify from 'dompurify'
 import './QuickStatsBar.scss'
+import { sanitizeHTML } from '../../../utils/common.utils'
 
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import SideEffectIcon from '../../assets/side-effect.svg'
@@ -32,7 +33,7 @@ class QuickStatsBar extends Component {
       trimmed = description.trim()
     }
 
-    return DOMPurify.sanitize(trimmed)
+    return sanitizeHTML(trimmed)
   }
 
   render() {

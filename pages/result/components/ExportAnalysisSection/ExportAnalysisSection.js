@@ -308,10 +308,7 @@ class ExportAnalysisSection extends Component {
 
     return (
       <div className="export-analysis-section">
-        <h2 className="result__section-heading result__section-heading--new">
-          {' '}
-          Exports Analysis{' '}
-        </h2>
+        <h2 className="result__section-heading"> Exports Analysis </h2>
 
         {this.getIncompatibleMessage() && this.renderIncompatible()}
         {analysisState === State.REJECTED && this.renderFailure()}
