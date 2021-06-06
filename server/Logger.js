@@ -23,11 +23,19 @@ const winston = require('winston')
 //   },
 // }
 
+const logFormat = winston.format.printf(function (info) {
+  let date = new Date().toISOString()
+  return `${date}-${info.level}: ${JSON.stringify(info.message, null, 4)}\n`
+})
+
 class Logger {
   constructor() {
-    let transports = []
+    let transports = [
+      new winston.transports.Console({
+        format: winston.format.combine(winston.format.colorize(), logFormat),
+      }),
+    ]
 
-    winston.remove(winston.transports.Console)
     this.logger = winston.createLogger({
       transports,
     })
