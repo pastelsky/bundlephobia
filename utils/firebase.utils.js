@@ -129,7 +129,7 @@ class FirebaseUtils {
       return packageHistory
     }
 
-    debug('searched history %s %o', name, Object.keys(firebaseHistory))
+    // debug('searched history %s %o', name, Object.keys(firebaseHistory))
     Object.keys(firebaseHistory).forEach(version => {
       const decodedVersion = decodeFirebaseKey(version)
       if (limitedVersions.includes(decodedVersion)) {
