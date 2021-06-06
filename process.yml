@@ -5,6 +5,7 @@ apps:
     max_memory_restart: 300M
     error_file: logs/index.log
     out_file: logs/index.log
+    kill_timeout: 20000
     env:
       NODE_ENV: production
       DEBUG: 'bp*'
@@ -15,6 +16,7 @@ apps:
     max_memory_restart: 1000M
     error_file: logs/build-service.log
     out_file: logs/build-service.log
+    kill_timeout: 20000
     env:
       NODE_ENV: production
       DEBUG: 'bp*'
@@ -23,6 +25,7 @@ apps:
     name: cache-service
     instances: 1
     max_memory_restart: 200M
+    kill_timeout: 5000
     error_file: logs/cache-service.log
     out_file: logs/cache-service.log
     env:
