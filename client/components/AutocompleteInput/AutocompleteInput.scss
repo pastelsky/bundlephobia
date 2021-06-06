@@ -23,6 +23,7 @@
   width: 100%;
   box-sizing: border-box;
   letter-spacing: -0.7px;
+  margin: 0;
 
   @media screen and (max-width: 40em) {
     padding: $global-spacing (20px + $global-spacing) $global-spacing

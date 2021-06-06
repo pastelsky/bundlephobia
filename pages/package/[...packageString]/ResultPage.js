@@ -318,6 +318,7 @@ class ResultPage extends PureComponent {
                 initialValue={inputInitialValue}
                 className="result-page__search-input"
                 onSearchSubmit={this.handleSearchSubmit}
+                renderAsH1={true}
               />
             </AutocompleteInputBox>
             {resultsPromiseState === 'pending' && (

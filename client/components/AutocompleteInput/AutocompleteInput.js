@@ -12,6 +12,7 @@ import './AutocompleteInput.scss'
 export default class AutocompleteInput extends PureComponent {
   static defaultProps = {
     initialValue: '',
+    renderAsH1: false,
   }
 
   state = {
@@ -69,7 +70,7 @@ export default class AutocompleteInput extends PureComponent {
   }
 
   render() {
-    const { className, containerClass, autoFocus } = this.props
+    const { className, containerClass, autoFocus, renderAsH1 } = this.props
     const { suggestions, value, isMenuVisible } = this.state
     const { name, version } = parsePackageString(value)
     const baseFontSize =
@@ -80,6 +81,8 @@ export default class AutocompleteInput extends PureComponent {
       value.length < maxFullSizeChars
         ? null
         : `${baseFontSize - (value.length - maxFullSizeChars) * 0.8}px`
+    const DummyInputElement = attributes =>
+      renderAsH1 ? <h1 {...attributes} /> : <div {...attributes} />
 
     return (
       <form
@@ -128,7 +131,7 @@ export default class AutocompleteInput extends PureComponent {
             }}
             renderItem={this.renderSuggestionItem}
           />
-          <div
+          <DummyInputElement
             style={{ fontSize: searchFontSize }}
             className="autocomplete-input__dummy-input"
           >
@@ -137,7 +140,7 @@ export default class AutocompleteInput extends PureComponent {
               <span className="dummy-input__at-separator">@</span>
             )}
             <span className="dummy-input__package-version">{version}</span>
-          </div>
+          </DummyInputElement>
         </div>
         <div
           className="autocomplete-input__search-icon"
