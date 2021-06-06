@@ -1,0 +1,17 @@
+@import '../../../../stylesheets/variables';
+@import '../../../../stylesheets/mixins';
+
+.interlinks-section {
+  width: 100%;
+}
+
+.interlinks-section__list {
+  @include horizontal-scroll-overflow-indicators;
+  @include hide-scrollbars;
+
+  display: flex;
+  margin-left: -$global-spacing;
+  margin-right: -$global-spacing;
+  white-space: nowrap;
+  overflow-x: scroll;
+}

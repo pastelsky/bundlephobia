@@ -26,7 +26,10 @@ const formatSize = value => {
 
 const formatTime = value => {
   let unit, size
-  if (value < 0.5) {
+  if (value < 0.001) {
+    unit = 'μs'
+    size = Math.round(value * 1000000)
+  } else if (value < 0.5) {
     unit = 'ms'
     size = Math.round(value * 1000)
   } else {
@@ -42,7 +45,7 @@ const formatTime = value => {
 
 const DownloadSpeed = {
   THREE_G: 400, // Slow 3G
-  FOUR_G: 9000, // 4G
+  FOUR_G: 7000, // 4G
 }
 const getTimeFromSize = sizeInBytes => {
   return {

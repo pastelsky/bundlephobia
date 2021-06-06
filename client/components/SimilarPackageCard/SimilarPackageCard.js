@@ -4,6 +4,7 @@ import { formatSize } from 'utils'
 import Link from 'next/link'
 import DOMPurify from 'dompurify'
 import queryString from 'query-string'
+import { sanitizeHTML } from '../../../utils/common.utils'
 
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import PlusIcon from '../../assets/plus.svg'
@@ -128,7 +129,7 @@ export default class SimilarPackageCard extends Component {
             <p
               className="similar-package-card__description"
               dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(pack.description),
+                __html: sanitizeHTML(pack.description),
               }}
             />
           </div>
