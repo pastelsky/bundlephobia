@@ -26,7 +26,7 @@ const formatSize = value => {
 
 const formatTime = value => {
   let unit, size
-  if (value < 0.001) {
+  if (value < 0.0005) {
     unit = 'μs'
     size = Math.round(value * 1000000)
   } else if (value < 0.5) {
