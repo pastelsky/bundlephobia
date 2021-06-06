@@ -29,6 +29,10 @@ module.exports = {
     /^parcel$/,
     /^devextreme$/,
     /^yarn$/,
+
+    // big packages, that fail often
+    /^styled-icons$/,
+    /^razzle$/,
   ],
 
   unsupported: [
