@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://bundlephobia.com
+
+# Sitemaps
+Sitemap: https://bundlephobia.com/sitemap.xml

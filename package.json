@@ -93,6 +93,7 @@
   "scripts": {
     "dev": "DEBUG=bp:* node index",
     "build": "NODE_ENV=production next build",
+    "prebuild": "node bin/generate-sitemap.js",
     "prestart": "yarn build",
     "start": "NODE_ENV=production DEBUG=bp:* node index",
     "prod": "yarn run build && yarn start",
@@ -131,6 +132,7 @@
     "postcss-loader": "^3.0.0",
     "prettier": "2.1.2",
     "pretty-quick": "^3.1.0",
-    "sass-loader": "^8.0.2"
+    "sass-loader": "^8.0.2",
+    "sitemap": "^7.0.0"
   }
 }
