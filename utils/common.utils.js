@@ -1,7 +1,7 @@
 // Used by the server as well as the client
 // Use ES5 only
 
-import DOMPurify from 'dompurify'
+const DOMPurify = require('dompurify')
 
 function parsePackageString(packageString) {
   // Scoped packages
