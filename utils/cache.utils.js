@@ -10,12 +10,10 @@ const API = axios.create({
 
 class Cache {
   async getPackageSize({ name, version }) {
-    debug('get package %s@%s', name, version)
     try {
       const result = await API.get('/package-cache', {
         params: { name, version },
       })
-      debug('cache hit')
       return result.data
     } catch (err) {
       console.error(err.statusText)

@@ -25,7 +25,7 @@ const winston = require('winston')
 
 const logFormat = winston.format.printf(function (info) {
   let date = new Date().toISOString()
-  return `${date}-${info.level}: ${JSON.stringify(info.message, null, 4)}\n`
+  return `${date} ${info.level}: ${JSON.stringify(info.message, null, 4)}`
 })
 
 class Logger {

@@ -15,7 +15,7 @@
     "npm": ">= 5.5.x"
   },
   "scripts": {
-    "start": "DEBUG=bp-* node index",
-    "dev": "DEBUG=bp-* node index"
+    "start": "DEBUG=bp:* node index",
+    "dev": "DEBUG=bp:* node index"
   }
 }
