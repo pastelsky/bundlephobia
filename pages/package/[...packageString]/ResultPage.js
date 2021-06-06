@@ -271,6 +271,7 @@ class ResultPage extends PureComponent {
           origin + `/api/stats-image?name=${name}&version=${version}&wide=true`
         }
         description={description}
+        twitterDescription="Insights into npm packages"
         canonicalPath={`/package/${name}`}
         isLargeImage={true}
       />

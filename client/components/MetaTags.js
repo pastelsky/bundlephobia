@@ -6,6 +6,7 @@ export const DEFAULT_DESCRIPTION_START =
 
 export default function MetaTags({
   description,
+  twitterDescription,
   title,
   canonicalPath,
   image,
@@ -40,6 +41,13 @@ export default function MetaTags({
         key="twitter:creator"
         content="@_pastelsky"
       />
+      {twitterDescription && (
+        <meta
+          property="twitter:description"
+          key="twitter:description"
+          content={twitterDescription}
+        />
+      )}
       {isLargeImage ? (
         <meta
           name="twitter:card"
