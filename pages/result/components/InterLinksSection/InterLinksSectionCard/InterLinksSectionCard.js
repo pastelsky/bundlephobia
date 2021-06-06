@@ -12,7 +12,7 @@ export default function InterLinksSectionCard(props) {
       <a className="interlinks-card">
         <div className="interlinks-card__wrap">
           <div className="interlinks-card__header">
-            <h3 className="interlinks-card__name">{name}</h3>
+            <h4 className="interlinks-card__name">{name}</h4>
           </div>
           <p
             className="interlinks-card__description"

@@ -34,6 +34,10 @@ const InterLinksSection = props => {
   const { scope } = parsePackageString(props.packageName)
   const morePackages = usePackagesFromSameScope(props.packageName)
 
+  if (!morePackages.length) {
+    return null
+  }
+
   return (
     <div className="content-container">
       <div className="interlinks-section">
