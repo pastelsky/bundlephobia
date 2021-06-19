@@ -3,15 +3,24 @@ import React, { Component } from 'react'
 import ProgressHex from '../ProgressHex'
 import './BuildProgressIndicator.scss'
 
+const OptimisticLoadTimeout = 700
+
 export default class BuildProgressIndicator extends Component {
   constructor(props) {
     super(props)
     this.stage = 0
-    this.state = {}
+    this.state = {
+      started: false,
+    }
   }
 
   componentDidMount() {
-    this.setMessage()
+    setTimeout(() => {
+      if (!this.props.isDone) {
+        this.setState({ started: true })
+        this.setMessage()
+      }
+    }, OptimisticLoadTimeout)
   }
 
   componentWillReceiveProps(nextProps) {
@@ -68,7 +77,11 @@ export default class BuildProgressIndicator extends Component {
   }
 
   render() {
-    const { progressText } = this.state
+    const { progressText, started } = this.state
+    if (!started) {
+      return null
+    }
+
     return (
       <div className="build-progress-indicator">
         <ProgressHex compact />
