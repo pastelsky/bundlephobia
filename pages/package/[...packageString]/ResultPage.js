@@ -383,7 +383,7 @@ class ResultPage extends PureComponent {
                         label="Emerging 4G"
                         infoText={`Download Speed: ⬇️ ${
                           DownloadSpeed.FOUR_G / 1000
-                        } mB/s`}
+                        } MB/s`}
                       />
                     </div>
                   </div>
