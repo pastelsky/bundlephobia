@@ -44,8 +44,8 @@ const formatTime = value => {
 // Speed in KB/s
 
 const DownloadSpeed = {
-  THREE_G: 400, // Slow 3G
-  FOUR_G: 7000, // 4G
+  THREE_G: 400 / 8, // Slow 3G
+  FOUR_G: 7000 / 8, // 4G
 }
 const getTimeFromSize = sizeInBytes => {
   return {
