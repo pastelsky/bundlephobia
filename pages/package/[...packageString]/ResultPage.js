@@ -289,9 +289,11 @@ class ResultPage extends PureComponent {
       similarPackagesCategory,
     } = this.state
 
-    const { errorName, errorBody, errorDetails } = resolveBuildError(
-      resultsError
-    )
+    const { errorName, errorBody, errorDetails } =
+      resolveBuildError(resultsError)
+
+    const referenceSpeedInfoText = (speed, units) =>
+      `Download Speed: ⬇️ ${speed} ${units}.\n Does not include HTTP request latency`
 
     const getQuickStatsBar = () =>
       resultsPromiseState === 'fulfilled' && (
@@ -375,15 +377,19 @@ class ResultPage extends PureComponent {
                         value={getTimeFromSize(results.gzip).threeG}
                         type={Stat.type.TIME}
                         label="Slow 3G"
-                        infoText={`Download Speed: ⬇️ ${DownloadSpeed.THREE_G} kB/s`}
+                        infoText={referenceSpeedInfoText(
+                          DownloadSpeed.THREE_G,
+                          'kB/s'
+                        )}
                       />
                       <Stat
                         value={getTimeFromSize(results.gzip).fourG}
                         type={Stat.type.TIME}
                         label="Emerging 4G"
-                        infoText={`Download Speed: ⬇️ ${
-                          DownloadSpeed.FOUR_G / 1000
-                        } mB/s`}
+                        infoText={referenceSpeedInfoText(
+                          DownloadSpeed.FOUR_G,
+                          'kB/s'
+                        )}
                       />
                     </div>
                   </div>
