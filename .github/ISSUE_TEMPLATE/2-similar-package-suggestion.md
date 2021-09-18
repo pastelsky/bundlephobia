@@ -4,6 +4,7 @@ about: Suggest a better alternative to a popular package
 title: 'Package suggestion: <alternative> for <package / category>'
 labels: similar suggestion
 assignees: ''
+
 ---
 
 **Package name**
@@ -14,7 +15,7 @@ assignees: ''
 
 **Quality check**
 
-<!-- All of the below factors are considered for acceptance -->
+<!-- All of the below factors are necessary for acceptance -->
 
 - [ ] Package has sufficient overlap in functionality to act as a replacement.
 - [ ] Package is actively maintained, and/or stable for use.
