@@ -293,7 +293,7 @@ class ResultPage extends PureComponent {
       resolveBuildError(resultsError)
 
     const referenceSpeedInfoText = (speed, units) =>
-      `Download Speed: ⬇️ ${speed} ${units}.\n Does not include HTTP request latency`
+      `Download Speed: ⬇️ ${speed} ${units}.\nExclusive of HTTP request latency.`
 
     const getQuickStatsBar = () =>
       resultsPromiseState === 'fulfilled' && (
