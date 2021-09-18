@@ -99,6 +99,26 @@ export default class MyDocument extends Document {
           <Main />
           <NextScript />
         </body>
+
+        {/* See https://docs.sentry.io/platforms/javascript/troubleshooting/#using-the-javascript-proxy-api */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+          if ("Proxy" in window) {
+            var handler = {
+              get: function(_, key) {
+                return new Proxy(function(cb) {
+                  if (key === "flush" || key === "close") return Promise.resolve();
+                  if (typeof cb === "function") return cb(window.Sentry);
+                  return window.Sentry;
+                }, handler);
+              },
+            };
+            window.Sentry = new Proxy({}, handler);
+          }
+        `,
+          }}
+        />
         <script
           src="https://browser.sentry-cdn.com/5.15.0/bundle.min.js"
           crossOrigin="anonymous"
