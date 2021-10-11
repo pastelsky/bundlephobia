@@ -29,7 +29,9 @@ if (process.env.AMPLITUDE_API_KEY) {
 fastify.get('/size', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
   try {
-    const result = await getPackageStats(packageString)
+    const result = await getPackageStats(packageString, {
+      installTimeout: 60000,
+    })
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
@@ -41,7 +43,9 @@ fastify.get('/exports-sizes', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
 
   try {
-    const result = await getPackageExportSizes(packageString)
+    const result = await getPackageExportSizes(packageString, {
+      installTimeout: 60000,
+    })
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
@@ -53,7 +57,9 @@ fastify.get('/exports', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
 
   try {
-    const result = await getAllPackageExports(packageString)
+    const result = await getAllPackageExports(packageString, {
+      installTimeout: 60000,
+    })
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
