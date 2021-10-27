@@ -35,7 +35,8 @@ fastify.get('/size', async (req, res) => {
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
-    return res.code(500).send(err)
+    const errorToSend = 'toJSON' in err ? err.toJSON() : err
+    return res.code(500).send(errorToSend)
   }
 })
 
@@ -49,7 +50,8 @@ fastify.get('/exports-sizes', async (req, res) => {
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
-    return res.code(500).send(err)
+    const errorToSend = 'toJSON' in err ? err.toJSON() : err
+    return res.code(500).send(errorToSend)
   }
 })
 
@@ -63,7 +65,8 @@ fastify.get('/exports', async (req, res) => {
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
-    return res.code(500).send(err)
+    const errorToSend = 'toJSON' in err ? err.toJSON() : err
+    return res.code(500).send(errorToSend)
   }
 })
 
