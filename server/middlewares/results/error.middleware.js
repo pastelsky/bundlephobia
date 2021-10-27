@@ -40,6 +40,7 @@ async function errorHandler(ctx, next) {
       respondWithError(500, { code: 'UnknownError', details: err })
       return
     }
+    console.log('ERROR OBJ IS', JSON.stringify(err, null, 2))
 
     switch (err.name) {
       case 'BlacklistedPackageError':

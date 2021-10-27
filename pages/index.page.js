@@ -22,7 +22,7 @@ export default class Home extends PureComponent {
     return (
       <Layout className="homepage">
         <MetaTags
-          title="Bundlephobia | Size of NPM dependencies"
+          title="Bundlephobia | Size of npm dependencies"
           canonicalPath=""
         />
         <div className="homepage__container">

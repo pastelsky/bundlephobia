@@ -44,7 +44,7 @@ export default class Layout extends Component {
           </div>
           <section className="footer__split">
             <div className="footer__description">
-              <h3> What does this thing do? </h3>
+              <h3> What does Bundlephobia do? </h3>
               <p>
                 JavaScript bloat is more real today than it ever was. Sites
                 continuously get bigger as more (often redundant) libraries are
@@ -53,9 +53,10 @@ export default class Layout extends Component {
                 happens.
               </p>
               <p>
-                This thing lets you understand the performance cost of
-                <code>npm&nbsp;install</code> in a new npm package before
-                actually adding it to your bundle.
+                Bundlephobia lets you understand the performance cost of
+                <code>npm&nbsp;install</code> ing a new npm package before it
+                becomes a part of your bundle. Analyze size, compositions and
+                exports
               </p>
               <p>
                 Credits to{' '}
@@ -63,7 +64,7 @@ export default class Layout extends Component {
                   {' '}
                   @thekitze{' '}
                 </a>
-                for suggesting the name.
+                for the name.
               </p>
               <div className="footer__hosting-credits">
                 Hosted on
