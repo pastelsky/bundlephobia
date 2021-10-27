@@ -25,7 +25,14 @@ async function buildMiddleware(ctx, next) {
   const { force, record, package: packageQuery } = ctx.query
 
   const buildStart = now()
-  result = await buildService.getPackageBuildStats(packageString, priority)
+  try {
+    result = await buildService.getPackageBuildStats(packageString, priority)
+  } catch (err) {
+    console.log(
+      'returned by getPackageBuildStats is ',
+      JSON.stringify(err, null, 2)
+    )
+  }
   const buildEnd = now()
 
   ctx.cacheControl = {
