@@ -35,6 +35,7 @@ fastify.get('/size', async (req, res) => {
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
+    console.log('In build service I got', JSON.stringify(err, null, 2))
     return res.code(500).send(err)
   }
 })
