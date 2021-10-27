@@ -10861,10 +10861,10 @@ p-try@^2.0.0:
   resolved "https://registry.yarnpkg.com/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==
 
-package-build-stats@7.3.5:
-  version "7.3.5"
-  resolved "https://registry.npmjs.org/package-build-stats/-/package-build-stats-7.3.5.tgz#762e7d1ba14b27eb692beb41f6d9884e8bcb05ea"
-  integrity sha512-L/2EKd58cphUUm9KRr3cAjepI5iD15NY193iup7Jq2PrsFIXDOTsCLuA55cUMQkxKyLyPYSRqmGZmNvLwpukjw==
+package-build-stats@7.3.6:
+  version "7.3.6"
+  resolved "https://registry.yarnpkg.com/package-build-stats/-/package-build-stats-7.3.6.tgz#a4cda8899bfa5ce4d385fec0e7c9052f19350ee3"
+  integrity sha512-a7X9IdyEoVk7fDcQXvFNGw1wHVGgy+lBS9kl6x2ITjlx70S0R3MrdMEhXySmHG4sJrNFsvxwTUpXG3qKh5VNPw==
   dependencies:
     "@babel/core" "^7.13.8"
     "@babel/parser" "^7.13.9"
