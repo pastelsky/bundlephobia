@@ -67,7 +67,7 @@ export default class Header extends Component {
                   rel="noreferrer noopener"
                   href=" https://opencollective.com/bundlephobia"
                 >
-                  Opencollective
+                  Donate
                 </a>
               </li>
               <li>

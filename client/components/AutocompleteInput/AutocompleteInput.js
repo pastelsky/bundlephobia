@@ -81,8 +81,8 @@ export default class AutocompleteInput extends PureComponent {
       value.length < maxFullSizeChars
         ? null
         : `${baseFontSize - (value.length - maxFullSizeChars) * 0.8}px`
-    const DummyInputElement = attributes =>
-      renderAsH1 ? <h1 {...attributes} /> : <div {...attributes} />
+    const PackageNameElement = attributes =>
+      renderAsH1 ? <h1 {...attributes} /> : <span {...attributes} />
 
     return (
       <form
@@ -131,16 +131,18 @@ export default class AutocompleteInput extends PureComponent {
             }}
             renderItem={this.renderSuggestionItem}
           />
-          <DummyInputElement
+          <div
             style={{ fontSize: searchFontSize }}
             className="autocomplete-input__dummy-input"
           >
-            <span className="dummy-input__package-name">{name}</span>
+            <PackageNameElement className="dummy-input__package-name">
+              {name}
+            </PackageNameElement>
             {version !== null && (
               <span className="dummy-input__at-separator">@</span>
             )}
             <span className="dummy-input__package-version">{version}</span>
-          </DummyInputElement>
+          </div>
         </div>
         <div
           className="autocomplete-input__search-icon"
