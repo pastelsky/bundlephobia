@@ -5,9 +5,12 @@ const {
   getPackageExportSizes,
 } = require('package-build-stats')
 
+const getPackageStatsIncreasedTimeout = (name, options) =>
+  getPackageStats(name, { ...options, installTimeout: 120000 })
+
 // create a worker and register public functions
 workerpool.worker({
-  getPackageStats,
+  getPackageStats: getPackageStatsIncreasedTimeout,
   getAllPackageExports,
   getPackageExportSizes,
 })
