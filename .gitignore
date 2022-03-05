@@ -13,3 +13,4 @@ node_modules
 # Logs
 yarn-error.log
 logs
+newrelic_agent.log
