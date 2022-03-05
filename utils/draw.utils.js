@@ -109,7 +109,9 @@ function drawStatsImg({
 
   const packageNameGroup = new fabric.Group(
     [packageNameText, packageAtText, packageVersionText],
-    { selectable: false /* top: 91 / 2, originY: 'center'*/ }
+    {
+      selectable: false /* top: 91 / 2, originY: 'center'*/,
+    }
   )
 
   // const packageNameGroup = new fabric.Group(

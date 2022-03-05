@@ -25,9 +25,8 @@ export default class Scan extends Component {
   }
 
   setSelectedPackages = () => {
-    const checkedInputs = this.packageSelectionContainer.querySelectorAll(
-      'input:checked'
-    )
+    const checkedInputs =
+      this.packageSelectionContainer.querySelectorAll('input:checked')
 
     const selectedPackages = Array.from(checkedInputs).map(({ value }) => {
       const [name, resolvedVersion] = value.split('#')
