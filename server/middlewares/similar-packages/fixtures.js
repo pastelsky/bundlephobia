@@ -222,6 +222,24 @@ const categories = {
       'urql',
     ],
   },
+  'graphql-server': {
+    name: 'GraphQL Servers',
+    tags: [
+      { tag: 'graphql', weight: Weight.HIGH },
+      { tag: 'server', weight: Weight.MID },
+      { tag: 'js', weight: Weight.MID },
+      { tag: 'javascript', weight: Weight.MID },
+      { tag: 'node node.js', weight: Weight.NORMAL },
+    ],
+    similar: [
+      'express-graphql',
+      '@graphql-yoga/node',
+      '@graphql-yoga/common',
+      'apollo-server',
+      'apollo-server-micro',
+      'mercurius',
+    ],
+  },
   'html-sanitization': {
     name: 'HTML Sanitization',
     tags: [
