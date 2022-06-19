@@ -12,7 +12,7 @@ module.exports = {
 
   WORKER_TIMEOUT: 600 * 1000, //ms,
 
-  DEFAULT_DEV_PORT: 5050,
+  DEFAULT_DEV_PORT: 5000,
 
   blackList: [
     /hack-cheats/,
