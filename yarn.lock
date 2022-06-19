@@ -2381,17 +2381,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@newrelic/native-metrics@npm:^5.3.0":
-  version: 5.3.0
-  resolution: "@newrelic/native-metrics@npm:5.3.0"
-  dependencies:
-    nan: ^2.14.1
-    node-gyp: latest
-    semver: ^5.5.1
-  checksum: 226e96010d5c569c763a044654ef11342592b6a87d5f742a00a8f2537a140cc02789cbdcb66f495b73d09acaff9966a5db8236f1629ef78f62d99833fa5e1b0e
-  languageName: node
-  linkType: hard
-
 "@next/env@npm:11.0.0":
   version: 11.0.0
   resolution: "@next/env@npm:11.0.0"
@@ -4931,7 +4920,6 @@ __metadata:
     "@babel/preset-env": ^7.17.10
     "@contentful/rich-text-react-renderer": ^15.12.1
     "@contentful/rich-text-types": ^15.12.1
-    "@newrelic/native-metrics": ^5.3.0
     "@zeit/next-css": ^1.0.1
     "@zeit/next-sass": ^1.0.1
     "@zeit/next-source-maps": ^0.0.4-canary.1
@@ -13359,7 +13347,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.12.1, nan@npm:^2.13.2, nan@npm:^2.14.1":
+"nan@npm:^2.12.1, nan@npm:^2.13.2":
   version: 2.14.2
   resolution: "nan@npm:2.14.2"
   dependencies:
@@ -17381,7 +17369,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:2 || 3 || 4 || 5, semver@npm:^5.5.0, semver@npm:^5.5.1, semver@npm:^5.6.0":
+"semver@npm:2 || 3 || 4 || 5, semver@npm:^5.5.0, semver@npm:^5.6.0":
   version: 5.7.1
   resolution: "semver@npm:5.7.1"
   bin:
