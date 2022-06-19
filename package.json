@@ -64,7 +64,6 @@
     "memory-fs": "^0.5.0",
     "mkdir-promise": "^1.0.0",
     "natural": "^5.0.3",
-    "newrelic": "^6.13.2",
     "next": "^11.0.0",
     "node-fetch": "^2.6.1",
     "normalize.css": "^7.0.0",
