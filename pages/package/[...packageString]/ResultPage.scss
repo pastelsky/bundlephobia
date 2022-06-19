@@ -1,3 +1,5 @@
+@use "sass:math";
+
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
 
@@ -7,7 +9,7 @@
 
 .flash-message {
   @include font-size-sm;
-  padding: $global-spacing / 3 $global-spacing * 2;
+  padding: math.div($global-spacing, 3) $global-spacing * 2;
   text-align: center;
   color: darken($pastel-green, 20%);
   align-self: center;
@@ -28,7 +30,7 @@
 }
 
 .flash-message__icon {
-  margin-left: $global-spacing / 2;
+  margin-left: $global-spacing * 0.5;
   margin-right: $global-spacing;
   height: $global-spacing * 2.5;
   width: auto;
@@ -241,7 +243,7 @@
     @include font-size-xs;
     content: 'NEW';
     font-family: $font-family-code;
-    padding: $global-spacing / 5 $global-spacing / 1.5;
+    padding: $global-spacing * 0.2 math.div($global-spacing, 1.5);
     position: absolute;
     top: 0;
     margin-left: $global-spacing;

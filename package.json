@@ -15,6 +15,8 @@
     "npm": ">= 5.4.x"
   },
   "dependencies": {
+    "@contentful/rich-text-react-renderer": "^15.12.1",
+    "@contentful/rich-text-types": "^15.12.1",
     "@newrelic/native-metrics": "^5.3.0",
     "@zeit/next-css": "^1.0.1",
     "@zeit/next-sass": "^1.0.1",
@@ -24,16 +26,16 @@
     "balloon-css": "^0.4.0",
     "bfj": "^7.0.2",
     "big-json": "^3.1.0",
-    "canvas": "^2.6.1",
+    "canvas": "^2.9.1",
     "classnames": "^2.2.6",
     "date-fns": "^2.22.1",
     "debounce": "^1.2.0",
-    "debug": "^4.2.0",
+    "debug": "^4.3.4",
     "dompurify": "^2.2.9",
     "dotenv": "^8.2.0",
     "dotenv-defaults": "^2.0.2",
     "execa": "^5.1.1",
-    "fabric": "^4.2.0",
+    "fabric": "5.2.1",
     "firebase": "^8.6.8",
     "flatten": "^1.0.3",
     "git-url-parse": "^11.3.0",
@@ -65,10 +67,9 @@
     "newrelic": "^6.13.2",
     "next": "^11.0.0",
     "node-fetch": "^2.6.1",
-    "node-sass": "^6.0.0",
     "normalize.css": "^7.0.0",
     "p-queue": "^3.0.0",
-    "package-build-stats": "7.3.6",
+    "package-build-stats": "7.3.11",
     "pacote": "^11.3.4",
     "performance-now": "^2.1.0",
     "promise-queue-plus": "^1.2.2",
@@ -77,11 +78,13 @@
     "query-string": "^7.0.0",
     "react": "17.0.2",
     "react-autocomplete": "^1.8.1",
+    "react-contentful": "^2.0.31",
     "react-dom": "17.0.2",
     "react-dropzone": "^7.0.1",
     "react-flip-move": "^3.0.4",
     "react-sidebar": "^3.0.2",
     "remark": "^9.0.0",
+    "sass": "^1.52.3",
     "semver": "^7.1.3",
     "strip-markdown": "^4.0.0",
     "trending-github": "^1.0.2",
@@ -89,10 +92,10 @@
     "unfetch": "^4.2.0",
     "webpack": "^4.46.0",
     "winston": "^3.3.3",
-    "workerpool": "^3.0.0"
+    "workerpool": "^6.2.0"
   },
   "scripts": {
-    "dev": "DEBUG=bp:* node --trace-deprecation index",
+    "dev": "DEBUG='bp:*' node --preserve-symlinks --trace-deprecation index",
     "build": "NODE_ENV=production next build",
     "prebuild": "node bin/generate-sitemap.js",
     "prestart": "yarn build",
@@ -115,8 +118,8 @@
     "singleQuote": true
   },
   "devDependencies": {
-    "@babel/core": "^7.14.6",
-    "@babel/preset-env": "^7.14.5",
+    "@babel/core": "^7.17.10",
+    "@babel/preset-env": "^7.17.10",
     "@zeit/next-source-maps": "^0.0.4-canary.1",
     "autoprefixer": "^9.8.6",
     "babel-jest": "^24.9.0",
@@ -134,5 +137,6 @@
     "pretty-quick": "^3.1.1",
     "sass-loader": "^10.2.0",
     "sitemap": "^7.0.0"
-  }
+  },
+  "packageManager": "yarn@3.2.0"
 }

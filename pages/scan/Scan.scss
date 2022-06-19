@@ -1,3 +1,5 @@
+@use "sass:math";
+
 @import '../../stylesheets/base';
 @import '../../stylesheets/variables';
 
@@ -57,7 +59,7 @@
 }
 
 .scan__package-item {
-  padding: $global-spacing / 2.5;
+  padding: math.div($global-spacing, 2.5);
 
   input {
     margin-right: $global-spacing;

@@ -2,20 +2,18 @@
 @import '../stylesheets/variables';
 
 .homepage {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   height: 100vh;
   height: calc(100vh - 4px);
   padding: 0 $global-spacing * 2;
 }
 
-.homepage__container {
+.homepage__content {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   max-width: 100%;
+  height: calc(100vh - 90px);
 }
 
 .homepage__tagline {
