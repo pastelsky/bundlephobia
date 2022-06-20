@@ -1,3 +1,5 @@
+@use "sass:math";
+
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
 
@@ -24,12 +26,12 @@
   }
 
   @media screen and (max-width: 64em) {
-    margin: $global-spacing / 1.5;
+    margin: math.div($global-spacing, 1.5);
     width: calc(33.3% - #{$global-spacing * 2});
   }
 
   @media screen and (max-width: 48em) {
-    margin: $global-spacing / 1.5;
+    margin: math.div($global-spacing, 1.5);
     width: calc(50% - #{$global-spacing * 1.5});
   }
 

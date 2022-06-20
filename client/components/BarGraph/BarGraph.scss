@@ -1,3 +1,5 @@
+@use "sass:math";
+
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
 
@@ -49,7 +51,7 @@ $bar-grow-duration: 0.4s;
   }
 
   & + & {
-    margin-top: $global-spacing / 3;
+    margin-top: math.div($global-spacing, 3);
   }
 }
 

@@ -90,7 +90,7 @@
 }
 
 .stat-container__info-text {
-  margin-left: $global-spacing / 2;
+  margin-left: $global-spacing * 0.5;
   border: 1px solid rgba(40, 40, 40, 0.5);
   color: rgba(40, 40, 40, 0.5);
   width: 12px;

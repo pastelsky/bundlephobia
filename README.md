@@ -59,3 +59,7 @@ You can see a detailed stack trace in your devtools console, and [open an issue]
 ## Contributing
 
 See [Contributing](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/CONTRIBUTING.md)
+
+## Sponsors
+
+<img width="100px" src="https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg"/>

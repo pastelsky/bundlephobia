@@ -4,11 +4,11 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "@amplitude/node": "^1.6.1",
+    "@amplitude/node": "^1.10.0",
     "dotenv-defaults": "^2.0.2",
     "fastify": "^3.18.0",
     "now-logs": "^0.0.7",
-    "package-build-stats": "7.3.6"
+    "package-build-stats": "7.3.11"
   },
   "engines": {
     "node": ">= 9.x.x",

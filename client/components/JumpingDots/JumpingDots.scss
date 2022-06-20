@@ -3,7 +3,7 @@
 .jumping-dots {
   position: relative;
   text-align: center;
-  padding: 0 $global-spacing / 2;
+  padding: 0 $global-spacing * 0.5;
 }
 
 .jumping-dots__dot {

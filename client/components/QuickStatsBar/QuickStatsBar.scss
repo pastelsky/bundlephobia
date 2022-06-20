@@ -1,3 +1,5 @@
+@use "sass:math";
+
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
 
@@ -12,7 +14,7 @@
 }
 
 .quick-stats-bar__stat {
-  padding: $global-spacing/1.5 $global-spacing * 1.5;
+  padding: math.div($global-spacing, 1.5) $global-spacing * 1.5;
   display: flex;
   align-content: center;
   position: relative;
@@ -91,7 +93,7 @@
 }
 
 .quick-stats-bar__link {
-  margin: auto $global-spacing / 2;
+  margin: auto $global-spacing * 0.5;
 
   &:hover {
     .quick-stats-bar__logo-icon--github {

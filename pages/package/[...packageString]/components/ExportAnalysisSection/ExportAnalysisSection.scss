@@ -199,7 +199,7 @@
 .export-analysis-section__pill-size-unit {
   color: $raven;
   font-size: 90%;
-  margin-left: $global-spacing / 5;
+  margin-left: $global-spacing * 0.2;
 }
 
 .export-analysis-section__letter-heading {

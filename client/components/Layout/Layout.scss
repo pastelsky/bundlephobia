@@ -1,3 +1,5 @@
+@use "sass:math";
+
 @import '../../../stylesheets/variables';
 @import '../../../stylesheets/base';
 @import '../../../stylesheets/colors';
@@ -74,7 +76,7 @@ footer {
       padding: $global-spacing $global-spacing * 2;
 
       @media screen and (max-width: 48em) {
-        padding: $global-spacing $global-spacing / 2;
+        padding: $global-spacing $global-spacing * 0.5;
       }
     }
 
@@ -139,7 +141,7 @@ footer {
 .footer__zeit-logo {
   width: $global-spacing;
   height: $global-spacing;
-  margin: 0 $global-spacing / 2;
+  margin: 0 $global-spacing * 0.5;
 }
 
 .footer__credits {
@@ -172,7 +174,7 @@ footer {
 
     code {
       font-family: $font-family-code;
-      padding: 0 $global-spacing / 3 0 $global-spacing;
+      padding: 0 math.div($global-spacing, 3) 0 $global-spacing;
       opacity: 0.9;
     }
   }
@@ -219,7 +221,7 @@ footer {
   border: 2px solid lighten($raven, 30%);
   background: transparent;
   border-radius: 10px;
-  padding: $global-spacing / 1.5 $global-spacing;
+  padding: math.div($global-spacing, 1.5) $global-spacing;
   display: block;
   transition: background 0.2s;
   color: lighten($raven, 30%);
@@ -241,7 +243,7 @@ footer {
 
 .footer__credits-profile {
   margin-top: -$global-spacing * 1.5;
-  margin-bottom: $global-spacing / 2;
+  margin-bottom: $global-spacing * 0.5;
 }
 
 .footer__sponsor-logo {

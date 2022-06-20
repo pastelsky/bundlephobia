@@ -4,7 +4,7 @@
 .warning-bar {
   @include font-size-xs;
   background: lighten($dandelion, 5%);
-  padding: $global-spacing / 2 $global-spacing;
+  padding: $global-spacing * 0.5 $global-spacing;
   border-radius: 4px;
   margin-top: 2vh;
   color: darken(desaturate($dandelion, 35%), 35%);
