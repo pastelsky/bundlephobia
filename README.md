@@ -38,9 +38,9 @@
 
 Liked bundlephobia? Used it's API to build something cool? Let us know!
 
-We could use some 💛 on our opencollective page –
+We could use some 💛 and sponsorship on –
 
-<a href="https://opencollective.com/bundlephobia">
+<a href="https://github.com/sponsors/pastelsky">
   <img src="https://opencollective.com/bundlephobia/tiers/backer.svg"/>
 </a>
 
