@@ -67,7 +67,7 @@ export default class Header extends Component {
                   rel="noreferrer noopener"
                   href="https://github.com/sponsors/pastelsky"
                 >
-                  Donate
+                  Sponsor
                 </a>
               </li>
               <li>
