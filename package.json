@@ -67,7 +67,7 @@
     "node-fetch": "^2.6.1",
     "normalize.css": "^7.0.0",
     "p-queue": "^3.0.0",
-    "package-build-stats": "7.3.12",
+    "package-build-stats": "7.3.13",
     "pacote": "^11.3.4",
     "performance-now": "^2.1.0",
     "promise-queue-plus": "^1.2.2",
