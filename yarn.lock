@@ -4925,7 +4925,7 @@ __metadata:
     dotenv-defaults: ^2.0.2
     fastify: ^3.18.0
     now-logs: ^0.0.7
-    package-build-stats: 7.3.11
+    package-build-stats: 7.3.12
   languageName: unknown
   linkType: soft
 
@@ -4973,7 +4973,7 @@ __metadata:
     balloon-css: ^0.4.0
     bfj: ^7.0.2
     big-json: ^3.1.0
-    canvas: ^2.9.1
+    canvas: ^2.9.3
     classnames: ^2.2.6
     date-fns: ^2.22.1
     debounce: ^1.2.0
@@ -5018,7 +5018,7 @@ __metadata:
     node-fetch: ^2.6.1
     normalize.css: ^7.0.0
     p-queue: ^3.0.0
-    package-build-stats: 7.3.11
+    package-build-stats: 7.3.12
     pacote: ^11.3.4
     performance-now: ^2.1.0
     postcss: ^8.3.5
@@ -5366,7 +5366,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"canvas@npm:^2.8.0, canvas@npm:^2.9.1":
+"canvas@npm:^2.8.0":
   version: 2.9.1
   resolution: "canvas@npm:2.9.1"
   dependencies:
@@ -5375,6 +5375,18 @@ __metadata:
     node-gyp: latest
     simple-get: ^3.0.3
   checksum: 0175067df9eaa591113605441c150ffe7d5196a3273559b0aadfe56854e8353ea99eb3c56c9347c76e54a4781c88dd24662268a0f86500e69b608d5b1e9e6801
+  languageName: node
+  linkType: hard
+
+"canvas@npm:^2.9.3":
+  version: 2.9.3
+  resolution: "canvas@npm:2.9.3"
+  dependencies:
+    "@mapbox/node-pre-gyp": ^1.0.0
+    nan: ^2.15.0
+    node-gyp: latest
+    simple-get: ^3.0.3
+  checksum: 368112ba4b16f54ce6dfac1ccbc45ddd1eb0b76dc09509c2601c2a26459bb4449d259a7aa8664fd94153aad13b48557535f3b9eb7fad9a97929b9eb962e50f09
   languageName: node
   linkType: hard
 
@@ -14540,9 +14552,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-build-stats@npm:7.3.11":
-  version: 7.3.11
-  resolution: "package-build-stats@npm:7.3.11"
+"package-build-stats@npm:7.3.12":
+  version: 7.3.12
+  resolution: "package-build-stats@npm:7.3.12"
   dependencies:
     "@babel/core": ^7.13.8
     "@babel/parser": ^7.13.9
@@ -14592,7 +14604,7 @@ __metadata:
     vue-template-compiler: ^2.6.12
     webpack: ^4.44.2
     write-file-webpack-plugin: ^4.5.1
-  checksum: ec0c4c85673c4b98b22331e58a678388ffb4c7a8f77f4e0adfed346fdc9ef45eb25583e72aab29af4d43f57f8c2a6e5be3647a1240f5201b92665634259b5a01
+  checksum: 4b522fe9821ad1b44475dd94c0e72c38bd24da3cf982142c460edef908ff1e469b027c27a4e65fe0b356e070dcaaba67227bfb7f7dd158264a437288ae6e2f6e
   languageName: node
   linkType: hard
 
