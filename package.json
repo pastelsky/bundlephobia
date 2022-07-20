@@ -115,6 +115,9 @@
     "arrowParens": "avoid",
     "singleQuote": true
   },
+  "resolutions": {
+    "package-build-stats/webpack": "pastelsky/webpack-4-modern#06bfd3cd0b1f846ceeea727c739fd55add3c3b16"
+  },
   "devDependencies": {
     "@babel/core": "^7.17.10",
     "@babel/preset-env": "^7.17.10",
