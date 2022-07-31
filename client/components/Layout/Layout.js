@@ -54,7 +54,7 @@ export default class Layout extends Component {
               </p>
               <p>
                 Bundlephobia lets you understand the performance cost of
-                <code>npm&nbsp;install</code> ing a new npm package before it
+                <code>npm&nbsp;install</code> in a new npm package before it
                 becomes a part of your bundle. Analyze size, compositions and
                 exports
               </p>
