@@ -153,7 +153,8 @@ class ExportAnalysisSection extends Component {
   startAnalysis = () => {
     const { result } = this.props
     const { name, version } = result
-    const packageString = `${name}@${version}`
+    const packageString =
+      `${name}@${version}` + (result.path ? '/' + result.path : '')
     const startTime = Date.now()
     let sizeStartTime
 

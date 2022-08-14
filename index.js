@@ -103,6 +103,7 @@ app.prepare().then(() => {
       hash: ctx => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
+        path: ctx.state.resolved.path,
       }),
     }),
     errorMiddleware,
@@ -128,6 +129,7 @@ app.prepare().then(() => {
       hash: ctx => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
+        path: ctx.state.resolved.path,
       }),
     }),
     errorMiddleware,

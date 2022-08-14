@@ -11,7 +11,7 @@ const buildService = new BuildService()
 async function exportsMiddleware(ctx) {
   let result,
     priority = getRequestPriority(ctx)
-  const { name, version, packageString } = ctx.state.resolved
+  const { name, version, path, packageString } = ctx.state.resolved
   const { force, package: packageQuery } = ctx.query
 
   const buildStart = now()
@@ -26,7 +26,7 @@ async function exportsMiddleware(ctx) {
       ? CONFIG.CACHE.SIZE_API_HAS_VERSION
       : CONFIG.CACHE.SIZE_API_DEFAULT,
   }
-  ctx.body = { name, version, exports: result }
+  ctx.body = { name, version, path, exports: result }
   const time = buildEnd - buildStart
 
   logger.info(

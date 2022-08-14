@@ -82,7 +82,9 @@ class ResultPage extends PureComponent {
 
         if (this.activeQuery !== packageString) return
 
-        const newPackageString = `${results.name}@${results.version}`
+        const newPackageString =
+          `${results.name}@${results.version}` +
+          (results.path ? '/' + results.path : '')
         this.setState(
           {
             inputInitialValue: newPackageString,

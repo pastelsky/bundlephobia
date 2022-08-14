@@ -72,7 +72,7 @@ export default class AutocompleteInput extends PureComponent {
   render() {
     const { className, containerClass, autoFocus, renderAsH1 } = this.props
     const { suggestions, value, isMenuVisible } = this.state
-    const { name, version } = parsePackageString(value)
+    const { name, version, path } = parsePackageString(value)
     const baseFontSize =
       typeof window !== 'undefined' && window.innerWidth < 640 ? 22 : 35
     const maxFullSizeChars =
@@ -142,6 +142,10 @@ export default class AutocompleteInput extends PureComponent {
               <span className="dummy-input__at-separator">@</span>
             )}
             <span className="dummy-input__package-version">{version}</span>
+            {path !== null && (
+              <span className="dummy-input__path-separator">/</span>
+            )}
+            <span className="dummy-input__package-path">{path}</span>
           </div>
         </div>
         <div
