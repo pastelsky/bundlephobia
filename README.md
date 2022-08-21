@@ -13,6 +13,10 @@
   Know the performance impact of including an npm package in your app's bundle.
 </p>
 
+<p align="center">
+    <b><a href="https://github.com/pastelsky/bundlephobia/issues/683"> Bundlephobia's looking for contributors and co-maintainers </a> </b>
+</p>
+
 ## Features
 
 - Works with ES6 packages
