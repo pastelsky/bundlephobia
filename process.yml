@@ -2,7 +2,7 @@ apps:
   - script: index.js
     name: main
     instances: 1
-    max_memory_restart: 300M
+    max_memory_restart: 500M
     error_file: logs/index.log
     out_file: logs/index.log
     kill_timeout: 20000

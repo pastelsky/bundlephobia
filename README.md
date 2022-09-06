@@ -2,7 +2,6 @@
     <img src="https://cdn.rawgit.com/pastelsky/bundlephobia/bundlephobia/client/assets/site-logo.svg" alt="" width="290" height="235" />
 </p>
 <p align="center">
-  <a href="https://travis-ci.org/pastelsky/bundlephobia"><img src="https://img.shields.io/travis/pastelsky/bundlephobia/bundlephobia.svg" /></a>
   <img src="https://img.shields.io/npm/v/package-build-stats.svg" />
   <img src="https://img.shields.io/npm/l/package-build-stats.svg" />
 </p>
@@ -11,6 +10,10 @@
 </p>
 <p align="center">
   Know the performance impact of including an npm package in your app's bundle.
+</p>
+
+<p align="center">
+    <b><a href="https://github.com/pastelsky/bundlephobia/issues/683"> Bundlephobia's looking for contributors and co-maintainers </a> </b>
 </p>
 
 ## Features
@@ -38,9 +41,9 @@
 
 Liked bundlephobia? Used it's API to build something cool? Let us know!
 
-We could use some 💛 on our opencollective page –
+We could use some 💛 and sponsorship on –
 
-<a href="https://opencollective.com/bundlephobia">
+<a href="https://github.com/sponsors/pastelsky">
   <img src="https://opencollective.com/bundlephobia/tiers/backer.svg"/>
 </a>
 

@@ -31,7 +31,7 @@ const PageNav = ({ minimal }) => (
           <a
             target="_blank"
             rel="noreferrer noopener"
-            href="https://opencollective.com/bundlephobia"
+            href="https://github.com/sponsors/pastelsky"
           >
             Sponsor
           </a>

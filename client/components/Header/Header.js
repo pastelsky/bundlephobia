@@ -65,9 +65,9 @@ export default class Header extends Component {
                 <a
                   target="_blank"
                   rel="noreferrer noopener"
-                  href=" https://opencollective.com/bundlephobia"
+                  href="https://github.com/sponsors/pastelsky"
                 >
-                  Donate
+                  Sponsor
                 </a>
               </li>
               <li>
