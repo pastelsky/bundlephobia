@@ -26,7 +26,7 @@ const resolvePackageMiddleware = require('./server/middlewares/results/resolvePa
 const cachedResponseMiddleware = require('./server/middlewares/results/cachedResponse.middleware')
 const buildMiddleware = require('./server/middlewares/results/build.middleware')
 const errorMiddleware = require('./server/middlewares/results/error.middleware')
-const blockBlacklistMiddleware = require('./server/middlewares/results/blockBlacklist.middleware')
+const blockBlocklistMiddleware = require('./server/middlewares/results/blockBlocklist.middleware')
 const requestLoggerMiddleware = require('./server/middlewares/requestLogger.middleware')
 const similarPackagesMiddleware = require('./server/middlewares/similar-packages/similarPackages.middleware')
 const generateImgMiddleware = require('./server/middlewares/generateImg.middleware')
@@ -107,7 +107,7 @@ app.prepare().then(() => {
     }),
     errorMiddleware,
     resolvePackageMiddleware,
-    blockBlacklistMiddleware,
+    blockBlocklistMiddleware,
     cachedResponseMiddleware,
     buildMiddleware
   )
@@ -116,7 +116,7 @@ app.prepare().then(() => {
     '/api/exports',
     errorMiddleware,
     resolvePackageMiddleware,
-    blockBlacklistMiddleware,
+    blockBlocklistMiddleware,
     exportsMiddlware
   )
 
@@ -132,7 +132,7 @@ app.prepare().then(() => {
     }),
     errorMiddleware,
     resolvePackageMiddleware,
-    blockBlacklistMiddleware,
+    blockBlocklistMiddleware,
     cachedResponseMiddleware,
     exportsSizesMiddlware
   )

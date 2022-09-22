@@ -48,7 +48,7 @@ describe('build api', () => {
     done()
   })
 
-  it('gives right error messages on when trying to build blacklisted packages', async done => {
+  it('gives right error messages on when trying to build blocklisted packages', async done => {
     const resultURL = baseURL + 'polymer-cli'
     const result = await fetch(resultURL)
     const errorJSON = await result.json()
@@ -56,9 +56,9 @@ describe('build api', () => {
     expect(result.status).toBe(403)
     expect(result.headers.get('cache-control')).toBe('max-age=60')
 
-    expect(errorJSON.error.code).toBe('BlacklistedPackageError')
+    expect(errorJSON.error.code).toBe('BlocklistedPackageError')
     expect(errorJSON.error.message).toBe(
-      'The package you were looking for is blacklisted due to suspicious activity in the past'
+      'The package you were looking for is blocklisted due to suspicious activity in the past'
     )
 
     done()

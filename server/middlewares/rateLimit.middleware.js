@@ -4,8 +4,8 @@
 const ipchecker = require('ipchecker')
 const defaults = {
   duration: 1000 * 60 * 60,
-  whiteList: [],
-  blackList: [],
+  allowList: [],
+  blockList: [],
   accessLimited: '429: Too Many Requests.',
   accessForbidden: '403: This is forbidden area for you.',
   max: 100,
@@ -36,8 +36,8 @@ module.exports = function betterlimit(options = {}) {
     options.accessForbidden = options.message_403
   }
 
-  const whiteListMap = ipchecker.map(options.whiteList)
-  const blackListMap = ipchecker.map(options.blackList)
+  const allowListMap = ipchecker.map(options.allowList)
+  const blockListMap = ipchecker.map(options.blockList)
 
   return function* ratelimit(next) {
     const ip =
@@ -48,12 +48,12 @@ module.exports = function betterlimit(options = {}) {
     if (!ip) {
       return yield* next
     }
-    if (ipchecker.check(ip, blackListMap)) {
+    if (ipchecker.check(ip, blockListMap)) {
       this.response.status = 403
       this.response.body = options.accessForbidden
       return
     }
-    if (ipchecker.check(ip, whiteListMap)) {
+    if (ipchecker.check(ip, allowListMap)) {
       return yield* next
     }
 

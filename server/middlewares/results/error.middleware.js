@@ -42,11 +42,11 @@ async function errorHandler(ctx, next) {
     }
 
     switch (err.name) {
-      case 'BlacklistedPackageError':
+      case 'BlocklistedPackageError':
         respondWithError(403, {
-          code: 'BlacklistedPackageError',
+          code: 'BlocklistedPackageError',
           message:
-            'The package you were looking for is blacklisted ' +
+            'The package you were looking for is blocklisted ' +
             "because it failed to build multiple times in the past and further tries aren't likely to succeed. This can " +
             "happen if this package wasn't meant to be bundled in a client side application.",
         })
