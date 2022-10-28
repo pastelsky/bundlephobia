@@ -4,6 +4,9 @@
 <p align="center">
   <img src="https://img.shields.io/npm/v/package-build-stats.svg" />
   <img src="https://img.shields.io/npm/l/package-build-stats.svg" />
+  <a href="https://discord.gg/trbWvVet44">
+    <img src="https://badgen.net/badge/icon/discord?icon=discord&label"/>
+  </a>
 </p>
 <p align="center">
   <a href="https://bundlephobia.com"> bundlephobia.com </a> <br />
