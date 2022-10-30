@@ -20,12 +20,12 @@ import Stat from 'client/components/Stat'
 
 import API from 'client/api'
 import MetaTags, { DEFAULT_DESCRIPTION_START } from 'client/components/MetaTags'
-import InterLinksSection from '../../client/components/InterLinksSection'
+import InterLinksSection from './components/InterLinksSection'
 
-import TreemapSection from '../../client/components/TreemapSection'
+import TreemapSection from './components/TreemapSection'
 import EmptyBox from 'client/assets/empty-box.svg'
-import SimilarPackagesSection from '../../client/components/SimilarPackagesSection'
-import ExportAnalysisSection from '../../client/components/ExportAnalysisSection'
+import SimilarPackagesSection from './components/SimilarPackagesSection'
+import ExportAnalysisSection from './components/ExportAnalysisSection'
 import QuickStatsBar from 'client/components/QuickStatsBar/QuickStatsBar'
 
 import Warning from 'client/components/Warning/Warning'

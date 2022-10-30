@@ -1,9 +1,9 @@
 import { useRouter } from 'next/router'
 import React from 'react'
-import BlogLayout from './BlogLayout'
+import BlogLayout from '../../../client/components/BlogLayout'
 import { useContentful } from 'react-contentful'
-import BlogPost from './Post'
-import ContentfulProvider from './ContentfulProvider'
+import BlogPost from '../components/Post'
+import ContentfulProvider from '../components/ContentfulProvider'
 
 const ArticleWithContent = () => {
   return (

@@ -1,4 +1,4 @@
-import Article from '../../client/components/Article'
+import Article from './components/Article'
 
 const ArticleIs = () => <Article />
 
