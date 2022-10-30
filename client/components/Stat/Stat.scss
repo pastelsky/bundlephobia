@@ -3,107 +3,66 @@
 
 .stat-container {
   margin: 0 24px;
-
   @media screen and (max-width: 40em) {
     margin: 0 $global-spacing;
   }
 }
-
 .stat-container--compact {
   margin: 0;
 }
-
 .stat-container__value-container {
   display: flex;
   align-items: baseline;
   justify-content: center;
   padding: 5px 15px;
-
   .stat-container--compact & {
     padding-top: 0;
   }
 }
-
 .stat-container__value {
   @include font-size-xxl;
   font-weight: bold;
   color: #212121;
   background: inherit;
   position: relative;
-
   .stat-container--compact & {
     @include font-size-lg;
     font-weight: $font-weight-light;
   }
 }
-
 .stat-container__value.time::before {
   content: attr(data-value);
   position: absolute;
-  @@ -47,48 +40,40 @@
+  z-index: 2;
+  overflow: hidden;
+  color: $pastel-green;
+  white-space: nowrap;
   width: 0%;
   transition: width 0.3s;
-}
-
-.stat-container__value.time:hover::before {
-  width: 100%;
-  transition-duration: inherit;
-}
-
-.stat-container__unit {
-  @include font-size-xl;
-  color: $raven;
-  font-weight: bold;
-  margin-left: 4px;
-
-  .stat-container--compact & {
-    @include font-size-sm;
-    font-weight: $font-weight-thin;
-  }
-}
-
-.stat-container__footer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 10px;
-
-  .stat-container--compact & {
-    margin-top: 0;
-  }
-}
-
-.stat-container__label {
-  @include font-size-reg;
-  color: $raven;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-align: center;
-
-  .stat-container--compact & {
-    @include font-size-sm;
-    letter-spacing: 1px;
-  }
 }
 
 .stat-container__info-text {
   margin-left: $global-spacing * 0.5;
   border: 1px solid rgba(40, 40, 40, 0.5);
-  @@ -103,17 +88,14 @@
+  color: rgba(40, 40, 40, 0.5);
+  width: 12px;
+  height: 13px;
+  font-family: $font-family-code;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 2px;
   transition: background 0.2s;
   cursor: help;
-
   &:hover {
     background: rgba(40, 40, 40, 0.6);
     color: white;
   }
-
   &::after,
   &::before {
     font-family: $font-family-body;
   }
-
   @media screen and (max-width: 40em) {
     display: none;
   }
