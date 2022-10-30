@@ -95,7 +95,7 @@ class QuickStatsBar extends Component {
         <div className="quick-stats-bar__stat">
           <a
             className="quick-stats-bar__link"
-            href={'https://npmjs.org/package/' + name}
+            href={'https://npmjs.com/package/' + name}
             target="_blank"
             rel="noopener noreferrer"
           >
