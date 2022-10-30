@@ -1,0 +1,141 @@
+@import '../shared/base';
+@import '../shared/variables';
+
+.homepage {
+  height: 100vh;
+  height: calc(100vh - 4px);
+  padding: 0 $global-spacing * 2;
+}
+
+.homepage__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+  height: calc(100vh - 90px);
+}
+
+.homepage__tagline {
+  @include font-size-md;
+  font-family: $font-family-body;
+  font-weight: $font-weight-hairline;
+  color: #777;
+  margin-top: $global-spacing;
+  text-align: center;
+  line-height: 1.4;
+  letter-spacing: 1px;
+}
+
+.logo {
+  text-transform: uppercase;
+  font-weight: $font-weight-bold;
+  letter-spacing: 4px;
+  @include font-size-md-2;
+  user-select: none;
+  margin-top: $global-spacing * 2;
+}
+
+.logo__alt {
+  color: #888;
+}
+
+.logo__skeleton {
+  animation: move 2s alternate infinite;
+
+  .logo-graphic:hover & {
+    stroke: desaturate($pastel-green, 30%);
+  }
+}
+
+.logo-graphic {
+  width: 137px * 0.9;
+  height: 157px * 0.9;
+
+  @media screen and (max-width: 40em) {
+    width: 137px * 0.8;
+    height: 157px * 0.8;
+  }
+
+  &:hover {
+    .logo__skeleton-group {
+      opacity: 0.4;
+    }
+  }
+}
+
+.homepage__search-input-container {
+  width: 100%;
+}
+
+.homepage__search-input {
+  margin-top: $global-spacing;
+  width: 100%;
+
+  @media screen and (max-width: 40em) {
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+  }
+
+  .autocomplete-input {
+    text-align: center;
+  }
+  .autocomplete-input__dummy-input {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.homepage__or-divider {
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  color: $raven;
+  margin-top: 4vh;
+  letter-spacing: 3px;
+}
+
+.homepage__scan-link {
+  margin-top: 4vh;
+  margin-bottom: 14vh;
+  letter-spacing: 0.5px;
+
+  a {
+    color: inherit;
+
+    span {
+      border-bottom: 1px dashed $raven;
+    }
+
+    sup {
+      color: $cornflower-blue;
+    }
+  }
+
+  @media screen and (max-width: 40em) {
+    margin-bottom: 20vh;
+  }
+}
+
+@for $i from 1 through 3 {
+  .logo__skeleton:nth-of-type(#{$i}) {
+    animation-delay: 0.2 * $i * 1s;
+  }
+}
+
+@keyframes move {
+  0% {
+    transform: translate(1px, 0.5px);
+  }
+
+  20% {
+    transform: translate(0px, -1px);
+  }
+
+  75% {
+    transform: translate(-1px, 1px);
+  }
+
+  100% {
+    transform: translate(0.55px, -1px);
+  }
+}

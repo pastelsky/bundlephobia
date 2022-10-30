@@ -1,7 +1,7 @@
 @use "sass:math";
 
-@import './stylesheets/base';
-@import './stylesheets/variables';
+@import '../shared/base';
+@import '../shared/variables';
 
 .scan__dropzone {
   border: 2px dashed lighten($raven, 20%);

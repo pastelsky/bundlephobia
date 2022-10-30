@@ -1,6 +1,6 @@
-@import './stylesheets/variables';
-@import './stylesheets/colors';
-@import './stylesheets/mixins';
+@import '/stylesheets/shared/colors';
+@import '/stylesheets/shared/variables';
+@import '/stylesheets/shared/mixins';
 
 .export-analysis-section {
   position: relative;

@@ -1,5 +1,5 @@
-@import './stylesheets/variables';
-@import './stylesheets/colors';
+@import '/stylesheets/shared/colors';
+@import '/stylesheets/shared/variables';
 
 .similar-packages-section__list {
   display: flex;

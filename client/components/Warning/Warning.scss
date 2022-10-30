@@ -1,5 +1,5 @@
-@import './stylesheets/colors';
-@import './stylesheets/variables';
+@import '/stylesheets/shared/colors';
+@import '/stylesheets/shared/variables';
 
 .warning-bar {
   @include font-size-xs;

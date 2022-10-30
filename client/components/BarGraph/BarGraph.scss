@@ -1,7 +1,7 @@
 @use "sass:math";
 
-@import './stylesheets/colors';
-@import './stylesheets/variables';
+@import '/stylesheets/shared/colors';
+@import '/stylesheets/shared/variables';
 
 $bar-width: 1.6vw;
 $min-bar-width: 20px;

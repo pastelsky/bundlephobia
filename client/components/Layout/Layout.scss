@@ -1,8 +1,8 @@
 @use "sass:math";
 
-@import './stylesheets/variables';
-@import './stylesheets/base';
-@import './stylesheets/colors';
+@import '/stylesheets/shared/colors';
+@import '/stylesheets/shared/base';
+@import '/stylesheets/shared/variables';
 
 $footer-content-max-width: 800px;
 
