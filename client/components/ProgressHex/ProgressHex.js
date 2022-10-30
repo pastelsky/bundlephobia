@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import ProgressHexAnimator from './progress-hex-timeline'
-import './ProgressHex.scss'
 
 class ProgressHex extends Component {
   constructor(props) {

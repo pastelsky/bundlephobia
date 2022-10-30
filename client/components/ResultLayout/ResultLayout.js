@@ -5,7 +5,6 @@ import Link from 'next/link'
 import Layout from 'client/components/Layout'
 
 import GithubLogo from '../../assets/github-logo.svg'
-import './ResultLayout.scss'
 import PageNav from '../PageNav'
 
 export default class ResultLayout extends Component {

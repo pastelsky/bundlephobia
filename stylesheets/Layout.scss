@@ -1,0 +1,262 @@
+@use "sass:math";
+
+@import './stylesheets/variables';
+@import './stylesheets/base';
+@import './stylesheets/colors';
+
+$footer-content-max-width: 800px;
+
+.layout {
+  max-width: 100%;
+}
+
+footer {
+  background: #222;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 $global-spacing * 5;
+  color: lighten($raven, 27%);
+  flex-direction: column;
+
+  a {
+    color: lighten($raven, 27%);
+    transition: color 0.2s;
+
+    &:hover {
+      color: lighten($raven, 40%);
+    }
+  }
+}
+
+.footer__recent-search-bar {
+  width: 100%;
+  background: darken($raven, 22%);
+  padding: 0 $global-spacing * 2;
+}
+
+.footer__recent-search-bar__wrap {
+  max-width: $footer-content-max-width;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+
+  h4 {
+    @include font-size-xs;
+    color: lighten($raven, 27%);
+    margin: 0;
+    line-height: 1.2;
+  }
+}
+
+.footer__recent-search-list {
+  @include font-size-xs;
+
+  display: flex;
+  padding: 0;
+  margin: 0 0 0 $global-spacing * 1.5;
+  flex-grow: 1;
+  max-width: 960px;
+
+  @media screen and (max-width: 40em) {
+    margin: 0;
+  }
+
+  li {
+    list-style: none;
+    position: relative;
+    flex-grow: 1;
+    text-align: center;
+    font-family: $font-family-code;
+    letter-spacing: 0.5px;
+
+    a {
+      padding: $global-spacing $global-spacing * 2;
+
+      @media screen and (max-width: 48em) {
+        padding: $global-spacing $global-spacing * 0.5;
+      }
+    }
+
+    &:not(:first-of-type) {
+      &::after {
+        content: '';
+        width: 1px;
+        height: 60%;
+        background: rgba(255, 255, 255, 0.1);
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+      }
+    }
+
+    @media screen and (max-width: 48em) {
+      &:nth-child(n + 5) {
+        display: none;
+      }
+    }
+
+    @media screen and (max-width: 40em) {
+      &:nth-child(n + 4) {
+        display: none;
+      }
+    }
+  }
+}
+
+.footer__split {
+  display: flex;
+  max-width: $footer-content-max-width;
+  padding: $global-spacing * 3 $global-spacing;
+  margin: auto;
+
+  @media screen and (max-width: 40em) {
+    padding: $global-spacing * 3 $global-spacing * 2.5;
+    flex-direction: column;
+  }
+}
+
+.footer__hosting-credits {
+  @include font-size-xs;
+  border-top: 1px solid darken($raven, 25%);
+  color: lighten($raven, 70%);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding-top: $global-spacing;
+  padding-right: $global-spacing;
+  font-size: 12px;
+  width: $global-spacing * 20;
+
+  @media screen and (max-width: 40em) {
+    text-align: center;
+    padding-top: $global-spacing * 1.5;
+    margin: $global-spacing * 3 auto auto;
+  }
+}
+
+.footer__zeit-logo {
+  width: $global-spacing;
+  height: $global-spacing;
+  margin: 0 $global-spacing * 0.5;
+}
+
+.footer__credits {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-basis: 33%;
+
+  p {
+    margin: 0;
+  }
+
+  @media screen and (max-width: 40em) {
+    margin-top: $global-spacing * 2;
+  }
+}
+
+.footer__description {
+  @include font-size-xs;
+  color: lighten($raven, 20%);
+  flex-basis: 66%;
+
+  p {
+    text-align: left;
+    line-height: 1.4;
+
+    a {
+      display: inline;
+    }
+
+    code {
+      font-family: $font-family-code;
+      padding: 0 math.div($global-spacing, 3) 0 $global-spacing;
+      opacity: 0.9;
+    }
+  }
+}
+
+.footer__credits__heart {
+  width: 8vw;
+  height: 8vw;
+  max-width: 100px;
+
+  path {
+    fill: mix($raven, $maya-blue);
+  }
+
+  &:hover {
+    path {
+      animation: pulse 10s infinite both;
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    fill: mix($raven, $maya-blue);
+  }
+
+  25% {
+    fill: mix($raven, $cornflower-blue);
+  }
+
+  50% {
+    fill: $raven;
+  }
+
+  75% {
+    fill: mix($raven, $maya-blue);
+  }
+}
+
+.footer__credits-fork-button {
+  @include font-size-xs;
+  cursor: pointer;
+  margin-top: $global-spacing;
+  border: 2px solid lighten($raven, 30%);
+  background: transparent;
+  border-radius: 10px;
+  padding: math.div($global-spacing, 1.5) $global-spacing;
+  display: block;
+  transition: background 0.2s;
+  color: lighten($raven, 30%);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-size: 10px;
+  font-weight: $font-weight-bold;
+
+  &:hover {
+    background: lighten($raven, 30%);
+    color: #212121;
+  }
+
+  @media screen and (max-width: 48em) {
+    padding: $global-spacing $global-spacing * 2;
+    margin-top: $global-spacing * 2;
+  }
+}
+
+.footer__credits-profile {
+  margin-top: -$global-spacing * 1.5;
+  margin-bottom: $global-spacing * 0.5;
+}
+
+.footer__sponsor-logo {
+  margin-top: $global-spacing;
+}
+
+footer {
+  p {
+    text-align: center;
+  }
+
+  a {
+    display: block;
+    text-decoration: none;
+  }
+}

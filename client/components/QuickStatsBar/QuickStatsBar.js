@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import DOMPurify from 'dompurify'
-import './QuickStatsBar.scss'
 import { sanitizeHTML } from '../../../utils/common.utils'
 
 import TreeShakeIcon from '../../assets/tree-shake.svg'

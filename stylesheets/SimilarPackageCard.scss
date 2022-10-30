@@ -1,0 +1,164 @@
+@use "sass:math";
+
+@import './stylesheets/colors';
+@import './stylesheets/variables';
+
+.similar-package-card {
+  border: 1px solid $autocomplete-border-color;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  width: calc(25% - #{$global-spacing * 2});
+  display: flex;
+  flex-direction: column;
+  margin: $global-spacing;
+  color: inherit;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: scale(1.01);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.06);
+    border: 1px solid fade-in($autocomplete-border-color, 0.02);
+  }
+
+  &.similar-package-card--empty {
+    border-style: dashed;
+    background: transparentize($raven, 0.97);
+  }
+
+  @media screen and (max-width: 64em) {
+    margin: math.div($global-spacing, 1.5);
+    width: calc(33.3% - #{$global-spacing * 2});
+  }
+
+  @media screen and (max-width: 48em) {
+    margin: math.div($global-spacing, 1.5);
+    width: calc(50% - #{$global-spacing * 1.5});
+  }
+
+  @media screen and (max-width: 40em) {
+    width: 100%;
+  }
+}
+
+.similar-package-card--empty {
+  color: transparentize($raven, 0.5);
+  align-items: center;
+}
+
+.similar-package-card__wrap {
+  padding: $global-spacing * 2;
+  flex-grow: 1;
+
+  .similar-package-card--empty & {
+    padding: $global-spacing * 5 $global-spacing * 2;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.similar-package-card__header {
+  display: flex;
+}
+
+.similar-package-card__name {
+  margin: 0;
+  font-family: $font-family-code;
+  font-weight: $font-weight-light;
+  flex-grow: 1;
+  word-break: break-word;
+}
+
+.similar-package-card__description {
+  @include font-size-sm;
+  color: $dark-raven;
+  line-height: 1.5;
+  margin: $global-spacing 0 0 0;
+  word-break: break-word;
+  img {
+    height: auto;
+    max-width: 100%;
+  }
+
+  .similar-package-card--empty & {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: $font-weight-bold;
+    color: transparentize($raven, 0.4);
+  }
+}
+
+.similar-package-card__footer {
+  background: lighten($raven, 54%);
+  display: flex;
+  padding: $global-spacing $global-spacing * 2;
+  align-items: center;
+  border-radius: 0 0 10px 10px;
+}
+
+.similar-package-card__stat {
+  & + & {
+    margin-left: $global-spacing * 2;
+  }
+}
+
+.similar-package-card__number {
+  @include font-size-md;
+  font-weight: $font-weight-very-bold;
+}
+
+.similar-package-card__comparison--positive {
+  color: $pastel-green;
+}
+
+.similar-package-card__comparison--negative {
+  color: $carrot-orange;
+}
+
+.similar-package-card__comparison--similar {
+  color: $raven;
+}
+
+.similar-package-card__label {
+  @include font-size-xs;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.5;
+
+  .similar-package-card__size & {
+    color: $raven;
+  }
+}
+
+.similar-package-card__treeshake {
+  height: $global-spacing * 2.5;
+  width: auto;
+  margin-left: auto;
+}
+
+.similar-package-card__shrink {
+  font-size: 75%;
+  .similar-package-card__size & {
+    color: $raven;
+  }
+}
+
+.similar-package-card__github-icon {
+  height: $global-spacing * 2;
+  width: auto;
+  opacity: 0.5;
+  transition: all 0.2s;
+  vertical-align: middle;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.similar-package-card__plus {
+  width: 35%;
+  height: auto;
+  margin-bottom: $global-spacing * 1.5;
+  path {
+    fill: transparentize($raven, 0.7);
+  }
+}

@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import { formatSize } from 'utils/index'
 import TreeShakeIcon from '../Icons/TreeShakeIcon'
 import SideEffectIcon from '../Icons/SideEffectIcon'
-import './BarGraph.scss'
 
 export default class BarGraph extends PureComponent {
   static propTypes = {

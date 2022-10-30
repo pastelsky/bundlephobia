@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import Link from 'next/link'
 import API from '../../api'
-import './Layout.scss'
 
 import Heart from '../../assets/heart.svg'
 import DigitalOceanLogo from '../../assets/digital-ocean-logo.svg'
@@ -34,7 +33,7 @@ export default class Layout extends Component {
               <ul className="footer__recent-search-list">
                 {recentSearches.map(search => (
                   <li key={search}>
-                    <Link href={`/package/${search}`}>
+                    <Link href={`/package/${search}`} legacyBehavior>
                       <a>{search}</a>
                     </Link>
                   </li>

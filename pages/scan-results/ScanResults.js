@@ -11,7 +11,6 @@ import Link from 'next/link'
 import ResultLayout from '../../client/components/ResultLayout'
 import { parsePackageString } from 'utils/common.utils'
 
-import './ScanResults.scss'
 import API from 'client/api'
 import { getTimeFromSize } from 'utils'
 
@@ -84,7 +83,7 @@ class ResultCard extends Component {
           <span> {index + 1}. </span>
         </div>
         <div className="scan-results__name" data-name={pack.name}>
-          <Link href={`/package/${pack.packageString}`}>
+          <Link href={`/package/${pack.packageString}`} legacyBehavior>
             <a>
               <span className="scan-results__package-name"> {pack.name}</span>
               <div>

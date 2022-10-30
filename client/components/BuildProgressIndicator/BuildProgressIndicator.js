@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 
 import ProgressHex from '../ProgressHex'
-import './BuildProgressIndicator.scss'
 
 const OptimisticLoadTimeout = 700
 

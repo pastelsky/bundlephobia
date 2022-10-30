@@ -6,7 +6,7 @@ const PageNav = ({ minimal }) => (
   <header className="page-header">
     {!minimal && (
       <section className="result-header--left-section">
-        <Link href="/">
+        <Link href="/" legacyBehavior>
           <a>
             <div className="logo-small">
               <span>Bundle</span>
@@ -37,13 +37,13 @@ const PageNav = ({ minimal }) => (
           </a>
         </li>
         <li>
-          <Link href="/blog">
+          <Link href="/blog" legacyBehavior>
             <a>Blog</a>
           </Link>
         </li>
         {!minimal && (
           <li>
-            <Link href="/scan">
+            <Link href="/scan" legacyBehavior>
               <a>Scan package.json</a>
             </Link>
           </li>

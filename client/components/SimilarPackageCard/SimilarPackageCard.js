@@ -9,7 +9,6 @@ import { sanitizeHTML } from '../../../utils/common.utils'
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import PlusIcon from '../../assets/plus.svg'
 import GithubIcon from '../../assets/github-logo.svg'
-import './SimilarPackageCard.scss'
 
 export default class SimilarPackageCard extends Component {
   getSuggestionIssueUrl = () => {
@@ -109,7 +108,7 @@ export default class SimilarPackageCard extends Component {
     )
 
     return (
-      <Link href={`/package/${pack.name}`}>
+      <Link href={`/package/${pack.name}`} legacyBehavior>
         <a className="similar-package-card">
           <div className="similar-package-card__wrap">
             <div className="similar-package-card__header">

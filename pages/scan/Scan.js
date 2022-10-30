@@ -7,7 +7,6 @@ import scanBlacklist from '../../client/config/scanBlacklist'
 import Dropzone from 'react-dropzone'
 import Router from 'next/router'
 import * as semver from 'semver'
-import './Scan.scss'
 
 export default class Scan extends Component {
   state = {
@@ -25,9 +24,8 @@ export default class Scan extends Component {
   }
 
   setSelectedPackages = () => {
-    const checkedInputs = this.packageSelectionContainer.querySelectorAll(
-      'input:checked'
-    )
+    const checkedInputs =
+      this.packageSelectionContainer.querySelectorAll('input:checked')
 
     const selectedPackages = Array.from(checkedInputs).map(({ value }) => {
       const [name, resolvedVersion] = value.split('#')

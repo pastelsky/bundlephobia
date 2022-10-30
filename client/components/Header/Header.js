@@ -41,7 +41,7 @@ export default class Header extends Component {
       >
         <header className="page-header">
           <section className="result-header--left-section">
-            <Link href="/">
+            <Link href="/" legacyBehavior>
               <a>
                 <div className="logo-small">
                   <span>Bundle</span>
@@ -71,7 +71,7 @@ export default class Header extends Component {
                 </a>
               </li>
               <li>
-                <Link href="/scan">
+                <Link href="/scan" legacyBehavior>
                   <a>
                     Scan package.json <sup>β</sup>
                   </a>
