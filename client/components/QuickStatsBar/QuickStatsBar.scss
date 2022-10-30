@@ -1,7 +1,7 @@
 @use "sass:math";
 
-@import '/stylesheets/colors';
-@import '/stylesheets/variables';
+@import '../../../stylesheets/colors';
+@import '../../../stylesheets/variables';
 
 .quick-stats-bar {
   display: flex;
