@@ -4925,7 +4925,7 @@ __metadata:
     dotenv-defaults: ^2.0.2
     fastify: ^3.18.0
     now-logs: ^0.0.7
-    package-build-stats: 7.3.12
+    package-build-stats: 7.3.13
   languageName: unknown
   linkType: soft
 
@@ -5018,7 +5018,7 @@ __metadata:
     node-fetch: ^2.6.1
     normalize.css: ^7.0.0
     p-queue: ^3.0.0
-    package-build-stats: 7.3.12
+    package-build-stats: 7.3.13
     pacote: ^11.3.4
     performance-now: ^2.1.0
     postcss: ^8.3.5
@@ -14552,9 +14552,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-build-stats@npm:7.3.12":
-  version: 7.3.12
-  resolution: "package-build-stats@npm:7.3.12"
+"package-build-stats@npm:7.3.13":
+  version: 7.3.13
+  resolution: "package-build-stats@npm:7.3.13"
   dependencies:
     "@babel/core": ^7.13.8
     "@babel/parser": ^7.13.9
@@ -14604,7 +14604,7 @@ __metadata:
     vue-template-compiler: ^2.6.12
     webpack: ^4.44.2
     write-file-webpack-plugin: ^4.5.1
-  checksum: 4b522fe9821ad1b44475dd94c0e72c38bd24da3cf982142c460edef908ff1e469b027c27a4e65fe0b356e070dcaaba67227bfb7f7dd158264a437288ae6e2f6e
+  checksum: 8a7ef526942836dcea714df09af90be5594c049bde86cf33909f7ededebb47ff2acb713e7716a9d7bcee67d75904a6b4a82b581610fd23d2d2dd397dca2fe004
   languageName: node
   linkType: hard
 
