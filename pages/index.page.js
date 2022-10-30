@@ -156,14 +156,12 @@ export default class Home extends PureComponent {
             </AutocompleteInputBox>
             <div className="homepage__or-divider">or</div>
             <div className="homepage__scan-link">
-              <Link href="/scan" legacyBehavior>
-                <a>
-                  <span>
-                    Scan a <code>package.json</code> file
-                  </span>
-                  &nbsp;
-                  <sup>beta</sup>
-                </a>
+              <Link href="/scan">
+                <span>
+                  Scan a <code>package.json</code> file
+                </span>
+                &nbsp;
+                <sup>beta</sup>
               </Link>
             </div>
           </div>

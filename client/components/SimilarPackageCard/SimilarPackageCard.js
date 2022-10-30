@@ -108,32 +108,30 @@ export default class SimilarPackageCard extends Component {
     )
 
     return (
-      <Link href={`/package/${pack.name}`} legacyBehavior>
-        <a className="similar-package-card">
-          <div className="similar-package-card__wrap">
-            <div className="similar-package-card__header">
-              <h3 className="similar-package-card__name">{pack.name}</h3>
-              {pack.repository && (
-                <a
-                  href={pack.repository}
-                  onClick={e => {
-                    e.stopPropagation()
-                    window.location = pack.repository
-                  }}
-                >
-                  <GithubIcon className="similar-package-card__github-icon" />
-                </a>
-              )}
-            </div>
-            <p
-              className="similar-package-card__description"
-              dangerouslySetInnerHTML={{
-                __html: sanitizeHTML(pack.description),
-              }}
-            />
+      <Link href={`/package/${pack.name}`} className="similar-package-card">
+        <div className="similar-package-card__wrap">
+          <div className="similar-package-card__header">
+            <h3 className="similar-package-card__name">{pack.name}</h3>
+            {pack.repository && (
+              <a
+                href={pack.repository}
+                onClick={e => {
+                  e.stopPropagation()
+                  window.location = pack.repository
+                }}
+              >
+                <GithubIcon className="similar-package-card__github-icon" />
+              </a>
+            )}
           </div>
-          {footer}
-        </a>
+          <p
+            className="similar-package-card__description"
+            dangerouslySetInnerHTML={{
+              __html: sanitizeHTML(pack.description),
+            }}
+          />
+        </div>
+        {footer}
       </Link>
     )
   }

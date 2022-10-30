@@ -83,17 +83,15 @@ class ResultCard extends Component {
           <span> {index + 1}. </span>
         </div>
         <div className="scan-results__name" data-name={pack.name}>
-          <Link href={`/package/${pack.packageString}`} legacyBehavior>
-            <a>
-              <span className="scan-results__package-name"> {pack.name}</span>
-              <div>
-                {pack.version && (
-                  <span className="scan-results__package-version">
-                    v{pack.version}
-                  </span>
-                )}
-              </div>
-            </a>
+          <Link href={`/package/${pack.packageString}`}>
+            <span className="scan-results__package-name"> {pack.name}</span>
+            <div>
+              {pack.version && (
+                <span className="scan-results__package-version">
+                  v{pack.version}
+                </span>
+              )}
+            </div>
           </Link>
         </div>
         {content}

@@ -117,13 +117,11 @@ export default class ResultPage extends PureComponent {
         <div className="page-container">
           <header className="result-header">
             <section className="result-header--left-section">
-              <Link href="/" legacyBehavior>
-                <a>
-                  <div className="logo-small">
-                    <span>Bundle</span>
-                    <span className="logo-small__alt">Phobia</span>
-                  </div>
-                </a>
+              <Link href="/">
+                <div className="logo-small">
+                  <span>Bundle</span>
+                  <span className="logo-small__alt">Phobia</span>
+                </div>
               </Link>
             </section>
             <section className="result-header--right-section">

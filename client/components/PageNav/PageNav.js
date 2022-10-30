@@ -6,13 +6,11 @@ const PageNav = ({ minimal }) => (
   <header className="page-header">
     {!minimal && (
       <section className="result-header--left-section">
-        <Link href="/" legacyBehavior>
-          <a>
-            <div className="logo-small">
-              <span>Bundle</span>
-              <span className="logo-small__alt">Phobia</span>
-            </div>
-          </a>
+        <Link href="/">
+          <div className="logo-small">
+            <span>Bundle</span>
+            <span className="logo-small__alt">Phobia</span>
+          </div>
         </Link>
       </section>
     )}
@@ -37,15 +35,11 @@ const PageNav = ({ minimal }) => (
           </a>
         </li>
         <li>
-          <Link href="/blog" legacyBehavior>
-            <a>Blog</a>
-          </Link>
+          <Link href="/blog">Blog</Link>
         </li>
         {!minimal && (
           <li>
-            <Link href="/scan" legacyBehavior>
-              <a>Scan package.json</a>
-            </Link>
+            <Link href="/scan">Scan package.json</Link>
           </li>
         )}
       </ul>

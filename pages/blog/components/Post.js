@@ -56,10 +56,8 @@ const Post = ({ title, content, slug, preview, createdAt }) => {
   return (
     <article className="blog-post__preview">
       {preview ? (
-        <Link href={`/blog/${slug}`} legacyBehavior>
-          <a>
-            <h2>{title}</h2>
-          </a>
+        <Link href={`/blog/${slug}`}>
+          <h2>{title}</h2>
         </Link>
       ) : (
         <h1>{title}</h1>
@@ -76,8 +74,8 @@ const Post = ({ title, content, slug, preview, createdAt }) => {
         )}
       </div>
       {preview && (
-        <Link href={`/blog/${slug}`} legacyBehavior>
-          <a className="blog-post__preview-read-more">Read more...</a>
+        <Link href={`/blog/${slug}`} className="blog-post__preview-read-more">
+          Read more...
         </Link>
       )}
     </article>
