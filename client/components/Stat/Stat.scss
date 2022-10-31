@@ -40,7 +40,6 @@
 .stat-container__value.time::before {
   content: attr(data-value);
   position: absolute;
-  @@ -48,47 +41,6 @@
   transition: width 0.3s;
 }
 
@@ -88,7 +87,6 @@
 .stat-container__info-text {
   margin-left: $global-spacing * 0.5;
   border: 1px solid rgba(40, 40, 40, 0.5);
-  @@ -103,17 +55,14 @@
   border-radius: 2px;
   transition: background 0.2s;
   cursor: help;

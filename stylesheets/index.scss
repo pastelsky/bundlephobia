@@ -1,9 +1,9 @@
 // pages
 @import '../pages/compare/ComparePage.scss';
-@import '../pages/package/components/ExportAnalysisSection/ExportAnalysisSection.scss';
-@import '../pages/package/components/InterLinksSection/InterLinksSectionCard/InterLinksSectionCard.scss';
-@import '../pages/package/components/InterLinksSection/InterLinksSection.scss';
-@import '../pages/package/ResultPage.scss';
+@import '../pages/package/[...packageString]/components/ExportAnalysisSection/ExportAnalysisSection.scss';
+@import '../pages/package/[...packageString]/components/InterLinksSection/InterLinksSectionCard/InterLinksSectionCard.scss';
+@import '../pages/package/[...packageString]/components/InterLinksSection/InterLinksSection.scss';
+@import '../pages/package/[...packageString]/ResultPage.scss';
 @import '../pages/scan/Scan.scss';
 @import '../pages/scan-results/ScanResults.scss';
 @import '../pages/index.scss';
