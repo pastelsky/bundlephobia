@@ -3461,6 +3461,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"acorn@npm:^8.0.1":
+  version: 8.8.1
+  resolution: "acorn@npm:8.8.1"
+  bin:
+    acorn: bin/acorn
+  checksum: 4079b67283b94935157698831967642f24a075c52ce3feaaaafe095776dfbe15d86a1b33b1e53860fc0d062ed6c83f4284a5c87c85b9ad51853a01173da6097f
+  languageName: node
+  linkType: hard
+
 "acorn@npm:^8.2.1, acorn@npm:^8.2.4":
   version: 8.2.4
   resolution: "acorn@npm:8.2.4"
@@ -7447,7 +7456,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"enhanced-resolve@npm:^4.5.0":
+"enhanced-resolve@npm:^4.3.0, enhanced-resolve@npm:^4.5.0":
   version: 4.5.0
   resolution: "enhanced-resolve@npm:4.5.0"
   dependencies:
@@ -19570,7 +19579,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:^4.44.2, webpack@npm:^4.46.0":
+"webpack@npm:^4.46.0":
   version: 4.46.0
   resolution: "webpack@npm:4.46.0"
   dependencies:
@@ -19641,6 +19650,44 @@ __metadata:
   bin:
     webpack: bin/webpack.js
   checksum: 572d3cd617bbccebbc98d9c312f8e166ddbd20620cb3e64f634bc65e08e58fa839bb2c4098960cd2172c10a0eb32f9e036860061dd03cbc9345bc424704610b8
+  languageName: node
+  linkType: hard
+
+"webpack@pastelsky/webpack-4-modern#fca4748eafe351bf9757c04ef9fcce2151c6ac14":
+  version: 4.45.1-modern-acorn-0
+  resolution: "webpack@https://github.com/pastelsky/webpack-4-modern.git#commit=fca4748eafe351bf9757c04ef9fcce2151c6ac14"
+  dependencies:
+    "@webassemblyjs/ast": 1.9.0
+    "@webassemblyjs/helper-module-context": 1.9.0
+    "@webassemblyjs/wasm-edit": 1.9.0
+    "@webassemblyjs/wasm-parser": 1.9.0
+    acorn: ^8.0.1
+    ajv: ^6.10.2
+    ajv-keywords: ^3.4.1
+    chrome-trace-event: ^1.0.2
+    enhanced-resolve: ^4.3.0
+    eslint-scope: ^4.0.3
+    json-parse-better-errors: ^1.0.2
+    loader-runner: ^2.4.0
+    loader-utils: ^1.2.3
+    memory-fs: ^0.4.1
+    micromatch: ^3.1.10
+    mkdirp: ^0.5.3
+    neo-async: ^2.6.1
+    node-libs-browser: ^2.2.1
+    schema-utils: ^1.0.0
+    tapable: ^1.1.3
+    terser-webpack-plugin: ^1.4.3
+    watchpack: ^1.7.4
+    webpack-sources: ^1.4.1
+  peerDependenciesMeta:
+    webpack-cli:
+      optional: true
+    webpack-command:
+      optional: true
+  bin:
+    webpack-4-modern-acorn: ./bin/webpack.js
+  checksum: 2d17f1cf235d6b6b5a244520d3be7cbbfc21fe2d8c17ca913de7d438f5b4590661e70dca19cf9bfedc06250e4633c399df854da2e00d1b5442befedca0554c11
   languageName: node
   linkType: hard
 
