@@ -40,6 +40,11 @@
 .stat-container__value.time::before {
   content: attr(data-value);
   position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  color: $pastel-green;
+  white-space: nowrap;
+  width: 0%;
   transition: width 0.3s;
 }
 
@@ -87,6 +92,14 @@
 .stat-container__info-text {
   margin-left: $global-spacing * 0.5;
   border: 1px solid rgba(40, 40, 40, 0.5);
+  color: rgba(40, 40, 40, 0.5);
+  width: 12px;
+  height: 13px;
+  font-family: $font-family-code;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 2px;
   transition: background 0.2s;
   cursor: help;
