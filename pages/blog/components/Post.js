@@ -57,9 +57,7 @@ const Post = ({ title, content, slug, preview, createdAt }) => {
     <article className="blog-post__preview">
       {preview ? (
         <Link href={`/blog/${slug}`}>
-          <a>
-            <h2>{title}</h2>
-          </a>
+          <h2>{title}</h2>
         </Link>
       ) : (
         <h1>{title}</h1>
@@ -76,8 +74,8 @@ const Post = ({ title, content, slug, preview, createdAt }) => {
         )}
       </div>
       {preview && (
-        <Link href={`/blog/${slug}`}>
-          <a className="blog-post__preview-read-more">Read more...</a>
+        <Link href={`/blog/${slug}`} className="blog-post__preview-read-more">
+          Read more...
         </Link>
       )}
     </article>

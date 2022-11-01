@@ -1,6 +1,5 @@
 import React from 'react'
 import cx from 'classnames'
-import './Stat.scss'
 import { formatSize, formatTime } from 'utils'
 
 const Type = {

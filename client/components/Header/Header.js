@@ -42,12 +42,10 @@ export default class Header extends Component {
         <header className="page-header">
           <section className="result-header--left-section">
             <Link href="/">
-              <a>
-                <div className="logo-small">
-                  <span>Bundle</span>
-                  <span className="logo-small__alt">Phobia</span>
-                </div>
-              </a>
+              <div className="logo-small">
+                <span>Bundle</span>
+                <span className="logo-small__alt">Phobia</span>
+              </div>
             </Link>
           </section>
           <section className="page-header--right-section">
@@ -72,9 +70,7 @@ export default class Header extends Component {
               </li>
               <li>
                 <Link href="/scan">
-                  <a>
-                    Scan package.json <sup>β</sup>
-                  </a>
+                  Scan package.json <sup>β</sup>
                 </Link>
               </li>
             </ul>

@@ -7,8 +7,6 @@ import SearchIcon from '../Icons/SearchIcon'
 import { parsePackageString } from 'utils/common.utils'
 import API from 'client/api'
 
-import './AutocompleteInput.scss'
-
 export default class AutocompleteInput extends PureComponent {
   static defaultProps = {
     initialValue: '',

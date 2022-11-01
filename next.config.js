@@ -1,19 +1,10 @@
-const withSass = require('@zeit/next-sass')
-const withCss = require('@zeit/next-css')
-const withSourceMaps = require('@zeit/next-source-maps')()
+const path = require('path')
 
 module.exports = {
-  webpack5: false,
   pageExtensions: ['page.js'],
-  ...withSass(
-    withSourceMaps({
-      sassLoaderOptions: {
-        sassOptions: {
-          includePaths: ['pages/**', 'node_modules'],
-        },
-      },
-    })
-  ),
+  sassOptions: {
+    includePaths: [path.join(__dirname, 'stylesheets')],
+  },
   env: {
     RELEASE_DATE: new Date().toDateString(),
   },

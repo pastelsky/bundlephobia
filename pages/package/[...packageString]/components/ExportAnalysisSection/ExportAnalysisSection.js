@@ -6,8 +6,6 @@ import SearchIcon from 'client/components/Icons/SearchIcon'
 import JumpingDots from 'client/components/JumpingDots'
 import { formatSize, resolveBuildError } from 'utils'
 
-import './ExportAnalysisSection.scss'
-
 const State = {
   TBD: 'tbd',
   IN_PROGRESS: 'in-progress',

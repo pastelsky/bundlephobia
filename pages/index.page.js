@@ -3,7 +3,6 @@ import AutocompleteInput from 'client/components/AutocompleteInput'
 import Layout from 'client/components/Layout'
 import Router from 'next/router'
 import Link from 'next/link'
-import './index.scss'
 import Analytics from 'client/analytics'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox/AutocompleteInputBox'
 import MetaTags from '../client/components/MetaTags'
@@ -158,13 +157,11 @@ export default class Home extends PureComponent {
             <div className="homepage__or-divider">or</div>
             <div className="homepage__scan-link">
               <Link href="/scan">
-                <a>
-                  <span>
-                    Scan a <code>package.json</code> file
-                  </span>
-                  &nbsp;
-                  <sup>beta</sup>
-                </a>
+                <span>
+                  Scan a <code>package.json</code> file
+                </span>
+                &nbsp;
+                <sup>beta</sup>
               </Link>
             </div>
           </div>

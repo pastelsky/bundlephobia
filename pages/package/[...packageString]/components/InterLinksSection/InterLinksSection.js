@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { parsePackageString, daysFromToday } from 'utils/common.utils'
 import API from 'client/api'
 import InterLinksSectionCard from './InterLinksSectionCard'
-import './InterLinksSection.scss'
 
 function usePackagesFromSameScope(packageName) {
   const { scope } = parsePackageString(packageName)

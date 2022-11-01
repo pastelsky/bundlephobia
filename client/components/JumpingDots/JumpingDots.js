@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import './JumpingDots.scss'
 
 export default function JumpingDots() {
   return (

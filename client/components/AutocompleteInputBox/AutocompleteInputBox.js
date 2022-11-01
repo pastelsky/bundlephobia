@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import cx from 'classnames'
-import './AutocompleteInputBox.scss'
 
 class AutocompleteInputBox extends Component {
   render() {

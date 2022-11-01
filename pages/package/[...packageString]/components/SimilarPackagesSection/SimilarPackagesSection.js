@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import SimilarPackageCard from 'client/components/SimilarPackageCard/SimilarPackageCard'
-import './SimilarPackagesSection.scss'
 
 class SimilarPackagesSection extends Component {
   render() {

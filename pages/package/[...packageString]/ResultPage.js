@@ -28,7 +28,6 @@ import SimilarPackagesSection from './components/SimilarPackagesSection'
 import ExportAnalysisSection from './components/ExportAnalysisSection'
 import QuickStatsBar from 'client/components/QuickStatsBar/QuickStatsBar'
 
-import './ResultPage.scss'
 import Warning from 'client/components/Warning/Warning'
 import arrayToSentence from 'array-to-sentence'
 

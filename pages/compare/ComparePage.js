@@ -14,7 +14,6 @@ import API from 'client/api'
 
 import GithubLogo from '../../client/assets/github-logo.svg'
 import EmptyBox from '../../client/assets/empty-box.svg'
-import './ComparePage.scss'
 
 export default class ResultPage extends PureComponent {
   fetchResults = packageString => {
@@ -119,12 +118,10 @@ export default class ResultPage extends PureComponent {
           <header className="result-header">
             <section className="result-header--left-section">
               <Link href="/">
-                <a>
-                  <div className="logo-small">
-                    <span>Bundle</span>
-                    <span className="logo-small__alt">Phobia</span>
-                  </div>
-                </a>
+                <div className="logo-small">
+                  <span>Bundle</span>
+                  <span className="logo-small__alt">Phobia</span>
+                </div>
               </Link>
             </section>
             <section className="result-header--right-section">
