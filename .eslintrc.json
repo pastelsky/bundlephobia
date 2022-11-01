@@ -1,0 +1,6 @@
+{
+  "extends": "next",
+  "plugins": [],
+  "root": true,
+  "rules": {}
+}

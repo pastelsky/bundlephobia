@@ -346,6 +346,7 @@ class ResultPage extends PureComponent {
                   <a
                     href="https://github.com/pastelsky/bundlephobia#1-why-does-search-for-package-x-throw-missingdependencyerror-"
                     target="_blank"
+                    rel="noreferrer"
                   >
                     Read more
                   </a>

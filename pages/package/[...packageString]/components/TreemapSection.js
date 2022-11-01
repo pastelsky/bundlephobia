@@ -143,7 +143,11 @@ class TreemapSection extends Component {
                     {dep.isSelf || dep.isOthers ? (
                       <span> {dep.name} </span>
                     ) : (
-                      <a href={`/package/${dep.name}`} target="_blank">
+                      <a
+                        href={`/package/${dep.name}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         {dep.name}
                       </a>
                     )}
@@ -168,8 +172,9 @@ class TreemapSection extends Component {
         </Treemap>
         <p className="treemap__note">
           <b>Note: </b> These sizes represent the contribution made by
-          dependencies (direct or transitive) to <code>{packageName}</code>'s
-          size. These may be different from the dependencies' standalone sizes.
+          dependencies (direct or transitive) to <code>{packageName}</code>
+          &apos;s size. These may be different from the dependencies&apos;
+          standalone sizes.
         </p>
       </section>
     )

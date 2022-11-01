@@ -128,6 +128,7 @@ export default class ResultPage extends PureComponent {
               <a
                 target="_blank"
                 href="https://github.com/pastelsky/bundlephobia"
+                rel="noreferrer"
               >
                 <GithubLogo />
               </a>
