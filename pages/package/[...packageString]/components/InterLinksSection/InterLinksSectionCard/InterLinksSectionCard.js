@@ -1,4 +1,4 @@
-import { sanitizeHTML } from 'utils/common.utils'
+import { sanitizeHTML } from '../../../../../../utils/common.utils'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import React from 'react'

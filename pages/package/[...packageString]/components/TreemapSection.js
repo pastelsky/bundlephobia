@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import { formatSize } from 'utils'
-import colors from 'client/config/colors'
-import Treemap from 'client/components/Treemap'
+import { formatSize } from '../../../../utils'
+import colors from '../../../../client/config/colors'
+import Treemap from '../../../../client/components/Treemap'
 
 class TreemapSection extends Component {
   state = {

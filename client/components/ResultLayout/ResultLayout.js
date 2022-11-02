@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import cx from 'classnames'
 import Link from 'next/link'
 
-import Layout from 'client/components/Layout'
+import Layout from '../../components/Layout'
 
 import GithubLogo from '../../assets/github-logo.svg'
 import PageNav from '../PageNav'

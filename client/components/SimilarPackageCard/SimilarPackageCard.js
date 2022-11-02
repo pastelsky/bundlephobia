@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import cx from 'classnames'
-import { formatSize } from 'utils'
+import { formatSize } from '../../../utils'
 import Link from 'next/link'
 import DOMPurify from 'dompurify'
 import queryString from 'query-string'

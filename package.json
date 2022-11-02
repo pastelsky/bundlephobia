@@ -123,6 +123,7 @@
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.24",
     "@types/react-dom": "^18.0.8",
+    "@svgr/webpack": "^6.5.1",
     "autoprefixer": "^9.8.6",
     "babel-jest": "^24.9.0",
     "babel-plugin-css-modules-transform": "^1.6.1",

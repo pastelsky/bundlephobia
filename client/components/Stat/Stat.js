@@ -1,6 +1,6 @@
 import React from 'react'
 import cx from 'classnames'
-import { formatSize, formatTime } from 'utils'
+import { formatSize, formatTime } from '../../../utils'
 
 const Type = {
   SIZE: 'size',

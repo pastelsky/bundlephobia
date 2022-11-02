@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { parsePackageString, daysFromToday } from 'utils/common.utils'
-import API from 'client/api'
+import {
+  parsePackageString,
+  daysFromToday,
+} from '../../../../../utils/common.utils'
+import API from '../../../../../client/api'
 import InterLinksSectionCard from './InterLinksSectionCard'
 
 function usePackagesFromSameScope(packageName) {
