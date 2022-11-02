@@ -1,15 +1,25 @@
 import React, { Component } from 'react'
-import DOMPurify from 'dompurify'
-import { sanitizeHTML } from '../../../utils/common.utils'
 
+import { sanitizeHTML } from '../../../utils/common.utils'
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import SideEffectIcon from '../../assets/side-effect.svg'
 import DependencyIcon from '../../assets/dependency.svg'
 import GithubIcon from '../../assets/github-logo.svg'
 import NPMIcon from '../../assets/npm-logo.svg'
 import InfoIcon from '../../assets/info.svg'
+import { PackageInfo } from '../../../types'
 
-class QuickStatsBar extends Component {
+type QuickStatsBarProps = Pick<
+  PackageInfo,
+  | 'name'
+  | 'description'
+  | 'repository'
+  | 'dependencyCount'
+  | 'isTreeShakeable'
+  | 'hasSideEffects'
+>
+
+class QuickStatsBar extends Component<QuickStatsBarProps> {
   static defaultProps = {
     description: '',
   }
@@ -74,7 +84,9 @@ class QuickStatsBar extends Component {
           <div className="quick-stats-bar__stat">
             <SideEffectIcon className="quick-stats-bar__stat-icon" />{' '}
             <span>
-              {hasSideEffects.length ? 'some side-effects' : 'side-effect free'}
+              {!(hasSideEffects === false)
+                ? 'some side-effects'
+                : 'side-effect free'}
             </span>
           </div>
         )}

@@ -4,8 +4,26 @@ import ProgressHex from '../ProgressHex'
 
 const OptimisticLoadTimeout = 700
 
-export default class BuildProgressIndicator extends Component {
-  constructor(props) {
+type BuildProgressIndicatorProps = {
+  isDone: boolean
+  onDone: () => void
+}
+
+type BuildProgressIndicatorState = {
+  started: boolean
+  progressText?: string
+}
+
+const order = ['resolving', 'building', 'minifying', 'calculating'] as const
+
+export default class BuildProgressIndicator extends Component<
+  BuildProgressIndicatorProps,
+  BuildProgressIndicatorState
+> {
+  stage: number
+  timeoutId?: ReturnType<typeof setTimeout>
+
+  constructor(props: BuildProgressIndicatorProps) {
     super(props)
     this.stage = 0
     this.state = {
@@ -22,14 +40,17 @@ export default class BuildProgressIndicator extends Component {
     }, OptimisticLoadTimeout)
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps: BuildProgressIndicatorProps) {
     if (nextProps.isDone) {
       this.stage = 3
       this.props.onDone()
     }
   }
 
-  shouldComponentUpdate(props, nextState) {
+  shouldComponentUpdate(
+    props: BuildProgressIndicatorProps,
+    nextState: BuildProgressIndicatorState
+  ) {
     return this.state.progressText !== nextState.progressText
   }
 
@@ -37,7 +58,7 @@ export default class BuildProgressIndicator extends Component {
     clearTimeout(this.timeoutId)
   }
 
-  getProgressText = stage => {
+  getProgressText = (stage: typeof order[number]) => {
     const progressText = {
       resolving: 'Resolving version and dependencies',
       building: 'Bundling package',
@@ -54,8 +75,6 @@ export default class BuildProgressIndicator extends Component {
       minifying: 3 + Math.random() * 2,
       calculating: 20,
     }
-
-    const order = ['resolving', 'building', 'minifying', 'calculating']
 
     if (this.stage === order.length) {
       //this.props.onDone()

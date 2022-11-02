@@ -1,7 +1,14 @@
 import React, { Component } from 'react'
 import cx from 'classnames'
 
-class AutocompleteInputBox extends Component {
+import { WithClassName } from '../../../types'
+
+type AutocompleteInputBoxProps = React.PropsWithChildren &
+  WithClassName & {
+    footer?: React.ReactNode
+  }
+
+class AutocompleteInputBox extends Component<AutocompleteInputBoxProps> {
   render() {
     const { children, footer, className } = this.props
     return (

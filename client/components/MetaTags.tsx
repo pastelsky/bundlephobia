@@ -4,6 +4,15 @@ import Head from 'next/head'
 export const DEFAULT_DESCRIPTION_START =
   'Bundlephobia helps you find the performance impact of npm packages.'
 
+type MetaTagsProps = {
+  title: string
+  canonicalPath: string
+  description?: string
+  twitterDescription?: string
+  image?: string
+  isLargeImage?: boolean
+}
+
 export default function MetaTags({
   description,
   twitterDescription,
@@ -11,7 +20,7 @@ export default function MetaTags({
   canonicalPath,
   image,
   isLargeImage,
-}) {
+}: MetaTagsProps) {
   const defaultDescription = `${DEFAULT_DESCRIPTION_START} Find the size of any javascript package and its effect on your frontend bundle.`
   const defaultImage = 'https://bundlephobia.com/android-chrome-256x256.png'
   const origin =

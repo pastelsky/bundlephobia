@@ -1,9 +1,10 @@
 import React from 'react'
 import Document, {
+  DocumentContext,
   Head as DocumentHead,
+  Html,
   Main,
   NextScript,
-  Html,
 } from 'next/document'
 
 const amplitudeScript = `
@@ -40,7 +41,7 @@ e=(!e||e.length===0?"$default_instance":e).toLowerCase()
 `
 
 export default class MyDocument extends Document {
-  static async getInitialProps(ctx) {
+  static async getInitialProps(ctx: DocumentContext) {
     const initialProps = await Document.getInitialProps(ctx)
     return { ...initialProps }
   }

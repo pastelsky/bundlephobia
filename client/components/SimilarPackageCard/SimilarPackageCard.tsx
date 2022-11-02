@@ -1,16 +1,20 @@
 import React, { Component } from 'react'
 import cx from 'classnames'
-import { formatSize } from '../../../utils'
 import Link from 'next/link'
-import DOMPurify from 'dompurify'
 import queryString from 'query-string'
-import { sanitizeHTML } from '../../../utils/common.utils'
 
+import { formatSize } from '../../../utils'
+import { sanitizeHTML } from '../../../utils/common.utils'
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import PlusIcon from '../../assets/plus.svg'
 import GithubIcon from '../../assets/github-logo.svg'
 
-export default class SimilarPackageCard extends Component {
+type SimilarPackageCardProps = { category?: string } & (
+  | { pack: any; comparisonSizePercent: number }
+  | { isEmpty: true }
+)
+
+export default class SimilarPackageCard extends Component<SimilarPackageCardProps> {
   getSuggestionIssueUrl = () => {
     const params = queryString.stringify({
       labels: 'similar suggestion',
@@ -20,10 +24,9 @@ export default class SimilarPackageCard extends Component {
 
     return `https://github.com/pastelsky/bundlephobia/issues/new?${params}`
   }
-  render() {
-    const { pack, comparisonSizePercent, isEmpty } = this.props
 
-    if (isEmpty) {
+  render() {
+    if ('isEmpty' in this.props) {
       return (
         <a
           className="similar-package-card similar-package-card--empty"
@@ -39,12 +42,13 @@ export default class SimilarPackageCard extends Component {
       )
     }
 
+    const { pack, comparisonSizePercent } = this.props
     const { size, unit } = formatSize(pack.gzip)
     const sizeDiff = Math.abs(
       (comparisonSizePercent / 100) * pack.gzip - pack.gzip
     )
 
-    const getComparisonNumber = comparisonSizePercent => {
+    const getComparisonNumber = (comparisonSizePercent: number) => {
       if (sizeDiff < 1500) {
         return (
           <div>

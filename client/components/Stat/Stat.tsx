@@ -1,10 +1,20 @@
 import React from 'react'
 import cx from 'classnames'
+
 import { formatSize, formatTime } from '../../../utils'
+import { WithClassName } from '../../../types'
 
 const Type = {
   SIZE: 'size',
   TIME: 'time',
+} as const
+
+type StatProps = WithClassName & {
+  value: number
+  type: 'size' | 'time'
+  label: string
+  infoText?: string
+  compact?: boolean
 }
 
 export default function Stat({
@@ -14,7 +24,7 @@ export default function Stat({
   infoText,
   compact,
   className,
-}) {
+}: StatProps) {
   const roundedValue =
     type === Type.SIZE
       ? parseFloat(formatSize(value).size.toFixed(1))

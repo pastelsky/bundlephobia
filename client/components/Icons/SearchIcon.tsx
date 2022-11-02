@@ -1,6 +1,8 @@
 import React from 'react'
 
-export default function SearchIcon({ className }) {
+import { WithClassName } from '../../../types'
+
+export default function SearchIcon({ className }: WithClassName) {
   return (
     <svg
       width="90"

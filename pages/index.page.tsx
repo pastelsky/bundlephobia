@@ -1,10 +1,11 @@
 import React, { PureComponent } from 'react'
-import AutocompleteInput from '../client/components/AutocompleteInput'
-import Layout from '../client/components/Layout'
 import Router from 'next/router'
 import Link from 'next/link'
+
 import Analytics from '../client/analytics'
+import AutocompleteInput from '../client/components/AutocompleteInput'
 import AutocompleteInputBox from '../client/components/AutocompleteInputBox/AutocompleteInputBox'
+import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
 
@@ -13,7 +14,7 @@ export default class Home extends PureComponent {
     Analytics.pageView('home')
   }
 
-  handleSearchSubmit = value => {
+  handleSearchSubmit = (value: string) => {
     Analytics.performedSearch(value.trim())
     Router.push(`/package/${value.trim()}`)
   }

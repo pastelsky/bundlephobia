@@ -1,11 +1,27 @@
-import anime from 'animejs'
+import anime, { AnimeAnimParams } from 'animejs'
+
 import colors from '../../config/colors'
-import { zeroToN, randomFromArray } from '../../../utils/index'
+import { randomFromArray, zeroToN } from '../../../utils'
 
 const DURATION = 1000
 
+type Circle = { cx: number; cy: number; ringNumber: number }
+
+type CirclesMap = Map<SVGCircleElement, Circle>
+
+type ProgressHexAnimatorProps = {
+  svg: SVGSVGElement
+}
+
 export default class ProgressHexAnimator {
-  constructor({ svg }) {
+  circlesMap: CirclesMap
+  circles: NodeListOf<SVGCircleElement>
+  rings: NodeListOf<SVGGElement>
+  trailBlaze: Trailblaze
+  width: number
+  height: number
+
+  constructor({ svg }: ProgressHexAnimatorProps) {
     this.circlesMap = new Map()
     this.circles = svg.querySelectorAll('circle')
     this.rings = svg.querySelectorAll('g')
@@ -17,22 +33,22 @@ export default class ProgressHexAnimator {
     })
 
     Array.from(this.circles).forEach(circle => {
-      const cx = parseFloat(circle.getAttribute('cx'))
-      const cy = parseFloat(circle.getAttribute('cy'))
+      const cx = parseFloat(circle.getAttribute('cx')!)
+      const cy = parseFloat(circle.getAttribute('cy')!)
       circle.style.transformOrigin = `${cx}px ${cy}px`
       this.circlesMap.set(circle, {
         cx,
         cy,
-        ringNumber: parseInt(circle.parentElement.id.match(/.+(\d+)/)[1]) - 1,
+        ringNumber: parseInt(circle.parentElement!.id.match(/.+(\d+)/)![1]) - 1,
       })
-
-      this.width = parseFloat(svg.getAttribute('width'))
-      this.height = parseFloat(svg.getAttribute('height'))
     })
+
+    this.width = parseFloat(svg.getAttribute('width')!)
+    this.height = parseFloat(svg.getAttribute('height')!)
   }
 
-  getTranslation(circle, distance) {
-    const { cx, cy } = this.circlesMap.get(circle)
+  getTranslation(circle: SVGCircleElement, distance: number) {
+    const { cx, cy } = this.circlesMap.get(circle)!
     const { x, y } = this.pointAtDistance(
       cx,
       cy,
@@ -44,7 +60,7 @@ export default class ProgressHexAnimator {
     return { x: x - cx, y: y - cy }
   }
 
-  pointAtDistance(x1, y1, x2, y2, d) {
+  pointAtDistance(x1: number, y1: number, x2: number, y2: number, d: number) {
     const curDistanceBetweenPoints = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
     if (curDistanceBetweenPoints === 0) return { x: x1, y: y1 }
 
@@ -77,19 +93,25 @@ export default class ProgressHexAnimator {
 
     const quakeCircles = {
       targets: this.circles,
-      scale: el => (this.circlesMap.get(el).ringNumber === 0 ? 3 : 1.5),
-      translateY: circle => this.getTranslation(circle, 4).y,
-      translateX: circle => this.getTranslation(circle, 4).x,
-      delay: (el, i) =>
-        (Math.pow(this.circlesMap.get(el).ringNumber, 0.6) * DURATION) / 4 +
-        (this.circlesMap.get(el).ringNumber > 0 ? DURATION / 2.5 : 0),
+      scale: (el: SVGCircleElement) =>
+        this.circlesMap.get(el)!.ringNumber === 0 ? 3 : 1.5,
+      translateY: (circle: SVGCircleElement) =>
+        this.getTranslation(circle, 4).y,
+      translateX: (circle: SVGCircleElement) =>
+        this.getTranslation(circle, 4).x,
+      delay: ((el: SVGCircleElement) =>
+        (Math.pow(this.circlesMap.get(el)!.ringNumber, 0.6) * DURATION) / 4 +
+        (this.circlesMap.get(el)!.ringNumber > 0
+          ? DURATION / 2.5
+          : 0)) as unknown as AnimeAnimParams['delay'],
       duration: DURATION,
-      easing: () => t => Math.sin(t * Math.PI),
+      easing: () => (t: number) => Math.sin(t * Math.PI),
       changeBegin: () => this.trailBlaze.start(),
     }
 
     fadeInTimeline.add(fadeInRings)
     quakeTimeline.add(quakeCircles)
+
     return {
       ...quakeTimeline,
       play: () => {
@@ -102,8 +124,19 @@ export default class ProgressHexAnimator {
   }
 }
 
+type TrailblazeProps = {
+  svg: SVGSVGElement
+  circlesMap: CirclesMap
+  linesCount: number
+  ringsCount: number
+}
+
 class Trailblaze {
-  constructor({ linesCount, svg, circlesMap, ringsCount }) {
+  circlesMap: CirclesMap
+  ringsCount: number
+  lines: SVGLineElement[]
+
+  constructor({ linesCount, svg, circlesMap, ringsCount }: TrailblazeProps) {
     this.lines = []
     this.circlesMap = circlesMap
     this.ringsCount = ringsCount
@@ -121,15 +154,15 @@ class Trailblaze {
     return line
   }
 
-  setLineCoords(line, x1 = 0, x2 = 0, y1 = 0, y2 = 0) {
+  setLineCoords(line: SVGLineElement, x1 = 0, x2 = 0, y1 = 0, y2 = 0) {
     line.setAttribute('x1', `${x1}`)
     line.setAttribute('x2', `${x2}`)
     line.setAttribute('y1', `${y1}`)
     line.setAttribute('y2', `${y2}`)
   }
 
-  getCirclesInRing(ringNumber) {
-    const circles = []
+  getCirclesInRing(ringNumber: number) {
+    const circles: Circle[] = []
     this.circlesMap.forEach(value => {
       if (value.ringNumber === ringNumber) {
         circles.push(value)
@@ -138,7 +171,7 @@ class Trailblaze {
     return circles
   }
 
-  distanceBetweenCircles(c1, c2) {
+  distanceBetweenCircles(c1: Circle, c2: Circle) {
     return Math.sqrt((c2.cx - c1.cx) ** 2 + (c2.cy - c1.cy) ** 2)
   }
 
@@ -177,7 +210,7 @@ class Trailblaze {
     }
   }
 
-  getDashOffset = element => {
+  getDashOffset = (element: SVGElement | HTMLElement | null) => {
     if (!element) return 0
     try {
       return anime.setDashoffset(element)
@@ -189,7 +222,10 @@ class Trailblaze {
   }
 
   start() {
-    const lineMap = new WeakMap()
+    const lineMap = new WeakMap<
+      SVGLineElement,
+      { source: Circle; destination: Circle }
+    >()
 
     this.lines.forEach(line => {
       const { source, destination } = this.getRandomConnection()
@@ -207,11 +243,11 @@ class Trailblaze {
     anime({
       targets: this.lines,
       opacity: [1, 0.9, 0],
-      strokeDashoffset: [el => this.getDashOffset(el), 0],
-      x1: el => lineMap.get(el).source.cx,
-      x2: el => lineMap.get(el).destination.cx,
-      y1: el => lineMap.get(el).source.cy,
-      y2: el => lineMap.get(el).destination.cy,
+      strokeDashoffset: [(el: SVGLineElement) => this.getDashOffset(el), 0],
+      x1: (el: SVGLineElement) => lineMap.get(el)!.source.cx,
+      x2: (el: SVGLineElement) => lineMap.get(el)!.destination.cx,
+      y1: (el: SVGLineElement) => lineMap.get(el)!.source.cy,
+      y2: (el: SVGLineElement) => lineMap.get(el)!.destination.cy,
       duration: 500,
       delay: () => anime.random(0, DURATION / 5),
       easing: 'easeOutCubic',

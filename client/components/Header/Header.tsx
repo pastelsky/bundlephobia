@@ -2,10 +2,20 @@ import React, { Component } from 'react'
 import Sidebar from 'react-sidebar'
 import Link from 'next/link'
 
+import { WithClassName } from '../../../types'
 import GithubLogo from '../../assets/github-logo.svg'
 
-export default class Header extends Component {
-  constructor(props) {
+type HeaderProps = WithClassName
+
+type HeaderState = {
+  sidebarDocked: boolean
+  sidebarOpen: boolean
+}
+
+export default class Header extends Component<HeaderProps, HeaderState> {
+  mql!: MediaQueryList
+
+  constructor(props: HeaderProps) {
     super(props)
     this.state = {
       sidebarDocked: false,
@@ -23,7 +33,7 @@ export default class Header extends Component {
     this.mql.removeListener(this.mediaQueryChanged)
   }
 
-  onSetSidebarOpen(open) {
+  onSetSidebarOpen(open: boolean) {
     this.setState({ sidebarOpen: open })
   }
 

@@ -1,20 +1,28 @@
 import React, { Component } from 'react'
 import ProgressHexAnimator from './progress-hex-timeline'
 
-class ProgressHex extends Component {
-  constructor(props) {
+type ProgressHexProps = {
+  compact?: boolean
+}
+
+class ProgressHex extends Component<ProgressHexProps> {
+  svgRef: React.RefObject<SVGSVGElement>
+  animator?: ProgressHexAnimator
+  timeline?: ReturnType<ProgressHexAnimator['createTimeline']>
+
+  constructor(props: ProgressHexProps) {
     super(props)
     this.svgRef = React.createRef()
   }
 
   componentDidMount() {
-    this.animator = new ProgressHexAnimator({ svg: this.svgRef.current })
+    this.animator = new ProgressHexAnimator({ svg: this.svgRef.current! })
     this.timeline = this.animator.createTimeline()
     this.timeline.play()
   }
 
   componentWillUnmount() {
-    this.timeline.pause()
+    this.timeline?.pause()
   }
 
   render() {

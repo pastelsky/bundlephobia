@@ -41,4 +41,4 @@ export default [
   /**** Common dev dependencies ****/
   /prop-types/,
   /devtools/,
-]
+] as const
