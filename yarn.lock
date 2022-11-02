@@ -5056,6 +5056,7 @@ __metadata:
     dotenv: ^8.2.0
     dotenv-defaults: ^2.0.2
     eslint-config-next: ^13.0.1
+    eslint-config-prettier: ^8.5.0
     execa: ^5.1.1
     fabric: 5.2.1
     firebase: ^8.6.8
@@ -7947,6 +7948,17 @@ __metadata:
     typescript:
       optional: true
   checksum: 67e92dfbab2baa2e5a23c1f517b38101efb49e475b9a5523709898e2c11c879ebc9f61d8decb9d10fcfddec2e7c52863e11df0df485ac6e00ef2fbd5b5f5d769
+  languageName: node
+  linkType: hard
+
+"eslint-config-prettier@npm:^8.5.0":
+  version: 8.5.0
+  resolution: "eslint-config-prettier@npm:8.5.0"
+  peerDependencies:
+    eslint: ">=7.0.0"
+  bin:
+    eslint-config-prettier: bin/cli.js
+  checksum: 0d0f5c32e7a0ad91249467ce71ca92394ccd343178277d318baf32063b79ea90216f4c81d1065d60f96366fdc60f151d4d68ae7811a58bd37228b84c2083f893
   languageName: node
   linkType: hard
 
