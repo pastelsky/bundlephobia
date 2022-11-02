@@ -1,6 +1,6 @@
 import anime from 'animejs'
 import colors from '../../config/colors'
-import { zeroToN, randomFromArray } from 'utils/index'
+import { zeroToN, randomFromArray } from '../../../utils/index'
 
 const DURATION = 1000
 

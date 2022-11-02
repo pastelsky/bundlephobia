@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
-import { formatSize } from 'utils/index'
+import { formatSize } from '../../../utils/index'
 import TreeShakeIcon from '../Icons/TreeShakeIcon'
 import SideEffectIcon from '../Icons/SideEffectIcon'
 

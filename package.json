@@ -118,17 +118,11 @@
     "package-build-stats/webpack": "pastelsky/webpack-4-modern#fca4748eafe351bf9757c04ef9fcce2151c6ac14"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.10",
-    "@babel/preset-env": "^7.17.10",
+    "@svgr/webpack": "^6.5.1",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.24",
     "@types/react-dom": "^18.0.8",
     "autoprefixer": "^9.8.6",
-    "babel-jest": "^24.9.0",
-    "babel-plugin-css-modules-transform": "^1.6.1",
-    "babel-plugin-inline-react-svg": "^1.1.1",
-    "babel-plugin-module-resolver": "^4.0.0",
-    "babel-plugin-wrap-in-js": "^1.1.1",
     "eslint": "^8.26.0",
     "eslint-config-next": "^13.0.1",
     "eslint-config-prettier": "^8.5.0",

@@ -1,18 +1,18 @@
 import Router, { withRouter } from 'next/router'
 import React, { Component } from 'react'
-import Analytics from 'client/analytics'
+import Analytics from '../../client/analytics'
 import FlipMove from 'react-flip-move'
 import cx from 'classnames'
 
 const PromiseQueue = require('p-queue')
 const queryString = require('query-string')
-import Stat from 'client/components/Stat'
+import Stat from '../../client/components/Stat'
 import Link from 'next/link'
 import ResultLayout from '../../client/components/ResultLayout'
-import { parsePackageString } from 'utils/common.utils'
+import { parsePackageString } from '../../utils/common.utils'
 
-import API from 'client/api'
-import { getTimeFromSize } from 'utils'
+import API from '../../client/api'
+import { getTimeFromSize } from '../../utils'
 
 class ResultCard extends Component {
   render() {

@@ -4,8 +4,8 @@ import AutoComplete from 'react-autocomplete'
 import cx from 'classnames'
 
 import SearchIcon from '../Icons/SearchIcon'
-import { parsePackageString } from 'utils/common.utils'
-import API from 'client/api'
+import { parsePackageString } from '../../../utils/common.utils'
+import API from '../../../client/api'
 
 export default class AutocompleteInput extends PureComponent {
   static defaultProps = {
