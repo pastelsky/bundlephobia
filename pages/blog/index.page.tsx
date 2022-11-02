@@ -34,16 +34,14 @@ const BlogHome = () => {
     content = (
       <>
         {data.items.map(item => (
-          <>
-            <Post
-              key={item.fields.title}
-              title={item.fields.title}
-              content={item.fields.content}
-              slug={item.fields.slug}
-              createdAt={item.fields.createdAt || item.sys.createdAt}
-              preview={true}
-            />
-          </>
+          <Post
+            key={item.fields.title}
+            title={item.fields.title}
+            content={item.fields.content}
+            slug={item.fields.slug}
+            createdAt={item.fields.createdAt || item.sys.createdAt}
+            preview={true}
+          />
         ))}{' '}
       </>
     )

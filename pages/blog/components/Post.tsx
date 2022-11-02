@@ -1,9 +1,12 @@
 import React from 'react'
-import { documentToReactComponents } from '@contentful/rich-text-react-renderer'
-import { BLOCKS } from '@contentful/rich-text-types'
+import {
+  documentToReactComponents,
+  NodeRenderer,
+} from '@contentful/rich-text-react-renderer'
+import { BLOCKS, Document, TopLevelBlock } from '@contentful/rich-text-types'
 import Link from 'next/link'
 
-const getWordCount = node => {
+const getWordCount = (node: TopLevelBlock) => {
   let count = 0
   if (node.nodeType === 'paragraph') {
     node.content.forEach(content => {
@@ -19,7 +22,7 @@ const getWordCount = node => {
   return count
 }
 
-const makeContentPreview = content => {
+const makeContentPreview = (content: Document) => {
   const wordLimit = 50
   let wordCount = 0
   const previewContent = []
@@ -36,10 +39,18 @@ const makeContentPreview = content => {
   return { ...others, content: previewContent }
 }
 
-const Post = ({ title, content, slug, preview, createdAt }) => {
+type PostProps = {
+  title: React.ReactNode
+  content: Document
+  slug: string
+  preview?: boolean
+  createdAt: string | number | Date
+}
+
+const Post = ({ title, content, slug, preview, createdAt }: PostProps) => {
   const options = {
     renderNode: {
-      [BLOCKS.EMBEDDED_ASSET]: (node, children) => {
+      [BLOCKS.EMBEDDED_ASSET]: (node: Parameters<NodeRenderer>[0]) => {
         // render the EMBEDDED_ASSET as you need
         return (
           <img

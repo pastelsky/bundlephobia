@@ -2,8 +2,8 @@ import { useRouter } from 'next/router'
 import React from 'react'
 import BlogLayout from '../../../client/components/BlogLayout'
 import { useContentful } from 'react-contentful'
-import BlogPost from '../components/Post'
-import ContentfulProvider from '../components/ContentfulProvider'
+import BlogPost from './Post'
+import ContentfulProvider from './ContentfulProvider'
 
 const ArticleWithContent = () => {
   return (
@@ -16,15 +16,16 @@ const ArticleWithContent = () => {
 }
 
 const Article = () => {
-  const { router } = useRouter()
+  const router = useRouter()
 
   console.log('router is ', router)
+
   const { data, error, loading } = useContentful({
     contentType: 'blogPost',
   })
 
   if (loading) {
-    return 'Loading...'
+    return <>Loading...</>
   } else if (error) {
     return (
       <pre>
@@ -47,7 +48,7 @@ const Article = () => {
     )
   }
 
-  return 'Loading...'
+  return <>Loading...</>
 }
 
 export default ArticleWithContent

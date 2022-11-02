@@ -14,5 +14,11 @@ node_modules
 yarn-error.log
 logs
 **/.yarn/cache
+**/.yarn/install-state.gz
 
+# JetBrains IDE
+.idea
 
+# TypeScript
+tsconfig.tsbuildinfo
+next-env.d.ts
