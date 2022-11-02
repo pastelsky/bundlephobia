@@ -20,4 +20,5 @@ logs
 .idea
 
 # TypeScript
+tsconfig.tsbuildinfo
 next-env.d.ts

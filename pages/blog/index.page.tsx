@@ -16,7 +16,6 @@ const BlogWithContent = () => {
 }
 
 const BlogHome = () => {
-  // ts-ignoring react-contentful type errors for now because their type definitions are too generic
   const { data, error, loading } = useContentful({
     contentType: 'blogPost',
   })
@@ -28,14 +27,12 @@ const BlogHome = () => {
   } else if (error) {
     content = (
       <pre>
-        {/* @ts-ignore */}
         <code>{error}</code>
       </pre>
     )
   } else if (data) {
     content = (
       <>
-        {/* @ts-ignore */}
         {data.items.map(item => (
           <Post
             key={item.fields.title}

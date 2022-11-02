@@ -20,7 +20,6 @@ const Article = () => {
 
   console.log('router is ', router)
 
-  // ts-ignoring react-contentful type errors for now because their type definitions are too generic
   const { data, error, loading } = useContentful({
     contentType: 'blogPost',
   })
@@ -30,14 +29,12 @@ const Article = () => {
   } else if (error) {
     return (
       <pre>
-        {/* @ts-ignore */}
         <code>{error}</code>
       </pre>
     )
   } else if (data) {
     return (
       <>
-        {/* @ts-ignore */}
         {data.items.map(item => (
           <BlogPost
             key={item.fields.title}
