@@ -106,7 +106,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged"
+      "pre-commit": "next lint --fix && pretty-quick --staged"
     }
   },
   "prettier": {
