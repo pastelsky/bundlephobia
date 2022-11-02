@@ -101,11 +101,12 @@
     "test:watch": "jest --watch",
     "postinstall": "yarn run build",
     "prettier": "prettier --write '**/*.{html,js,json,css,scss,jsx,flow,md,yml,yaml}'",
+    "lint": "next lint",
     "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged"
+      "pre-commit": "next lint --fix && pretty-quick --staged"
     }
   },
   "prettier": {
@@ -125,6 +126,9 @@
     "babel-plugin-inline-react-svg": "^1.1.1",
     "babel-plugin-module-resolver": "^4.0.0",
     "babel-plugin-wrap-in-js": "^1.1.1",
+    "eslint": "^8.26.0",
+    "eslint-config-next": "^13.0.1",
+    "eslint-config-prettier": "^8.5.0",
     "glob": "^7.1.6",
     "husky": "^4.3.0",
     "jest": "^24.9.0",

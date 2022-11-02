@@ -24,6 +24,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: yarn install
+      - name: Run lint
+        run: yarn next lint
       - run: yarn build
         env:
           CI: true
