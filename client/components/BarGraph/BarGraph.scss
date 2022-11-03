@@ -96,33 +96,6 @@ $bar-grow-duration: 0.4s;
   }
 }
 
-.bar-graph__bar-version {
-  @include font-size-xs;
-  z-index: 33;
-  font-weight: $font-weight-light;
-  transform: rotate(-90deg) translateX(#{-$global-spacing * 1.5});
-  font-variant-numeric: tabular-nums;
-  color: lighten($raven, 15%);
-  transition: opacity 0.2s, color 0.2s;
-  font-family: $font-family-code;
-  letter-spacing: -1px;
-  line-height: 1;
-  cursor: pointer;
-  height: $bar-width;
-  text-align: end;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-
-  .bar-graph-container:hover & {
-    color: $raven;
-  }
-
-  .bar-graph__bar-group:hover & {
-    color: darken($raven, 20%);
-  }
-}
-
 .bar-graph__bar-version,
 .bar-graph__bar-symbols,
 .bar-graph__legend {

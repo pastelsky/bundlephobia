@@ -1,0 +1,46 @@
+@import '../../../stylesheets/colors';
+@import '../../../stylesheets/variables';
+
+.bar-graph__bar-version {
+  @include font-size-xs;
+  z-index: 33;
+  font-weight: $font-weight-light;
+  transform: rotate(-180deg);
+  font-variant-numeric: tabular-nums;
+  color: lighten($raven, 15%);
+  transition: opacity 0.2s, color 0.2s;
+  font-family: $font-family-code;
+  letter-spacing: -1px;
+  line-height: 1;
+  cursor: pointer;
+  height: $bar-width;
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
+  height: 50px;
+  text-align: left;
+  justify-content: flex-start;
+  display: inline-block;
+  margin-top: 5px;
+
+  > div {
+    display: flex;
+    text-align: end;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    > span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .bar-graph-container:hover & {
+    color: $raven;
+  }
+
+  .bar-graph__bar-group:hover & {
+    color: darken($raven, 20%);
+  }
+}
