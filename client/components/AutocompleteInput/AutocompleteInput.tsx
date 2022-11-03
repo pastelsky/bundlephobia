@@ -9,7 +9,7 @@ import { SuggestionItem } from './components/SuggestionItem'
 import { PackageNameElement } from './components/PackageNameElement'
 import { useFontSize } from './hooks/useFontSize'
 
-interface Props {
+type AutocompleteInputProps = {
   initialValue?: string
   renderAsH1?: boolean
   className?: string
@@ -25,7 +25,7 @@ export const AutocompleteInput = ({
   containerClass,
   autoFocus,
   onSearchSubmit,
-}: Props) => {
+}: AutocompleteInputProps) => {
   const searchInput = React.useRef<AutoComplete | null>(null)
   const {
     value,
