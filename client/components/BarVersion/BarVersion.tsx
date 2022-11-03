@@ -6,7 +6,7 @@ export function BarVersion({ version }: Props) {
   return (
     <div className="bar-graph__bar-version">
       <div>
-        <span>{version}</span>
+        <span title={version}>{version}</span>
       </div>
     </div>
   )
