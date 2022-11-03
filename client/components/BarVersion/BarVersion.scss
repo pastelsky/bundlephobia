@@ -5,7 +5,7 @@
   @include font-size-xs;
   z-index: 33;
   font-weight: $font-weight-light;
-  transform: rotate(-180deg);
+  transform: rotate(-90deg) translateX(#{-$global-spacing * 1.5});
   font-variant-numeric: tabular-nums;
   color: lighten($raven, 15%);
   transition: opacity 0.2s, color 0.2s;
@@ -14,27 +14,10 @@
   line-height: 1;
   cursor: pointer;
   height: $bar-width;
-  writing-mode: vertical-rl;
-  text-orientation: sideways;
-  height: 50px;
-  text-align: left;
-  justify-content: flex-start;
-  display: inline-block;
-  margin-top: 5px;
-
-  > div {
-    display: flex;
-    text-align: end;
-    justify-content: flex-start;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    > span {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
+  text-align: end;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 
   .bar-graph-container:hover & {
     color: $raven;

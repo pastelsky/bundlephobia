@@ -5320,6 +5320,7 @@ __metadata:
     sitemap: ^7.0.0
     strip-markdown: ^4.0.0
     trending-github: ^1.0.2
+    truncate: ^3.0.0
     typescript: ^4.8.4
     uglifyjs-webpack-plugin: ^2.2.0
     unfetch: ^4.2.0
@@ -19798,6 +19799,13 @@ __metadata:
   dependencies:
     utf8-byte-length: ^1.0.1
   checksum: ad097314709ea98444ad9c80c03aac8da805b894f37ceb5685c49ad297483afe3a5ec9572ebcaff699dda72b6cd447a2ba2a3fd10e96c2628cd16d94abeb328a
+  languageName: node
+  linkType: hard
+
+"truncate@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "truncate@npm:3.0.0"
+  checksum: 1d84831cd101e9cfe065f3c460cb7ffc5944504f029d2b173d17201c3ad14bfa3cdc3dcdb5db36ba509a85b8e453447226da6c4d9963c8e43fc7a240825615ca
   languageName: node
   linkType: hard
 
