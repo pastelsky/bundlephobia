@@ -99,7 +99,6 @@
     "prod": "yarn run build && yarn start",
     "test": "jest",
     "test:watch": "jest --watch",
-    "postinstall": "yarn run build",
     "prettier": "prettier --write '**/*.{html,js,json,css,scss,jsx,flow,md,yml,yaml}'",
     "lint": "next lint",
     "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
