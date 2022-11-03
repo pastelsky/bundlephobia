@@ -13,6 +13,8 @@ import cacheControl from 'koa-cache-control'
 import requestId from 'koa-requestid'
 import auth from 'koa-basic-auth'
 import bodyParser from 'koa-bodyparser'
+import invariant from 'ts-invariant'
+
 import Cache from './utils/cache.utils'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
@@ -33,8 +35,10 @@ import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
 
+invariant(process.env.PORT, 'Environment variable PORT is required')
+
 const cache = new Cache()
-const port = parseInt(process.env.PORT!) || config.DEFAULT_DEV_PORT
+const port = parseInt(process.env.PORT) || config.DEFAULT_DEV_PORT
 const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
@@ -182,7 +186,7 @@ app.prepare().then(() => {
 
   router.get(
     '/admin/restart',
-    auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD! }),
+    auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD }),
     async (ctx, next) => {
       try {
         const { stdout, stderr } = await exec.command('pm2 reload all')
@@ -209,9 +213,14 @@ app.prepare().then(() => {
     }
   })
 
+  invariant(
+    process.env.BASIC_AUTH_PASSWORD,
+    'Environment variable BASIC_AUTH_PASSWORD is required'
+  )
+
   router.get(
     '/admin/clear-cache',
-    auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD! }),
+    auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD }),
     async (ctx, next) => {
       try {
         const { stdout } = await exec.command(
@@ -227,13 +236,17 @@ app.prepare().then(() => {
   )
 
   router.get('/result', async (ctx: Context) => {
-    const packageString = ctx.query.p
-    ctx.redirect(`/package/${(packageString as string).trim()}`)
+    invariant(ctx.query.p, 'p parameter is required')
+    const packageString =
+      typeof ctx.query.p === 'string' ? ctx.query.p : ctx.query.p.join('/')
+
+    ctx.redirect(`/package/${packageString.trim()}`)
     ctx.status = 301
   })
 
   router.get('*', async (ctx: Context) => {
-    const parsedUrl = parse(ctx.req.url!, true)
+    invariant(ctx.req.url, 'url is missing')
+    const parsedUrl = parse(ctx.req.url, true)
     await handle(ctx.req, ctx.res, parsedUrl)
     ctx.respond = false
   })

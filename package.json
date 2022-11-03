@@ -85,6 +85,7 @@
     "strip-markdown": "^4.0.0",
     "trending-github": "^1.0.2",
     "truncate": "^3.0.0",
+    "ts-invariant": "^0.10.3",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "unfetch": "^4.2.0",
     "webpack": "^4.46.0",

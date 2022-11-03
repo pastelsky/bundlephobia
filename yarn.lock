@@ -5560,6 +5560,7 @@ __metadata:
     strip-markdown: ^4.0.0
     trending-github: ^1.0.2
     truncate: ^3.0.0
+    ts-invariant: ^0.10.3
     typescript: ^4.8.4
     uglifyjs-webpack-plugin: ^2.2.0
     unfetch: ^4.2.0
@@ -20052,6 +20053,15 @@ __metadata:
   version: 1.0.1
   resolution: "tryer@npm:1.0.1"
   checksum: 1cf14d7f67c79613f054b569bfc9a89c7020d331573a812dfcf7437244e8f8e6eb6893b210cbd9cc217f67c1d72617f89793df231e4fe7d53634ed91cf3a89d1
+  languageName: node
+  linkType: hard
+
+"ts-invariant@npm:^0.10.3":
+  version: 0.10.3
+  resolution: "ts-invariant@npm:0.10.3"
+  dependencies:
+    tslib: ^2.1.0
+  checksum: bb07d56fe4aae69d8860e0301dfdee2d375281159054bc24bf1e49e513fb0835bf7f70a11351344d213a79199c5e695f37ebbf5a447188a377ce0cd81d91ddb5
   languageName: node
   linkType: hard
 
