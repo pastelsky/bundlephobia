@@ -95,7 +95,7 @@
     "build": "NODE_ENV=production next build",
     "prebuild": "node bin/generate-sitemap.js",
     "prestart": "yarn build",
-    "start": "NODE_ENV=production DEBUG=bp:* node index",
+    "start": "NODE_ENV=production DEBUG='bp:*' node index",
     "prod": "yarn run build && yarn start",
     "test": "jest",
     "test:watch": "jest --watch",
