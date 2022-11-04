@@ -35,22 +35,32 @@ import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
 
-invariant(process.env.PORT, 'Environment variable PORT is required')
+function getEnv(env: Record<string, string | undefined | null>) {
+  invariant(
+    env.BASIC_AUTH_PASSWORD,
+    'Environment variable BASIC_AUTH_PASSWORD is required'
+  )
+  invariant(env.PORT, 'Environment variable PORT is required')
+  invariant(env.NODE_ENV, 'Environment variable NODE_ENV is required')
+
+  return {
+    basicAuthPassword: env.BASIC_AUTH_PASSWORD,
+    port: parseInt(env.PORT) || config.DEFAULT_DEV_PORT,
+    nodeEnv: env.NODE_ENV,
+  }
+}
+
+const env = getEnv(process.env)
 
 const cache = new Cache()
-const port = parseInt(process.env.PORT) || config.DEFAULT_DEV_PORT
-const dev = process.env.NODE_ENV !== 'production'
+const port = env.port
+const dev = env.nodeEnv !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
 app.prepare().then(() => {
   const server = new Koa()
   const router = new Router()
-
-  invariant(
-    process.env.BASIC_AUTH_PASSWORD,
-    'Environment variable BASIC_AUTH_PASSWORD is required'
-  )
 
   server.use(requestId())
   server.use(bodyParser())
@@ -191,7 +201,7 @@ app.prepare().then(() => {
 
   router.get(
     '/admin/restart',
-    auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD }),
+    auth({ name: 'bundlephobia', pass: env.basicAuthPassword }),
     async (ctx, next) => {
       try {
         const { stdout, stderr } = await exec.command('pm2 reload all')
@@ -207,7 +217,7 @@ app.prepare().then(() => {
   router.post('/admin/restart', async (ctx, next) => {
     console.log('got', ctx.request.body)
     const { name, pass } = ctx.request.body
-    if (name !== 'bundlephobia' || pass !== process.env.BASIC_AUTH_PASSWORD) {
+    if (name !== 'bundlephobia' || pass !== env.basicAuthPassword) {
       console.error('Failed to restart')
       ctx.status = 500
       ctx.body = 'Failed to restart'
@@ -220,7 +230,7 @@ app.prepare().then(() => {
 
   router.get(
     '/admin/clear-cache',
-    auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD }),
+    auth({ name: 'bundlephobia', pass: env.basicAuthPassword }),
     async (ctx, next) => {
       try {
         const { stdout } = await exec.command(

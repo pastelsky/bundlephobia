@@ -18,8 +18,6 @@ const ArticleWithContent = () => {
 const Article = () => {
   const router = useRouter()
 
-  console.log('router is ', router)
-
   const { data, error, loading } = useContentful({
     contentType: 'blogPost',
   })
