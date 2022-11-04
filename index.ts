@@ -47,6 +47,11 @@ app.prepare().then(() => {
   const server = new Koa()
   const router = new Router()
 
+  invariant(
+    process.env.BASIC_AUTH_PASSWORD,
+    'Environment variable BASIC_AUTH_PASSWORD is required'
+  )
+
   server.use(requestId())
   server.use(bodyParser())
   server.use(requestLoggerMiddleware)
@@ -212,11 +217,6 @@ app.prepare().then(() => {
       console.error(stderr)
     }
   })
-
-  invariant(
-    process.env.BASIC_AUTH_PASSWORD,
-    'Environment variable BASIC_AUTH_PASSWORD is required'
-  )
 
   router.get(
     '/admin/clear-cache',
