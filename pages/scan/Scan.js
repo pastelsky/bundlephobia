@@ -3,7 +3,7 @@ import Analytics from '../../client/analytics'
 import ResultLayout from '../../client/components/ResultLayout'
 import Separator from '../../client/components/Separator'
 import MetaTags from '../../client/components/MetaTags'
-import scanBlacklist from '../../client/config/scanBlacklist'
+import scanBlocklist from '../../client/config/scanBlocklist'
 import Dropzone from 'react-dropzone'
 import Router from 'next/router'
 import * as semver from 'semver'
@@ -145,7 +145,7 @@ export default class Scan extends Component {
                   <input
                     type="checkbox"
                     defaultChecked={
-                      !scanBlacklist.some(regex => regex.test(name))
+                      !scanBlocklist.some(regex => regex.test(name))
                     }
                     value={`${name}#${resolvedVersion}`}
                     onChange={this.handleSelectionChange}

@@ -1,8 +1,8 @@
 const { parsePackageString } = require('../../../utils/common.utils')
-const CustomError = require('./../../CustomError')
+const CustomError = require('../../CustomError')
 const CONFIG = require('../../config')
 
-async function blockBlacklistMiddleware(ctx, next) {
+async function blockBlocklistMiddleware(ctx, next) {
   const { package: packageString, force } = ctx.query
   if (force) {
     await next()
@@ -11,9 +11,9 @@ async function blockBlacklistMiddleware(ctx, next) {
 
   const parsedPackage = parsePackageString(packageString)
 
-  // If package is blacklisted, fail fast
-  if (CONFIG.blackList.some(entry => entry.test(parsedPackage.name))) {
-    throw new CustomError('BlacklistedPackageError', { ...parsedPackage })
+  // If package is blocklisted, fail fast
+  if (CONFIG.blockList.some(entry => entry.test(parsedPackage.name))) {
+    throw new CustomError('BlocklistedPackageError', { ...parsedPackage })
   }
 
   // If package is unsupported, fail fast
@@ -31,4 +31,4 @@ async function blockBlacklistMiddleware(ctx, next) {
   await next()
 }
 
-module.exports = blockBlacklistMiddleware
+module.exports = blockBlocklistMiddleware

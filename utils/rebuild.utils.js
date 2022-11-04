@@ -1,4 +1,4 @@
-const { blackList } = require('../server/config')
+const { blockList } = require('../server/config')
 
 require('dotenv-defaults').config()
 const firebase = require('firebase')
@@ -82,8 +82,8 @@ async function getPackageResult({ name, version }) {
   return snapshot.val()
 }
 
-function filterBlacklistedPackages() {
-  blackList
+function filterBlocklistedPackages() {
+  blockList
 }
 
 async function trim(packages) {
@@ -122,7 +122,7 @@ async function run() {
   //   Object.keys(packs[packName]).forEach(version => {
   //     // if (packName !== 'react') return
   //     //
-  //     if (blackList.some(entry => entry.test(packName))) {
+  //     if (blockList.some(entry => entry.test(packName))) {
   //       return
   //     }
   //

@@ -14,7 +14,7 @@ module.exports = {
 
   DEFAULT_DEV_PORT: 5000,
 
-  blackList: [
+  blockList: [
     /hack-cheats/,
     /hacks?-cheats?/,
     /hack-unlimited/,

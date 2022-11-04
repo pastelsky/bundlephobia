@@ -232,7 +232,7 @@ const categories = {
       { tag: 'escape', weight: Weight.MID },
       { tag: 'filter', weight: Weight.NORMAL },
       { tag: 'xss', weight: Weight.HIGH },
-      { tag: 'whitelist', weight: Weight.SMALL },
+      { tag: 'allowlist', weight: Weight.SMALL },
     ],
     similar: ['sanitize-html', 'xss', 'dompurify', 'sanitizer'],
   },
