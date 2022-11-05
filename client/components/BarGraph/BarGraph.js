@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { formatSize } from '../../../utils/index'
 import TreeShakeIcon from '../Icons/TreeShakeIcon'
 import SideEffectIcon from '../Icons/SideEffectIcon'
+import { BarVersion } from '../BarVersion/BarVersion'
 
 export default class BarGraph extends PureComponent {
   static propTypes = {
@@ -69,9 +70,7 @@ export default class BarGraph extends PureComponent {
         style={{ height: `${50}%` }}
         data-balloon="Unknown | Click 👆 to build"
       />
-      <div className="bar-graph__bar-version" key={reading.version}>
-        {reading.version}
-      </div>
+      <BarVersion version={reading.version} />
     </div>
   )
 
@@ -129,9 +128,7 @@ export default class BarGraph extends PureComponent {
           style={{ height: `${reading.gzip * scale}%` }}
           data-balloon={getTooltipMessage(reading)}
         />
-        <div className="bar-graph__bar-version" key={reading.version}>
-          {reading.version}
-        </div>
+        <BarVersion version={reading.version} />
       </div>
     )
   }
