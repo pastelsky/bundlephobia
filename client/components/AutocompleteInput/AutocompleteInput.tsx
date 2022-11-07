@@ -6,7 +6,6 @@ import SearchIcon from '../Icons/SearchIcon'
 import { parsePackageString } from '../../../utils/common.utils'
 import { useAutocompleteInput } from './hooks/useAutocompleteInput'
 import { SuggestionItem } from './components/SuggestionItem'
-import { PackageNameElement } from './components/PackageNameElement'
 import { useFontSize } from './hooks/useFontSize'
 
 type AutocompleteInputProps = {
@@ -100,7 +99,7 @@ export const AutocompleteInput = ({
           className="autocomplete-input__dummy-input"
         >
           <PackageNameElement
-            as={renderAsH1 ? 'h1' : undefined}
+            isHeading={renderAsH1}
             className="dummy-input__package-name"
           >
             {name}
@@ -118,4 +117,15 @@ export const AutocompleteInput = ({
       </button>
     </form>
   )
+}
+
+type PackageNameElementProps = React.HTMLAttributes<HTMLElement> & {
+  isHeading?: boolean
+}
+
+export function PackageNameElement({
+  isHeading,
+  ...props
+}: PackageNameElementProps) {
+  return isHeading ? <h1 {...props} /> : <span {...props} />
 }

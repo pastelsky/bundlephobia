@@ -120,6 +120,7 @@
   "devDependencies": {
     "@svgr/webpack": "^6.5.1",
     "@types/animejs": "^3.1.6",
+    "@types/debounce": "^1.2.1",
     "@types/koa": "^2.13.5",
     "@types/koa-basic-auth": "^2.0.4",
     "@types/koa-bodyparser": "^4.3.9",
@@ -129,7 +130,6 @@
     "@types/koa-proxy": "^1.0.4",
     "@types/koa-router": "^7.4.4",
     "@types/koa-static": "^4.0.2",
-    "@types/debounce": "^1.2.1",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.24",
     "@types/react-autocomplete": "^1.8.6",
