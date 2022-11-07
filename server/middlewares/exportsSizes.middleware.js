@@ -13,7 +13,7 @@ const buildService = new BuildService()
 async function exportSizesMiddleware(ctx) {
   let result,
     priority = getRequestPriority(ctx)
-  const { name, version, packageString } = ctx.state.resolved
+  const { name, version, packageString, path } = ctx.state.resolved
   const { force, peek, package: packageQuery } = ctx.query
 
   if (peek) {
@@ -21,7 +21,7 @@ async function exportSizesMiddleware(ctx) {
   }
 
   const buildStart = now()
-  result = await buildService.getPackageExportSizes(packageString, priority)
+  result = await buildService.getPackageExportSizes(packageQuery, priority)
 
   const buildEnd = now()
 
@@ -33,7 +33,7 @@ async function exportSizesMiddleware(ctx) {
       : CONFIG.CACHE.SIZE_API_DEFAULT,
   }
 
-  const body = { name, version, ...result }
+  const body = { name, version, path, ...result }
   ctx.body = body
   const time = buildEnd - buildStart
 

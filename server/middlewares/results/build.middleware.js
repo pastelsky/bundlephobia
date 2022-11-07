@@ -18,6 +18,7 @@ async function buildMiddleware(ctx, next) {
     scoped,
     name,
     version,
+    path,
     description,
     repository,
     packageString,
@@ -36,7 +37,15 @@ async function buildMiddleware(ctx, next) {
       : CONFIG.CACHE.SIZE_API_DEFAULT,
   }
 
-  const body = { scoped, name, version, description, repository, ...result }
+  const body = {
+    scoped,
+    name,
+    version,
+    path,
+    description,
+    repository,
+    ...result,
+  }
   ctx.body = body
   ctx.state.buildResult = body
   const time = buildEnd - buildStart

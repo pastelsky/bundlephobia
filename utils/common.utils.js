@@ -7,32 +7,57 @@ function parsePackageString(packageString) {
   // Scoped packages
   let name,
     version,
+    path,
     scope,
     scoped = false
   const lastAtIndex = packageString.lastIndexOf('@')
   const firstSlashIndex = packageString.indexOf('/')
 
   if (packageString.startsWith('@')) {
+    const secondSlashIndex = packageString.indexOf('/', firstSlashIndex + 1)
+
     scoped = true
     scope = packageString.substring(1, firstSlashIndex)
-    if (lastAtIndex === 0) {
-      name = packageString
-      version = null
-    } else {
-      name = packageString.substring(0, lastAtIndex)
-      version = packageString.substring(lastAtIndex + 1)
-    }
+
+    name =
+      lastAtIndex === 0
+        ? secondSlashIndex === -1
+          ? packageString
+          : packageString.substring(0, secondSlashIndex)
+        : packageString.substring(0, lastAtIndex)
+    version =
+      lastAtIndex === 0
+        ? null
+        : secondSlashIndex === -1
+        ? packageString.substring(lastAtIndex + 1)
+        : packageString.substring(lastAtIndex + 1, secondSlashIndex)
+    path =
+      secondSlashIndex === -1
+        ? null
+        : packageString.substring(secondSlashIndex + 1)
   } else {
-    if (lastAtIndex === -1) {
-      name = packageString
-      version = null
-    } else {
-      name = packageString.substring(0, lastAtIndex)
-      version = packageString.substring(lastAtIndex + 1)
-    }
+    name =
+      lastAtIndex === -1
+        ? firstSlashIndex === -1
+          ? packageString
+          : packageString.substring(0, firstSlashIndex)
+        : packageString.substring(0, lastAtIndex)
+    version =
+      lastAtIndex === -1
+        ? null
+        : firstSlashIndex === -1
+        ? packageString.substring(lastAtIndex + 1)
+        : packageString.substring(lastAtIndex + 1, firstSlashIndex)
+    path =
+      firstSlashIndex === -1
+        ? null
+        : packageString.substring(firstSlashIndex + 1)
   }
 
-  return { name, version, scope, scoped }
+  const normalPath = name + (version ? '@' + version : '')
+  const fullPath = normalPath + (path ? '/' + path : '')
+
+  return { name, version, path, scope, scoped, normalPath, fullPath }
 }
 
 function daysFromToday(date) {

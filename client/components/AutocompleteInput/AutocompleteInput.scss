@@ -57,8 +57,16 @@
   color: #636363;
 }
 
+.dummy-input__package-path {
+  color: #a9a9a9;
+}
+
 .dummy-input__at-separator {
   color: $pastel-green;
+}
+
+.dummy-input__path-separator {
+  color: #a9a9a9;
 }
 
 .autocomplete-input__suggestions-menu {

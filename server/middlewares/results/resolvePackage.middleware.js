@@ -12,11 +12,11 @@ async function resolvePackageMiddleware(ctx, next) {
   // prefill values in case resolution fails
   ctx.state.resolved = {
     ...parsedPackage,
-    packageString: `${parsedPackage.name}@${parsedPackage.version}`,
+    packageString: parsedPackage.fullPath,
   }
 
   const resolveStart = now()
-  resolvedPackage = await resolvePackage(packageString)
+  resolvedPackage = await resolvePackage(parsedPackage.normalPath)
   const resolveEnd = now()
 
   const { name, version, repository, description } = resolvedPackage
@@ -39,8 +39,9 @@ async function resolvePackageMiddleware(ctx, next) {
   const result = {
     name,
     version,
+    path: parsedPackage.path,
     scoped: parsedPackage.scoped,
-    packageString: `${name}@${version}`,
+    packageString: parsedPackage.fullPath,
     description: truncatedDescription,
     repository: repositoryURL,
   }
