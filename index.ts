@@ -4,7 +4,7 @@ import next from 'next'
 import exec from 'execa'
 import { parse } from 'url'
 
-import Koa, { Context, Next } from 'koa'
+import Koa, { Context } from 'koa'
 import proxy from 'koa-proxy'
 import serve from 'koa-static'
 import Router from 'koa-router'
@@ -76,7 +76,7 @@ app.prepare().then(() => {
     )
   }
 
-  server.use(async (ctx: Context, next: Next) => {
+  server.use(async (ctx, next) => {
     try {
       await next()
     } catch (err: any) {
@@ -217,9 +217,8 @@ app.prepare().then(() => {
     }
   )
 
-  router.post('/admin/restart', async (ctx, next) => {
-    console.log('got', ctx.request.body)
-    const { name, pass } = ctx.request.body
+  router.post('/admin/restart', async ctx => {
+    const { name, pass } = <{ name?: string; pass?: string }>ctx.request.body
     if (name !== 'bundlephobia' || pass !== env.basicAuthPassword) {
       console.error('Failed to restart')
       ctx.status = 500
@@ -248,7 +247,7 @@ app.prepare().then(() => {
     }
   )
 
-  router.get('/result', async (ctx: Context) => {
+  router.get('/result', async ctx => {
     invariant(ctx.query.p, 'p parameter is required')
     const packageString =
       typeof ctx.query.p === 'string' ? ctx.query.p : ctx.query.p.join('/')
@@ -257,7 +256,7 @@ app.prepare().then(() => {
     ctx.status = 301
   })
 
-  router.get('*', async (ctx: Context) => {
+  router.get('*', async ctx => {
     invariant(ctx.req.url, 'url is missing')
     const parsedUrl = parse(ctx.req.url, true)
     await handle(ctx.req, ctx.res, parsedUrl)
