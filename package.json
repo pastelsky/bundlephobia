@@ -92,11 +92,11 @@
     "workerpool": "^6.2.0"
   },
   "scripts": {
-    "dev": "DEBUG='bp:*' nodemon",
+    "dev": "DEBUG='bp:*' NODE_ENV=production nodemon",
     "build": "NODE_ENV=production next build",
     "prebuild": "node bin/generate-sitemap.js",
     "prestart": "yarn build",
-    "start": "NODE_ENV=production DEBUG='bp:*' node index",
+    "start": "DEBUG='bp:*' NODE_ENV=production nodemon",
     "prod": "yarn run build && yarn start",
     "test": "jest",
     "test:watch": "jest --watch",
