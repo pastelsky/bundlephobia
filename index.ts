@@ -1,42 +1,60 @@
 require('dotenv-defaults').config()
 
-const next = require('next')
-const exec = require('execa')
-const { parse } = require('url')
+import next from 'next'
+import exec from 'execa'
+import { parse } from 'url'
 
-const Koa = require('koa')
-const proxy = require('koa-proxy')
-const serve = require('koa-static')
-const koaCache = require('koa-cash')
-const Router = require('koa-router')
-const compress = require('koa-compress')
-const cacheControl = require('koa-cache-control')
-const requestId = require('koa-requestid')
-const auth = require('koa-basic-auth')
-const bodyParser = require('koa-bodyparser')
-const Cache = require('./utils/cache.utils')
-const { parsePackageString } = require('./utils/common.utils')
-const firebaseUtils = require('./utils/firebase.utils')
-const logger = require('./server/Logger')
+import Koa, { Context } from 'koa'
+import proxy from 'koa-proxy'
+import serve from 'koa-static'
+import Router from 'koa-router'
+import compress from 'koa-compress'
+import cacheControl from 'koa-cache-control'
+import requestId from 'koa-requestid'
+import auth from 'koa-basic-auth'
+import bodyParser from 'koa-bodyparser'
+import invariant from 'ts-invariant'
 
-const limit = require('./server/middlewares/rateLimit.middleware')
-const exportsMiddlware = require('./server/middlewares/exports.middleware')
-const exportsSizesMiddlware = require('./server/middlewares/exportsSizes.middleware')
-const resolvePackageMiddleware = require('./server/middlewares/results/resolvePackage.middleware')
-const cachedResponseMiddleware = require('./server/middlewares/results/cachedResponse.middleware')
-const buildMiddleware = require('./server/middlewares/results/build.middleware')
-const errorMiddleware = require('./server/middlewares/results/error.middleware')
-const blockBlacklistMiddleware = require('./server/middlewares/results/blockBlacklist.middleware')
-const requestLoggerMiddleware = require('./server/middlewares/requestLogger.middleware')
-const similarPackagesMiddleware = require('./server/middlewares/similar-packages/similarPackages.middleware')
-const generateImgMiddleware = require('./server/middlewares/generateImg.middleware')
-const jsonCacheMiddleware = require('./server/middlewares/jsonCache.middleware')
+import Cache from './utils/cache.utils'
+import { parsePackageString } from './utils/common.utils'
+import firebaseUtils from './utils/firebase.utils'
+import logger from './server/Logger'
 
-const config = require('./server/config')
+import limit from './server/middlewares/rateLimit.middleware'
+import exportsMiddlware from './server/middlewares/exports.middleware'
+import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
+import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
+import cachedResponseMiddleware from './server/middlewares/results/cachedResponse.middleware'
+import buildMiddleware from './server/middlewares/results/build.middleware'
+import errorMiddleware from './server/middlewares/results/error.middleware'
+import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
+import requestLoggerMiddleware from './server/middlewares/requestLogger.middleware'
+import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
+import generateImgMiddleware from './server/middlewares/generateImg.middleware'
+import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
+
+import config from './server/config'
+
+function getEnv(env: Record<string, string | undefined | null>) {
+  invariant(
+    env.BASIC_AUTH_PASSWORD,
+    'Environment variable BASIC_AUTH_PASSWORD is required'
+  )
+  invariant(env.PORT, 'Environment variable PORT is required')
+  invariant(env.NODE_ENV, 'Environment variable NODE_ENV is required')
+
+  return {
+    basicAuthPassword: env.BASIC_AUTH_PASSWORD,
+    port: parseInt(env.PORT) || config.DEFAULT_DEV_PORT,
+    nodeEnv: env.NODE_ENV,
+  }
+}
+
+const env = getEnv(process.env)
 
 const cache = new Cache()
-const port = parseInt(process.env.PORT) || config.DEFAULT_DEV_PORT
-const dev = process.env.NODE_ENV !== 'production'
+const port = env.port
+const dev = env.nodeEnv !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
@@ -61,7 +79,7 @@ app.prepare().then(() => {
   server.use(async (ctx, next) => {
     try {
       await next()
-    } catch (err) {
+    } catch (err: any) {
       if (401 == err.status) {
         ctx.status = 401
         ctx.set('WWW-Authenticate', 'Basic')
@@ -78,7 +96,9 @@ app.prepare().then(() => {
         return /(text|json|javascript|svg)/.test(contentType)
       },
       threshold: 2048,
-      flush: require('zlib').Z_SYNC_FLUSH,
+      gzip: {
+        flush: require('zlib').Z_SYNC_FLUSH,
+      },
     })
   )
 
@@ -95,12 +115,17 @@ app.prepare().then(() => {
     })
   )
 
+  type Key = {
+    name: string
+    version: string
+  }
+
   router.get(
     '/api/size',
     jsonCacheMiddleware({
-      get: key => cache.getPackageSize(key),
-      set: (key, value) => cache.setPackageSize(key, value),
-      hash: ctx => ({
+      get: (key: Key) => cache.getPackageSize(key),
+      set: (key: Key, value: string) => cache.setPackageSize(key, value),
+      hash: (ctx: Context) => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
       }),
@@ -123,9 +148,9 @@ app.prepare().then(() => {
   router.get(
     '/api/exports-sizes',
     jsonCacheMiddleware({
-      get: key => cache.getExportsSize(key),
-      set: (key, value) => cache.setExportsSize(key, value),
-      hash: ctx => ({
+      get: (key: Key) => cache.getExportsSize(key),
+      set: (key: Key, value: string) => cache.setExportsSize(key, value),
+      hash: (ctx: Context) => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
       }),
@@ -137,13 +162,13 @@ app.prepare().then(() => {
     exportsSizesMiddlware
   )
 
-  router.get('/api/recent', async ctx => {
+  router.get('/api/recent', async (ctx: Context) => {
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.RECENTS_API,
       }
-      ctx.body = await firebaseUtils.getRecentSearches(ctx.query.limit)
-    } catch (err) {
+      ctx.body = await firebaseUtils.getRecentSearches(Number(ctx.query.limit))
+    } catch (err: any) {
       console.error('in /api/recent', err)
       logger.error('RECENT', err, 'RECENT FAILED: failed')
       ctx.status = 422
@@ -151,14 +176,17 @@ app.prepare().then(() => {
     }
   })
 
-  router.get('/api/package-history', async ctx => {
+  router.get('/api/package-history', async (ctx: Context) => {
     const { name } = parsePackageString(ctx.query.package)
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
       }
-      ctx.body = await firebaseUtils.getPackageHistory(name, ctx.query.limit)
-    } catch (err) {
+      ctx.body = await firebaseUtils.getPackageHistory(
+        name,
+        Number(ctx.query.limit)
+      )
+    } catch (err: any) {
       console.error(err)
       logger.error(
         'HISTORY',
@@ -176,10 +204,10 @@ app.prepare().then(() => {
 
   router.get(
     '/admin/restart',
-    auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD }),
+    auth({ name: 'bundlephobia', pass: env.basicAuthPassword }),
     async (ctx, next) => {
       try {
-        const { stdout, stderr } = await exec.shell('pm2 reload all')
+        const { stdout, stderr } = await exec.command('pm2 reload all')
         ctx.body = 'Server restarted' + stdout
       } catch (err) {
         console.error('Failed to restart', err)
@@ -189,15 +217,14 @@ app.prepare().then(() => {
     }
   )
 
-  router.post('/admin/restart', async (ctx, next) => {
-    console.log('got', ctx.request.body)
-    const { name, pass } = ctx.request.body
-    if (name !== 'bundlephobia' || pass !== process.env.BASIC_AUTH_PASSWORD) {
+  router.post('/admin/restart', async ctx => {
+    const { name, pass } = <{ name?: string; pass?: string }>ctx.request.body
+    if (name !== 'bundlephobia' || pass !== env.basicAuthPassword) {
       console.error('Failed to restart')
       ctx.status = 500
       ctx.body = 'Failed to restart'
     } else {
-      const { stdout, stderr } = await exec.shell('pm2 reload all')
+      const { stdout, stderr } = await exec.command('pm2 reload all')
       ctx.body = 'Server restarted' + stdout
       console.error(stderr)
     }
@@ -205,10 +232,10 @@ app.prepare().then(() => {
 
   router.get(
     '/admin/clear-cache',
-    auth({ name: 'bundlephobia', pass: process.env.BASIC_AUTH_PASSWORD }),
+    auth({ name: 'bundlephobia', pass: env.basicAuthPassword }),
     async (ctx, next) => {
       try {
-        const { stdout } = await exec.shell(
+        const { stdout } = await exec.command(
           'rm -rf /tmp/tmp-build/cache/_cacache /tmp/tmp-build/packages/'
         )
         ctx.body = 'Cache cleared' + stdout
@@ -221,12 +248,16 @@ app.prepare().then(() => {
   )
 
   router.get('/result', async ctx => {
-    const packageString = ctx.query.p
+    invariant(ctx.query.p, 'p parameter is required')
+    const packageString =
+      typeof ctx.query.p === 'string' ? ctx.query.p : ctx.query.p.join('/')
+
     ctx.redirect(`/package/${packageString.trim()}`)
     ctx.status = 301
   })
 
   router.get('*', async ctx => {
+    invariant(ctx.req.url, 'url is missing')
     const parsedUrl = parse(ctx.req.url, true)
     await handle(ctx.req, ctx.res, parsedUrl)
     ctx.respond = false
@@ -238,8 +269,7 @@ app.prepare().then(() => {
   })
 
   server.use(router.routes())
-  server.listen(port, err => {
-    if (err) throw err
+  server.listen(port, () => {
     console.log(`> Ready on http://localhost:${port}`)
   })
 })
