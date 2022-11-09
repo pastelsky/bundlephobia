@@ -1,4 +1,4 @@
-// stab typings for amplitudeScript loaded in the _document
+// stub typings for amplitudeScript loaded in the _document
 declare global {
   var amplitude: {
     getInstance: () => {
