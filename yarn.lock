@@ -3074,6 +3074,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/animejs@npm:^3.1.6":
+  version: 3.1.6
+  resolution: "@types/animejs@npm:3.1.6"
+  checksum: da54d122376212ce9fd3a57d385e4b800b3ec4026dcf55d99a32c0aedf799b169abdea9f1e54b5d81a4be0edd8e0c9b245a57bf48778d1d59c607582f34aabdc
+  languageName: node
+  linkType: hard
+
 "@types/babel__core@npm:^7.1.0":
   version: 7.1.14
   resolution: "@types/babel__core@npm:7.1.14"
@@ -3497,6 +3504,15 @@ __metadata:
   dependencies:
     "@types/react": "*"
   checksum: 522e5e949d05f35c6037a2290838c9c7ff92a9d06f7d96b993c7c3f5a86d8f3a6337e059c94e6fb0920227f445e5d1ce10fbfe3d9bbd95fb82a5539249d90646
+  languageName: node
+  linkType: hard
+
+"@types/react-sidebar@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "@types/react-sidebar@npm:3.0.2"
+  dependencies:
+    "@types/react": "*"
+  checksum: 4fb384d965ef567cb9dc2082887838d0d2dadee672359905404c8318f6a7cbcc0538d25b700d8da5bc79853846cc939bb9134237cdacb846a443895969faee17
   languageName: node
   linkType: hard
 
@@ -5466,6 +5482,7 @@ __metadata:
     "@contentful/rich-text-react-renderer": ^15.12.1
     "@contentful/rich-text-types": ^15.12.1
     "@svgr/webpack": ^6.5.1
+    "@types/animejs": ^3.1.6
     "@types/koa": ^2.13.5
     "@types/koa-basic-auth": ^2.0.4
     "@types/koa-bodyparser": ^4.3.9
@@ -5478,6 +5495,7 @@ __metadata:
     "@types/node": ^18.11.9
     "@types/react": ^18.0.24
     "@types/react-dom": ^18.0.8
+    "@types/react-sidebar": ^3.0.2
     animejs: ^3.2.1
     array-to-sentence: ^2.0.0
     autoprefixer: ^9.8.6
@@ -5543,7 +5561,6 @@ __metadata:
     pretty-quick: ^3.1.1
     promise-queue-plus: ^1.2.2
     promise.series: ^0.2.0
-    prop-types: ^15.7.2
     query-string: ^7.0.0
     react: 18.2.0
     react-autocomplete: ^1.8.1

@@ -1,23 +1,27 @@
 import React, { PureComponent } from 'react'
-import PropTypes from 'prop-types'
-import { formatSize } from '../../../utils/index'
+
+import { formatSize } from '../../../utils'
 import TreeShakeIcon from '../Icons/TreeShakeIcon'
 import SideEffectIcon from '../Icons/SideEffectIcon'
 import { BarVersion } from '../BarVersion/BarVersion'
 
-export default class BarGraph extends PureComponent {
-  static propTypes = {
-    onBarClick: PropTypes.func.isRequired,
-    readings: PropTypes.arrayOf(
-      PropTypes.shape({
-        version: PropTypes.string.isRequired,
-        size: PropTypes.number,
-        gzip: PropTypes.number,
-        disabled: PropTypes.bool,
-      })
-    ),
-  }
+export type Reading = {
+  version: string
+  size: number
+  gzip: number
+  disabled: boolean
+  hasSideEffects: boolean
+  hasJSModule: boolean
+  hasJSNext: boolean
+  isModuleType: boolean
+}
 
+type BarGraphProps = {
+  readings: Reading[]
+  onBarClick: (reading: Reading) => void
+}
+
+export default class BarGraph extends PureComponent<BarGraphProps> {
   getScale = () => {
     const { readings } = this.props
 
@@ -59,7 +63,7 @@ export default class BarGraph extends PureComponent {
     return treeshakingIntroducedRecently ? firstTreeshakingIndex : -1
   }
 
-  renderDisabledBar = reading => (
+  renderDisabledBar = (reading: Reading) => (
     <div
       key={reading.version}
       className="bar-graph__bar-group bar-graph__bar-group--disabled"
@@ -74,8 +78,12 @@ export default class BarGraph extends PureComponent {
     </div>
   )
 
-  renderActiveBar = (reading, scale, options) => {
-    const getTooltipMessage = reading => {
+  renderActiveBar = (
+    reading: Reading,
+    scale: number,
+    options: { isFirstTreeshakeable: boolean; isFirstSideEffectFree: boolean }
+  ) => {
+    const getTooltipMessage = (reading: Reading) => {
       const formattedSize = formatSize(reading.size)
       const formattedGzip = formatSize(reading.gzip)
       return `Minified: ${parseFloat(formattedSize.size).toFixed(1)}${

@@ -1,8 +1,22 @@
 import fetch from 'unfetch'
 
+type PackageSuggestion = {
+  searchScore: number
+  score: { detail: { popularity: number } }
+}
+
+type RecentSearch = {
+  [key: string]: {
+    name: string
+    version: string
+    lastSearched: number
+    count: number
+  }
+}
+
 export default class API {
-  static get(url, isInternal = true) {
-    const headers = {
+  static get<T = unknown>(url: string, isInternal = true): Promise<T> {
+    const headers: Record<string, string> = {
       Accept: 'application/json',
     }
 
@@ -37,32 +51,35 @@ export default class API {
     })
   }
 
-  static getInfo(packageString) {
+  static getInfo(packageString: string) {
     return API.get(`/api/size?package=${packageString}&record=true`)
   }
 
-  static getExports(packageString) {
+  static getExports(packageString: string) {
     return API.get(`/api/exports?package=${packageString}`)
   }
 
-  static getExportsSizes(packageString) {
+  static getExportsSizes(packageString: string) {
     return API.get(`/api/exports-sizes?package=${packageString}`)
   }
 
-  static getHistory(packageString) {
+  static getHistory(packageString: string) {
     return API.get(`/api/package-history?package=${packageString}`)
   }
 
-  static getRecentSearches(limit) {
-    return API.get(`/api/recent?limit=${limit}`)
+  static getRecentSearches(limit: number) {
+    return API.get<RecentSearch[]>(`/api/recent?limit=${limit}`)
   }
 
-  static getSimilar(packageName) {
+  static getSimilar(packageName: string) {
     return API.get(`/api/similar-packages?package=${packageName}`)
   }
 
-  static getSuggestions(query) {
-    const suggestionSort = (packageA, packageB) => {
+  static getSuggestions(query: string) {
+    const suggestionSort = (
+      packageA: PackageSuggestion,
+      packageB: PackageSuggestion
+    ) => {
       // Rank closely matching packages followed
       // by most popular ones
       if (
@@ -78,7 +95,7 @@ export default class API {
       }
     }
 
-    return API.get(
+    return API.get<PackageSuggestion[]>(
       `https://api.npms.io/v2/search/suggestions?q=${query}`,
       false
     ).then(result => result.sort(suggestionSort))

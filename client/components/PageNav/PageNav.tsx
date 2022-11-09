@@ -2,7 +2,11 @@ import Link from 'next/link'
 import React from 'react'
 import GithubLogo from '../../assets/github-logo.svg'
 
-const PageNav = ({ minimal }) => (
+type PageNavProps = {
+  minimal?: boolean
+}
+
+const PageNav = ({ minimal }: PageNavProps) => (
   <header className="page-header">
     {!minimal && (
       <section className="result-header--left-section">

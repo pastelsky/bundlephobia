@@ -70,7 +70,6 @@
     "performance-now": "^2.1.0",
     "promise-queue-plus": "^1.2.2",
     "promise.series": "^0.2.0",
-    "prop-types": "^15.7.2",
     "query-string": "^7.0.0",
     "react": "18.2.0",
     "react-autocomplete": "^1.8.1",
@@ -120,6 +119,7 @@
   },
   "devDependencies": {
     "@svgr/webpack": "^6.5.1",
+    "@types/animejs": "^3.1.6",
     "@types/koa": "^2.13.5",
     "@types/koa-basic-auth": "^2.0.4",
     "@types/koa-bodyparser": "^4.3.9",
@@ -132,6 +132,7 @@
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.24",
     "@types/react-dom": "^18.0.8",
+    "@types/react-sidebar": "^3.0.2",
     "autoprefixer": "^9.8.6",
     "eslint": "^8.26.0",
     "eslint-config-next": "^13.0.1",

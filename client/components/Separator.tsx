@@ -1,11 +1,18 @@
 import React from 'react'
 
+type SeparatorProps = {
+  text?: string
+  align?: React.CSSProperties['justifyContent']
+  showLeft?: boolean
+  containerStyles?: React.CSSProperties
+}
+
 export default function Separator({
   text = 'or',
   align = 'center',
   showLeft = true,
   containerStyles,
-}) {
+}: SeparatorProps) {
   const commonStyles = {
     display: 'flex',
     justifyContent: align,

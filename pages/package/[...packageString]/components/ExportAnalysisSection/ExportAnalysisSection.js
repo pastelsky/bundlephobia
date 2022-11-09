@@ -34,7 +34,7 @@ function getBGClass(ratio) {
 
 class ExportPill extends React.Component {
   render() {
-    const { name, size, path, totalSize, isLoading } = this.props
+    const { name, size, totalSize, isLoading } = this.props
     return (
       <li className="export-analysis-section__pill export-analysis-section__dont-break">
         <div
@@ -100,7 +100,7 @@ function ExportList({ exports, totalSize, isLoading }) {
             )}
             {exportDictionary[letter]
               .slice(shouldShowLabels ? 1 : 0)
-              .map((exp, expIndex) => (
+              .map(exp => (
                 <ExportPill
                   size={exp.gzip}
                   totalSize={totalSize}

@@ -1,11 +1,18 @@
 import React, { Component } from 'react'
 import Link from 'next/link'
-import API from '../../api'
 
+import API from '../../api'
 import Heart from '../../assets/heart.svg'
 import DigitalOceanLogo from '../../assets/digital-ocean-logo.svg'
+import { WithClassName } from '../../../types'
 
-export default class Layout extends Component {
+type LayoutProps = React.PropsWithChildren & WithClassName
+
+type LayoutState = {
+  recentSearches: string[]
+}
+
+export default class Layout extends Component<LayoutProps, LayoutState> {
   state = {
     recentSearches: [],
   }

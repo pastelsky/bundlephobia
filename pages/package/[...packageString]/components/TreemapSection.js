@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import { formatSize } from '../../../../utils'
-import colors from '../../../../client/config/colors'
-import Treemap from '../../../../client/components/Treemap'
+import { formatSize } from 'utils'
+import colors from 'client/config/colors'
+import { Treemap, TreemapSquare } from 'client/components/Treemap'
 
 class TreemapSection extends Component {
   state = {
@@ -128,7 +128,7 @@ class TreemapSection extends Component {
         <h2 className="result__section-heading"> Composition </h2>
         <Treemap width={width} height={height} className="treemap">
           {compactedDependencies.map((dep, index) => (
-            <Treemap.Square
+            <TreemapSquare
               key={dep.name}
               value={dep.percentShare}
               style={{ background: colors[index % colors.length] }}
@@ -167,7 +167,7 @@ class TreemapSection extends Component {
               ) : (
                 <span className="treemap__ellipsis">&hellip;</span>
               )}
-            </Treemap.Square>
+            </TreemapSquare>
           ))}
         </Treemap>
         <p className="treemap__note">

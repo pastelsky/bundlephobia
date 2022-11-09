@@ -1,13 +1,13 @@
 import React, { Component } from 'react'
 import cx from 'classnames'
-import Link from 'next/link'
 
 import Layout from '../../components/Layout'
-
-import GithubLogo from '../../assets/github-logo.svg'
 import PageNav from '../PageNav'
+import { WithClassName } from '../../../types'
 
-export default class ResultLayout extends Component {
+export default class ResultLayout extends Component<
+  React.PropsWithChildren & WithClassName
+> {
   render() {
     const { children, className } = this.props
     return (
