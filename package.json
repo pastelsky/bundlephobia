@@ -92,7 +92,7 @@
     "workerpool": "^6.2.0"
   },
   "scripts": {
-    "dev": "DEBUG='bp:*' NODE_ENV=production nodemon",
+    "dev": "DEBUG='bp:*' NODE_ENV=development nodemon",
     "build": "NODE_ENV=production next build",
     "prebuild": "node bin/generate-sitemap.js",
     "prestart": "yarn build",
