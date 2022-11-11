@@ -150,6 +150,7 @@
     "pretty-quick": "^3.1.1",
     "sass-loader": "^10.2.0",
     "sitemap": "^7.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
   },
   "packageManager": "yarn@3.2.0"
