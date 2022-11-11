@@ -36,7 +36,7 @@ async function errorHandler(ctx, next) {
       maxAge: force ? 0 : CONFIG.CACHE.SIZE_API_ERROR,
     }
 
-    if (!'name' in err) {
+    if (!('name' in err)) {
       respondWithError(500, { code: 'UnknownError', details: err })
       return
     }
