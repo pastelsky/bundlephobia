@@ -1,73 +1,70 @@
-import React, { PureComponent } from 'react'
+import React, { useMemo } from 'react'
 
 import { formatSize } from '../../../utils'
 import TreeShakeIcon from '../Icons/TreeShakeIcon'
 import SideEffectIcon from '../Icons/SideEffectIcon'
-import { BarVersion } from '../BarVersion/BarVersion'
+import { BarVersion } from '../BarVersion'
+import { Reading } from './types'
+import { useBarGraph } from './hooks/useBarGraph'
 
-export type Reading = {
-  version: string
-  size: number
-  gzip: number
-  disabled: boolean
-  hasSideEffects: boolean
-  hasJSModule: boolean
-  hasJSNext: boolean
-  isModuleType: boolean
-}
-
-type BarGraphProps = {
+interface BarGraphProps {
   readings: Reading[]
   onBarClick: (reading: Reading) => void
 }
 
-export default class BarGraph extends PureComponent<BarGraphProps> {
-  getScale = () => {
-    const { readings } = this.props
+export function BarGraph({ onBarClick, readings }: BarGraphProps) {
+  const { firstSideEffectFreeIndex, firstTreeshakeableIndex, graphScale } =
+    useBarGraph({ readings })
 
-    const gzipValues = readings
-      .filter(reading => !reading.disabled)
-      .map(reading => reading.gzip)
+  return (
+    <div className="bar-graph-container">
+      <figure className="bar-graph">
+        {readings.map((reading, index) =>
+          reading.disabled ? (
+            <DisabledBar
+              key={reading.version}
+              reading={reading}
+              onBarClick={onBarClick}
+            />
+          ) : (
+            <ActiveBar
+              key={reading.version}
+              reading={reading}
+              graphScale={graphScale}
+              options={{
+                isFirstTreeshakeable: index === firstTreeshakeableIndex,
+                isFirstSideEffectFree: index === firstSideEffectFreeIndex,
+              }}
+              onBarClick={onBarClick}
+            />
+          )
+        )}
+      </figure>
+      <div className="bar-graph__legend">
+        <div className="bar-graph__legend__bar1">
+          <div className="bar-graph__legend__colorbox" />
+          Min
+        </div>
+        <div className="bar-graph__legend__bar2">
+          <div className="bar-graph__legend__colorbox" />
+          GZIP
+        </div>
+      </div>
+    </div>
+  )
+}
 
-    const sizeValues = readings
-      .filter(reading => !reading.disabled)
-      .map(reading => reading.size)
+interface DisabledBarProps {
+  reading: Reading
+  onBarClick: (reading: Reading) => void
+}
 
-    const maxValue = Math.max(...[...gzipValues, ...sizeValues])
-    return 100 / maxValue
-  }
-
-  getFirstSideEffectFreeIndex = () => {
-    const { readings } = this.props
-    const sideEffectFreeIntroducedRecently = !readings.every(
-      reading => !reading.hasSideEffects
-    )
-    const firstSideEffectFreeIndex = readings.findIndex(
-      reading => !(reading.disabled || reading.hasSideEffects)
-    )
-
-    return sideEffectFreeIntroducedRecently ? firstSideEffectFreeIndex : -1
-  }
-
-  getFirstTreeshakeableIndex = () => {
-    const { readings } = this.props
-    const treeshakingIntroducedRecently = !readings.every(
-      reading => reading.hasJSModule
-    )
-    const firstTreeshakingIndex = readings.findIndex(
-      reading =>
-        !reading.disabled &&
-        (reading.hasJSModule || reading.hasJSNext || reading.isModuleType)
-    )
-
-    return treeshakingIntroducedRecently ? firstTreeshakingIndex : -1
-  }
-
-  renderDisabledBar = (reading: Reading) => (
+function DisabledBar({ reading, onBarClick }: DisabledBarProps) {
+  return (
     <div
       key={reading.version}
       className="bar-graph__bar-group bar-graph__bar-group--disabled"
-      onClick={() => this.props.onBarClick(reading)}
+      onClick={() => onBarClick(reading)}
     >
       <div
         className="bar-graph__bar"
@@ -77,99 +74,75 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
       <BarVersion version={reading.version} />
     </div>
   )
+}
 
-  renderActiveBar = (
-    reading: Reading,
-    scale: number,
-    options: { isFirstTreeshakeable: boolean; isFirstSideEffectFree: boolean }
-  ) => {
-    const getTooltipMessage = (reading: Reading) => {
-      const formattedSize = formatSize(reading.size)
-      const formattedGzip = formatSize(reading.gzip)
-      return `Minified: ${parseFloat(formattedSize.size).toFixed(1)}${
-        formattedSize.unit
-      } | Gzipped: ${parseFloat(formattedGzip.size).toFixed(1)}${
-        formattedGzip.unit
-      }`
-    }
+interface ActiveBarProps {
+  reading: Reading
+  graphScale: number
+  options: { isFirstTreeshakeable: boolean; isFirstSideEffectFree: boolean }
+  onBarClick: (reading: Reading) => void
+}
 
-    return (
+function ActiveBar({
+  reading,
+  options,
+  graphScale,
+  onBarClick,
+}: ActiveBarProps) {
+  const tooltipMessage = useMemo(() => {
+    const formattedSize = formatSize(reading.size)
+    const formattedGzip = formatSize(reading.gzip)
+    return `Minified: ${parseFloat(formattedSize.size).toFixed(1)}${
+      formattedSize.unit
+    } | Gzipped: ${parseFloat(formattedGzip.size).toFixed(1)}${
+      formattedGzip.unit
+    }`
+  }, [reading])
+
+  return (
+    <div
+      onClick={() => onBarClick(reading)}
+      key={reading.version}
+      className="bar-graph__bar-group"
+    >
+      <div className="bar-graph__bar-symbols">
+        {options.isFirstTreeshakeable && (
+          <div
+            data-balloon={`ES2015 exports introduced. ${
+              reading.hasSideEffects
+                ? 'Not side-effect free yet, hence limited tree-shake ability.'
+                : ''
+            }`}
+            className="bar-graph__bar-symbol"
+          >
+            <TreeShakeIcon />
+          </div>
+        )}
+        {options.isFirstSideEffectFree && (
+          <div
+            data-balloon={`Was marked side-effect free. ${
+              reading.hasJSNext || reading.hasJSModule || reading.isModuleType
+                ? 'Supports ES2015 exports also, hence fully tree-shakeable'
+                : "Doesn't export ESM yet, limited tree-shake ability"
+            }`}
+            className="bar-graph__bar-symbol"
+          >
+            <SideEffectIcon />
+          </div>
+        )}
+      </div>
+
       <div
-        onClick={() => this.props.onBarClick(reading)}
-        key={reading.version}
-        className="bar-graph__bar-group"
-      >
-        <div className="bar-graph__bar-symbols">
-          {options.isFirstTreeshakeable && (
-            <div
-              data-balloon={`ES2015 exports introduced. ${
-                reading.hasSideEffects
-                  ? 'Not side-effect free yet, hence limited tree-shake ability.'
-                  : ''
-              }`}
-              className="bar-graph__bar-symbol"
-            >
-              <TreeShakeIcon />
-            </div>
-          )}
-          {options.isFirstSideEffectFree && (
-            <div
-              data-balloon={`Was marked side-effect free. ${
-                reading.hasJSNext || reading.hasJSModule || reading.isModuleType
-                  ? 'Supports ES2015 exports also, hence fully tree-shakeable'
-                  : "Doesn't export ESM yet, limited tree-shake ability"
-              }`}
-              className="bar-graph__bar-symbol"
-            >
-              <SideEffectIcon />
-            </div>
-          )}
-        </div>
-
-        <div
-          className="bar-graph__bar"
-          style={{ height: `${(reading.size - reading.gzip) * scale}%` }}
-          data-balloon={getTooltipMessage(reading)}
-        />
-        <div
-          className="bar-graph__bar2"
-          style={{ height: `${reading.gzip * scale}%` }}
-          data-balloon={getTooltipMessage(reading)}
-        />
-        <BarVersion version={reading.version} />
-      </div>
-    )
-  }
-
-  render() {
-    const { readings } = this.props
-    const graphScale = this.getScale()
-    const firstTreeshakeableIndex = this.getFirstTreeshakeableIndex()
-    const firstSideEffectFreeIndex = this.getFirstSideEffectFreeIndex()
-
-    return (
-      <div className="bar-graph-container">
-        <figure className="bar-graph">
-          {readings.map((reading, index) =>
-            reading.disabled
-              ? this.renderDisabledBar(reading)
-              : this.renderActiveBar(reading, graphScale, {
-                  isFirstTreeshakeable: index === firstTreeshakeableIndex,
-                  isFirstSideEffectFree: index === firstSideEffectFreeIndex,
-                })
-          )}
-        </figure>
-        <div className="bar-graph__legend">
-          <div className="bar-graph__legend__bar1">
-            <div className="bar-graph__legend__colorbox" />
-            Min
-          </div>
-          <div className="bar-graph__legend__bar2">
-            <div className="bar-graph__legend__colorbox" />
-            GZIP
-          </div>
-        </div>
-      </div>
-    )
-  }
+        className="bar-graph__bar"
+        style={{ height: `${(reading.size - reading.gzip) * graphScale}%` }}
+        data-balloon={tooltipMessage}
+      />
+      <div
+        className="bar-graph__bar2"
+        style={{ height: `${reading.gzip * graphScale}%` }}
+        data-balloon={tooltipMessage}
+      />
+      <BarVersion version={reading.version} />
+    </div>
+  )
 }

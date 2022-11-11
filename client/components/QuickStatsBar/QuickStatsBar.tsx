@@ -19,7 +19,7 @@ type QuickStatsBarProps = Pick<
   | 'hasSideEffects'
 >
 
-class QuickStatsBar extends Component<QuickStatsBarProps> {
+export class QuickStatsBar extends Component<QuickStatsBarProps> {
   static defaultProps = {
     description: '',
   }
@@ -127,5 +127,3 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
     )
   }
 }
-
-export default QuickStatsBar

@@ -1,1 +1,1 @@
-export { default } from './PageNav'
+export { PageNav } from './PageNav'

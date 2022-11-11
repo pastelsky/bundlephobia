@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { formatSize } from 'utils'
 import colors from 'client/config/colors'
-import { Treemap, TreemapSquare } from 'client/components/Treemap'
+import { TreeMap, TreemapSquare } from '../../../../client/components/Treemap'
 
 class TreemapSection extends Component {
   state = {
@@ -126,7 +126,7 @@ class TreemapSection extends Component {
         ref={ts => (this.treemapSection = ts)}
       >
         <h2 className="result__section-heading"> Composition </h2>
-        <Treemap width={width} height={height} className="treemap">
+        <TreeMap width={width} height={height} className="treemap">
           {compactedDependencies.map((dep, index) => (
             <TreemapSquare
               key={dep.name}
@@ -169,7 +169,7 @@ class TreemapSection extends Component {
               )}
             </TreemapSquare>
           ))}
-        </Treemap>
+        </TreeMap>
         <p className="treemap__note">
           <b>Note: </b> These sizes represent the contribution made by
           dependencies (direct or transitive) to <code>{packageName}</code>

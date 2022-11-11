@@ -17,7 +17,7 @@ type StatProps = WithClassName & {
   compact?: boolean
 }
 
-export default function Stat({
+export function Stat({
   value,
   label,
   type,

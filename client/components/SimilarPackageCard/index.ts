@@ -1,3 +1,1 @@
-import SimilarPackageCard from './SimilarPackageCard'
-
-export default SimilarPackageCard
+export { SimilarPackageCard } from './SimilarPackageCard'

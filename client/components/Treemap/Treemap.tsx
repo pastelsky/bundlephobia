@@ -8,7 +8,7 @@ type TreeMapProps = {
 } & React.PropsWithChildren &
   React.HTMLAttributes<HTMLDivElement>
 
-class TreeMap extends Component<TreeMapProps> {
+export class TreeMap extends Component<TreeMapProps> {
   render() {
     const { width, height, children, ...others } = this.props
 
@@ -59,5 +59,3 @@ class TreeMap extends Component<TreeMapProps> {
     )
   }
 }
-
-export default TreeMap

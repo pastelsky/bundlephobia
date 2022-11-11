@@ -1,1 +1,1 @@
-export { default } from './JumpingDots'
+export { JumpingDots } from './JumpingDots'

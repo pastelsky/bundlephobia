@@ -1,3 +1,1 @@
-import Layout from './Layout'
-
-export default Layout
+export { Layout } from './Layout'

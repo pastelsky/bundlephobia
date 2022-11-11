@@ -13,7 +13,7 @@ type MetaTagsProps = {
   isLargeImage?: boolean
 }
 
-export default function MetaTags({
+export function MetaTags({
   description,
   twitterDescription,
   title,

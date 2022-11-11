@@ -1,7 +1,7 @@
 import React from 'react'
-import BlogLayout from '../../client/components/BlogLayout'
+import { BlogLayout } from '../../client/components/BlogLayout'
 import { useContentful } from 'react-contentful'
-import Separator from '../../client/components/Separator'
+import { Separator } from '../../client/components/Separator'
 import Post from './components/Post'
 import ContentfulProvider from './components/ContentfulProvider'
 

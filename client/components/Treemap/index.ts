@@ -1,4 +1,2 @@
-import Treemap from './Treemap'
-import TreemapSquare from './TreemapSquare'
-
-export { Treemap, TreemapSquare }
+export { TreeMap } from './Treemap'
+export { TreemapSquare } from './TreemapSquare'

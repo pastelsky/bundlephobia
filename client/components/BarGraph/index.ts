@@ -1,3 +1,1 @@
-import BarGraph from './BarGraph'
-
-export default BarGraph
+export { BarGraph } from './BarGraph'
