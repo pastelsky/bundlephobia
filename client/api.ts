@@ -52,7 +52,7 @@ export default class API {
   }
 
   static getInfo(packageString: string) {
-    return API.get(`/api/size?package=${packageString}&record=true`)
+    return API.get<any>(`/api/size?package=${packageString}&record=true`)
   }
 
   static getExports(packageString: string) {

@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-  pageExtensions: ['page.js', 'page.tsx'],
+  pageExtensions: ['page.js', 'page.ts', 'page.tsx'],
   sassOptions: {
     includePaths: [path.join(__dirname, 'stylesheets')],
   },

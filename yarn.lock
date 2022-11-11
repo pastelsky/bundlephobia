@@ -3746,6 +3746,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/semver@npm:7.1.0":
+  version: 7.1.0
+  resolution: "@types/semver@npm:7.1.0"
+  dependencies:
+    "@types/node": "*"
+  checksum: 1f10d876b1ef427c031178ac8c92b02a22c9323ed4f932e55f76a2d87713ec0e10d13a7bd1d66bfce31627e065ab57bfeb47bdcc4eafbb181805aaf2ca655536
+  languageName: node
+  linkType: hard
+
 "@types/serve-static@npm:*":
   version: 1.15.0
   resolution: "@types/serve-static@npm:1.15.0"
@@ -5690,6 +5699,7 @@ __metadata:
     "@types/react-autocomplete": ^1.8.6
     "@types/react-dom": ^18.0.8
     "@types/react-sidebar": ^3.0.2
+    "@types/semver": 7.1.0
     animejs: ^3.2.1
     array-to-sentence: ^2.0.0
     autoprefixer: ^9.8.6

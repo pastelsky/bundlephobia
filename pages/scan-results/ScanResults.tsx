@@ -1,20 +1,48 @@
-import Router, { withRouter } from 'next/router'
 import React, { Component } from 'react'
-import Analytics from '../../client/analytics'
-import FlipMove from 'react-flip-move'
-import cx from 'classnames'
-
-const PromiseQueue = require('p-queue')
-const queryString = require('query-string')
-import Stat from '../../client/components/Stat'
 import Link from 'next/link'
+import Router, { NextRouter, withRouter } from 'next/router'
+import cx from 'classnames'
+import ReactFlipMove from 'react-flip-move'
+import PromiseQueue from 'p-queue'
+import queryString from 'query-string'
+import invariant from 'ts-invariant'
+
+import Analytics from '../../client/analytics'
+import Stat from '../../client/components/Stat'
 import ResultLayout from '../../client/components/ResultLayout'
 import { parsePackageString } from '../../utils/common.utils'
-
-import API from '../../client/api'
 import { getTimeFromSize } from '../../utils'
+import API from '../../client/api'
 
-class ResultCard extends Component {
+// workaround for https://github.com/joshwcomeau/react-flip-move/issues/273
+const FlipMove = ReactFlipMove as unknown as React.FC<
+  React.PropsWithChildren & { duration: number; easing: string }
+>
+
+type Result = {
+  size: number
+  gzip: number
+}
+
+type Package = {
+  name: string
+  version: string
+  packageString: string
+} & (
+  | { promiseState: 'pending'; result?: undefined }
+  | { promiseState: 'rejected'; result?: undefined; error: any }
+  | {
+      promiseState: 'fulfilled'
+      result: Result
+    }
+)
+
+type ResultCardProps = {
+  index: number
+  pack: Package
+}
+
+class ResultCard extends Component<ResultCardProps> {
   render() {
     const { pack, index } = this.props
 
@@ -100,21 +128,42 @@ class ResultCard extends Component {
   }
 }
 
-class ScanResults extends Component {
-  constructor(props) {
+type SortMode = 'alphabetic' | 'size'
+
+type ScanResultsProps = {
+  router: NextRouter
+}
+
+type ScanResultsState = {
+  packages: Package[]
+  sortMode?: SortMode
+}
+
+const parsePackages = (value: string | string[] | undefined) =>
+  value
+    ? (typeof value === 'string' ? [value] : value)
+        .flatMap(str => str.split(','))
+        .map(str => str.trim())
+    : []
+
+class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
+  constructor(props: ScanResultsProps) {
     super(props)
 
     const { router } = this.props
     const sortMode = router.query.sortMode
-    const packageStrings = router.query.packages
-    const packages = packageStrings
-      .split(',')
-      .map(str => str.trim())
-      .map(str => ({
-        promiseState: 'pending',
-        packageString: str,
-        ...parsePackageString(str),
-      }))
+    const packages = parsePackages(router.query.packages).map(str => ({
+      promiseState: 'pending' as const,
+      packageString: str,
+      ...parsePackageString(str),
+    }))
+
+    invariant(
+      sortMode === undefined ||
+        sortMode === 'alphabetic' ||
+        sortMode === 'size',
+      'invalid sort mode'
+    )
 
     this.state = { packages, sortMode: sortMode }
   }
@@ -154,6 +203,7 @@ class ScanResults extends Component {
             console.error(error)
             this.updatePackageState(pack, {
               promiseState: 'rejected',
+              result: undefined,
               error,
             })
 
@@ -179,7 +229,16 @@ class ScanResults extends Component {
     })
   }
 
-  updatePackageState(pack, state) {
+  updatePackageState(
+    pack: Package,
+    state:
+      | {
+          promiseState: 'fulfilled'
+          result: Result
+          version?: string | undefined
+        }
+      | { promiseState: 'rejected'; result: undefined; error: any }
+  ) {
     const { packages } = this.state
     const packIndex = packages.findIndex(
       ({ packageString }) => packageString === pack.packageString
@@ -193,7 +252,7 @@ class ScanResults extends Component {
     this.setState({ packages })
   }
 
-  setParamsAndState = sortMode => {
+  setParamsAndState = (sortMode: SortMode) => {
     debugger
     const updatedQuery = { ...this.props.router.query, sortMode }
     Router.replace(

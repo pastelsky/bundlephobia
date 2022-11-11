@@ -1,15 +1,30 @@
 import React, { Component } from 'react'
+import Dropzone from 'react-dropzone'
+import Router from 'next/router'
+import * as semver from 'semver'
+import invariant from 'ts-invariant'
+
 import Analytics from '../../client/analytics'
 import ResultLayout from '../../client/components/ResultLayout'
 import Separator from '../../client/components/Separator'
 import MetaTags from '../../client/components/MetaTags'
 import scanBlacklist from '../../client/config/scanBlacklist'
-import Dropzone from 'react-dropzone'
-import Router from 'next/router'
-import * as semver from 'semver'
 
-export default class Scan extends Component {
-  state = {
+type Package = {
+  name: string
+  versionRange?: string
+  resolvedVersion: string
+}
+
+type ScanState = {
+  packages: Package[] | null
+  selectedPackages: Package[]
+}
+
+export default class Scan extends Component<{}, ScanState> {
+  packageSelectionContainer: HTMLUListElement | null = null
+
+  state: ScanState = {
     packages: null,
     selectedPackages: [],
   }
@@ -18,14 +33,16 @@ export default class Scan extends Component {
     Analytics.pageView('scan')
   }
 
-  resolveVersionFromRange = range => {
+  resolveVersionFromRange = (range: string) => {
     const rangeSet = new semver.Range(range).set
     return rangeSet[0][0].semver.version
   }
 
   setSelectedPackages = () => {
     const checkedInputs =
-      this.packageSelectionContainer.querySelectorAll('input:checked')
+      this.packageSelectionContainer!.querySelectorAll<HTMLInputElement>(
+        'input:checked'
+      )
 
     const selectedPackages = Array.from(checkedInputs).map(({ value }) => {
       const [name, resolvedVersion] = value.split('#')
@@ -39,10 +56,15 @@ export default class Scan extends Component {
     this.setSelectedPackages()
   }
 
-  handleDropAccepted = ([file]) => {
+  handleDropAccepted = ([file]: File[]) => {
     const reader = new FileReader()
     reader.onload = () => {
       try {
+        invariant(
+          typeof reader.result === 'string',
+          'reader.result is expected to be a string'
+        )
+
         const json = JSON.parse(reader.result)
         const packages = Object.keys(json.dependencies)
           .filter(packageName => {
@@ -50,7 +72,7 @@ export default class Scan extends Component {
             return semver.valid(versionRange) || semver.validRange(versionRange)
           })
           .map(packageName => {
-            const versionRange = json.dependencies[packageName]
+            const versionRange = json.dependencies[packageName] as string
 
             return {
               name: packageName,
@@ -174,8 +196,4 @@ export default class Scan extends Component {
       </ResultLayout>
     )
   }
-}
-
-export const getServerSideProps = () => {
-  return { props: {} }
 }
