@@ -3,7 +3,7 @@ import Analytics from '../../../client/analytics'
 
 import ResultLayout from '../../../client/components/ResultLayout'
 import BarGraph from '../../../client/components/BarGraph'
-import AutocompleteInput from '../../../client/components/AutocompleteInput'
+import { AutocompleteInput } from '../../../client/components/AutocompleteInput'
 import AutocompleteInputBox from '../../../client/components/AutocompleteInputBox'
 import BuildProgressIndicator from '../../../client/components/BuildProgressIndicator'
 import Router, { withRouter } from 'next/router'

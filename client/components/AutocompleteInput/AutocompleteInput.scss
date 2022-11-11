@@ -160,6 +160,9 @@
   margin: auto;
   width: 25px;
   height: 25px;
+  border: none;
+  background: none;
+  padding: 0;
 
   @media screen and (max-width: 40em) {
     width: 16px;

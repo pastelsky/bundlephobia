@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import Link from 'next/link'
 
 import Analytics from '../client/analytics'
-import AutocompleteInput from '../client/components/AutocompleteInput'
+import { AutocompleteInput } from '../client/components/AutocompleteInput'
 import AutocompleteInputBox from '../client/components/AutocompleteInputBox/AutocompleteInputBox'
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
