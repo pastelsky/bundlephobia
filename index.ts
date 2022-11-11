@@ -40,12 +40,11 @@ function getEnv(env: Record<string, string | undefined | null>) {
     env.BASIC_AUTH_PASSWORD,
     'Environment variable BASIC_AUTH_PASSWORD is required'
   )
-  invariant(env.PORT, 'Environment variable PORT is required')
   invariant(env.NODE_ENV, 'Environment variable NODE_ENV is required')
 
   return {
     basicAuthPassword: env.BASIC_AUTH_PASSWORD,
-    port: parseInt(env.PORT) || config.DEFAULT_DEV_PORT,
+    port: env.PORT ? parseInt(env.PORT) : config.DEFAULT_DEV_PORT,
     nodeEnv: env.NODE_ENV,
   }
 }

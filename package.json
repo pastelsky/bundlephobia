@@ -92,11 +92,11 @@
     "workerpool": "^6.2.0"
   },
   "scripts": {
-    "dev": "DEBUG='bp:*' NODE_ENV=development npx esno ./index.ts",
+    "dev": "DEBUG='bp:*' NODE_ENV=development nodemon --watch ./server --watch ./utils ./index.ts",
     "build": "NODE_ENV=production next build",
     "prebuild": "node bin/generate-sitemap.js",
     "prestart": "yarn build",
-    "start": "DEBUG='bp:*' NODE_ENV=production npx esno ./index.ts",
+    "start": "DEBUG='bp:*' NODE_ENV=production ts-node --project tsconfig.server.json ./index.ts",
     "prod": "yarn run build && yarn start",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -119,6 +119,8 @@
   },
   "devDependencies": {
     "@svgr/webpack": "^6.5.1",
+    "@swc/core": "^1.3.14",
+    "@swc/helpers": "^0.4.12",
     "@types/animejs": "^3.1.6",
     "@types/koa": "^2.13.5",
     "@types/koa-basic-auth": "^2.0.4",
@@ -140,6 +142,7 @@
     "glob": "^7.1.6",
     "husky": "^4.3.0",
     "jest": "^24.9.0",
+    "nodemon": "^2.0.20",
     "postcss": "^8.3.5",
     "postcss-easy-import": "^3.0.0",
     "postcss-loader": "^3.0.0",
