@@ -2,7 +2,7 @@
   "name": "bundlephobia",
   "version": "1.0.1",
   "description": "Find the cost of adding new frontend dependencies",
-  "main": "index.js",
+  "main": "index.ts",
   "author": "Shubham Kanodia <shubham.kanodia10@gmail.com>",
   "license": "MIT",
   "private": true,
@@ -92,11 +92,11 @@
     "workerpool": "^6.2.0"
   },
   "scripts": {
-    "dev": "DEBUG='bp:*' node --preserve-symlinks --trace-deprecation index",
+    "dev": "DEBUG='bp:*' NODE_ENV=development npx esno ./index.ts",
     "build": "NODE_ENV=production next build",
     "prebuild": "node bin/generate-sitemap.js",
     "prestart": "yarn build",
-    "start": "NODE_ENV=production DEBUG='bp:*' node index",
+    "start": "DEBUG='bp:*' NODE_ENV=production npx esno ./index.ts",
     "prod": "yarn run build && yarn start",
     "test": "jest",
     "test:watch": "jest --watch",
