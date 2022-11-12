@@ -5,7 +5,6 @@ import cx from 'classnames'
 import ReactFlipMove from 'react-flip-move'
 import PromiseQueue from 'p-queue'
 import queryString from 'query-string'
-import invariant from 'ts-invariant'
 
 import Analytics from '../../client/analytics'
 import Stat from '../../client/components/Stat'
@@ -31,11 +30,12 @@ type Package = {
 } & (
   | { promiseState: 'pending'; result?: undefined }
   | { promiseState: 'rejected'; result?: undefined; error: any }
-  | {
-      promiseState: 'fulfilled'
-      result: Result
-    }
+  | { promiseState: 'fulfilled'; result: Result }
 )
+
+type PackageStateUpdate =
+  | { promiseState: 'fulfilled'; result: Result; version?: string | undefined }
+  | { promiseState: 'rejected'; result: undefined; error: any }
 
 type ResultCardProps = {
   index: number
@@ -146,24 +146,20 @@ const parsePackages = (value: string | string[] | undefined) =>
         .map(str => str.trim())
     : []
 
+const parseSortMode = (value: string | string[] | undefined) =>
+  value === 'alphabetic' || value === 'size' ? value : undefined
+
 class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
   constructor(props: ScanResultsProps) {
     super(props)
 
     const { router } = this.props
-    const sortMode = router.query.sortMode
+    const sortMode = parseSortMode(router.query.sortMode)
     const packages = parsePackages(router.query.packages).map(str => ({
       promiseState: 'pending' as const,
       packageString: str,
       ...parsePackageString(str),
     }))
-
-    invariant(
-      sortMode === undefined ||
-        sortMode === 'alphabetic' ||
-        sortMode === 'size',
-      'invalid sort mode'
-    )
 
     this.state = { packages, sortMode: sortMode }
   }
@@ -229,16 +225,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
     })
   }
 
-  updatePackageState(
-    pack: Package,
-    state:
-      | {
-          promiseState: 'fulfilled'
-          result: Result
-          version?: string | undefined
-        }
-      | { promiseState: 'rejected'; result: undefined; error: any }
-  ) {
+  updatePackageState(pack: Package, state: PackageStateUpdate) {
     const { packages } = this.state
     const packIndex = packages.findIndex(
       ({ packageString }) => packageString === pack.packageString
