@@ -43,6 +43,10 @@ export function useAutocompleteInput({
     if (trimmedValue.length > 1) {
       getSuggestions(name)
     }
+
+    if (!trimmedValue) {
+      setSuggestions([])
+    }
   }
 
   return {
