@@ -9,7 +9,7 @@ type TreemapSquareProps = {
     'left' | 'top' | 'width' | 'height' | 'borderRadius'
   >
 
-function TreemapSquare({
+export function TreemapSquare({
   children,
   left,
   top,
@@ -44,5 +44,3 @@ function TreemapSquare({
     </div>
   )
 }
-
-export default TreemapSquare

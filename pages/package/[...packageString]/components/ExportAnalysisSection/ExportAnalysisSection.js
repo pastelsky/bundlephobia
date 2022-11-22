@@ -3,7 +3,7 @@ import Analytics from '../../../../../client/analytics'
 import cx from 'classnames'
 import API from '../../../../../client/api'
 import SearchIcon from '../../../../../client/components/Icons/SearchIcon'
-import JumpingDots from '../../../../../client/components/JumpingDots'
+import { JumpingDots } from '../../../../../client/components/JumpingDots'
 import { formatSize, resolveBuildError } from '../../../../../utils'
 
 const State = {

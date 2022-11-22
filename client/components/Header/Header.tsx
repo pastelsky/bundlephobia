@@ -12,7 +12,8 @@ type HeaderState = {
   sidebarOpen: boolean
 }
 
-export default class Header extends Component<HeaderProps, HeaderState> {
+// TODO: this is not use, can be removed?
+export class Header extends Component<HeaderProps, HeaderState> {
   mql!: MediaQueryList
 
   constructor(props: HeaderProps) {
@@ -84,7 +85,11 @@ export default class Header extends Component<HeaderProps, HeaderState> {
                 </Link>
               </li>
             </ul>
-            <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
+            <a
+              target="_blank"
+              href="https://github.com/pastelsky/bundlephobia"
+              rel="noreferrer"
+            >
               <GithubLogo />
             </a>
           </section>

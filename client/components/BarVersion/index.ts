@@ -1,0 +1,1 @@
+export { BarVersion } from './BarVersion'

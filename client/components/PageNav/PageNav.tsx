@@ -6,7 +6,7 @@ type PageNavProps = {
   minimal?: boolean
 }
 
-const PageNav = ({ minimal }: PageNavProps) => (
+export const PageNav = ({ minimal }: PageNavProps) => (
   <header className="page-header">
     {!minimal && (
       <section className="result-header--left-section">
@@ -47,11 +47,13 @@ const PageNav = ({ minimal }: PageNavProps) => (
           </li>
         )}
       </ul>
-      <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
+      <a
+        target="_blank"
+        href="https://github.com/pastelsky/bundlephobia"
+        rel="noreferrer"
+      >
         <GithubLogo />
       </a>
     </section>
   </header>
 )
-
-export default PageNav

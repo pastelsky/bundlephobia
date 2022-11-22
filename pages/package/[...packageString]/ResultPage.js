@@ -1,11 +1,11 @@
 import React, { PureComponent } from 'react'
 import Analytics from '../../../client/analytics'
 
-import ResultLayout from '../../../client/components/ResultLayout'
-import BarGraph from '../../../client/components/BarGraph'
+import { ResultLayout } from '../../../client/components/ResultLayout'
+import { BarGraph } from '../../../client/components/BarGraph'
 import { AutocompleteInput } from '../../../client/components/AutocompleteInput'
-import AutocompleteInputBox from '../../../client/components/AutocompleteInputBox'
-import BuildProgressIndicator from '../../../client/components/BuildProgressIndicator'
+import { AutocompleteInputBox } from '../../../client/components/AutocompleteInputBox'
+import { BuildProgressIndicator } from '../../../client/components/BuildProgressIndicator'
 import Router, { withRouter } from 'next/router'
 import semver from 'semver'
 import isEmptyObject from 'is-empty-object'
@@ -16,11 +16,12 @@ import {
   resolveBuildError,
   formatSize,
 } from '../../../utils'
-import Stat from '../../../client/components/Stat'
+import { Stat } from '../../../client/components/Stat'
 
 import API from '../../../client/api'
-import MetaTags, {
+import {
   DEFAULT_DESCRIPTION_START,
+  MetaTags,
 } from '../../../client/components/MetaTags'
 import InterLinksSection from './components/InterLinksSection'
 
@@ -28,9 +29,9 @@ import TreemapSection from './components/TreemapSection'
 import EmptyBox from '../../../client/assets/empty-box.svg'
 import SimilarPackagesSection from './components/SimilarPackagesSection'
 import ExportAnalysisSection from './components/ExportAnalysisSection'
-import QuickStatsBar from '../../../client/components/QuickStatsBar/QuickStatsBar'
+import { QuickStatsBar } from '../../../client/components/QuickStatsBar/QuickStatsBar'
 
-import Warning from '../../../client/components/Warning/Warning'
+import { Warning } from '../../../client/components/Warning/Warning'
 import arrayToSentence from 'array-to-sentence'
 
 class ResultPage extends PureComponent {

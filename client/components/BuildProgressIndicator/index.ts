@@ -1,3 +1,1 @@
-import BuildProgressIndicator from './BuildProgressIndicator'
-
-export default BuildProgressIndicator
+export { BuildProgressIndicator } from './BuildProgressIndicator'

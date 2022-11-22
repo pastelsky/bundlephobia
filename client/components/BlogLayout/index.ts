@@ -1,1 +1,1 @@
-export { default } from './BlogLayout'
+export { BlogLayout } from './BlogLayout'

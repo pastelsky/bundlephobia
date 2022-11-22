@@ -1,3 +1,1 @@
-import ResultLayout from './ResultLayout'
-
-export default ResultLayout
+export { ResultLayout } from './ResultLayout'

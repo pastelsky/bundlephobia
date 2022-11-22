@@ -1,19 +1,14 @@
 import React, { PureComponent } from 'react'
-import Head from 'next/head'
 
-import Layout from '../../client/components/Layout'
-import BarGraph from '../../client/components/BarGraph'
-import AutocompleteInput from '../../client/components/AutocompleteInput'
-import BuildProgressIndicator from '../../client/components/BuildProgressIndicator'
+import { Layout } from '../../client/components/Layout'
+import { AutocompleteInput } from '../../client/components/AutocompleteInput'
 import Router from 'next/router'
 import Link from 'next/link'
 import isEmptyObject from 'is-empty-object'
-import { parsePackageString } from '../../utils/common.utils'
 
 import API from '../../client/api'
 
 import GithubLogo from '../../client/assets/github-logo.svg'
-import EmptyBox from '../../client/assets/empty-box.svg'
 
 export default class ResultPage extends PureComponent {
   fetchResults = packageString => {

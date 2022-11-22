@@ -6,9 +6,9 @@ import cx from 'classnames'
 
 const PromiseQueue = require('p-queue')
 const queryString = require('query-string')
-import Stat from '../../client/components/Stat'
+import { Stat } from '../../client/components/Stat'
 import Link from 'next/link'
-import ResultLayout from '../../client/components/ResultLayout'
+import { ResultLayout } from '../../client/components/ResultLayout'
 import { parsePackageString } from '../../utils/common.utils'
 
 import API from '../../client/api'

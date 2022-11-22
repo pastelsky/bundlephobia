@@ -1,3 +1,1 @@
-import AutocompleteInputBox from './AutocompleteInputBox'
-
-export default AutocompleteInputBox
+export { AutocompleteInputBox } from './AutocompleteInputBox'

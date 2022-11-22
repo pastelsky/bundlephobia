@@ -1,6 +1,6 @@
-import React, { Component } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
-import ProgressHex from '../ProgressHex'
+import { ProgressHex } from '../ProgressHex'
 
 const OptimisticLoadTimeout = 700
 
@@ -9,66 +9,18 @@ type BuildProgressIndicatorProps = {
   onDone: () => void
 }
 
-type BuildProgressIndicatorState = {
-  started: boolean
-  progressText?: string
-}
-
 const order = ['resolving', 'building', 'minifying', 'calculating'] as const
 
-export default class BuildProgressIndicator extends Component<
-  BuildProgressIndicatorProps,
-  BuildProgressIndicatorState
-> {
-  stage: number
-  timeoutId?: ReturnType<typeof setTimeout>
+export function BuildProgressIndicator({
+  isDone,
+  onDone,
+}: BuildProgressIndicatorProps) {
+  const timeout = useRef<NodeJS.Timeout>()
+  const [stage, setStage] = useState<number>(0)
+  const [started, setStarted] = useState<boolean>(false)
+  const [progressText, setProgressText] = useState<string | null>(null)
 
-  constructor(props: BuildProgressIndicatorProps) {
-    super(props)
-    this.stage = 0
-    this.state = {
-      started: false,
-    }
-  }
-
-  componentDidMount() {
-    setTimeout(() => {
-      if (!this.props.isDone) {
-        this.setState({ started: true })
-        this.setMessage()
-      }
-    }, OptimisticLoadTimeout)
-  }
-
-  componentWillReceiveProps(nextProps: BuildProgressIndicatorProps) {
-    if (nextProps.isDone) {
-      this.stage = 3
-      this.props.onDone()
-    }
-  }
-
-  shouldComponentUpdate(
-    props: BuildProgressIndicatorProps,
-    nextState: BuildProgressIndicatorState
-  ) {
-    return this.state.progressText !== nextState.progressText
-  }
-
-  componentWillUnmount() {
-    clearTimeout(this.timeoutId)
-  }
-
-  getProgressText = (stage: typeof order[number]) => {
-    const progressText = {
-      resolving: 'Resolving version and dependencies',
-      building: 'Bundling package',
-      minifying: 'Minifying, GZipping',
-      calculating: 'Calculating file sizes',
-    }
-    return progressText[stage]
-  }
-
-  setMessage = (stage = 0) => {
+  const setMessage = useCallback((stage = 0) => {
     const timings = {
       resolving: 3 + Math.random() * 2,
       building: 5 + Math.random() * 3,
@@ -76,35 +28,57 @@ export default class BuildProgressIndicator extends Component<
       calculating: 20,
     }
 
-    if (this.stage === order.length) {
-      //this.props.onDone()
-      return
-    }
+    if (stage === order.length) return
 
-    this.setState({
-      progressText: this.getProgressText(order[this.stage]),
-    })
+    setProgressText(getProgressText(order[stage]))
 
-    this.timeoutId = setTimeout(() => {
-      if (this.stage < order.length) {
-        this.stage += 1
+    timeout.current = setTimeout(() => {
+      if (stage < order.length) {
+        stage += 1
       }
 
-      this.setMessage(this.stage)
+      setMessage(stage)
     }, timings[order[stage]] * 1000)
-  }
+  }, [])
 
-  render() {
-    const { progressText, started } = this.state
-    if (!started) {
-      return null
+  useEffect(() => {
+    setTimeout(() => {
+      if (!isDone) {
+        setStarted(true)
+        setMessage()
+      }
+    }, OptimisticLoadTimeout)
+  }, [isDone, setMessage])
+
+  useEffect(() => {
+    if (isDone) {
+      setStage(3)
+      onDone()
     }
+  }, [isDone, onDone])
 
-    return (
-      <div className="build-progress-indicator">
-        <ProgressHex compact />
-        <p className="build-progress-indicator__text">{progressText}</p>
-      </div>
-    )
+  useEffect(() => {
+    return () => {
+      clearTimeout(timeout.current)
+    }
+  }, [])
+
+  if (!started) return null
+
+  return (
+    <div className="build-progress-indicator">
+      <ProgressHex compact />
+      <p className="build-progress-indicator__text">{progressText}</p>
+    </div>
+  )
+}
+
+function getProgressText(stage: typeof order[number]) {
+  const progressText = {
+    resolving: 'Resolving version and dependencies',
+    building: 'Bundling package',
+    minifying: 'Minifying, GZipping',
+    calculating: 'Calculating file sizes',
   }
+  return progressText[stage]
 }

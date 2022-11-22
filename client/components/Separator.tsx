@@ -7,7 +7,7 @@ type SeparatorProps = {
   containerStyles?: React.CSSProperties
 }
 
-export default function Separator({
+export function Separator({
   text = 'or',
   align = 'center',
   showLeft = true,

@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 import React from 'react'
-import BlogLayout from '../../../client/components/BlogLayout'
+import { BlogLayout } from '../../../client/components/BlogLayout'
 import { useContentful } from 'react-contentful'
 import BlogPost from './Post'
 import ContentfulProvider from './ContentfulProvider'
