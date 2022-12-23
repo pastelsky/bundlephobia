@@ -1,5 +1,6 @@
 apps:
-  - script: index.js
+  - script: 'ts-node'
+    args: '--project tsconfig.server.json index.ts'
     name: main
     instances: 1
     max_memory_restart: 500M
