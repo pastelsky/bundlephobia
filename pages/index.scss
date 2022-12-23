@@ -64,6 +64,16 @@
   }
 }
 
+.logo-graphic-christmas {
+  width: 137px * 1.1;
+  height: 157px * 1.1;
+
+  @media screen and (max-width: 40em) {
+    width: 137px * 0.9;
+    height: 157px * 0.9;
+  }
+}
+
 .homepage__search-input-container {
   width: 100%;
 }
