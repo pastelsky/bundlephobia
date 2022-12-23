@@ -17,6 +17,7 @@
   "dependencies": {
     "@contentful/rich-text-react-renderer": "^15.12.1",
     "@contentful/rich-text-types": "^15.12.1",
+    "@next/font": "^13.1.0",
     "animejs": "^3.2.1",
     "array-to-sentence": "^2.0.0",
     "axios": "^0.21.1",

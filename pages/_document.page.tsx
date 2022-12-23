@@ -53,6 +53,12 @@ export default class MyDocument extends Document {
           <meta charSet="utf-8" />
           <meta httpEquiv="x-ua-compatible" content="ie=edge" />
           <meta name="application-name" content="Bundlephobia" />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossOrigin="true"
+          />
           <link
             href="https://fonts.googleapis.com/css?family=Source+Code+Pro:300,400,600"
             rel="stylesheet"

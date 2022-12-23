@@ -8,6 +8,11 @@ import AutocompleteInputBox from '../client/components/AutocompleteInputBox/Auto
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
+import cx from 'classnames'
+
+import { Press_Start_2P } from '@next/font/google'
+
+const pressStart2P = Press_Start_2P({ weight: '400', subsets: ['latin'] })
 
 const LogoChristmas = () => (
   <svg
@@ -230,7 +235,7 @@ const Home = () => {
         <PageNav minimal={true} />
         <div className="homepage__content">
           <LogoChristmas />
-          <div className="logo">
+          <div className={cx('logo', pressStart2P.className)}>
             <span>Bundle</span>
             <span className="logo__alt">Phobia</span>
           </div>

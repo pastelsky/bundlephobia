@@ -31,7 +31,8 @@
   text-transform: uppercase;
   font-weight: $font-weight-bold;
   letter-spacing: 4px;
-  @include font-size-md-2;
+  //@include font-size-md-2; // Enable after removing chirstmas
+  @include font-size-md;
   user-select: none;
   margin-top: $global-spacing * 2;
 }

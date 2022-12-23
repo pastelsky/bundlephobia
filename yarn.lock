@@ -2543,6 +2543,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@next/font@npm:^13.1.0":
+  version: 13.1.0
+  resolution: "@next/font@npm:13.1.0"
+  checksum: 6a8d2952e7ba2f3a6b700c0747d326038a0b1719f2b2bd35a0ae8aa2811ad4b814aad1f83beaa63bdb0b283da0713d46b4952b93ed89ae11a78464b65232ac52
+  languageName: node
+  linkType: hard
+
 "@next/swc-android-arm-eabi@npm:13.0.0":
   version: 13.0.0
   resolution: "@next/swc-android-arm-eabi@npm:13.0.0"
@@ -5671,6 +5678,7 @@ __metadata:
   dependencies:
     "@contentful/rich-text-react-renderer": ^15.12.1
     "@contentful/rich-text-types": ^15.12.1
+    "@next/font": ^13.1.0
     "@svgr/webpack": ^6.5.1
     "@swc/core": ^1.3.14
     "@swc/helpers": ^0.4.12
