@@ -40,7 +40,7 @@ for caching to work (optional).
 
 ### Canvas compile issues
 
-Bundlephobia relies on [`canvas`](https://www.npmjs.com/package/canvas) which may require need to be built from source depending on your platform. You may need to [install the required packages list in their docs](https://github.com/Automattic/node-canvas#compiling).
+Bundlephobia relies on [`canvas`](https://www.npmjs.com/package/canvas) which may need to be built from source (depending on your platform). If so, [install the required packages listed in their docs](https://github.com/Automattic/node-canvas#compiling).
 
 ### Commands
 
