@@ -213,9 +213,9 @@ class ResultPage extends PureComponent {
     const sorted = formattedResults.sort((packageA, packageB) =>
       semver.compare(packageA.version, packageB.version)
     )
-    return typeof window !== 'undefined' && window.innerWidth < 640
+    return typeof window !== 'undefined' && window.innerWidth < 1080
       ? sorted.slice(-10)
-      : sorted
+      : sorted.slice(-15)
   }
 
   handleBarClick = reading => {
