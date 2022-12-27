@@ -63,8 +63,10 @@ export default class API {
     return API.get(`/api/exports-sizes?package=${packageString}`)
   }
 
-  static getHistory(packageString: string) {
-    return API.get(`/api/package-history?package=${packageString}`)
+  static getHistory(packageString: string, limit: number) {
+    return API.get(
+      `/api/package-history?package=${packageString}&limit=${limit}`
+    )
   }
 
   static getRecentSearches(limit: number) {

@@ -114,7 +114,7 @@ class ResultPage extends PureComponent {
   }
 
   fetchHistory = packageString => {
-    API.getHistory(packageString)
+    API.getHistory(packageString, 15)
       .then(results => {
         if (this.activeQuery !== packageString) return
 
