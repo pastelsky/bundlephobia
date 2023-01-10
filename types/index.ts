@@ -9,4 +9,21 @@ export type PackageInfo = {
   hasSideEffects: string[] | boolean
 }
 
+export type Asset = {
+  gzip: number
+  name: string
+  parse: any // TODO: fix type
+  size: number
+  type: string
+}
+
+export type DependencySize = {
+  approximateSize: number
+  name: string
+}
+
+export type Tag = {
+  tag: string
+  weight: number
+}
 export type WithClassName = Pick<React.HTMLAttributes<HTMLElement>, 'className'>

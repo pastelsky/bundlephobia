@@ -2,11 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { formatSize } from 'utils'
 import colors from 'client/config/colors'
 import { Treemap, TreemapSquare } from 'client/components/Treemap'
-
-type DependencySize = {
-  approximateSize: number
-  name: string
-}
+import { DependencySize } from '../../../../types'
 
 interface TreemapSectionProps {
   packageName: string

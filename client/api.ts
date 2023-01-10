@@ -1,4 +1,10 @@
 import fetch from 'unfetch'
+import {
+  GetExportsDto,
+  GetExportsSizeDto,
+  GetInfoDto,
+  GetSimilarDto,
+} from '../dto/'
 
 type PackageSuggestion = {
   searchScore: number
@@ -15,7 +21,7 @@ type RecentSearch = {
 }
 
 export default class API {
-  static get<T = unknown>(url: string, isInternal = true): Promise<T> {
+  static async get<T = unknown>(url: string, isInternal = true): Promise<T> {
     const headers: Record<string, string> = {
       Accept: 'application/json',
     }
@@ -23,44 +29,45 @@ export default class API {
     if (isInternal) {
       headers['X-Bundlephobia-User'] = 'bundlephobia website'
     }
-    return fetch(url, { headers }).then(res => {
-      if (!res.ok) {
-        try {
-          return res.json().then(err => Promise.reject(err))
-        } catch (e) {
-          if (res.status === 503) {
-            return Promise.reject({
-              error: {
-                code: 'TimeoutError',
-                message:
-                  'This is taking unusually long. Check back in a couple of minutes?',
-              },
-            })
-          }
-
+    const res = await fetch(url, { headers })
+    if (!res.ok) {
+      try {
+        return res.json().then(err => Promise.reject(err))
+      } catch (e) {
+        if (res.status === 503) {
           return Promise.reject({
             error: {
-              code: 'BuildError',
+              code: 'TimeoutError',
               message:
-                "Oops, something went wrong and we don't have an appropriate error for this. Open an issue maybe?",
+                'This is taking unusually long. Check back in a couple of minutes?',
             },
           })
         }
+
+        return Promise.reject({
+          error: {
+            code: 'BuildError',
+            message:
+              "Oops, something went wrong and we don't have an appropriate error for this. Open an issue maybe?",
+          },
+        })
       }
-      return res.json()
-    })
+    }
+    return await res.json()
   }
 
   static getInfo(packageString: string) {
-    return API.get(`/api/size?package=${packageString}&record=true`)
+    return API.get<GetInfoDto>(`/api/size?package=${packageString}&record=true`)
   }
 
   static getExports(packageString: string) {
-    return API.get(`/api/exports?package=${packageString}`)
+    return API.get<GetExportsDto>(`/api/exports?package=${packageString}`)
   }
 
   static getExportsSizes(packageString: string) {
-    return API.get(`/api/exports-sizes?package=${packageString}`)
+    return API.get<GetExportsSizeDto>(
+      `/api/exports-sizes?package=${packageString}`
+    )
   }
 
   static getHistory(packageString: string, limit: number) {
@@ -74,7 +81,9 @@ export default class API {
   }
 
   static getSimilar(packageName: string) {
-    return API.get(`/api/similar-packages?package=${packageName}`)
+    return API.get<GetSimilarDto>(
+      `/api/similar-packages?package=${packageName}`
+    )
   }
 
   static getSuggestions(query: string) {
