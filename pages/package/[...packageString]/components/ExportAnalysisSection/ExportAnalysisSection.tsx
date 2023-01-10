@@ -270,15 +270,6 @@ const ExportAnalysisSection: React.FC<ExportAnalysisSectionProps> = ({
     setFilterText(value)
   }
 
-  const renderProgress = () => {
-    return (
-      <div className="export-analysis-section__progress-container">
-        Fetching all named exports in&nbsp;<code>{result.name}</code>{' '}
-        <JumpingDots />
-      </div>
-    )
-  }
-
   const renderIncompatible = () => {
     return (
       <p className="export-analysis-section__subtext">
