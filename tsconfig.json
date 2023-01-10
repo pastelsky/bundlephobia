@@ -15,6 +15,13 @@
     "jsx": "preserve",
     "incremental": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "pages/package/[...packageString]/components/InterLinksSection/InterLinksSectionCard/InterLinksSectionCard.js",
+    "pages/package/[...packageString]/index.page.tsx",
+    "pages/package/[...packageString]/ResultPage.js"
+  ],
   "exclude": ["node_modules"]
 }

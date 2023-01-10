@@ -3424,6 +3424,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/is-empty-object@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@types/is-empty-object@npm:1.1.0"
+  checksum: aed1c97acafd41f0e6e982cd1eccbc1483f99a6fb16b22d1244107ff59c59b76b5d5c68e5c5ee1753927b0822e1f6f353db60229d6c5a55017e210cadaddbb35
+  languageName: node
+  linkType: hard
+
 "@types/istanbul-lib-coverage@npm:*, @types/istanbul-lib-coverage@npm:^2.0.0":
   version: 2.0.3
   resolution: "@types/istanbul-lib-coverage@npm:2.0.3"
@@ -3750,6 +3757,13 @@ __metadata:
   version: 0.16.2
   resolution: "@types/scheduler@npm:0.16.2"
   checksum: b6b4dcfeae6deba2e06a70941860fb1435730576d3689225a421280b7742318d1548b3d22c1f66ab68e414f346a9542f29240bc955b6332c5b11e561077583bc
+  languageName: node
+  linkType: hard
+
+"@types/semver@npm:^7.3.13":
+  version: 7.3.13
+  resolution: "@types/semver@npm:7.3.13"
+  checksum: 00c0724d54757c2f4bc60b5032fe91cda6410e48689633d5f35ece8a0a66445e3e57fa1d6e07eb780f792e82ac542948ec4d0b76eb3484297b79bd18b8cf1cb0
   languageName: node
   linkType: hard
 
@@ -5684,6 +5698,7 @@ __metadata:
     "@swc/helpers": ^0.4.12
     "@types/animejs": ^3.1.6
     "@types/debounce": ^1.2.1
+    "@types/is-empty-object": ^1.1.0
     "@types/koa": ^2.13.5
     "@types/koa-basic-auth": ^2.0.4
     "@types/koa-bodyparser": ^4.3.9
@@ -5698,6 +5713,7 @@ __metadata:
     "@types/react-autocomplete": ^1.8.6
     "@types/react-dom": ^18.0.8
     "@types/react-sidebar": ^3.0.2
+    "@types/semver": ^7.3.13
     animejs: ^3.2.1
     array-to-sentence: ^2.0.0
     autoprefixer: ^9.8.6
