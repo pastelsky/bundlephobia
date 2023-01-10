@@ -3,9 +3,17 @@ import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import React from 'react'
 
-export default function InterLinksSectionCard(props) {
-  const { description, name, date } = props
+interface InterLinksSectionCardProps {
+  description: string
+  name: string
+  date: string | number | Date
+}
 
+export const InterLinksSectionCard: React.FC<InterLinksSectionCardProps> = ({
+  description,
+  name,
+  date,
+}) => {
   return (
     <Link href={`/package/${name}`} className="interlinks-card">
       <div className="interlinks-card__wrap">
