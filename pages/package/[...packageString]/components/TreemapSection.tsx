@@ -81,7 +81,7 @@ const TreemapSection: React.FC<TreemapSectionProps> = ({
     }))
 
   depdendenciesCopy.sort((depA, depB) => {
-    return depB.percentShare - depA.percentShare
+    return (depB.percentShare || 0) - (depA.percentShare || 0)
   })
 
   let compactedDependencies: any[] = []
@@ -97,11 +97,11 @@ const TreemapSection: React.FC<TreemapSectionProps> = ({
       0
     )
     const percentShare = otherDependencies.reduce(
-      (acc, dep) => acc + dep.percentShare,
+      (acc, dep) => acc + (dep.percentShare || 0),
       0
     )
     const sizeShare = otherDependencies.reduce(
-      (acc, dep) => acc + dep.sizeShare,
+      (acc, dep) => acc + (dep.sizeShare || 0),
       0
     )
 
@@ -114,7 +114,7 @@ const TreemapSection: React.FC<TreemapSectionProps> = ({
       tooltip: otherDependencies
         .map(
           dep =>
-            `${dep.name} ｜ ${dep.percentShare.toFixed(
+            `${dep.name} ｜ ${(dep.percentShare || 0).toFixed(
               1
             )}% ｜ ~ ${getFormattedSize(dep.sizeShare)} min`
         )

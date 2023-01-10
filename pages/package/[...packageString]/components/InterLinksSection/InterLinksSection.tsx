@@ -5,11 +5,12 @@ import {
 } from '../../../../../utils/common.utils'
 import API from '../../../../../client/api'
 import InterLinksSectionCard from './InterLinksSectionCard'
+import { PackageSuggestion } from '../../../../../types'
 
-function usePackagesFromSameScope(packageName) {
+function usePackagesFromSameScope(packageName: string) {
   const { scope } = parsePackageString(packageName)
 
-  const [morePackages, setMorePackages] = useState([])
+  const [morePackages, setMorePackages] = useState<PackageSuggestion[]>([])
   const getAgeScore = result =>
     Math.min(1 / Math.log(daysFromToday(result.package.date)), 1)
 
@@ -29,10 +30,15 @@ function usePackagesFromSameScope(packageName) {
   return morePackages
 }
 
-const InterLinksSection = props => {
-  const { scope } = parsePackageString(props.packageName)
-  const morePackages = usePackagesFromSameScope(props.packageName)
+interface InterLinksSectionProps {
+  packageName: string
+}
 
+const InterLinksSection: React.FC<InterLinksSectionProps> = ({
+  packageName,
+}) => {
+  const { scope } = parsePackageString(packageName)
+  const morePackages = usePackagesFromSameScope(packageName)
   if (!morePackages.length) {
     return null
   }
