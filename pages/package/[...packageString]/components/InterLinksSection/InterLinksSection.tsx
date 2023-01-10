@@ -11,7 +11,7 @@ function usePackagesFromSameScope(packageName: string) {
   const { scope } = parsePackageString(packageName)
 
   const [morePackages, setMorePackages] = useState<PackageSuggestion[]>([])
-  const getAgeScore = result =>
+  const getAgeScore = (result: PackageSuggestion) =>
     Math.min(1 / Math.log(daysFromToday(result.package.date)), 1)
 
   useEffect(() => {
