@@ -94,7 +94,6 @@ const ExportList: React.FC<ExportListProps> = ({
     }
   })
 
-  console.log(exportDictionary['a'][0])
   return (
     <ul className="export-analysis-section__list">
       {Object.keys(exportDictionary)
@@ -206,7 +205,6 @@ const ExportAnalysisSection: React.FC<ExportAnalysisSectionProps> = ({
     API.getExports(packageString)
       .then(
         (results: any) => {
-          console.log(results.exports)
           setExports(results.exports)
           setAnalysisState(State.EXPORTS_FULFILLED)
 
@@ -229,7 +227,6 @@ const ExportAnalysisSection: React.FC<ExportAnalysisSectionProps> = ({
       })
       .then(
         (results: any) => {
-          console.log(results)
           setAnalysisState(State.SIZES_FULFILLED)
           setAssets(
             results.assets
@@ -281,7 +278,6 @@ const ExportAnalysisSection: React.FC<ExportAnalysisSectionProps> = ({
   }
 
   const renderSuccess = () => {
-    console.log('success', analysisState)
     const { gzip: totalSize } = result
 
     const normalizedExports =
