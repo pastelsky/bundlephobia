@@ -1,1 +1,3 @@
-export { default } from './InterLinksSectionCard'
+import InterLinksSectionCard from './InterLinksSectionCard'
+
+export default InterLinksSectionCard

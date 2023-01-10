@@ -9,7 +9,7 @@ interface InterLinksSectionCardProps {
   date: string | number | Date
 }
 
-export const InterLinksSectionCard: React.FC<InterLinksSectionCardProps> = ({
+const InterLinksSectionCard: React.FC<InterLinksSectionCardProps> = ({
   description,
   name,
   date,
@@ -33,3 +33,5 @@ export const InterLinksSectionCard: React.FC<InterLinksSectionCardProps> = ({
     </Link>
   )
 }
+
+export default InterLinksSectionCard
