@@ -4,12 +4,8 @@ import {
   GetExportsSizeDto,
   GetInfoDto,
   GetSimilarDto,
+  GetSuggestionDto,
 } from '../dto/'
-
-type PackageSuggestion = {
-  searchScore: number
-  score: { detail: { popularity: number } }
-}
 
 type RecentSearch = {
   [key: string]: {
@@ -88,8 +84,8 @@ export default class API {
 
   static getSuggestions(query: string) {
     const suggestionSort = (
-      packageA: PackageSuggestion,
-      packageB: PackageSuggestion
+      packageA: GetSuggestionDto,
+      packageB: GetSuggestionDto
     ) => {
       // Rank closely matching packages followed
       // by most popular ones
@@ -106,7 +102,7 @@ export default class API {
       }
     }
 
-    return API.get<PackageSuggestion[]>(
+    return API.get<GetSuggestionDto[]>(
       `https://api.npms.io/v2/search/suggestions?q=${query}`,
       false
     ).then(result => result.sort(suggestionSort))
