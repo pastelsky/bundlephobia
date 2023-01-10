@@ -35,6 +35,9 @@ import QuickStatsBar from '../../../client/components/QuickStatsBar/QuickStatsBa
 import Warning from '../../../client/components/Warning/Warning'
 import arrayToSentence from 'array-to-sentence'
 import { GetInfoDto } from '../../../dto'
+import { PackageInfo } from '../../../types'
+
+type PromiseState = null | 'pending' | 'fulfilled' | 'rejected'
 
 const ResultPage = () => {
   const router = useRouter()
@@ -48,13 +51,14 @@ const ResultPage = () => {
   }, [])
 
   const [results, setResults] = useState<any>({})
-  const [resultsPromiseState, setResultsPromiseState] = useState<any>(null)
+  const [resultsPromiseState, setResultsPromiseState] =
+    useState<PromiseState>(null)
   const [resultsError, setResultError] = useState<any>(null)
   const [historicalResultsPromiseState, setHistoricalResultsPromiseState] =
-    useState<any>(null)
+    useState<PromiseState>(null)
   const [inputInitialValue, setInputInitialValue] = useState('')
   const [historicalResults, setHistoricalResults] = useState<any[]>([])
-  const [similarPackages, setSimilarPackages] = useState<any[]>([])
+  const [similarPackages, setSimilarPackages] = useState<PackageInfo[]>([])
   const [similarPackagesCategory, setSimilarPackagesCategory] = useState('')
 
   useEffect(() => {

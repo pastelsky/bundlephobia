@@ -1,12 +1,24 @@
 import React from 'react'
 
 export type PackageInfo = {
-  name: string
-  description: string
-  repository: string
+  isTreeShakeable?: boolean
+
+  assets: Asset[]
   dependencyCount: number
-  isTreeShakeable: boolean
+  dependencySizes: DependencySize[]
+  description: string
+  gzip: number
+  hasJSModule: string
+  hasJSNext: boolean
   hasSideEffects: string[] | boolean
+  isModuleType: boolean
+  name: string
+  parse: null
+  peerDependencies: string[]
+  repository: string
+  scoped: boolean
+  size: number
+  version: string
 }
 
 export type Asset = {
