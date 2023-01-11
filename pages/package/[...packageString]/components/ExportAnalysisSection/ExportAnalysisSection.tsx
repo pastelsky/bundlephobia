@@ -163,7 +163,7 @@ interface ExportAnalysisSectionProps {
     isModuleType: boolean
     name: string
     parse: any
-    peerDependencies: any[]
+    peerDependencies: string[]
     repository: string
     scoped: boolean
     size: number
