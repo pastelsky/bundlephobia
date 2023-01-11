@@ -50,7 +50,7 @@ const ResultPage = () => {
     Analytics.pageView('package result')
   }, [])
 
-  const [results, setResults] = useState<any>({})
+  const [results, setResults] = useState<PackageInfo | null>(null)
   const [resultsPromiseState, setResultsPromiseState] =
     useState<PromiseState>(null)
   const [resultsError, setResultError] = useState<any>(null)
