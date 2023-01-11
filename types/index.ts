@@ -13,7 +13,7 @@ export type PackageInfo = {
   hasSideEffects: string[] | boolean
   isModuleType: boolean
   name: string
-  parse: null
+  parse: any
   peerDependencies: string[]
   repository: string
   scoped: boolean

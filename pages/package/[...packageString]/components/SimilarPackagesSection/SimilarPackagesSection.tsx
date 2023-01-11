@@ -1,8 +1,9 @@
-import React, { Component } from 'react'
+import React from 'react'
 import SimilarPackageCard from '../../../../../client/components/SimilarPackageCard/SimilarPackageCard'
+import { PackageInfo } from '../../../../../types'
 
 interface SimilarPackagesSectionProps {
-  packs: any[]
+  packs: PackageInfo[]
   category: string
   comparisonGzip: number
 }

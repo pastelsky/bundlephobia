@@ -5,6 +5,7 @@ import API from '../../../../../client/api'
 import SearchIcon from '../../../../../client/components/Icons/SearchIcon'
 import JumpingDots from '../../../../../client/components/JumpingDots'
 import { formatSize, resolveBuildError } from '../../../../../utils'
+import { Asset } from '../../../../../types'
 
 const State = {
   TBD: 'tbd',
@@ -71,7 +72,7 @@ const ExportPill: React.FC<ExportPillProps> = ({
 }
 
 interface ExportListProps {
-  exports: any[]
+  exports: (Asset | { name: string })[]
   totalSize: number
   isLoading: boolean
 }
@@ -82,7 +83,7 @@ const ExportList: React.FC<ExportListProps> = ({
   isLoading,
 }) => {
   const shouldShowLabels = exports.length > 20
-  const exportDictionary: { [x: string]: any[] } = {}
+  const exportDictionary: { [x: string]: (Asset | { name: string })[] } = {}
   let curIndex = 0
 
   exports.forEach(exp => {
@@ -174,8 +175,8 @@ const ExportAnalysisSection: React.FC<ExportAnalysisSectionProps> = ({
   result,
 }) => {
   const [analysisState, setAnalysisState] = useState(State.TBD)
-  const [exports, setExports] = useState<{ [x: string]: any[] }>({})
-  const [assets, setAssets] = useState([])
+  const [exports, setExports] = useState<{ [x: string]: string }>({})
+  const [assets, setAssets] = useState<Asset[]>([])
   const [filterText, setFilterText] = useState('')
   const [resultError, setResultError] = useState<any>({})
 
@@ -204,7 +205,7 @@ const ExportAnalysisSection: React.FC<ExportAnalysisSectionProps> = ({
 
     API.getExports(packageString)
       .then(
-        (results: any) => {
+        results => {
           setExports(results.exports)
           setAnalysisState(State.EXPORTS_FULFILLED)
 
@@ -226,12 +227,12 @@ const ExportAnalysisSection: React.FC<ExportAnalysisSectionProps> = ({
         return API.getExportsSizes(packageString)
       })
       .then(
-        (results: any) => {
+        results => {
           setAnalysisState(State.SIZES_FULFILLED)
           setAssets(
             results.assets
-              .filter((asset: any) => asset.type === 'js')
-              .map((asset: any) => ({
+              .filter(asset => asset.type === 'js')
+              .map(asset => ({
                 ...asset,
                 path: exports[asset.name],
               }))
