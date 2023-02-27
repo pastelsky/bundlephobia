@@ -5,6 +5,7 @@ import API from '../../../../../client/api'
 import SearchIcon from '../../../../../client/components/Icons/SearchIcon'
 import JumpingDots from '../../../../../client/components/JumpingDots'
 import { formatSize, resolveBuildError } from '../../../../../utils'
+import { Asset } from '../../../../../types'
 
 const State = {
   TBD: 'tbd',
@@ -14,7 +15,7 @@ const State = {
   REJECTED: 'rejected',
 }
 
-function getBGClass(ratio) {
+function getBGClass(ratio: number) {
   if (ratio < 0.05) {
     return 'low-1'
   } else if (ratio < 0.15) {
@@ -32,7 +33,14 @@ function getBGClass(ratio) {
   }
 }
 
-class ExportPill extends React.Component {
+type ExportPillProps = {
+  name: string
+  size: number
+  totalSize: number
+  isLoading: boolean
+}
+
+class ExportPill extends React.Component<ExportPillProps> {
   render() {
     const { name, size, totalSize, isLoading } = this.props
     return (
@@ -63,9 +71,15 @@ class ExportPill extends React.Component {
   }
 }
 
-function ExportList({ exports, totalSize, isLoading }) {
+type ExportListProps = {
+  exports: Asset[]
+  totalSize: number
+  isLoading: boolean
+}
+
+function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
   const shouldShowLabels = exports.length > 20
-  const exportDictionary = {}
+  const exportDictionary: { [x: string]: (Asset | { name: string })[] } = {}
   let curIndex = 0
 
   exports.forEach(exp => {
@@ -117,7 +131,11 @@ function ExportList({ exports, totalSize, isLoading }) {
   )
 }
 
-function InputExportFilter({ onChange }) {
+type InputExportFilterProps = {
+  onChange: (text: string) => void
+}
+
+function InputExportFilter({ onChange }: InputExportFilterProps) {
   return (
     <div className="export-analysis-section__filter-input-container">
       <input
@@ -131,7 +149,36 @@ function InputExportFilter({ onChange }) {
   )
 }
 
-class ExportAnalysisSection extends Component {
+type ExportAnalysisSectionProps = {
+  result: {
+    description: string
+    gzip: number
+    hasJSModule: string
+    hasJSNext: boolean
+    hasSideEffects: boolean
+    isModuleType: boolean
+    name: string
+    parse: any
+    peerDependencies: string[]
+    repository: string
+    scoped: boolean
+    size: number
+    version: string
+  }
+}
+
+type ExportAnalysisSectionState = {
+  analysisState: string
+  exports: { [x: string]: string }
+  assets: Asset[]
+  filterText: string
+  resultError: any
+}
+
+class ExportAnalysisSection extends Component<
+  ExportAnalysisSectionProps,
+  ExportAnalysisSectionState
+> {
   state = {
     analysisState: State.TBD,
     exports: {},
@@ -153,7 +200,7 @@ class ExportAnalysisSection extends Component {
     const { name, version } = result
     const packageString = `${name}@${version}`
     const startTime = Date.now()
-    let sizeStartTime
+    let sizeStartTime: number
 
     this.setState({ analysisState: State.IN_PROGRESS })
 
@@ -215,7 +262,7 @@ class ExportAnalysisSection extends Component {
       })
   }
 
-  handleFilterInputChange = value => {
+  handleFilterInputChange = (value: string) => {
     this.setState({ filterText: value })
   }
 

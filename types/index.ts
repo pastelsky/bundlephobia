@@ -22,11 +22,11 @@ export type PackageInfo = {
 }
 
 export type Asset = {
-  gzip: number
+  gzip?: number
   name: string
-  parse: any // TODO: fix type
-  size: number
-  type: string
+  parse?: any // TODO: fix type
+  size?: number
+  type?: string
 }
 
 export type DependencySize = {
