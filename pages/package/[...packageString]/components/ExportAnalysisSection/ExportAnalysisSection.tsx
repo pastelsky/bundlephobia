@@ -35,14 +35,14 @@ function getBGClass(ratio: number) {
 
 type ExportPillProps = {
   name: string
-  size: number
+  size?: number
   totalSize: number
   isLoading: boolean
 }
 
 class ExportPill extends React.Component<ExportPillProps> {
   render() {
-    const { name, size, totalSize, isLoading } = this.props
+    const { name, size = 0, totalSize, isLoading } = this.props
     return (
       <li className="export-analysis-section__pill export-analysis-section__dont-break">
         <div
@@ -79,7 +79,7 @@ type ExportListProps = {
 
 function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
   const shouldShowLabels = exports.length > 20
-  const exportDictionary: { [x: string]: (Asset | { name: string })[] } = {}
+  const exportDictionary: { [x: string]: Asset[] } = {}
   let curIndex = 0
 
   exports.forEach(exp => {
@@ -106,7 +106,7 @@ function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
                   size={exportDictionary[letter][0].gzip}
                   totalSize={totalSize}
                   name={exportDictionary[letter][0].name}
-                  path={exportDictionary[letter][0].path}
+                  // path={exportDictionary[letter][0].path}
                   key={exportDictionary[letter][0].name}
                   isLoading={curIndex++ < 40 && isLoading}
                 />
@@ -119,7 +119,7 @@ function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
                   size={exp.gzip}
                   totalSize={totalSize}
                   name={exp.name}
-                  path={exp.path}
+                  // path={exp.path}
                   key={exp.name}
                   isLoading={curIndex++ < 40 && isLoading}
                 />

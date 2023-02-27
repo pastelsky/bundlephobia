@@ -248,12 +248,14 @@ class ScanResults extends Component {
     const packages = this.sortPackages()
 
     const totalMinSize = packages.reduce(
-      (curTotal, pack) => curTotal + (pack.result ? pack.result.size : 0),
+      (curTotal: number, pack) =>
+        curTotal + (pack.result ? pack.result.size : 0),
       0
     )
 
     const totalGZIPSize = packages.reduce(
-      (curTotal, pack) => curTotal + (pack.result ? pack.result.gzip : 0),
+      (curTotal: number, pack) =>
+        curTotal + (pack.result ? pack.result.gzip : 0),
       0
     )
 
