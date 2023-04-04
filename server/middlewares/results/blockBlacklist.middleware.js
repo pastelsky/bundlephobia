@@ -13,7 +13,7 @@ async function blockBlacklistMiddleware(ctx, next) {
 
   // If package is blacklisted, fail fast
   if (CONFIG.blackList.some(entry => entry.test(parsedPackage.name))) {
-    throw new CustomError('BlacklistedPackageError', { ...parsedPackage })
+    throw new CustomError('BlocklistedPackageError', { ...parsedPackage })
   }
 
   // If package is unsupported, fail fast
