@@ -4,10 +4,10 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "debug": "^4.2.0",
+    "debug": "^4.3.4",
     "dotenv": "^8.2.0",
     "dotenv-defaults": "^2.0.2",
-    "fastify": "^3.18.0",
+    "fastify": "^4.15.0",
     "firebase": "^8.6.8",
     "lru-cache": "^5.1.1"
   },
