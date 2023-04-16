@@ -7,7 +7,7 @@ import { parse } from 'url'
 import Koa, { Context } from 'koa'
 import proxy from 'koa-proxy'
 import serve from 'koa-static'
-import Router from 'koa-router'
+import Router from '@koa/router'
 import compress from 'koa-compress'
 import cacheControl from 'koa-cache-control'
 import requestId from 'koa-requestid'
@@ -161,7 +161,7 @@ app.prepare().then(() => {
     exportsSizesMiddlware
   )
 
-  router.get('/api/recent', async (ctx: Context) => {
+  router.get('/api/recent', async ctx => {
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.RECENTS_API,
@@ -175,7 +175,7 @@ app.prepare().then(() => {
     }
   })
 
-  router.get('/api/package-history', async (ctx: Context) => {
+  router.get('/api/package-history', async ctx => {
     const { name } = parsePackageString(ctx.query.package)
     try {
       ctx.cacheControl = {
@@ -255,7 +255,7 @@ app.prepare().then(() => {
     ctx.status = 301
   })
 
-  router.get('*', async ctx => {
+  router.get('(.*)', async ctx => {
     invariant(ctx.req.url, 'url is missing')
     const parsedUrl = parse(ctx.req.url, true)
     await handle(ctx.req, ctx.res, parsedUrl)

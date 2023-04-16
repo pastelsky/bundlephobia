@@ -26,9 +26,7 @@ const prefixURL = (url, { base, user, project, head, path }) => {
 
 async function getPackageDetails(packageName) {
   let readme = ''
-  const {
-    body,
-  } = await got(
+  const { body } = await got(
     `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(
       packageName
     )}?x-algolia-application-id=OFCNCOG2CU&x-algolia-api-key=f54e21fa3a2a0160595bb058179bfb1e`,

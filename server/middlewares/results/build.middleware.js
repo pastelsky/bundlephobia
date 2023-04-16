@@ -14,14 +14,8 @@ const buildService = new BuildService()
 async function buildMiddleware(ctx, next) {
   let result,
     priority = getRequestPriority(ctx)
-  const {
-    scoped,
-    name,
-    version,
-    description,
-    repository,
-    packageString,
-  } = ctx.state.resolved
+  const { scoped, name, version, description, repository, packageString } =
+    ctx.state.resolved
   const { force, record, package: packageQuery } = ctx.query
 
   const buildStart = now()
