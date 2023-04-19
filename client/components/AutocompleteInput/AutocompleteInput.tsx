@@ -34,6 +34,8 @@ export const AutocompleteInput = ({
     handleInputChange,
     setIsMenuVisible,
     setSuggestions,
+    isValidationError,
+    errorClearHandler,
   } = useAutocompleteInput({ initialValue, onSubmit: onSearchSubmit })
   const { searchFontSize } = useFontSize({ value })
 
@@ -51,7 +53,9 @@ export const AutocompleteInput = ({
         className={cx('autocomplete-input__container', className, {
           'autocomplete-input__container--menu-visible':
             isMenuVisible && !!suggestions.length,
+          'autocomplete-input__container--error': isValidationError,
         })}
+        onAnimationEnd={errorClearHandler}
       >
         <AutoComplete
           getItemValue={item => item.package.name}
