@@ -1,0 +1,37 @@
+apps:
+  - script: 'ts-node'
+    args: '--project tsconfig.server.json ./index.ts'
+    name: main
+    instances: 1
+    max_memory_restart: 500M
+    error_file: logs/index.log
+    out_file: logs/index.log
+    kill_timeout: 20000
+    exec_mode: cluster
+    env:
+      NODE_ENV: production
+      DEBUG: 'bp:*'
+
+  - script: ./build-service/index.js
+    name: build-service
+    instances: 3
+    max_memory_restart: 1000M
+    exec_mode: cluster
+    error_file: logs/build-service.log
+    out_file: logs/build-service.log
+    kill_timeout: 20000
+    env:
+      NODE_ENV: production
+      DEBUG: 'bp:*'
+
+  - script: ./cache-service/index.js
+    name: cache-service
+    instances: 1
+    max_memory_restart: 200M
+    exec_mode: cluster
+    kill_timeout: 5000
+    error_file: logs/cache-service.log
+    out_file: logs/cache-service.log
+    env:
+      NODE_ENV: production
+      DEBUG: 'bp:*'

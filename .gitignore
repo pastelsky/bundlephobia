@@ -1,12 +1,27 @@
-/node_modules
-/npm-debug.log
-/build
-.DS_Store
-/coverage
-/.idea
-/tmp
-/tmp-build
-yarn.lock
-err.log
-out.log
+.next
 .env
+build
+out
+now.json
+
+# package directories
+node_modules
+
+# Serverless directories
+.serverless
+
+# Logs
+yarn-error.log
+logs
+**/.yarn/cache
+**/.yarn/install-state.gz
+
+# JetBrains IDE
+.idea
+
+# TypeScript
+tsconfig.tsbuildinfo
+next-env.d.ts
+/test-results/
+/playwright-report/
+/playwright/.cache/
