@@ -69,7 +69,11 @@ class ResultPage extends PureComponent {
     const currentPackage = parsePackageString(packageString)
     const nextPackage = parsePackageString(nextPackageString)
 
-    if (currentPackage.name !== nextPackage.name) {
+    const isPackageDifferent =
+      currentPackage.name !== nextPackage.name ||
+      currentPackage.version !== nextPackage.version
+
+    if (isPackageDifferent) {
       this.handleSearchSubmit(nextPackageString)
     }
   }
