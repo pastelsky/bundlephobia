@@ -294,14 +294,14 @@ class ScanResults extends Component {
               />
               <Stat
                 className="scan-results__stat-item"
-                value={totalGZIPSize / 1024 / 30}
+                value={totalGZIPSize / 1000 / 30}
                 type={Stat.type.TIME}
                 label="2G Edge"
                 compact
               />
               <Stat
                 className="scan-results__stat-item"
-                value={totalGZIPSize / 1024 / 50}
+                value={totalGZIPSize / 1000 / 50}
                 type={Stat.type.TIME}
                 label="Slow 3G"
                 compact
