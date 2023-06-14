@@ -1,6 +1,6 @@
 apps:
-  - script: 'ts-node'
-    args: '--project tsconfig.server.json index.ts'
+  - script: './index.js'
+    args: '--project tsconfig.server.json ./index.ts'
     name: main
     instances: 1
     max_memory_restart: 500M
@@ -11,8 +11,9 @@ apps:
     env:
       NODE_ENV: production
       DEBUG: 'bp:*'
+      PORT: 5400
 
-  - script: build-service/index.js
+  - script: ./build-service/index.js
     name: build-service
     instances: 3
     max_memory_restart: 1000M
@@ -24,7 +25,7 @@ apps:
       NODE_ENV: production
       DEBUG: 'bp:*'
 
-  - script: cache-service/index.js
+  - script: ./cache-service/index.js
     name: cache-service
     instances: 1
     max_memory_restart: 200M
