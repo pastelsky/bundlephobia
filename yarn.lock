@@ -21448,7 +21448,7 @@ __metadata:
       optional: true
   bin:
     webpack-4-modern-acorn: ./bin/webpack.js
-  checksum: edb4dfba35a394e9b899db99fcc336360437e831e08e5a0f2cc4e1eded7ddadd9d719a83ec1c1a08c2a458d81a6a2af64606fc9b476c087c6035b4f208b2c694
+  checksum: 2d17f1cf235d6b6b5a244520d3be7cbbfc21fe2d8c17ca913de7d438f5b4590661e70dca19cf9bfedc06250e4633c399df854da2e00d1b5442befedca0554c11
   languageName: node
   linkType: hard
 
