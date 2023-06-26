@@ -8,7 +8,7 @@ import AutocompleteInputBox from '../../../client/components/AutocompleteInputBo
 import BuildProgressIndicator from '../../../client/components/BuildProgressIndicator'
 import Router, { withRouter } from 'next/router'
 import semver from 'semver'
-import isEmptyObject from 'is-empty-object'
+import isEmpty from 'just-is-empty'
 import { parsePackageString } from '../../../utils/common.utils'
 import {
   getTimeFromSize,
@@ -201,7 +201,7 @@ class ResultPage extends PureComponent {
     }
 
     const formattedResults = Object.keys(totalVersions).map(version => {
-      if (isEmptyObject(totalVersions[version])) {
+      if (isEmpty(totalVersions[version])) {
         return { version, disabled: true }
       }
       return {

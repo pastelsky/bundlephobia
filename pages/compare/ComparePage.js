@@ -7,7 +7,7 @@ import AutocompleteInput from '../../client/components/AutocompleteInput'
 import BuildProgressIndicator from '../../client/components/BuildProgressIndicator'
 import Router from 'next/router'
 import Link from 'next/link'
-import isEmptyObject from 'is-empty-object'
+import isEmpty from 'just-is-empty'
 import { parsePackageString } from '../../utils/common.utils'
 
 import API from '../../client/api'
@@ -84,7 +84,7 @@ export default class ResultPage extends PureComponent {
     }
 
     const formattedResults = Object.keys(totalVersions).map(version => {
-      if (isEmptyObject(totalVersions[version])) {
+      if (isEmpty(totalVersions[version])) {
         return { version, disabled: true }
       }
       return {

@@ -13,9 +13,9 @@ const got = require('got')
 const gitURLParse = require('git-url-parse')
 const { resolvePackage } = require('./server.utils')
 const { parsePackageString } = require('./common.utils')
-const deepEqual = require('lodash.isequal')
 const childProcess = require('child_process')
 const mkdir = require('mkdir-promise')
+const { default: compare } = require('just-compare')
 
 const patchedDB = {}
 
@@ -187,7 +187,7 @@ async function run() {
     const oldPkg = packs[pack.packName][pack.version]
     const newPkg = packsNew[pack.packName][pack.version]
 
-    return deepEqual(oldPkg, newPkg)
+    return compare(oldPkg, newPkg)
   })
 
   console.log('package count is', packages.length)

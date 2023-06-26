@@ -6,7 +6,7 @@ const trending = require('trending-github')
 const fetch = require('node-fetch')
 const debug = require('debug')('bp:trending-fetch')
 const GithubAPI = require('github')
-const isEmptyObject = require('is-empty-object')
+const { default: isEmpty } = require('just-is-empty')
 const promiseSeries = require('promise.series')
 
 require('dotenv').config()
@@ -96,7 +96,7 @@ async function getVersionsToBuild(name) {
   const versionInfo = await res.json()
 
   Object.keys(versionInfo).forEach(version => {
-    if (isEmptyObject(versionInfo[version])) {
+    if (isEmpty(versionInfo[version])) {
       versionsToBuild.push(version)
     }
   })
@@ -112,7 +112,7 @@ async function getVersionsToBuild(name) {
   const versionInfo = await res.json()
 
   Object.keys(versionInfo).forEach(version => {
-    if (isEmptyObject(versionInfo[version])) {
+    if (isEmpty(versionInfo[version])) {
       versionsToBuild.push(version)
     }
   })
