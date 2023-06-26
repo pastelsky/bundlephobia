@@ -10,10 +10,6 @@ import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
 import cx from 'classnames'
 
-import { Press_Start_2P } from '@next/font/google'
-
-const pressStart2P = Press_Start_2P({ weight: '400', subsets: ['latin'] })
-
 const Logo = () => (
   <svg
     className="logo-graphic"
