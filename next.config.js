@@ -9,6 +9,9 @@ const nextConfig = {
   env: {
     RELEASE_DATE: new Date().toDateString(),
   },
+  images: {
+    unoptimized: true,
+  },
   webpack: config => {
     config.module.rules.push({
       test: /\.svg$/i,
