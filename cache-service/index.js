@@ -25,7 +25,7 @@ fastify.get('/exports-cache', getExportsSizeMiddlware)
 fastify.post('/exports-cache', postExportsSizeMiddleware)
 
 fastify
-  .listen(7001)
+  .listen({ port: 7001 })
   .then(() => {
     console.log(`server listening on ${fastify.server.address().port}`)
   })
