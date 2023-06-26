@@ -18,16 +18,22 @@ jobs:
         node-version: [16.x]
 
     steps:
+      - name: Checkout
         uses: actions/checkout@v3
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
+
       - name: Install project dependencies
         run: yarn install
+
       - name: Run lint
         run: yarn lint
-      - run: yarn build
+
+      - name: Run build
+        run: yarn build
         env:
           CI: true
