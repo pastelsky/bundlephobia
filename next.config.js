@@ -1,6 +1,7 @@
 const path = require('path')
 
-module.exports = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   pageExtensions: ['page.js', 'page.tsx'],
   sassOptions: {
     includePaths: [path.join(__dirname, 'stylesheets')],
@@ -8,7 +9,7 @@ module.exports = {
   env: {
     RELEASE_DATE: new Date().toDateString(),
   },
-  webpack(config) {
+  webpack: config => {
     config.module.rules.push({
       test: /\.svg$/i,
       issuer: /\.[jt]sx?$/,
@@ -32,3 +33,5 @@ module.exports = {
     return config
   },
 }
+
+module.exports = nextConfig
