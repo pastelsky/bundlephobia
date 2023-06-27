@@ -3425,13 +3425,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/debounce@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@types/debounce@npm:1.2.1"
-  checksum: bea6d414acefbee50adfe87cee10f8a855d033e4778567ab03bdc3cb2648b6bf9237ca53f4ee76fe4be75f77f86d4688411499626fe409bc870f53631d24231f
-  languageName: node
-  linkType: hard
-
 "@types/eslint-scope@npm:^3.7.3":
   version: 3.7.4
   resolution: "@types/eslint-scope@npm:3.7.4"
@@ -5765,7 +5758,6 @@ __metadata:
     "@swc/core": ^1.3.51
     "@swc/helpers": ^0.4.12
     "@types/animejs": ^3.1.7
-    "@types/debounce": ^1.2.1
     "@types/koa": ^2.13.6
     "@types/koa-basic-auth": ^2.0.4
     "@types/koa-bodyparser": ^4.3.10
@@ -5788,7 +5780,6 @@ __metadata:
     canvas: ^2.11.2
     classnames: ^2.3.2
     date-fns: ^2.29.3
-    debounce: ^1.2.1
     debug: ^4.3.4
     dompurify: ^2.4.5
     dotenv: ^8.2.0
@@ -5801,7 +5792,6 @@ __metadata:
     execa: ^5.1.1
     fabric: 5.3.0
     firebase: ^8.6.8
-    flatten: ^1.0.3
     git-url-parse: ^13.1.0
     github: ^10.0.0
     glob: ^7.1.6
@@ -5809,8 +5799,11 @@ __metadata:
     hot-shots: ^6.8.5
     husky: ^4.3.0
     ipchecker: ^0.0.2
-    is-empty-object: ^1.1.1
     jest: ^24.9.0
+    just-compare: ^2.3.0
+    just-debounce-it: ^3.2.0
+    just-flatten-it: ^5.2.0
+    just-is-empty: ^3.4.1
     koa: ^2.14.2
     koa-basic-auth: ^4.0.0
     koa-bodyparser: ^4.4.0
@@ -5821,7 +5814,6 @@ __metadata:
     koa-requestid: ^2.1.0
     koa-send: ^5.0.1
     koa-static: ^5.0.0
-    lodash.isequal: ^4.5.0
     lru-cache: ^6.0.0
     memory-fs: ^0.5.0
     natural: ^5.2.4
@@ -7515,13 +7507,6 @@ __metadata:
   version: 1.0.2
   resolution: "de-indent@npm:1.0.2"
   checksum: 8deacc0f4a397a4414a0fc4d0034d2b7782e7cb4eaf34943ea47754e08eccf309a0e71fa6f56cc48de429ede999a42d6b4bca761bf91683be0095422dbf24611
-  languageName: node
-  linkType: hard
-
-"debounce@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "debounce@npm:1.2.1"
-  checksum: 682a89506d9e54fb109526f4da255c5546102fbb8e3ae75eef3b04effaf5d4853756aee97475cd4650641869794e44f410eeb20ace2b18ea592287ab2038519e
   languageName: node
   linkType: hard
 
@@ -9700,13 +9685,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flatten@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "flatten@npm:1.0.3"
-  checksum: 5c57379816f1692aaa79fbc6390e0a0644e5e8442c5783ed57c6d315468eddbc53a659eaa03c9bb1e771b0f4a9bd8dd8a2620286bf21fd6538a7857321fdfb20
-  languageName: node
-  linkType: hard
-
 "flush-write-stream@npm:^1.0.0":
   version: 1.1.1
   resolution: "flush-write-stream@npm:1.1.1"
@@ -11543,13 +11521,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-empty-object@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "is-empty-object@npm:1.1.1"
-  checksum: aeb6f64268e40d22fa45a3e424486f1df5da1ec202bbdc1daf17d25779ab282440b5263601c5dc2c1359a847e2e3403eb0b83440fedf79e25dc7b1ce757597b8
-  languageName: node
-  linkType: hard
-
 "is-expression@npm:^4.0.0":
   version: 4.0.0
   resolution: "is-expression@npm:4.0.0"
@@ -12855,6 +12826,34 @@ __metadata:
     array-includes: ^3.1.5
     object.assign: ^4.1.3
   checksum: a2ed78cac49a0f0c4be8b1eafe3c5257a1411341d8e7f1ac740debae003de04e5f6372bfcfbd9d082e954ffd99aac85bcda85b7c6bc11609992483f4cdc0f745
+  languageName: node
+  linkType: hard
+
+"just-compare@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "just-compare@npm:2.3.0"
+  checksum: 4fbad740d2697c357b203b6f5ddcce0d9b0d38abb25bb92fbb101687c86b6cf33678332469ebf6282c4f717f20baed41b33b49f2643d07dd64e4bf7a95306464
+  languageName: node
+  linkType: hard
+
+"just-debounce-it@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "just-debounce-it@npm:3.2.0"
+  checksum: a42039a341f1bdf9ccb797e8df88b7e218a95efee01a7bb4bce53bfd5befe0334f3ce32b905e01666312868ade7c1c23071dcd53e80aaa1000b7246382176e84
+  languageName: node
+  linkType: hard
+
+"just-flatten-it@npm:^5.2.0":
+  version: 5.2.0
+  resolution: "just-flatten-it@npm:5.2.0"
+  checksum: 34611deb25be905404b083f638428528bc928b346a3258d66e2ef0c65a992f173152d6d2dd35e7708f37cd1e1fa7d02ab5ca6c29ea02345711b748bef8b9a860
+  languageName: node
+  linkType: hard
+
+"just-is-empty@npm:^3.4.1":
+  version: 3.4.1
+  resolution: "just-is-empty@npm:3.4.1"
+  checksum: 91b4026c22a04ff0679f205f5ab3f9d7f8e752ce7be74b7a9fb60910fae91d1c6ec4cbcff2a465d47a7c47b7c53ad9094136bc4038197dc96b72caef0b735c1f
   languageName: node
   linkType: hard
 

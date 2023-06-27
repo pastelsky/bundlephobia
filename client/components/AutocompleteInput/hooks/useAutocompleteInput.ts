@@ -1,5 +1,5 @@
 import React from 'react'
-import debounce from 'debounce'
+import debounce from 'just-debounce-it'
 
 import { parsePackageString } from '../../../../utils/common.utils'
 import API from '../../../api'
