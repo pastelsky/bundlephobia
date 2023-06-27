@@ -15,7 +15,7 @@ const { resolvePackage } = require('./server.utils')
 const { parsePackageString } = require('./common.utils')
 const deepEqual = require('lodash.isequal')
 const childProcess = require('child_process')
-const mkdir = require('mkdir-promise')
+const { mkdir } = require('fs/promises')
 
 const patchedDB = {}
 
@@ -307,7 +307,7 @@ async function getExports(name, version) {
     .replace(/\//g, '-')
     .replace(/\./g, '')}`
   console.log(pathtmp, 'pathtmp')
-  await mkdir(pathtmp)
+  await mkdir(pathtmp, { recursive: true })
 
   fs.writeFileSync(
     path.join(pathtmp, 'package.json'),

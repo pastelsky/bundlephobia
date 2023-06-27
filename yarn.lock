@@ -5824,7 +5824,6 @@ __metadata:
     lodash.isequal: ^4.5.0
     lru-cache: ^6.0.0
     memory-fs: ^0.5.0
-    mkdir-promise: ^1.0.0
     natural: ^5.2.4
     next: ^13.3.0
     node-fetch: ^2.6.9
@@ -14234,13 +14233,6 @@ __metadata:
     for-in: ^1.0.2
     is-extendable: ^1.0.1
   checksum: 820d5a51fcb7479f2926b97f2c3bb223546bc915e6b3a3eb5d906dda871bba569863595424a76682f2b15718252954644f3891437cb7e3f220949bed54b1750d
-  languageName: node
-  linkType: hard
-
-"mkdir-promise@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "mkdir-promise@npm:1.0.0"
-  checksum: a5d1715e9abcdc4c8b1a1d453ae49939e92d3e234445ad3ccd7ec2e522e54689f8d43c601500804587ed87ed1035874464ebf949793fdafe66b027e3db2732b9
   languageName: node
   linkType: hard
 

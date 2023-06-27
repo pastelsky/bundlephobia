@@ -57,7 +57,6 @@
     "lodash.isequal": "^4.5.0",
     "lru-cache": "^6.0.0",
     "memory-fs": "^0.5.0",
-    "mkdir-promise": "^1.0.0",
     "natural": "^5.2.4",
     "next": "^13.3.0",
     "node-fetch": "^2.6.9",
