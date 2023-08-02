@@ -5,10 +5,10 @@
   "license": "MIT",
   "dependencies": {
     "debug": "^4.3.4",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
     "dotenv-defaults": "^2.0.2",
-    "fastify": "^4.15.0",
-    "firebase": "^8.6.8",
+    "fastify": "^4.21.0",
+    "firebase": "^8.10.1",
     "lru-cache": "^5.1.1"
   },
   "scripts": {
