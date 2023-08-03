@@ -14,11 +14,11 @@ const formatSize = value => {
     unit = 'B'
     size = value
   } else if (Math.log10(value) < 6) {
-    unit = 'kB'
-    size = value / 1024
+    unit = 'KB'
+    size = value / 1000
   } else {
     unit = 'MB'
-    size = value / 1024 / 1024
+    size = value / 1000 / 1000
   }
 
   return { unit, size }
@@ -49,8 +49,8 @@ const DownloadSpeed = {
 }
 const getTimeFromSize = sizeInBytes => {
   return {
-    threeG: sizeInBytes / 1024 / DownloadSpeed.THREE_G,
-    fourG: sizeInBytes / 1024 / DownloadSpeed.FOUR_G,
+    threeG: sizeInBytes / 1000 / DownloadSpeed.THREE_G,
+    fourG: sizeInBytes / 1000 / DownloadSpeed.FOUR_G,
   }
 }
 

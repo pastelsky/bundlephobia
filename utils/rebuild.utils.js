@@ -212,7 +212,7 @@ async function run() {
             '%d fetched %s, diff: %d KB',
             startIndex + index,
             packStr,
-            Math.round(gzipDiff / 1024)
+            Math.round(gzipDiff / 1000)
           )
 
           if (
@@ -223,8 +223,8 @@ async function run() {
               'GZIP sizes for %s vary more than %d. Old: %d KB, After rebuild: %d KB',
               packStr,
               gzipDiff,
-              Math.round(packs[pack.packName][pack.version].gzip / 1024),
-              Math.round(res.gzip / 1024)
+              Math.round(packs[pack.packName][pack.version].gzip / 1000),
+              Math.round(res.gzip / 1000)
             )
           }
           if (
@@ -235,8 +235,8 @@ async function run() {
               'MIN sizes for %s vary more than %d. Old: %d KB, After rebuild: %d KB',
               packStr,
               minDiff,
-              Math.round(packs[pack.packName][pack.version].size / 1024),
-              Math.round(res.size / 1024)
+              Math.round(packs[pack.packName][pack.version].size / 1000),
+              Math.round(res.size / 1000)
             )
           }
         })

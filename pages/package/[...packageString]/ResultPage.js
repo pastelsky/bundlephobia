@@ -385,7 +385,7 @@ class ResultPage extends PureComponent {
                         label="Slow 3G"
                         infoText={referenceSpeedInfoText(
                           DownloadSpeed.THREE_G,
-                          'kB/s'
+                          'KB/s'
                         )}
                       />
                       <Stat
@@ -394,7 +394,7 @@ class ResultPage extends PureComponent {
                         label="Emerging 4G"
                         infoText={referenceSpeedInfoText(
                           DownloadSpeed.FOUR_G,
-                          'kB/s'
+                          'KB/s'
                         )}
                       />
                     </div>
