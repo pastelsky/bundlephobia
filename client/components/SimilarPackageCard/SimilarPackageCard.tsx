@@ -125,7 +125,7 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
                   window.location = pack.repository
                 }}
               >
-                {pack.repository.includes('github') ? (
+                {pack.repository.includes('github.com') ? (
                   <GithubIcon className="similar-package-card__github-icon" />
                 ) : (
                   <GitIcon className="similar-package-card__github-icon" />
