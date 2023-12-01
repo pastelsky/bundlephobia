@@ -2,8 +2,15 @@ import React, { Component } from 'react'
 import { formatSize } from 'utils'
 import colors from 'client/config/colors'
 import { Treemap, TreemapSquare } from 'client/components/Treemap'
+import { DependencySize } from '../../../../types'
 
-class TreemapSection extends Component {
+type TreemapSectionProps = {
+  packageName: string
+  packageSize: number
+  dependencySizes: DependencySize[]
+}
+
+class TreemapSection extends Component<TreemapSectionProps> {
   state = {
     width: 0,
     height: 0,
@@ -77,7 +84,7 @@ class TreemapSection extends Component {
       }))
 
     depdendenciesCopy.sort((depA, depB) => {
-      return depB.percentShare - depA.percentShare
+      return (depB.percentShare || 0) - (depA.percentShare || 0)
     })
 
     let compactedDependencies = []
@@ -93,11 +100,11 @@ class TreemapSection extends Component {
         0
       )
       const percentShare = otherDependencies.reduce(
-        (acc, dep) => acc + dep.percentShare,
+        (acc, dep) => acc + (dep.percentShare || 0),
         0
       )
       const sizeShare = otherDependencies.reduce(
-        (acc, dep) => acc + dep.sizeShare,
+        (acc, dep) => acc + (dep.sizeShare || 0),
         0
       )
 
@@ -110,7 +117,7 @@ class TreemapSection extends Component {
         tooltip: otherDependencies
           .map(
             dep =>
-              `${dep.name} ｜ ${dep.percentShare.toFixed(
+              `${dep.name} ｜ ${(dep.percentShare || 0).toFixed(
                 1
               )}% ｜ ~ ${getFormattedSize(dep.sizeShare)} min`
           )
@@ -136,8 +143,9 @@ class TreemapSection extends Component {
               data-balloon-pos="top"
               className="treemap__square"
             >
-              {dep.percentShare > ellipsizeLimit &&
-              dep.name.length < dep.percentShare * (12 / ellipsizeLimit) ? (
+              {(dep.percentShare || 0) > ellipsizeLimit &&
+              dep.name.length <
+                (dep.percentShare || 0) * (12 / ellipsizeLimit) ? (
                 <div className="treemap__content">
                   <div className="treemap__label">
                     {dep.isSelf || dep.isOthers ? (
@@ -156,11 +164,11 @@ class TreemapSection extends Component {
                     className="treemap__percent"
                     style={{
                       fontSize: `${
-                        14 + Math.min(dep.percentShare * 1.2, 25)
+                        14 + Math.min((dep.percentShare || 0) * 1.2, 25)
                       }px`,
                     }}
                   >
-                    {dep.percentShare.toFixed(1)}
+                    {(dep.percentShare || 0).toFixed(1)}
                     <span className="treemap__percent-sign">%</span>
                   </div>
                 </div>

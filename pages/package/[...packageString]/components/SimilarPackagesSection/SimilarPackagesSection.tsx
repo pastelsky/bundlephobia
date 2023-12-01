@@ -1,7 +1,14 @@
 import React, { Component } from 'react'
 import SimilarPackageCard from '../../../../../client/components/SimilarPackageCard/SimilarPackageCard'
+import { PackageInfo } from '../../../../../types'
 
-class SimilarPackagesSection extends Component {
+type SimilarPackagesSectionProps = {
+  packs: PackageInfo[]
+  category: string
+  comparisonGzip: number
+}
+
+class SimilarPackagesSection extends Component<SimilarPackagesSectionProps> {
   render() {
     const { packs, category, comparisonGzip } = this.props
     return (
