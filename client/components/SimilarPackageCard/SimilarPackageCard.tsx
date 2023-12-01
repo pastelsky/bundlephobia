@@ -8,6 +8,7 @@ import { sanitizeHTML } from '../../../utils/common.utils'
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import PlusIcon from '../../assets/plus.svg'
 import GithubIcon from '../../assets/github-logo.svg'
+import GitIcon from '../../assets/git-logo.svg'
 
 type SimilarPackageCardProps = { category?: string } & (
   | { pack: any; comparisonSizePercent: number }
@@ -124,7 +125,11 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
                   window.location = pack.repository
                 }}
               >
-                <GithubIcon className="similar-package-card__github-icon" />
+                {pack.repository.includes('github.com') ? (
+                  <GithubIcon className="similar-package-card__github-icon" />
+                ) : (
+                  <GitIcon className="similar-package-card__github-icon" />
+                )}
               </a>
             )}
           </div>
