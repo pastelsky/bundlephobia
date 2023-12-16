@@ -117,17 +117,6 @@ const categories = {
       'interactjs',
     ],
   },
-  'excel-parsers': {
-    name: 'Excel File Readers, Manipulators & Writers',
-    tags: [
-      { tag: 'excel', weight: Weight.MAX },
-      { tag: 'read', weight: Weight.SMALL },
-      { tag: 'write', weight: Weight.SMALL },
-      { tag: 'manipulate', weight: Weight.SMALL },
-      { tag: 'parse', weight: Weight.SMALL },
-    ],
-    similar: ['xlsx', 'exceljs', 'node-xlsx', 'excel4node'],
-  },
   'full-text-search': {
     name: 'Text search',
     tags: [
