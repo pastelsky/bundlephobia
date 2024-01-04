@@ -107,7 +107,9 @@ const Home = () => {
 
   const handleSearchSubmit = (value: string) => {
     Analytics.performedSearch(value.trim())
-    router.push(`/package/${value.trim()}`)
+    if (value ?? '') {
+      router.push(`/package/${value.trim()}`)
+    }
   }
 
   return (
