@@ -68,4 +68,4 @@ See [Contributing](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/C
 
 ## Sponsors
 
-<img width="100px" src="https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg"/>
+<a href="https://www.digitalocean.com?utm_medium=opensource&utm_source=bundlephobia"><img width="100px" src="https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg"/></a>
