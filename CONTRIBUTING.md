@@ -49,3 +49,33 @@ Bundlephobia relies on [`canvas`](https://www.npmjs.com/package/canvas) which ma
 | `yarn run dev`   | Start a development server locally |
 | `yarn run build` | Build for production               |
 | `yarn run prod`  | Start a production server locally  |
+
+### Troubleshooting
+
+#### Node version 18
+If you are using Node.js version 18 and encounter the following error during execution:
+
+
+```
+Error: error:0308010C:digital envelope routines::unsupported
+    at new Hash (node:internal/crypto/hash:69:19)
+    at Object.createHash (node:crypto:133:10)
+    at module.exports (~/bundlephobia/node_modules/package-build-stats/node_modules/webpack/lib/util/createHash.js:135:53)
+    at NormalModule._initBuildHash (~/bundlephobia/node_modules/package-build-stats/node_modules/webpack/lib/NormalModule.js:417:16)
+    at handleParseError (~/bundlephobia/node_modules/package-build-stats/node_modules/webpack/lib/NormalModule.js:471:10)
+    at ~/bundlephobia/node_modules/package-build-stats/node_modules/webpack/lib/NormalModule.js:503:5
+    at ~/bundlephobia/node_modules/package-build-stats/node_modules/webpack/lib/NormalModule.js:358:12
+    at ~/bundlephobia/node_modules/loader-runner/lib/LoaderRunner.js:373:3
+    at iterateNormalLoaders (~/bundlephobia/node_modules/loader-runner/lib/LoaderRunner.js:214:10)
+    at iterateNormalLoaders (~/bundlephobia/node_modules/loader-runner/lib/LoaderRunner.js:221:10)
+    at ~/bundlephobia/node_modules/loader-runner/lib/LoaderRunner.js:236:3
+    at runSyncOrAsync (~/bundlephobia/node_modules/loader-runner/lib/LoaderRunner.js:130:11)
+    at iterateNormalLoaders (~/bundlephobia/node_modules/loader-runner/lib/LoaderRunner.js:232:2)
+    at iterateNormalLoaders (~/bundlephobia/node_modules/loader-runner/lib/LoaderRunner.js:221:10)
+    at ~/bundlephobia/node_modules/loader-runner/lib/LoaderRunner.js:236:3
+    at context.callback (~/bundlephobia/node_modules/loader-runner/lib/LoaderRunner.js:111:13)
+```
+
+you can resolve it by running the command:
+
+```NODE_OPTIONS=--openssl-legacy-provider yarn run dev```
