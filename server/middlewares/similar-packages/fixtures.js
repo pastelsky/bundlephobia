@@ -99,7 +99,13 @@ const categories = {
       { tag: 'compare', weight: Weight.NORMAL },
       { tag: 'isequal', weight: Weight.HIGH },
     ],
-    similar: ['fast-deep-equal', 'deep-eql', 'deep-equal', 'lodash.isequal'],
+    similar: [
+      'fast-deep-equal',
+      'deep-eql',
+      'deep-equal',
+      'lodash.isequal',
+      '@react-hookz/deep-equal',
+    ],
   },
   'drag-and-drop': {
     name: 'Drag & Drop Libraries',
