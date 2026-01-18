@@ -5,11 +5,6 @@ module.exports = {
   sassOptions: {
     includePaths: [path.join(__dirname, 'stylesheets')],
   },
-  // Temporarily ignore TypeScript errors during build
-  // due to React 18 type incompatibilities with react-autocomplete and react-sidebar
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   env: {
     RELEASE_DATE: new Date().toDateString(),
   },

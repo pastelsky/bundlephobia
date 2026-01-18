@@ -6,7 +6,8 @@ import { chain } from 'stream-chain'
 import { parser } from 'stream-json'
 import { streamArray } from 'stream-json/streamers/StreamArray'
 import { streamObject } from 'stream-json/streamers/StreamObject'
-import JSONStream from 'JSONStream'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const JSONStream = require('JSONStream')
 import progress from 'progress-stream'
 
 // Initialize Firebase (you'll need to set up your service account key)
@@ -73,7 +74,7 @@ async function processBackupFile(
       fs.createReadStream(backupFilePath).pipe(progressStream),
       parser(),
       streamObject(),
-    ])
+    ] as any)
 
     let isProcessingSearchesV2 = false
     let isProcessingModuleCostV2 = false
@@ -221,7 +222,7 @@ async function processBackupFile(
         prunedSize += JSON.stringify(prunedVersions).length
 
         // Write to output stream
-        stringifyStream.write([packageName, prunedVersions])
+        ;(stringifyStream as any).write([packageName, prunedVersions])
 
         console.log(
           `Package: ${packageName} | Action: ${action} | Reason: ${reason}`
@@ -242,7 +243,7 @@ async function uploadPrunedDataToFirebase(filePath: string) {
   const prunedRef = db.ref('module-cost-pruned')
   const readStream = fs.createReadStream(filePath)
   const parseStream = JSONStream.parse('*')
-  const pipeline = chain([readStream, parseStream])
+  const pipeline = chain([readStream, parseStream] as any)
 
   let buffer: { [key: string]: any } = {}
   let count = 0

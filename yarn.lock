@@ -5201,6 +5201,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/jsonstream@npm:^0.8.33":
+  version: 0.8.33
+  resolution: "@types/jsonstream@npm:0.8.33"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 098cd60f26b13057aa74d5e730e1b4f4061a63b92a1b66a9219ab5d41f15b68eaf6fc5bdf8a1cbd9d5977ec5982fa305ca0aa7ef11509b5a801b464783c75bff
+  languageName: node
+  linkType: hard
+
 "@types/jsonwebtoken@npm:^9.0.2":
   version: 9.0.7
   resolution: "@types/jsonwebtoken@npm:9.0.7::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Fjsonwebtoken%2F-%2Fjsonwebtoken-9.0.7.tgz"
@@ -5483,17 +5492,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*":
-  version: 18.2.18
-  resolution: "@types/react@npm:18.2.18"
-  dependencies:
-    "@types/prop-types": "npm:*"
-    "@types/scheduler": "npm:*"
-    csstype: "npm:^3.0.2"
-  checksum: 2f544da491f7fcfa91ef172945b9b0f3ed9aff48bdf644f557cdfbef363b5891e1b1b06f3510c8f361c72523b835ed72ef0320a0d03cddbdcc37ff198c212900
-  languageName: node
-  linkType: hard
-
 "@types/react@npm:18.2.48":
   version: 18.2.48
   resolution: "@types/react@npm:18.2.48"
@@ -5502,17 +5500,6 @@ __metadata:
     "@types/scheduler": "npm:*"
     csstype: "npm:^3.0.2"
   checksum: 7e89f18ea2928b1638f564b156d692894dcb9352a7e0a807873c97e858abe1f23dbd165a25dd088a991344e973fdeef88ba5724bfb64504b74072cbc9c220c3a
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:^16.14.2, @types/react@npm:^16.9.53":
-  version: 16.14.40
-  resolution: "@types/react@npm:16.14.40"
-  dependencies:
-    "@types/prop-types": "npm:*"
-    "@types/scheduler": "npm:*"
-    csstype: "npm:^3.0.2"
-  checksum: f5637b1bce24438f87df853a4c90b3bb4bd5f4064febb0e9a6d4d9e56dec38a6db349e4cf834ecfb5eaed265ac6e7107d957df6c5586af8fa62e1d578a5dbb06
   languageName: node
   linkType: hard
 
@@ -5550,6 +5537,13 @@ __metadata:
   version: 0.16.3
   resolution: "@types/scheduler@npm:0.16.3"
   checksum: c249d4b96fa05165ac22c214f94a045ee0af8beedefdbc54b769febd0044cab3a874e55419841a0dcc76439e379a63e257f3253c87168e3261e7bc783d623302
+  languageName: node
+  linkType: hard
+
+"@types/semver@npm:^7.7.1":
+  version: 7.7.1
+  resolution: "@types/semver@npm:7.7.1"
+  checksum: c938aef3bf79a73f0f3f6037c16e2e759ff40c54122ddf0b2583703393d8d3127130823facb880e694caa324eb6845628186aac1997ee8b31dc2d18fafe26268
   languageName: node
   linkType: hard
 
@@ -7421,6 +7415,7 @@ __metadata:
     "@swc/helpers": "npm:^0.5.3"
     "@types/animejs": "npm:^3.1.12"
     "@types/debounce": "npm:^1.2.4"
+    "@types/jsonstream": "npm:^0.8.33"
     "@types/koa": "npm:^2.14.0"
     "@types/koa-basic-auth": "npm:^2.0.6"
     "@types/koa-bodyparser": "npm:^4.3.12"
@@ -7436,6 +7431,7 @@ __metadata:
     "@types/react-autocomplete": "npm:1.8.10"
     "@types/react-dom": "npm:18.2.18"
     "@types/react-sidebar": "npm:^3.0.4"
+    "@types/semver": "npm:^7.7.1"
     "@types/stream-json": "npm:^1"
     animejs: "npm:^3.2.2"
     array-to-sentence: "npm:^2.0.0"

@@ -53,7 +53,6 @@ export const AutocompleteInput = ({
             isMenuVisible && !!suggestions.length,
         })}
       >
-        {/* @ts-ignore - react-autocomplete types are not compatible with React 18 */}
         <AutoComplete
           getItemValue={item => item.package.name}
           inputProps={{

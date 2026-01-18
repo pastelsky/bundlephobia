@@ -125,7 +125,8 @@
     "singleQuote": true
   },
   "resolutions": {
-    "canvas": "^3.2.1"
+    "canvas": "^3.2.1",
+    "@types/react": "18.2.48"
   },
   "devDependencies": {
     "@svgr/webpack": "^6.5.1",
@@ -133,6 +134,7 @@
     "@swc/helpers": "^0.5.3",
     "@types/animejs": "^3.1.12",
     "@types/debounce": "^1.2.4",
+    "@types/jsonstream": "^0.8.33",
     "@types/koa": "^2.14.0",
     "@types/koa-basic-auth": "^2.0.6",
     "@types/koa-bodyparser": "^4.3.12",
@@ -147,6 +149,7 @@
     "@types/react-autocomplete": "1.8.10",
     "@types/react-dom": "18.2.18",
     "@types/react-sidebar": "^3.0.4",
+    "@types/semver": "^7.7.1",
     "@types/stream-json": "^1",
     "autoprefixer": "^9.8.8",
     "eslint": "^8.56.0",
