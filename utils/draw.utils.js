@@ -45,6 +45,7 @@ function drawStatsImg({
   const wideBy = 25
 
   const selectedTheme = theme === 'light' ? lightTheme : darkTheme
+  // fabric.devicePixelRatio = 1.5 // Might need to check if this is still supported or needed the same way
 
   const canvas = new fabric.StaticCanvas('c', {
     backgroundColor: selectedTheme.backgroundColor,
@@ -58,6 +59,10 @@ function drawStatsImg({
     { width: canvas.width * 1.5, height: canvas.height * 1.5 },
     { cssOnly: true }
   )
+  // Wait, fabric.devicePixelRatio affected serialization?
+  // v6 might handle retina scaling differently or via viewportTransform upon export.
+  // For now let's leave devicePixelRatio commented out if unsure or rely on defaults.
+  // Actually createJPEGStream comes from node-canvas (or fabric enhancement).
 
   const x0 = wide ? wideBy / 2 : 0
 
@@ -96,6 +101,9 @@ function drawStatsImg({
     top: 24,
   })
 
+  // packageAtText.top =
+  //   packageNameText.top + (packageNameText.height - packageAtText.height) / 2
+
   const packageVersionText = new fabric.Text(version, {
     fontFamily: 'Source Code Pro',
     fontSize: 35,
@@ -105,10 +113,20 @@ function drawStatsImg({
     top: 28,
   })
 
+  // packageVersionText.top =
+  //   packageNameText.top +
+  //   (packageNameText.height - packageVersionText.height) / 2 +
+  //   pad / 2
+
   const packageNameGroup = new fabric.Group(
     [packageNameText, packageAtText, packageVersionText],
-    { selectable: false }
+    { selectable: false /* top: 91 / 2, originY: 'center'*/ }
   )
+
+  // const packageNameGroup = new fabric.Group(
+  //   [packageNameText, packageAtText, packageVersionText],
+  //   { selectable: false, /* top: 91 / 2, originY: 'center'*/ },
+  // )
 
   function createStatGroup(number, unit, label, opts) {
     const numberText = new fabric.Text(number.toString(), {
@@ -155,7 +173,9 @@ function drawStatsImg({
     minSize.unit,
     'minified',
     {
+      // originY: 'center',
       originX: 'center',
+      // top: 91 + (height - 91) / 4,
       top: 106,
       left: width / 4,
     }
@@ -166,7 +186,9 @@ function drawStatsImg({
     gzipSize.unit,
     'gzipped',
     {
+      // originY: 'center',
       originX: 'center',
+      // top: 91 + (height - 91) / 4,
       top: 106,
       left: width * (3 / 4),
     }
@@ -177,7 +199,9 @@ function drawStatsImg({
     threeGTime.unit,
     'slow 3G',
     {
+      // originY: 'center',
       originX: 'center',
+      // top: 91 + (height - 91) * (3 / 4),
       top: 235,
       left: width / 4,
     }
@@ -188,7 +212,9 @@ function drawStatsImg({
     fourGTime.unit,
     'emerging 4G',
     {
+      // originY: 'center',
       originX: 'center',
+      // top: 91 + (height - 91) * (3 / 4),
       top: 235,
       left: width * (3 / 4),
     }
