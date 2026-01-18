@@ -12,6 +12,8 @@ apps:
       NODE_ENV: production
       DEBUG: 'bp:*'
       PORT: 5400
+      CACHE_SERVICE_ENDPOINT: http://localhost:7001
+      BUILD_SERVICE_ENDPOINT: http://localhost:7002
 
   - script: ./build-service/index.js
     name: build-service

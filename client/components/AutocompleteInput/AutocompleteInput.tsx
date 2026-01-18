@@ -79,7 +79,7 @@ export const AutocompleteInput = ({
                 style={{ minWidth: inbuiltStyles.minWidth }}
                 className="autocomplete-input__suggestions-menu"
               >
-                {items}
+                {items as any}
               </div>
             )
           }}

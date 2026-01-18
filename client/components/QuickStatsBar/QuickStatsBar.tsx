@@ -34,15 +34,14 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
   }
 
   getTrimmedDescription = () => {
-    let trimmed
     const { description } = this.props
-    if (description.trim().endsWith('.')) {
-      trimmed = description.substring(0, description.length - 1)
-    } else {
-      trimmed = description.trim()
-    }
+    const trimmed = description.trim()
 
-    return sanitizeHTML(trimmed)
+    if (trimmed.endsWith('.')) {
+      return trimmed.substring(0, trimmed.length - 1)
+    } else {
+      return trimmed
+    }
   }
 
   render() {
@@ -54,18 +53,19 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
       repository,
     } = this.props
     const statItemCount = this.getStatItemCount()
+    const description = this.getTrimmedDescription()
 
     return (
       <div className="quick-stats-bar">
         <div
           className="quick-stats-bar__stat quick-stats-bar__stat--description "
-          title={this.getTrimmedDescription()}
+          title={description}
         >
           <InfoIcon />
           {statItemCount < 2 && (
             <span
               className="quick-stats-bar__stat--description-content"
-              dangerouslySetInnerHTML={{ __html: this.getTrimmedDescription() }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(description) }}
               style={{
                 maxWidth: `${500 - statItemCount * 280}px`,
               }}

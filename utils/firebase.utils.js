@@ -5,6 +5,9 @@ const axios = require('axios')
 const firebase = require('firebase')
 const debug = require('debug')('bp:firebase-util')
 
+// Configurable Firebase key for reading package history
+const FIREBASE_READ_KEY = process.env.FIREBASE_READ_KEY || 'modules-v2'
+
 if (process.env.FIREBASE_DATABASE_URL) {
   const firebaseConfig = {
     apiKey: process.env.FIREBASE_API_KEY,
@@ -63,13 +66,35 @@ class FirebaseUtils {
 
     debug('package history %s', name)
     const packageHistory = {}
-    const ref = this.firebase
-      .database()
-      .ref()
-      .child('modules-v2')
-      .child(encodeFirebaseKey(name))
 
-    const firebasePromise = ref.once('value').then(snapshot => snapshot.val())
+    // Helper to get history from a specific Firebase key
+    const getHistoryFromKey = async key => {
+      const ref = this.firebase
+        .database()
+        .ref()
+        .child(key)
+        .child(encodeFirebaseKey(name))
+      return ref.once('value').then(snapshot => snapshot.val())
+    }
+
+    // Try primary key first, then fallback if using v3
+    const firebasePromise = (async () => {
+      const result = await getHistoryFromKey(FIREBASE_READ_KEY)
+      if (result) {
+        debug('package history from %s', FIREBASE_READ_KEY)
+        return result
+      }
+      // Fallback to v2 if reading from v3
+      if (FIREBASE_READ_KEY === 'modules-v3') {
+        const fallback = await getHistoryFromKey('modules-v2')
+        if (fallback) {
+          debug('package history from modules-v2 (fallback)')
+        }
+        return fallback
+      }
+      return null
+    })()
+
     const yarnPromise = axios.get(
       `https://${
         process.env.ALGOLIA_APP_ID
@@ -99,7 +124,7 @@ class FirebaseUtils {
     } catch (err) {
       console.error(err)
       firebaseHistory = await firebasePromise
-      versions = Object.keys(firebaseHistory).map(version =>
+      versions = Object.keys(firebaseHistory || {}).map(version =>
         decodeFirebaseKey(version)
       )
     }

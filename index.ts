@@ -31,6 +31,7 @@ import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklis
 import requestLoggerMiddleware from './server/middlewares/requestLogger.middleware'
 import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
 import generateImgMiddleware from './server/middlewares/generateImg.middleware'
+
 import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
@@ -71,6 +72,7 @@ app.prepare().then(() => {
       limit({
         duration: 1000 * 60 * 5, //  5 mins
         max: 60,
+        whiteList: ['127.0.0.1', '::1'],
       })
     )
   }
