@@ -42,7 +42,11 @@ async function getPackageResult({ name, version, readKey }) {
   }
 
   // If reading from default v3 and not found, fall back to "exports" (v2)
-  if (targetReadKey === 'exports-v3' && !readKey) {
+  if (
+    targetReadKey === 'exports-v3' &&
+    !readKey &&
+    !process.env.DISABLE_FIREBASE_V2_FALLBACK
+  ) {
     const fallbackResult = await getPackageResultFromKey('exports', {
       name,
       version,

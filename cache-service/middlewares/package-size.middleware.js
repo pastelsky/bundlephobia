@@ -42,7 +42,11 @@ async function getPackageResult({ name, version, readKey }) {
   }
 
   // If reading from default v3 and not found, fall back to v2
-  if (targetReadKey === 'modules-v3' && !readKey) {
+  if (
+    targetReadKey === 'modules-v3' &&
+    !readKey &&
+    !process.env.DISABLE_FIREBASE_V2_FALLBACK
+  ) {
     const fallbackResult = await getPackageResultFromKey('modules-v2', {
       name,
       version,

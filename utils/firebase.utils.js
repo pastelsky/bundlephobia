@@ -85,7 +85,10 @@ class FirebaseUtils {
         return result
       }
       // Fallback to v2 if reading from v3
-      if (FIREBASE_READ_KEY === 'modules-v3') {
+      if (
+        FIREBASE_READ_KEY === 'modules-v3' &&
+        !process.env.DISABLE_FIREBASE_V2_FALLBACK
+      ) {
         const fallback = await getHistoryFromKey('modules-v2')
         if (fallback) {
           debug('package history from modules-v2 (fallback)')
