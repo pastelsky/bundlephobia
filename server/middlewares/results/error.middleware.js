@@ -85,7 +85,7 @@ async function errorHandler(ctx, next) {
       case 'InstallError':
         respondWithError(500, {
           code: 'InstallError',
-          message: 'Installing the packaged failed.',
+          message: 'Installing the package failed.',
         })
         // Installing can fail for various reasons,
         // let's not cache this since it will
