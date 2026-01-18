@@ -7492,7 +7492,7 @@ __metadata:
     nodemon: "npm:^2.0.22"
     normalize.css: "npm:^8.0.1"
     p-queue: "npm:^3.2.0"
-    package-build-stats: "npm:8.2.0"
+    package-build-stats: "npm:8.2.1"
     pacote: "npm:^11.3.5"
     performance-now: "npm:^2.1.0"
     postcss: "npm:^8.4.33"
@@ -17673,6 +17673,48 @@ __metadata:
   bin:
     package-stats: bin/cli.js
   checksum: 1e060eb89bb72fd7478a32328561f10b080a4537e985b06ecad11a6a8f8b5fa6c67812a3d03e6247dfb782df6788f393629f3b2ccf740dc751ff1f032ac908f5
+  languageName: node
+  linkType: hard
+
+"package-build-stats@npm:8.2.1":
+  version: 8.2.1
+  resolution: "package-build-stats@npm:8.2.1"
+  dependencies:
+    "@babel/core": "npm:^7.28.5"
+    "@rspack/core": "npm:^1.6.0"
+    "@swc/core": "npm:^1.14.0"
+    autoprefixer: "npm:^9.7.6"
+    css-loader: "npm:^7.1.0"
+    debug: "npm:^4.4.3"
+    esbuild: "npm:^0.25.12"
+    esbuild-register: "npm:^3.6.0"
+    escape-string-regexp: "npm:^5.0.0"
+    fast-safe-stringify: "npm:^2.1.1"
+    firebase-admin: "npm:^13.6.0"
+    is-valid-npm-name: "npm:^0.0.5"
+    less: "npm:^4.4.2"
+    less-loader: "npm:^12.2.0"
+    lodash: "npm:^4.17.21"
+    mitt: "npm:^3.0.1"
+    node-fetch: "npm:^2.7.0"
+    np: "npm:^10.0.5"
+    oxc-parser: "npm:^0.96.0"
+    oxc-resolver: "npm:^11.13.0"
+    oxc-walker: "npm:^0.5.2"
+    pify: "npm:^6.1.0"
+    postcss: "npm:^8.4.0"
+    postcss-loader: "npm:^8.1.0"
+    rimraf: "npm:^6.1.0"
+    sanitize-filename: "npm:^1.6.3"
+    sass: "npm:^1.69.0"
+    sass-loader: "npm:^14.0.0"
+    svelte: "npm:^4.0.0"
+    svelte-loader: "npm:^3.1.0"
+    terser: "npm:^5.44.0"
+    yargs: "npm:^18.0.0"
+  bin:
+    package-stats: bin/cli.js
+  checksum: 811f534ae49c9072039495e8ae34ee89516f736d6b7fe177e6d196a4d46312c93f8dec132dfc36774338ea717013d6e39da744b24621895b63416cebe7898484
   languageName: node
   linkType: hard
 

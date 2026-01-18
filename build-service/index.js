@@ -1,12 +1,14 @@
-require('dotenv-defaults').config()
-const fastify = require('fastify')()
-const {
+import 'dotenv-defaults/config.js'
+import Fastify from 'fastify'
+import {
   getPackageStats,
   getAllPackageExports,
   getPackageExportSizes,
   eventQueue,
-} = require('package-build-stats')
-const Amplitude = require('@amplitude/node')
+} from 'package-build-stats'
+import Amplitude from '@amplitude/node'
+
+const fastify = Fastify()
 
 if (process.env.AMPLITUDE_API_KEY) {
   const client = Amplitude.init(process.env.AMPLITUDE_API_KEY)
