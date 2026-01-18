@@ -2,8 +2,8 @@
 @import '../../../stylesheets/variables';
 
 .announcement-banner {
-  background: $dark-gulf-blue;
-  color: #fff;
+  background: #fff;
+  color: $dark-gulf-blue;
   padding: 0;
   position: relative;
   width: auto;
@@ -11,8 +11,8 @@
   margin: 10px auto 20px;
   border-radius: 8px;
   z-index: 1000;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba($raven, 0.3);
+  box-shadow: none;
 }
 
 .announcement-banner__content {
@@ -49,7 +49,7 @@
 
   strong {
     font-weight: 600;
-    color: $pastel-green;
+    color: $gulf-blue;
   }
 
   a {
@@ -62,7 +62,7 @@
 
     &:hover {
       text-decoration-color: $cornflower-blue;
-      color: lighten($cornflower-blue, 10%);
+      color: darken($cornflower-blue, 10%);
     }
   }
 }
@@ -74,7 +74,7 @@
   transform: translateY(-50%);
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: $raven;
   font-size: 24px;
   width: 28px;
   height: 28px;
@@ -88,12 +88,12 @@
   padding: 0;
 
   &:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    color: $dark-gulf-blue;
+    background: rgba($raven, 0.1);
   }
 
   &:focus {
     outline: none;
-    color: #fff;
+    color: $dark-gulf-blue;
   }
 }
