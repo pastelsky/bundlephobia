@@ -46,7 +46,7 @@ export const AnnouncementBanner: React.FC = () => {
       <div className="announcement-banner__content">
         <span className="announcement-banner__icon">🚀</span>
         <p className="announcement-banner__text">
-          <strong>What&apos;s New:</strong> We&apos;ve switched to using{' '}
+          <strong>New:</strong> Now built with{' '}
           <a
             href="https://rspack.dev"
             target="_blank"
@@ -54,8 +54,7 @@ export const AnnouncementBanner: React.FC = () => {
           >
             RSpack
           </a>{' '}
-          for building — enjoy much faster results, better tree-shaking, exports
-          detection, and more accurate size calculations!
+          — much faster results, better tree-shaking & accuracy!
         </p>
         <button
           className="announcement-banner__close"
