@@ -7,7 +7,7 @@
     "debug": "^4.3.4",
     "dotenv": "^8.6.0",
     "dotenv-defaults": "^2.0.2",
-    "fastify": "^4.21.0",
+    "fastify": "^4.25.2",
     "firebase": "^8.10.1",
     "lru-cache": "^5.1.1"
   },
