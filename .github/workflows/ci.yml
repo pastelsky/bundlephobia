@@ -23,7 +23,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
       - name: Enable Corepack
         run: corepack enable
       - name: Install project dependencies
