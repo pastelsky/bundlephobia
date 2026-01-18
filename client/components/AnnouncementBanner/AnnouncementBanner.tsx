@@ -54,8 +54,8 @@ export const AnnouncementBanner: React.FC = () => {
           >
             RSpack
           </a>{' '}
-          for building — enjoy much better tree-shaking, exports detection, and
-          more accurate size calculations!
+          for building — enjoy much faster results, better tree-shaking, exports
+          detection, and more accurate size calculations!
         </p>
         <button
           className="announcement-banner__close"

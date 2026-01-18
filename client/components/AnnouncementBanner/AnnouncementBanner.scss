@@ -6,8 +6,13 @@
   color: #fff;
   padding: 0;
   position: relative;
+  width: auto;
+  max-width: 1000px;
+  margin: 10px auto 20px;
+  border-radius: 8px;
   z-index: 1000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .announcement-banner__content {
