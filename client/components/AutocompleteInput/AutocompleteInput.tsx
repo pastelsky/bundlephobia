@@ -53,6 +53,7 @@ export const AutocompleteInput = ({
             isMenuVisible && !!suggestions.length,
         })}
       >
+        {/* @ts-ignore - react-autocomplete types are not compatible with React 18 */}
         <AutoComplete
           getItemValue={item => item.package.name}
           inputProps={{
@@ -79,7 +80,7 @@ export const AutocompleteInput = ({
                 style={{ minWidth: inbuiltStyles.minWidth }}
                 className="autocomplete-input__suggestions-menu"
               >
-                {items}
+                {items as any}
               </div>
             )
           }}

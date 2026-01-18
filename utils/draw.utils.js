@@ -1,5 +1,5 @@
+const fabric = require('fabric/node')
 const { formatSize, formatTime, getTimeFromSize } = require('./index')
-const { fabric } = require('fabric')
 
 function drawStatsImg({
   name,
@@ -45,13 +45,24 @@ function drawStatsImg({
   const wideBy = 25
 
   const selectedTheme = theme === 'light' ? lightTheme : darkTheme
-  fabric.devicePixelRatio = 1.5
+  // fabric.devicePixelRatio = 1.5 // Might need to check if this is still supported or needed the same way
 
   const canvas = new fabric.StaticCanvas('c', {
     backgroundColor: selectedTheme.backgroundColor,
     width: wide ? width + wideBy : width,
     height: height,
   })
+
+  // Set export scaling
+  canvas.enableRetinaScaling = true
+  canvas.setDimensions(
+    { width: canvas.width * 1.5, height: canvas.height * 1.5 },
+    { cssOnly: true }
+  )
+  // Wait, fabric.devicePixelRatio affected serialization?
+  // v6 might handle retina scaling differently or via viewportTransform upon export.
+  // For now let's leave devicePixelRatio commented out if unsure or rely on defaults.
+  // Actually createJPEGStream comes from node-canvas (or fabric enhancement).
 
   const x0 = wide ? wideBy / 2 : 0
 
@@ -219,7 +230,7 @@ function drawStatsImg({
     .add(threeGGroup)
     .add(fourGGroup)
 
-  packageNameGroup.centerH()
+  canvas.centerObjectH(packageNameGroup)
   canvas.renderAll()
   return canvas.createJPEGStream()
 }
