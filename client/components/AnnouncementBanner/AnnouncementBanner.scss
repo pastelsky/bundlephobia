@@ -11,7 +11,7 @@
   margin: 10px auto 20px;
   border-radius: 8px;
   z-index: 1000;
-  border: 1px solid rgba($raven, 0.3);
+  border: 2px solid $raven;
   box-shadow: none;
 }
 
@@ -84,8 +84,9 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  line-height: 1;
-  padding: 0;
+  line-height: 24px;
+  padding-bottom: 2px;
+  padding-left: 1px;
 
   &:hover {
     color: $dark-gulf-blue;
