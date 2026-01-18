@@ -24,6 +24,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
+      - name: Enable Corepack
+        run: corepack enable
       - name: Install project dependencies
         run: yarn install
       - name: Run lint
