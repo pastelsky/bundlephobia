@@ -29,3 +29,4 @@ scripts/keys
 # Maintenance scripts and logs
 maintenance_logs/
 top-packages.json
+populate-v3-*.json
