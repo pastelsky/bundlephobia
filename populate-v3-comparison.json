@@ -1,0 +1,5512 @@
+[
+  {
+    "package": "react@19.2.2",
+    "v2_size": 7598,
+    "v2_gzip": 2897,
+    "v3_size": 7595,
+    "v3_gzip": 2908,
+    "diff_size": -3,
+    "diff_gzip": 11,
+    "percent_diff": "-0.04"
+  },
+  {
+    "package": "react@19.2.3",
+    "v2_size": 7598,
+    "v2_gzip": 2897,
+    "v3_size": 7595,
+    "v3_gzip": 2910,
+    "diff_size": -3,
+    "diff_gzip": 13,
+    "percent_diff": "-0.04"
+  },
+  {
+    "package": "react@19.2.1",
+    "v2_size": 7598,
+    "v2_gzip": 2897,
+    "v3_size": 7595,
+    "v3_gzip": 2910,
+    "diff_size": -3,
+    "diff_gzip": 13,
+    "percent_diff": "-0.04"
+  },
+  {
+    "package": "react@19.2.0",
+    "v2_size": 7598,
+    "v2_gzip": 2897,
+    "v3_size": 7595,
+    "v3_gzip": 2909,
+    "diff_size": -3,
+    "diff_gzip": 12,
+    "percent_diff": "-0.04"
+  },
+  {
+    "package": "react@19.1.4",
+    "v2_size": 7597,
+    "v2_gzip": 2916,
+    "v3_size": 7633,
+    "v3_gzip": 2914,
+    "diff_size": 36,
+    "diff_gzip": -2,
+    "percent_diff": "0.47"
+  },
+  {
+    "package": "react@19.1.3",
+    "v2_size": 7597,
+    "v2_gzip": 2916,
+    "v3_size": 7633,
+    "v3_gzip": 2915,
+    "diff_size": 36,
+    "diff_gzip": -1,
+    "percent_diff": "0.47"
+  },
+  {
+    "package": "react@19.1.2",
+    "v2_size": 7597,
+    "v2_gzip": 2916,
+    "v3_size": 7631,
+    "v3_gzip": 2914,
+    "diff_size": 34,
+    "diff_gzip": -2,
+    "percent_diff": "0.45"
+  },
+  {
+    "package": "react@19.1.1",
+    "v2_size": 7597,
+    "v2_gzip": 2915,
+    "v3_size": 7633,
+    "v3_gzip": 2916,
+    "diff_size": 36,
+    "diff_gzip": 1,
+    "percent_diff": "0.47"
+  },
+  {
+    "package": "react@19.1.0",
+    "v2_size": 7597,
+    "v2_gzip": 2915,
+    "v3_size": 7633,
+    "v3_gzip": 2916,
+    "diff_size": 36,
+    "diff_gzip": 1,
+    "percent_diff": "0.47"
+  },
+  {
+    "package": "react@19.0.3",
+    "v2_size": 7488,
+    "v2_gzip": 2865,
+    "v3_size": 7524,
+    "v3_gzip": 2866,
+    "diff_size": 36,
+    "diff_gzip": 1,
+    "percent_diff": "0.48"
+  },
+  {
+    "package": "react@19.0.2",
+    "v2_size": 7488,
+    "v2_gzip": 2865,
+    "v3_size": 7522,
+    "v3_gzip": 2861,
+    "diff_size": 34,
+    "diff_gzip": -4,
+    "percent_diff": "0.45"
+  },
+  {
+    "package": "react@19.0.1",
+    "v2_size": 7488,
+    "v2_gzip": 2865,
+    "v3_size": 7524,
+    "v3_gzip": 2864,
+    "diff_size": 36,
+    "diff_gzip": -1,
+    "percent_diff": "0.48"
+  },
+  {
+    "package": "react@19.0.0",
+    "v2_size": 7488,
+    "v2_gzip": 2864,
+    "v3_size": 7524,
+    "v3_gzip": 2864,
+    "diff_size": 36,
+    "diff_gzip": 0,
+    "percent_diff": "0.48"
+  },
+  {
+    "package": "react@18.3.1",
+    "v2_size": 6599,
+    "v2_gzip": 2576,
+    "v3_size": 6553,
+    "v3_gzip": 2609,
+    "diff_size": -46,
+    "diff_gzip": 33,
+    "percent_diff": "-0.70"
+  },
+  {
+    "package": "react@18.3.0",
+    "v2_size": 6588,
+    "v2_gzip": 2567,
+    "v3_size": 6542,
+    "v3_gzip": 2597,
+    "diff_size": -46,
+    "diff_gzip": 30,
+    "percent_diff": "-0.70"
+  },
+  {
+    "package": "react@18.2.0",
+    "v2_size": 6588,
+    "v2_gzip": 2567,
+    "v3_size": 6542,
+    "v3_gzip": 2598,
+    "diff_size": -46,
+    "diff_gzip": 31,
+    "percent_diff": "-0.70"
+  },
+  {
+    "package": "react@18.1.0",
+    "v2_size": 6588,
+    "v2_gzip": 2567,
+    "v3_size": 6542,
+    "v3_gzip": 2596,
+    "diff_size": -46,
+    "diff_gzip": 29,
+    "percent_diff": "-0.70"
+  },
+  {
+    "package": "react@18.0.0",
+    "v2_size": 6607,
+    "v2_gzip": 2587,
+    "v3_size": 6561,
+    "v3_gzip": 2617,
+    "diff_size": -46,
+    "diff_gzip": 30,
+    "percent_diff": "-0.70"
+  },
+  {
+    "package": "react@17.0.2",
+    "v2_size": 7057,
+    "v2_gzip": 2863,
+    "v3_size": 7004,
+    "v3_gzip": 2898,
+    "diff_size": -53,
+    "diff_gzip": 35,
+    "percent_diff": "-0.75"
+  },
+  {
+    "package": "react@17.0.1",
+    "v2_size": 7057,
+    "v2_gzip": 2862,
+    "v3_size": 7004,
+    "v3_gzip": 2897,
+    "diff_size": -53,
+    "diff_gzip": 35,
+    "percent_diff": "-0.75"
+  },
+  {
+    "package": "react-dom@19.2.3",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3683,
+    "v3_gzip": 1381,
+    "diff_size": -7,
+    "diff_gzip": 16,
+    "percent_diff": "-0.19"
+  },
+  {
+    "package": "react-dom@19.2.2",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3683,
+    "v3_gzip": 1382,
+    "diff_size": -7,
+    "diff_gzip": 17,
+    "percent_diff": "-0.19"
+  },
+  {
+    "package": "react-dom@19.2.0",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3685,
+    "v3_gzip": 1386,
+    "diff_size": -5,
+    "diff_gzip": 21,
+    "percent_diff": "-0.14"
+  },
+  {
+    "package": "react-dom@19.2.1",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3683,
+    "v3_gzip": 1383,
+    "diff_size": -7,
+    "diff_gzip": 18,
+    "percent_diff": "-0.19"
+  },
+  {
+    "package": "react-dom@19.1.2",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3685,
+    "v3_gzip": 1385,
+    "diff_size": -5,
+    "diff_gzip": 20,
+    "percent_diff": "-0.14"
+  },
+  {
+    "package": "react-dom@19.1.4",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3685,
+    "v3_gzip": 1387,
+    "diff_size": -5,
+    "diff_gzip": 22,
+    "percent_diff": "-0.14"
+  },
+  {
+    "package": "react-dom@19.0.3",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3685,
+    "v3_gzip": 1388,
+    "diff_size": -5,
+    "diff_gzip": 23,
+    "percent_diff": "-0.14"
+  },
+  {
+    "package": "react-dom@19.1.1",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3685,
+    "v3_gzip": 1388,
+    "diff_size": -5,
+    "diff_gzip": 23,
+    "percent_diff": "-0.14"
+  },
+  {
+    "package": "react-dom@19.1.0",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3683,
+    "v3_gzip": 1385,
+    "diff_size": -7,
+    "diff_gzip": 20,
+    "percent_diff": "-0.19"
+  },
+  {
+    "package": "react-dom@19.1.3",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3683,
+    "v3_gzip": 1385,
+    "diff_size": -7,
+    "diff_gzip": 20,
+    "percent_diff": "-0.19"
+  },
+  {
+    "package": "react-dom@19.0.2",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3683,
+    "v3_gzip": 1385,
+    "diff_size": -7,
+    "diff_gzip": 20,
+    "percent_diff": "-0.19"
+  },
+  {
+    "package": "react-dom@19.0.1",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3685,
+    "v3_gzip": 1387,
+    "diff_size": -5,
+    "diff_gzip": 22,
+    "percent_diff": "-0.14"
+  },
+  {
+    "package": "react-dom@19.0.0",
+    "v2_size": 3690,
+    "v2_gzip": 1365,
+    "v3_size": 3685,
+    "v3_gzip": 1388,
+    "diff_size": -5,
+    "diff_gzip": 23,
+    "percent_diff": "-0.14"
+  },
+  {
+    "package": "react-dom@18.3.1",
+    "v2_size": 133258,
+    "v2_gzip": 42942,
+    "v3_size": 132776,
+    "v3_gzip": 42660,
+    "diff_size": -482,
+    "diff_gzip": -282,
+    "percent_diff": "-0.36"
+  },
+  {
+    "package": "react-dom@18.3.0",
+    "v2_size": 133258,
+    "v2_gzip": 42942,
+    "v3_size": 132778,
+    "v3_gzip": 42665,
+    "diff_size": -480,
+    "diff_gzip": -277,
+    "percent_diff": "-0.36"
+  },
+  {
+    "package": "react-dom@18.2.0",
+    "v2_size": 133308,
+    "v2_gzip": 43000,
+    "v3_size": 132828,
+    "v3_gzip": 42708,
+    "diff_size": -480,
+    "diff_gzip": -292,
+    "percent_diff": "-0.36"
+  },
+  {
+    "package": "react-dom@17.0.2",
+    "v2_size": 123904,
+    "v2_gzip": 40349,
+    "v3_size": 123259,
+    "v3_gzip": 40018,
+    "diff_size": -645,
+    "diff_gzip": -331,
+    "percent_diff": "-0.52"
+  },
+  {
+    "package": "react-dom@18.1.0",
+    "v2_size": 133127,
+    "v2_gzip": 42756,
+    "v3_size": 132436,
+    "v3_gzip": 42432,
+    "diff_size": -691,
+    "diff_gzip": -324,
+    "percent_diff": "-0.52"
+  },
+  {
+    "package": "react-dom@18.0.0",
+    "v2_size": 132919,
+    "v2_gzip": 42640,
+    "v3_size": 132179,
+    "v3_gzip": 42306,
+    "diff_size": -740,
+    "diff_gzip": -334,
+    "percent_diff": "-0.56"
+  },
+  {
+    "package": "react-dom@17.0.1",
+    "v2_size": 123904,
+    "v2_gzip": 40349,
+    "v3_size": 123259,
+    "v3_gzip": 40011,
+    "diff_size": -645,
+    "diff_gzip": -338,
+    "percent_diff": "-0.52"
+  },
+  {
+    "package": "typesafe-actions@4.4.2",
+    "v2_size": 3582,
+    "v2_gzip": 1126,
+    "v3_size": 3501,
+    "v3_gzip": 1101,
+    "diff_size": -81,
+    "diff_gzip": -25,
+    "percent_diff": "-2.26"
+  },
+  {
+    "package": "typesafe-actions@5.1.0",
+    "v2_size": 4043,
+    "v2_gzip": 1265,
+    "v3_size": 3956,
+    "v3_gzip": 1229,
+    "diff_size": -87,
+    "diff_gzip": -36,
+    "percent_diff": "-2.15"
+  },
+  {
+    "package": "typesafe-actions@2.0.3",
+    "v2_size": 2659,
+    "v2_gzip": 824,
+    "v3_size": 2596,
+    "v3_gzip": 812,
+    "diff_size": -63,
+    "diff_gzip": -12,
+    "percent_diff": "-2.37"
+  },
+  {
+    "package": "typesafe-actions@3.1.0",
+    "v2_size": 2679,
+    "v2_gzip": 879,
+    "v3_size": 2622,
+    "v3_gzip": 865,
+    "diff_size": -57,
+    "diff_gzip": -14,
+    "percent_diff": "-2.13"
+  },
+  {
+    "package": "typesafe-actions@2.2.0",
+    "v2_size": 2656,
+    "v2_gzip": 869,
+    "v3_size": 2599,
+    "v3_gzip": 857,
+    "diff_size": -57,
+    "diff_gzip": -12,
+    "percent_diff": "-2.15"
+  },
+  {
+    "package": "lodash@4.17.20",
+    "v2_size": 71267,
+    "v2_gzip": 24899,
+    "v3_size": 69690,
+    "v3_gzip": 25111,
+    "diff_size": -1577,
+    "diff_gzip": 212,
+    "percent_diff": "-2.21"
+  },
+  {
+    "package": "lodash@4.17.21",
+    "v2_size": 71469,
+    "v2_gzip": 25007,
+    "v3_size": 69889,
+    "v3_gzip": 25208,
+    "diff_size": -1580,
+    "diff_gzip": 201,
+    "percent_diff": "-2.21"
+  },
+  {
+    "package": "lodash@4.17.19",
+    "v2_size": 71267,
+    "v2_gzip": 24899,
+    "v3_size": 69690,
+    "v3_gzip": 25111,
+    "diff_size": -1577,
+    "diff_gzip": 212,
+    "percent_diff": "-2.21"
+  },
+  {
+    "package": "lodash@4.17.17",
+    "v2_size": 71267,
+    "v2_gzip": 24897,
+    "v3_size": 69688,
+    "v3_gzip": 25109,
+    "diff_size": -1579,
+    "diff_gzip": 212,
+    "percent_diff": "-2.22"
+  },
+  {
+    "package": "lodash@4.17.18",
+    "v2_size": 71267,
+    "v2_gzip": 24899,
+    "v3_size": 69690,
+    "v3_gzip": 25112,
+    "diff_size": -1577,
+    "diff_gzip": 213,
+    "percent_diff": "-2.21"
+  },
+  {
+    "package": "lodash@4.17.16",
+    "v2_size": 110513,
+    "v2_gzip": 31609,
+    "v3_size": 110674,
+    "v3_gzip": 34928,
+    "diff_size": 161,
+    "diff_gzip": 3319,
+    "percent_diff": "0.15"
+  },
+  {
+    "package": "redux@4.1.0",
+    "v2_size": 4981,
+    "v2_gzip": 1825,
+    "v3_size": 4678,
+    "v3_gzip": 1789,
+    "diff_size": -303,
+    "diff_gzip": -36,
+    "percent_diff": "-6.08"
+  },
+  {
+    "package": "redux@4.0.5",
+    "v2_size": 7486,
+    "v2_gzip": 2694,
+    "v3_size": 6549,
+    "v3_gzip": 2486,
+    "diff_size": -937,
+    "diff_gzip": -208,
+    "percent_diff": "-12.52"
+  },
+  {
+    "package": "redux@4.0.4",
+    "v2_size": 7446,
+    "v2_gzip": 2681,
+    "v3_size": 6507,
+    "v3_gzip": 2470,
+    "diff_size": -939,
+    "diff_gzip": -211,
+    "percent_diff": "-12.61"
+  },
+  {
+    "package": "redux@4.0.3",
+    "v2_size": 7476,
+    "v2_gzip": 2692,
+    "v3_size": 6539,
+    "v3_gzip": 2483,
+    "diff_size": -937,
+    "diff_gzip": -209,
+    "percent_diff": "-12.53"
+  },
+  {
+    "package": "redux@4.0.2",
+    "v2_size": 7476,
+    "v2_gzip": 2692,
+    "v3_size": 6539,
+    "v3_gzip": 2481,
+    "diff_size": -937,
+    "diff_gzip": -211,
+    "percent_diff": "-12.53"
+  },
+  {
+    "package": "redux@4.0.0",
+    "v2_size": 7144,
+    "v2_gzip": 2580,
+    "v3_size": 6245,
+    "v3_gzip": 2371,
+    "diff_size": -899,
+    "diff_gzip": -209,
+    "percent_diff": "-12.58"
+  },
+  {
+    "package": "redux@3.7.1",
+    "v2_size": 6562,
+    "v2_gzip": 2459,
+    "v3_size": 5547,
+    "v3_gzip": 2219,
+    "diff_size": -1015,
+    "diff_gzip": -240,
+    "percent_diff": "-15.47"
+  },
+  {
+    "package": "redux@3.7.0",
+    "v2_size": 6800,
+    "v2_gzip": 2528,
+    "v3_size": 5770,
+    "v3_gzip": 2287,
+    "diff_size": -1030,
+    "diff_gzip": -241,
+    "percent_diff": "-15.15"
+  },
+  {
+    "package": "redux@3.6.0",
+    "v2_size": 6417,
+    "v2_gzip": 2413,
+    "v3_size": 5407,
+    "v3_gzip": 2150,
+    "diff_size": -1010,
+    "diff_gzip": -263,
+    "percent_diff": "-15.74"
+  },
+  {
+    "package": "redux@3.5.2",
+    "v2_size": 7117,
+    "v2_gzip": 2508,
+    "v3_size": 6724,
+    "v3_gzip": 2489,
+    "diff_size": -393,
+    "diff_gzip": -19,
+    "percent_diff": "-5.52"
+  },
+  {
+    "package": "redux@3.3.1",
+    "v2_size": 6514,
+    "v2_gzip": 2335,
+    "v3_size": 6180,
+    "v3_gzip": 2303,
+    "diff_size": -334,
+    "diff_gzip": -32,
+    "percent_diff": "-5.13"
+  },
+  {
+    "package": "redux@2.0.0",
+    "v2_size": 4629,
+    "v2_gzip": 1622,
+    "v3_size": 4412,
+    "v3_gzip": 1624,
+    "diff_size": -217,
+    "diff_gzip": 2,
+    "percent_diff": "-4.69"
+  },
+  {
+    "package": "jquery@3.7.0",
+    "v2_size": 87099,
+    "v2_gzip": 30400,
+    "v3_size": 86740,
+    "v3_gzip": 30353,
+    "diff_size": -359,
+    "diff_gzip": -47,
+    "percent_diff": "-0.41"
+  },
+  {
+    "package": "jquery@3.6.4",
+    "v2_size": 90303,
+    "v2_gzip": 31176,
+    "v3_size": 89605,
+    "v3_gzip": 31123,
+    "diff_size": -698,
+    "diff_gzip": -53,
+    "percent_diff": "-0.77"
+  },
+  {
+    "package": "jquery@3.6.3",
+    "v2_size": 90455,
+    "v2_gzip": 31207,
+    "v3_size": 89755,
+    "v3_gzip": 31163,
+    "diff_size": -700,
+    "diff_gzip": -44,
+    "percent_diff": "-0.77"
+  },
+  {
+    "package": "jquery@3.6.2",
+    "v2_size": 90450,
+    "v2_gzip": 31202,
+    "v3_size": 89750,
+    "v3_gzip": 31160,
+    "diff_size": -700,
+    "diff_gzip": -42,
+    "percent_diff": "-0.77"
+  },
+  {
+    "package": "jquery@3.6.1",
+    "v2_size": 90170,
+    "v2_gzip": 31119,
+    "v3_size": 89474,
+    "v3_gzip": 31075,
+    "diff_size": -696,
+    "diff_gzip": -44,
+    "percent_diff": "-0.77"
+  },
+  {
+    "package": "jquery@3.6.0",
+    "v2_size": 90000,
+    "v2_gzip": 31076,
+    "v3_size": 89317,
+    "v3_gzip": 31017,
+    "diff_size": -683,
+    "diff_gzip": -59,
+    "percent_diff": "-0.76"
+  },
+  {
+    "package": "jquery@3.5.1",
+    "v2_size": 89977,
+    "v2_gzip": 31091,
+    "v3_size": 89289,
+    "v3_gzip": 31017,
+    "diff_size": -688,
+    "diff_gzip": -74,
+    "percent_diff": "-0.76"
+  },
+  {
+    "package": "jquery@3.5.0",
+    "v2_size": 89728,
+    "v2_gzip": 31109,
+    "v3_size": 89304,
+    "v3_gzip": 31016,
+    "diff_size": -424,
+    "diff_gzip": -93,
+    "percent_diff": "-0.47"
+  },
+  {
+    "package": "jquery@3.4.1",
+    "v2_size": 88017,
+    "v2_gzip": 30743,
+    "v3_size": 87975,
+    "v3_gzip": 30762,
+    "diff_size": -42,
+    "diff_gzip": 19,
+    "percent_diff": "-0.05"
+  },
+  {
+    "package": "jquery@3.4.0",
+    "v2_size": 88023,
+    "v2_gzip": 30732,
+    "v3_size": 87969,
+    "v3_gzip": 30756,
+    "diff_size": -54,
+    "diff_gzip": 24,
+    "percent_diff": "-0.06"
+  },
+  {
+    "package": "jquery@3.3.1",
+    "v2_size": 87206,
+    "v2_gzip": 30419,
+    "v3_size": 86522,
+    "v3_gzip": 30360,
+    "diff_size": -684,
+    "diff_gzip": -59,
+    "percent_diff": "-0.78"
+  },
+  {
+    "package": "jquery@3.3.0",
+    "v2_size": 86575,
+    "v2_gzip": 30336,
+    "v3_size": 86522,
+    "v3_gzip": 30360,
+    "diff_size": -53,
+    "diff_gzip": 24,
+    "percent_diff": "-0.06"
+  },
+  {
+    "package": "jquery@3.2.1",
+    "v2_size": 86210,
+    "v2_gzip": 30115,
+    "v3_size": 86161,
+    "v3_gzip": 30127,
+    "diff_size": -49,
+    "diff_gzip": 12,
+    "percent_diff": "-0.06"
+  },
+  {
+    "package": "jquery@3.2.0",
+    "v2_size": 86148,
+    "v2_gzip": 30092,
+    "v3_size": 86099,
+    "v3_gzip": 30107,
+    "diff_size": -49,
+    "diff_gzip": 15,
+    "percent_diff": "-0.06"
+  },
+  {
+    "package": "jquery@3.1.1",
+    "v2_size": 86281,
+    "v2_gzip": 30078,
+    "v3_size": 86239,
+    "v3_gzip": 30091,
+    "diff_size": -42,
+    "diff_gzip": 13,
+    "percent_diff": "-0.05"
+  },
+  {
+    "package": "jquery@3.1.0",
+    "v2_size": 85951,
+    "v2_gzip": 30036,
+    "v3_size": 85876,
+    "v3_gzip": 30032,
+    "diff_size": -75,
+    "diff_gzip": -4,
+    "percent_diff": "-0.09"
+  },
+  {
+    "package": "jquery@3.0.0",
+    "v2_size": 85847,
+    "v2_gzip": 30001,
+    "v3_size": 85772,
+    "v3_gzip": 29993,
+    "diff_size": -75,
+    "diff_gzip": -8,
+    "percent_diff": "-0.09"
+  },
+  {
+    "package": "jquery@2.2.4",
+    "v2_size": 85107,
+    "v2_gzip": 29737,
+    "v3_size": 85053,
+    "v3_gzip": 29820,
+    "diff_size": -54,
+    "diff_gzip": 83,
+    "percent_diff": "-0.06"
+  },
+  {
+    "package": "jquery@2.2.3",
+    "v2_size": 85188,
+    "v2_gzip": 29778,
+    "v3_size": 85134,
+    "v3_gzip": 29882,
+    "diff_size": -54,
+    "diff_gzip": 104,
+    "percent_diff": "-0.06"
+  },
+  {
+    "package": "angular@1.8.3",
+    "v2_size": 185298,
+    "v2_gzip": 63815,
+    "v3_size": 183157,
+    "v3_gzip": 63695,
+    "diff_size": -2141,
+    "diff_gzip": -120,
+    "percent_diff": "-1.16"
+  },
+  {
+    "package": "angular@1.8.0",
+    "v2_size": 184462,
+    "v2_gzip": 63666,
+    "v3_size": 182321,
+    "v3_gzip": 63522,
+    "diff_size": -2141,
+    "diff_gzip": -144,
+    "percent_diff": "-1.16"
+  },
+  {
+    "package": "angular@1.8.1",
+    "v2_size": 185203,
+    "v2_gzip": 63809,
+    "v3_size": 183064,
+    "v3_gzip": 63692,
+    "diff_size": -2139,
+    "diff_gzip": -117,
+    "percent_diff": "-1.15"
+  },
+  {
+    "package": "angular@1.7.9",
+    "v2_size": 184167,
+    "v2_gzip": 63517,
+    "v3_size": 182027,
+    "v3_gzip": 63361,
+    "diff_size": -2140,
+    "diff_gzip": -156,
+    "percent_diff": "-1.16"
+  },
+  {
+    "package": "angular@1.7.8",
+    "v2_size": 184172,
+    "v2_gzip": 63516,
+    "v3_size": 182030,
+    "v3_gzip": 63362,
+    "diff_size": -2142,
+    "diff_gzip": -154,
+    "percent_diff": "-1.16"
+  },
+  {
+    "package": "angular@1.7.5",
+    "v2_size": 182711,
+    "v2_gzip": 63016,
+    "v3_size": 180567,
+    "v3_gzip": 62820,
+    "diff_size": -2144,
+    "diff_gzip": -196,
+    "percent_diff": "-1.17"
+  },
+  {
+    "package": "angular@1.7.4",
+    "v2_size": 182689,
+    "v2_gzip": 63010,
+    "v3_size": 180547,
+    "v3_gzip": 62821,
+    "diff_size": -2142,
+    "diff_gzip": -189,
+    "percent_diff": "-1.17"
+  },
+  {
+    "package": "angular@1.7.3",
+    "v2_size": 182684,
+    "v2_gzip": 63008,
+    "v3_size": 180533,
+    "v3_gzip": 62812,
+    "diff_size": -2151,
+    "diff_gzip": -196,
+    "percent_diff": "-1.18"
+  },
+  {
+    "package": "angular@1.7.0",
+    "v2_size": 178960,
+    "v2_gzip": 61565,
+    "v3_size": 176956,
+    "v3_gzip": 61392,
+    "diff_size": -2004,
+    "diff_gzip": -173,
+    "percent_diff": "-1.12"
+  },
+  {
+    "package": "angular@1.7.2",
+    "v2_size": 179879,
+    "v2_gzip": 61867,
+    "v3_size": 177872,
+    "v3_gzip": 61719,
+    "diff_size": -2007,
+    "diff_gzip": -148,
+    "percent_diff": "-1.12"
+  },
+  {
+    "package": "angular@1.7.1",
+    "v2_size": 179254,
+    "v2_gzip": 61666,
+    "v3_size": 177262,
+    "v3_gzip": 61530,
+    "diff_size": -1992,
+    "diff_gzip": -136,
+    "percent_diff": "-1.11"
+  },
+  {
+    "package": "angular@1.6.9",
+    "v2_size": 177616,
+    "v2_gzip": 61057,
+    "v3_size": 175380,
+    "v3_gzip": 60841,
+    "diff_size": -2236,
+    "diff_gzip": -216,
+    "percent_diff": "-1.26"
+  },
+  {
+    "package": "angular@1.6.6",
+    "v2_size": 176443,
+    "v2_gzip": 60732,
+    "v3_size": 174181,
+    "v3_gzip": 60533,
+    "diff_size": -2262,
+    "diff_gzip": -199,
+    "percent_diff": "-1.28"
+  },
+  {
+    "package": "angular@1.6.4",
+    "v2_size": 174604,
+    "v2_gzip": 60301,
+    "v3_size": 172457,
+    "v3_gzip": 60119,
+    "diff_size": -2147,
+    "diff_gzip": -182,
+    "percent_diff": "-1.23"
+  },
+  {
+    "package": "preact@10.28.2",
+    "v2_size": 12033,
+    "v2_gzip": 4847,
+    "v3_size": 11696,
+    "v3_gzip": 4827,
+    "diff_size": -337,
+    "diff_gzip": -20,
+    "percent_diff": "-2.80"
+  },
+  {
+    "package": "preact@10.28.0",
+    "v2_size": 12017,
+    "v2_gzip": 4840,
+    "v3_size": 11680,
+    "v3_gzip": 4821,
+    "diff_size": -337,
+    "diff_gzip": -19,
+    "percent_diff": "-2.80"
+  },
+  {
+    "package": "preact@10.27.1",
+    "v2_size": 12004,
+    "v2_gzip": 4842,
+    "v3_size": 11667,
+    "v3_gzip": 4819,
+    "diff_size": -337,
+    "diff_gzip": -23,
+    "percent_diff": "-2.81"
+  },
+  {
+    "package": "preact@10.27.2",
+    "v2_size": 12029,
+    "v2_gzip": 4850,
+    "v3_size": 11692,
+    "v3_gzip": 4830,
+    "diff_size": -337,
+    "diff_gzip": -20,
+    "percent_diff": "-2.80"
+  },
+  {
+    "package": "preact@10.26.7",
+    "v2_size": 11973,
+    "v2_gzip": 4813,
+    "v3_size": 11635,
+    "v3_gzip": 4787,
+    "diff_size": -338,
+    "diff_gzip": -26,
+    "percent_diff": "-2.82"
+  },
+  {
+    "package": "preact@10.26.6",
+    "v2_size": 11980,
+    "v2_gzip": 4816,
+    "v3_size": 11643,
+    "v3_gzip": 4786,
+    "diff_size": -337,
+    "diff_gzip": -30,
+    "percent_diff": "-2.81"
+  },
+  {
+    "package": "preact@10.26.3",
+    "v2_size": 11958,
+    "v2_gzip": 4798,
+    "v3_size": 11622,
+    "v3_gzip": 4779,
+    "diff_size": -336,
+    "diff_gzip": -19,
+    "percent_diff": "-2.81"
+  },
+  {
+    "package": "lodash@4.17.15",
+    "v2_size": 71081,
+    "v3_size": 69509,
+    "v2_gzip": 24845,
+    "v3_gzip": 25043,
+    "size_diff": -1572,
+    "gzip_diff": 198,
+    "timestamp": "2026-01-18T05:45:13.480Z"
+  },
+  {
+    "package": "lodash@4.17.14",
+    "v2_size": 71081,
+    "v3_size": 69509,
+    "v2_gzip": 24846,
+    "v3_gzip": 25044,
+    "size_diff": -1572,
+    "gzip_diff": 198,
+    "timestamp": "2026-01-18T05:45:14.248Z"
+  },
+  {
+    "package": "lodash@4.17.13",
+    "v2_size": 71081,
+    "v3_size": 69509,
+    "v2_gzip": 24845,
+    "v3_gzip": 25044,
+    "size_diff": -1572,
+    "gzip_diff": 199,
+    "timestamp": "2026-01-18T05:45:14.997Z"
+  },
+  {
+    "package": "lodash@4.17.12",
+    "v2_size": 71081,
+    "v3_size": 69507,
+    "v2_gzip": 24846,
+    "v3_gzip": 25039,
+    "size_diff": -1574,
+    "gzip_diff": 193,
+    "timestamp": "2026-01-18T05:45:15.732Z"
+  },
+  {
+    "package": "lodash@4.17.11",
+    "v2_size": 70972,
+    "v3_size": 69400,
+    "v2_gzip": 24784,
+    "v3_gzip": 24988,
+    "size_diff": -1572,
+    "gzip_diff": 204,
+    "timestamp": "2026-01-18T05:45:16.525Z"
+  },
+  {
+    "package": "lodash@4.17.10",
+    "v2_size": 70976,
+    "v3_size": 69402,
+    "v2_gzip": 24792,
+    "v3_gzip": 24997,
+    "size_diff": -1574,
+    "gzip_diff": 205,
+    "timestamp": "2026-01-18T05:45:17.517Z"
+  },
+  {
+    "package": "lodash@4.17.9",
+    "v2_size": 70975,
+    "v3_size": 69399,
+    "v2_gzip": 24792,
+    "v3_gzip": 24995,
+    "size_diff": -1576,
+    "gzip_diff": 203,
+    "timestamp": "2026-01-18T05:45:18.276Z"
+  },
+  {
+    "package": "lodash@4.17.5",
+    "v2_size": 70925,
+    "v3_size": 69340,
+    "v2_gzip": 24774,
+    "v3_gzip": 24974,
+    "size_diff": -1585,
+    "gzip_diff": 200,
+    "timestamp": "2026-01-18T05:45:19.034Z"
+  },
+  {
+    "package": "lodash@4.17.4",
+    "v2_size": 70648,
+    "v3_size": 68987,
+    "v2_gzip": 24691,
+    "v3_gzip": 24866,
+    "size_diff": -1661,
+    "gzip_diff": 175,
+    "timestamp": "2026-01-18T05:45:19.811Z"
+  },
+  {
+    "package": "lodash@4.17.3",
+    "v2_size": 70657,
+    "v3_size": 68998,
+    "v2_gzip": 24696,
+    "v3_gzip": 24872,
+    "size_diff": -1659,
+    "gzip_diff": 176,
+    "timestamp": "2026-01-18T05:45:20.596Z"
+  },
+  {
+    "package": "lodash@4.17.2",
+    "v2_size": 70554,
+    "v3_size": 68901,
+    "v2_gzip": 24703,
+    "v3_gzip": 24839,
+    "size_diff": -1653,
+    "gzip_diff": 136,
+    "timestamp": "2026-01-18T05:45:21.429Z"
+  },
+  {
+    "package": "lodash@4.17.0",
+    "v2_size": 70628,
+    "v3_size": 68989,
+    "v2_gzip": 24754,
+    "v3_gzip": 24893,
+    "size_diff": -1639,
+    "gzip_diff": 139,
+    "timestamp": "2026-01-18T05:45:22.196Z"
+  },
+  {
+    "package": "lodash@4.16.6",
+    "v2_size": 70445,
+    "v3_size": 68802,
+    "v2_gzip": 24699,
+    "v3_gzip": 24812,
+    "size_diff": -1643,
+    "gzip_diff": 113,
+    "timestamp": "2026-01-18T05:45:22.945Z"
+  },
+  {
+    "package": "lodash@4.16.4",
+    "v2_size": 69627,
+    "v3_size": 67998,
+    "v2_gzip": 24465,
+    "v3_gzip": 24622,
+    "size_diff": -1629,
+    "gzip_diff": 157,
+    "timestamp": "2026-01-18T05:45:23.679Z"
+  },
+  {
+    "package": "vue@3.5.26",
+    "v2_size": 130964,
+    "v3_size": 117138,
+    "v2_gzip": 47175,
+    "v3_gzip": 44543,
+    "size_diff": -13826,
+    "gzip_diff": -2632,
+    "timestamp": "2026-01-18T05:45:28.195Z"
+  },
+  {
+    "package": "vue@3.5.25",
+    "v2_size": 130740,
+    "v3_size": 116973,
+    "v2_gzip": 47092,
+    "v3_gzip": 44570,
+    "size_diff": -13767,
+    "gzip_diff": -2522,
+    "timestamp": "2026-01-18T05:45:30.581Z"
+  },
+  {
+    "package": "vue@3.5.24",
+    "v2_size": 130335,
+    "v3_size": 116617,
+    "v2_gzip": 46941,
+    "v3_gzip": 44431,
+    "size_diff": -13718,
+    "gzip_diff": -2510,
+    "timestamp": "2026-01-18T05:45:32.957Z"
+  },
+  {
+    "package": "vue@3.5.23",
+    "v2_size": 130335,
+    "v3_size": 116617,
+    "v2_gzip": 46942,
+    "v3_gzip": 44431,
+    "size_diff": -13718,
+    "gzip_diff": -2511,
+    "timestamp": "2026-01-18T05:45:35.356Z"
+  },
+  {
+    "package": "vue@3.5.22",
+    "v2_size": 129699,
+    "v3_size": 116002,
+    "v2_gzip": 46741,
+    "v3_gzip": 44204,
+    "size_diff": -13697,
+    "gzip_diff": -2537,
+    "timestamp": "2026-01-18T05:45:37.672Z"
+  },
+  {
+    "package": "vue@3.5.21",
+    "v2_size": 129218,
+    "v3_size": 115522,
+    "v2_gzip": 46606,
+    "v3_gzip": 44066,
+    "size_diff": -13696,
+    "gzip_diff": -2540,
+    "timestamp": "2026-01-18T05:45:40.011Z"
+  },
+  {
+    "package": "vue@3.5.20",
+    "v2_size": 128885,
+    "v3_size": 115195,
+    "v2_gzip": 46484,
+    "v3_gzip": 43968,
+    "size_diff": -13690,
+    "gzip_diff": -2516,
+    "timestamp": "2026-01-18T05:45:42.420Z"
+  },
+  {
+    "package": "vue@3.5.19",
+    "v2_size": 128948,
+    "v3_size": 115258,
+    "v2_gzip": 46522,
+    "v3_gzip": 44010,
+    "size_diff": -13690,
+    "gzip_diff": -2512,
+    "timestamp": "2026-01-18T05:45:44.786Z"
+  },
+  {
+    "package": "vue@3.5.18",
+    "v2_size": 129004,
+    "v3_size": 115328,
+    "v2_gzip": 46505,
+    "v3_gzip": 43996,
+    "size_diff": -13676,
+    "gzip_diff": -2509,
+    "timestamp": "2026-01-18T05:45:47.283Z"
+  },
+  {
+    "package": "vue@3.5.17",
+    "v2_size": 128683,
+    "v3_size": 115035,
+    "v2_gzip": 46386,
+    "v3_gzip": 43855,
+    "size_diff": -13648,
+    "gzip_diff": -2531,
+    "timestamp": "2026-01-18T05:45:49.589Z"
+  },
+  {
+    "package": "vue@3.5.16",
+    "v2_size": 128523,
+    "v3_size": 114875,
+    "v2_gzip": 46319,
+    "v3_gzip": 43800,
+    "size_diff": -13648,
+    "gzip_diff": -2519,
+    "timestamp": "2026-01-18T05:45:51.986Z"
+  },
+  {
+    "package": "vue@3.5.15",
+    "v2_size": 128523,
+    "v3_size": 114875,
+    "v2_gzip": 46319,
+    "v3_gzip": 43800,
+    "size_diff": -13648,
+    "gzip_diff": -2519,
+    "timestamp": "2026-01-18T05:45:54.201Z"
+  },
+  {
+    "package": "vue@3.5.14",
+    "v2_size": 128240,
+    "v3_size": 114607,
+    "v2_gzip": 46207,
+    "v3_gzip": 43697,
+    "size_diff": -13633,
+    "gzip_diff": -2510,
+    "timestamp": "2026-01-18T05:45:56.514Z"
+  },
+  {
+    "package": "vue@3.5.13",
+    "v2_size": 127884,
+    "v3_size": 114253,
+    "v2_gzip": 46037,
+    "v3_gzip": 43546,
+    "size_diff": -13631,
+    "gzip_diff": -2491,
+    "timestamp": "2026-01-18T05:45:58.745Z"
+  },
+  {
+    "package": "vue@3.5.12",
+    "v2_size": 127155,
+    "v3_size": 113530,
+    "v2_gzip": 45857,
+    "v3_gzip": 43366,
+    "size_diff": -13625,
+    "gzip_diff": -2491,
+    "timestamp": "2026-01-18T05:46:07.510Z"
+  },
+  {
+    "package": "vue@3.5.11",
+    "v2_size": 127641,
+    "v3_size": 114141,
+    "v2_gzip": 45971,
+    "v3_gzip": 43499,
+    "size_diff": -13500,
+    "gzip_diff": -2472,
+    "timestamp": "2026-01-18T05:46:09.597Z"
+  },
+  {
+    "package": "vue@3.5.10",
+    "v2_size": 127646,
+    "v3_size": 114145,
+    "v2_gzip": 45987,
+    "v3_gzip": 43496,
+    "size_diff": -13501,
+    "gzip_diff": -2491,
+    "timestamp": "2026-01-18T05:46:11.879Z"
+  },
+  {
+    "package": "vue@3.5.9",
+    "v2_size": 127602,
+    "v3_size": 114092,
+    "v2_gzip": 45970,
+    "v3_gzip": 43471,
+    "size_diff": -13510,
+    "gzip_diff": -2499,
+    "timestamp": "2026-01-18T05:46:14.114Z"
+  },
+  {
+    "package": "vue@3.5.8",
+    "v2_size": 127662,
+    "v3_size": 114162,
+    "v2_gzip": 45968,
+    "v3_gzip": 43454,
+    "size_diff": -13500,
+    "gzip_diff": -2514,
+    "timestamp": "2026-01-18T05:46:16.354Z"
+  },
+  {
+    "package": "vue@3.5.7",
+    "v2_size": 127652,
+    "v3_size": 114152,
+    "v2_gzip": 45962,
+    "v3_gzip": 43455,
+    "size_diff": -13500,
+    "gzip_diff": -2507,
+    "timestamp": "2026-01-18T05:46:18.600Z"
+  },
+  {
+    "package": "memoize-one@6.0.0",
+    "v2_size": 693,
+    "v3_size": 671,
+    "v2_gzip": 409,
+    "v3_gzip": 409,
+    "size_diff": -22,
+    "gzip_diff": 0,
+    "timestamp": "2026-01-18T05:46:19.267Z"
+  },
+  {
+    "package": "memoize-one@5.2.1",
+    "v2_size": 574,
+    "v3_size": 589,
+    "v2_gzip": 355,
+    "v3_gzip": 373,
+    "size_diff": 15,
+    "gzip_diff": 18,
+    "timestamp": "2026-01-18T05:46:19.900Z"
+  },
+  {
+    "package": "memoize-one@5.1.1",
+    "v2_size": 479,
+    "v3_size": 495,
+    "v2_gzip": 297,
+    "v3_gzip": 318,
+    "size_diff": 16,
+    "gzip_diff": 21,
+    "timestamp": "2026-01-18T05:46:20.525Z"
+  },
+  {
+    "package": "memoize-one@5.0.5",
+    "v2_size": 493,
+    "v3_size": 505,
+    "v2_gzip": 312,
+    "v3_gzip": 327,
+    "size_diff": 12,
+    "gzip_diff": 15,
+    "timestamp": "2026-01-18T05:46:21.162Z"
+  },
+  {
+    "package": "memoize-one@5.0.4",
+    "v2_size": 493,
+    "v3_size": 505,
+    "v2_gzip": 312,
+    "v3_gzip": 326,
+    "size_diff": 12,
+    "gzip_diff": 14,
+    "timestamp": "2026-01-18T05:46:21.834Z"
+  },
+  {
+    "package": "memoize-one@5.0.0",
+    "v2_size": 492,
+    "v3_size": 486,
+    "v2_gzip": 311,
+    "v3_gzip": 316,
+    "size_diff": -6,
+    "gzip_diff": 5,
+    "timestamp": "2026-01-18T05:46:22.447Z"
+  },
+  {
+    "package": "memoize-one@4.0.3",
+    "v2_size": 478,
+    "v3_size": 490,
+    "v2_gzip": 301,
+    "v3_gzip": 318,
+    "size_diff": 12,
+    "gzip_diff": 17,
+    "timestamp": "2026-01-18T05:46:23.038Z"
+  },
+  {
+    "package": "memoize-one@4.0.2",
+    "v2_size": 478,
+    "v3_size": 490,
+    "v2_gzip": 301,
+    "v3_gzip": 317,
+    "size_diff": 12,
+    "gzip_diff": 16,
+    "timestamp": "2026-01-18T05:46:23.720Z"
+  },
+  {
+    "package": "memoize-one@4.0.0",
+    "v2_size": 522,
+    "v3_size": 542,
+    "v2_gzip": 311,
+    "v3_gzip": 330,
+    "size_diff": 20,
+    "gzip_diff": 19,
+    "timestamp": "2026-01-18T05:46:24.325Z"
+  },
+  {
+    "package": "memoize-one@3.1.1",
+    "v2_size": 522,
+    "v3_size": 537,
+    "v2_gzip": 311,
+    "v3_gzip": 329,
+    "size_diff": 15,
+    "gzip_diff": 18,
+    "timestamp": "2026-01-18T05:46:24.955Z"
+  },
+  {
+    "package": "hybrids@7.0.5",
+    "v2_size": 47903,
+    "v3_size": 46377,
+    "v2_gzip": 16031,
+    "v3_gzip": 15816,
+    "size_diff": -1526,
+    "gzip_diff": -215,
+    "timestamp": "2026-01-18T05:46:25.615Z"
+  },
+  {
+    "package": "hybrids@6.1.0",
+    "v2_size": 35069,
+    "v3_size": 33791,
+    "v2_gzip": 11660,
+    "v3_gzip": 11484,
+    "size_diff": -1278,
+    "gzip_diff": -176,
+    "timestamp": "2026-01-18T05:46:26.276Z"
+  },
+  {
+    "package": "hybrids@4.3.3",
+    "v2_size": 39539,
+    "v3_size": 40400,
+    "v2_gzip": 11494,
+    "v3_gzip": 11926,
+    "size_diff": 861,
+    "gzip_diff": 432,
+    "timestamp": "2026-01-18T05:46:27.070Z"
+  },
+  {
+    "package": "hybrids@4.2.0",
+    "v2_size": 22709,
+    "v3_size": 22927,
+    "v2_gzip": 7180,
+    "v3_gzip": 7361,
+    "size_diff": 218,
+    "gzip_diff": 181,
+    "timestamp": "2026-01-18T05:46:27.815Z"
+  },
+  {
+    "package": "hybrids@1.4.2",
+    "v2_size": 19451,
+    "v3_size": 18776,
+    "v2_gzip": 6346,
+    "v3_gzip": 6193,
+    "size_diff": -675,
+    "gzip_diff": -153,
+    "timestamp": "2026-01-18T05:46:30.236Z"
+  },
+  {
+    "package": "moment@2.30.1",
+    "v2_size": 301966,
+    "v3_size": 301428,
+    "v2_gzip": 74889,
+    "v3_gzip": 77179,
+    "size_diff": -538,
+    "gzip_diff": 2290,
+    "timestamp": "2026-01-18T05:46:30.990Z"
+  },
+  {
+    "package": "moment@2.30.0",
+    "v2_size": 301966,
+    "v3_size": 301437,
+    "v2_gzip": 74889,
+    "v3_gzip": 77171,
+    "size_diff": -529,
+    "gzip_diff": 2282,
+    "timestamp": "2026-01-18T05:46:31.727Z"
+  },
+  {
+    "package": "moment@2.29.4",
+    "v2_size": 297143,
+    "v3_size": 296429,
+    "v2_gzip": 73867,
+    "v3_gzip": 76083,
+    "size_diff": -714,
+    "gzip_diff": 2216,
+    "timestamp": "2026-01-18T05:46:32.534Z"
+  },
+  {
+    "package": "moment@2.29.3",
+    "v2_size": 297142,
+    "v3_size": 296423,
+    "v2_gzip": 73866,
+    "v3_gzip": 76054,
+    "size_diff": -719,
+    "gzip_diff": 2188,
+    "timestamp": "2026-01-18T05:46:33.311Z"
+  },
+  {
+    "package": "moment@2.29.2",
+    "v2_size": 297162,
+    "v3_size": 296290,
+    "v2_gzip": 73872,
+    "v3_gzip": 76038,
+    "size_diff": -872,
+    "gzip_diff": 2166,
+    "timestamp": "2026-01-18T05:46:34.060Z"
+  },
+  {
+    "package": "moment@2.29.1",
+    "v2_size": 296414,
+    "v3_size": 295685,
+    "v2_gzip": 73658,
+    "v3_gzip": 75854,
+    "size_diff": -729,
+    "gzip_diff": 2196,
+    "timestamp": "2026-01-18T05:46:35.016Z"
+  },
+  {
+    "package": "moment@2.29.0",
+    "v2_size": 294447,
+    "v3_size": 293740,
+    "v2_gzip": 73438,
+    "v3_gzip": 75623,
+    "size_diff": -707,
+    "gzip_diff": 2185,
+    "timestamp": "2026-01-18T05:46:35.787Z"
+  },
+  {
+    "package": "moment@2.28.0",
+    "v2_size": 288738,
+    "v3_size": 287853,
+    "v2_gzip": 72805,
+    "v3_gzip": 74914,
+    "size_diff": -885,
+    "gzip_diff": 2109,
+    "timestamp": "2026-01-18T05:46:36.505Z"
+  },
+  {
+    "package": "moment@2.27.0",
+    "v2_size": 288704,
+    "v3_size": 287840,
+    "v2_gzip": 72793,
+    "v3_gzip": 74939,
+    "size_diff": -864,
+    "gzip_diff": 2146,
+    "timestamp": "2026-01-18T05:46:37.248Z"
+  },
+  {
+    "package": "moment@2.26.0",
+    "v2_size": 286620,
+    "v3_size": 285658,
+    "v2_gzip": 72300,
+    "v3_gzip": 74477,
+    "size_diff": -962,
+    "gzip_diff": 2177,
+    "timestamp": "2026-01-18T05:46:38.121Z"
+  },
+  {
+    "package": "moment@2.25.3",
+    "v2_size": 284558,
+    "v3_size": 283594,
+    "v2_gzip": 71813,
+    "v3_gzip": 73861,
+    "size_diff": -964,
+    "gzip_diff": 2048,
+    "timestamp": "2026-01-18T05:46:38.897Z"
+  },
+  {
+    "package": "moment@2.25.2",
+    "v2_size": 285292,
+    "v3_size": 289459,
+    "v2_gzip": 71128,
+    "v3_gzip": 74115,
+    "size_diff": 4167,
+    "gzip_diff": 2987,
+    "timestamp": "2026-01-18T05:46:39.641Z"
+  },
+  {
+    "package": "moment@2.25.1",
+    "v2_size": 72865,
+    "v3_size": 66495,
+    "v2_gzip": 20818,
+    "v3_gzip": 21343,
+    "size_diff": -6370,
+    "gzip_diff": 525,
+    "timestamp": "2026-01-18T05:46:40.369Z"
+  },
+  {
+    "package": "moment@2.25.0",
+    "v2_size": 72984,
+    "v3_size": 66555,
+    "v2_gzip": 20885,
+    "v3_gzip": 21400,
+    "size_diff": -6429,
+    "gzip_diff": 515,
+    "timestamp": "2026-01-18T05:46:41.107Z"
+  },
+  {
+    "package": "moment@2.24.0",
+    "v2_size": 269260,
+    "v3_size": 268500,
+    "v2_gzip": 68113,
+    "v3_gzip": 70150,
+    "size_diff": -760,
+    "gzip_diff": 2037,
+    "timestamp": "2026-01-18T05:46:41.890Z"
+  },
+  {
+    "package": "moment@2.23.0",
+    "v2_size": 263109,
+    "v3_size": 262373,
+    "v2_gzip": 67285,
+    "v3_gzip": 69315,
+    "size_diff": -736,
+    "gzip_diff": 2030,
+    "timestamp": "2026-01-18T05:46:42.635Z"
+  },
+  {
+    "package": "moment@2.22.2",
+    "v2_size": 261075,
+    "v3_size": 260322,
+    "v2_gzip": 66545,
+    "v3_gzip": 68483,
+    "size_diff": -753,
+    "gzip_diff": 1938,
+    "timestamp": "2026-01-18T05:46:43.389Z"
+  },
+  {
+    "package": "moment@2.22.1",
+    "v2_size": 261018,
+    "v3_size": 260137,
+    "v2_gzip": 66535,
+    "v3_gzip": 68471,
+    "size_diff": -881,
+    "gzip_diff": 1936,
+    "timestamp": "2026-01-18T05:46:44.125Z"
+  },
+  {
+    "package": "moment@2.22.0",
+    "v2_size": 261005,
+    "v3_size": 260246,
+    "v2_gzip": 66531,
+    "v3_gzip": 68432,
+    "size_diff": -759,
+    "gzip_diff": 1901,
+    "timestamp": "2026-01-18T05:46:44.838Z"
+  },
+  {
+    "package": "moment@2.21.0",
+    "v2_size": 258394,
+    "v3_size": 257596,
+    "v2_gzip": 65679,
+    "v3_gzip": 67510,
+    "size_diff": -798,
+    "gzip_diff": 1831,
+    "timestamp": "2026-01-18T05:46:45.615Z"
+  },
+  {
+    "package": "universal-router@10.0.3",
+    "v2_size": 5225,
+    "v3_size": 5090,
+    "v2_gzip": 2292,
+    "v3_gzip": 2266,
+    "size_diff": -135,
+    "gzip_diff": -26,
+    "timestamp": "2026-01-18T05:46:46.554Z"
+  },
+  {
+    "package": "universal-router@10.0.2",
+    "v2_size": 5225,
+    "v3_size": 5088,
+    "v2_gzip": 2292,
+    "v3_gzip": 2263,
+    "size_diff": -137,
+    "gzip_diff": -29,
+    "timestamp": "2026-01-18T05:46:47.246Z"
+  },
+  {
+    "package": "universal-router@10.0.1",
+    "v2_size": 5225,
+    "v3_size": 5090,
+    "v2_gzip": 2292,
+    "v3_gzip": 2266,
+    "size_diff": -135,
+    "gzip_diff": -26,
+    "timestamp": "2026-01-18T05:46:47.856Z"
+  },
+  {
+    "package": "universal-router@10.0.0",
+    "v2_size": 5225,
+    "v3_size": 5090,
+    "v2_gzip": 2292,
+    "v3_gzip": 2266,
+    "size_diff": -135,
+    "gzip_diff": -26,
+    "timestamp": "2026-01-18T05:46:48.573Z"
+  },
+  {
+    "package": "universal-router@9.2.1",
+    "v2_size": 6723,
+    "v3_size": 6582,
+    "v2_gzip": 2697,
+    "v3_gzip": 2678,
+    "size_diff": -141,
+    "gzip_diff": -19,
+    "timestamp": "2026-01-18T05:46:49.996Z"
+  },
+  {
+    "package": "universal-router@9.2.0",
+    "v2_size": 6723,
+    "v3_size": 6582,
+    "v2_gzip": 2697,
+    "v3_gzip": 2679,
+    "size_diff": -141,
+    "gzip_diff": -18,
+    "timestamp": "2026-01-18T05:46:50.670Z"
+  },
+  {
+    "package": "universal-router@9.0.1",
+    "v2_size": 6732,
+    "v3_size": 6589,
+    "v2_gzip": 2703,
+    "v3_gzip": 2684,
+    "size_diff": -143,
+    "gzip_diff": -19,
+    "timestamp": "2026-01-18T05:46:51.318Z"
+  },
+  {
+    "package": "universal-router@6.0.0",
+    "v2_size": 5605,
+    "v3_size": 5477,
+    "v2_gzip": 2426,
+    "v3_gzip": 2420,
+    "size_diff": -128,
+    "gzip_diff": -6,
+    "timestamp": "2026-01-18T05:46:52.013Z"
+  },
+  {
+    "package": "universal-router@5.0.0",
+    "v2_size": 5913,
+    "v3_size": 5772,
+    "v2_gzip": 2549,
+    "v3_gzip": 2541,
+    "size_diff": -141,
+    "gzip_diff": -8,
+    "timestamp": "2026-01-18T05:46:52.686Z"
+  },
+  {
+    "package": "universal-router@4.3.0",
+    "v2_size": 5847,
+    "v3_size": 5704,
+    "v2_gzip": 2525,
+    "v3_gzip": 2521,
+    "size_diff": -143,
+    "gzip_diff": -4,
+    "timestamp": "2026-01-18T05:46:53.415Z"
+  },
+  {
+    "package": "universal-router@3.2.0",
+    "v2_size": 6053,
+    "v3_size": 5893,
+    "v2_gzip": 2615,
+    "v3_gzip": 2623,
+    "size_diff": -160,
+    "gzip_diff": 8,
+    "timestamp": "2026-01-18T05:46:54.144Z"
+  },
+  {
+    "package": "redux-beacon@2.1.0",
+    "v2_size": 3149,
+    "v3_size": 2990,
+    "v2_gzip": 997,
+    "v3_gzip": 1020,
+    "size_diff": -159,
+    "gzip_diff": 23,
+    "timestamp": "2026-01-18T05:46:55.557Z"
+  },
+  {
+    "package": "redux-beacon@2.0.5",
+    "v2_size": 3065,
+    "v3_size": 2918,
+    "v2_gzip": 968,
+    "v3_gzip": 996,
+    "size_diff": -147,
+    "gzip_diff": 28,
+    "timestamp": "2026-01-18T05:46:56.411Z"
+  },
+  {
+    "package": "wretch@3.0.6",
+    "v2_size": 4319,
+    "v3_size": 4235,
+    "v2_gzip": 1811,
+    "v3_gzip": 1785,
+    "size_diff": -84,
+    "gzip_diff": -26,
+    "timestamp": "2026-01-18T05:46:57.405Z"
+  },
+  {
+    "package": "wretch@3.0.5",
+    "v2_size": 4284,
+    "v3_size": 4200,
+    "v2_gzip": 1803,
+    "v3_gzip": 1775,
+    "size_diff": -84,
+    "gzip_diff": -28,
+    "timestamp": "2026-01-18T05:46:58.053Z"
+  },
+  {
+    "package": "wretch@3.0.4",
+    "v2_size": 4284,
+    "v3_size": 4200,
+    "v2_gzip": 1803,
+    "v3_gzip": 1775,
+    "size_diff": -84,
+    "gzip_diff": -28,
+    "timestamp": "2026-01-18T05:46:59.337Z"
+  },
+  {
+    "package": "wretch@3.0.3",
+    "v2_size": 4284,
+    "v3_size": 4200,
+    "v2_gzip": 1803,
+    "v3_gzip": 1775,
+    "size_diff": -84,
+    "gzip_diff": -28,
+    "timestamp": "2026-01-18T05:47:00.345Z"
+  },
+  {
+    "package": "wretch@3.0.2",
+    "v2_size": 4284,
+    "v3_size": 4200,
+    "v2_gzip": 1803,
+    "v3_gzip": 1775,
+    "size_diff": -84,
+    "gzip_diff": -28,
+    "timestamp": "2026-01-18T05:47:01.270Z"
+  },
+  {
+    "package": "wretch@3.0.1",
+    "v2_size": 4276,
+    "v3_size": 4192,
+    "v2_gzip": 1797,
+    "v3_gzip": 1770,
+    "size_diff": -84,
+    "gzip_diff": -27,
+    "timestamp": "2026-01-18T05:47:02.379Z"
+  },
+  {
+    "package": "wretch@3.0.0",
+    "v2_size": 4276,
+    "v3_size": 4192,
+    "v2_gzip": 1797,
+    "v3_gzip": 1770,
+    "size_diff": -84,
+    "gzip_diff": -27,
+    "timestamp": "2026-01-18T05:47:03.521Z"
+  },
+  {
+    "package": "wretch@2.11.1",
+    "v2_size": 5799,
+    "v3_size": 4890,
+    "v2_gzip": 2235,
+    "v3_gzip": 2009,
+    "size_diff": -909,
+    "gzip_diff": -226,
+    "timestamp": "2026-01-18T05:47:04.616Z"
+  },
+  {
+    "package": "wretch@2.11.0",
+    "v2_size": 5777,
+    "v3_size": 4868,
+    "v2_gzip": 2227,
+    "v3_gzip": 1996,
+    "size_diff": -909,
+    "gzip_diff": -231,
+    "timestamp": "2026-01-18T05:47:05.675Z"
+  },
+  {
+    "package": "wretch@2.10.0",
+    "v2_size": 5726,
+    "v3_size": 4827,
+    "v2_gzip": 2216,
+    "v3_gzip": 1989,
+    "size_diff": -899,
+    "gzip_diff": -227,
+    "timestamp": "2026-01-18T05:47:06.739Z"
+  },
+  {
+    "package": "wretch@2.9.1",
+    "v2_size": 5726,
+    "v3_size": 4827,
+    "v2_gzip": 2216,
+    "v3_gzip": 1990,
+    "size_diff": -899,
+    "gzip_diff": -226,
+    "timestamp": "2026-01-18T05:47:07.796Z"
+  },
+  {
+    "package": "wretch@2.9.0",
+    "v2_size": 5579,
+    "v3_size": 4682,
+    "v2_gzip": 2163,
+    "v3_gzip": 1938,
+    "size_diff": -897,
+    "gzip_diff": -225,
+    "timestamp": "2026-01-18T05:47:08.722Z"
+  },
+  {
+    "package": "wretch@2.8.1",
+    "v2_size": 5518,
+    "v3_size": 4621,
+    "v2_gzip": 2137,
+    "v3_gzip": 1908,
+    "size_diff": -897,
+    "gzip_diff": -229,
+    "timestamp": "2026-01-18T05:47:09.730Z"
+  },
+  {
+    "package": "wretch@2.8.0",
+    "v2_size": 5518,
+    "v3_size": 4621,
+    "v2_gzip": 2137,
+    "v3_gzip": 1908,
+    "size_diff": -897,
+    "gzip_diff": -229,
+    "timestamp": "2026-01-18T05:47:10.703Z"
+  },
+  {
+    "package": "wretch@2.7.1",
+    "v2_size": 5474,
+    "v3_size": 4577,
+    "v2_gzip": 2124,
+    "v3_gzip": 1896,
+    "size_diff": -897,
+    "gzip_diff": -228,
+    "timestamp": "2026-01-18T05:47:11.692Z"
+  },
+  {
+    "package": "wretch@2.7.0",
+    "v2_size": 5378,
+    "v3_size": 4483,
+    "v2_gzip": 2087,
+    "v3_gzip": 1862,
+    "size_diff": -895,
+    "gzip_diff": -225,
+    "timestamp": "2026-01-18T05:47:12.687Z"
+  },
+  {
+    "package": "wretch@2.6.0",
+    "v2_size": 5378,
+    "v3_size": 4483,
+    "v2_gzip": 2087,
+    "v3_gzip": 1861,
+    "size_diff": -895,
+    "gzip_diff": -226,
+    "timestamp": "2026-01-18T05:47:13.679Z"
+  },
+  {
+    "package": "wretch@2.5.2",
+    "v2_size": 5201,
+    "v3_size": 4350,
+    "v2_gzip": 2031,
+    "v3_gzip": 1813,
+    "size_diff": -851,
+    "gzip_diff": -218,
+    "timestamp": "2026-01-18T05:47:14.737Z"
+  },
+  {
+    "package": "wretch@2.5.1",
+    "v2_size": 5201,
+    "v3_size": 4350,
+    "v2_gzip": 2031,
+    "v3_gzip": 1812,
+    "size_diff": -851,
+    "gzip_diff": -219,
+    "timestamp": "2026-01-18T05:47:15.833Z"
+  },
+  {
+    "package": "wretch@2.5.0",
+    "v2_size": 5161,
+    "v3_size": 4325,
+    "v2_gzip": 2015,
+    "v3_gzip": 1799,
+    "size_diff": -836,
+    "gzip_diff": -216,
+    "timestamp": "2026-01-18T05:47:16.736Z"
+  },
+  {
+    "package": "redux@5.0.1",
+    "v2_size": 3744,
+    "v3_size": 3346,
+    "v2_gzip": 1477,
+    "v3_gzip": 1405,
+    "size_diff": -398,
+    "gzip_diff": -72,
+    "timestamp": "2026-01-18T05:47:17.747Z"
+  },
+  {
+    "package": "redux@5.0.0",
+    "v2_size": 3711,
+    "v3_size": 3313,
+    "v2_gzip": 1475,
+    "v3_gzip": 1402,
+    "size_diff": -398,
+    "gzip_diff": -73,
+    "timestamp": "2026-01-18T05:47:18.460Z"
+  },
+  {
+    "package": "redux@4.2.1",
+    "v2_size": 5040,
+    "v3_size": 4711,
+    "v2_gzip": 1838,
+    "v3_gzip": 1803,
+    "size_diff": -329,
+    "gzip_diff": -35,
+    "timestamp": "2026-01-18T05:47:19.896Z"
+  },
+  {
+    "package": "redux@4.0.1",
+    "v2_size": 7257,
+    "v3_size": 6322,
+    "v2_gzip": 2652,
+    "v3_gzip": 2420,
+    "size_diff": -935,
+    "gzip_diff": -232,
+    "timestamp": "2026-01-18T05:47:23.338Z"
+  },
+  {
+    "package": "redux@3.7.2",
+    "v2_size": 6562,
+    "v3_size": 5547,
+    "v2_gzip": 2459,
+    "v3_gzip": 2219,
+    "size_diff": -1015,
+    "gzip_diff": -240,
+    "timestamp": "2026-01-18T05:47:26.484Z"
+  },
+  {
+    "package": "jquery@3.7.1",
+    "v2_size": 87171,
+    "v3_size": 86807,
+    "v2_gzip": 30429,
+    "v3_gzip": 30377,
+    "size_diff": -364,
+    "gzip_diff": -52,
+    "timestamp": "2026-01-18T05:47:28.856Z"
+  },
+  {
+    "package": "angular@1.8.2",
+    "v2_size": 185296,
+    "v3_size": 183157,
+    "v2_gzip": 63813,
+    "v3_gzip": 63696,
+    "size_diff": -2139,
+    "gzip_diff": -117,
+    "timestamp": "2026-01-18T05:47:41.575Z"
+  },
+  {
+    "package": "angular@1.7.7",
+    "v2_size": 184131,
+    "v3_size": 181991,
+    "v2_gzip": 63501,
+    "v3_gzip": 63351,
+    "size_diff": -2140,
+    "gzip_diff": -150,
+    "timestamp": "2026-01-18T05:47:43.574Z"
+  },
+  {
+    "package": "angular@1.7.6",
+    "v2_size": 184146,
+    "v3_size": 182006,
+    "v2_gzip": 63507,
+    "v3_gzip": 63356,
+    "size_diff": -2140,
+    "gzip_diff": -151,
+    "timestamp": "2026-01-18T05:47:44.350Z"
+  },
+  {
+    "package": "angular@1.6.10",
+    "v2_size": 178344,
+    "v3_size": 176104,
+    "v2_gzip": 61321,
+    "v3_gzip": 61089,
+    "size_diff": -2240,
+    "gzip_diff": -232,
+    "timestamp": "2026-01-18T05:47:47.788Z"
+  },
+  {
+    "package": "angular@1.6.5",
+    "v2_size": 176017,
+    "v3_size": 173771,
+    "v2_gzip": 60621,
+    "v3_gzip": 60436,
+    "size_diff": -2246,
+    "gzip_diff": -185,
+    "timestamp": "2026-01-18T05:47:49.381Z"
+  },
+  {
+    "package": "angular@1.6.3",
+    "v2_size": 175053,
+    "v3_size": 172901,
+    "v2_gzip": 60493,
+    "v3_gzip": 60277,
+    "size_diff": -2152,
+    "gzip_diff": -216,
+    "timestamp": "2026-01-18T05:47:50.146Z"
+  },
+  {
+    "package": "preact@10.28.1",
+    "v2_size": 12024,
+    "v3_size": 11687,
+    "v2_gzip": 4843,
+    "v3_gzip": 4824,
+    "size_diff": -337,
+    "gzip_diff": -19,
+    "timestamp": "2026-01-18T05:47:50.837Z"
+  },
+  {
+    "package": "preact@10.27.0",
+    "v2_size": 11984,
+    "v3_size": 11647,
+    "v2_gzip": 4839,
+    "v3_gzip": 4815,
+    "size_diff": -337,
+    "gzip_diff": -24,
+    "timestamp": "2026-01-18T05:47:51.517Z"
+  },
+  {
+    "package": "preact@10.26.9",
+    "v2_size": 11979,
+    "v3_size": 11641,
+    "v2_gzip": 4816,
+    "v3_gzip": 4793,
+    "size_diff": -338,
+    "gzip_diff": -23,
+    "timestamp": "2026-01-18T05:47:52.288Z"
+  },
+  {
+    "package": "preact@10.26.8",
+    "v2_size": 11979,
+    "v3_size": 11641,
+    "v2_gzip": 4816,
+    "v3_gzip": 4793,
+    "size_diff": -338,
+    "gzip_diff": -23,
+    "timestamp": "2026-01-18T05:47:52.969Z"
+  },
+  {
+    "package": "preact@10.26.5",
+    "v2_size": 11980,
+    "v3_size": 11643,
+    "v2_gzip": 4816,
+    "v3_gzip": 4786,
+    "size_diff": -337,
+    "gzip_diff": -30,
+    "timestamp": "2026-01-18T05:47:53.619Z"
+  },
+  {
+    "package": "preact@10.26.4",
+    "v2_size": 12005,
+    "v3_size": 11668,
+    "v2_gzip": 4822,
+    "v3_gzip": 4799,
+    "size_diff": -337,
+    "gzip_diff": -23,
+    "timestamp": "2026-01-18T05:47:54.863Z"
+  },
+  {
+    "package": "preact@10.26.2",
+    "v2_size": 11930,
+    "v3_size": 11594,
+    "v2_gzip": 4784,
+    "v3_gzip": 4765,
+    "size_diff": -336,
+    "gzip_diff": -19,
+    "timestamp": "2026-01-18T05:47:55.588Z"
+  },
+  {
+    "package": "preact@10.26.0",
+    "v2_size": 11895,
+    "v3_size": 11559,
+    "v2_gzip": 4771,
+    "v3_gzip": 4751,
+    "size_diff": -336,
+    "gzip_diff": -20,
+    "timestamp": "2026-01-18T05:47:56.930Z"
+  },
+  {
+    "package": "preact@10.25.4",
+    "v2_size": 11878,
+    "v3_size": 11548,
+    "v2_gzip": 4758,
+    "v3_gzip": 4751,
+    "size_diff": -330,
+    "gzip_diff": -7,
+    "timestamp": "2026-01-18T05:47:57.644Z"
+  },
+  {
+    "package": "preact@10.25.3",
+    "v2_size": 11878,
+    "v3_size": 11548,
+    "v2_gzip": 4758,
+    "v3_gzip": 4751,
+    "size_diff": -330,
+    "gzip_diff": -7,
+    "timestamp": "2026-01-18T05:47:58.336Z"
+  },
+  {
+    "package": "preact@10.25.2",
+    "v2_size": 11878,
+    "v3_size": 11548,
+    "v2_gzip": 4758,
+    "v3_gzip": 4750,
+    "size_diff": -330,
+    "gzip_diff": -8,
+    "timestamp": "2026-01-18T05:48:00.578Z"
+  },
+  {
+    "package": "preact@10.25.1",
+    "v2_size": 11932,
+    "v3_size": 11606,
+    "v2_gzip": 4764,
+    "v3_gzip": 4771,
+    "size_diff": -326,
+    "gzip_diff": 7,
+    "timestamp": "2026-01-18T05:48:02.195Z"
+  },
+  {
+    "package": "axios@1.13.2",
+    "v2_size": 37697,
+    "v3_size": 35441,
+    "v2_gzip": 14488,
+    "v3_gzip": 14072,
+    "size_diff": -2256,
+    "gzip_diff": -416,
+    "timestamp": "2026-01-18T05:48:04.755Z"
+  },
+  {
+    "package": "axios@1.13.1",
+    "v2_size": 37697,
+    "v3_size": 35441,
+    "v2_gzip": 14488,
+    "v3_gzip": 14071,
+    "size_diff": -2256,
+    "gzip_diff": -417,
+    "timestamp": "2026-01-18T05:48:05.787Z"
+  },
+  {
+    "package": "axios@1.13.0",
+    "v2_size": 37697,
+    "v3_size": 35441,
+    "v2_gzip": 14488,
+    "v3_gzip": 14072,
+    "size_diff": -2256,
+    "gzip_diff": -416,
+    "timestamp": "2026-01-18T05:48:08.220Z"
+  },
+  {
+    "package": "axios@1.12.2",
+    "v2_size": 37416,
+    "v3_size": 35178,
+    "v2_gzip": 14363,
+    "v3_gzip": 13943,
+    "size_diff": -2238,
+    "gzip_diff": -420,
+    "timestamp": "2026-01-18T05:48:09.713Z"
+  },
+  {
+    "package": "axios@1.12.1",
+    "v2_size": 37416,
+    "v3_size": 35182,
+    "v2_gzip": 14352,
+    "v3_gzip": 13942,
+    "size_diff": -2234,
+    "gzip_diff": -410,
+    "timestamp": "2026-01-18T05:48:11.522Z"
+  },
+  {
+    "package": "axios@1.12.0",
+    "v2_size": 37416,
+    "v3_size": 35182,
+    "v2_gzip": 14352,
+    "v3_gzip": 13943,
+    "size_diff": -2234,
+    "gzip_diff": -409,
+    "timestamp": "2026-01-18T05:48:12.646Z"
+  },
+  {
+    "package": "axios@1.11.0",
+    "v2_size": 36883,
+    "v3_size": 34709,
+    "v2_gzip": 14069,
+    "v3_gzip": 13673,
+    "size_diff": -2174,
+    "gzip_diff": -396,
+    "timestamp": "2026-01-18T05:48:14.056Z"
+  },
+  {
+    "package": "axios@1.10.0",
+    "v2_size": 36724,
+    "v3_size": 34501,
+    "v2_gzip": 14035,
+    "v3_gzip": 13619,
+    "size_diff": -2223,
+    "gzip_diff": -416,
+    "timestamp": "2026-01-18T05:48:15.363Z"
+  },
+  {
+    "package": "axios@1.9.0",
+    "v2_size": 36680,
+    "v3_size": 34459,
+    "v2_gzip": 14024,
+    "v3_gzip": 13610,
+    "size_diff": -2221,
+    "gzip_diff": -414,
+    "timestamp": "2026-01-18T05:48:16.741Z"
+  },
+  {
+    "package": "axios@1.8.4",
+    "v2_size": 36464,
+    "v3_size": 34241,
+    "v2_gzip": 13910,
+    "v3_gzip": 13500,
+    "size_diff": -2223,
+    "gzip_diff": -410,
+    "timestamp": "2026-01-18T05:48:17.850Z"
+  },
+  {
+    "package": "axios@1.8.3",
+    "v2_size": 36462,
+    "v3_size": 34241,
+    "v2_gzip": 13909,
+    "v3_gzip": 13501,
+    "size_diff": -2221,
+    "gzip_diff": -408,
+    "timestamp": "2026-01-18T05:48:19.204Z"
+  },
+  {
+    "package": "axios@1.8.2",
+    "v2_size": 36442,
+    "v3_size": 34221,
+    "v2_gzip": 13906,
+    "v3_gzip": 13499,
+    "size_diff": -2221,
+    "gzip_diff": -407,
+    "timestamp": "2026-01-18T05:48:20.591Z"
+  },
+  {
+    "package": "axios@1.8.1",
+    "v2_size": 36442,
+    "v3_size": 34221,
+    "v2_gzip": 13906,
+    "v3_gzip": 13499,
+    "size_diff": -2221,
+    "gzip_diff": -407,
+    "timestamp": "2026-01-18T05:48:21.954Z"
+  },
+  {
+    "package": "axios@1.8.0",
+    "v2_size": 36763,
+    "v3_size": 34680,
+    "v2_gzip": 14091,
+    "v3_gzip": 13671,
+    "size_diff": -2083,
+    "gzip_diff": -420,
+    "timestamp": "2026-01-18T05:48:23.587Z"
+  },
+  {
+    "package": "axios@1.7.9",
+    "v2_size": 36478,
+    "v3_size": 34300,
+    "v2_gzip": 13985,
+    "v3_gzip": 13580,
+    "size_diff": -2178,
+    "gzip_diff": -405,
+    "timestamp": "2026-01-18T05:48:24.893Z"
+  },
+  {
+    "package": "axios@1.7.8",
+    "v2_size": 36478,
+    "v3_size": 34300,
+    "v2_gzip": 13985,
+    "v3_gzip": 13581,
+    "size_diff": -2178,
+    "gzip_diff": -404,
+    "timestamp": "2026-01-18T05:48:27.135Z"
+  },
+  {
+    "package": "axios@1.7.7",
+    "v2_size": 36651,
+    "v3_size": 34438,
+    "v2_gzip": 14014,
+    "v3_gzip": 13613,
+    "size_diff": -2213,
+    "gzip_diff": -401,
+    "timestamp": "2026-01-18T05:49:04.292Z"
+  },
+  {
+    "package": "axios@1.7.6",
+    "v2_size": 36512,
+    "v3_size": 34303,
+    "v2_gzip": 13963,
+    "v3_gzip": 13564,
+    "size_diff": -2209,
+    "gzip_diff": -399,
+    "timestamp": "2026-01-18T05:49:04.630Z"
+  },
+  {
+    "package": "axios@1.7.5",
+    "v2_size": 36298,
+    "v3_size": 34092,
+    "v2_gzip": 13909,
+    "v3_gzip": 13515,
+    "size_diff": -2206,
+    "gzip_diff": -394,
+    "timestamp": "2026-01-18T05:49:04.806Z"
+  },
+  {
+    "package": "axios@1.7.4",
+    "v2_size": 36208,
+    "v3_size": 34008,
+    "v2_gzip": 13871,
+    "v3_gzip": 13484,
+    "size_diff": -2200,
+    "gzip_diff": -387,
+    "timestamp": "2026-01-18T05:49:52.686Z"
+  },
+  {
+    "package": "@material-ui/core@4.12.4",
+    "v2_size": 343921,
+    "v3_size": 334150,
+    "v2_gzip": 96187,
+    "v3_gzip": 95638,
+    "size_diff": -9771,
+    "gzip_diff": -549,
+    "timestamp": "2026-01-18T05:49:54.496Z"
+  },
+  {
+    "package": "@material-ui/core@4.12.3",
+    "v2_size": 343913,
+    "v3_size": 334144,
+    "v2_gzip": 96185,
+    "v3_gzip": 95633,
+    "size_diff": -9769,
+    "gzip_diff": -552,
+    "timestamp": "2026-01-18T05:49:56.452Z"
+  },
+  {
+    "package": "@material-ui/core@4.12.2",
+    "v2_size": 343799,
+    "v3_size": 334028,
+    "v2_gzip": 96163,
+    "v3_gzip": 95608,
+    "size_diff": -9771,
+    "gzip_diff": -555,
+    "timestamp": "2026-01-18T05:50:04.726Z"
+  },
+  {
+    "package": "@material-ui/core@4.12.1",
+    "v2_size": 343743,
+    "v3_size": 333976,
+    "v2_gzip": 96133,
+    "v3_gzip": 95585,
+    "size_diff": -9767,
+    "gzip_diff": -548,
+    "timestamp": "2026-01-18T05:50:11.435Z"
+  },
+  {
+    "package": "@material-ui/core@4.12.0",
+    "v2_size": 343751,
+    "v3_size": 333974,
+    "v2_gzip": 96135,
+    "v3_gzip": 95585,
+    "size_diff": -9777,
+    "gzip_diff": -550,
+    "timestamp": "2026-01-18T05:50:14.753Z"
+  },
+  {
+    "package": "@material-ui/core@4.11.4",
+    "v2_size": 337282,
+    "v3_size": 327721,
+    "v2_gzip": 95255,
+    "v3_gzip": 94787,
+    "size_diff": -9561,
+    "gzip_diff": -468,
+    "timestamp": "2026-01-18T05:50:19.784Z"
+  },
+  {
+    "package": "@material-ui/core@4.11.3",
+    "v2_size": 337282,
+    "v3_size": 327723,
+    "v2_gzip": 95255,
+    "v3_gzip": 94783,
+    "size_diff": -9559,
+    "gzip_diff": -472,
+    "timestamp": "2026-01-18T05:50:23.189Z"
+  },
+  {
+    "package": "@material-ui/core@4.11.2",
+    "v2_size": 337282,
+    "v3_size": 327721,
+    "v2_gzip": 95255,
+    "v3_gzip": 94784,
+    "size_diff": -9561,
+    "gzip_diff": -471,
+    "timestamp": "2026-01-18T05:50:27.522Z"
+  },
+  {
+    "package": "@material-ui/core@4.11.1",
+    "v2_size": 335292,
+    "v3_size": 327128,
+    "v2_gzip": 94798,
+    "v3_gzip": 94605,
+    "size_diff": -8164,
+    "gzip_diff": -193,
+    "timestamp": "2026-01-18T05:50:33.211Z"
+  },
+  {
+    "package": "@material-ui/core@4.11.0",
+    "v2_size": 335241,
+    "v3_size": 327032,
+    "v2_gzip": 94846,
+    "v3_gzip": 94610,
+    "size_diff": -8209,
+    "gzip_diff": -236,
+    "timestamp": "2026-01-18T05:50:36.988Z"
+  },
+  {
+    "package": "@material-ui/core@4.10.2",
+    "v2_size": 330751,
+    "v3_size": 322634,
+    "v2_gzip": 94029,
+    "v3_gzip": 93804,
+    "size_diff": -8117,
+    "gzip_diff": -225,
+    "timestamp": "2026-01-18T05:50:40.159Z"
+  },
+  {
+    "package": "@material-ui/core@4.10.1",
+    "v2_size": 331593,
+    "v3_size": 323433,
+    "v2_gzip": 94461,
+    "v3_gzip": 94181,
+    "size_diff": -8160,
+    "gzip_diff": -280,
+    "timestamp": "2026-01-18T05:50:43.978Z"
+  },
+  {
+    "package": "@material-ui/core@4.10.0",
+    "v2_size": 331323,
+    "v3_size": 323170,
+    "v2_gzip": 94421,
+    "v3_gzip": 94125,
+    "size_diff": -8153,
+    "gzip_diff": -296,
+    "timestamp": "2026-01-18T05:50:48.291Z"
+  },
+  {
+    "package": "@material-ui/core@4.9.14",
+    "v2_size": 331587,
+    "v3_size": 323443,
+    "v2_gzip": 94460,
+    "v3_gzip": 94168,
+    "size_diff": -8144,
+    "gzip_diff": -292,
+    "timestamp": "2026-01-18T05:50:53.162Z"
+  },
+  {
+    "package": "@material-ui/core@4.9.11",
+    "v2_size": 332352,
+    "v3_size": 324202,
+    "v2_gzip": 93063,
+    "v3_gzip": 92890,
+    "size_diff": -8150,
+    "gzip_diff": -173,
+    "timestamp": "2026-01-18T05:50:59.967Z"
+  },
+  {
+    "package": "@material-ui/core@4.9.10",
+    "v2_size": 326694,
+    "v3_size": 318751,
+    "v2_gzip": 92782,
+    "v3_gzip": 92489,
+    "size_diff": -7943,
+    "gzip_diff": -293,
+    "timestamp": "2026-01-18T05:51:03.219Z"
+  },
+  {
+    "package": "@material-ui/core@4.9.8",
+    "v2_size": 324951,
+    "v3_size": 317398,
+    "v2_gzip": 92242,
+    "v3_gzip": 91926,
+    "size_diff": -7553,
+    "gzip_diff": -316,
+    "timestamp": "2026-01-18T05:51:07.749Z"
+  },
+  {
+    "package": "@material-ui/core@4.9.5",
+    "v2_size": 323485,
+    "v3_size": 315968,
+    "v2_gzip": 91930,
+    "v3_gzip": 91620,
+    "size_diff": -7517,
+    "gzip_diff": -310,
+    "timestamp": "2026-01-18T05:51:11.466Z"
+  },
+  {
+    "package": "@material-ui/core@4.9.4",
+    "v2_size": 324892,
+    "v3_size": 317382,
+    "v2_gzip": 91942,
+    "v3_gzip": 91629,
+    "size_diff": -7510,
+    "gzip_diff": -313,
+    "timestamp": "2026-01-18T05:51:15.043Z"
+  },
+  {
+    "package": "v8n@1.5.1",
+    "v2_size": 7580,
+    "v3_size": 7517,
+    "v2_gzip": 2196,
+    "v3_gzip": 2197,
+    "size_diff": -63,
+    "gzip_diff": 1,
+    "timestamp": "2026-01-18T05:51:16.528Z"
+  },
+  {
+    "package": "v8n@1.3.3",
+    "v2_size": 7688,
+    "v3_size": 7655,
+    "v2_gzip": 2365,
+    "v3_gzip": 2376,
+    "size_diff": -33,
+    "gzip_diff": 11,
+    "timestamp": "2026-01-18T05:51:17.984Z"
+  },
+  {
+    "package": "prop-types@15.8.1",
+    "v2_size": 906,
+    "v3_size": 910,
+    "v2_gzip": 536,
+    "v3_gzip": 558,
+    "size_diff": 4,
+    "gzip_diff": 22,
+    "timestamp": "2026-01-18T05:51:18.903Z"
+  },
+  {
+    "package": "prop-types@15.8.0",
+    "v2_size": 906,
+    "v3_size": 910,
+    "v2_gzip": 536,
+    "v3_gzip": 557,
+    "size_diff": 4,
+    "gzip_diff": 21,
+    "timestamp": "2026-01-18T05:51:19.943Z"
+  },
+  {
+    "package": "prop-types@15.7.2",
+    "v2_size": 897,
+    "v3_size": 905,
+    "v2_gzip": 532,
+    "v3_gzip": 557,
+    "size_diff": 8,
+    "gzip_diff": 25,
+    "timestamp": "2026-01-18T05:51:20.836Z"
+  },
+  {
+    "package": "prop-types@15.7.1",
+    "v2_size": 897,
+    "v3_size": 905,
+    "v2_gzip": 532,
+    "v3_gzip": 556,
+    "size_diff": 8,
+    "gzip_diff": 24,
+    "timestamp": "2026-01-18T05:51:22.365Z"
+  },
+  {
+    "package": "prop-types@15.7.0",
+    "v2_size": 897,
+    "v3_size": 903,
+    "v2_gzip": 532,
+    "v3_gzip": 553,
+    "size_diff": 6,
+    "gzip_diff": 21,
+    "timestamp": "2026-01-18T05:51:24.009Z"
+  },
+  {
+    "package": "prop-types@15.6.2",
+    "v2_size": 829,
+    "v3_size": 837,
+    "v2_gzip": 502,
+    "v3_gzip": 529,
+    "size_diff": 8,
+    "gzip_diff": 27,
+    "timestamp": "2026-01-18T05:51:25.612Z"
+  },
+  {
+    "package": "prop-types@15.6.1",
+    "v2_size": 1456,
+    "v3_size": 1446,
+    "v2_gzip": 758,
+    "v3_gzip": 795,
+    "size_diff": -10,
+    "gzip_diff": 37,
+    "timestamp": "2026-01-18T05:51:28.328Z"
+  },
+  {
+    "package": "prop-types@15.6.0",
+    "v2_size": 1456,
+    "v3_size": 1446,
+    "v2_gzip": 758,
+    "v3_gzip": 796,
+    "size_diff": -10,
+    "gzip_diff": 38,
+    "timestamp": "2026-01-18T05:51:29.504Z"
+  },
+  {
+    "package": "prop-types@15.5.10",
+    "v2_size": 1448,
+    "v3_size": 1436,
+    "v2_gzip": 754,
+    "v3_gzip": 788,
+    "size_diff": -12,
+    "gzip_diff": 34,
+    "timestamp": "2026-01-18T05:51:30.782Z"
+  },
+  {
+    "package": "prop-types@15.5.9",
+    "v2_size": 1336,
+    "v3_size": 1333,
+    "v2_gzip": 679,
+    "v3_gzip": 714,
+    "size_diff": -3,
+    "gzip_diff": 35,
+    "timestamp": "2026-01-18T05:51:32.567Z"
+  },
+  {
+    "package": "prop-types@15.5.8",
+    "v2_size": 1336,
+    "v3_size": 1333,
+    "v2_gzip": 679,
+    "v3_gzip": 712,
+    "size_diff": -3,
+    "gzip_diff": 33,
+    "timestamp": "2026-01-18T05:51:34.339Z"
+  },
+  {
+    "package": "prop-types@15.5.7",
+    "v2_size": 1336,
+    "v3_size": 1333,
+    "v2_gzip": 679,
+    "v3_gzip": 712,
+    "size_diff": -3,
+    "gzip_diff": 33,
+    "timestamp": "2026-01-18T05:51:36.105Z"
+  },
+  {
+    "package": "prop-types@15.5.6",
+    "v2_size": 1726,
+    "v3_size": 1614,
+    "v2_gzip": 817,
+    "v3_gzip": 830,
+    "size_diff": -112,
+    "gzip_diff": 13,
+    "timestamp": "2026-01-18T05:51:37.280Z"
+  },
+  {
+    "package": "prop-types@15.5.5",
+    "v2_size": 1726,
+    "v3_size": 1607,
+    "v2_gzip": 817,
+    "v3_gzip": 824,
+    "size_diff": -119,
+    "gzip_diff": 7,
+    "timestamp": "2026-01-18T05:51:38.458Z"
+  },
+  {
+    "package": "prop-types@15.5.4",
+    "v2_size": 1726,
+    "v3_size": 1609,
+    "v2_gzip": 817,
+    "v3_gzip": 824,
+    "size_diff": -117,
+    "gzip_diff": 7,
+    "timestamp": "2026-01-18T05:51:39.622Z"
+  },
+  {
+    "package": "prop-types@15.5.3",
+    "v2_size": 1726,
+    "v3_size": 1611,
+    "v2_gzip": 817,
+    "v3_gzip": 826,
+    "size_diff": -115,
+    "gzip_diff": 9,
+    "timestamp": "2026-01-18T05:51:41.055Z"
+  },
+  {
+    "package": "prop-types@15.5.2",
+    "v2_size": 1726,
+    "v3_size": 1611,
+    "v2_gzip": 817,
+    "v3_gzip": 829,
+    "size_diff": -115,
+    "gzip_diff": 12,
+    "timestamp": "2026-01-18T05:51:42.227Z"
+  },
+  {
+    "package": "prop-types@15.5.1",
+    "v2_size": 1652,
+    "v3_size": 1542,
+    "v2_gzip": 793,
+    "v3_gzip": 792,
+    "size_diff": -110,
+    "gzip_diff": -1,
+    "timestamp": "2026-01-18T05:51:44.002Z"
+  },
+  {
+    "package": "prop-types@15.5.0",
+    "v2_size": 1652,
+    "v3_size": 1540,
+    "v2_gzip": 793,
+    "v3_gzip": 788,
+    "size_diff": -112,
+    "gzip_diff": -5,
+    "timestamp": "2026-01-18T05:51:45.217Z"
+  },
+  {
+    "package": "prop-types@0.2.0",
+    "v2_size": 4616,
+    "v3_size": 4524,
+    "v2_gzip": 1646,
+    "v3_gzip": 1665,
+    "size_diff": -92,
+    "gzip_diff": 19,
+    "timestamp": "2026-01-18T05:51:46.328Z"
+  },
+  {
+    "package": "styled-components@6.3.8",
+    "v2_size": 33779,
+    "v3_size": 32436,
+    "v2_gzip": 12239,
+    "v3_gzip": 12059,
+    "size_diff": -1343,
+    "gzip_diff": -180,
+    "timestamp": "2026-01-18T05:51:51.359Z"
+  },
+  {
+    "package": "styled-components@6.3.6",
+    "v2_size": 33588,
+    "v3_size": 32261,
+    "v2_gzip": 12167,
+    "v3_gzip": 11988,
+    "size_diff": -1327,
+    "gzip_diff": -179,
+    "timestamp": "2026-01-18T05:51:54.599Z"
+  },
+  {
+    "package": "styled-components@6.3.5",
+    "v2_size": 33421,
+    "v3_size": 32094,
+    "v2_gzip": 12101,
+    "v3_gzip": 11919,
+    "size_diff": -1327,
+    "gzip_diff": -182,
+    "timestamp": "2026-01-18T05:51:56.224Z"
+  },
+  {
+    "package": "styled-components@6.3.4",
+    "v2_size": 32080,
+    "v3_size": 30757,
+    "v2_gzip": 11635,
+    "v3_gzip": 11461,
+    "size_diff": -1323,
+    "gzip_diff": -174,
+    "timestamp": "2026-01-18T05:51:57.637Z"
+  },
+  {
+    "package": "styled-components@6.3.3",
+    "v2_size": 32120,
+    "v3_size": 30795,
+    "v2_gzip": 11644,
+    "v3_gzip": 11469,
+    "size_diff": -1325,
+    "gzip_diff": -175,
+    "timestamp": "2026-01-18T05:51:58.980Z"
+  },
+  {
+    "package": "styled-components@6.3.1",
+    "v2_size": 32120,
+    "v3_size": 30797,
+    "v2_gzip": 11644,
+    "v3_gzip": 11470,
+    "size_diff": -1323,
+    "gzip_diff": -174,
+    "timestamp": "2026-01-18T05:52:00.505Z"
+  },
+  {
+    "package": "styled-components@6.3.0",
+    "v2_size": 32120,
+    "v3_size": 30797,
+    "v2_gzip": 11644,
+    "v3_gzip": 11470,
+    "size_diff": -1323,
+    "gzip_diff": -174,
+    "timestamp": "2026-01-18T05:52:01.970Z"
+  },
+  {
+    "package": "styled-components@6.2.0",
+    "v2_size": 31253,
+    "v3_size": 29939,
+    "v2_gzip": 11450,
+    "v3_gzip": 11252,
+    "size_diff": -1314,
+    "gzip_diff": -198,
+    "timestamp": "2026-01-18T05:52:04.767Z"
+  },
+  {
+    "package": "styled-components@6.1.19",
+    "v2_size": 30919,
+    "v3_size": 29613,
+    "v2_gzip": 11319,
+    "v3_gzip": 11142,
+    "size_diff": -1306,
+    "gzip_diff": -177,
+    "timestamp": "2026-01-18T05:52:06.790Z"
+  },
+  {
+    "package": "styled-components@6.1.18",
+    "v2_size": 30919,
+    "v3_size": 29613,
+    "v2_gzip": 11319,
+    "v3_gzip": 11142,
+    "size_diff": -1306,
+    "gzip_diff": -177,
+    "timestamp": "2026-01-18T05:52:09.790Z"
+  },
+  {
+    "package": "styled-components@6.1.17",
+    "v2_size": 30913,
+    "v3_size": 29616,
+    "v2_gzip": 11325,
+    "v3_gzip": 11148,
+    "size_diff": -1297,
+    "gzip_diff": -177,
+    "timestamp": "2026-01-18T05:52:11.429Z"
+  },
+  {
+    "package": "styled-components@6.1.16",
+    "v2_size": 30913,
+    "v3_size": 29614,
+    "v2_gzip": 11325,
+    "v3_gzip": 11145,
+    "size_diff": -1299,
+    "gzip_diff": -180,
+    "timestamp": "2026-01-18T05:52:14.310Z"
+  },
+  {
+    "package": "styled-components@6.1.15",
+    "v2_size": 30913,
+    "v3_size": 29616,
+    "v2_gzip": 11326,
+    "v3_gzip": 11148,
+    "size_diff": -1297,
+    "gzip_diff": -178,
+    "timestamp": "2026-01-18T05:52:16.573Z"
+  },
+  {
+    "package": "styled-components@6.1.14",
+    "v2_size": 30913,
+    "v3_size": 29616,
+    "v2_gzip": 11325,
+    "v3_gzip": 11147,
+    "size_diff": -1297,
+    "gzip_diff": -178,
+    "timestamp": "2026-01-18T05:52:18.384Z"
+  },
+  {
+    "package": "styled-components@6.1.13",
+    "v2_size": 30908,
+    "v3_size": 29611,
+    "v2_gzip": 11322,
+    "v3_gzip": 11144,
+    "size_diff": -1297,
+    "gzip_diff": -178,
+    "timestamp": "2026-01-18T05:52:21.879Z"
+  },
+  {
+    "package": "styled-components@6.1.12",
+    "v2_size": 30908,
+    "v3_size": 29611,
+    "v2_gzip": 11321,
+    "v3_gzip": 11144,
+    "size_diff": -1297,
+    "gzip_diff": -177,
+    "timestamp": "2026-01-18T05:52:23.800Z"
+  },
+  {
+    "package": "styled-components@6.1.11",
+    "v2_size": 30790,
+    "v3_size": 29495,
+    "v2_gzip": 11283,
+    "v3_gzip": 11114,
+    "size_diff": -1295,
+    "gzip_diff": -169,
+    "timestamp": "2026-01-18T05:52:26.198Z"
+  },
+  {
+    "package": "styled-components@6.1.10",
+    "v2_size": 30790,
+    "v3_size": 29495,
+    "v2_gzip": 11283,
+    "v3_gzip": 11114,
+    "size_diff": -1295,
+    "gzip_diff": -169,
+    "timestamp": "2026-01-18T05:52:28.419Z"
+  },
+  {
+    "package": "styled-components@6.1.9",
+    "v2_size": 30737,
+    "v3_size": 29494,
+    "v2_gzip": 11262,
+    "v3_gzip": 11113,
+    "size_diff": -1243,
+    "gzip_diff": -149,
+    "timestamp": "2026-01-18T05:52:30.757Z"
+  },
+  {
+    "package": "styled-components@6.1.8",
+    "v2_size": 30723,
+    "v3_size": 29484,
+    "v2_gzip": 11254,
+    "v3_gzip": 11106,
+    "size_diff": -1239,
+    "gzip_diff": -148,
+    "timestamp": "2026-01-18T05:52:32.540Z"
+  },
+  {
+    "package": "classnames@2.5.1",
+    "v2_size": 752,
+    "v3_size": 832,
+    "v2_gzip": 436,
+    "v3_gzip": 474,
+    "size_diff": 80,
+    "gzip_diff": 38,
+    "timestamp": "2026-01-18T05:52:33.961Z"
+  },
+  {
+    "package": "classnames@2.5.0",
+    "v2_size": 752,
+    "v3_size": 832,
+    "v2_gzip": 436,
+    "v3_gzip": 474,
+    "size_diff": 80,
+    "gzip_diff": 38,
+    "timestamp": "2026-01-18T05:52:35.056Z"
+  },
+  {
+    "package": "classnames@2.4.0",
+    "v2_size": 752,
+    "v3_size": 830,
+    "v2_gzip": 436,
+    "v3_gzip": 471,
+    "size_diff": 78,
+    "gzip_diff": 35,
+    "timestamp": "2026-01-18T05:52:36.279Z"
+  },
+  {
+    "package": "classnames@2.3.3",
+    "v2_size": 717,
+    "v3_size": 800,
+    "v2_gzip": 431,
+    "v3_gzip": 470,
+    "size_diff": 83,
+    "gzip_diff": 39,
+    "timestamp": "2026-01-18T05:52:37.937Z"
+  },
+  {
+    "package": "classnames@2.3.2",
+    "v2_size": 717,
+    "v3_size": 798,
+    "v2_gzip": 431,
+    "v3_gzip": 468,
+    "size_diff": 81,
+    "gzip_diff": 37,
+    "timestamp": "2026-01-18T05:52:38.696Z"
+  },
+  {
+    "package": "classnames@2.3.1",
+    "v2_size": 660,
+    "v3_size": 741,
+    "v2_gzip": 400,
+    "v3_gzip": 439,
+    "size_diff": 81,
+    "gzip_diff": 39,
+    "timestamp": "2026-01-18T05:52:39.718Z"
+  },
+  {
+    "package": "classnames@2.3.0",
+    "v2_size": 729,
+    "v3_size": 743,
+    "v2_gzip": 454,
+    "v3_gzip": 442,
+    "size_diff": 14,
+    "gzip_diff": -12,
+    "timestamp": "2026-01-18T05:52:40.761Z"
+  },
+  {
+    "package": "classnames@2.2.6",
+    "v2_size": 588,
+    "v3_size": 669,
+    "v2_gzip": 371,
+    "v3_gzip": 407,
+    "size_diff": 81,
+    "gzip_diff": 36,
+    "timestamp": "2026-01-18T05:52:41.984Z"
+  },
+  {
+    "package": "classnames@2.2.5",
+    "v2_size": 552,
+    "v3_size": 635,
+    "v2_gzip": 350,
+    "v3_gzip": 393,
+    "size_diff": 83,
+    "gzip_diff": 43,
+    "timestamp": "2026-01-18T05:52:42.961Z"
+  },
+  {
+    "package": "classnames@2.2.4",
+    "v2_size": 552,
+    "v3_size": 635,
+    "v2_gzip": 350,
+    "v3_gzip": 391,
+    "size_diff": 83,
+    "gzip_diff": 41,
+    "timestamp": "2026-01-18T05:52:44.463Z"
+  },
+  {
+    "package": "classnames@2.2.3",
+    "v2_size": 552,
+    "v3_size": 633,
+    "v2_gzip": 350,
+    "v3_gzip": 391,
+    "size_diff": 81,
+    "gzip_diff": 41,
+    "timestamp": "2026-01-18T05:52:45.832Z"
+  },
+  {
+    "package": "classnames@2.2.2",
+    "v2_size": 552,
+    "v3_size": 635,
+    "v2_gzip": 350,
+    "v3_gzip": 393,
+    "size_diff": 83,
+    "gzip_diff": 43,
+    "timestamp": "2026-01-18T05:52:47.355Z"
+  },
+  {
+    "package": "classnames@2.2.1",
+    "v2_size": 551,
+    "v3_size": 634,
+    "v2_gzip": 352,
+    "v3_gzip": 393,
+    "size_diff": 83,
+    "gzip_diff": 41,
+    "timestamp": "2026-01-18T05:52:48.458Z"
+  },
+  {
+    "package": "classnames@2.2.0",
+    "v2_size": 553,
+    "v3_size": 631,
+    "v2_gzip": 353,
+    "v3_gzip": 391,
+    "size_diff": 78,
+    "gzip_diff": 38,
+    "timestamp": "2026-01-18T05:52:50.117Z"
+  },
+  {
+    "package": "classnames@2.1.5",
+    "v2_size": 553,
+    "v3_size": 631,
+    "v2_gzip": 353,
+    "v3_gzip": 391,
+    "size_diff": 78,
+    "gzip_diff": 38,
+    "timestamp": "2026-01-18T05:52:51.189Z"
+  },
+  {
+    "package": "classnames@2.1.4",
+    "v2_size": 553,
+    "v3_size": 631,
+    "v2_gzip": 353,
+    "v3_gzip": 391,
+    "size_diff": 78,
+    "gzip_diff": 38,
+    "timestamp": "2026-01-18T05:52:52.395Z"
+  },
+  {
+    "package": "classnames@2.1.3",
+    "v2_size": 537,
+    "v3_size": 602,
+    "v2_gzip": 345,
+    "v3_gzip": 375,
+    "size_diff": 65,
+    "gzip_diff": 30,
+    "timestamp": "2026-01-18T05:52:53.480Z"
+  },
+  {
+    "package": "classnames@2.1.2",
+    "v2_size": 515,
+    "v3_size": 602,
+    "v2_gzip": 336,
+    "v3_gzip": 375,
+    "size_diff": 87,
+    "gzip_diff": 39,
+    "timestamp": "2026-01-18T05:52:54.501Z"
+  },
+  {
+    "package": "classnames@2.1.1",
+    "v2_size": 523,
+    "v3_size": 548,
+    "v2_gzip": 335,
+    "v3_gzip": 355,
+    "size_diff": 25,
+    "gzip_diff": 20,
+    "timestamp": "2026-01-18T05:52:55.895Z"
+  },
+  {
+    "package": "classnames@2.1.0",
+    "v2_size": 524,
+    "v3_size": 553,
+    "v2_gzip": 331,
+    "v3_gzip": 356,
+    "size_diff": 29,
+    "gzip_diff": 25,
+    "timestamp": "2026-01-18T05:52:57.190Z"
+  },
+  {
+    "package": "@nuxtjs/axios@5.13.6",
+    "v2_size": 12681,
+    "v3_size": 12501,
+    "v2_gzip": 4705,
+    "v3_gzip": 4678,
+    "size_diff": -180,
+    "gzip_diff": -27,
+    "timestamp": "2026-01-18T05:53:02.913Z"
+  },
+  {
+    "package": "@nuxtjs/axios@5.13.1",
+    "v2_size": 12761,
+    "v3_size": 12622,
+    "v2_gzip": 4691,
+    "v3_gzip": 4674,
+    "size_diff": -139,
+    "gzip_diff": -17,
+    "timestamp": "2026-01-18T05:53:05.051Z"
+  },
+  {
+    "package": "@nuxtjs/axios@5.13.0",
+    "v2_size": 12761,
+    "v3_size": 12618,
+    "v2_gzip": 4685,
+    "v3_gzip": 4666,
+    "size_diff": -143,
+    "gzip_diff": -19,
+    "timestamp": "2026-01-18T05:53:06.725Z"
+  },
+  {
+    "package": "@nuxtjs/axios@5.12.5",
+    "v2_size": 12588,
+    "v3_size": 12447,
+    "v2_gzip": 4656,
+    "v3_gzip": 4635,
+    "size_diff": -141,
+    "gzip_diff": -21,
+    "timestamp": "2026-01-18T05:53:08.310Z"
+  },
+  {
+    "package": "@nuxtjs/axios@5.12.3",
+    "v2_size": 12569,
+    "v3_size": 12424,
+    "v2_gzip": 4645,
+    "v3_gzip": 4621,
+    "size_diff": -145,
+    "gzip_diff": -24,
+    "timestamp": "2026-01-18T05:53:09.974Z"
+  },
+  {
+    "package": "@nuxtjs/axios@5.12.2",
+    "v2_size": 12846,
+    "v3_size": 12703,
+    "v2_gzip": 4715,
+    "v3_gzip": 4687,
+    "size_diff": -143,
+    "gzip_diff": -28,
+    "timestamp": "2026-01-18T05:53:11.538Z"
+  },
+  {
+    "package": "@nuxtjs/axios@5.10.3",
+    "v2_size": 12640,
+    "v3_size": 12498,
+    "v2_gzip": 4625,
+    "v3_gzip": 4612,
+    "size_diff": -142,
+    "gzip_diff": -13,
+    "timestamp": "2026-01-18T05:53:16.284Z"
+  },
+  {
+    "package": "@nuxtjs/axios@5.4.1",
+    "v2_size": 11619,
+    "v3_size": 11489,
+    "v2_gzip": 4298,
+    "v3_gzip": 4289,
+    "size_diff": -130,
+    "gzip_diff": -9,
+    "timestamp": "2026-01-18T05:53:19.029Z"
+  },
+  {
+    "package": "vuex-persist@3.1.3",
+    "v2_size": 5881,
+    "v3_size": 5471,
+    "v2_gzip": 2222,
+    "v3_gzip": 2174,
+    "size_diff": -410,
+    "gzip_diff": -48,
+    "timestamp": "2026-01-18T05:53:23.937Z"
+  },
+  {
+    "package": "vuex-persist@2.3.0",
+    "v2_size": 75205,
+    "v3_size": 73498,
+    "v2_gzip": 26215,
+    "v3_gzip": 26459,
+    "size_diff": -1707,
+    "gzip_diff": 244,
+    "timestamp": "2026-01-18T05:53:25.268Z"
+  },
+  {
+    "package": "vuex-persist@2.2.0",
+    "v2_size": 13725,
+    "v3_size": 12833,
+    "v2_gzip": 4966,
+    "v3_gzip": 4765,
+    "size_diff": -892,
+    "gzip_diff": -201,
+    "timestamp": "2026-01-18T05:53:26.483Z"
+  },
+  {
+    "package": "vuex-persist@2.1.0",
+    "v2_size": 13923,
+    "v3_size": 13031,
+    "v2_gzip": 5018,
+    "v3_gzip": 4819,
+    "size_diff": -892,
+    "gzip_diff": -199,
+    "timestamp": "2026-01-18T05:53:28.228Z"
+  },
+  {
+    "package": "vuex-persist@2.0.1",
+    "v2_size": 13851,
+    "v3_size": 12959,
+    "v2_gzip": 5003,
+    "v3_gzip": 4808,
+    "size_diff": -892,
+    "gzip_diff": -195,
+    "timestamp": "2026-01-18T05:53:29.424Z"
+  },
+  {
+    "package": "vuex-persist@1.8.0",
+    "v2_size": 14667,
+    "v3_size": 13765,
+    "v2_gzip": 5232,
+    "v3_gzip": 5021,
+    "size_diff": -902,
+    "gzip_diff": -211,
+    "timestamp": "2026-01-18T05:53:32.284Z"
+  },
+  {
+    "package": "vuex-persist@1.5.4",
+    "v2_size": 14165,
+    "v3_size": 13284,
+    "v2_gzip": 5131,
+    "v3_gzip": 4920,
+    "size_diff": -881,
+    "gzip_diff": -211,
+    "timestamp": "2026-01-18T05:53:33.526Z"
+  },
+  {
+    "package": "bootstrap@5.3.8",
+    "v2_size": 60561,
+    "v3_size": 59765,
+    "v2_gzip": 16383,
+    "v3_gzip": 16343,
+    "size_diff": -796,
+    "gzip_diff": -40,
+    "timestamp": "2026-01-18T05:53:36.551Z"
+  },
+  {
+    "package": "bootstrap@5.3.7",
+    "v2_size": 60583,
+    "v3_size": 59787,
+    "v2_gzip": 16388,
+    "v3_gzip": 16351,
+    "size_diff": -796,
+    "gzip_diff": -37,
+    "timestamp": "2026-01-18T05:53:39.178Z"
+  },
+  {
+    "package": "bootstrap@5.3.6",
+    "v2_size": 60505,
+    "v3_size": 59709,
+    "v2_gzip": 16368,
+    "v3_gzip": 16339,
+    "size_diff": -796,
+    "gzip_diff": -29,
+    "timestamp": "2026-01-18T05:53:40.858Z"
+  },
+  {
+    "package": "bootstrap@5.3.5",
+    "v2_size": 60483,
+    "v3_size": 59689,
+    "v2_gzip": 16363,
+    "v3_gzip": 16330,
+    "size_diff": -794,
+    "gzip_diff": -33,
+    "timestamp": "2026-01-18T05:53:44.190Z"
+  },
+  {
+    "package": "bootstrap@5.3.4",
+    "v2_size": 60483,
+    "v3_size": 59689,
+    "v2_gzip": 16363,
+    "v3_gzip": 16330,
+    "size_diff": -794,
+    "gzip_diff": -33,
+    "timestamp": "2026-01-18T05:53:47.599Z"
+  },
+  {
+    "package": "bootstrap@5.3.3",
+    "v2_size": 60487,
+    "v3_size": 59693,
+    "v2_gzip": 16357,
+    "v3_gzip": 16323,
+    "size_diff": -794,
+    "gzip_diff": -34,
+    "timestamp": "2026-01-18T05:53:49.456Z"
+  },
+  {
+    "package": "bootstrap@5.3.2",
+    "v2_size": 60429,
+    "v3_size": 59637,
+    "v2_gzip": 16342,
+    "v3_gzip": 16309,
+    "size_diff": -792,
+    "gzip_diff": -33,
+    "timestamp": "2026-01-18T05:53:51.294Z"
+  },
+  {
+    "package": "bootstrap@5.3.1",
+    "v2_size": 60434,
+    "v3_size": 59642,
+    "v2_gzip": 16328,
+    "v3_gzip": 16300,
+    "size_diff": -792,
+    "gzip_diff": -28,
+    "timestamp": "2026-01-18T05:53:53.028Z"
+  },
+  {
+    "package": "bootstrap@5.3.0",
+    "v2_size": 60332,
+    "v3_size": 59545,
+    "v2_gzip": 16280,
+    "v3_gzip": 16256,
+    "size_diff": -787,
+    "gzip_diff": -24,
+    "timestamp": "2026-01-18T05:53:55.658Z"
+  },
+  {
+    "package": "bootstrap@5.2.3",
+    "v2_size": 60401,
+    "v3_size": 59613,
+    "v2_gzip": 16346,
+    "v3_gzip": 16305,
+    "size_diff": -788,
+    "gzip_diff": -41,
+    "timestamp": "2026-01-18T05:53:58.199Z"
+  },
+  {
+    "package": "bootstrap@5.2.2",
+    "v2_size": 60463,
+    "v3_size": 59671,
+    "v2_gzip": 16362,
+    "v3_gzip": 16319,
+    "size_diff": -792,
+    "gzip_diff": -43,
+    "timestamp": "2026-01-18T05:54:00.371Z"
+  },
+  {
+    "package": "bootstrap@5.2.1",
+    "v2_size": 60422,
+    "v3_size": 59625,
+    "v2_gzip": 16370,
+    "v3_gzip": 16320,
+    "size_diff": -797,
+    "gzip_diff": -50,
+    "timestamp": "2026-01-18T05:54:03.425Z"
+  },
+  {
+    "package": "bootstrap@5.2.0",
+    "v2_size": 60081,
+    "v3_size": 59283,
+    "v2_gzip": 16284,
+    "v3_gzip": 16232,
+    "size_diff": -798,
+    "gzip_diff": -52,
+    "timestamp": "2026-01-18T05:54:08.858Z"
+  },
+  {
+    "package": "bootstrap@5.1.3",
+    "v2_size": 59048,
+    "v3_size": 58308,
+    "v2_gzip": 16505,
+    "v3_gzip": 16408,
+    "size_diff": -740,
+    "gzip_diff": -97,
+    "timestamp": "2026-01-18T05:54:11.277Z"
+  },
+  {
+    "package": "bootstrap@5.1.2",
+    "v2_size": 59048,
+    "v3_size": 58308,
+    "v2_gzip": 16505,
+    "v3_gzip": 16408,
+    "size_diff": -740,
+    "gzip_diff": -97,
+    "timestamp": "2026-01-18T05:54:13.629Z"
+  },
+  {
+    "package": "bootstrap@5.1.1",
+    "v2_size": 59052,
+    "v3_size": 58312,
+    "v2_gzip": 16500,
+    "v3_gzip": 16404,
+    "size_diff": -740,
+    "gzip_diff": -96,
+    "timestamp": "2026-01-18T05:54:16.284Z"
+  },
+  {
+    "package": "bootstrap@5.1.0",
+    "v2_size": 58839,
+    "v3_size": 58103,
+    "v2_gzip": 16436,
+    "v3_gzip": 16321,
+    "size_diff": -736,
+    "gzip_diff": -115,
+    "timestamp": "2026-01-18T05:54:19.560Z"
+  },
+  {
+    "package": "bootstrap@5.0.2",
+    "v2_size": 59271,
+    "v3_size": 58508,
+    "v2_gzip": 16517,
+    "v3_gzip": 16353,
+    "size_diff": -763,
+    "gzip_diff": -164,
+    "timestamp": "2026-01-18T05:54:21.839Z"
+  },
+  {
+    "package": "bootstrap@5.0.1",
+    "v2_size": 59197,
+    "v3_size": 58439,
+    "v2_gzip": 16546,
+    "v3_gzip": 16362,
+    "size_diff": -758,
+    "gzip_diff": -184,
+    "timestamp": "2026-01-18T05:54:23.685Z"
+  },
+  {
+    "package": "bootstrap@5.0.0",
+    "v2_size": 59960,
+    "v3_size": 59169,
+    "v2_gzip": 16569,
+    "v3_gzip": 16385,
+    "size_diff": -791,
+    "gzip_diff": -184,
+    "timestamp": "2026-01-18T05:54:25.569Z"
+  },
+  {
+    "package": "react-router@7.12.0",
+    "v2_size": 198158,
+    "v3_size": 184305,
+    "v2_gzip": 60641,
+    "v3_gzip": 58540,
+    "size_diff": -13853,
+    "gzip_diff": -2101,
+    "timestamp": "2026-01-18T05:54:29.438Z"
+  },
+  {
+    "package": "react-router@7.11.0",
+    "v2_size": 196065,
+    "v3_size": 182367,
+    "v2_gzip": 60067,
+    "v3_gzip": 57967,
+    "size_diff": -13698,
+    "gzip_diff": -2100,
+    "timestamp": "2026-01-18T05:54:33.440Z"
+  },
+  {
+    "package": "react-router@7.10.1",
+    "v2_size": 192142,
+    "v3_size": 178640,
+    "v2_gzip": 59088,
+    "v3_gzip": 57016,
+    "size_diff": -13502,
+    "gzip_diff": -2072,
+    "timestamp": "2026-01-18T05:54:38.494Z"
+  },
+  {
+    "package": "react-router@7.10.0",
+    "v2_size": 192136,
+    "v3_size": 178632,
+    "v2_gzip": 59087,
+    "v3_gzip": 57012,
+    "size_diff": -13504,
+    "gzip_diff": -2075,
+    "timestamp": "2026-01-18T05:54:41.900Z"
+  },
+  {
+    "package": "react-router@7.9.6",
+    "v2_size": 189789,
+    "v3_size": 177608,
+    "v2_gzip": 58308,
+    "v3_gzip": 56657,
+    "size_diff": -12181,
+    "gzip_diff": -1651,
+    "timestamp": "2026-01-18T05:54:44.549Z"
+  },
+  {
+    "package": "react-router@7.9.5",
+    "v2_size": 189104,
+    "v3_size": 176874,
+    "v2_gzip": 58096,
+    "v3_gzip": 56393,
+    "size_diff": -12230,
+    "gzip_diff": -1703,
+    "timestamp": "2026-01-18T05:54:47.456Z"
+  },
+  {
+    "package": "react-router@7.9.4",
+    "v2_size": 196624,
+    "v3_size": 183785,
+    "v2_gzip": 59997,
+    "v3_gzip": 58186,
+    "size_diff": -12839,
+    "gzip_diff": -1811,
+    "timestamp": "2026-01-18T05:54:51.638Z"
+  },
+  {
+    "package": "react-router@7.9.3",
+    "v2_size": 196223,
+    "v3_size": 183452,
+    "v2_gzip": 59896,
+    "v3_gzip": 58097,
+    "size_diff": -12771,
+    "gzip_diff": -1799,
+    "timestamp": "2026-01-18T05:54:54.008Z"
+  },
+  {
+    "package": "react-router@7.9.2",
+    "v2_size": 196200,
+    "v3_size": 183429,
+    "v2_gzip": 59875,
+    "v3_gzip": 58090,
+    "size_diff": -12771,
+    "gzip_diff": -1785,
+    "timestamp": "2026-01-18T05:54:56.592Z"
+  },
+  {
+    "package": "react-router@7.9.1",
+    "v2_size": 193216,
+    "v3_size": 180513,
+    "v2_gzip": 59198,
+    "v3_gzip": 57397,
+    "size_diff": -12703,
+    "gzip_diff": -1801,
+    "timestamp": "2026-01-18T05:54:59.419Z"
+  },
+  {
+    "package": "react-router@7.9.0",
+    "v2_size": 193216,
+    "v3_size": 180513,
+    "v2_gzip": 59198,
+    "v3_gzip": 57399,
+    "size_diff": -12703,
+    "gzip_diff": -1799,
+    "timestamp": "2026-01-18T05:55:02.288Z"
+  },
+  {
+    "package": "react-router@7.8.2",
+    "v2_size": 193240,
+    "v3_size": 180624,
+    "v2_gzip": 59115,
+    "v3_gzip": 57310,
+    "size_diff": -12616,
+    "gzip_diff": -1805,
+    "timestamp": "2026-01-18T05:55:05.007Z"
+  },
+  {
+    "package": "react-router@7.8.1",
+    "v2_size": 193543,
+    "v3_size": 180932,
+    "v2_gzip": 59190,
+    "v3_gzip": 57300,
+    "size_diff": -12611,
+    "gzip_diff": -1890,
+    "timestamp": "2026-01-18T05:55:07.575Z"
+  },
+  {
+    "package": "react-router@7.8.0",
+    "v2_size": 191459,
+    "v3_size": 178944,
+    "v2_gzip": 58650,
+    "v3_gzip": 56813,
+    "size_diff": -12515,
+    "gzip_diff": -1837,
+    "timestamp": "2026-01-18T05:55:10.547Z"
+  },
+  {
+    "package": "react-router@7.7.1",
+    "v2_size": 189447,
+    "v3_size": 177055,
+    "v2_gzip": 58231,
+    "v3_gzip": 56434,
+    "size_diff": -12392,
+    "gzip_diff": -1797,
+    "timestamp": "2026-01-18T05:55:12.906Z"
+  },
+  {
+    "package": "react-router@7.7.0",
+    "v2_size": 189445,
+    "v3_size": 177057,
+    "v2_gzip": 58236,
+    "v3_gzip": 56443,
+    "size_diff": -12388,
+    "gzip_diff": -1793,
+    "timestamp": "2026-01-18T05:55:15.399Z"
+  },
+  {
+    "package": "react-router@7.6.3",
+    "v2_size": 170975,
+    "v3_size": 160992,
+    "v2_gzip": 52625,
+    "v3_gzip": 51272,
+    "size_diff": -9983,
+    "gzip_diff": -1353,
+    "timestamp": "2026-01-18T05:55:17.532Z"
+  },
+  {
+    "package": "react-router@7.6.2",
+    "v2_size": 170975,
+    "v3_size": 160992,
+    "v2_gzip": 52625,
+    "v3_gzip": 51274,
+    "size_diff": -9983,
+    "gzip_diff": -1351,
+    "timestamp": "2026-01-18T05:55:19.936Z"
+  },
+  {
+    "package": "react-router@7.6.1",
+    "v2_size": 170591,
+    "v3_size": 160800,
+    "v2_gzip": 52582,
+    "v3_gzip": 51217,
+    "size_diff": -9791,
+    "gzip_diff": -1365,
+    "timestamp": "2026-01-18T05:55:22.199Z"
+  },
+  {
+    "package": "react-router@7.6.0",
+    "v2_size": 170527,
+    "v3_size": 160739,
+    "v2_gzip": 52559,
+    "v3_gzip": 51197,
+    "size_diff": -9788,
+    "gzip_diff": -1362,
+    "timestamp": "2026-01-18T05:55:25.551Z"
+  },
+  {
+    "package": "react-router-dom@7.12.0",
+    "v2_size": 606,
+    "v3_size": 187849,
+    "v2_gzip": 335,
+    "v3_gzip": 59554,
+    "size_diff": 187243,
+    "gzip_diff": 59219,
+    "timestamp": "2026-01-18T05:55:29.964Z"
+  },
+  {
+    "package": "react-router-dom@7.11.0",
+    "v2_size": 606,
+    "v3_size": 185853,
+    "v2_gzip": 335,
+    "v3_gzip": 58965,
+    "size_diff": 185247,
+    "gzip_diff": 58630,
+    "timestamp": "2026-01-18T05:55:32.533Z"
+  },
+  {
+    "package": "react-router-dom@7.10.1",
+    "v2_size": 606,
+    "v3_size": 182144,
+    "v2_gzip": 335,
+    "v3_gzip": 57985,
+    "size_diff": 181538,
+    "gzip_diff": 57650,
+    "timestamp": "2026-01-18T05:55:34.900Z"
+  },
+  {
+    "package": "react-router-dom@7.10.0",
+    "v2_size": 606,
+    "v3_size": 182138,
+    "v2_gzip": 335,
+    "v3_gzip": 57984,
+    "size_diff": 181532,
+    "gzip_diff": 57649,
+    "timestamp": "2026-01-18T05:55:37.486Z"
+  },
+  {
+    "package": "react-router-dom@7.9.6",
+    "v2_size": 606,
+    "v3_size": 181062,
+    "v2_gzip": 335,
+    "v3_gzip": 57615,
+    "size_diff": 180456,
+    "gzip_diff": 57280,
+    "timestamp": "2026-01-18T05:55:39.920Z"
+  },
+  {
+    "package": "react-router-dom@7.9.5",
+    "v2_size": 606,
+    "v3_size": 180326,
+    "v2_gzip": 335,
+    "v3_gzip": 57348,
+    "size_diff": 179720,
+    "gzip_diff": 57013,
+    "timestamp": "2026-01-18T05:55:42.253Z"
+  },
+  {
+    "package": "react-router-dom@7.9.4",
+    "v2_size": 606,
+    "v3_size": 187097,
+    "v2_gzip": 335,
+    "v3_gzip": 59002,
+    "size_diff": 186491,
+    "gzip_diff": 58667,
+    "timestamp": "2026-01-18T05:55:44.607Z"
+  },
+  {
+    "package": "react-router-dom@7.9.3",
+    "v2_size": 606,
+    "v3_size": 186764,
+    "v2_gzip": 335,
+    "v3_gzip": 58915,
+    "size_diff": 186158,
+    "gzip_diff": 58580,
+    "timestamp": "2026-01-18T05:55:47.225Z"
+  },
+  {
+    "package": "react-router-dom@7.9.2",
+    "v2_size": 606,
+    "v3_size": 186741,
+    "v2_gzip": 335,
+    "v3_gzip": 58905,
+    "size_diff": 186135,
+    "gzip_diff": 58570,
+    "timestamp": "2026-01-18T05:55:49.753Z"
+  },
+  {
+    "package": "react-router-dom@7.9.1",
+    "v2_size": 606,
+    "v3_size": 183823,
+    "v2_gzip": 335,
+    "v3_gzip": 58207,
+    "size_diff": 183217,
+    "gzip_diff": 57872,
+    "timestamp": "2026-01-18T05:55:52.260Z"
+  },
+  {
+    "package": "react-router-dom@7.9.0",
+    "v2_size": 606,
+    "v3_size": 183825,
+    "v2_gzip": 335,
+    "v3_gzip": 58208,
+    "size_diff": 183219,
+    "gzip_diff": 57873,
+    "timestamp": "2026-01-18T05:55:55.377Z"
+  },
+  {
+    "package": "react-router-dom@7.8.2",
+    "v2_size": 606,
+    "v3_size": 183933,
+    "v2_gzip": 335,
+    "v3_gzip": 58123,
+    "size_diff": 183327,
+    "gzip_diff": 57788,
+    "timestamp": "2026-01-18T05:55:57.871Z"
+  },
+  {
+    "package": "react-router-dom@7.8.1",
+    "v2_size": 606,
+    "v3_size": 184203,
+    "v2_gzip": 335,
+    "v3_gzip": 58097,
+    "size_diff": 183597,
+    "gzip_diff": 57762,
+    "timestamp": "2026-01-18T05:56:00.453Z"
+  },
+  {
+    "package": "react-router-dom@7.8.0",
+    "v2_size": 606,
+    "v3_size": 182217,
+    "v2_gzip": 335,
+    "v3_gzip": 57632,
+    "size_diff": 181611,
+    "gzip_diff": 57297,
+    "timestamp": "2026-01-18T05:56:03.245Z"
+  },
+  {
+    "package": "react-router-dom@7.7.1",
+    "v2_size": 606,
+    "v3_size": 180330,
+    "v2_gzip": 335,
+    "v3_gzip": 57254,
+    "size_diff": 179724,
+    "gzip_diff": 56919,
+    "timestamp": "2026-01-18T05:56:05.491Z"
+  },
+  {
+    "package": "react-router-dom@7.7.0",
+    "v2_size": 606,
+    "v3_size": 180328,
+    "v2_gzip": 335,
+    "v3_gzip": 57260,
+    "size_diff": 179722,
+    "gzip_diff": 56925,
+    "timestamp": "2026-01-18T05:56:08.487Z"
+  },
+  {
+    "package": "react-router-dom@7.6.3",
+    "v2_size": 606,
+    "v3_size": 164241,
+    "v2_gzip": 335,
+    "v3_gzip": 52119,
+    "size_diff": 163635,
+    "gzip_diff": 51784,
+    "timestamp": "2026-01-18T05:56:10.943Z"
+  },
+  {
+    "package": "react-router-dom@7.6.2",
+    "v2_size": 606,
+    "v3_size": 164241,
+    "v2_gzip": 335,
+    "v3_gzip": 52116,
+    "size_diff": 163635,
+    "gzip_diff": 51781,
+    "timestamp": "2026-01-18T05:56:13.342Z"
+  },
+  {
+    "package": "react-router-dom@7.6.1",
+    "v2_size": 606,
+    "v3_size": 164047,
+    "v2_gzip": 335,
+    "v3_gzip": 52057,
+    "size_diff": 163441,
+    "gzip_diff": 51722,
+    "timestamp": "2026-01-18T05:56:15.800Z"
+  },
+  {
+    "package": "react-router-dom@7.6.0",
+    "v2_size": 606,
+    "v3_size": 163990,
+    "v2_gzip": 335,
+    "v3_gzip": 52043,
+    "size_diff": 163384,
+    "gzip_diff": 51708,
+    "timestamp": "2026-01-18T05:56:18.686Z"
+  },
+  {
+    "package": "emotion@11.0.0",
+    "v2_size": 283,
+    "v3_size": 296,
+    "v2_gzip": 216,
+    "v3_gzip": 228,
+    "size_diff": 13,
+    "gzip_diff": 12,
+    "timestamp": "2026-01-18T05:56:21.379Z"
+  },
+  {
+    "package": "@material-ui/core@4.9.12",
+    "v2_size": 332814,
+    "v3_size": 324628,
+    "v2_gzip": 93221,
+    "v3_gzip": 93047,
+    "size_diff": -8186,
+    "gzip_diff": -174,
+    "timestamp": "2026-01-18T06:33:27.396Z"
+  },
+  {
+    "package": "emotion@10.0.27",
+    "v2_size": 15718,
+    "v3_size": 15321,
+    "v2_gzip": 5931,
+    "v3_gzip": 5921,
+    "size_diff": -397,
+    "gzip_diff": -10,
+    "timestamp": "2026-01-18T06:33:32.488Z"
+  },
+  {
+    "package": "emotion@10.0.27",
+    "v2_size": 15718,
+    "v3_size": 15321,
+    "v2_gzip": 5931,
+    "v3_gzip": 5921,
+    "size_diff": -397,
+    "gzip_diff": -10,
+    "timestamp": "2026-01-18T06:45:13.846Z"
+  },
+  {
+    "package": "emotion@10.0.23",
+    "v2_size": 15718,
+    "v3_size": 15321,
+    "v2_gzip": 5931,
+    "v3_gzip": 5921,
+    "size_diff": -397,
+    "gzip_diff": -10,
+    "timestamp": "2026-01-18T06:45:14.881Z"
+  },
+  {
+    "package": "emotion@10.0.14",
+    "v2_size": 15718,
+    "v3_size": 15321,
+    "v2_gzip": 5931,
+    "v3_gzip": 5921,
+    "size_diff": -397,
+    "gzip_diff": -10,
+    "timestamp": "2026-01-18T06:45:15.801Z"
+  },
+  {
+    "package": "emotion@10.0.9",
+    "v2_size": 15718,
+    "v3_size": 15321,
+    "v2_gzip": 5931,
+    "v3_gzip": 5922,
+    "size_diff": -397,
+    "gzip_diff": -9,
+    "timestamp": "2026-01-18T06:45:16.706Z"
+  },
+  {
+    "package": "emotion@10.0.8",
+    "v2_size": 15718,
+    "v3_size": 15321,
+    "v2_gzip": 5931,
+    "v3_gzip": 5921,
+    "size_diff": -397,
+    "gzip_diff": -10,
+    "timestamp": "2026-01-18T06:45:18.762Z"
+  },
+  {
+    "package": "emotion@10.0.0",
+    "v2_size": 15918,
+    "v3_size": 15293,
+    "v2_gzip": 5981,
+    "v3_gzip": 5925,
+    "size_diff": -625,
+    "gzip_diff": -56,
+    "timestamp": "2026-01-18T06:45:19.804Z"
+  },
+  {
+    "package": "emotion@9.2.12",
+    "v2_size": 15166,
+    "v3_size": 14546,
+    "v2_gzip": 5822,
+    "v3_gzip": 5730,
+    "size_diff": -620,
+    "gzip_diff": -92,
+    "timestamp": "2026-01-18T06:45:22.421Z"
+  },
+  {
+    "package": "emotion@9.2.8",
+    "v2_size": 15166,
+    "v3_size": 14544,
+    "v2_gzip": 5822,
+    "v3_gzip": 5727,
+    "size_diff": -622,
+    "gzip_diff": -95,
+    "timestamp": "2026-01-18T06:45:23.883Z"
+  },
+  {
+    "package": "emotion@9.2.6",
+    "v2_size": 15166,
+    "v3_size": 14544,
+    "v2_gzip": 5822,
+    "v3_gzip": 5729,
+    "size_diff": -622,
+    "gzip_diff": -93,
+    "timestamp": "2026-01-18T06:45:24.772Z"
+  },
+  {
+    "package": "emotion@9.1.3",
+    "v2_size": 15166,
+    "v3_size": 14546,
+    "v2_gzip": 5822,
+    "v3_gzip": 5729,
+    "size_diff": -620,
+    "gzip_diff": -93,
+    "timestamp": "2026-01-18T06:45:25.652Z"
+  },
+  {
+    "package": "styled-system@5.1.5",
+    "v2_size": 18112,
+    "v3_size": 15690,
+    "v2_gzip": 4994,
+    "v3_gzip": 4844,
+    "size_diff": -2422,
+    "gzip_diff": -150,
+    "timestamp": "2026-01-18T06:45:29.384Z"
+  },
+  {
+    "package": "styled-system@5.1.4",
+    "v2_size": 18112,
+    "v3_size": 15690,
+    "v2_gzip": 4994,
+    "v3_gzip": 4844,
+    "size_diff": -2422,
+    "gzip_diff": -150,
+    "timestamp": "2026-01-18T06:45:30.277Z"
+  },
+  {
+    "package": "styled-system@5.1.2",
+    "v2_size": 18112,
+    "v3_size": 15690,
+    "v2_gzip": 4994,
+    "v3_gzip": 4845,
+    "size_diff": -2422,
+    "gzip_diff": -149,
+    "timestamp": "2026-01-18T06:45:31.138Z"
+  },
+  {
+    "package": "styled-system@5.0.18",
+    "v2_size": 17996,
+    "v3_size": 15626,
+    "v2_gzip": 4973,
+    "v3_gzip": 4824,
+    "size_diff": -2370,
+    "gzip_diff": -149,
+    "timestamp": "2026-01-18T06:45:31.965Z"
+  },
+  {
+    "package": "styled-system@5.0.0",
+    "v2_size": 16848,
+    "v3_size": 14651,
+    "v2_gzip": 4549,
+    "v3_gzip": 4405,
+    "size_diff": -2197,
+    "gzip_diff": -144,
+    "timestamp": "2026-01-18T06:45:32.829Z"
+  },
+  {
+    "package": "styled-system@4.2.2",
+    "v2_size": 11511,
+    "v3_size": 8954,
+    "v2_gzip": 3352,
+    "v3_gzip": 3267,
+    "size_diff": -2557,
+    "gzip_diff": -85,
+    "timestamp": "2026-01-18T06:45:34.454Z"
+  },
+  {
+    "package": "normalize.css@8.0.1",
+    "v2_size": 1816,
+    "v3_size": 2094,
+    "v2_gzip": 773,
+    "v3_gzip": 771,
+    "size_diff": 278,
+    "gzip_diff": -2,
+    "timestamp": "2026-01-18T06:45:35.908Z"
+  },
+  {
+    "package": "normalize.css@8.0.0",
+    "v2_size": 1797,
+    "v3_size": 2075,
+    "v2_gzip": 766,
+    "v3_gzip": 765,
+    "size_diff": 278,
+    "gzip_diff": -1,
+    "timestamp": "2026-01-18T06:45:37.023Z"
+  },
+  {
+    "package": "normalize.css@7.0.0",
+    "v2_size": 2277,
+    "v3_size": 2570,
+    "v2_gzip": 952,
+    "v3_gzip": 949,
+    "size_diff": 293,
+    "gzip_diff": -3,
+    "timestamp": "2026-01-18T06:45:38.141Z"
+  },
+  {
+    "package": "normalize.css@6.0.0",
+    "v2_size": 2172,
+    "v3_size": 2465,
+    "v2_gzip": 911,
+    "v3_gzip": 910,
+    "size_diff": 293,
+    "gzip_diff": -1,
+    "timestamp": "2026-01-18T06:45:39.172Z"
+  },
+  {
+    "package": "normalize.css@5.0.0",
+    "v2_size": 2370,
+    "v3_size": 2663,
+    "v2_gzip": 985,
+    "v3_gzip": 988,
+    "size_diff": 293,
+    "gzip_diff": 3,
+    "timestamp": "2026-01-18T06:45:40.205Z"
+  },
+  {
+    "package": "normalize.css@4.2.0",
+    "v2_size": 2269,
+    "v3_size": 2585,
+    "v2_gzip": 984,
+    "v3_gzip": 989,
+    "size_diff": 316,
+    "gzip_diff": 5,
+    "timestamp": "2026-01-18T06:45:41.268Z"
+  },
+  {
+    "package": "normalize.css@4.1.1",
+    "v2_size": 2243,
+    "v3_size": 2559,
+    "v2_gzip": 976,
+    "v3_gzip": 979,
+    "size_diff": 316,
+    "gzip_diff": 3,
+    "timestamp": "2026-01-18T06:45:42.317Z"
+  },
+  {
+    "package": "normalize.css@4.0.0",
+    "v2_size": 2044,
+    "v3_size": 2280,
+    "v2_gzip": 927,
+    "v3_gzip": 936,
+    "size_diff": 236,
+    "gzip_diff": 9,
+    "timestamp": "2026-01-18T06:45:43.408Z"
+  },
+  {
+    "package": "normalize.css@3.0.3",
+    "v2_size": 1911,
+    "v3_size": 2111,
+    "v2_gzip": 897,
+    "v3_gzip": 895,
+    "size_diff": 200,
+    "gzip_diff": -2,
+    "timestamp": "2026-01-18T06:45:44.480Z"
+  },
+  {
+    "package": "normalize.css@3.0.2",
+    "v2_size": 1982,
+    "v3_size": 2095,
+    "v2_gzip": 903,
+    "v3_gzip": 888,
+    "size_diff": 113,
+    "gzip_diff": -15,
+    "timestamp": "2026-01-18T06:45:45.529Z"
+  },
+  {
+    "package": "express@5.1.0",
+    "v2_size": 582085,
+    "v3_size": 600279,
+    "v2_gzip": 230779,
+    "v3_gzip": 241350,
+    "size_diff": 18194,
+    "gzip_diff": 10571,
+    "timestamp": "2026-01-18T06:45:49.020Z"
+  },
+  {
+    "package": "express@5.0.1",
+    "v2_size": 1155964,
+    "v3_size": 653720,
+    "v2_gzip": 429030,
+    "v3_gzip": 253617,
+    "size_diff": -502244,
+    "gzip_diff": -175413,
+    "timestamp": "2026-01-18T06:45:50.712Z"
+  },
+  {
+    "package": "express@5.0.0",
+    "v2_size": 1156301,
+    "v3_size": 653331,
+    "v2_gzip": 429101,
+    "v3_gzip": 253341,
+    "size_diff": -502970,
+    "gzip_diff": -175760,
+    "timestamp": "2026-01-18T06:45:51.755Z"
+  },
+  {
+    "package": "express@4.22.1",
+    "v2_size": 595976,
+    "v3_size": 614511,
+    "v2_gzip": 238188,
+    "v3_gzip": 247416,
+    "size_diff": 18535,
+    "gzip_diff": 9228,
+    "timestamp": "2026-01-18T06:45:53.224Z"
+  },
+  {
+    "package": "express@4.22.0",
+    "v2_size": 595295,
+    "v3_size": 614513,
+    "v2_gzip": 237971,
+    "v3_gzip": 247428,
+    "size_diff": 19218,
+    "gzip_diff": 9457,
+    "timestamp": "2026-01-18T06:45:54.937Z"
+  },
+  {
+    "package": "express@4.21.2",
+    "v2_size": 594862,
+    "v3_size": 613375,
+    "v2_gzip": 237920,
+    "v3_gzip": 247109,
+    "size_diff": 18513,
+    "gzip_diff": 9189,
+    "timestamp": "2026-01-18T06:45:56.004Z"
+  },
+  {
+    "package": "express@4.21.1",
+    "v2_size": 594083,
+    "v3_size": 613279,
+    "v2_gzip": 236987,
+    "v3_gzip": 247113,
+    "size_diff": 19196,
+    "gzip_diff": 10126,
+    "timestamp": "2026-01-18T06:45:57.316Z"
+  },
+  {
+    "package": "express@4.21.0",
+    "v2_size": 593592,
+    "v3_size": 612840,
+    "v2_gzip": 236790,
+    "v3_gzip": 246859,
+    "size_diff": 19248,
+    "gzip_diff": 10069,
+    "timestamp": "2026-01-18T06:45:58.660Z"
+  },
+  {
+    "package": "express@4.20.0",
+    "v2_size": 616600,
+    "v3_size": 635585,
+    "v2_gzip": 240529,
+    "v3_gzip": 249808,
+    "size_diff": 18985,
+    "gzip_diff": 9279,
+    "timestamp": "2026-01-18T06:46:00.527Z"
+  },
+  {
+    "package": "express@4.19.2",
+    "v2_size": 590308,
+    "v3_size": 609674,
+    "v2_gzip": 235878,
+    "v3_gzip": 246075,
+    "size_diff": 19366,
+    "gzip_diff": 10197,
+    "timestamp": "2026-01-18T06:46:01.874Z"
+  },
+  {
+    "package": "express@4.19.1",
+    "v2_size": 590405,
+    "v3_size": 609769,
+    "v2_gzip": 235880,
+    "v3_gzip": 246064,
+    "size_diff": 19364,
+    "gzip_diff": 10184,
+    "timestamp": "2026-01-18T06:46:03.418Z"
+  },
+  {
+    "package": "express@4.19.0",
+    "v2_size": 590397,
+    "v3_size": 609751,
+    "v2_gzip": 235877,
+    "v3_gzip": 246049,
+    "size_diff": 19354,
+    "gzip_diff": 10172,
+    "timestamp": "2026-01-18T06:46:04.752Z"
+  },
+  {
+    "package": "express@4.18.3",
+    "v2_size": 590155,
+    "v3_size": 609531,
+    "v2_gzip": 235797,
+    "v3_gzip": 245967,
+    "size_diff": 19376,
+    "gzip_diff": 10170,
+    "timestamp": "2026-01-18T06:46:06.406Z"
+  },
+  {
+    "package": "express@4.18.2",
+    "v2_size": 586912,
+    "v3_size": 609238,
+    "v2_gzip": 235003,
+    "v3_gzip": 245922,
+    "size_diff": 22326,
+    "gzip_diff": 10919,
+    "timestamp": "2026-01-18T06:46:07.880Z"
+  },
+  {
+    "package": "express@4.18.1",
+    "v2_size": 591957,
+    "v3_size": 608948,
+    "v2_gzip": 236672,
+    "v3_gzip": 245833,
+    "size_diff": 16991,
+    "gzip_diff": 9161,
+    "timestamp": "2026-01-18T06:46:10.034Z"
+  },
+  {
+    "package": "express@4.18.0",
+    "v2_size": 586040,
+    "v3_size": 608960,
+    "v2_gzip": 234624,
+    "v3_gzip": 245813,
+    "size_diff": 22920,
+    "gzip_diff": 11189,
+    "timestamp": "2026-01-18T06:46:11.666Z"
+  },
+  {
+    "package": "express@4.17.3",
+    "v2_size": 561602,
+    "v3_size": 581943,
+    "v2_gzip": 226449,
+    "v3_gzip": 238323,
+    "size_diff": 20341,
+    "gzip_diff": 11874,
+    "timestamp": "2026-01-18T06:46:13.713Z"
+  },
+  {
+    "package": "express@4.17.2",
+    "v2_size": 561712,
+    "v3_size": 581686,
+    "v2_gzip": 226471,
+    "v3_gzip": 238178,
+    "size_diff": 19974,
+    "gzip_diff": 11707,
+    "timestamp": "2026-01-18T06:46:15.567Z"
+  },
+  {
+    "package": "express@4.17.1",
+    "v2_size": 554128,
+    "v3_size": 582987,
+    "v2_gzip": 224999,
+    "v3_gzip": 238678,
+    "size_diff": 28859,
+    "gzip_diff": 13679,
+    "timestamp": "2026-01-18T06:46:17.485Z"
+  },
+  {
+    "package": "express@4.17.0",
+    "v2_size": 402994,
+    "v3_size": 583074,
+    "v2_gzip": 223712,
+    "v3_gzip": 238693,
+    "size_diff": 180080,
+    "gzip_diff": 14981,
+    "timestamp": "2026-01-18T06:46:18.908Z"
+  },
+  {
+    "package": "date-fns@4.1.0",
+    "v2_size": 79064,
+    "v3_size": 70722,
+    "v2_gzip": 17895,
+    "v3_gzip": 17485,
+    "size_diff": -8342,
+    "gzip_diff": -410,
+    "timestamp": "2026-01-18T06:46:23.426Z"
+  },
+  {
+    "package": "date-fns@4.0.0",
+    "v2_size": 79335,
+    "v3_size": 70991,
+    "v2_gzip": 17943,
+    "v3_gzip": 17537,
+    "size_diff": -8344,
+    "gzip_diff": -406,
+    "timestamp": "2026-01-18T06:46:26.928Z"
+  },
+  {
+    "package": "date-fns@3.6.0",
+    "v2_size": 77673,
+    "v3_size": 69293,
+    "v2_gzip": 17627,
+    "v3_gzip": 17247,
+    "size_diff": -8380,
+    "gzip_diff": -380,
+    "timestamp": "2026-01-18T06:46:30.477Z"
+  },
+  {
+    "package": "date-fns@3.5.0",
+    "v2_size": 77673,
+    "v3_size": 69293,
+    "v2_gzip": 17627,
+    "v3_gzip": 17248,
+    "size_diff": -8380,
+    "gzip_diff": -379,
+    "timestamp": "2026-01-18T06:46:33.246Z"
+  },
+  {
+    "package": "date-fns@3.4.0",
+    "v2_size": 77642,
+    "v3_size": 69290,
+    "v2_gzip": 17621,
+    "v3_gzip": 17236,
+    "size_diff": -8352,
+    "gzip_diff": -385,
+    "timestamp": "2026-01-18T06:46:36.118Z"
+  },
+  {
+    "package": "date-fns@3.3.1",
+    "v2_size": 77332,
+    "v3_size": 69011,
+    "v2_gzip": 17566,
+    "v3_gzip": 17178,
+    "size_diff": -8321,
+    "gzip_diff": -388,
+    "timestamp": "2026-01-18T06:46:39.259Z"
+  },
+  {
+    "package": "date-fns@3.3.0",
+    "v2_size": 77323,
+    "v3_size": 68989,
+    "v2_gzip": 17552,
+    "v3_gzip": 17134,
+    "size_diff": -8334,
+    "gzip_diff": -418,
+    "timestamp": "2026-01-18T06:46:42.107Z"
+  },
+  {
+    "package": "date-fns@3.2.0",
+    "v2_size": 77329,
+    "v3_size": 69028,
+    "v2_gzip": 17492,
+    "v3_gzip": 17101,
+    "size_diff": -8301,
+    "gzip_diff": -391,
+    "timestamp": "2026-01-18T06:46:44.896Z"
+  },
+  {
+    "package": "date-fns@3.1.0",
+    "v2_size": 77135,
+    "v3_size": 68937,
+    "v2_gzip": 17469,
+    "v3_gzip": 17082,
+    "size_diff": -8198,
+    "gzip_diff": -387,
+    "timestamp": "2026-01-18T06:46:47.789Z"
+  },
+  {
+    "package": "date-fns@3.0.6",
+    "v2_size": 77549,
+    "v3_size": 69396,
+    "v2_gzip": 17461,
+    "v3_gzip": 17058,
+    "size_diff": -8153,
+    "gzip_diff": -403,
+    "timestamp": "2026-01-18T06:46:51.175Z"
+  },
+  {
+    "package": "date-fns@3.0.5",
+    "v2_size": 77525,
+    "v3_size": 69378,
+    "v2_gzip": 17448,
+    "v3_gzip": 17049,
+    "size_diff": -8147,
+    "gzip_diff": -399,
+    "timestamp": "2026-01-18T06:46:54.465Z"
+  },
+  {
+    "package": "date-fns@3.0.4",
+    "v2_size": 77525,
+    "v3_size": 69378,
+    "v2_gzip": 17450,
+    "v3_gzip": 17051,
+    "size_diff": -8147,
+    "gzip_diff": -399,
+    "timestamp": "2026-01-18T06:46:57.227Z"
+  },
+  {
+    "package": "date-fns@3.0.3",
+    "v2_size": 77513,
+    "v3_size": 69368,
+    "v2_gzip": 17444,
+    "v3_gzip": 17045,
+    "size_diff": -8145,
+    "gzip_diff": -399,
+    "timestamp": "2026-01-18T06:47:01.125Z"
+  },
+  {
+    "package": "date-fns@3.0.2",
+    "v2_size": 77513,
+    "v3_size": 69368,
+    "v2_gzip": 17444,
+    "v3_gzip": 17045,
+    "size_diff": -8145,
+    "gzip_diff": -399,
+    "timestamp": "2026-01-18T06:47:04.534Z"
+  },
+  {
+    "package": "date-fns@3.0.1",
+    "v2_size": 77513,
+    "v3_size": 69368,
+    "v2_gzip": 17444,
+    "v3_gzip": 17044,
+    "size_diff": -8145,
+    "gzip_diff": -400,
+    "timestamp": "2026-01-18T06:47:07.492Z"
+  },
+  {
+    "package": "date-fns@3.0.0",
+    "v2_size": 77513,
+    "v3_size": 69368,
+    "v2_gzip": 17444,
+    "v3_gzip": 17046,
+    "size_diff": -8145,
+    "gzip_diff": -398,
+    "timestamp": "2026-01-18T06:47:10.665Z"
+  },
+  {
+    "package": "date-fns@2.30.0",
+    "v2_size": 110426,
+    "v3_size": 99334,
+    "v2_gzip": 23414,
+    "v3_gzip": 22317,
+    "size_diff": -11092,
+    "gzip_diff": -1097,
+    "timestamp": "2026-01-18T06:47:16.822Z"
+  },
+  {
+    "package": "date-fns@2.29.3",
+    "v2_size": 166008,
+    "v3_size": 149464,
+    "v2_gzip": 27481,
+    "v3_gzip": 24995,
+    "size_diff": -16544,
+    "gzip_diff": -2486,
+    "timestamp": "2026-01-18T06:47:22.314Z"
+  },
+  {
+    "package": "date-fns@2.29.2",
+    "v2_size": 103801,
+    "v3_size": 93070,
+    "v2_gzip": 22086,
+    "v3_gzip": 21070,
+    "size_diff": -10731,
+    "gzip_diff": -1016,
+    "timestamp": "2026-01-18T06:47:27.339Z"
+  },
+  {
+    "package": "date-fns@2.29.1",
+    "v2_size": 103795,
+    "v3_size": 93062,
+    "v2_gzip": 22088,
+    "v3_gzip": 21072,
+    "size_diff": -10733,
+    "gzip_diff": -1016,
+    "timestamp": "2026-01-18T06:47:31.706Z"
+  },
+  {
+    "package": "rxjs@7.8.2",
+    "v2_size": 71220,
+    "v3_size": 65114,
+    "v2_gzip": 18154,
+    "v3_gzip": 17768,
+    "size_diff": -6106,
+    "gzip_diff": -386,
+    "timestamp": "2026-01-18T06:47:34.066Z"
+  },
+  {
+    "package": "rxjs@7.8.1",
+    "v2_size": 71197,
+    "v3_size": 65095,
+    "v2_gzip": 18128,
+    "v3_gzip": 17726,
+    "size_diff": -6102,
+    "gzip_diff": -402,
+    "timestamp": "2026-01-18T06:47:36.314Z"
+  },
+  {
+    "package": "rxjs@7.8.0",
+    "v2_size": 70914,
+    "v3_size": 65098,
+    "v2_gzip": 18074,
+    "v3_gzip": 17720,
+    "size_diff": -5816,
+    "gzip_diff": -354,
+    "timestamp": "2026-01-18T06:47:39.860Z"
+  },
+  {
+    "package": "rxjs@7.7.0",
+    "v2_size": 70894,
+    "v3_size": 65078,
+    "v2_gzip": 18072,
+    "v3_gzip": 17716,
+    "size_diff": -5816,
+    "gzip_diff": -356,
+    "timestamp": "2026-01-18T06:47:43.399Z"
+  },
+  {
+    "package": "rxjs@7.6.0",
+    "v2_size": 70884,
+    "v3_size": 65068,
+    "v2_gzip": 18065,
+    "v3_gzip": 17715,
+    "size_diff": -5816,
+    "gzip_diff": -350,
+    "timestamp": "2026-01-18T06:47:45.993Z"
+  },
+  {
+    "package": "rxjs@7.5.7",
+    "v2_size": 70781,
+    "v3_size": 65006,
+    "v2_gzip": 18046,
+    "v3_gzip": 17716,
+    "size_diff": -5775,
+    "gzip_diff": -330,
+    "timestamp": "2026-01-18T06:47:48.556Z"
+  },
+  {
+    "package": "rxjs@7.5.6",
+    "v2_size": 70654,
+    "v3_size": 64928,
+    "v2_gzip": 18022,
+    "v3_gzip": 17684,
+    "size_diff": -5726,
+    "gzip_diff": -338,
+    "timestamp": "2026-01-18T06:47:51.119Z"
+  },
+  {
+    "package": "rxjs@7.5.5",
+    "v2_size": 70795,
+    "v3_size": 65066,
+    "v2_gzip": 18030,
+    "v3_gzip": 17749,
+    "size_diff": -5729,
+    "gzip_diff": -281,
+    "timestamp": "2026-01-18T06:47:53.627Z"
+  },
+  {
+    "package": "rxjs@7.5.4",
+    "v2_size": 70553,
+    "v3_size": 64797,
+    "v2_gzip": 17931,
+    "v3_gzip": 17637,
+    "size_diff": -5756,
+    "gzip_diff": -294,
+    "timestamp": "2026-01-18T06:47:56.510Z"
+  },
+  {
+    "package": "rxjs@7.5.3",
+    "v2_size": 70282,
+    "v3_size": 64496,
+    "v2_gzip": 17893,
+    "v3_gzip": 17590,
+    "size_diff": -5786,
+    "gzip_diff": -303,
+    "timestamp": "2026-01-18T06:47:59.039Z"
+  },
+  {
+    "package": "rxjs@7.5.2",
+    "v2_size": 70866,
+    "v3_size": 65060,
+    "v2_gzip": 17952,
+    "v3_gzip": 17640,
+    "size_diff": -5806,
+    "gzip_diff": -312,
+    "timestamp": "2026-01-18T06:48:01.538Z"
+  },
+  {
+    "package": "rxjs@7.5.1",
+    "v2_size": 70866,
+    "v3_size": 65060,
+    "v2_gzip": 17958,
+    "v3_gzip": 17645,
+    "size_diff": -5806,
+    "gzip_diff": -313,
+    "timestamp": "2026-01-18T06:48:04.161Z"
+  },
+  {
+    "package": "rxjs@7.5.0",
+    "v2_size": 70866,
+    "v3_size": 65060,
+    "v2_gzip": 17958,
+    "v3_gzip": 17646,
+    "size_diff": -5806,
+    "gzip_diff": -312,
+    "timestamp": "2026-01-18T06:48:07.344Z"
+  },
+  {
+    "package": "rxjs@7.4.0",
+    "v2_size": 70461,
+    "v3_size": 64399,
+    "v2_gzip": 17853,
+    "v3_gzip": 17442,
+    "size_diff": -6062,
+    "gzip_diff": -411,
+    "timestamp": "2026-01-18T06:48:10.933Z"
+  },
+  {
+    "package": "rxjs@7.3.1",
+    "v2_size": 70461,
+    "v3_size": 64480,
+    "v2_gzip": 17853,
+    "v3_gzip": 17456,
+    "size_diff": -5981,
+    "gzip_diff": -397,
+    "timestamp": "2026-01-18T06:48:13.616Z"
+  },
+  {
+    "package": "rxjs@7.3.0",
+    "v2_size": 71183,
+    "v3_size": 65103,
+    "v2_gzip": 17909,
+    "v3_gzip": 17469,
+    "size_diff": -6080,
+    "gzip_diff": -440,
+    "timestamp": "2026-01-18T06:48:16.209Z"
+  },
+  {
+    "package": "rxjs@7.2.0",
+    "v2_size": 70779,
+    "v3_size": 64745,
+    "v2_gzip": 17782,
+    "v3_gzip": 17344,
+    "size_diff": -6034,
+    "gzip_diff": -438,
+    "timestamp": "2026-01-18T06:48:18.625Z"
+  },
+  {
+    "package": "rxjs@7.1.0",
+    "v2_size": 42950,
+    "v3_size": 40113,
+    "v2_gzip": 11575,
+    "v3_gzip": 11313,
+    "size_diff": -2837,
+    "gzip_diff": -262,
+    "timestamp": "2026-01-18T06:48:20.814Z"
+  },
+  {
+    "package": "rxjs@7.0.1",
+    "v2_size": 42786,
+    "v3_size": 39964,
+    "v2_gzip": 11544,
+    "v3_gzip": 11280,
+    "size_diff": -2822,
+    "gzip_diff": -264,
+    "timestamp": "2026-01-18T06:48:23.842Z"
+  },
+  {
+    "package": "@angular/core@16.2.12",
+    "v2_size": 278372,
+    "v3_size": 259114,
+    "v2_gzip": 87899,
+    "v3_gzip": 86408,
+    "size_diff": -19258,
+    "gzip_diff": -1491,
+    "timestamp": "2026-01-18T06:48:37.371Z"
+  },
+  {
+    "package": "@angular/core@16.2.11",
+    "v2_size": 278372,
+    "v3_size": 259114,
+    "v2_gzip": 87898,
+    "v3_gzip": 86408,
+    "size_diff": -19258,
+    "gzip_diff": -1490,
+    "timestamp": "2026-01-18T06:48:48.929Z"
+  },
+  {
+    "package": "@angular/core@16.2.10",
+    "v2_size": 278083,
+    "v3_size": 258850,
+    "v2_gzip": 87811,
+    "v3_gzip": 86274,
+    "size_diff": -19233,
+    "gzip_diff": -1537,
+    "timestamp": "2026-01-18T06:48:55.654Z"
+  },
+  {
+    "package": "@angular/core@16.2.9",
+    "v2_size": 278082,
+    "v3_size": 258849,
+    "v2_gzip": 87810,
+    "v3_gzip": 86273,
+    "size_diff": -19233,
+    "gzip_diff": -1537,
+    "timestamp": "2026-01-18T06:49:05.761Z"
+  },
+  {
+    "package": "@angular/core@16.2.8",
+    "v2_size": 278082,
+    "v3_size": 258849,
+    "v2_gzip": 87810,
+    "v3_gzip": 86273,
+    "size_diff": -19233,
+    "gzip_diff": -1537,
+    "timestamp": "2026-01-18T06:49:16.139Z"
+  },
+  {
+    "package": "@angular/core@16.2.7",
+    "v2_size": 278082,
+    "v3_size": 258849,
+    "v2_gzip": 87810,
+    "v3_gzip": 86274,
+    "size_diff": -19233,
+    "gzip_diff": -1536,
+    "timestamp": "2026-01-18T06:49:25.015Z"
+  },
+  {
+    "package": "@angular/core@16.2.6",
+    "v2_size": 278076,
+    "v3_size": 258843,
+    "v2_gzip": 87808,
+    "v3_gzip": 86271,
+    "size_diff": -19233,
+    "gzip_diff": -1537,
+    "timestamp": "2026-01-18T06:49:34.968Z"
+  },
+  {
+    "package": "@angular/core@16.2.5",
+    "v2_size": 277859,
+    "v3_size": 258669,
+    "v2_gzip": 87750,
+    "v3_gzip": 86217,
+    "size_diff": -19190,
+    "gzip_diff": -1533,
+    "timestamp": "2026-01-18T06:49:45.059Z"
+  },
+  {
+    "package": "@angular/core@16.2.4",
+    "v2_size": 277439,
+    "v3_size": 258262,
+    "v2_gzip": 87601,
+    "v3_gzip": 86105,
+    "size_diff": -19177,
+    "gzip_diff": -1496,
+    "timestamp": "2026-01-18T06:49:54.978Z"
+  },
+  {
+    "package": "@angular/core@16.2.3",
+    "v2_size": 277123,
+    "v3_size": 258022,
+    "v2_gzip": 87447,
+    "v3_gzip": 85885,
+    "size_diff": -19101,
+    "gzip_diff": -1562,
+    "timestamp": "2026-01-18T06:50:05.083Z"
+  },
+  {
+    "package": "@angular/core@16.2.2",
+    "v2_size": 276894,
+    "v3_size": 257816,
+    "v2_gzip": 87229,
+    "v3_gzip": 85613,
+    "size_diff": -19078,
+    "gzip_diff": -1616,
+    "timestamp": "2026-01-18T06:50:15.364Z"
+  },
+  {
+    "package": "@angular/core@16.2.1",
+    "v2_size": 276894,
+    "v3_size": 257816,
+    "v2_gzip": 87228,
+    "v3_gzip": 85613,
+    "size_diff": -19078,
+    "gzip_diff": -1615,
+    "timestamp": "2026-01-18T06:50:25.371Z"
+  },
+  {
+    "package": "@angular/core@16.2.0",
+    "v2_size": 276873,
+    "v3_size": 257794,
+    "v2_gzip": 87214,
+    "v3_gzip": 85602,
+    "size_diff": -19079,
+    "gzip_diff": -1612,
+    "timestamp": "2026-01-18T06:50:36.874Z"
+  },
+  {
+    "package": "@angular/core@16.1.9",
+    "v2_size": 268185,
+    "v3_size": 249406,
+    "v2_gzip": 84588,
+    "v3_gzip": 82981,
+    "size_diff": -18779,
+    "gzip_diff": -1607,
+    "timestamp": "2026-01-18T06:50:47.138Z"
+  },
+  {
+    "package": "@angular/core@16.1.8",
+    "v2_size": 268061,
+    "v3_size": 249306,
+    "v2_gzip": 84537,
+    "v3_gzip": 82942,
+    "size_diff": -18755,
+    "gzip_diff": -1595,
+    "timestamp": "2026-01-18T06:50:57.005Z"
+  },
+  {
+    "package": "@angular/core@16.1.7",
+    "v2_size": 268061,
+    "v3_size": 249306,
+    "v2_gzip": 84538,
+    "v3_gzip": 82942,
+    "size_diff": -18755,
+    "gzip_diff": -1596,
+    "timestamp": "2026-01-18T06:51:08.864Z"
+  },
+  {
+    "package": "@angular/core@16.1.6",
+    "v2_size": 268061,
+    "v3_size": 249306,
+    "v2_gzip": 84538,
+    "v3_gzip": 82942,
+    "size_diff": -18755,
+    "gzip_diff": -1596,
+    "timestamp": "2026-01-18T06:51:19.180Z"
+  },
+  {
+    "package": "@angular/core@16.1.5",
+    "v2_size": 268061,
+    "v3_size": 249306,
+    "v2_gzip": 84538,
+    "v3_gzip": 82942,
+    "size_diff": -18755,
+    "gzip_diff": -1596,
+    "timestamp": "2026-01-18T06:51:30.308Z"
+  },
+  {
+    "package": "@angular/core@16.1.4",
+    "v2_size": 267737,
+    "v3_size": 248997,
+    "v2_gzip": 84458,
+    "v3_gzip": 82834,
+    "size_diff": -18740,
+    "gzip_diff": -1624,
+    "timestamp": "2026-01-18T06:51:40.820Z"
+  },
+  {
+    "package": "@angular/core@16.1.3",
+    "v2_size": 267647,
+    "v3_size": 248913,
+    "v2_gzip": 84435,
+    "v3_gzip": 82814,
+    "size_diff": -18734,
+    "gzip_diff": -1621,
+    "timestamp": "2026-01-18T06:51:54.480Z"
+  },
+  {
+    "package": "webpack@5.104.1",
+    "v2_size": 3621648,
+    "v3_size": 3487368,
+    "v2_gzip": 879968,
+    "v3_gzip": 849494,
+    "size_diff": -134280,
+    "gzip_diff": -30474,
+    "timestamp": "2026-01-18T06:52:01.645Z"
+  },
+  {
+    "package": "webpack@5.104.0",
+    "v2_size": 3620685,
+    "v3_size": 3487271,
+    "v2_gzip": 879809,
+    "v3_gzip": 849431,
+    "size_diff": -133414,
+    "gzip_diff": -30378,
+    "timestamp": "2026-01-18T06:52:05.794Z"
+  },
+  {
+    "package": "webpack@5.103.0",
+    "v2_size": 3612984,
+    "v3_size": 3482207,
+    "v2_gzip": 874401,
+    "v3_gzip": 845068,
+    "size_diff": -130777,
+    "gzip_diff": -29333,
+    "timestamp": "2026-01-18T06:52:08.285Z"
+  },
+  {
+    "package": "webpack@5.102.1",
+    "v2_size": 3570841,
+    "v3_size": 3443648,
+    "v2_gzip": 863697,
+    "v3_gzip": 835970,
+    "size_diff": -127193,
+    "gzip_diff": -27727,
+    "timestamp": "2026-01-18T06:52:11.480Z"
+  },
+  {
+    "package": "webpack@5.102.0",
+    "v2_size": 3566605,
+    "v3_size": 3440233,
+    "v2_gzip": 862722,
+    "v3_gzip": 835058,
+    "size_diff": -126372,
+    "gzip_diff": -27664,
+    "timestamp": "2026-01-18T06:52:14.175Z"
+  },
+  {
+    "package": "webpack@5.101.3",
+    "v2_size": 3434249,
+    "v3_size": 3429362,
+    "v2_gzip": 839405,
+    "v3_gzip": 831819,
+    "size_diff": -4887,
+    "gzip_diff": -7586,
+    "timestamp": "2026-01-18T06:52:17.153Z"
+  },
+  {
+    "package": "webpack@5.101.2",
+    "v2_size": 3433805,
+    "v3_size": 3428403,
+    "v2_gzip": 839245,
+    "v3_gzip": 831683,
+    "size_diff": -5402,
+    "gzip_diff": -7562,
+    "timestamp": "2026-01-18T06:52:21.075Z"
+  },
+  {
+    "package": "webpack@5.101.0",
+    "v2_size": 3430418,
+    "v3_size": 3425953,
+    "v2_gzip": 838517,
+    "v3_gzip": 830722,
+    "size_diff": -4465,
+    "gzip_diff": -7795,
+    "timestamp": "2026-01-18T06:52:24.843Z"
+  },
+  {
+    "package": "webpack@5.100.2",
+    "v2_size": 3423855,
+    "v3_size": 3419518,
+    "v2_gzip": 836643,
+    "v3_gzip": 828981,
+    "size_diff": -4337,
+    "gzip_diff": -7662,
+    "timestamp": "2026-01-18T06:52:27.209Z"
+  },
+  {
+    "package": "webpack@5.100.0",
+    "v2_size": 3422992,
+    "v3_size": 3418094,
+    "v2_gzip": 836172,
+    "v3_gzip": 828532,
+    "size_diff": -4898,
+    "gzip_diff": -7640,
+    "timestamp": "2026-01-18T06:52:29.941Z"
+  },
+  {
+    "package": "webpack@5.99.9",
+    "v2_size": 3396573,
+    "v3_size": 3400074,
+    "v2_gzip": 826646,
+    "v3_gzip": 822338,
+    "size_diff": 3501,
+    "gzip_diff": -4308,
+    "timestamp": "2026-01-18T06:52:32.382Z"
+  },
+  {
+    "package": "webpack@5.99.8",
+    "v2_size": 3395165,
+    "v3_size": 3399845,
+    "v2_gzip": 826226,
+    "v3_gzip": 822210,
+    "size_diff": 4680,
+    "gzip_diff": -4016,
+    "timestamp": "2026-01-18T06:52:35.105Z"
+  },
+  {
+    "package": "webpack@5.99.7",
+    "v2_size": 3385202,
+    "v3_size": 3392288,
+    "v2_gzip": 825325,
+    "v3_gzip": 821696,
+    "size_diff": 7086,
+    "gzip_diff": -3629,
+    "timestamp": "2026-01-18T06:52:37.867Z"
+  },
+  {
+    "package": "webpack@5.99.6",
+    "v2_size": 3387333,
+    "v3_size": 3395423,
+    "v2_gzip": 824556,
+    "v3_gzip": 821320,
+    "size_diff": 8090,
+    "gzip_diff": -3236,
+    "timestamp": "2026-01-18T06:52:41.742Z"
+  },
+  {
+    "package": "webpack@5.99.5",
+    "v2_size": 3386919,
+    "v3_size": 3394782,
+    "v2_gzip": 824308,
+    "v3_gzip": 821119,
+    "size_diff": 7863,
+    "gzip_diff": -3189,
+    "timestamp": "2026-01-18T06:52:44.551Z"
+  },
+  {
+    "package": "webpack@5.99.2",
+    "v2_size": 3386858,
+    "v3_size": 3394870,
+    "v2_gzip": 824302,
+    "v3_gzip": 821127,
+    "size_diff": 8012,
+    "gzip_diff": -3175,
+    "timestamp": "2026-01-18T06:52:47.843Z"
+  },
+  {
+    "package": "webpack@5.99.0",
+    "v2_size": 3386736,
+    "v3_size": 3394778,
+    "v2_gzip": 824260,
+    "v3_gzip": 821154,
+    "size_diff": 8042,
+    "gzip_diff": -3106,
+    "timestamp": "2026-01-18T06:52:52.456Z"
+  },
+  {
+    "package": "webpack@5.98.0",
+    "v2_size": 3376332,
+    "v3_size": 3385700,
+    "v2_gzip": 821296,
+    "v3_gzip": 818737,
+    "size_diff": 9368,
+    "gzip_diff": -2559,
+    "timestamp": "2026-01-18T06:52:55.046Z"
+  },
+  {
+    "package": "webpack@5.97.1",
+    "v2_size": 3369443,
+    "v3_size": 3646344,
+    "v2_gzip": 814819,
+    "v3_gzip": 885609,
+    "size_diff": 276901,
+    "gzip_diff": 70790,
+    "timestamp": "2026-01-18T06:52:58.083Z"
+  },
+  {
+    "package": "webpack@5.97.0",
+    "v2_size": 3364680,
+    "v3_size": 3646501,
+    "v2_gzip": 813407,
+    "v3_gzip": 885745,
+    "size_diff": 281821,
+    "gzip_diff": 72338,
+    "timestamp": "2026-01-18T06:53:02.116Z"
+  },
+  {
+    "package": "antd@6.2.0",
+    "v2_size": 1470521,
+    "v3_size": 1434880,
+    "v2_gzip": 442812,
+    "v3_gzip": 435278,
+    "size_diff": -35641,
+    "gzip_diff": -7534,
+    "timestamp": "2026-01-18T06:53:18.050Z"
+  },
+  {
+    "package": "antd@6.1.4",
+    "v2_size": 1471441,
+    "v3_size": 1436244,
+    "v2_gzip": 441776,
+    "v3_gzip": 434318,
+    "size_diff": -35197,
+    "gzip_diff": -7458,
+    "timestamp": "2026-01-18T06:53:25.987Z"
+  },
+  {
+    "package": "antd@6.1.3",
+    "v2_size": 1470619,
+    "v3_size": 1435955,
+    "v2_gzip": 441461,
+    "v3_gzip": 434235,
+    "size_diff": -34664,
+    "gzip_diff": -7226,
+    "timestamp": "2026-01-18T06:53:36.848Z"
+  },
+  {
+    "package": "antd@6.1.2",
+    "v2_size": 1470516,
+    "v3_size": 1435954,
+    "v2_gzip": 441433,
+    "v3_gzip": 434226,
+    "size_diff": -34562,
+    "gzip_diff": -7207,
+    "timestamp": "2026-01-18T06:53:45.873Z"
+  },
+  {
+    "package": "antd@6.1.1",
+    "v2_size": 1470870,
+    "v3_size": 1435939,
+    "v2_gzip": 441509,
+    "v3_gzip": 434169,
+    "size_diff": -34931,
+    "gzip_diff": -7340,
+    "timestamp": "2026-01-18T06:53:55.136Z"
+  },
+  {
+    "package": "antd@6.1.0",
+    "v2_size": 1314739,
+    "v3_size": 1436066,
+    "v2_gzip": 408446,
+    "v3_gzip": 434136,
+    "size_diff": 121327,
+    "gzip_diff": 25690,
+    "timestamp": "2026-01-18T06:54:04.318Z"
+  },
+  {
+    "package": "antd@6.0.1",
+    "v2_size": 1331044,
+    "v3_size": 1451873,
+    "v2_gzip": 413542,
+    "v3_gzip": 439129,
+    "size_diff": 120829,
+    "gzip_diff": 25587,
+    "timestamp": "2026-01-18T06:54:13.564Z"
+  },
+  {
+    "package": "antd@6.0.0",
+    "v2_size": 1498666,
+    "v3_size": 1451385,
+    "v2_gzip": 450520,
+    "v3_gzip": 439029,
+    "size_diff": -47281,
+    "gzip_diff": -11491,
+    "timestamp": "2026-01-18T06:54:23.104Z"
+  },
+  {
+    "package": "antd@5.29.2",
+    "v2_size": 1525279,
+    "v3_size": 1485411,
+    "v2_gzip": 460333,
+    "v3_gzip": 452177,
+    "size_diff": -39868,
+    "gzip_diff": -8156,
+    "timestamp": "2026-01-18T06:54:34.047Z"
+  },
+  {
+    "package": "antd@5.29.1",
+    "v2_size": 1525119,
+    "v3_size": 1485256,
+    "v2_gzip": 460253,
+    "v3_gzip": 452073,
+    "size_diff": -39863,
+    "gzip_diff": -8180,
+    "timestamp": "2026-01-18T06:54:42.299Z"
+  },
+  {
+    "package": "antd@5.29.0",
+    "v2_size": 1525164,
+    "v3_size": 1485303,
+    "v2_gzip": 460259,
+    "v3_gzip": 452087,
+    "size_diff": -39861,
+    "gzip_diff": -8172,
+    "timestamp": "2026-01-18T06:54:55.131Z"
+  },
+  {
+    "package": "antd@5.28.1",
+    "v2_size": 1523399,
+    "v3_size": 1483561,
+    "v2_gzip": 459806,
+    "v3_gzip": 451665,
+    "size_diff": -39838,
+    "gzip_diff": -8141,
+    "timestamp": "2026-01-18T06:55:03.569Z"
+  },
+  {
+    "package": "antd@5.28.0",
+    "v2_size": 1523041,
+    "v3_size": 1483175,
+    "v2_gzip": 459693,
+    "v3_gzip": 451561,
+    "size_diff": -39866,
+    "gzip_diff": -8132,
+    "timestamp": "2026-01-18T06:55:13.458Z"
+  },
+  {
+    "package": "antd@5.27.6",
+    "v2_size": 1520884,
+    "v3_size": 1481048,
+    "v2_gzip": 458935,
+    "v3_gzip": 451001,
+    "size_diff": -39836,
+    "gzip_diff": -7934,
+    "timestamp": "2026-01-18T06:55:22.714Z"
+  },
+  {
+    "package": "antd@5.27.4",
+    "v2_size": 1520412,
+    "v3_size": 1480475,
+    "v2_gzip": 458816,
+    "v3_gzip": 450679,
+    "size_diff": -39937,
+    "gzip_diff": -8137,
+    "timestamp": "2026-01-18T06:55:34.036Z"
+  },
+  {
+    "package": "antd@5.27.3",
+    "v2_size": 1519663,
+    "v3_size": 1479831,
+    "v2_gzip": 458520,
+    "v3_gzip": 450396,
+    "size_diff": -39832,
+    "gzip_diff": -8124,
+    "timestamp": "2026-01-18T06:55:42.299Z"
+  },
+  {
+    "package": "antd@5.27.2",
+    "v2_size": 1519297,
+    "v3_size": 1479516,
+    "v2_gzip": 458348,
+    "v3_gzip": 450271,
+    "size_diff": -39781,
+    "gzip_diff": -8077,
+    "timestamp": "2026-01-18T06:55:51.742Z"
+  },
+  {
+    "package": "antd@5.27.1",
+    "v2_size": 1519242,
+    "v3_size": 1479489,
+    "v2_gzip": 458294,
+    "v3_gzip": 450217,
+    "size_diff": -39753,
+    "gzip_diff": -8077,
+    "timestamp": "2026-01-18T06:55:58.488Z"
+  }
+]

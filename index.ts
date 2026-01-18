@@ -30,7 +30,7 @@ import errorMiddleware from './server/middlewares/results/error.middleware'
 import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
 import requestLoggerMiddleware from './server/middlewares/requestLogger.middleware'
 import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
-// import generateImgMiddleware from './server/middlewares/generateImg.middleware'
+import generateImgMiddleware from './server/middlewares/generateImg.middleware'
 
 import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
@@ -67,7 +67,7 @@ app.prepare().then(() => {
   server.use(requestLoggerMiddleware)
   server.use(cacheControl())
 
-  /* if (!dev) {
+  if (!dev) {
     server.use(
       limit({
         duration: 1000 * 60 * 5, //  5 mins
@@ -75,7 +75,7 @@ app.prepare().then(() => {
         whiteList: ['127.0.0.1', '::1'],
       })
     )
-  } */
+  }
 
   server.use(async (ctx, next) => {
     try {
@@ -201,7 +201,7 @@ app.prepare().then(() => {
 
   router.get('/api/similar-packages', similarPackagesMiddleware)
 
-  // router.get('/api/stats-image', generateImgMiddleware)
+  router.get('/api/stats-image', generateImgMiddleware)
 
   router.get(
     '/admin/restart',

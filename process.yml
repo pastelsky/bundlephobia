@@ -12,10 +12,6 @@ apps:
       NODE_ENV: production
       DEBUG: 'bp:*'
       PORT: 5400
-      FIREBASE_READ_KEY: modules-v3
-      FIREBASE_WRITE_KEY: modules-v3
-      FIREBASE_READ_KEY_EXPORTS: exports-v3
-      FIREBASE_WRITE_KEY_EXPORTS: exports-v3
       CACHE_SERVICE_ENDPOINT: http://localhost:7001
       BUILD_SERVICE_ENDPOINT: http://localhost:7002
 
@@ -42,7 +38,3 @@ apps:
     env:
       NODE_ENV: production
       DEBUG: 'bp:*'
-      FIREBASE_READ_KEY: modules-v3
-      FIREBASE_WRITE_KEY: modules-v3
-      FIREBASE_READ_KEY_EXPORTS: exports-v3
-      FIREBASE_WRITE_KEY_EXPORTS: exports-v3
