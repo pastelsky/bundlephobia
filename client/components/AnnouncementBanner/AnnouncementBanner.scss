@@ -1,0 +1,105 @@
+@import '../../../stylesheets/colors';
+@import '../../../stylesheets/variables';
+
+.announcement-banner {
+  background: #fff;
+  color: $dark-gulf-blue;
+  padding: 0;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  left: auto;
+  top: auto;
+  transform: none;
+  width: 300px;
+  margin: 0;
+  border-radius: 8px;
+  z-index: 1000;
+  border: 1.5px solid $raven;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.announcement-banner__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 48px 10px 20px;
+  gap: 12px;
+
+  @media (max-width: 600px) {
+    padding: 10px 40px 10px 12px;
+    gap: 8px;
+  }
+}
+
+.announcement-banner__icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.announcement-banner__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  line-height: 1.5;
+  text-align: left;
+  font-family: $font-family-body;
+
+  @media (max-width: 600px) {
+    font-size: 13px;
+    text-align: left;
+  }
+
+  strong {
+    font-weight: 600;
+    color: $gulf-blue;
+  }
+
+  a {
+    color: $cornflower-blue;
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: rgba($cornflower-blue, 0.4);
+    text-underline-offset: 2px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      text-decoration-color: $cornflower-blue;
+      color: darken($cornflower-blue, 10%);
+    }
+  }
+}
+
+.announcement-banner__close {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  transform: none;
+  background: transparent;
+  border: none;
+  color: $raven;
+  font-size: 24px;
+  font-weight: 300;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0;
+
+  &:hover {
+    color: $dark-gulf-blue;
+    background: rgba($raven, 0.1);
+  }
+
+  &:focus {
+    outline: none;
+    color: $dark-gulf-blue;
+  }
+}
