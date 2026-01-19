@@ -8,6 +8,34 @@
   width: 100%;
 }
 
+.autocomplete-input__container--error {
+  animation-duration: 0.75s;
+  animation-fill-mode: both;
+  animation-name: shakeX;
+}
+
+@keyframes shakeX {
+  from,
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translate3d(-6px, 0, 0);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translate3d(6px, 0, 0);
+  }
+}
+
 .autocomplete-input {
   width: 40vw;
   border: none;

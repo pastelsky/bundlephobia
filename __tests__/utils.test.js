@@ -1,10 +1,11 @@
-import { parsePackageString } from '../utils/common.utils'
+const { parsePackageString, isEmpty } = require('../utils/common.utils')
 
 describe('parsePackageString', () => {
   it('handles scoped packages correctly', () => {
     expect(parsePackageString('@babel/core@9.8.0')).toEqual({
       scoped: true,
       name: '@babel/core',
+      scope: 'babel',
       version: '9.8.0',
     })
   })
@@ -13,6 +14,7 @@ describe('parsePackageString', () => {
     expect(parsePackageString('@babel/core')).toEqual({
       scoped: true,
       name: '@babel/core',
+      scope: 'babel',
       version: null,
     })
   })
@@ -47,5 +49,17 @@ describe('parsePackageString', () => {
       name: 'chart.js',
       version: '0.7.0-beta',
     })
+  })
+})
+
+describe('isEmpty', () => {
+  it('should return true for empty string', () => {
+    expect(isEmpty('')).toBe(true)
+    expect(isEmpty('   ')).toBe(true)
+  })
+
+  it('should return false for non-empty string', () => {
+    expect(isEmpty('Hello')).toBe(false)
+    expect(isEmpty('  Hello   ')).toBe(false)
   })
 })
