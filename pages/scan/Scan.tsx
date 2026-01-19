@@ -8,7 +8,18 @@ import Dropzone from 'react-dropzone'
 import Router from 'next/router'
 import * as semver from 'semver'
 
-export default class Scan extends Component {
+type Package = {
+  name: string
+  resolvedVersion: string
+  versionRange: string
+}
+
+type ScanState = {
+  packages: Package | null
+  selectedPackages: Package[]
+}
+
+export default class Scan extends Component<_, ScanState> {
   state = {
     packages: null,
     selectedPackages: [],
@@ -18,7 +29,7 @@ export default class Scan extends Component {
     Analytics.pageView('scan')
   }
 
-  resolveVersionFromRange = range => {
+  resolveVersionFromRange = (range: string) => {
     const rangeSet = new semver.Range(range).set
     return rangeSet[0][0].semver.version
   }
@@ -27,10 +38,12 @@ export default class Scan extends Component {
     const checkedInputs =
       this.packageSelectionContainer.querySelectorAll('input:checked')
 
-    const selectedPackages = Array.from(checkedInputs).map(({ value }) => {
-      const [name, resolvedVersion] = value.split('#')
-      return { name, resolvedVersion }
-    })
+    const selectedPackages: Package[] = Array.from(checkedInputs).map(
+      ({ value }) => {
+        const [name, resolvedVersion] = value.split('#')
+        return { name, resolvedVersion }
+      }
+    )
 
     this.setState({ selectedPackages })
   }
@@ -39,7 +52,7 @@ export default class Scan extends Component {
     this.setSelectedPackages()
   }
 
-  handleDropAccepted = ([file]) => {
+  handleDropAccepted = ([file]: [file: File]) => {
     const reader = new FileReader()
     reader.onload = () => {
       try {
