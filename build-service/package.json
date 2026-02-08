@@ -9,7 +9,7 @@
     "dotenv-defaults": "^2.0.2",
     "fastify": "^4.25.2",
     "now-logs": "^0.0.7",
-    "package-build-stats": "8.2.3"
+    "package-build-stats": "8.2.4"
   },
   "engines": {
     "node": ">= 9.x.x",
