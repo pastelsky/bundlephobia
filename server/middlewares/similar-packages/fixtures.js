@@ -429,6 +429,15 @@ const categories = {
       'react-select',
     ],
   },
+  'react-color-picker': {
+    name: 'React based color picker components',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'color', weight: Weight.NORMAL },
+      { tag: 'color picker', weight: Weight.NORMAL },
+    ],
+    similar: ['react-color', 'react-colorful', 'react-input-color'],
+  },
   'react-head-meta': {
     name: 'React based meta tags management',
     tags: [
