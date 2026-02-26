@@ -50,4 +50,13 @@ function sanitizeHTML(html) {
   })
 }
 
-module.exports = { parsePackageString, daysFromToday, sanitizeHTML }
+/**
+ * replace it when refactor to TS
+ * @param {string} str - input string
+ * @returns boolean
+ * */
+function isEmpty(str) {
+  return !str.trim().length
+}
+
+module.exports = { parsePackageString, daysFromToday, sanitizeHTML, isEmpty }
