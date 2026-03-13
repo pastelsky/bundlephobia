@@ -13,8 +13,21 @@ import { parsePackageString } from '../../utils/common.utils'
 
 import API from '../../client/api'
 import { getTimeFromSize } from '../../utils'
+import { Asset } from '../../types'
 
-class ResultCard extends Component {
+type ResultCardProps = {
+  pack: {
+    result: Asset
+    promiseState: string
+    error: {
+      code: string
+      message: string
+    }
+  }
+  index: number
+}
+
+class ResultCard extends Component<ResultCardProps> {
   render() {
     const { pack, index } = this.props
 
@@ -32,14 +45,14 @@ class ResultCard extends Component {
           <div className="scan-results__stat-container">
             <Stat
               className="scan-results__stat-item"
-              value={pack.result.size}
+              value={pack.result.size || 0}
               type={Stat.type.SIZE}
               label="Min"
               compact
             />
             <Stat
               className="scan-results__stat-item"
-              value={pack.result.gzip}
+              value={pack.result.gzip || 0}
               type={Stat.type.SIZE}
               label="Min + GZIP"
               compact
@@ -167,7 +180,7 @@ class ScanResults extends Component {
 
     queue.onIdle().then(() => {
       const successfulBuildCount = packages.reduce(
-        (curSum, nextPack) =>
+        (curSum: number, nextPack) =>
           nextPack.promiseState === 'fulfilled' ? curSum + 1 : curSum,
         0
       )
@@ -235,12 +248,14 @@ class ScanResults extends Component {
     const packages = this.sortPackages()
 
     const totalMinSize = packages.reduce(
-      (curTotal, pack) => curTotal + (pack.result ? pack.result.size : 0),
+      (curTotal: number, pack) =>
+        curTotal + (pack.result ? pack.result.size : 0),
       0
     )
 
     const totalGZIPSize = packages.reduce(
-      (curTotal, pack) => curTotal + (pack.result ? pack.result.gzip : 0),
+      (curTotal: number, pack) =>
+        curTotal + (pack.result ? pack.result.gzip : 0),
       0
     )
 
