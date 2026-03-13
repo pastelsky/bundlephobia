@@ -12,7 +12,10 @@ const CustomError = require('../server/CustomError')
  */
 async function resolvePackage(packageString) {
   try {
-    return await pacote.manifest(packageString, { fullMetadata: true })
+     const registryObj = process.env.REGISTRY_URL
+      ? { registry: process.env.REGISTRY_URL }
+      : {}
+    return await pacote.manifest(packageString, { fullMetadata: true, ...registryObj })
   } catch (err) {
     if (err.code === 'ETARGET') {
       throw new CustomError('PackageVersionMismatchError', null, {
