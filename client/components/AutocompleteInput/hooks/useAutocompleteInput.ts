@@ -1,7 +1,7 @@
 import React from 'react'
 import debounce from 'debounce'
 
-import { parsePackageString } from '../../../../utils/common.utils'
+import { parsePackageString, isEmpty } from '../../../../utils/common.utils'
 import API from '../../../api'
 
 interface UseAutocompleteInputArgs {
@@ -16,6 +16,7 @@ export function useAutocompleteInput({
   const [value, setValue] = React.useState(initialValue)
   const [suggestions, setSuggestions] = React.useState<any[]>([])
   const [isMenuVisible, setIsMenuVisible] = React.useState(false)
+  const [isValidationError, setIsValidationError] = React.useState(false)
 
   const getSuggestions = React.useMemo(
     () =>
@@ -27,9 +28,17 @@ export function useAutocompleteInput({
     []
   )
 
+  const errorClearHandler = () => {
+    setIsValidationError(false)
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(value)
+    if (!isEmpty(value)) {
+      onSubmit(value)
+    } else {
+      setIsValidationError(true)
+    }
   }
 
   const handleInputChange = (
@@ -57,5 +66,7 @@ export function useAutocompleteInput({
     handleInputChange,
     setIsMenuVisible,
     setSuggestions,
+    isValidationError,
+    errorClearHandler,
   }
 }
