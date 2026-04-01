@@ -100,34 +100,39 @@ export default class API {
     return API.get<PackageSuggestion[]>(
       `https://api.npms.io/v2/search/suggestions?q=${query}`,
       false
-    ).then(result => result.sort(suggestionSort))
+    )
+      .then(result => result.sort(suggestionSort))
+      .catch(() => {
+        // fallback when npms.io is down
+        return API.get<{ objects: Array<{ package: { name: string } }> }>(
+          `/api/search?text=${query}`
+        ).then(result =>
+          result.objects.map(suggestion => {
+            const name = suggestion.package.name
+            const hasMatch = name.includes(query)
+            const startIndex = name.indexOf(query)
+            const endIndex = startIndex + query.length
+            let highlight
 
-    //backup when npms.io is down
+            if (hasMatch) {
+              highlight =
+                name.substring(0, startIndex) +
+                '<em>' +
+                name.substring(startIndex, endIndex) +
+                '</em>' +
+                name.substring(endIndex)
+            } else {
+              highlight = name
+            }
 
-    //return API.get(`/-/search?text=${query}`)
-    //  .then(result => result.objects
-    //    .sort(suggestionSort)
-    //    .map(suggestion => {
-    //      const name = suggestion.package.name
-    //      const hasMatch = name.includes(query)
-    //      const startIndex = name.indexOf(query)
-    //      const endIndex = startIndex + query.length
-    //      let highlight
-    //
-    //      if (hasMatch) {
-    //        highlight =
-    //          name.substring(0, startIndex) +
-    //          '<em>' + name.substring(startIndex, endIndex) + '</em>' +
-    //          name.substring(endIndex)
-    //      } else {
-    //        highlight = name
-    //      }
-    //
-    //      return {
-    //        ...suggestion,
-    //        highlight,
-    //      }
-    //    }),
-    //  )
+            return {
+              ...suggestion,
+              highlight,
+              searchScore: 1,
+              score: { detail: { popularity: 0 } },
+            }
+          })
+        )
+      })
   }
 }
