@@ -17,7 +17,8 @@ async function exportSizesMiddleware(ctx) {
   const { force, peek, package: packageQuery } = ctx.query
 
   if (peek) {
-    return { name, version, peekSuccess: false }
+    ctx.body = { name, version, peekSuccess: false }
+    return
   }
 
   const buildStart = now()
