@@ -7,6 +7,7 @@ const { getRequestPriority } = require('../../utils/server.utils')
 const { parsePackageString } = require('../../utils/common.utils')
 const BuildService = require('../api/BuildService')
 
+
 const cache = new Cache()
 const buildService = new BuildService()
 
@@ -28,7 +29,7 @@ async function exportSizesMiddleware(ctx) {
   ctx.cacheControl = {
     maxAge: force
       ? 0
-      : semver.valid(parsePackageString(packageQuery).version)
+      : semver.valid(parsePackageString(typeof packageQuery === 'string' ? packageQuery : '').version)
       ? CONFIG.CACHE.SIZE_API_HAS_VERSION
       : CONFIG.CACHE.SIZE_API_DEFAULT,
   }
