@@ -4,6 +4,7 @@
 const DOMPurify = require('dompurify')
 
 function parsePackageString(packageString) {
+  if (typeof packageString !== 'string') return { name: null, version: null, scoped: false }
   // Scoped packages
   let name,
     version,
