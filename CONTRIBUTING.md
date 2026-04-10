@@ -42,10 +42,17 @@ for caching to work (optional).
 
 Bundlephobia relies on [`canvas`](https://www.npmjs.com/package/canvas) which may need to be built from source (depending on your platform). If so, [install the required packages listed in their docs](https://github.com/Automattic/node-canvas#compiling).
 
+### Setup
+
+1. Make sure you have `pnpm` installed.
+2. `pnpm install`
+3. Create a `.env` file from `.env.defaults` or just rely on defaults (already handled by `dotenv-defaults`).
+4. `pnpm dev` to start the development server.
+
 ### Commands
 
 | script           | description                        |
 | ---------------- | :--------------------------------- |
-| `yarn run dev`   | Start a development server locally |
-| `yarn run build` | Build for production               |
-| `yarn run prod`  | Start a production server locally  |
+| `pnpm run dev`   | Start a development server locally |
+| `pnpm run build` | Build for production               |
+| `pnpm run prod`  | Start a production server locally  |
