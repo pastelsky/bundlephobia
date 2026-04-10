@@ -80,8 +80,8 @@ function resolveBuildError(resultsError) {
     resultsError.error &&
     resultsError.error.details &&
     resultsError.error.details.originalError
-      ? Array.isArray(resultsError.error.details.originalError)
-        ? resultsError.error.details.originalError[0]
+      ? typeof resultsError.error.details.originalError === 'object'
+        ? JSON.stringify(resultsError.error.details.originalError, null, 2)
         : resultsError.error.details.originalError.toString()
       : null
 

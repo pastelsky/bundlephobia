@@ -67,7 +67,7 @@ class Logger {
   }
 
   decrement(label) {
-    // statsClient.increment(label)
+    // statsClient.decrement(label)
   }
 
   histogram(label, value) {

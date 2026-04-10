@@ -60,7 +60,7 @@ export default class MyDocument extends Document {
             crossOrigin="anonymous"
           />
           <link
-            href="https://fonts.googleapis.com/css?family=Source+Code+Pro:300,400,600"
+            href="https://fonts.googleapis.com/css?family=Source+Code+Pro:300,400,600&display=optional"
             rel="stylesheet"
           />
           <link
@@ -126,18 +126,21 @@ export default class MyDocument extends Document {
         `,
           }}
         />
-        <script
-          src="https://browser.sentry-cdn.com/5.15.0/bundle.min.js"
-          crossOrigin="anonymous"
-        />
-        <script
-          src="https://browser.sentry-cdn.com/5.15.0/extraerrordata.min.js"
-          crossOrigin="anonymous"
-        />
-        <script
-          src="https://browser.sentry-cdn.com/5.15.0/captureconsole.min.js"
-          crossOrigin="anonymous"
-        />
+          <script
+            src="https://browser.sentry-cdn.com/5.15.0/bundle.min.js"
+            crossOrigin="anonymous"
+            async
+          />
+          <script
+            src="https://browser.sentry-cdn.com/5.15.0/extraerrordata.min.js"
+            crossOrigin="anonymous"
+            async
+          />
+          <script
+            src="https://browser.sentry-cdn.com/5.15.0/captureconsole.min.js"
+            crossOrigin="anonymous"
+            async
+          />
         <script
           dangerouslySetInnerHTML={{
             __html: `Sentry.init({ 

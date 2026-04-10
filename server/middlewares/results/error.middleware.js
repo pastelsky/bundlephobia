@@ -123,8 +123,9 @@ async function errorHandler(ctx, next) {
 
       case 'MissingDependencyError': {
         const status = 500
+        const items = err.extra.missingModules
         const missingModules = arrayToSentence(
-          err.extra.missingModules.map(module => `\`<code>${module}</code>\``)
+          items.map(module => `\`<code>${module}</code>\``)
         )
         const body = {
           error: {
@@ -132,8 +133,11 @@ async function errorHandler(ctx, next) {
             message:
               `This package (or this version) uses ${missingModules}, ` +
               `but does not specify ${
-                missingModules.length > 1 ? 'them' : 'it'
-              } either as a dependency or a peer dependency`,
+                items.length > 1 ? 'them' : 'it'
+              } either as a dependency or a peer dependency. <br/> <br/> ` +
+              `If you are the maintainer, please add ${
+                items.length > 1 ? 'these' : 'this'
+              } to your <code>dependencies</code> or <code>peerDependencies</code>.`,
             details: err,
           },
         }
@@ -187,8 +191,14 @@ async function errorHandler(ctx, next) {
         const status = 500
         const errorJSON = {
           code: 'BuildError',
-          message: 'Failed to build this package.',
-          details: err,
+          message:
+            'Failed to build this package. ' +
+            (err.message ? `Reason: ${err.message}` : '') +
+            '<br/> <br/> This often happens due to a compatibility issue with the build environment or missing system dependencies.',
+          details: {
+            originalError: err.originalError || err.message,
+            stack: err.stack,
+          },
         }
         respondWithError(500, errorJSON)
         debug(

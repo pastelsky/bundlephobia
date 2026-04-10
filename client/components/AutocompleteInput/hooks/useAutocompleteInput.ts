@@ -16,6 +16,7 @@ export function useAutocompleteInput({
   const [value, setValue] = React.useState(initialValue)
   const [suggestions, setSuggestions] = React.useState<any[]>([])
   const [isMenuVisible, setIsMenuVisible] = React.useState(false)
+  const [error, setError] = React.useState(false)
 
   const getSuggestions = React.useMemo(
     () =>
@@ -29,13 +30,19 @@ export function useAutocompleteInput({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(value)
+    if (value.trim()) {
+      setError(false)
+      onSubmit(value)
+    } else {
+      setError(true)
+    }
   }
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     value: string
   ) => {
+    setError(false)
     setValue(e.target.value)
     const trimmedValue = e.target.value.trim()
     const { name } = parsePackageString(trimmedValue)
@@ -53,9 +60,11 @@ export function useAutocompleteInput({
     value,
     suggestions,
     isMenuVisible,
+    error,
     handleSubmit,
     handleInputChange,
     setIsMenuVisible,
     setSuggestions,
   }
 }
+

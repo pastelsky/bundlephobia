@@ -5,7 +5,7 @@ const { pool } = require('../init')
 const CustomError = require('../CustomError')
 const debug = require('debug')('bp:build')
 
-const OpertationType = {
+const OperationType = {
   PACKAGE_BUILD_STATS: 'PACKAGE_BUILD_STATS',
   PACKAGE_EXPORTS: 'PACKAGE_EXPORTS',
   PACKAGE_EXPORTS_SIZES: 'PACKAGE_EXPORTS_SIZES',
@@ -15,17 +15,17 @@ class BuildService {
   constructor() {
     const operations = [
       {
-        type: OpertationType.PACKAGE_BUILD_STATS,
+        type: OperationType.PACKAGE_BUILD_STATS,
         endpoint: '/size',
         methodName: 'getPackageStats',
       },
       {
-        type: OpertationType.PACKAGE_EXPORTS,
+        type: OperationType.PACKAGE_EXPORTS,
         endpoint: '/exports',
         methodName: 'getAllPackageExports',
       },
       {
-        type: OpertationType.PACKAGE_EXPORTS_SIZES,
+        type: OperationType.PACKAGE_EXPORTS_SIZES,
         endpoint: '/exports-sizes',
         methodName: 'getPackageExportSizes',
       },
@@ -84,7 +84,7 @@ class BuildService {
   async getPackageBuildStats(packageString, priority) {
     return await requestQueue.process(
       packageString,
-      OpertationType.PACKAGE_BUILD_STATS,
+      OperationType.PACKAGE_BUILD_STATS,
       { packageString },
       { priority }
     )
@@ -93,7 +93,7 @@ class BuildService {
   async getPackageExports(packageString, priority) {
     return await requestQueue.process(
       packageString,
-      OpertationType.PACKAGE_EXPORTS,
+      OperationType.PACKAGE_EXPORTS,
       { packageString },
       { priority }
     )
@@ -102,7 +102,7 @@ class BuildService {
   async getPackageExportSizes(packageString, priority) {
     return await requestQueue.process(
       packageString,
-      OpertationType.PACKAGE_EXPORTS_SIZES,
+      OperationType.PACKAGE_EXPORTS_SIZES,
       { packageString },
       { priority }
     )

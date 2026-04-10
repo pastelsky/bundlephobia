@@ -96,7 +96,7 @@ class Queue {
   }
 
   /**
-   * Increments the priorites of "ready" jobs
+   * Increments the priorities of "ready" jobs
    * in the queue to prevent starvation of lower
    * priority jobs.
    */
@@ -118,7 +118,7 @@ class Queue {
 
   /**
    * Clear the queue of all "ready" jobs. Jobs
-   * in execution are not terminate prematurely.
+   * in execution are not terminated prematurely.
    * Jobs being terminated have their failure listeners notified.
    */
   clear() {
@@ -162,7 +162,7 @@ class Queue {
       this.pruneQueue()
       this.executeNextJob()
     } else {
-      log('waiting... all workers ain quere are occupied')
+      log('waiting... all workers in queue are occupied')
     }
   }
 

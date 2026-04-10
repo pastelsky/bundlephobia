@@ -30,6 +30,7 @@ export const AutocompleteInput = ({
     value,
     isMenuVisible,
     suggestions,
+    error,
     handleSubmit,
     handleInputChange,
     setIsMenuVisible,
@@ -57,7 +58,9 @@ export const AutocompleteInput = ({
           getItemValue={item => item.package.name}
           inputProps={{
             placeholder: 'find package',
-            className: 'autocomplete-input',
+            className: cx('autocomplete-input', {
+              'autocomplete-input--error': error,
+            }),
             autoCorrect: 'off',
             autoFocus: autoFocus,
             autoCapitalize: 'off',
