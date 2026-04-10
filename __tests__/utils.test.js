@@ -6,6 +6,7 @@ describe('parsePackageString', () => {
       scoped: true,
       name: '@babel/core',
       version: '9.8.0',
+      scope: 'babel',
     })
   })
 
@@ -14,6 +15,7 @@ describe('parsePackageString', () => {
       scoped: true,
       name: '@babel/core',
       version: null,
+      scope: 'babel',
     })
   })
 

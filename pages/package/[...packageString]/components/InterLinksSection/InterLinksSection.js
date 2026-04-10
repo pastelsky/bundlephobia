@@ -7,13 +7,12 @@ import API from '../../../../../client/api'
 import InterLinksSectionCard from './InterLinksSectionCard'
 
 function usePackagesFromSameScope(packageName) {
-  const { scope } = parsePackageString(packageName)
-
   const [morePackages, setMorePackages] = useState([])
   const getAgeScore = result =>
     Math.min(1 / Math.log(daysFromToday(result.package.date)), 1)
 
   useEffect(() => {
+    const { scope } = parsePackageString(packageName)
     API.getSuggestions(`@${scope}`).then(results => {
       const sorted = results
         .filter(result => result.package.scope === scope)
