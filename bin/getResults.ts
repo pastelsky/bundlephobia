@@ -1,7 +1,8 @@
-const firebase = require('firebase')
-const { encodeFirebaseKey, decodeFirebaseKey } = require('../utils/index')
-const fs = require('fs')
-require('dotenv').config()
+import fs from 'fs'
+import path from 'path'
+import firebase from 'firebase'
+
+import 'dotenv/config'
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -13,7 +14,10 @@ firebase.initializeApp(firebaseConfig)
 
 function getFirebaseStoreFromDisk() {
   try {
-    return require('./data/firebase-modules.json')
+    const firebaseModulesPath = path.join(__dirname, 'data/firebase-modules.json')
+    return JSON.parse(
+      fs.readFileSync(firebaseModulesPath, 'utf8')
+    ) as Record<string, Record<string, unknown>>
   } catch (err) {
     console.log('not found on disk')
     return null
@@ -22,36 +26,39 @@ function getFirebaseStoreFromDisk() {
 
 async function getFirebaseStoreFromNetwork() {
   const modulesRef = firebase.database().ref('modules-v2')
-  const lastEntry = Object.keys(
-    await modulesRef
-      .limitToLast(1)
-      .once('value')
-      .then(snapshot => snapshot.val())
-  )[0]
-
-  const firstEntry = Object.keys(
-    await modulesRef
+  const lastSnapshot =
+    ((await modulesRef.limitToLast(1).once('value').then(snapshot => snapshot.val())) as
+      | Record<string, unknown>
+      | null) ?? {}
+  const firstSnapshot =
+    ((await modulesRef
       .limitToFirst(1)
       .once('value')
-      .then(snapshot => snapshot.val())
-  )[0]
+      .then(snapshot => snapshot.val())) as Record<string, unknown> | null) ??
+    {}
+
+  const lastEntry = Object.keys(lastSnapshot)[0]
+  const firstEntry = Object.keys(firstSnapshot)[0]
 
   let currentLastEntry = firstEntry
-  let allData = {}
+  let allData: Record<string, Record<string, unknown>> = {}
   let counter = 0
 
   console.log('fetching from ', firstEntry, ' to ', lastEntry)
 
   while (currentLastEntry !== lastEntry) {
     counter += 20000
-    const snapshot = await firebase
+    const snapshot = (await firebase
       .database()
       .ref('modules-v2')
       .orderByKey()
       .startAt(currentLastEntry)
       .limitToFirst(20000)
       .once('value')
-      .then(snapshot => snapshot.val())
+      .then(snapshot => snapshot.val())) as Record<
+      string,
+      Record<string, unknown>
+    >
 
     const packageNames = Object.keys(snapshot)
     currentLastEntry = packageNames[packageNames.length - 1]
@@ -67,27 +74,27 @@ async function getFirebaseStoreFromNetwork() {
   }
 
   fs.mkdirSync(__dirname + '/data', { recursive: true })
-
   fs.writeFileSync(
     __dirname + '/data/firebase-modules.json',
     JSON.stringify(allData, null, 2),
     'utf8'
   )
+
   return allData
 }
 
-async function getResults() {
-  let firebaseStore = getFirebaseStoreFromDisk()
+export async function getResults() {
+  const firebaseStore = getFirebaseStoreFromDisk() ?? {}
   console.log('loaded firebase store')
-  return Object.keys(firebaseStore).flatMap(packageName =>
-    Object.keys(firebaseStore[packageName]).map(
-      version => firebaseStore[packageName][version]
+  return Object.keys(firebaseStore ?? {}).flatMap(packageName =>
+    Object.keys((firebaseStore ?? {})[packageName]).map(
+      version => (firebaseStore as Record<string, Record<string, unknown>>)[packageName][version]
     )
   )
 }
 
-async function getPackages() {
-  let firebaseStore =
+export async function getPackages() {
+  const firebaseStore =
     getFirebaseStoreFromDisk() || (await getFirebaseStoreFromNetwork())
   const packages = Object.keys(firebaseStore).map(
     packageName => firebaseStore[packageName]
@@ -96,4 +103,4 @@ async function getPackages() {
   return packages
 }
 
-module.exports = { getResults, getPackages }
+export {}

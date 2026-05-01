@@ -11,6 +11,7 @@
     "baseUrl": ".",
     "module": "esnext",
     "moduleResolution": "node",
+    "types": ["node", "jest"],
     "paths": {
       "client/*": ["client/*"],
       "pages/*": ["pages/*"],

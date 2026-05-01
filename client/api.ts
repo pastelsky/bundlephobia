@@ -44,12 +44,31 @@ export type PackageBuildInfoSnapshot = Partial<PackageBuildInfo>
 
 export type PackageHistoryResponse = Record<string, PackageBuildInfoSnapshot>
 
+export type PackageDependencyInfo = {
+  name: string
+  version: string
+}
+
 export type SimilarPackagesResponse = {
   category: {
     label?: string
     score: number
     similar: string[]
   }
+}
+
+export type PackageExportsResponse = {
+  exports: Record<string, string>
+}
+
+export type PackageExportAsset = {
+  name: string
+  gzip?: number
+  type?: string
+}
+
+export type PackageExportSizesResponse = {
+  assets: PackageExportAsset[]
 }
 
 export default class API {
@@ -96,11 +115,21 @@ export default class API {
   }
 
   static getExports(packageString: string) {
-    return API.get(`/api/exports?package=${packageString}`)
+    return API.get<PackageExportsResponse>(
+      `/api/exports?package=${packageString}`
+    )
   }
 
   static getExportsSizes(packageString: string) {
-    return API.get(`/api/exports-sizes?package=${packageString}`)
+    return API.get<PackageExportSizesResponse>(
+      `/api/exports-sizes?package=${packageString}`
+    )
+  }
+
+  static getDependencies(packageString: string) {
+    return API.get<PackageDependencyInfo[]>(
+      `/api/dependencies?package=${packageString}`
+    )
   }
 
   static getHistory(packageString: string, limit: number) {

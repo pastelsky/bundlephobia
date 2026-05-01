@@ -6,8 +6,7 @@ import { chain } from 'stream-chain'
 import { parser } from 'stream-json'
 import { streamArray } from 'stream-json/streamers/StreamArray'
 import { streamObject } from 'stream-json/streamers/StreamObject'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const JSONStream = require('JSONStream')
+import * as JSONStream from 'JSONStream'
 import progress from 'progress-stream'
 
 // Initialize Firebase (you'll need to set up your service account key)
