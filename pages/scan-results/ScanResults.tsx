@@ -1,24 +1,81 @@
-import Router, { withRouter } from 'next/router'
+import Link from 'next/link'
+import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { Component } from 'react'
-import Analytics from '../../client/analytics'
 import FlipMove from 'react-flip-move'
 import cx from 'classnames'
+import PQueue from 'p-queue'
+import { stringify } from 'query-string'
 
-const PromiseQueue = require('p-queue')
-const queryString = require('query-string')
+import Analytics from '../../client/analytics'
+import API, { type PackageBuildInfo } from '../../client/api'
 import Stat from '../../client/components/Stat'
-import Link from 'next/link'
 import ResultLayout from '../../client/components/ResultLayout'
 import { parsePackageString } from '../../utils/common.utils'
-
-import API from '../../client/api'
 import { getTimeFromSize } from '../../utils'
 
-class ResultCard extends Component {
+type PromiseState = 'pending' | 'fulfilled' | 'rejected'
+type SortMode = 'alphabetic' | 'size'
+
+type PackageBuildError = {
+  code: string
+  message: string
+}
+
+type ParsedPackage = ReturnType<typeof parsePackageString>
+
+type ScanPackage = ParsedPackage & {
+  promiseState: PromiseState
+  packageString: string
+  result?: PackageBuildInfo
+  error?: PackageBuildError
+}
+
+type ResultCardProps = {
+  pack: ScanPackage
+  index: number
+}
+
+type ScanResultsProps = {
+  router: NextRouter
+}
+
+type ScanResultsState = {
+  packages: ScanPackage[]
+  sortMode: SortMode
+}
+
+function getQueryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+function getPackagesFromRouter(router: NextRouter): ScanPackage[] {
+  const packageStrings = getQueryValue(router.query.packages)
+
+  if (!packageStrings) {
+    return []
+  }
+
+  return packageStrings
+    .split(',')
+    .map(str => str.trim())
+    .filter(Boolean)
+    .map(str => ({
+      promiseState: 'pending' as const,
+      packageString: str,
+      ...parsePackageString(str),
+    }))
+}
+
+function getSortModeFromRouter(router: NextRouter): SortMode {
+  const sortMode = getQueryValue(router.query.sortMode)
+  return sortMode === 'size' ? 'size' : 'alphabetic'
+}
+
+class ResultCard extends Component<ResultCardProps> {
   render() {
     const { pack, index } = this.props
 
-    let content
+    let content: React.ReactNode = null
 
     switch (pack.promiseState) {
       case 'pending':
@@ -28,6 +85,10 @@ class ResultCard extends Component {
         break
 
       case 'fulfilled':
+        if (!pack.result) {
+          break
+        }
+
         content = (
           <div className="scan-results__stat-container">
             <Stat
@@ -63,6 +124,10 @@ class ResultCard extends Component {
         break
 
       case 'rejected':
+        if (!pack.error) {
+          break
+        }
+
         content = (
           <details className="scan-results__error-text">
             <summary> {pack.error.code}</summary>
@@ -100,23 +165,10 @@ class ResultCard extends Component {
   }
 }
 
-class ScanResults extends Component {
-  constructor(props) {
-    super(props)
-
-    const { router } = this.props
-    const sortMode = router.query.sortMode
-    const packageStrings = router.query.packages
-    const packages = packageStrings
-      .split(',')
-      .map(str => str.trim())
-      .map(str => ({
-        promiseState: 'pending',
-        packageString: str,
-        ...parsePackageString(str),
-      }))
-
-    this.state = { packages, sortMode: sortMode }
+class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
+  state: ScanResultsState = {
+    packages: getPackagesFromRouter(this.props.router),
+    sortMode: getSortModeFromRouter(this.props.router),
   }
 
   // Disables Next.js's Automatic Static Optimization
@@ -128,18 +180,18 @@ class ScanResults extends Component {
 
   componentDidMount() {
     const { packages } = this.state
-    const queue = new PromiseQueue({ concurrency: 3 })
+    const queue = new PQueue({ concurrency: 3 })
     const startTime = Date.now()
 
     Analytics.pageView('scan results')
 
     packages.forEach(pack => {
-      queue.add(() => {
-        const start = Date.now()
+      const packageStartTime = Date.now()
 
+      queue.add(() =>
         API.getInfo(pack.packageString)
           .then(result => {
-            this.updatePackageState(pack, {
+            this.updatePackageState(pack.packageString, {
               promiseState: 'fulfilled',
               version: result.version,
               result,
@@ -147,60 +199,60 @@ class ScanResults extends Component {
 
             Analytics.searchSuccess({
               packageName: pack.packageString,
-              timeTaken: Date.now() - start,
+              timeTaken: Date.now() - packageStartTime,
             })
           })
-          .catch(({ error }) => {
+          .catch(({ error }: { error: PackageBuildError }) => {
             console.error(error)
-            this.updatePackageState(pack, {
+            this.updatePackageState(pack.packageString, {
               promiseState: 'rejected',
               error,
             })
 
             Analytics.searchFailure({
               packageName: pack.packageString,
-              timeTaken: Date.now() - start,
+              timeTaken: Date.now() - packageStartTime,
             })
           })
-      })
+      )
     })
 
     queue.onIdle().then(() => {
-      const successfulBuildCount = packages.reduce(
-        (curSum, nextPack) =>
-          nextPack.promiseState === 'fulfilled' ? curSum + 1 : curSum,
-        0
-      )
+      this.setState(currentState => {
+        const successfulBuildCount = currentState.packages.reduce(
+          (curSum, nextPack) =>
+            nextPack.promiseState === 'fulfilled' ? curSum + 1 : curSum,
+          0
+        )
 
-      Analytics.scanCompleted({
-        successRatio: successfulBuildCount / packages.length,
-        timeTaken: Date.now() - startTime,
+        Analytics.scanCompleted({
+          successRatio:
+            currentState.packages.length === 0
+              ? 0
+              : successfulBuildCount / currentState.packages.length,
+          timeTaken: Date.now() - startTime,
+        })
+
+        return null
       })
     })
   }
 
-  updatePackageState(pack, state) {
-    const { packages } = this.state
-    const packIndex = packages.findIndex(
-      ({ packageString }) => packageString === pack.packageString
-    )
-
-    packages[packIndex] = {
-      ...packages[packIndex],
-      ...state,
-    }
-
-    this.setState({ packages })
+  updatePackageState(packageString: string, state: Partial<ScanPackage>) {
+    this.setState(currentState => ({
+      packages: currentState.packages.map(pack =>
+        pack.packageString === packageString ? { ...pack, ...state } : pack
+      ),
+    }))
   }
 
-  setParamsAndState = sortMode => {
-    debugger
+  setParamsAndState = (sortMode: SortMode) => {
     const updatedQuery = { ...this.props.router.query, sortMode }
     Router.replace(
-      `/scan-results?${queryString.stringify(updatedQuery, { encode: false })}`
+      `/scan-results?${stringify(updatedQuery, { encode: false })}`
     )
 
-    this.setState({ sortMode: sortMode })
+    this.setState({ sortMode })
   }
 
   handleSortAlphabetic = () => {
@@ -213,21 +265,20 @@ class ScanResults extends Component {
 
   sortPackages = () => {
     const { packages, sortMode } = this.state
-    let sortedList
+    const packagesCopy = [...packages]
 
     if (sortMode === 'size') {
-      sortedList = packages.sort((packA, packB) => {
+      return packagesCopy.sort((packA, packB) => {
         const packASize = packA.result ? packA.result.gzip : 0
         const packBSize = packB.result ? packB.result.gzip : 0
 
         return packBSize - packASize
       })
-    } else {
-      sortedList = packages.sort((packA, packB) =>
-        packA.name.localeCompare(packB.name)
-      )
     }
-    return sortedList
+
+    return packagesCopy.sort((packA, packB) =>
+      packA.name.localeCompare(packB.name)
+    )
   }
 
   render() {
@@ -272,7 +323,7 @@ class ScanResults extends Component {
             easing="cubic-bezier(0.175, 0.885, 0.325, 1.040)"
           >
             {packages.map((pack, index) => (
-              <ResultCard pack={pack} index={index} key={pack.name} />
+              <ResultCard pack={pack} index={index} key={pack.packageString} />
             ))}
           </FlipMove>
           <li className="scan-results__item scan-results__item--total">

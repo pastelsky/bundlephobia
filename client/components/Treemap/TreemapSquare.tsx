@@ -1,9 +1,13 @@
 import React from 'react'
 
+import { type TreemapRectangle } from './squarify'
+
 type TreemapSquareProps = {
+  value: number
   style: React.CSSProperties
-  data?: any
+  data?: TreemapRectangle
 } & React.PropsWithChildren &
+  React.HTMLAttributes<HTMLDivElement> &
   Pick<
     React.CSSProperties,
     'left' | 'top' | 'width' | 'height' | 'borderRadius'
@@ -17,12 +21,14 @@ function TreemapSquare({
   height,
   borderRadius,
   data,
+  value,
   style,
   ...other
 }: TreemapSquareProps) {
   return (
     <div
-      data-vals={data.toString() + '...' + width + '...' + height}
+      data-value={value}
+      data-vals={`${data?.toString() ?? ''}...${width}...${height}`}
       style={{
         position: 'absolute',
         left,

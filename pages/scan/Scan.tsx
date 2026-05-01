@@ -1,31 +1,58 @@
-import React, { Component } from 'react'
-import Analytics from '../../client/analytics'
-import ResultLayout from '../../client/components/ResultLayout'
-import Separator from '../../client/components/Separator'
-import MetaTags from '../../client/components/MetaTags'
-import scanBlacklist from '../../client/config/scanBlacklist'
-import Dropzone from 'react-dropzone'
 import Router from 'next/router'
+import React, { Component, createRef } from 'react'
+import Dropzone from 'react-dropzone'
 import * as semver from 'semver'
 
-export default class Scan extends Component {
-  state = {
+import Analytics from '../../client/analytics'
+import MetaTags from '../../client/components/MetaTags'
+import ResultLayout from '../../client/components/ResultLayout'
+import Separator from '../../client/components/Separator'
+import scanBlacklist from '../../client/config/scanBlacklist'
+
+type PackageJsonDependencies = Record<string, string>
+
+type ParsedPackageJson = {
+  dependencies?: PackageJsonDependencies
+}
+
+type ScannablePackage = {
+  name: string
+  versionRange: string
+  resolvedVersion: string
+}
+
+type SelectedPackage = {
+  name: string
+  resolvedVersion: string
+}
+
+type ScanState = {
+  packages: ScannablePackage[] | null
+  selectedPackages: SelectedPackage[]
+}
+
+export default class Scan extends Component<Record<string, never>, ScanState> {
+  state: ScanState = {
     packages: null,
     selectedPackages: [],
   }
+
+  private packageSelectionContainerRef = createRef<HTMLUListElement>()
 
   componentDidMount() {
     Analytics.pageView('scan')
   }
 
-  resolveVersionFromRange = range => {
+  resolveVersionFromRange = (range: string) => {
     const rangeSet = new semver.Range(range).set
     return rangeSet[0][0].semver.version
   }
 
   setSelectedPackages = () => {
     const checkedInputs =
-      this.packageSelectionContainer.querySelectorAll('input:checked')
+      this.packageSelectionContainerRef.current?.querySelectorAll<HTMLInputElement>(
+        'input:checked'
+      ) ?? []
 
     const selectedPackages = Array.from(checkedInputs).map(({ value }) => {
       const [name, resolvedVersion] = value.split('#')
@@ -39,36 +66,53 @@ export default class Scan extends Component {
     this.setSelectedPackages()
   }
 
-  handleDropAccepted = ([file]) => {
+  getParsedPackages(json: ParsedPackageJson): ScannablePackage[] {
+    const dependencies = json.dependencies ?? {}
+
+    return Object.keys(dependencies)
+      .filter(packageName => {
+        const versionRange = dependencies[packageName]
+        return semver.valid(versionRange) || semver.validRange(versionRange)
+      })
+      .map(packageName => {
+        const versionRange = dependencies[packageName]
+
+        return {
+          name: packageName,
+          versionRange,
+          resolvedVersion: this.resolveVersionFromRange(versionRange),
+        }
+      })
+  }
+
+  handleDropAccepted = ([file]: File[]) => {
+    if (!file) {
+      this.showInvalidFileError()
+      return
+    }
+
     const reader = new FileReader()
     reader.onload = () => {
       try {
-        const json = JSON.parse(reader.result)
-        const packages = Object.keys(json.dependencies)
-          .filter(packageName => {
-            const versionRange = json.dependencies[packageName]
-            return semver.valid(versionRange) || semver.validRange(versionRange)
-          })
-          .map(packageName => {
-            const versionRange = json.dependencies[packageName]
-
-            return {
-              name: packageName,
-              versionRange,
-              resolvedVersion: this.resolveVersionFromRange(versionRange),
-            }
-          })
+        const result =
+          typeof reader.result === 'string'
+            ? reader.result
+            : reader.result
+            ? new TextDecoder().decode(reader.result)
+            : ''
+        const json = JSON.parse(result) as ParsedPackageJson
+        const packages = this.getParsedPackages(json)
 
         this.setState({ packages }, this.setSelectedPackages)
-
         Analytics.scanPackageJsonDropped(packages.length)
       } catch (err) {
+        console.error(err)
         this.showInvalidFileError()
       }
     }
 
     try {
-      reader.readAsBinaryString(file)
+      reader.readAsText(file)
     } catch (err) {
       console.error(err)
       this.showInvalidFileError()
@@ -84,8 +128,8 @@ export default class Scan extends Component {
     const query = selectedPackages
       .map(pack => `${pack.name}@${pack.resolvedVersion}`)
       .join(',')
-    Router.push(`/scan-results?packages=${query}`)
 
+    Router.push(`/scan-results?packages=${query}`)
     Analytics.performedScan()
   }
 
@@ -95,13 +139,12 @@ export default class Scan extends Component {
 
   showInvalidFileError() {
     alert('Could not parse the `package.json` file.')
-
     Analytics.scanParseError()
   }
 
   render() {
-    let content
     const { packages, selectedPackages } = this.state
+    let content: React.ReactNode
 
     if (!packages) {
       content = (
@@ -137,7 +180,7 @@ export default class Scan extends Component {
           </header>
           <ul
             className="scan__package-container"
-            ref={pc => (this.packageSelectionContainer = pc)}
+            ref={this.packageSelectionContainerRef}
           >
             {packages.map(({ name, versionRange, resolvedVersion }) => (
               <li className="scan__package-item" key={name}>
@@ -163,6 +206,7 @@ export default class Scan extends Component {
         </div>
       )
     }
+
     return (
       <ResultLayout className="scan-page">
         <MetaTags

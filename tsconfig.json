@@ -8,8 +8,16 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
+    "baseUrl": ".",
     "module": "esnext",
     "moduleResolution": "node",
+    "paths": {
+      "client/*": ["client/*"],
+      "pages/*": ["pages/*"],
+      "server/*": ["server/*"],
+      "utils": ["utils/index.js"],
+      "utils/*": ["utils/*"]
+    },
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
