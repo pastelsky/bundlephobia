@@ -1,11 +1,20 @@
-import { sanitizeHTML } from '../../../../../../utils/common.utils'
-import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import Link from 'next/link'
 import React from 'react'
 
-export default function InterLinksSectionCard(props) {
-  const { description, name, date } = props
+import { sanitizeHTML } from '../../../../../../utils/common.utils'
 
+type InterLinksSectionCardProps = {
+  description: string
+  name: string
+  date: string
+}
+
+export default function InterLinksSectionCard({
+  description,
+  name,
+  date,
+}: InterLinksSectionCardProps) {
   return (
     <Link href={`/package/${name}`} className="interlinks-card">
       <div className="interlinks-card__wrap">

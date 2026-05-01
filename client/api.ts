@@ -1,16 +1,54 @@
 import fetch from 'unfetch'
 
-type PackageSuggestion = {
+export type PackageSuggestion = {
+  package: {
+    name: string
+    description: string
+    scope?: string
+    date?: string
+  }
   searchScore: number
   score: { detail: { popularity: number } }
+  highlight?: string
 }
 
-type RecentSearch = {
+export type RecentSearch = {
   [key: string]: {
     name: string
     version: string
     lastSearched: number
     count: number
+  }
+}
+
+export type PackageBuildInfo = {
+  name: string
+  description: string
+  repository: string
+  version: string
+  size: number
+  gzip: number
+  dependencyCount: number
+  hasSideEffects: boolean | string[]
+  hasJSModule: boolean
+  hasJSNext: boolean
+  isModuleType: boolean
+  ignoredMissingDependencies?: string[]
+  dependencySizes?: Array<{
+    name: string
+    approximateSize: number
+  }>
+}
+
+export type PackageBuildInfoSnapshot = Partial<PackageBuildInfo>
+
+export type PackageHistoryResponse = Record<string, PackageBuildInfoSnapshot>
+
+export type SimilarPackagesResponse = {
+  category: {
+    label?: string
+    score: number
+    similar: string[]
   }
 }
 
@@ -52,7 +90,9 @@ export default class API {
   }
 
   static getInfo(packageString: string) {
-    return API.get(`/api/size?package=${packageString}&record=true`)
+    return API.get<PackageBuildInfo>(
+      `/api/size?package=${packageString}&record=true`
+    )
   }
 
   static getExports(packageString: string) {
@@ -64,17 +104,19 @@ export default class API {
   }
 
   static getHistory(packageString: string, limit: number) {
-    return API.get(
+    return API.get<PackageHistoryResponse>(
       `/api/package-history?package=${packageString}&limit=${limit}`
     )
   }
 
   static getRecentSearches(limit: number) {
-    return API.get<RecentSearch[]>(`/api/recent?limit=${limit}`)
+    return API.get<RecentSearch>(`/api/recent?limit=${limit}`)
   }
 
   static getSimilar(packageName: string) {
-    return API.get(`/api/similar-packages?package=${packageName}`)
+    return API.get<SimilarPackagesResponse>(
+      `/api/similar-packages?package=${packageName}`
+    )
   }
 
   static getSuggestions(query: string) {

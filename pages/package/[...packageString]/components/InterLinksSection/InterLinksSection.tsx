@@ -1,39 +1,55 @@
 import React, { useEffect, useState } from 'react'
+
+import API, { type PackageSuggestion } from '../../../../../client/api'
 import {
-  parsePackageString,
   daysFromToday,
+  parsePackageString,
 } from '../../../../../utils/common.utils'
-import API from '../../../../../client/api'
 import InterLinksSectionCard from './InterLinksSectionCard'
 
-function usePackagesFromSameScope(packageName) {
-  const { scope } = parsePackageString(packageName)
+type InterLinksSectionProps = {
+  packageName: string
+}
 
-  const [morePackages, setMorePackages] = useState([])
-  const getAgeScore = result =>
-    Math.min(1 / Math.log(daysFromToday(result.package.date)), 1)
+function usePackagesFromSameScope(packageName: string) {
+  const { scope } = parsePackageString(packageName)
+  const [morePackages, setMorePackages] = useState<PackageSuggestion[]>([])
 
   useEffect(() => {
+    if (!scope) {
+      setMorePackages([])
+      return
+    }
+
+    const getAgeScore = (result: PackageSuggestion) =>
+      result.package.date
+        ? Math.min(1 / Math.log(daysFromToday(result.package.date)), 1)
+        : 0
+
     API.getSuggestions(`@${scope}`).then(results => {
       const sorted = results
         .filter(result => result.package.scope === scope)
         .filter(result => result.package.name !== packageName)
         .sort(
-          (rA, rB) =>
-            rB.score.detail.popularity * getAgeScore(rB) -
-            rA.score.detail.popularity * getAgeScore(rA)
+          (packageA, packageB) =>
+            packageB.score.detail.popularity * getAgeScore(packageB) -
+            packageA.score.detail.popularity * getAgeScore(packageA)
         )
+
       setMorePackages(sorted)
     })
-  }, [packageName])
+  }, [packageName, scope])
+
   return morePackages
 }
 
-const InterLinksSection = props => {
-  const { scope } = parsePackageString(props.packageName)
-  const morePackages = usePackagesFromSameScope(props.packageName)
+export default function InterLinksSection({
+  packageName,
+}: InterLinksSectionProps) {
+  const { scope } = parsePackageString(packageName)
+  const morePackages = usePackagesFromSameScope(packageName)
 
-  if (!morePackages.length) {
+  if (!scope || !morePackages.length) {
     return null
   }
 
@@ -49,7 +65,7 @@ const InterLinksSection = props => {
               key={pack.package.name}
               name={pack.package.name}
               description={pack.package.description}
-              date={pack.package.date}
+              date={pack.package.date ?? new Date().toISOString()}
             />
           ))}
         </div>
@@ -57,5 +73,3 @@ const InterLinksSection = props => {
     </div>
   )
 }
-
-export default InterLinksSection
