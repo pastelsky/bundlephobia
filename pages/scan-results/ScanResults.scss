@@ -16,14 +16,14 @@
   width: 100%;
   padding: 0;
   margin: 0;
-  border: 1px solid lighten($raven, 50%);
+  border: 1px solid var(--color-border-primary);
   border-radius: 2px;
-  box-shadow: 0 0 4px lighten($raven, 50%);
+  box-shadow: 0 0 4px var(--color-border-primary);
 }
 
 .scan-results__note {
   @include font-size-xs;
-  color: lighten($raven, 20%);
+  color: var(--color-text-muted);
   margin-top: $global-spacing * 2;
   margin-bottom: $global-spacing * 4;
 }
@@ -31,7 +31,7 @@
 .scan-results__sort-panel {
   @include font-size-sm;
   margin-bottom: 1.5rem;
-  color: $raven;
+  color: var(--color-text-muted);
 
   label {
     text-transform: uppercase;
@@ -41,7 +41,7 @@
   button {
     cursor: pointer;
     border: none;
-    border-bottom: 1px dashed lighten($raven, 40%);
+    border-bottom: 1px dashed var(--color-border-primary);
     box-shadow: none;
     background: none;
     margin-left: $global-spacing;
@@ -50,7 +50,7 @@
     color: inherit;
 
     &:hover {
-      border-color: lighten($raven, 30%);
+      border-color: var(--color-text-muted);
     }
 
     &:focus {
@@ -59,8 +59,8 @@
   }
 
   .scan-results__sort--selected {
-    color: $pastel-green;
-    border-color: $pastel-green;
+    color: var(--color-accent);
+    border-color: var(--color-accent);
   }
 }
 
@@ -82,7 +82,7 @@
 }
 
 .scan-results__item--total {
-  background: transparentize($raven, 0.96);
+  background: var(--color-surface-raised);
 }
 
 .scan-results__item--loading {
@@ -143,7 +143,7 @@
   @include font-size-sm;
   flex-grow: 1;
   text-align: center;
-  color: lighten($raven, 20%);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   font-weight: $font-weight-bold;
   letter-spacing: 0.5px;
@@ -165,7 +165,7 @@
     @include font-size-sm;
     font-weight: $font-weight-light;
     text-align: left;
-    color: lighten($raven, 10%);
+    color: var(--color-text-muted);
     font-family: $font-family-body;
     line-height: 1.5;
   }
@@ -186,7 +186,7 @@ $index-width: 4rem;
 .scan-results__index {
   @include font-size-xl;
   font-weight: $font-weight-very-bold;
-  color: lighten($raven, 50%);
+  color: var(--color-text-faint);
   position: relative;
   width: $index-width;
 }
@@ -202,7 +202,7 @@ $index-width: 4rem;
   }
 
   .scan-results__package-version {
-    color: $raven;
+    color: var(--color-text-muted);
     font-family: $font-family-code;
   }
 

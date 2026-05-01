@@ -1,4 +1,4 @@
-@use "sass:math";
+@use 'sass:math';
 
 @import '../../../../../../stylesheets/colors';
 @import '../../../../../../stylesheets/variables';
@@ -73,7 +73,7 @@
 
 .interlinks-card__publish-date {
   @include font-size-xs;
-  color: $raven;
+  color: var(--color-text-muted);
   border-top: 1px dashed lighten($raven, 50%);
   padding-top: $global-spacing * 0.5;
   margin-top: $global-spacing * 0.5;

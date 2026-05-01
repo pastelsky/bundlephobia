@@ -45,7 +45,7 @@
   animation: move 2s alternate infinite;
 
   .logo-graphic:hover & {
-    stroke: desaturate($pastel-green, 30%);
+    stroke: var(--color-accent);
   }
 }
 
@@ -90,7 +90,7 @@
 .homepage__or-divider {
   font-weight: $font-weight-bold;
   text-transform: uppercase;
-  color: $raven;
+  color: var(--color-text-muted);
   margin-top: 4vh;
   letter-spacing: 3px;
 }

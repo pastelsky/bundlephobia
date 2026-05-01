@@ -1,10 +1,10 @@
-@use "sass:math";
+@use 'sass:math';
 
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
 
 .similar-package-card {
-  border: 1px solid $autocomplete-border-color;
+  border: 1px solid var(--color-autocomplete-border);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   border-radius: 10px;
   width: calc(25% - #{$global-spacing * 2});
@@ -17,12 +17,12 @@
   &:hover {
     transform: scale(1.01);
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.06);
-    border: 1px solid fade-in($autocomplete-border-color, 0.02);
+    border: 1px solid var(--color-border-primary);
   }
 
   &.similar-package-card--empty {
     border-style: dashed;
-    background: transparentize($raven, 0.97);
+    background: var(--color-surface-raised);
   }
 
   @media screen and (max-width: 64em) {
@@ -41,7 +41,7 @@
 }
 
 .similar-package-card--empty {
-  color: transparentize($raven, 0.5);
+  color: var(--color-text-muted);
   align-items: center;
 }
 
@@ -70,7 +70,7 @@
 
 .similar-package-card__description {
   @include font-size-sm;
-  color: $dark-raven;
+  color: var(--color-text-secondary);
   line-height: 1.5;
   margin: $global-spacing 0 0 0;
   word-break: break-word;
@@ -83,12 +83,12 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     font-weight: $font-weight-bold;
-    color: transparentize($raven, 0.4);
+    color: var(--color-text-muted);
   }
 }
 
 .similar-package-card__footer {
-  background: lighten($raven, 54%);
+  background: var(--color-bg-secondary);
   display: flex;
   padding: $global-spacing $global-spacing * 2;
   align-items: center;
@@ -115,7 +115,7 @@
 }
 
 .similar-package-card__comparison--similar {
-  color: $raven;
+  color: var(--color-text-muted);
 }
 
 .similar-package-card__label {
@@ -125,7 +125,7 @@
   line-height: 1.5;
 
   .similar-package-card__size & {
-    color: $raven;
+    color: var(--color-text-muted);
   }
 }
 
@@ -138,7 +138,7 @@
 .similar-package-card__shrink {
   font-size: 75%;
   .similar-package-card__size & {
-    color: $raven;
+    color: var(--color-text-muted);
   }
 }
 
@@ -159,6 +159,6 @@
   height: auto;
   margin-bottom: $global-spacing * 1.5;
   path {
-    fill: transparentize($raven, 0.7);
+    fill: var(--color-border-primary);
   }
 }

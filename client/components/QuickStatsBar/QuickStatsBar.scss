@@ -98,7 +98,7 @@
   &:hover {
     .quick-stats-bar__logo-icon--github {
       path {
-        fill: #333;
+        fill: var(--color-icon-hover);
       }
     }
     .quick-stats-bar__logo-icon--npm {

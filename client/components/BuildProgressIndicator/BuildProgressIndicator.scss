@@ -14,7 +14,7 @@
 .build-progress-indicator__text {
   font-size: 0.7rem;
   margin-top: $global-spacing * 3;
-  color: lighten($raven, 15%);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   font-weight: $font-weight-bold;
   letter-spacing: 2px;

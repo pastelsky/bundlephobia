@@ -186,7 +186,7 @@ footer {
   max-width: 100px;
 
   path {
-    fill: mix($raven, $maya-blue);
+    fill: var(--color-neptune); // mix($raven, $maya-blue) ≈ teal
   }
 
   &:hover {
@@ -198,19 +198,19 @@ footer {
 
 @keyframes pulse {
   0% {
-    fill: mix($raven, $maya-blue);
+    fill: var(--color-neptune);
   }
 
   25% {
-    fill: mix($raven, $cornflower-blue);
+    fill: var(--color-cornflower-blue);
   }
 
   50% {
-    fill: $raven;
+    fill: var(--color-raven);
   }
 
   75% {
-    fill: mix($raven, $maya-blue);
+    fill: var(--color-neptune);
   }
 }
 

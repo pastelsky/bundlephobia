@@ -126,6 +126,12 @@
 
   // ── Icon secondary colour (C8CDD3 — gray parts of icons) ─────────────────
   --color-icon-muted: #c8cdd3;
+
+  // ── General purpose surface & faint tokens ────────────────────────────────
+  // Barely-there hover/raised surface (transparentize($raven, 0.97) ≈ rgba(102,110,120,0.03))
+  --color-surface-raised: rgba(102, 110, 120, 0.03);
+  // Very faint text e.g. large index numerals (lighten($raven, 50%) ≈ #d4d7da)
+  --color-text-faint: #d4d7da;
 }
 
 // ─── Dark mode overrides ─────────────────────────────────────────────────────
@@ -248,6 +254,10 @@
 
   // Icon muted (gray icon parts)
   --color-icon-muted: #484f58;
+
+  // General purpose surface & faint tokens
+  --color-surface-raised: rgba(240, 246, 252, 0.04);
+  --color-text-faint: #484f58;
 
   // Primitive overrides for components that reference primitives directly
   --color-gulf-blue: #f0f6fc;

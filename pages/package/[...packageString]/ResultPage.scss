@@ -11,7 +11,7 @@
   @include font-size-sm;
   padding: math.div($global-spacing, 3) $global-spacing * 2;
   text-align: center;
-  color: darken($pastel-green, 20%);
+  color: var(--color-accent);
   align-self: center;
   margin-top: $global-spacing;
   position: relative;
@@ -19,7 +19,7 @@
   align-items: center;
 
   code {
-    color: darken($pastel-green, 25%);
+    color: var(--color-accent);
     font-size: 95%;
   }
 

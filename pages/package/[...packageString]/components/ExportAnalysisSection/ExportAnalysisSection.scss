@@ -23,13 +23,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: $raven;
+  color: var(--color-text-muted);
   margin-bottom: $global-spacing * 2;
 }
 
 .export-analysis-section__subtext {
   @include font-size-xs;
-  color: $raven;
+  color: var(--color-text-muted);
   text-align: center;
   max-width: $max-content-width;
   line-height: 1.5;
@@ -81,7 +81,7 @@
   height: $global-spacing * 1.5;
 
   path {
-    stroke: #666;
+    stroke: var(--color-icon-secondary);
     stroke-width: 3px;
   }
 }
@@ -94,13 +94,13 @@
   transition: all 0.1s ease-in-out;
   will-change: transform;
   contain: strict;
-  border: 1px solid lighten($raven, 51%);
-  background: lighten($raven, 51%);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-secondary);
 
   &:focus {
     width: 23vw;
-    background: white;
-    border: 1px solid lighten($raven, 48%);
+    background: var(--color-bg-base);
+    border: 1px solid var(--color-border-primary);
   }
 }
 
@@ -117,7 +117,7 @@
 
   &::after {
     content: '';
-    background: lighten($raven, 52%);
+    background: var(--color-border-subtle);
     position: absolute;
     bottom: 0;
     height: 1px;
@@ -197,7 +197,7 @@
 }
 
 .export-analysis-section__pill-size-unit {
-  color: $raven;
+  color: var(--color-text-muted);
   font-size: 90%;
   margin-left: $global-spacing * 0.2;
 }
@@ -218,6 +218,6 @@
 
   p {
     @include font-size-sm;
-    color: $raven;
+    color: var(--color-text-muted);
   }
 }

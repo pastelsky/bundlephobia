@@ -71,7 +71,7 @@
     @include font-size-sm;
     font-weight: $font-weight-light;
     text-align: left;
-    color: $raven;
+    color: var(--color-text-muted);
     line-height: 1.5;
     background: color-mix(in srgb, var(--color-raven), transparent 94%);
     padding: $global-spacing $global-spacing * 2;
@@ -95,7 +95,7 @@
 .result-error__message {
   margin-top: $global-spacing;
   font-weight: $font-weight-light;
-  color: $raven;
+  color: var(--color-text-muted);
   max-width: $global-spacing * 60;
   text-align: center;
   line-height: 1.5;
@@ -334,7 +334,7 @@
 
 .treemap__note {
   @include font-size-xs;
-  color: $raven;
+  color: var(--color-text-muted);
   margin: $global-spacing * 3 0 0 0;
   line-height: 1.2;
 }
