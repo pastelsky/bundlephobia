@@ -178,10 +178,16 @@ class Trailblaze {
   getRandomConnection() {
     const rings = zeroToN(this.ringsCount)
     const sourceRingNumber = randomFromArray(rings.slice(0, -1))
+    if (sourceRingNumber == null) {
+      throw new Error('Missing source ring')
+    }
     const destinationRingNumber = sourceRingNumber + 1
 
     const eligibleSourceCircles = this.getCirclesInRing(sourceRingNumber)
     const sourceCircle = randomFromArray(eligibleSourceCircles)
+    if (!sourceCircle) {
+      throw new Error('Missing source circle')
+    }
 
     const eligibleDestinationCircles = this.getCirclesInRing(
       destinationRingNumber
@@ -201,8 +207,15 @@ class Trailblaze {
       .filter(c => Math.abs(eligibleDistancesMin - c.distance) < 2)
       .map(d => d.index)
 
-    const destinationCircle =
-      eligibleDestinationCircles[randomFromArray(eligibleDestinationIndexes)]
+    const destinationIndex = randomFromArray(eligibleDestinationIndexes)
+    if (destinationIndex == null) {
+      throw new Error('Missing destination circle')
+    }
+
+    const destinationCircle = eligibleDestinationCircles[destinationIndex]
+    if (!destinationCircle) {
+      throw new Error('Missing destination circle')
+    }
 
     return {
       source: sourceCircle,
@@ -230,7 +243,12 @@ class Trailblaze {
     this.lines.forEach(line => {
       const { source, destination } = this.getRandomConnection()
       lineMap.set(line, { source, destination })
-      line.setAttribute('stroke', randomFromArray(colors))
+      const strokeColor = randomFromArray(colors)
+      if (!strokeColor) {
+        throw new Error('Missing stroke color')
+      }
+
+      line.setAttribute('stroke', strokeColor)
       this.setLineCoords(
         line,
         source.cx,
