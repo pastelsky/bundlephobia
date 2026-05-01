@@ -73,7 +73,9 @@ class ResultPage extends PureComponent {
       currentPackage.name !== nextPackage.name ||
       currentPackage.version !== nextPackage.version
 
-    if (isPackageDifferent) {
+    const isSelfInitiatedNavigation = this.activeQuery === nextPackageString
+
+    if (isPackageDifferent && !isSelfInitiatedNavigation) {
       this.handleSearchSubmit(nextPackageString)
     }
   }
@@ -94,6 +96,7 @@ class ResultPage extends PureComponent {
             results,
           },
           () => {
+            this.activeQuery = newPackageString
             Router.replace(`/package/${newPackageString}`)
           }
         )
@@ -178,9 +181,9 @@ class ResultPage extends PureComponent {
         historicalResults: [],
       },
       () => {
+        this.activeQuery = normalizedQuery
         Router.push(`/package/${normalizedQuery}`)
         Analytics.pageView('package result')
-        this.activeQuery = normalizedQuery
         this.fetchResults(normalizedQuery)
         this.fetchHistory(normalizedQuery)
       }
@@ -446,15 +449,16 @@ class ResultPage extends PureComponent {
             </div>
           )}
 
-          {resultsPromiseState === 'fulfilled' && similarPackages.length > 0 && (
-            <div className="content-container">
-              <SimilarPackagesSection
-                category={similarPackagesCategory}
-                packs={similarPackages}
-                comparisonGzip={results.gzip}
-              />
-            </div>
-          )}
+          {resultsPromiseState === 'fulfilled' &&
+            similarPackages.length > 0 && (
+              <div className="content-container">
+                <SimilarPackagesSection
+                  category={similarPackagesCategory}
+                  packs={similarPackages}
+                  comparisonGzip={results.gzip}
+                />
+              </div>
+            )}
 
           {resultsPromiseState === 'fulfilled' &&
             parsePackageString(results.name).scoped && (
