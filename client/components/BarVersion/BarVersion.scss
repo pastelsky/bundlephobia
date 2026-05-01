@@ -7,7 +7,7 @@
   font-weight: $font-weight-light;
   transform: rotate(-90deg) translateX(#{-$global-spacing * 1.5});
   font-variant-numeric: tabular-nums;
-  color: lighten($raven, 15%);
+  color: var(--color-bar-version);
   transition: opacity 0.2s, color 0.2s;
   font-family: $font-family-code;
   letter-spacing: -1px;
@@ -20,10 +20,10 @@
   align-items: center;
 
   .bar-graph-container:hover & {
-    color: $raven;
+    color: var(--color-bar-version-hover);
   }
 
   .bar-graph__bar-group:hover & {
-    color: darken($raven, 20%);
+    color: var(--color-bar-version-active);
   }
 }

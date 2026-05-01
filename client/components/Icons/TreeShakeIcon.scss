@@ -45,3 +45,8 @@ svg.treeshake-icon-animated {
     transform: translate3d(1px, 0, 0);
   }
 }
+
+// Dark mode: dim the shake effect lines
+[data-theme='dark'] .tree-shake-icon-svg__shake {
+  fill: var(--color-icon-muted);
+}

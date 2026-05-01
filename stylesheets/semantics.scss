@@ -110,6 +110,22 @@
   --color-treemap-percent: rgba(0, 0, 0, 0.5);
   --color-treemap-percent-hover: rgba(0, 0, 0, 0.8);
   --color-treemap-ellipsis: rgba(0, 0, 0, 0.35);
+
+  // ── Result page ───────────────────────────────────────────────────────────
+  --color-result-heading: #848d97; // ≈ lighten($raven, 10%)
+  --color-divider: #d4d7da; // ≈ lighten($raven, 50%)
+  --color-error-pre-bg: rgba(102, 110, 120, 0.06);
+
+  // ── History bar graph ─────────────────────────────────────────────────────
+  --color-bar-disabled: #d0d3d6; // ≈ lighten($raven, 45%)
+  --color-bar-disabled-hover: #bec2c6; // ≈ lighten($raven, 35%)
+  --color-bar-legend: #9ba1a9; // ≈ lighten($raven, 20%)
+  --color-bar-version: #8e959d; // ≈ lighten($raven, 15%)
+  --color-bar-version-hover: #666e78; // = $raven
+  --color-bar-version-active: #3a4049; // ≈ darken($raven, 20%)
+
+  // ── Icon secondary colour (C8CDD3 — gray parts of icons) ─────────────────
+  --color-icon-muted: #c8cdd3;
 }
 
 // ─── Dark mode overrides ─────────────────────────────────────────────────────
@@ -216,6 +232,22 @@
   --color-treemap-percent: rgba(255, 255, 255, 0.75);
   --color-treemap-percent-hover: rgba(255, 255, 255, 1);
   --color-treemap-ellipsis: rgba(255, 255, 255, 0.5);
+
+  // Result page
+  --color-result-heading: #8b949e;
+  --color-divider: #21262d;
+  --color-error-pre-bg: rgba(240, 246, 252, 0.05);
+
+  // History bar graph
+  --color-bar-disabled: #30363d;
+  --color-bar-disabled-hover: #484f58;
+  --color-bar-legend: #8b949e;
+  --color-bar-version: #8b949e;
+  --color-bar-version-hover: #8b949e;
+  --color-bar-version-active: #c9d1d9;
+
+  // Icon muted (gray icon parts)
+  --color-icon-muted: #484f58;
 
   // Primitive overrides for components that reference primitives directly
   --color-gulf-blue: #f0f6fc;

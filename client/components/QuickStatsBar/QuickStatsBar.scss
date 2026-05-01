@@ -108,3 +108,18 @@
     }
   }
 }
+
+// ── Icon dark mode overrides ──────────────────────────────────────────────────
+[data-theme='dark'] {
+  .dep-icon__node {
+    fill: var(--color-icon-muted);
+  }
+
+  .dep-icon__dot {
+    fill: var(--color-bg-base);
+  }
+
+  .info-icon__body {
+    fill: var(--color-icon-muted);
+  }
+}

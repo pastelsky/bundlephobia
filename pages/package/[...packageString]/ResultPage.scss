@@ -51,7 +51,7 @@
 
   summary {
     text-align: center;
-    color: lighten($raven, 10%);
+    color: var(--color-result-heading);
 
     &:focus {
       outline: none;
@@ -63,9 +63,9 @@
     @include font-size-sm;
     font-weight: $font-weight-light;
     text-align: left;
-    color: $raven;
+    color: var(--color-text-muted);
     line-height: 1.5;
-    background: transparentize($raven, 0.94);
+    background: var(--color-error-pre-bg);
     padding: $global-spacing $global-spacing * 2;
     white-space: normal;
     border-radius: 10px;
@@ -87,7 +87,7 @@
 .result-error__message {
   margin-top: $global-spacing;
   font-weight: $font-weight-light;
-  color: $raven;
+  color: var(--color-text-muted);
   max-width: $global-spacing * 60;
   text-align: center;
   line-height: 1.5;
@@ -174,7 +174,7 @@
 }
 
 .time-container {
-  border-top: 1px solid lighten($raven, 50%);
+  border-top: 1px solid var(--color-divider);
   padding-top: 5vh;
 
   @media screen and (max-width: 48em) {
@@ -204,7 +204,7 @@
   letter-spacing: 2px;
   font-weight: $font-weight-thin;
   margin: 0 0 $global-spacing * 2;
-  color: lighten($raven, 10%);
+  color: var(--color-result-heading);
 
   @media screen and (max-width: 48em) {
     margin: 0 0 $global-spacing;
@@ -327,7 +327,7 @@
 
 .treemap__note {
   @include font-size-xs;
-  color: $raven;
+  color: var(--color-text-muted);
   margin: $global-spacing * 3 0 0 0;
   line-height: 1.2;
 }

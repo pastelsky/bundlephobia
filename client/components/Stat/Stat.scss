@@ -55,7 +55,7 @@
 
 .stat-container__unit {
   @include font-size-xl;
-  color: $raven;
+  color: var(--color-text-muted);
   font-weight: bold;
   margin-left: 4px;
 
@@ -78,7 +78,7 @@
 
 .stat-container__label {
   @include font-size-reg;
-  color: $raven;
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 2px;
   text-align: center;

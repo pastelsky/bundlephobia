@@ -1,4 +1,4 @@
-@use "sass:math";
+@use 'sass:math';
 
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
@@ -76,11 +76,11 @@ $bar-grow-duration: 0.4s;
   }
 
   .bar-graph__bar-group--disabled & {
-    background: lighten($raven, 45%);
+    background: var(--color-bar-disabled);
     border-radius: 5px;
 
     &:hover {
-      background: lighten($raven, 35%);
+      background: var(--color-bar-disabled-hover);
     }
   }
 }
@@ -109,7 +109,7 @@ $bar-grow-duration: 0.4s;
   display: flex;
   text-transform: uppercase;
   justify-content: center;
-  color: lighten($raven, 20%);
+  color: var(--color-bar-legend);
 }
 
 .bar-graph__legend__colorbox {

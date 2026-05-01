@@ -39,3 +39,9 @@ svg.sideeffect-icon-animated {
     transform: scale(1);
   }
 }
+
+// Dark mode: dim the outer circle
+[data-theme='dark'] .side-effect-icon-svg__circle {
+  fill: var(--color-icon-muted);
+  stroke: var(--color-icon-muted);
+}
