@@ -6,6 +6,7 @@ describe('parsePackageString', () => {
       scoped: true,
       name: '@babel/core',
       version: '9.8.0',
+      scope: 'babel',
     })
   })
 
@@ -14,6 +15,7 @@ describe('parsePackageString', () => {
       scoped: true,
       name: '@babel/core',
       version: null,
+      scope: 'babel',
     })
   })
 
@@ -22,6 +24,7 @@ describe('parsePackageString', () => {
       scoped: false,
       name: 'react',
       version: '15.6.1',
+      scope: undefined,
     })
   })
 
@@ -30,6 +33,7 @@ describe('parsePackageString', () => {
       scoped: false,
       name: 'react',
       version: null,
+      scope: undefined,
     })
   })
 
@@ -38,6 +42,7 @@ describe('parsePackageString', () => {
       scoped: false,
       name: 'chart.js',
       version: '5.6.0',
+      scope: undefined,
     })
   })
 
@@ -46,6 +51,7 @@ describe('parsePackageString', () => {
       scoped: false,
       name: 'chart.js',
       version: '0.7.0-beta',
+      scope: undefined,
     })
   })
 })

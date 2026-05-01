@@ -1,24 +1,43 @@
-import React, { PureComponent } from 'react'
-import Head from 'next/head'
-
-import Layout from '../../client/components/Layout'
-import BarGraph from '../../client/components/BarGraph'
-import AutocompleteInput from '../../client/components/AutocompleteInput'
-import BuildProgressIndicator from '../../client/components/BuildProgressIndicator'
-import Router from 'next/router'
 import Link from 'next/link'
-import isEmptyObject from 'is-empty-object'
+import Router from 'next/router'
+import React, { PureComponent } from 'react'
+
+import API, {
+  type PackageBuildInfo,
+  type PackageHistoryResponse,
+} from '../../client/api'
+import EmptyBox from '../../client/assets/empty-box.svg'
+import GithubLogo from '../../client/assets/github-logo.svg'
+import BuildProgressIndicator from '../../client/components/BuildProgressIndicator'
+import BarGraph, {
+  type Reading,
+} from '../../client/components/BarGraph/BarGraph'
+import Layout from '../../client/components/Layout'
+import { AutocompleteInput } from '../../client/components/AutocompleteInput'
 import { parsePackageString } from '../../utils/common.utils'
 
-import API from '../../client/api'
+type ComparePageState = {
+  results: PackageBuildInfo | null
+  resultsError: unknown
+  resultsPromiseState: 'pending' | 'fulfilled' | 'rejected' | null
+  historicalResultsPromiseState: 'pending' | 'fulfilled' | 'rejected' | null
+  historicalResults: PackageHistoryResponse
+  inputInitialValue?: string
+}
 
-import GithubLogo from '../../client/assets/github-logo.svg'
-import EmptyBox from '../../client/assets/empty-box.svg'
+export default class ComparePage extends PureComponent<
+  Record<string, never>,
+  ComparePageState
+> {
+  state: ComparePageState = {
+    results: null,
+    resultsError: null,
+    resultsPromiseState: null,
+    historicalResultsPromiseState: null,
+    historicalResults: {},
+  }
 
-export default class ResultPage extends PureComponent {
-  fetchResults = packageString => {
-    const startTime = Date.now()
-
+  fetchResults = (packageString: string) => {
     API.getInfo(packageString)
       .then(results => {
         const newPackageString = `${results.name}@${results.version}`
@@ -41,7 +60,7 @@ export default class ResultPage extends PureComponent {
       })
   }
 
-  fetchHistory = packageString => {
+  fetchHistory = (packageString: string) => {
     API.getHistory(packageString, 15)
       .then(results => {
         this.setState({
@@ -55,17 +74,15 @@ export default class ResultPage extends PureComponent {
       })
   }
 
-  handleSearchSubmit = packageString => {
+  handleSearchSubmit = (packageString: string) => {
     this.setState({
-      results: {},
+      results: null,
       historicalResultsPromiseState: 'pending',
       resultsPromiseState: 'pending',
     })
 
     const normalizedQuery = packageString.trim().toLowerCase()
-
     Router.push(`/package/${normalizedQuery}`)
-
     this.fetchResults(normalizedQuery)
     this.fetchHistory(normalizedQuery)
   }
@@ -76,35 +93,61 @@ export default class ResultPage extends PureComponent {
     })
   }
 
-  formatHistoricalResults = () => {
+  formatHistoricalResults = (): Reading[] => {
     const { results, historicalResults } = this.state
-    const totalVersions = {
+
+    if (!results) {
+      return []
+    }
+
+    const totalVersions: PackageHistoryResponse = {
       ...historicalResults,
       [results.version]: results,
     }
 
     const formattedResults = Object.keys(totalVersions).map(version => {
-      if (isEmptyObject(totalVersions[version])) {
-        return { version, disabled: true }
+      const reading = totalVersions[version]
+      if (!reading || Object.keys(reading).length === 0) {
+        return {
+          version,
+          disabled: true,
+          size: 0,
+          gzip: 0,
+          hasSideEffects: false,
+          hasJSModule: false,
+          hasJSNext: false,
+          isModuleType: false,
+        }
       }
+
       return {
         version,
-        size: totalVersions[version].size,
-        gzip: totalVersions[version].gzip,
+        disabled: false,
+        size: reading.size ?? 0,
+        gzip: reading.gzip ?? 0,
+        hasSideEffects: Boolean(reading.hasSideEffects),
+        hasJSModule: Boolean(reading.hasJSModule),
+        hasJSNext: Boolean(reading.hasJSNext),
+        isModuleType: Boolean(reading.isModuleType),
       }
     })
+
     const sorted = formattedResults.sort((packageA, packageB) => {
-      const versionA = packageA.version.replace(/\D/g, '')
-      const versionB = packageB.version.replace(/\D/g, '')
-      return parseInt(versionA) > parseInt(versionB)
+      const versionA = Number(packageA.version.replace(/\D/g, ''))
+      const versionB = Number(packageB.version.replace(/\D/g, ''))
+      return versionA - versionB
     })
+
     return typeof window !== 'undefined' && window.innerWidth < 640
       ? sorted.slice(-10)
       : sorted
   }
 
-  handleBarClick = reading => {
+  handleBarClick = (reading: Reading) => {
     const { results } = this.state
+    if (!results) {
+      return
+    }
 
     const packageString = `${results.name}@${reading.version}`
     this.setState({ inputInitialValue: packageString })
@@ -137,24 +180,39 @@ export default class ResultPage extends PureComponent {
           <div className="compare__search-container">
             <div className="compare__search-inputs">
               <AutocompleteInput
-                key={''}
-                placeholder="package A"
-                initialValue={''}
+                key=""
+                initialValue=""
                 onSearchSubmit={this.handleSearchSubmit}
-                maxFullSizeCharsMultiplier={0.5}
-                hideSearchIcon
               />
               <div className="compare__vs">vs</div>
               <AutocompleteInput
-                key={'2'}
-                placeholder="package B"
-                initialValue={''}
+                key="2"
+                initialValue=""
                 onSearchSubmit={this.handleSearchSubmit}
-                maxFullSizeCharsMultiplier={0.5}
-                hideSearchIcon
               />
             </div>
           </div>
+          {this.state.resultsPromiseState === 'pending' && (
+            <BuildProgressIndicator
+              isDone={!!this.state.results?.version}
+              onDone={this.handleProgressDone}
+            />
+          )}
+          {this.state.historicalResultsPromiseState === 'fulfilled' &&
+            this.state.results && (
+              <BarGraph
+                readings={this.formatHistoricalResults()}
+                onBarClick={this.handleBarClick}
+              />
+            )}
+          {this.state.resultsPromiseState === 'rejected' && (
+            <div className="result-error">
+              <EmptyBox className="result-error__img" />
+              <h2 className="result-error__code">
+                {parsePackageString(this.state.inputInitialValue ?? '').name}
+              </h2>
+            </div>
+          )}
         </div>
       </Layout>
     )

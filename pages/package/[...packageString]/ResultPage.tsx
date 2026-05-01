@@ -1,13 +1,12 @@
 import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
-import isEmptyObject from 'is-empty-object'
-import arrayToSentence from 'array-to-sentence'
 
 import Analytics from '../../../client/analytics'
 import API, {
   type PackageBuildInfo,
   type PackageHistoryResponse,
+  type PackageBuildInfoSnapshot,
 } from '../../../client/api'
 import EmptyBox from '../../../client/assets/empty-box.svg'
 import { AutocompleteInput } from '../../../client/components/AutocompleteInput'
@@ -49,6 +48,36 @@ type ResultPageState = {
   historicalResults: PackageHistoryResponse
   similarPackages: PackageBuildInfo[]
   similarPackagesCategory: string
+}
+
+type ResolvedBuildError = {
+  errorName: string | null
+  errorBody: string | null
+  errorDetails: string | null
+}
+
+function isEmptySnapshot(reading: PackageBuildInfoSnapshot) {
+  return Object.keys(reading).length === 0
+}
+
+function formatSentence(values: string[]) {
+  if (values.length === 0) {
+    return ''
+  }
+
+  if (values.length === 1) {
+    return values[0]
+  }
+
+  if (values.length === 2) {
+    return `${values[0]} and ${values[1]}`
+  }
+
+  return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
+}
+
+function getResolvedBuildError(resultsError: unknown): ResolvedBuildError {
+  return resolveBuildError(resultsError)
 }
 
 function getPackageStringFromRouter(router: NextRouter) {
@@ -243,7 +272,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const formattedResults = Object.keys(totalVersions).map(version => {
       const reading = totalVersions[version]
 
-      if (isEmptyObject(reading)) {
+      if (isEmptySnapshot(reading)) {
         return {
           version,
           disabled: true,
@@ -357,13 +386,8 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       similarPackagesCategory,
     } = this.state
 
-    const { errorName, errorBody, errorDetails } = resolveBuildError(
-      resultsError
-    ) as {
-      errorName: string | null
-      errorBody: string | null
-      errorDetails: string | null
-    }
+    const { errorName, errorBody, errorDetails } =
+      getResolvedBuildError(resultsError)
 
     const referenceSpeedInfoText = (speed: number, units: string) =>
       `Download Speed: ⬇️ ${speed} ${units}.\nExclusive of HTTP request latency.`
@@ -416,7 +440,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
                     : 'dependency'}{' '}
                   &nbsp;
                   <code>
-                    {arrayToSentence(results.ignoredMissingDependencies)}
+                    {formatSentence(results.ignoredMissingDependencies)}
                   </code>
                   .
                   <a

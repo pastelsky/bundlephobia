@@ -1,7 +1,13 @@
 import React, { Component } from 'react'
-import Analytics from '../../../../../client/analytics'
 import cx from 'classnames'
-import API from '../../../../../client/api'
+
+import Analytics from '../../../../../client/analytics'
+import API, {
+  type PackageBuildInfo,
+  type PackageExportAsset,
+  type PackageExportsResponse,
+  type PackageExportSizesResponse,
+} from '../../../../../client/api'
 import SearchIcon from '../../../../../client/components/Icons/SearchIcon'
 import JumpingDots from '../../../../../client/components/JumpingDots'
 import { formatSize, resolveBuildError } from '../../../../../utils'
@@ -12,27 +18,52 @@ const State = {
   EXPORTS_FULFILLED: 'exports-fulfilled',
   SIZES_FULFILLED: 'sizes-fulfilled',
   REJECTED: 'rejected',
+} as const
+
+type AnalysisState = (typeof State)[keyof typeof State]
+
+type ExportItem = {
+  name: string
+  gzip?: number
+  path?: string
 }
 
-function getBGClass(ratio) {
-  if (ratio < 0.05) {
-    return 'low-1'
-  } else if (ratio < 0.15) {
-    return 'low-2'
-  } else if (ratio < 0.25) {
-    return 'med-1'
-  } else if (ratio < 0.4) {
-    return 'med-2'
-  } else if (ratio < 0.5) {
-    return 'med-3'
-  } else if (ratio < 0.7) {
-    return 'high-1'
-  } else {
-    return 'high-2'
-  }
+type ExportAnalysisSectionProps = {
+  result: PackageBuildInfo
 }
 
-class ExportPill extends React.Component {
+type ExportAnalysisSectionState = {
+  analysisState: AnalysisState
+  exports: Record<string, string>
+  assets: ExportItem[]
+  filterText: string
+  resultError: unknown
+}
+
+type ExportPillProps = {
+  name: string
+  size?: number
+  totalSize: number
+  isLoading: boolean
+}
+
+type ExportListProps = {
+  exports: ExportItem[]
+  totalSize: number
+  isLoading: boolean
+}
+
+function getBGClass(ratio: number) {
+  if (ratio < 0.05) return 'low-1'
+  if (ratio < 0.15) return 'low-2'
+  if (ratio < 0.25) return 'med-1'
+  if (ratio < 0.4) return 'med-2'
+  if (ratio < 0.5) return 'med-3'
+  if (ratio < 0.7) return 'high-1'
+  return 'high-2'
+}
+
+class ExportPill extends React.Component<ExportPillProps> {
   render() {
     const { name, size, totalSize, isLoading } = this.props
     return (
@@ -41,7 +72,7 @@ class ExportPill extends React.Component {
           className={cx(
             'export-analysis-section__pill-fill',
             `export-analysis-section__pill-fill--${getBGClass(
-              size / totalSize
+              (size ?? 0) / totalSize
             )}`
           )}
           style={{
@@ -63,9 +94,9 @@ class ExportPill extends React.Component {
   }
 }
 
-function ExportList({ exports, totalSize, isLoading }) {
+function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
   const shouldShowLabels = exports.length > 20
-  const exportDictionary = {}
+  const exportDictionary: Record<string, ExportItem[]> = {}
   let curIndex = 0
 
   exports.forEach(exp => {
@@ -92,7 +123,6 @@ function ExportList({ exports, totalSize, isLoading }) {
                   size={exportDictionary[letter][0].gzip}
                   totalSize={totalSize}
                   name={exportDictionary[letter][0].name}
-                  path={exportDictionary[letter][0].path}
                   key={exportDictionary[letter][0].name}
                   isLoading={curIndex++ < 40 && isLoading}
                 />
@@ -105,7 +135,6 @@ function ExportList({ exports, totalSize, isLoading }) {
                   size={exp.gzip}
                   totalSize={totalSize}
                   name={exp.name}
-                  path={exp.path}
                   key={exp.name}
                   isLoading={curIndex++ < 40 && isLoading}
                 />
@@ -117,7 +146,11 @@ function ExportList({ exports, totalSize, isLoading }) {
   )
 }
 
-function InputExportFilter({ onChange }) {
+function InputExportFilter({
+  onChange,
+}: {
+  onChange: (value: string) => void
+}) {
   return (
     <div className="export-analysis-section__filter-input-container">
       <input
@@ -131,8 +164,11 @@ function InputExportFilter({ onChange }) {
   )
 }
 
-class ExportAnalysisSection extends Component {
-  state = {
+export default class ExportAnalysisSection extends Component<
+  ExportAnalysisSectionProps,
+  ExportAnalysisSectionState
+> {
+  state: ExportAnalysisSectionState = {
     analysisState: State.TBD,
     exports: {},
     assets: [],
@@ -141,27 +177,23 @@ class ExportAnalysisSection extends Component {
   }
 
   componentDidMount() {
-    const isCompatible = !this.getIncompatibleMessage()
-
-    if (isCompatible) {
+    if (!this.getIncompatibleMessage()) {
       this.startAnalysis()
     }
   }
 
   startAnalysis = () => {
     const { result } = this.props
-    const { name, version } = result
-    const packageString = `${name}@${version}`
+    const packageString = `${result.name}@${result.version}`
     const startTime = Date.now()
-    let sizeStartTime
+    let sizeStartTime = Date.now()
 
     this.setState({ analysisState: State.IN_PROGRESS })
-
     Analytics.performedExportsAnalysis(packageString)
 
     API.getExports(packageString)
       .then(
-        results => {
+        (results: PackageExportsResponse) => {
           this.setState({
             exports: results.exports,
             analysisState: State.EXPORTS_FULFILLED,
@@ -185,16 +217,16 @@ class ExportAnalysisSection extends Component {
         return API.getExportsSizes(packageString)
       })
       .then(
-        results => {
-          this.setState({
+        (results: PackageExportSizesResponse) => {
+          this.setState(currentState => ({
             analysisState: State.SIZES_FULFILLED,
             assets: results.assets
-              .filter(asset => asset.type === 'js')
+              .filter((asset: PackageExportAsset) => asset.type === 'js')
               .map(asset => ({
                 ...asset,
-                path: this.state.exports[asset.name],
+                path: currentState.exports[asset.name],
               })),
-          })
+          }))
 
           Analytics.exportsSizesSuccess({
             packageName: packageString,
@@ -215,7 +247,7 @@ class ExportAnalysisSection extends Component {
       })
   }
 
-  handleFilterInputChange = value => {
+  handleFilterInputChange = (value: string) => {
     this.setState({ filterText: value })
   }
 
@@ -231,15 +263,13 @@ class ExportAnalysisSection extends Component {
 
   getIncompatibleMessage() {
     const { result } = this.props
-    let incompatibleMessage = ''
-
     if (!(result.hasJSModule || result.hasJSNext || result.isModuleType)) {
-      incompatibleMessage = 'This package does not export ES6 modules.'
-    } else if (result.hasSideEffects === true) {
-      incompatibleMessage =
-        "This package exports ES6 modules, but isn't marked side-effect free."
+      return 'This package does not export ES6 modules.'
     }
-    return incompatibleMessage
+    if (result.hasSideEffects === true) {
+      return "This package exports ES6 modules, but isn't marked side-effect free."
+    }
+    return ''
   }
 
   renderIncompatible() {
@@ -257,7 +287,7 @@ class ExportAnalysisSection extends Component {
     const { gzip: totalSize } = result
     const { exports, analysisState, assets, filterText } = this.state
 
-    const normalizedExports =
+    const normalizedExports: ExportItem[] =
       analysisState === State.SIZES_FULFILLED
         ? assets
         : Object.keys(exports)
@@ -265,7 +295,7 @@ class ExportAnalysisSection extends Component {
             .map(exp => ({ name: exp }))
 
     const matchedExports = normalizedExports.filter(asset =>
-      !!filterText ? asset.name.toLowerCase().includes(filterText) : true
+      filterText ? asset.name.toLowerCase().includes(filterText) : true
     )
 
     return (
@@ -291,11 +321,16 @@ class ExportAnalysisSection extends Component {
   renderFailure() {
     const { errorName, errorBody, errorDetails } = resolveBuildError(
       this.state.resultError
-    )
+    ) as {
+      errorName: string | null
+      errorBody: string | null
+      errorDetails: string | null
+    }
+
     return (
       <div className="export-analysis-section__error">
         <h4> {errorName}</h4>
-        <p dangerouslySetInnerHTML={{ __html: errorBody }} />
+        <p dangerouslySetInnerHTML={{ __html: errorBody ?? '' }} />
         {errorDetails && <pre>{errorDetails}</pre>}
       </div>
     )
@@ -313,10 +348,8 @@ class ExportAnalysisSection extends Component {
         {(analysisState === State.EXPORTS_FULFILLED ||
           analysisState === State.SIZES_FULFILLED) &&
           this.renderSuccess()}
-        {analysisState === State.IN_PROGRESS}
+        {analysisState === State.IN_PROGRESS && this.renderProgress()}
       </div>
     )
   }
 }
-
-export default ExportAnalysisSection
