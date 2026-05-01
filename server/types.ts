@@ -1,42 +1,24 @@
-export interface ResolvedPackageState {
-  name: string
-  version: string
+// Server-specific types only.
+// Domain types (PackageBuildResult, PackageExports*, etc.) are
+// re-exported from here so callers need only one import site.
+import type { PackageMetadata } from '../types/package-domain'
+
+export type {
+  PackageBuildResult,
+  PackageDependencySize,
+  PackageExportAsset,
+  PackageExportsResult,
+  PackageExportSizesResult,
+} from '../types/package-domain'
+
+/**
+ * State attached to Koa's `ctx.state.resolved` after the
+ * resolve-package middleware runs.  Extends the public metadata
+ * fields with server-only routing information.
+ */
+export interface ResolvedPackageState extends PackageMetadata {
   scoped: boolean
   packageString: string
-  description: string
-  repository: string
-}
-
-export interface PackageBuildResult {
-  name: string
-  description: string
-  repository: string
-  version: string
-  scoped?: boolean
-  size: number
-  gzip: number
-  dependencyCount: number
-  hasSideEffects: boolean | string[]
-  hasJSModule: boolean
-  hasJSNext: boolean
-  isModuleType: boolean
-  ignoredMissingDependencies?: string[]
-  dependencySizes?: Array<{
-    name: string
-    approximateSize: number
-  }>
-}
-
-export interface PackageExportsResult {
-  [exportName: string]: string
-}
-
-export interface PackageExportSizesResult {
-  assets: Array<{
-    name: string
-    gzip?: number
-    type?: string
-  }>
 }
 
 export interface FailureCacheEntry {

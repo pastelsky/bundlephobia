@@ -5,13 +5,14 @@ import queryString from 'query-string'
 
 import { formatSize } from '../../../utils'
 import { sanitizeHTML } from '../../../utils/common.utils'
+import type { PackageBuildInfo } from '../../api'
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import PlusIcon from '../../assets/plus.svg'
 import GithubIcon from '../../assets/github-logo.svg'
 import GitIcon from '../../assets/git-logo.svg'
 
 type SimilarPackageCardProps = { category?: string } & (
-  | { pack: any; comparisonSizePercent: number }
+  | { pack: PackageBuildInfo; comparisonSizePercent: number }
   | { isEmpty: true }
 )
 
@@ -122,7 +123,7 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
                 href={pack.repository}
                 onClick={e => {
                   e.stopPropagation()
-                  window.location = pack.repository
+                  window.location.href = pack.repository
                 }}
               >
                 {pack.repository.includes('github.com') ? (

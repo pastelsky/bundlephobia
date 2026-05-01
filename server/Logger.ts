@@ -2,6 +2,16 @@ import winston from 'winston'
 
 type LogPayload = Record<string, unknown>
 
+function toPayload(value: unknown): LogPayload {
+  if (value instanceof Error) {
+    return { message: value.message, name: value.name, stack: value.stack }
+  }
+  if (typeof value === 'object' && value !== null) {
+    return value as LogPayload
+  }
+  return { error: String(value) }
+}
+
 const logFormat = winston.format.printf(info => {
   const date = new Date().toISOString()
   return `${date} ${info.level}: ${info.message}`
@@ -30,11 +40,11 @@ class Logger {
     })
   }
 
-  error(tag: string, json: LogPayload, message: string): void {
+  error(tag: string, json: unknown, message: string): void {
     this.logger.error(message, {
       metadata: {
         tag,
-        ...json,
+        ...toPayload(json),
       },
     })
   }

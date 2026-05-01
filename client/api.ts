@@ -1,5 +1,18 @@
 import fetch from 'unfetch'
 
+import type {
+  PackageBuildInfo,
+  PackageBuildInfoSnapshot,
+  PackageExportAsset,
+  PackageIdentity,
+} from '../types/package-domain'
+
+// Re-export domain types that client code imports from this module.
+export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
+
+export type PackageHistoryResponse = Record<string, PackageBuildInfoSnapshot>
+
+/** A single npm-search suggestion returned by the npms.io API. */
 export type PackageSuggestion = {
   package: {
     name: string
@@ -21,33 +34,8 @@ export type RecentSearch = {
   }
 }
 
-export type PackageBuildInfo = {
-  name: string
-  description: string
-  repository: string
-  version: string
-  size: number
-  gzip: number
-  dependencyCount: number
-  hasSideEffects: boolean | string[]
-  hasJSModule: boolean
-  hasJSNext: boolean
-  isModuleType: boolean
-  ignoredMissingDependencies?: string[]
-  dependencySizes?: Array<{
-    name: string
-    approximateSize: number
-  }>
-}
-
-export type PackageBuildInfoSnapshot = Partial<PackageBuildInfo>
-
-export type PackageHistoryResponse = Record<string, PackageBuildInfoSnapshot>
-
-export type PackageDependencyInfo = {
-  name: string
-  version: string
-}
+/** Package name + version pair used in the dependencies endpoint. */
+export type PackageDependencyInfo = PackageIdentity
 
 export type SimilarPackagesResponse = {
   category: {
@@ -59,12 +47,6 @@ export type SimilarPackagesResponse = {
 
 export type PackageExportsResponse = {
   exports: Record<string, string>
-}
-
-export type PackageExportAsset = {
-  name: string
-  gzip?: number
-  type?: string
 }
 
 export type PackageExportSizesResponse = {
@@ -153,8 +135,7 @@ export default class API {
       packageA: PackageSuggestion,
       packageB: PackageSuggestion
     ) => {
-      // Rank closely matching packages followed
-      // by most popular ones
+      // Rank closely matching packages followed by most popular ones.
       if (
         Math.abs(
           Math.log(packageB.searchScore) - Math.log(packageA.searchScore)
@@ -172,33 +153,5 @@ export default class API {
       `https://api.npms.io/v2/search/suggestions?q=${query}`,
       false
     ).then(result => result.sort(suggestionSort))
-
-    //backup when npms.io is down
-
-    //return API.get(`/-/search?text=${query}`)
-    //  .then(result => result.objects
-    //    .sort(suggestionSort)
-    //    .map(suggestion => {
-    //      const name = suggestion.package.name
-    //      const hasMatch = name.includes(query)
-    //      const startIndex = name.indexOf(query)
-    //      const endIndex = startIndex + query.length
-    //      let highlight
-    //
-    //      if (hasMatch) {
-    //        highlight =
-    //          name.substring(0, startIndex) +
-    //          '<em>' + name.substring(startIndex, endIndex) + '</em>' +
-    //          name.substring(endIndex)
-    //      } else {
-    //        highlight = name
-    //      }
-    //
-    //      return {
-    //        ...suggestion,
-    //        highlight,
-    //      }
-    //    }),
-    //  )
   }
 }

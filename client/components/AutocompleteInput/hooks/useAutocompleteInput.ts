@@ -2,7 +2,7 @@ import React from 'react'
 import debounce from 'debounce'
 
 import { parsePackageString } from '../../../../utils/common.utils'
-import API from '../../../api'
+import API, { type PackageSuggestion } from '../../../api'
 
 interface UseAutocompleteInputArgs {
   initialValue: string
@@ -14,7 +14,7 @@ export function useAutocompleteInput({
   onSubmit,
 }: UseAutocompleteInputArgs) {
   const [value, setValue] = React.useState(initialValue)
-  const [suggestions, setSuggestions] = React.useState<any[]>([])
+  const [suggestions, setSuggestions] = React.useState<PackageSuggestion[]>([])
   const [isMenuVisible, setIsMenuVisible] = React.useState(false)
 
   const getSuggestions = React.useMemo(

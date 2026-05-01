@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -11,13 +11,16 @@
     "baseUrl": ".",
     "module": "esnext",
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "types": ["node", "jest"],
     "paths": {
       "client/*": ["client/*"],
       "pages/*": ["pages/*"],
       "server/*": ["server/*"],
-      "utils": ["utils/index.js"],
-      "utils/*": ["utils/*"]
+      "utils": ["utils/index.ts"],
+      "utils/*": ["utils/*"],
+      "types": ["types/index.ts"],
+      "types/*": ["types/*"]
     },
     "resolveJsonModule": true,
     "isolatedModules": true,

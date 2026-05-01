@@ -80,8 +80,8 @@ app.prepare().then(() => {
   server.use(async (ctx, next) => {
     try {
       await next()
-    } catch (err: any) {
-      if (401 == err.status) {
+    } catch (err) {
+      if (err instanceof Error && 'status' in err && err.status === 401) {
         ctx.status = 401
         ctx.set('WWW-Authenticate', 'Basic')
         ctx.body = 'Permission denied'
@@ -169,11 +169,13 @@ app.prepare().then(() => {
         maxAge: config.CACHE.RECENTS_API,
       }
       ctx.body = await firebaseUtils.getRecentSearches(Number(ctx.query.limit))
-    } catch (err: any) {
+    } catch (err) {
       console.error('in /api/recent', err)
+      const message = err instanceof Error ? err.message : String(err)
+      const name = err instanceof Error ? err.name : 'Error'
       logger.error('RECENT', err, 'RECENT FAILED: failed')
       ctx.status = 422
-      ctx.body = { type: err.name, message: err.message }
+      ctx.body = { type: name, message }
     }
   })
 
@@ -192,15 +194,17 @@ app.prepare().then(() => {
         name,
         Number(ctx.query.limit)
       )
-    } catch (err: any) {
+    } catch (err) {
       console.error(err)
+      const message = err instanceof Error ? err.message : String(err)
+      const name = err instanceof Error ? err.name : 'Error'
       logger.error(
         'HISTORY',
         err,
         'HISTORY FAILED: for package' + ctx.query.package
       )
       ctx.status = 422
-      ctx.body = { type: err.name, message: err.message }
+      ctx.body = { type: name, message }
     }
   })
 

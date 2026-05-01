@@ -1,12 +1,18 @@
 import React from 'react'
 
-export type PackageInfo = {
-  name: string
-  description: string
-  repository: string
-  dependencyCount: number
+import type { PackageBuildBase } from './package-domain'
+
+/**
+ * Props shape used by UI components that display package stats.
+ * Derived from `PackageBuildBase` so the field list stays in sync
+ * with the domain type; `isTreeShakeable` is a computed UI concept
+ * (true when hasJSModule || hasJSNext || isModuleType).
+ */
+export type PackageInfo = Pick<
+  PackageBuildBase,
+  'name' | 'description' | 'repository' | 'dependencyCount' | 'hasSideEffects'
+> & {
   isTreeShakeable: boolean
-  hasSideEffects: string[] | boolean
 }
 
 export type WithClassName = Pick<React.HTMLAttributes<HTMLElement>, 'className'>
