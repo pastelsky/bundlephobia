@@ -34,8 +34,6 @@ import Warning from '../../../client/components/Warning/Warning'
 import arrayToSentence from 'array-to-sentence'
 
 class ResultPage extends PureComponent {
-  expectedRouteQueries = new Set()
-
   state = {
     results: {},
     resultsPromiseState: null,
@@ -48,66 +46,21 @@ class ResultPage extends PureComponent {
   }
 
   getPackageString(router) {
-    return router.query.packageString?.join('/') || ''
-  }
-
-  normalizePackageString(packageString = '') {
-    return packageString.trim()
-  }
-
-  getRoutePackageString(router = this.props.router) {
-    return this.normalizePackageString(this.getPackageString(router))
-  }
-
-  logSearchFlow(event, details = {}) {
-    if (process.env.NODE_ENV !== 'development') {
-      return
-    }
-
-    console.info(`[ResultPage] ${event}`, {
-      ...details,
-      activeQuery: this.activeQuery || null,
-      expectedRouteQueries: Array.from(this.expectedRouteQueries),
-      routePackageString: this.getRoutePackageString(),
-    })
-  }
-
-  markExpectedRouteQuery(packageString) {
-    const normalizedQuery = this.normalizePackageString(packageString)
-
-    if (!normalizedQuery) {
-      return
-    }
-
-    this.expectedRouteQueries.add(normalizedQuery)
-    this.logSearchFlow('markExpectedRouteQuery', { normalizedQuery })
-  }
-
-  consumeExpectedRouteQuery(packageString) {
-    const normalizedQuery = this.normalizePackageString(packageString)
-    const wasExpected = this.expectedRouteQueries.delete(normalizedQuery)
-
-    if (wasExpected) {
-      this.logSearchFlow('consumeExpectedRouteQuery', { normalizedQuery })
-    }
-
-    return wasExpected
+    return router.query.packageString.join('/')
   }
 
   componentDidMount() {
     Analytics.pageView('package result')
 
-    const packageString = this.getRoutePackageString(this.props.router)
-    this.logSearchFlow('componentDidMount', { packageString })
-
+    const packageString = this.getPackageString(this.props.router)
     if (packageString) {
-      this.handleSearchSubmit(packageString, { source: 'mount' })
+      this.handleSearchSubmit(packageString)
     }
   }
 
   componentDidUpdate(prevProps) {
-    const packageString = this.getRoutePackageString(prevProps.router)
-    const nextPackageString = this.getRoutePackageString(this.props.router)
+    const packageString = this.getPackageString(prevProps.router)
+    const nextPackageString = this.getPackageString(this.props.router)
 
     if (!nextPackageString) {
       return
@@ -120,62 +73,31 @@ class ResultPage extends PureComponent {
       currentPackage.name !== nextPackage.name ||
       currentPackage.version !== nextPackage.version
 
-    this.logSearchFlow('componentDidUpdate', {
-      packageString,
-      nextPackageString,
-      isPackageDifferent,
-    })
+    const isSelfInitiatedNavigation = this.activeQuery === nextPackageString
 
-    if (!isPackageDifferent) {
-      return
+    if (isPackageDifferent && !isSelfInitiatedNavigation) {
+      this.handleSearchSubmit(nextPackageString)
     }
-
-    if (this.consumeExpectedRouteQuery(nextPackageString)) {
-      return
-    }
-
-    this.handleSearchSubmit(nextPackageString, { source: 'route-change' })
   }
 
   fetchResults = packageString => {
     const startTime = Date.now()
-    this.logSearchFlow('fetchResults:start', { packageString })
 
     API.getInfo(packageString)
       .then(results => {
         this.fetchSimilarPackages(packageString)
 
-        if (this.activeQuery !== packageString) {
-          this.logSearchFlow('fetchResults:stale', {
-            packageString,
-            resultsPackageString: `${results.name}@${results.version}`,
-          })
-          return
-        }
+        if (this.activeQuery !== packageString) return
 
         const newPackageString = `${results.name}@${results.version}`
-        const shouldReplaceRoute =
-          this.getRoutePackageString() !== newPackageString
-
-        if (shouldReplaceRoute) {
-          this.markExpectedRouteQuery(newPackageString)
-        }
-
         this.setState(
           {
             inputInitialValue: newPackageString,
             results,
           },
           () => {
-            this.logSearchFlow('fetchResults:routeSync', {
-              packageString,
-              newPackageString,
-              shouldReplaceRoute,
-            })
-
-            if (shouldReplaceRoute) {
-              Router.replace(`/package/${newPackageString}`)
-            }
+            this.activeQuery = newPackageString
+            Router.replace(`/package/${newPackageString}`)
           }
         )
 
@@ -189,7 +111,6 @@ class ResultPage extends PureComponent {
           resultsError: err,
           resultsPromiseState: 'rejected',
         })
-        this.logSearchFlow('fetchResults:error', { packageString, err })
         console.error(err)
 
         Analytics.searchFailure({
@@ -200,26 +121,17 @@ class ResultPage extends PureComponent {
   }
 
   fetchHistory = packageString => {
-    this.logSearchFlow('fetchHistory:start', { packageString })
     API.getHistory(packageString, 15)
       .then(results => {
-        if (this.activeQuery !== packageString) {
-          this.logSearchFlow('fetchHistory:stale', { packageString })
-          return
-        }
+        if (this.activeQuery !== packageString) return
 
         this.setState({
           historicalResultsPromiseState: 'fulfilled',
           historicalResults: results,
         })
-        this.logSearchFlow('fetchHistory:success', {
-          packageString,
-          resultCount: results.length,
-        })
       })
       .catch(err => {
         this.setState({ historicalResultsPromiseState: 'rejected' })
-        this.logSearchFlow('fetchHistory:error', { packageString, err })
         console.error('Fetching history failed:', err)
       })
   }
@@ -227,7 +139,6 @@ class ResultPage extends PureComponent {
   fetchSimilarPackages = packageString => {
     const { name } = parsePackageString(packageString)
     const promises = []
-    this.logSearchFlow('fetchSimilarPackages:start', { packageString, name })
 
     API.getSimilar(name)
       .then(result => {
@@ -239,13 +150,7 @@ class ResultPage extends PureComponent {
           })
 
           Promise.allSettled(promises).then(results => {
-            if (this.activeQuery !== packageString) {
-              this.logSearchFlow('fetchSimilarPackages:stale', {
-                packageString,
-                resultCount: results.length,
-              })
-              return
-            }
+            if (this.activeQuery !== packageString) return
 
             this.setState({
               similarPackagesCategory: result.category.label,
@@ -253,34 +158,18 @@ class ResultPage extends PureComponent {
                 .filter(result => result.status === 'fulfilled')
                 .map(result => result.value),
             })
-            this.logSearchFlow('fetchSimilarPackages:success', {
-              packageString,
-              category: result.category.label,
-              resultCount: results.length,
-            })
           })
         }
       })
       .catch(err => {
         this.setState({ historicalResultsPromiseState: 'rejected' })
-        this.logSearchFlow('fetchSimilarPackages:error', { packageString, err })
         console.error(err)
       })
   }
 
-  handleSearchSubmit = (packageString, { source = 'unknown' } = {}) => {
+  handleSearchSubmit = packageString => {
     Analytics.performedSearch(packageString)
-    const normalizedQuery = this.normalizePackageString(packageString)
-    const routePackageString = this.getRoutePackageString()
-    const shouldPushRoute = routePackageString !== normalizedQuery
-
-    this.logSearchFlow('handleSearchSubmit', {
-      source,
-      packageString,
-      normalizedQuery,
-      routePackageString,
-      shouldPushRoute,
-    })
+    const normalizedQuery = packageString.trim()
 
     this.setState(
       {
@@ -293,12 +182,7 @@ class ResultPage extends PureComponent {
       },
       () => {
         this.activeQuery = normalizedQuery
-
-        if (shouldPushRoute) {
-          this.markExpectedRouteQuery(normalizedQuery)
-          Router.push(`/package/${normalizedQuery}`)
-        }
-
+        Router.push(`/package/${normalizedQuery}`)
         Analytics.pageView('package result')
         this.fetchResults(normalizedQuery)
         this.fetchHistory(normalizedQuery)
@@ -346,7 +230,7 @@ class ResultPage extends PureComponent {
 
     const packageString = `${results.name}@${reading.version}`
     this.setState({ inputInitialValue: packageString })
-    this.handleSearchSubmit(packageString, { source: 'history-bar' })
+    this.handleSearchSubmit(packageString)
 
     Analytics.graphBarClicked({
       packageName: packageString,
