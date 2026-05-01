@@ -18,9 +18,10 @@ const Logo = () => (
     viewBox="0 0 137 157"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <g stroke="#000" strokeWidth="1.5" fill="none" fillRule="evenodd">
+    <g stroke="currentColor" strokeWidth="1.5" fill="none" fillRule="evenodd">
       <g transform="translate(37.21 45.73)">
         <rect
+          className="logo__pocket"
           fill="#C0C0C0"
           x="25.1"
           y="56.58"
