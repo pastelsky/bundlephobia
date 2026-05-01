@@ -2,10 +2,10 @@
 @import '../../../stylesheets/variables';
 
 .autocomplete-input-box {
-  border: 1px solid $autocomplete-border-color;
+  border: 1px solid var(--color-autocomplete-border);
   border-radius: 10px;
-  background: transparent;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-search-box);
   max-width: 700px;
   min-width: 550px;
 

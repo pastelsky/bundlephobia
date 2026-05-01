@@ -79,6 +79,7 @@
 
   // ── Cards & shadows ──────────────────────────────────────────────────────
   --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-search-box: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 // ─── Dark mode overrides ─────────────────────────────────────────────────────
@@ -145,7 +146,7 @@
   --color-bg-footer: #010409;
   --color-footer-text: #8b949e;
   --color-footer-text-hover: #c9d1d9;
-  --color-footer-search-bg: #0d1117;
+  --color-footer-search-bg: #161b22; // lighter than page bg so it reads as a band
   --color-footer-description: #8b949e;
   --color-footer-border: #21262d;
   --color-footer-btn-border: #8b949e;
@@ -153,6 +154,8 @@
 
   // Cards & shadows
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-search-box: 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 4px 20px rgba(0, 0, 0, 0.5);
 
   // Primitive overrides for components that reference primitives directly
   --color-gulf-blue: #f0f6fc;
