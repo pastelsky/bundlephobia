@@ -27,7 +27,7 @@
 .stat-container__value {
   @include font-size-xxl;
   font-weight: bold;
-  color: #212121;
+  color: var(--color-stat-text);
   background: inherit;
   position: relative;
 
@@ -91,8 +91,8 @@
 
 .stat-container__info-text {
   margin-left: $global-spacing * 0.5;
-  border: 1px solid rgba(40, 40, 40, 0.5);
-  color: rgba(40, 40, 40, 0.5);
+  border: 1px solid var(--color-stat-border);
+  color: var(--color-stat-border);
   width: 12px;
   height: 13px;
   font-family: $font-family-code;
@@ -105,8 +105,8 @@
   cursor: help;
 
   &:hover {
-    background: rgba(40, 40, 40, 0.6);
-    color: white;
+    background: var(--color-stat-tooltip-bg);
+    color: var(--color-text-primary);
   }
 
   &::after,

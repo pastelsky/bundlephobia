@@ -269,7 +269,7 @@
 
 .treemap {
   @include font-size-sm;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--color-treemap-text);
 }
 
 .treemap__square {
@@ -279,7 +279,7 @@
   &:hover {
     //transform:scale(1.05);
     z-index: 1;
-    color: rgba(0, 0, 0, 0.8);
+    color: var(--color-treemap-text-hover);
     //box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12);
     filter: brightness(105%);
   }
@@ -307,10 +307,10 @@
   display: block;
   font-weight: $font-weight-bold;
   letter-spacing: -1px;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--color-treemap-percent);
 
   .treemap__square:hover & {
-    color: rgba(0, 0, 0, 0.8);
+    color: var(--color-treemap-text-hover);
   }
 
   //color: black;
@@ -329,7 +329,7 @@
 }
 
 .treemap__ellipsis {
-  color: rgba(0, 0, 0, 0.35);
+  color: var(--color-treemap-ellipsis);
 }
 
 .treemap__note {

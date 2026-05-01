@@ -36,6 +36,7 @@
 
   // ── Autocomplete / search input ──────────────────────────────────────────
   --color-autocomplete-border: rgba(0, 0, 0, 0.07);
+  --color-search-box-bg: transparent;
   --color-suggestion-bg: rgba(255, 255, 255, 0.96);
   --color-suggestion-shadow: rgba(0, 0, 0, 0.05);
   --color-suggestion-text: #333333;
@@ -80,6 +81,35 @@
   // ── Cards & shadows ──────────────────────────────────────────────────────
   --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
   --shadow-search-box: 0 2px 6px rgba(0, 0, 0, 0.06);
+
+  // ── Primary button (dark pill / filled) ──────────────────────────────────
+  --color-btn-bg: #212121;
+  --color-btn-text: #ffffff;
+  --color-btn-border: #212121;
+  --color-btn-bg-hover: #666e78; // = $raven
+
+  // ── Scan page ─────────────────────────────────────────────────────────────
+  --color-scan-dropzone-border: #9ba1a9; // ≈ lighten($raven, 20%)
+  --color-scan-pkg-version: #848d97; // ≈ lighten($raven, 10%)
+
+  // ── Stat / tooltip ───────────────────────────────────────────────────────
+  --color-stat-text: #212121;
+  --color-stat-border: rgba(40, 40, 40, 0.5);
+  --color-stat-tooltip-bg: rgba(40, 40, 40, 0.6);
+
+  // ── JumpingDots ──────────────────────────────────────────────────────────
+  --color-jumping-dots: #303131;
+
+  // ── ScanResults fade gradient ─────────────────────────────────────────────
+  --color-scan-fade-transparent: rgba(255, 255, 255, 0);
+  --color-scan-fade-solid: rgba(255, 255, 255, 1);
+
+  // ── Treemap (text overlaid on coloured squares) ───────────────────────────
+  --color-treemap-text: rgba(0, 0, 0, 0.6);
+  --color-treemap-text-hover: rgba(0, 0, 0, 0.8);
+  --color-treemap-percent: rgba(0, 0, 0, 0.5);
+  --color-treemap-percent-hover: rgba(0, 0, 0, 0.8);
+  --color-treemap-ellipsis: rgba(0, 0, 0, 0.35);
 }
 
 // ─── Dark mode overrides ─────────────────────────────────────────────────────
@@ -110,7 +140,8 @@
   --color-nav-link: #8b949e;
 
   // Autocomplete
-  --color-autocomplete-border: rgba(255, 255, 255, 0.12);
+  --color-autocomplete-border: rgba(255, 255, 255, 0.1);
+  --color-search-box-bg: rgba(255, 255, 255, 0.04);
   --color-suggestion-bg: #161b22;
   --color-suggestion-shadow: rgba(0, 0, 0, 0.3);
   --color-suggestion-text: #e6edf3;
@@ -154,8 +185,37 @@
 
   // Cards & shadows
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.3);
-  --shadow-search-box: 0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 4px 20px rgba(0, 0, 0, 0.5);
+  // Subtle: slightly lifted surface + gentle glow, not a solid box
+  --shadow-search-box: 0 2px 12px rgba(0, 0, 0, 0.35);
+
+  // Primary button (inverted in dark)
+  --color-btn-bg: #e6edf3;
+  --color-btn-text: #0d1117;
+  --color-btn-border: #e6edf3;
+  --color-btn-bg-hover: #8b949e;
+
+  // Scan page
+  --color-scan-dropzone-border: #30363d;
+  --color-scan-pkg-version: #8b949e;
+
+  // Stat / tooltip
+  --color-stat-text: #f0f6fc;
+  --color-stat-border: rgba(240, 246, 252, 0.15);
+  --color-stat-tooltip-bg: rgba(240, 246, 252, 0.08);
+
+  // JumpingDots
+  --color-jumping-dots: #8b949e;
+
+  // ScanResults fade gradient (fade to page bg, not white)
+  --color-scan-fade-transparent: rgba(13, 17, 23, 0);
+  --color-scan-fade-solid: rgba(13, 17, 23, 1);
+
+  // Treemap (flip to white-based text on dark coloured squares)
+  --color-treemap-text: rgba(255, 255, 255, 0.85);
+  --color-treemap-text-hover: rgba(255, 255, 255, 1);
+  --color-treemap-percent: rgba(255, 255, 255, 0.75);
+  --color-treemap-percent-hover: rgba(255, 255, 255, 1);
+  --color-treemap-ellipsis: rgba(255, 255, 255, 0.5);
 
   // Primitive overrides for components that reference primitives directly
   --color-gulf-blue: #f0f6fc;

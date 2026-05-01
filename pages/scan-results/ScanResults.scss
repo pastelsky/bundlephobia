@@ -66,10 +66,10 @@
 
 .scan-results__item {
   background: linear-gradient(
-    rgba(255, 255, 255, 0) 5%,
-    rgba(255, 255, 255, 1) 10%,
-    rgba(255, 255, 255, 1) 90%,
-    rgba(255, 255, 255, 0) 95%
+    var(--color-scan-fade-transparent) 5%,
+    var(--color-scan-fade-solid) 10%,
+    var(--color-scan-fade-solid) 90%,
+    var(--color-scan-fade-transparent) 95%
   );
   display: flex;
   list-style: none;
@@ -77,7 +77,7 @@
   align-items: center;
 
   & + & {
-    border-top: 1px solid lighten($raven, 50%);
+    border-top: 1px solid var(--color-border-subtle);
   }
 }
 

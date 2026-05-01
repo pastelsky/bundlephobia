@@ -1,4 +1,4 @@
-@use "sass:math";
+@use 'sass:math';
 
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
@@ -261,7 +261,7 @@
 
 .treemap {
   @include font-size-sm;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--color-treemap-text);
 }
 
 .treemap__square {
@@ -269,10 +269,8 @@
   position: relative;
 
   &:hover {
-    //transform:scale(1.05);
     z-index: 1;
-    color: rgba(0, 0, 0, 0.8);
-    //box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12);
+    color: var(--color-treemap-text-hover);
     filter: brightness(105%);
   }
 }
@@ -305,17 +303,14 @@
   display: block;
   font-weight: $font-weight-bold;
   letter-spacing: -1px;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--color-treemap-percent);
 
   .treemap__square:hover & {
-    color: rgba(0, 0, 0, 0.8);
+    color: var(--color-treemap-percent-hover);
   }
 
-  //color: black;
   mix-blend-mode: soft-light;
 
-  // Disabling this for mobiles and tablets
-  // since text seems to glitch due to it
   @media screen and (max-width: 48em) {
     mix-blend-mode: normal;
   }
@@ -327,7 +322,7 @@
 }
 
 .treemap__ellipsis {
-  color: rgba(0, 0, 0, 0.35);
+  color: var(--color-treemap-ellipsis);
 }
 
 .treemap__note {

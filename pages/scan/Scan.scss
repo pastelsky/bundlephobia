@@ -1,10 +1,10 @@
-@use "sass:math";
+@use 'sass:math';
 
 @import '../../stylesheets/base';
 @import '../../stylesheets/variables';
 
 .scan__dropzone {
-  border: 2px dashed lighten($raven, 20%);
+  border: 2px dashed var(--color-scan-dropzone-border);
   width: 50vw;
   height: 50vh;
   display: flex;
@@ -21,19 +21,19 @@
   @include font-size-xs;
   cursor: pointer;
   margin-top: $global-spacing;
-  background: #212121;
+  background: var(--color-btn-bg);
   border-radius: 6px;
   border: none;
   padding: $global-spacing $global-spacing * 2;
   display: block;
-  transition: background 0.2s;
-  color: white;
+  transition: background 0.2s, color 0.2s;
+  color: var(--color-btn-text);
   letter-spacing: 1px;
   font-weight: $font-weight-bold;
   font-family: $font-family-body;
 
   &:hover {
-    background: $raven;
+    background: var(--color-btn-bg-hover);
   }
 
   & ~ & {
@@ -78,7 +78,7 @@
   @include font-size-xs;
   font-family: $font-family-code;
   margin-left: $global-spacing;
-  color: lighten($raven, 10%);
+  color: var(--color-scan-pkg-version);
 }
 
 .scan__selection-header {
@@ -95,13 +95,13 @@
     @include font-size-xxs;
     text-transform: uppercase;
     padding: $global-spacing $global-spacing * 2;
-    border: 2px solid #212121;
-    background: white;
-    color: #212121;
+    border: 2px solid var(--color-btn-border);
+    background: var(--color-bg-base);
+    color: var(--color-btn-bg);
 
     &:hover {
-      background: #212121;
-      color: white;
+      background: var(--color-btn-bg);
+      color: var(--color-btn-text);
     }
   }
 }

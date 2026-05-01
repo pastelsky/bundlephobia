@@ -5,7 +5,7 @@
   will-change: transform;
 
   circle {
-    fill: #212121;
+    fill: var(--color-text-primary);
     transform-box: view-box;
     transform-origin: 50% 50%;
   }

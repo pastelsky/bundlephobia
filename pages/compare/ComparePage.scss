@@ -36,13 +36,13 @@
   }
 
   path {
-    fill: #666;
+    fill: var(--color-icon-secondary);
     transition: fill 0.2s;
   }
 
   &:hover {
     path {
-      fill: black;
+      fill: var(--color-icon-hover);
     }
   }
 }
@@ -54,11 +54,11 @@
   letter-spacing: 3px;
   user-select: none;
   cursor: pointer;
-  color: #212121;
+  color: var(--color-logo-primary);
 }
 
 .logo-small__alt {
-  color: #888;
+  color: var(--color-logo-alt);
 }
 
 .compare__search-container {
