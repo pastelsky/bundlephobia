@@ -85,7 +85,8 @@ export default function Separator({
             margin: 'auto',
             width: '42px',
             height: '20px',
-            background: 'white',
+            background: 'var(--color-bg-base)',
+            color: 'var(--color-text-muted)',
             padding: '0 15px',
             borderRadius: '50%',
           }}
