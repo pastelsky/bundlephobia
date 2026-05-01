@@ -1,4 +1,4 @@
-@use "sass:math";
+@use 'sass:math';
 
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
@@ -7,8 +7,8 @@
   display: flex;
   align-content: center;
   @include font-size-xs;
-  color: lighten($raven, 15%);
-  background: lighten($raven, 55%);
+  color: var(--color-stats-bar-text);
+  background: var(--color-stats-bar-bg);
   border-radius: 0 0 10px 10px;
   overflow: hidden;
 }
@@ -32,7 +32,7 @@
     width: 1px;
     height: 60%;
     position: absolute;
-    background: transparentize(black, 0.95);
+    background: var(--color-stats-bar-border);
     top: 0;
     bottom: 0;
     margin: auto;
@@ -88,7 +88,7 @@
 
   path {
     transition: fill 0.2s;
-    fill: lighten($raven, 15%);
+    fill: var(--color-stats-bar-text);
   }
 }
 

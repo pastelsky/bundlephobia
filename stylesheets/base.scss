@@ -9,11 +9,12 @@
 
 body,
 html {
-  background: white;
+  background: var(--color-bg-base);
   font-family: $font-family-body;
   max-width: 100vw;
   overflow-x: hidden;
-  color: #212121;
+  color: var(--color-text-primary);
+  transition: background 0.2s, color 0.2s;
 }
 
 code {
@@ -56,18 +57,18 @@ a {
 input {
   background: transparent;
   line-height: 1;
-  border: 1px solid $autocomplete-border-color;
+  border: 1px solid var(--color-autocomplete-border);
   transition: border-top-left-radius 0.1s, border-top-right-radius 0.1s;
   border-radius: 0.3em;
   padding: $global-spacing * 0.5 $global-spacing;
 
   &:focus {
     outline: none;
-    caret-color: $pastel-green;
+    caret-color: var(--color-accent);
   }
 
   &::placeholder {
-    color: lighten($raven, 20%);
+    color: var(--color-text-muted);
   }
 }
 
@@ -77,11 +78,11 @@ input {
 @media not all and (min-resolution: 0.001dpcm) {
   @supports (-webkit-appearance: none) {
     input {
-      color: #ccc;
-      -webkit-text-stroke: 2px white;
+      color: var(--color-text-muted);
+      -webkit-text-stroke: 2px var(--color-bg-base);
 
       &::placeholder {
-        -webkit-text-stroke: 0px white;
+        -webkit-text-stroke: 0px var(--color-bg-base);
       }
     }
   }

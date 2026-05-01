@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 import GithubLogo from '../../assets/github-logo.svg'
+import ThemeToggle from '../ThemeToggle'
 
 type PageNavProps = {
   minimal?: boolean
@@ -50,6 +51,7 @@ const PageNav = ({ minimal }: PageNavProps) => (
       <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
         <GithubLogo />
       </a>
+      <ThemeToggle />
     </section>
   </header>
 )

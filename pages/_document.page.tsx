@@ -7,6 +7,21 @@ import Document, {
   NextScript,
 } from 'next/document'
 
+// Applied before React hydrates to avoid flash of wrong theme.
+// Sets data-theme on <html> from localStorage or prefers-color-scheme.
+const themeScript = `
+(function() {
+  try {
+    var stored = localStorage.getItem('theme');
+    if (stored === 'dark' || stored === 'light') {
+      document.documentElement.setAttribute('data-theme', stored);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  } catch (e) {}
+})();
+`
+
 const amplitudeScript = `
 (function(e,t){var n=e.amplitude||{_q:[],_iq:{}};var r=t.createElement("script")
 ;r.type="text/javascript"
@@ -103,6 +118,7 @@ export default class MyDocument extends Document {
           />
         </DocumentHead>
         <body>
+          <script dangerouslySetInnerHTML={{ __html: themeScript }} />
           <Main />
           <NextScript />
         </body>

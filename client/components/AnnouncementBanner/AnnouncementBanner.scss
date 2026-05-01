@@ -2,8 +2,8 @@
 @import '../../../stylesheets/variables';
 
 .announcement-banner {
-  background: #fff;
-  color: $dark-gulf-blue;
+  background: var(--color-banner-bg);
+  color: var(--color-banner-text);
   padding: 0;
   position: fixed;
   bottom: 24px;
@@ -15,8 +15,8 @@
   margin: 0;
   border-radius: 8px;
   z-index: 1000;
-  border: 1.5px solid $raven;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1.5px solid var(--color-banner-border);
+  box-shadow: var(--shadow-card);
 }
 
 .announcement-banner__content {
@@ -54,20 +54,20 @@
 
   strong {
     font-weight: 600;
-    color: $gulf-blue;
+    color: var(--color-gulf-blue);
   }
 
   a {
-    color: $cornflower-blue;
+    color: var(--color-link);
     font-weight: 500;
     text-decoration: underline;
-    text-decoration-color: rgba($cornflower-blue, 0.4);
+    text-decoration-color: rgba(101, 161, 248, 0.4);
     text-underline-offset: 2px;
     transition: all 0.2s ease;
 
     &:hover {
-      text-decoration-color: $cornflower-blue;
-      color: darken($cornflower-blue, 10%);
+      text-decoration-color: var(--color-link);
+      color: var(--color-link-hover);
     }
   }
 }
@@ -79,23 +79,16 @@
   transform: none;
   background: transparent;
   border: none;
-  color: $raven;
-  font-size: 24px;
-  font-weight: 300;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  line-height: 1;
-  padding: 0;
+  color: var(--color-icon-secondary);
 
   &:hover {
-    color: $dark-gulf-blue;
-    background: rgba($raven, 0.1);
+    color: var(--color-banner-text);
+    background: rgba(102, 110, 120, 0.1);
+  }
+
+  &:focus {
+    outline: none;
+    color: var(--color-banner-text);
   }
 
   &:focus {

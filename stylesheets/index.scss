@@ -1,3 +1,8 @@
+// tokens — must come first so CSS custom properties are defined before use
+@import './theme';
+@import './semantics';
+@import './base';
+
 // pages
 @import '../pages/compare/ComparePage.scss';
 @import '../pages/package/[...packageString]/components/ExportAnalysisSection/ExportAnalysisSection.scss';

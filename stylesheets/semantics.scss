@@ -1,0 +1,163 @@
+// ─── Semantic colour tokens ───────────────────────────────────────────────────
+// Purpose-named tokens that components consume. Light-mode values are the
+// default; [data-theme='dark'] overrides them for dark mode.
+// Derived values (e.g. lighten($raven, 27%)) are pre-computed here so that
+// SCSS build-time functions don't block runtime theme switching.
+:root {
+  color-scheme: light dark;
+
+  // Surfaces
+  --color-bg-base: #ffffff;
+  --color-bg-surface: #ffffff;
+  --color-bg-secondary: #f8fafc;
+
+  // Text
+  --color-text-primary: #212121;
+  --color-text-secondary: #4a5568;
+  --color-text-muted: #666e78; // = $raven
+
+  // Borders
+  --color-border-primary: #e0e0e0;
+  --color-border-subtle: #f0f0f0;
+
+  // Accents (same in both modes)
+  --color-accent: #7cd690; // = $pastel-green
+  --color-link: #65a1f8; // = $cornflower-blue
+  --color-link-hover: #4d8ee0;
+
+  // ── Logo & icons ─────────────────────────────────────────────────────────
+  --color-logo-primary: #212121;
+  --color-logo-alt: #888888;
+  --color-icon-secondary: #666666;
+  --color-icon-hover: #000000;
+
+  // ── Header nav links ─────────────────────────────────────────────────────
+  --color-nav-link: #666e78; // = $raven
+
+  // ── Autocomplete / search input ──────────────────────────────────────────
+  --color-autocomplete-border: rgba(0, 0, 0, 0.07);
+  --color-suggestion-bg: rgba(255, 255, 255, 0.96);
+  --color-suggestion-shadow: rgba(0, 0, 0, 0.05);
+  --color-suggestion-text: #333333;
+  --color-suggestion-text-em: #444444;
+  --color-suggestion-desc: #666666;
+  --color-suggestion-border: #f5f5f5;
+  --color-suggestion-highlight: rgb(212, 243, 255);
+  --color-input-text: #1d1d1d;
+  --color-input-version: #636363;
+
+  // ── Quick stats bar ──────────────────────────────────────────────────────
+  --color-stats-bar-bg: #ebebed; // ≈ lighten($raven, 55%)
+  --color-stats-bar-text: #8e959d; // ≈ lighten($raven, 15%)
+  --color-stats-bar-border: rgba(0, 0, 0, 0.05);
+
+  // ── Announcement banner ──────────────────────────────────────────────────
+  --color-banner-bg: #ffffff;
+  --color-banner-border: #666e78;
+  --color-banner-text: #152231; // = $dark-gulf-blue
+
+  // ── Warning bar ──────────────────────────────────────────────────────────
+  --color-warning-bg: #fff9e6;
+  --color-warning-text: #9d9685;
+
+  // ── Blog ─────────────────────────────────────────────────────────────────
+  --color-blog-heading: #5c5c66; // = $dark-raven
+  --color-blog-content: #3d3e42; // ≈ darken($dark-raven, 10%)
+  --color-blog-date: #666e78; // = $raven
+  --color-blog-link: #3d8fd4; // ≈ darken($maya-blue, 20%)
+  --color-blog-link-hover: #1a6aad; // ≈ darken($maya-blue, 40%)
+
+  // ── Footer ───────────────────────────────────────────────────────────────
+  --color-bg-footer: #222222;
+  --color-footer-text: #b0b6bc; // ≈ lighten($raven, 27%)
+  --color-footer-text-hover: #cdd0d3; // ≈ lighten($raven, 40%)
+  --color-footer-search-bg: #2f343c; // ≈ darken($raven, 22%)
+  --color-footer-description: #9ba1a9; // ≈ lighten($raven, 20%)
+  --color-footer-border: #272c32; // ≈ darken($raven, 25%)
+  --color-footer-btn-border: #b3b9bf; // ≈ lighten($raven, 30%)
+  --color-footer-credits: #f4f5f6; // ≈ lighten($raven, 70%)
+
+  // ── Cards & shadows ──────────────────────────────────────────────────────
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+// ─── Dark mode overrides ─────────────────────────────────────────────────────
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  // Surfaces
+  --color-bg-base: #0d1117;
+  --color-bg-surface: #161b22;
+  --color-bg-secondary: #010409;
+
+  // Text
+  --color-text-primary: #f0f6fc;
+  --color-text-secondary: #8b949e;
+  --color-text-muted: #8b949e;
+
+  // Borders
+  --color-border-primary: #30363d;
+  --color-border-subtle: #21262d;
+
+  // Logo & icons
+  --color-logo-primary: #f0f6fc;
+  --color-logo-alt: #8b949e;
+  --color-icon-secondary: #8b949e;
+  --color-icon-hover: #e6edf3;
+
+  // Nav links
+  --color-nav-link: #8b949e;
+
+  // Autocomplete
+  --color-autocomplete-border: rgba(255, 255, 255, 0.12);
+  --color-suggestion-bg: #161b22;
+  --color-suggestion-shadow: rgba(0, 0, 0, 0.3);
+  --color-suggestion-text: #e6edf3;
+  --color-suggestion-text-em: #f0f6fc;
+  --color-suggestion-desc: #8b949e;
+  --color-suggestion-border: #21262d;
+  --color-suggestion-highlight: rgba(101, 195, 248, 0.12);
+  --color-input-text: #e6edf3;
+  --color-input-version: #8b949e;
+
+  // Quick stats bar
+  --color-stats-bar-bg: #161b22;
+  --color-stats-bar-text: #8b949e;
+  --color-stats-bar-border: rgba(255, 255, 255, 0.05);
+
+  // Announcement banner
+  --color-banner-bg: #161b22;
+  --color-banner-border: #30363d;
+  --color-banner-text: #f0f6fc;
+
+  // Warning bar
+  --color-warning-bg: #4a4530;
+  --color-warning-text: #e0dcb8;
+
+  // Blog
+  --color-blog-heading: #8b949e;
+  --color-blog-content: #c9d1d9;
+  --color-blog-date: #8b949e;
+  --color-blog-link: #65c3f8;
+  --color-blog-link-hover: #9dd5f8;
+
+  // Footer (stays dark, adjust text contrast only)
+  --color-bg-footer: #010409;
+  --color-footer-text: #8b949e;
+  --color-footer-text-hover: #c9d1d9;
+  --color-footer-search-bg: #0d1117;
+  --color-footer-description: #8b949e;
+  --color-footer-border: #21262d;
+  --color-footer-btn-border: #8b949e;
+  --color-footer-credits: #6e7681;
+
+  // Cards & shadows
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+  // Primitive overrides for components that reference primitives directly
+  --color-gulf-blue: #f0f6fc;
+  --color-dark-gulf-blue: #e6edf3;
+  --color-raven: #8b949e;
+  --color-dark-raven: #abb2bf;
+  --color-cornflower-blue: #79b8ff;
+}

@@ -1,4 +1,4 @@
-@use "sass:math";
+@use 'sass:math';
 
 @import '../../../stylesheets/colors';
 @import '../../../stylesheets/variables';
@@ -47,14 +47,14 @@
 }
 
 .dummy-input__package-name {
-  color: #1d1d1d;
+  color: var(--color-input-text);
   font-size: inherit;
   font-weight: inherit;
   margin: 0;
 }
 
 .dummy-input__package-version {
-  color: #636363;
+  color: var(--color-input-version);
 }
 
 .dummy-input__at-separator {
@@ -62,15 +62,15 @@
 }
 
 .autocomplete-input__suggestions-menu {
-  border: 1px solid $autocomplete-border-color;
+  border: 1px solid var(--color-autocomplete-border);
   border-top: 0;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--color-suggestion-bg);
   font-size: 90%;
   position: absolute;
   overflow: auto;
   z-index: 10;
   max-height: 35vh;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px var(--color-suggestion-shadow);
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
   animation: unroll 0.2s cubic-bezier(0.305, 0.42, 0.205, 1.2);
@@ -100,7 +100,7 @@
 
 .autocomplete-input__suggestion {
   padding: 10px 32px;
-  color: #333;
+  color: var(--color-suggestion-text);
   font-size: 15px;
   cursor: pointer;
   font-family: 'Source Code Pro', monospace;
@@ -108,7 +108,7 @@
   letter-spacing: -0.5px;
 
   &:not(:last-of-type) {
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid var(--color-suggestion-border);
   }
 
   @media screen and (max-width: 40em) {
@@ -118,12 +118,12 @@
   em {
     font-weight: $font-weight-bold;
     font-style: normal;
-    color: #444;
+    color: var(--color-suggestion-text-em);
   }
 }
 
 .autocomplete-input__suggestion--highlight {
-  background: rgb(212, 243, 255);
+  background: var(--color-suggestion-highlight);
 }
 
 .autocomplete-input__suggestion-description {
@@ -135,7 +135,7 @@
   text-overflow: ellipsis;
   font-family: $font-family-body;
   font-weight: $font-weight-thin;
-  color: #666;
+  color: var(--color-suggestion-desc);
   padding-top: 5px;
   letter-spacing: 0;
 
@@ -176,7 +176,7 @@
 
     path {
       transition: all 0.2s;
-      fill: #666;
+      fill: var(--color-icon-secondary);
     }
   }
 

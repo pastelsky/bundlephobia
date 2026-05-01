@@ -20,7 +20,7 @@
   @include font-size-md;
   font-family: $font-family-body;
   font-weight: $font-weight-hairline;
-  color: #777;
+  color: var(--color-text-muted);
   margin-top: $global-spacing;
   text-align: center;
   line-height: 1.4;
@@ -38,7 +38,7 @@
 }
 
 .logo__alt {
-  color: #888;
+  color: var(--color-logo-alt);
 }
 
 .logo__skeleton {
