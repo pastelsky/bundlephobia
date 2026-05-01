@@ -178,7 +178,12 @@ app.prepare().then(() => {
   })
 
   router.get('/api/package-history', async ctx => {
-    const { name } = parsePackageString(ctx.query.package)
+    const packageQuery = ctx.query.package
+    const packageString =
+      typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+
+    invariant(packageString, 'package parameter is required')
+    const { name } = parsePackageString(packageString)
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
