@@ -19,6 +19,7 @@ import Cache from './utils/cache.utils'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
 import logger from './server/Logger'
+import remoteMcpClient from './server/mcp/remoteClient'
 
 import limit from './server/middlewares/rateLimit.middleware'
 import exportsMiddlware from './server/middlewares/exports.middleware'
@@ -222,6 +223,194 @@ app.prepare().then(() => {
   router.get('/api/similar-packages', similarPackagesMiddleware)
 
   router.get('/api/stats-image', generateImgMiddleware)
+
+  router.get('/api/mcp/tools', async ctx => {
+    try {
+      const localTools = [
+        {
+          name: 'bundlephobia.size',
+          description: 'Get package size result via /api/size',
+          inputSchema: {
+            type: 'object',
+            required: ['package'],
+            properties: {
+              package: { type: 'string' },
+            },
+          },
+        },
+        {
+          name: 'bundlephobia.exports',
+          description: 'Get package exports via /api/exports',
+          inputSchema: {
+            type: 'object',
+            required: ['package'],
+            properties: {
+              package: { type: 'string' },
+            },
+          },
+        },
+        {
+          name: 'bundlephobia.exportsSizes',
+          description: 'Get package exports sizes via /api/exports-sizes',
+          inputSchema: {
+            type: 'object',
+            required: ['package'],
+            properties: {
+              package: { type: 'string' },
+            },
+          },
+        },
+        {
+          name: 'bundlephobia.packageHistory',
+          description: 'Get package history via /api/package-history',
+          inputSchema: {
+            type: 'object',
+            required: ['package'],
+            properties: {
+              package: { type: 'string' },
+              limit: { type: 'number' },
+            },
+          },
+        },
+        {
+          name: 'bundlephobia.similarPackages',
+          description: 'Get similar packages via /api/similar-packages',
+          inputSchema: {
+            type: 'object',
+            required: ['package'],
+            properties: {
+              package: { type: 'string' },
+            },
+          },
+        },
+      ]
+
+      if (!remoteMcpClient.isEnabled()) {
+        ctx.body = { tools: localTools }
+        return
+      }
+
+      const remote = (await remoteMcpClient.listTools()) as {
+        tools?: Array<Record<string, unknown>>
+      }
+      ctx.body = {
+        tools: [...localTools, ...(remote.tools ?? [])],
+      }
+    } catch (error) {
+      remoteMcpClient.resetConnection(error)
+      logger.error('MCP_API', error, 'Failed to list MCP tools')
+      ctx.status = 502
+      ctx.body = { error: { code: 'McpListToolsFailed' } }
+    }
+  })
+
+  router.post('/api/mcp/call-tool', async ctx => {
+    const payload = ctx.request.body as
+      | { name?: string; arguments?: Record<string, unknown> }
+      | undefined
+
+    if (!payload?.name || typeof payload.name !== 'string') {
+      ctx.status = 400
+      ctx.body = {
+        error: { code: 'InvalidMcpPayload', message: '`name` is required' },
+      }
+      return
+    }
+
+    try {
+      const args = payload.arguments ?? {}
+      const packageName =
+        typeof args.package === 'string'
+          ? encodeURIComponent(args.package)
+          : undefined
+
+      const callLocalApi = async (path: string) => {
+        const response = await fetch(`http://127.0.0.1:${port}${path}`, {
+          headers: {
+            'X-Bundlephobia-User': 'bundlephobia mcp tool',
+          },
+        })
+        const body = await response.json()
+        return {
+          status: response.status,
+          body,
+        }
+      }
+
+      switch (payload.name) {
+        case 'bundlephobia.size': {
+          if (!packageName) {
+            ctx.status = 400
+            ctx.body = { error: { code: 'InvalidMcpPayload' } }
+            return
+          }
+          ctx.body = await callLocalApi(`/api/size?package=${packageName}`)
+          return
+        }
+        case 'bundlephobia.exports': {
+          if (!packageName) {
+            ctx.status = 400
+            ctx.body = { error: { code: 'InvalidMcpPayload' } }
+            return
+          }
+          ctx.body = await callLocalApi(`/api/exports?package=${packageName}`)
+          return
+        }
+        case 'bundlephobia.exportsSizes': {
+          if (!packageName) {
+            ctx.status = 400
+            ctx.body = { error: { code: 'InvalidMcpPayload' } }
+            return
+          }
+          ctx.body = await callLocalApi(
+            `/api/exports-sizes?package=${packageName}`
+          )
+          return
+        }
+        case 'bundlephobia.packageHistory': {
+          if (!packageName) {
+            ctx.status = 400
+            ctx.body = { error: { code: 'InvalidMcpPayload' } }
+            return
+          }
+          const limit = Number(args.limit ?? 10)
+          ctx.body = await callLocalApi(
+            `/api/package-history?package=${packageName}&limit=${limit}`
+          )
+          return
+        }
+        case 'bundlephobia.similarPackages': {
+          if (!packageName) {
+            ctx.status = 400
+            ctx.body = { error: { code: 'InvalidMcpPayload' } }
+            return
+          }
+          ctx.body = await callLocalApi(
+            `/api/similar-packages?package=${packageName}`
+          )
+          return
+        }
+        default:
+          break
+      }
+
+      if (!remoteMcpClient.isEnabled()) {
+        ctx.status = 404
+        ctx.body = { error: { code: 'McpNotConfigured' } }
+        return
+      }
+
+      ctx.body = await remoteMcpClient.callTool({
+        name: payload.name,
+        arguments: payload.arguments,
+      })
+    } catch (error) {
+      remoteMcpClient.resetConnection(error)
+      logger.error('MCP_API', error, `Failed MCP tool call: ${payload.name}`)
+      ctx.status = 502
+      ctx.body = { error: { code: 'McpCallToolFailed' } }
+    }
+  })
 
   router.get(
     '/admin/restart',

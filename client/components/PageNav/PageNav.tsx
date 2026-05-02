@@ -2,6 +2,7 @@ import Link from 'next/link'
 import React from 'react'
 import GithubLogo from '../../assets/github-logo.svg'
 import ThemeToggle from '../ThemeToggle'
+import McpNavPopup from '../McpNavPopup/McpNavPopup'
 
 type PageNavProps = {
   minimal?: boolean
@@ -47,6 +48,7 @@ const PageNav = ({ minimal }: PageNavProps) => (
             <Link href="/scan">Scan package.json</Link>
           </li>
         )}
+        <McpNavPopup />
       </ul>
       <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
         <GithubLogo />
