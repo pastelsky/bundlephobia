@@ -158,4 +158,12 @@ export default class Analytics {
       action,
     })
   }
+
+  static mcpSetupSnippetCopied() {
+    amplitude.getInstance().logEvent('MCP Setup Snippet Copied')
+  }
+
+  static mcpDocsOpened() {
+    amplitude.getInstance().logEvent('MCP Docs Opened')
+  }
 }
