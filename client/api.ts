@@ -90,6 +90,38 @@ export default class API {
     })
   }
 
+  static post<T = unknown>(
+    url: string,
+    body: Record<string, unknown>
+  ): Promise<T> {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-Bundlephobia-User': 'bundlephobia website',
+    }
+
+    return fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    }).then(res => {
+      if (!res.ok) {
+        try {
+          return res.json().then(err => Promise.reject(err))
+        } catch (e) {
+          return Promise.reject({
+            error: {
+              code: 'BuildError',
+              message:
+                "Oops, something went wrong and we don't have an appropriate error for this. Open an issue maybe?",
+            },
+          })
+        }
+      }
+      return res.json()
+    })
+  }
+
   static getInfo(packageString: string) {
     return API.get<PackageBuildInfo>(
       `/api/size?package=${packageString}&record=true`

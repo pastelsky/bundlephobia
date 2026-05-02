@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { WithClassName } from '../../../types'
 import GithubLogo from '../../assets/github-logo.svg'
+import McpNavPopup from '../McpNavPopup/McpNavPopup'
 
 type HeaderProps = WithClassName
 
@@ -83,6 +84,7 @@ export default class Header extends Component<HeaderProps, HeaderState> {
                   Scan package.json <sup>β</sup>
                 </Link>
               </li>
+              <McpNavPopup />
             </ul>
             <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
               <GithubLogo />

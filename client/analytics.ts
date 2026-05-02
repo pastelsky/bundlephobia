@@ -15,6 +15,18 @@ type HasSuccessRatio = {
 }
 
 type HasPackageNameAndTimeTaken = HasPackageName & HasTimeTaken
+type HasOpen = {
+  open: boolean
+}
+type HasToolCount = {
+  toolCount: number
+}
+type HasToolName = {
+  toolName: string
+}
+type HasAction = {
+  action: string
+}
 
 export default class Analytics {
   static pageView(pageType: string) {
@@ -120,6 +132,30 @@ export default class Analytics {
     amplitude.getInstance().logEvent('Exports Size Failed', {
       package: packageName,
       timeTaken,
+    })
+  }
+
+  static mcpHeaderClicked({ open }: HasOpen) {
+    amplitude.getInstance().logEvent('MCP Header Clicked', {
+      open,
+    })
+  }
+
+  static mcpToolsListed({ toolCount }: HasToolCount) {
+    amplitude.getInstance().logEvent('MCP Tools Listed', {
+      toolCount,
+    })
+  }
+
+  static mcpToolCalled({ toolName }: HasToolName) {
+    amplitude.getInstance().logEvent('MCP Tool Called', {
+      toolName,
+    })
+  }
+
+  static mcpActionFailed({ action }: HasAction) {
+    amplitude.getInstance().logEvent('MCP Action Failed', {
+      action,
     })
   }
 }
