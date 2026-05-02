@@ -39,8 +39,13 @@ class RemoteMcpClient {
 
     if (!this.connectPromise) {
       this.connectPromise = (async () => {
+        const endpoint = this.config.endpoint
+        if (!endpoint) {
+          throw new Error('MCP endpoint is not configured')
+        }
+
         const transport = new StreamableHTTPClientTransport(
-          new URL(this.config.endpoint),
+          new URL(endpoint),
           {}
         )
 
