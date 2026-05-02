@@ -31,6 +31,7 @@ import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklis
 import requestLoggerMiddleware from './server/middlewares/requestLogger.middleware'
 import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
 import generateImgMiddleware from './server/middlewares/generateImg.middleware'
+import buildMissRateLimit from './server/middlewares/buildMissRateLimit.middleware'
 
 import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
@@ -71,7 +72,7 @@ app.prepare().then(() => {
     server.use(
       limit({
         duration: 1000 * 60 * 5, //  5 mins
-        max: 60,
+        max: 120,
         whiteList: ['127.0.0.1', '::1'],
       })
     )
@@ -135,6 +136,11 @@ app.prepare().then(() => {
     resolvePackageMiddleware,
     blockBlacklistMiddleware,
     cachedResponseMiddleware,
+    buildMissRateLimit({
+      durationMs: 1000 * 60 * 5,
+      maxRequests: 10,
+      whiteList: ['127.0.0.1', '::1'],
+    }),
     buildMiddleware
   )
 
@@ -160,6 +166,11 @@ app.prepare().then(() => {
     resolvePackageMiddleware,
     blockBlacklistMiddleware,
     cachedResponseMiddleware,
+    buildMissRateLimit({
+      durationMs: 1000 * 60 * 5,
+      maxRequests: 10,
+      whiteList: ['127.0.0.1', '::1'],
+    }),
     exportsSizesMiddlware
   )
 
