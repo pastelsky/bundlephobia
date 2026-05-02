@@ -3,6 +3,7 @@ import Analytics from '../../analytics'
 
 const McpNavPopup = () => {
   const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
   const setupSnippet = `{
   "mcpServers": {
     "bundlephobia": {
@@ -19,6 +20,8 @@ const McpNavPopup = () => {
 
   const onCopySnippet = async () => {
     await navigator.clipboard.writeText(setupSnippet)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1200)
     Analytics.mcpSetupSnippetCopied()
   }
 
@@ -29,31 +32,30 @@ const McpNavPopup = () => {
       </button>
       {open && (
         <div className="mcp-nav__popup">
-          <p className="mcp-nav__title">
-            Use Bundlephobia as a remote MCP server
-          </p>
-          <p className="mcp-nav__tools">
-            Add this to your MCP client configuration:
-          </p>
-          <pre className="mcp-nav__result">{setupSnippet}</pre>
-          <div className="mcp-nav__row">
+          <div className="mcp-nav__code-wrap">
             <button
-              className="mcp-nav__button"
+              className={`mcp-nav__copy-icon ${
+                copied ? 'mcp-nav__copy-icon--copied' : ''
+              }`}
               type="button"
               onClick={onCopySnippet}
+              aria-label="Copy MCP snippet"
+              title="Copy"
             >
-              Copy Snippet
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                aria-hidden="true"
+              >
+                <path
+                  fill="currentColor"
+                  d="M16 1H6a2 2 0 0 0-2 2v12h2V3h10V1zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H10V7h9v14z"
+                />
+              </svg>
             </button>
+            <pre className="mcp-nav__result">{setupSnippet}</pre>
           </div>
-          <a
-            className="mcp-nav__docs-link"
-            target="_blank"
-            rel="noreferrer noopener"
-            href="/api/mcp"
-            onClick={() => Analytics.mcpDocsOpened()}
-          >
-            Open MCP endpoint docs
-          </a>
         </div>
       )}
     </li>

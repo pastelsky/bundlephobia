@@ -91,7 +91,7 @@
   right: 0;
   top: calc(100% + 10px);
   width: min(92vw, 360px);
-  z-index: 40;
+  z-index: 9999;
   background: var(--color-background-card);
   border: 1px solid var(--color-border-subtle);
   border-radius: 10px;
@@ -99,67 +99,72 @@
   padding: 12px;
 }
 
-.mcp-nav__row {
-  display: flex;
-  justify-content: flex-end;
+.mcp-nav__code-wrap {
+  position: relative;
 }
 
-.mcp-nav__button {
+.mcp-nav__copy-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
   border: 1px solid var(--color-border-subtle);
-  background: var(--color-background-primary);
-  color: var(--color-text-primary);
   border-radius: 6px;
-  padding: 6px 10px;
+  background: var(--color-background-card);
+  color: var(--color-text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-}
-
-.mcp-nav__input,
-.mcp-nav__textarea {
-  width: 100%;
-  margin-top: 8px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 6px;
-  padding: 8px;
-  background: var(--color-background-primary);
-  color: var(--color-text-primary);
-}
-
-.mcp-nav__textarea {
-  min-height: 90px;
-  resize: vertical;
-}
-
-.mcp-nav__tools {
-  margin: 8px 0 0;
-  @include font-size-xs;
   opacity: 0.75;
+  transition: opacity 0.2s, transform 0.12s, border-color 0.2s;
+
+  &:hover {
+    opacity: 1;
+    border-color: var(--color-nav-link);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--color-nav-link);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+
+  &::after {
+    content: 'Copied';
+    position: absolute;
+    top: -28px;
+    right: -2px;
+    @include font-size-xxs;
+    background: var(--color-background-card);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 4px;
+    padding: 2px 6px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(2px);
+    transition: opacity 0.15s, transform 0.15s;
+  }
 }
 
-.mcp-nav__title {
-  margin: 0;
-  @include font-size-xs;
-  font-weight: $font-weight-bold;
-}
-
-.mcp-nav__error {
-  margin: 8px 0 0;
-  @include font-size-xs;
-  color: #c63d2f;
+.mcp-nav__copy-icon--copied::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .mcp-nav__result {
-  margin: 8px 0 0;
-  max-height: 180px;
+  margin: 0;
   overflow: auto;
   @include font-size-xs;
-  padding: 8px;
+  padding: 12px;
+  padding-right: 40px;
   border-radius: 6px;
   background: var(--color-background-primary);
   border: 1px solid var(--color-border-subtle);
-}
-
-.mcp-nav__docs-link {
-  display: inline-block;
-  margin-top: 10px;
-  @include font-size-xs;
 }
