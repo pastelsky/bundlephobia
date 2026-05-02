@@ -1,4 +1,4 @@
-import { Client } from '@modelcontextprotocol/sdk/client'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 
 import logger from '../Logger'
@@ -73,7 +73,7 @@ class RemoteMcpClient {
 
   async listTools(): Promise<unknown> {
     const client = await this.connect()
-    return client.listTools({
+    return client.listTools(undefined, {
       timeout: this.config.timeoutMs,
     })
   }
