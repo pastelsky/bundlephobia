@@ -26,7 +26,7 @@ const McpNavPopup = () => {
   }
 
   return (
-    <li className="mcp-nav">
+    <div className="mcp-nav">
       <button className="mcp-nav__trigger" onClick={onToggle} type="button">
         MCP
       </button>
@@ -58,7 +58,7 @@ const McpNavPopup = () => {
           </div>
         </div>
       )}
-    </li>
+    </div>
   )
 }
 

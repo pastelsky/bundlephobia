@@ -48,8 +48,8 @@ const PageNav = ({ minimal }: PageNavProps) => (
             <Link href="/scan">Scan package.json</Link>
           </li>
         )}
-        <McpNavPopup />
       </ul>
+      <McpNavPopup />
       <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
         <GithubLogo />
       </a>
