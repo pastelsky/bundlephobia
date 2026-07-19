@@ -5,15 +5,12 @@ import {
   resolvePackage,
   type ResolvedPackageManifest,
 } from '../../utils/server.utils'
-import type {
-  PackageCacheMode,
-  PackageRequest,
-  ResolvedPackage,
-} from '../types'
+import type { PackageCacheMode } from '../../utils/packageApi.utils'
+import type { PackageRequest, ResolvedPackage } from '../types'
 
 export function createPackageRequest(
   packageString: string,
-  cacheMode: PackageCacheMode = 'prefer'
+  cacheMode: PackageCacheMode = 'cache-first'
 ): PackageRequest {
   return {
     ...parsePackageString(packageString),

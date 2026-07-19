@@ -101,7 +101,7 @@ export class PackageSizeService {
     packageRequest: PackageRequest
   ): Promise<PackageSizeCacheResult> {
     const { name, version, cacheMode } = packageRequest
-    const shouldReadCache = cacheMode !== 'refresh'
+    const shouldReadCache = cacheMode !== 'force-rebuild'
     const hasExactVersion = version !== null && semver.valid(version) !== null
 
     if (shouldReadCache && hasExactVersion) {

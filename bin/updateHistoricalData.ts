@@ -7,6 +7,7 @@ import fetch from 'node-fetch'
 import trending from 'trending-github'
 
 import firebaseUtils from '../utils/firebase.utils'
+import { createPackageApiPath } from '../utils/packageApi.utils'
 
 import 'dotenv/config'
 
@@ -89,7 +90,7 @@ async function getTrendingSearches() {
 async function getVersionsToBuild(name: string) {
   const versionsToBuild: string[] = []
   const res = await fetch(
-    `http://localhost:${port}/api/package-history?package=${name}`
+    `http://localhost:${port}${createPackageApiPath('package-history', name)}`
   )
   const versionInfo = (await res.json()) as Record<string, unknown>
 
@@ -111,7 +112,10 @@ async function getVersionsToBuild(name: string) {
 async function buildPackage(name: string, version: string) {
   debug('building package %s %s', name, version)
   const res = await fetch(
-    `http://localhost:${port}/api/size?package=${name + '@' + version}`
+    `http://localhost:${port}${createPackageApiPath(
+      'size',
+      `${name}@${version}`
+    )}`
   )
   debug('result %s %s %O', name, version, await res.json())
 }

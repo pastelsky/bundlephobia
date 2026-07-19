@@ -131,7 +131,7 @@ describe('PackageSizeService', () => {
     )
   })
 
-  it('refreshes package resolution instead of returning cached size data', async () => {
+  it('force-rebuilds instead of returning cached size data', async () => {
     const { service, getCachedPackageSize, resolvePackageRequest } =
       createService()
     getCachedPackageSize.mockResolvedValue(cachedResult)
@@ -145,7 +145,9 @@ describe('PackageSizeService', () => {
     })
 
     await expect(
-      service.findPackageSize(createPackageRequest('react@18.2.0', 'refresh'))
+      service.findPackageSize(
+        createPackageRequest('react@18.2.0', 'force-rebuild')
+      )
     ).resolves.toEqual({
       kind: 'cache-miss',
       resolvedPackage: expect.objectContaining({ version: '19.0.0' }),

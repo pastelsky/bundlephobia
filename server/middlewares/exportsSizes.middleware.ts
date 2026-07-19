@@ -31,7 +31,7 @@ const exportSizesMiddleware: Middleware = async ctx => {
 
   ctx.cacheControl = {
     maxAge:
-      cacheMode === 'refresh'
+      cacheMode === 'force-rebuild'
         ? 0
         : semver.valid(ctx.state.packageRequest.version ?? '')
         ? config.CACHE.SIZE_API_HAS_VERSION
@@ -53,7 +53,7 @@ const exportSizesMiddleware: Middleware = async ctx => {
     `BUILD EXPORTS SIZES: ${packageString} built in ${time.toFixed()}s`
   )
 
-  if (cacheMode === 'refresh') {
+  if (cacheMode === 'force-rebuild') {
     void cache.setExportsSize({ name, version }, body)
   }
 }

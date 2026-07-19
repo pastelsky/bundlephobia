@@ -87,7 +87,7 @@ const errorHandler: Middleware = async (ctx, next) => {
   } catch (error) {
     console.error(error)
     ctx.cacheControl = {
-      maxAge: cacheMode === 'refresh' ? 0 : config.CACHE.SIZE_API_ERROR,
+      maxAge: cacheMode === 'force-rebuild' ? 0 : config.CACHE.SIZE_API_ERROR,
     }
 
     if (!(error instanceof Error)) {
@@ -133,7 +133,7 @@ const errorHandler: Middleware = async (ctx, next) => {
       case 'UnsupportedPackageError':
         ctx.cacheControl = {
           maxAge:
-            cacheMode === 'refresh'
+            cacheMode === 'force-rebuild'
               ? 0
               : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
         }
@@ -189,7 +189,9 @@ const errorHandler: Middleware = async (ctx, next) => {
 
         ctx.cacheControl = {
           maxAge:
-            cacheMode === 'refresh' ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+            cacheMode === 'force-rebuild'
+              ? 0
+              : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)
@@ -218,7 +220,9 @@ const errorHandler: Middleware = async (ctx, next) => {
 
         ctx.cacheControl = {
           maxAge:
-            cacheMode === 'refresh' ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+            cacheMode === 'force-rebuild'
+              ? 0
+              : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)
@@ -245,7 +249,9 @@ const errorHandler: Middleware = async (ctx, next) => {
 
         ctx.cacheControl = {
           maxAge:
-            cacheMode === 'refresh' ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+            cacheMode === 'force-rebuild'
+              ? 0
+              : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)

@@ -8,7 +8,7 @@ import CustomError from '../../CustomError'
 const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
   const { cacheMode, ...requestedPackage } = ctx.state.packageRequest
 
-  if (cacheMode === 'refresh') {
+  if (cacheMode === 'force-rebuild') {
     await next()
     return
   }

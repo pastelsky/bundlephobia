@@ -6,6 +6,7 @@ import type {
   PackageExportAsset,
   PackageIdentity,
 } from '../types/package-domain'
+import { createPackageApiPath } from '../utils/packageApi.utils'
 
 // Re-export domain types that client code imports from this module.
 export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
@@ -124,31 +125,31 @@ export default class API {
 
   static getInfo(packageString: string) {
     return API.get<PackageBuildInfo>(
-      `/api/size?package=${packageString}&record=true`
+      createPackageApiPath('size', packageString, { record: true })
     )
   }
 
   static getExports(packageString: string) {
     return API.get<PackageExportsResponse>(
-      `/api/exports?package=${packageString}`
+      createPackageApiPath('exports', packageString)
     )
   }
 
   static getExportsSizes(packageString: string) {
     return API.get<PackageExportSizesResponse>(
-      `/api/exports-sizes?package=${packageString}`
+      createPackageApiPath('exports-sizes', packageString)
     )
   }
 
   static getDependencies(packageString: string) {
     return API.get<PackageDependencyInfo[]>(
-      `/api/dependencies?package=${packageString}`
+      createPackageApiPath('dependencies', packageString)
     )
   }
 
   static getHistory(packageString: string, limit: number) {
     return API.get<PackageHistoryResponse>(
-      `/api/package-history?package=${packageString}&limit=${limit}`
+      createPackageApiPath('package-history', packageString, { limit })
     )
   }
 
@@ -158,7 +159,7 @@ export default class API {
 
   static getSimilar(packageName: string) {
     return API.get<SimilarPackagesResponse>(
-      `/api/similar-packages?package=${packageName}`
+      createPackageApiPath('similar-packages', packageName)
     )
   }
 

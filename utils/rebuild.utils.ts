@@ -9,6 +9,7 @@ import createDebug from 'debug'
 import firebase from 'firebase'
 
 import config from '../server/config'
+import { createPackageApiPath } from './packageApi.utils'
 
 interface QueueModule {
   new (
@@ -175,7 +176,9 @@ async function run() {
 
     queue.push(() =>
       got<{ gzip: number; size: number }>(
-        `http://127.0.0.1:5000/api/size?package=${packString}&cache=refresh`,
+        `http://127.0.0.1:5000${createPackageApiPath('size', packString, {
+          cacheMode: 'force-rebuild',
+        })}`,
         { json: true }
       )
         .then(async response => {

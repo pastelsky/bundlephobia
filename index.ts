@@ -18,6 +18,7 @@ import invariant from 'ts-invariant'
 import Cache from './utils/cache.utils'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
+import { createPackageApiPath } from './utils/packageApi.utils'
 import logger from './server/Logger'
 import remoteMcpClient from './server/mcp/remoteClient'
 
@@ -323,9 +324,7 @@ app.prepare().then(() => {
     try {
       const args = payload.arguments ?? {}
       const packageName =
-        typeof args.package === 'string'
-          ? encodeURIComponent(args.package)
-          : undefined
+        typeof args.package === 'string' ? args.package : undefined
 
       const callLocalApi = async (path: string) => {
         const response = await fetch(`http://127.0.0.1:${port}${path}`, {
@@ -347,7 +346,9 @@ app.prepare().then(() => {
             ctx.body = { error: { code: 'InvalidMcpPayload' } }
             return
           }
-          ctx.body = await callLocalApi(`/api/size?package=${packageName}`)
+          ctx.body = await callLocalApi(
+            createPackageApiPath('size', packageName)
+          )
           return
         }
         case 'bundlephobia.exports': {
@@ -356,7 +357,9 @@ app.prepare().then(() => {
             ctx.body = { error: { code: 'InvalidMcpPayload' } }
             return
           }
-          ctx.body = await callLocalApi(`/api/exports?package=${packageName}`)
+          ctx.body = await callLocalApi(
+            createPackageApiPath('exports', packageName)
+          )
           return
         }
         case 'bundlephobia.exportsSizes': {
@@ -366,7 +369,7 @@ app.prepare().then(() => {
             return
           }
           ctx.body = await callLocalApi(
-            `/api/exports-sizes?package=${packageName}`
+            createPackageApiPath('exports-sizes', packageName)
           )
           return
         }
@@ -378,7 +381,7 @@ app.prepare().then(() => {
           }
           const limit = Number(args.limit ?? 10)
           ctx.body = await callLocalApi(
-            `/api/package-history?package=${packageName}&limit=${limit}`
+            createPackageApiPath('package-history', packageName, { limit })
           )
           return
         }
@@ -389,7 +392,7 @@ app.prepare().then(() => {
             return
           }
           ctx.body = await callLocalApi(
-            `/api/similar-packages?package=${packageName}`
+            createPackageApiPath('similar-packages', packageName)
           )
           return
         }

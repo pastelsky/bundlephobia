@@ -18,7 +18,7 @@ const exportsMiddleware: Middleware = async ctx => {
   )
   const { cacheMode } = ctx.state.packageRequest
 
-  if (cacheMode === 'only') {
+  if (cacheMode === 'cache-only') {
     ctx.status = 404
     return
   }
@@ -32,7 +32,7 @@ const exportsMiddleware: Middleware = async ctx => {
 
   ctx.cacheControl = {
     maxAge:
-      cacheMode === 'refresh'
+      cacheMode === 'force-rebuild'
         ? 0
         : semver.valid(ctx.state.packageRequest.version ?? '')
         ? config.CACHE.SIZE_API_HAS_VERSION

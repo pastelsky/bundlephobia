@@ -10,7 +10,7 @@ import { requireResolvedPackage } from '../../services/packageResolution.service
 // Cache-only misses stop here with the same 404 response on every endpoint.
 const cachedResponse: Middleware = async (ctx, next) => {
   const { cacheMode } = ctx.state.packageRequest
-  if (cacheMode === 'refresh') {
+  if (cacheMode === 'force-rebuild') {
     await next()
     return
   }
@@ -75,7 +75,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
 
   logCache({ hit: false, message: `CACHE MISS: ${packageString}` })
 
-  if (cacheMode === 'only') {
+  if (cacheMode === 'cache-only') {
     ctx.status = 404
     return
   }

@@ -3,6 +3,7 @@
 // re-exported from here so callers need only one import site.
 import type { PackageBuildInfo, PackageMetadata } from '../types/package-domain'
 import type { ParsedPackageString } from '../utils/common.utils'
+import type { PackageCacheMode } from '../utils/packageApi.utils'
 
 export type {
   PackageBuildResult,
@@ -20,8 +21,6 @@ export interface ResolvedPackage extends PackageMetadata {
   scoped: boolean
   packageString: string
 }
-
-export type PackageCacheMode = 'prefer' | 'refresh' | 'only'
 
 /** Normalized package input and cache behavior for one API or page request. */
 export interface PackageRequest extends ParsedPackageString {
