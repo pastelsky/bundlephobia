@@ -36,6 +36,11 @@
     background: var(--color-btn-bg-hover);
   }
 
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
   & ~ & {
     margin-left: $global-spacing * 1.5;
   }
@@ -104,4 +109,10 @@
       color: var(--color-btn-text);
     }
   }
+}
+
+.scan__empty-selection {
+  @include font-size-sm;
+  color: var(--color-text-muted);
+  margin: $global-spacing * 2;
 }

@@ -125,6 +125,10 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
 
   handleScanClick = () => {
     const { selectedPackages } = this.state
+    if (selectedPackages.length === 0) {
+      return
+    }
+
     const query = selectedPackages
       .map(pack => `${pack.name}@${pack.resolvedVersion}`)
       .join(',')
@@ -171,7 +175,11 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
         <div>
           <header className="scan__selection-header">
             <h1 className="scan__page-title"> Select packages to scan </h1>
-            <button className="scan__btn" onClick={this.handleScanClick}>
+            <button
+              className="scan__btn"
+              disabled={selectedPackages.length === 0}
+              onClick={this.handleScanClick}
+            >
               Scan {selectedPackages.length} packages
             </button>
             <button className="scan__btn" onClick={this.handleResetClick}>
@@ -203,6 +211,11 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
               </li>
             ))}
           </ul>
+          {selectedPackages.length === 0 && (
+            <p className="scan__empty-selection">
+              Select at least one package to start a scan.
+            </p>
+          )}
         </div>
       )
     }
