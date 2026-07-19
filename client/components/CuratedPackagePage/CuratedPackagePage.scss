@@ -1,0 +1,242 @@
+@import '../../../stylesheets/variables';
+
+.curated-page__main {
+  width: min(100% - 40px, 980px);
+  margin: 10px auto 80px;
+}
+
+.curated-page__breadcrumb {
+  @include font-size-xs;
+  display: flex;
+  gap: $global-spacing;
+  color: var(--color-text-muted);
+
+  a {
+    color: var(--color-link);
+  }
+}
+
+.curated-page__intro {
+  max-width: 720px;
+  margin: $global-spacing * 5 0 $global-spacing * 4;
+
+  h1 {
+    @include font-size-xxl;
+    margin: $global-spacing 0 $global-spacing * 2;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  > p:last-child {
+    @include font-size-md;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+  }
+}
+
+.curated-page__eyebrow {
+  @include font-size-xs;
+  margin: 0;
+  color: var(--color-result-heading);
+  font-family: $font-family-code;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.curated-page__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 10px;
+}
+
+.curated-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: right;
+
+  caption {
+    @include font-size-xs;
+    padding: $global-spacing * 1.5 $global-spacing * 2;
+    text-align: left;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  th,
+  td {
+    padding: $global-spacing * 2;
+    border-bottom: 1px solid var(--color-border-subtle);
+    vertical-align: top;
+  }
+
+  thead th {
+    @include font-size-xs;
+    color: var(--color-text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  th:first-child {
+    text-align: left;
+  }
+
+  tbody tr:last-child th,
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody th {
+    font-family: $font-family-code;
+    font-weight: $font-weight-bold;
+
+    a {
+      color: var(--color-link);
+    }
+
+    small {
+      display: block;
+      max-width: 46ch;
+      margin-top: $global-spacing * 0.6;
+      color: var(--color-text-muted);
+      font-family: $font-family-body;
+      font-weight: $font-weight-light;
+      line-height: 1.4;
+    }
+  }
+}
+
+.curated-page__guidance,
+.curated-page__related {
+  max-width: 720px;
+  margin-top: $global-spacing * 5;
+
+  h2 {
+    @include font-size-md-2;
+    margin-bottom: $global-spacing;
+  }
+
+  p,
+  li {
+    color: var(--color-text-secondary);
+    line-height: 1.65;
+  }
+}
+
+.curated-index {
+  max-width: 760px;
+  margin-top: $global-spacing * 5;
+
+  h2 {
+    @include font-size-md-2;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--color-border-primary);
+  }
+
+  li {
+    border-bottom: 1px solid var(--color-border-primary);
+  }
+
+  a {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) 1.2fr;
+    gap: $global-spacing * 2;
+    padding: $global-spacing * 2 0;
+    color: var(--color-text-primary);
+
+    &:hover strong,
+    &:focus-visible strong {
+      color: var(--color-link);
+    }
+  }
+
+  strong {
+    font-family: $font-family-code;
+    transition: color 0.2s;
+  }
+
+  span {
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+}
+
+.curated-page__related {
+  ul {
+    padding-left: $global-spacing * 2;
+  }
+
+  a {
+    color: var(--color-link);
+  }
+}
+
+@media screen and (max-width: 40em) {
+  .curated-page__main {
+    width: 100%;
+    margin-bottom: $global-spacing * 5;
+  }
+
+  .curated-page__intro {
+    margin: $global-spacing * 3 0;
+  }
+
+  .curated-page__table-wrap {
+    border: 0;
+    overflow: visible;
+  }
+
+  .curated-page__table {
+    display: block;
+
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+
+    tbody,
+    tr,
+    th,
+    td {
+      display: block;
+    }
+
+    caption {
+      display: block;
+      border: 0;
+      padding: 0 0 $global-spacing * 2;
+    }
+
+    tr {
+      padding: $global-spacing * 2 0;
+      border-top: 1px solid var(--color-border-primary);
+    }
+
+    th,
+    td {
+      border: 0;
+      padding: $global-spacing * 0.5 0;
+      text-align: left;
+    }
+
+    td::before {
+      content: attr(data-label) ': ';
+      color: var(--color-text-muted);
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  .curated-index a {
+    grid-template-columns: 1fr;
+    gap: $global-spacing * 0.8;
+  }
+}

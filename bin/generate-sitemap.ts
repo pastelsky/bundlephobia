@@ -1,7 +1,14 @@
-import { writeFileSync } from 'fs'
+import { mkdirSync, writeFileSync } from 'fs'
 import path from 'path'
 import { Readable } from 'stream'
-import { SitemapStream, streamToPromise } from 'sitemap'
+import { fileURLToPath } from 'url'
+import { SitemapIndexStream, SitemapStream, streamToPromise } from 'sitemap'
+
+import {
+  CURATED_CATEGORIES,
+  CURATED_COMPARISONS,
+  CURATED_PACKAGE_NAMES,
+} from '../seo/curated-content.ts'
 
 const popularPackages = [
   'react',
@@ -182,32 +189,84 @@ const popularPackages = [
   'polished',
 ] as const
 
-const otherPages = ['', '/scan']
-const links = [
-  ...otherPages.map(page => ({
+const otherPages = ['', '/scan', '/compare', '/categories']
+const coreLinks = otherPages.map(page => ({
     url: page,
     changefreq: 'weekly' as const,
     priority: 1,
-  })),
-  ...popularPackages.map(packageName => ({
+  }))
+
+const packageLinks = Array.from(
+  new Set([...popularPackages, ...CURATED_PACKAGE_NAMES])
+).map(packageName => ({
     url: `/package/${packageName}`,
     changefreq: 'weekly' as const,
     priority: 0.7,
+  }))
+
+const guideLinks = [
+  ...CURATED_COMPARISONS.map(comparison => ({
+    url: `/compare/${comparison.slug}`,
+    changefreq: 'weekly' as const,
+    priority: 0.8,
+  })),
+  ...CURATED_CATEGORIES.map(category => ({
+    url: `/categories/${category.slug}`,
+    changefreq: 'weekly' as const,
+    priority: 0.8,
   })),
 ]
 
-const stream = new SitemapStream({ hostname: 'https://bundlephobia.com' })
+const projectDirectory = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..'
+)
+const publicDirectory = path.join(
+  projectDirectory,
+  'client',
+  'assets',
+  'public'
+)
+const sitemapDirectory = path.join(publicDirectory, 'sitemaps')
+mkdirSync(sitemapDirectory, { recursive: true })
 
-streamToPromise(Readable.from(links).pipe(stream))
-  .then(data => data.toString())
-  .then(sitemap => {
-    writeFileSync(
-      path.join(__dirname, '..', 'client', 'assets', 'public', 'sitemap.xml'),
-      sitemap,
-      'utf8'
-    )
-  })
-  .catch(err => {
+async function writeSitemap(
+  fileName: string,
+  links: Array<{
+    url: string
+    changefreq: 'weekly'
+    priority: number
+  }>
+) {
+  const stream = new SitemapStream({ hostname: 'https://bundlephobia.com' })
+  const sitemap = await streamToPromise(Readable.from(links).pipe(stream))
+  writeFileSync(path.join(sitemapDirectory, fileName), sitemap.toString(), 'utf8')
+}
+
+async function generateSitemaps() {
+  await Promise.all([
+    writeSitemap('core.xml', coreLinks),
+    writeSitemap('packages.xml', packageLinks),
+    writeSitemap('guides.xml', guideLinks),
+  ])
+
+  const indexStream = new SitemapIndexStream()
+  const sitemapIndex = await streamToPromise(
+    Readable.from([
+      'https://bundlephobia.com/sitemaps/core.xml',
+      'https://bundlephobia.com/sitemaps/packages.xml',
+      'https://bundlephobia.com/sitemaps/guides.xml',
+    ]).pipe(indexStream)
+  )
+
+  writeFileSync(
+    path.join(publicDirectory, 'sitemap.xml'),
+    sitemapIndex.toString(),
+    'utf8'
+  )
+}
+
+generateSitemaps().catch(err => {
     console.error(err)
     process.exit(1)
   })

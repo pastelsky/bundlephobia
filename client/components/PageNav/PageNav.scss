@@ -58,15 +58,27 @@
   }
 
   @media screen and (max-width: 40em) {
-    max-width: 40vw;
-    overflow: scroll;
+    max-width: none;
+    margin-right: 0;
     align-items: center;
     justify-content: flex-end;
+
+    li {
+      display: none;
+    }
+
+    li:nth-child(4) {
+      display: block;
+    }
   }
 }
 
 .mcp-nav {
   position: relative;
+
+  @media screen and (max-width: 40em) {
+    display: none;
+  }
 }
 
 .mcp-nav__trigger {
