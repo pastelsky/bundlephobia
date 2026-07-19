@@ -30,11 +30,13 @@ type ScanState = {
   packages: ScannablePackage[] | null
   selectedPackages: SelectedPackage[]
   selectedPackageValues: string[]
+  unsupportedPackageNames: string[]
 }
 
 type PersistedScanState = {
   packages: ScannablePackage[]
   selectedPackageValues: string[]
+  unsupportedPackageNames: string[]
 }
 
 const persistedScanStateKey = 'bundlephobia.scan-state'
@@ -44,6 +46,7 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
     packages: null,
     selectedPackages: [],
     selectedPackageValues: [],
+    unsupportedPackageNames: [],
   }
 
   private packageSelectionContainerRef = createRef<HTMLUListElement>()
@@ -57,6 +60,7 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
         {
           packages: persistedScanState.packages,
           selectedPackageValues: persistedScanState.selectedPackageValues,
+          unsupportedPackageNames: persistedScanState.unsupportedPackageNames,
         },
         this.setSelectedPackages
       )
@@ -82,6 +86,11 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
         selectedPackageValues: Array.isArray(parsedState.selectedPackageValues)
           ? parsedState.selectedPackageValues
           : [],
+        unsupportedPackageNames: Array.isArray(
+          parsedState.unsupportedPackageNames
+        )
+          ? parsedState.unsupportedPackageNames
+          : [],
       }
     } catch (error) {
       console.error('Could not restore scan state:', error)
@@ -101,6 +110,7 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
       const persistedState: PersistedScanState = {
         packages,
         selectedPackageValues,
+        unsupportedPackageNames: this.state.unsupportedPackageNames,
       }
       window.sessionStorage.setItem(
         persistedScanStateKey,
@@ -161,6 +171,15 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
       })
   }
 
+  getUnsupportedPackageNames(json: ParsedPackageJson): string[] {
+    const dependencies = json.dependencies ?? {}
+
+    return Object.keys(dependencies).filter(packageName => {
+      const versionRange = dependencies[packageName]
+      return !semver.valid(versionRange) && !semver.validRange(versionRange)
+    })
+  }
+
   handleDropAccepted = ([file]: File[]) => {
     if (!file) {
       this.showInvalidFileError()
@@ -178,10 +197,12 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
             : ''
         const json = JSON.parse(result) as ParsedPackageJson
         const packages = this.getParsedPackages(json)
+        const unsupportedPackageNames = this.getUnsupportedPackageNames(json)
 
         this.setState(
           {
             packages,
+            unsupportedPackageNames,
             selectedPackageValues: packages
               .filter(
                 ({ name }) => !scanBlacklist.some(regex => regex.test(name))
@@ -225,7 +246,12 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
 
   handleResetClick = () => {
     this.setState(
-      { packages: null, selectedPackages: [], selectedPackageValues: [] },
+      {
+        packages: null,
+        selectedPackages: [],
+        selectedPackageValues: [],
+        unsupportedPackageNames: [],
+      },
       this.persistScanState
     )
   }
@@ -236,7 +262,12 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
   }
 
   render() {
-    const { packages, selectedPackages, selectedPackageValues } = this.state
+    const {
+      packages,
+      selectedPackages,
+      selectedPackageValues,
+      unsupportedPackageNames,
+    } = this.state
     let content: React.ReactNode
 
     if (!packages) {
@@ -275,6 +306,16 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
               Reset
             </button>
           </header>
+          {unsupportedPackageNames.length > 0 && (
+            <p className="scan__unsupported-packages">
+              Skipped {unsupportedPackageNames.length}{' '}
+              {unsupportedPackageNames.length === 1
+                ? 'dependency'
+                : 'dependencies'}{' '}
+              with unsupported version specifications:{' '}
+              {unsupportedPackageNames.join(', ')}
+            </p>
+          )}
           <ul
             className="scan__package-container"
             ref={this.packageSelectionContainerRef}
