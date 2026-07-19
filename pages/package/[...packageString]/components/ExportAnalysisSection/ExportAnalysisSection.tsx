@@ -194,7 +194,7 @@ export default class ExportAnalysisSection extends Component<
         this.observer = null
         this.startAnalysis()
       },
-      { rootMargin: '400px 0px' }
+      { rootMargin: '100px 0px' }
     )
     this.observer.observe(this.sectionRef.current as HTMLDivElement)
   }
