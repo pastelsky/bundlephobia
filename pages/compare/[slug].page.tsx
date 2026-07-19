@@ -10,7 +10,7 @@ import {
   CURATED_COMPARISONS,
   findCuratedComparison,
 } from '../../seo/curated-content'
-import { getPackageFactsBatch } from '../../server/seo/packageFacts'
+import { getCuratedPackageFactsBatch } from '../../server/seo/curatedPackageFacts'
 
 export default function ComparisonPage({
   comparison,
@@ -41,7 +41,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     'public, s-maxage=3600, stale-while-revalidate=86400'
   )
 
-  const packages = await getPackageFactsBatch(comparison.packages)
+  const packages = await getCuratedPackageFactsBatch(comparison.packages)
   const relatedPages = [
     ...CURATED_COMPARISONS.filter(item => item.slug !== comparison.slug)
       .slice(0, 3)

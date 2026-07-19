@@ -10,7 +10,7 @@ import {
   CURATED_COMPARISONS,
   findCuratedCategory,
 } from '../../seo/curated-content'
-import { getPackageFactsBatch } from '../../server/seo/packageFacts'
+import { getCuratedPackageFactsBatch } from '../../server/seo/curatedPackageFacts'
 
 export default function CategoryPage({
   category,
@@ -40,7 +40,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     'public, s-maxage=3600, stale-while-revalidate=86400'
   )
 
-  const packages = await getPackageFactsBatch(category.packages)
+  const packages = await getCuratedPackageFactsBatch(category.packages)
   const relatedPages = [
     ...CURATED_COMPARISONS.filter(comparison =>
       comparison.packages.some(name => category.packages.includes(name))

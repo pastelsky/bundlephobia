@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
-import type { PackageFacts } from '../../../server/seo/packageFacts'
+import type { CuratedPackageFacts } from '../../../server/seo/curatedPackageFacts'
 import { formatSize } from '../../../utils'
 import MetaTags from '../MetaTags'
 import ResultLayout from '../ResultLayout'
@@ -16,7 +16,7 @@ type CuratedPackagePageProps = {
   title: string
   description: string
   canonicalPath: string
-  packages: PackageFacts[]
+  packages: CuratedPackageFacts[]
   guidance?: string
   relatedPages: RelatedPage[]
 }
