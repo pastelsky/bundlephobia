@@ -33,16 +33,13 @@ import ExportAnalysisSection from './components/ExportAnalysisSection'
 import InterLinksSection from './components/InterLinksSection'
 import SimilarPackagesSection from './components/SimilarPackagesSection'
 import TreemapSection from './components/TreemapSection'
-import {
-  getPackageFacts,
-  type PackageFacts,
-} from '../../../server/seo/packageFacts'
+import { getCachedPackageAnalysis } from '../../../server/seo/cachedPackageAnalysis'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
 type ResultPageProps = {
   router: NextRouter
-  initialFacts: PackageFacts | null
+  initialResult: PackageBuildInfo | null
   initialPackageString: string
 }
 
@@ -104,8 +101,8 @@ function getPackageStringFromRouter(router: NextRouter) {
 
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   state: ResultPageState = {
-    results: this.props.initialFacts?.result ?? null,
-    resultsPromiseState: this.props.initialFacts?.result ? 'fulfilled' : null,
+    results: this.props.initialResult,
+    resultsPromiseState: this.props.initialResult ? 'fulfilled' : null,
     resultsError: null,
     historicalResultsPromiseState: null,
     inputInitialValue:
@@ -126,7 +123,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
     this.activeQuery = packageString
 
-    if (this.props.initialFacts?.result) {
+    if (this.props.initialResult) {
       this.scheduleSecondaryFetches(packageString)
     } else {
       this.setState(
@@ -379,9 +376,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       formattedGZIPSizeText = `${formattedGZIPSize.size.toFixed(1)} ${
         formattedGZIPSize.unit
       }`
-    } else if (this.props.initialFacts) {
-      name = this.props.initialFacts.name
-      version = this.props.initialFacts.version
     } else {
       const parsedPackage = parsePackageString(
         getPackageStringFromRouter(router)
@@ -400,8 +394,8 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       resultsPromiseState === 'fulfilled'
         ? `${name} bundle size: ${formattedGZIPSizeText} gzip | Bundlephobia`
         : `${name} bundle size, gzip size & dependencies | Bundlephobia`
-    const packageDescription = this.props.initialFacts?.description
-      ? ` ${this.props.initialFacts.description}`
+    const packageDescription = this.props.initialResult?.description
+      ? ` ${this.props.initialResult.description}`
       : ''
     const description = truncateMetaDescription(
       resultsPromiseState === 'fulfilled'
@@ -630,10 +624,10 @@ export const getServerSideProps = async (
   }
 
   try {
-    const initialFacts = await getPackageFacts(packageString)
+    const initialResult = await getCachedPackageAnalysis(packageString)
     return {
       props: {
-        initialFacts,
+        initialResult,
         initialPackageString: packageString,
       },
     }
@@ -642,7 +636,7 @@ export const getServerSideProps = async (
     // unavailable. The client can still perform the normal interactive lookup.
     return {
       props: {
-        initialFacts: null,
+        initialResult: null,
         initialPackageString: packageString,
       },
     }
