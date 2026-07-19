@@ -1,31 +1,14 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
-import { parsePackageString } from '../../../utils/common.utils'
 import { debug, logger } from '../../init'
-import { packageAnalysisService } from '../../services/packageAnalysis.service'
+import { packageSizeService } from '../../services/packageSize.service'
 
 const resolvePackageMiddleware: Middleware = async (ctx, next) => {
-  const packageQuery = ctx.query.package
-  const packageString =
-    typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
-
-  if (!packageString) {
-    ctx.throw(400, 'package query parameter is required')
-    return
-  }
-
-  const parsedPackage = parsePackageString(packageString)
-  ctx.state.resolved = {
-    ...parsedPackage,
-    version: parsedPackage.version ?? 'latest',
-    description: '',
-    repository: '',
-    packageString: `${parsedPackage.name}@${parsedPackage.version ?? 'latest'}`,
-  }
-
   const resolveStart = now()
-  const resolved = await packageAnalysisService.resolve(packageString)
+  const resolved = await packageSizeService.resolvePackage(
+    ctx.state.requestedPackage
+  )
   const resolveEnd = now()
   ctx.state.resolved = resolved
 

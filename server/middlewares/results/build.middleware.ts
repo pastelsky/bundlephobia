@@ -3,19 +3,16 @@ import now from 'performance-now'
 import semver from 'semver'
 
 import firebaseUtils from '../../../utils/firebase.utils'
-import { parsePackageString } from '../../../utils/common.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
 import type { PackageBuildResult } from '../../types'
 import config from '../../config'
 import logger from '../../Logger'
-import { packageAnalysisService } from '../../services/packageAnalysis.service'
+import { packageSizeService } from '../../services/packageSize.service'
 
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
-  const { force, record, package: packageQuery } = ctx.query
-  const requestedPackage =
-    typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+  const { force, record } = ctx.query
 
   const buildStart = now()
   const abortController = new AbortController()
@@ -35,7 +32,7 @@ const buildMiddleware: Middleware = async ctx => {
 
   let body: PackageBuildResult
   try {
-    body = await packageAnalysisService.build(
+    body = await packageSizeService.buildPackageSize(
       ctx.state.resolved,
       priority,
       abortController.signal
@@ -47,10 +44,9 @@ const buildMiddleware: Middleware = async ctx => {
 
   ctx.cacheControl = {
     maxAge:
-      force != null
+      force !== undefined
         ? 0
-        : requestedPackage &&
-          semver.valid(parsePackageString(requestedPackage).version)
+        : semver.valid(ctx.state.requestedPackage.version ?? '')
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }

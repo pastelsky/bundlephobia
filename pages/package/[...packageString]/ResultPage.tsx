@@ -33,7 +33,8 @@ import ExportAnalysisSection from './components/ExportAnalysisSection'
 import InterLinksSection from './components/InterLinksSection'
 import SimilarPackagesSection from './components/SimilarPackagesSection'
 import TreemapSection from './components/TreemapSection'
-import { packageAnalysisService } from '../../../server/services/packageAnalysis.service'
+import { createRequestedPackage } from '../../../server/packageRequest'
+import { packageSizeService } from '../../../server/services/packageSize.service'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
@@ -614,6 +615,8 @@ export const getServerSideProps = async (
     ? packageParam.join('/')
     : packageParam ?? ''
 
+  // This caches the rendered document. API cache-control middleware does not
+  // run for Next.js page responses handled by the catch-all Koa route.
   context.res.setHeader(
     'Cache-Control',
     'public, s-maxage=300, stale-while-revalidate=86400'
@@ -624,10 +627,10 @@ export const getServerSideProps = async (
   }
 
   try {
-    const { result: initialResult } = await packageAnalysisService.analyze(
-      packageString,
-      { mode: 'cache-only' }
+    const lookup = await packageSizeService.lookupPackageSize(
+      createRequestedPackage(packageString)
     )
+    const initialResult = lookup.kind === 'cache-hit' ? lookup.result : null
     return {
       props: {
         initialResult,

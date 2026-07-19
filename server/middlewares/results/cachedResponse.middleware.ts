@@ -4,11 +4,11 @@ import semver from 'semver'
 import config from '../../config'
 import { debug, failureCache } from '../../init'
 import logger from '../../Logger'
-import type { PackageAnalysis } from '../../services/packageAnalysis.service'
 
 const cachedResponse: Middleware = async (ctx, next) => {
   const { force, peep } = ctx.query
-  if (force) {
+  const forceBuild = force !== undefined
+  if (forceBuild) {
     await next()
     return
   }
@@ -37,19 +37,16 @@ const cachedResponse: Middleware = async (ctx, next) => {
       message
     )
 
-  const analysis = ctx.state.packageAnalysis as PackageAnalysis | undefined
-  const cached = analysis ? Boolean(analysis.result) : await ctx.cashed()
+  const lookup = ctx.state.packageSizeLookup
+  const cached = lookup ? lookup.kind === 'cache-hit' : await ctx.cashed()
   if (cached) {
     ctx.cacheControl = {
-      maxAge:
-        force != null
-          ? 0
-          : semver.valid(version)
-          ? config.CACHE.SIZE_API_HAS_VERSION
-          : config.CACHE.SIZE_API_DEFAULT,
+      maxAge: semver.valid(version)
+        ? config.CACHE.SIZE_API_HAS_VERSION
+        : config.CACHE.SIZE_API_DEFAULT,
     }
 
-    if (analysis?.result) ctx.body = analysis.result
+    if (lookup?.kind === 'cache-hit') ctx.body = lookup.result
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })
     return

@@ -1,42 +1,32 @@
 import type { Middleware } from 'koa'
 
-import { parsePackageString } from '../../../utils/common.utils'
 import config from '../../config'
 import CustomError from '../../CustomError'
 
 const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
-  const { package: packageQuery, force } = ctx.query
-  if (force) {
+  if (ctx.query.force !== undefined) {
     await next()
     return
   }
 
-  const packageString =
-    typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+  const requestedPackage = ctx.state.requestedPackage
 
-  if (!packageString) {
-    ctx.throw(400, 'package query parameter is required')
-    return
-  }
-
-  const parsedPackage = parsePackageString(packageString)
-
-  if (config.blackList.some(entry => entry.test(parsedPackage.name))) {
+  if (config.blackList.some(entry => entry.test(requestedPackage.name))) {
     throw new CustomError(
       'BlocklistedPackageError',
-      { ...parsedPackage },
+      { ...requestedPackage },
       undefined
     )
   }
 
   const matchedUnsupportedRule = config.unsupported.find(rule =>
-    new RegExp(rule.test).test(parsedPackage.name)
+    new RegExp(rule.test).test(requestedPackage.name)
   )
 
   if (matchedUnsupportedRule) {
     throw new CustomError(
       'UnsupportedPackageError',
-      { ...parsedPackage },
+      { ...requestedPackage },
       { reason: matchedUnsupportedRule.reason }
     )
   }

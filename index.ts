@@ -24,8 +24,9 @@ import remoteMcpClient from './server/mcp/remoteClient'
 import limit from './server/middlewares/rateLimit.middleware'
 import exportsMiddlware from './server/middlewares/exports.middleware'
 import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
+import packageRequestMiddleware from './server/middlewares/results/packageRequest.middleware'
 import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
-import packageAnalysisLookupMiddleware from './server/middlewares/results/packageAnalysisLookup.middleware'
+import packageSizeLookupMiddleware from './server/middlewares/results/packageSizeLookup.middleware'
 import cachedResponseMiddleware from './server/middlewares/results/cachedResponse.middleware'
 import buildMiddleware from './server/middlewares/results/build.middleware'
 import errorMiddleware from './server/middlewares/results/error.middleware'
@@ -126,8 +127,9 @@ app.prepare().then(() => {
 
   router.get(
     '/api/size',
+    packageRequestMiddleware,
     errorMiddleware,
-    packageAnalysisLookupMiddleware,
+    packageSizeLookupMiddleware,
     blockBlacklistMiddleware,
     cachedResponseMiddleware,
     buildMissRateLimit({
@@ -140,6 +142,7 @@ app.prepare().then(() => {
 
   router.get(
     '/api/exports',
+    packageRequestMiddleware,
     errorMiddleware,
     resolvePackageMiddleware,
     blockBlacklistMiddleware,
@@ -148,6 +151,7 @@ app.prepare().then(() => {
 
   router.get(
     '/api/exports-sizes',
+    packageRequestMiddleware,
     jsonCacheMiddleware({
       get: (key: Key) => cache.getExportsSize(key),
       set: (key: Key, value: string) => cache.setExportsSize(key, value),
