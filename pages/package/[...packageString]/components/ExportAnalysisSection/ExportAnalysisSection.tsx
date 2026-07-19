@@ -11,6 +11,7 @@ import API, {
 import SearchIcon from '../../../../../client/components/Icons/SearchIcon'
 import JumpingDots from '../../../../../client/components/JumpingDots'
 import { formatSize, resolveBuildError } from '../../../../../utils'
+import { sanitizeErrorHTML } from '../../../../../utils/common.utils'
 
 const State = {
   TBD: 'tbd',
@@ -330,7 +331,11 @@ export default class ExportAnalysisSection extends Component<
     return (
       <div className="export-analysis-section__error">
         <h4> {errorName}</h4>
-        <p dangerouslySetInnerHTML={{ __html: errorBody ?? '' }} />
+        <p
+          dangerouslySetInnerHTML={{
+            __html: sanitizeErrorHTML(errorBody ?? ''),
+          }}
+        />
         {errorDetails && <pre>{errorDetails}</pre>}
       </div>
     )

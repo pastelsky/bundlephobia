@@ -51,3 +51,12 @@ export function sanitizeHTML(html: string): string {
     ALLOWED_ATTR: [''],
   })
 }
+
+/** Keep the API's small error-message formatting without trusting its data. */
+export function sanitizeErrorHTML(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['a', 'b', 'code', 'i'],
+    ALLOWED_ATTR: ['href', 'target', 'rel'],
+    ALLOW_DATA_ATTR: false,
+  })
+}

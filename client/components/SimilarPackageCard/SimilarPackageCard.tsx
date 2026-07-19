@@ -125,6 +125,7 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
                   e.stopPropagation()
                   window.location.href = pack.repository
                 }}
+                aria-label={`View ${pack.name} repository`}
               >
                 {pack.repository.includes('github.com') ? (
                   <GithubIcon className="similar-package-card__github-icon" />

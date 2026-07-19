@@ -10,7 +10,7 @@ import Analytics from '../../client/analytics'
 import API, { type PackageBuildInfo } from '../../client/api'
 import Stat from '../../client/components/Stat'
 import ResultLayout from '../../client/components/ResultLayout'
-import { parsePackageString } from '../../utils/common.utils'
+import { parsePackageString, sanitizeErrorHTML } from '../../utils/common.utils'
 import { getTimeFromSize } from '../../utils'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected'
@@ -131,7 +131,11 @@ class ResultCard extends Component<ResultCardProps> {
         content = (
           <details className="scan-results__error-text">
             <summary> {pack.error.code}</summary>
-            <p dangerouslySetInnerHTML={{ __html: pack.error.message }} />
+            <p
+              dangerouslySetInnerHTML={{
+                __html: sanitizeErrorHTML(pack.error.message),
+              }}
+            />
           </details>
         )
         break

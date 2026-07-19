@@ -9,6 +9,8 @@
 
   @media screen and (max-width: 40em) {
     padding: $global-spacing * 2;
+    flex-wrap: wrap;
+    row-gap: $global-spacing;
   }
 }
 
@@ -17,6 +19,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @media screen and (max-width: 40em) {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
 }
 
 .logo-small {
@@ -61,7 +69,7 @@
     max-width: 40vw;
     overflow: scroll;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
 }
 

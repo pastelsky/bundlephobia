@@ -29,18 +29,96 @@ type SelectedPackage = {
 type ScanState = {
   packages: ScannablePackage[] | null
   selectedPackages: SelectedPackage[]
+  selectedPackageValues: string[]
+  unsupportedPackageNames: string[]
 }
+
+type PersistedScanState = {
+  packages: ScannablePackage[]
+  selectedPackageValues: string[]
+  unsupportedPackageNames: string[]
+}
+
+const persistedScanStateKey = 'bundlephobia.scan-state'
 
 export default class Scan extends Component<Record<string, never>, ScanState> {
   state: ScanState = {
     packages: null,
     selectedPackages: [],
+    selectedPackageValues: [],
+    unsupportedPackageNames: [],
   }
 
   private packageSelectionContainerRef = createRef<HTMLUListElement>()
 
   componentDidMount() {
     Analytics.pageView('scan')
+
+    const persistedScanState = this.readPersistedScanState()
+    if (persistedScanState) {
+      this.setState(
+        {
+          packages: persistedScanState.packages,
+          selectedPackageValues: persistedScanState.selectedPackageValues,
+          unsupportedPackageNames: persistedScanState.unsupportedPackageNames,
+        },
+        this.setSelectedPackages
+      )
+    }
+  }
+
+  readPersistedScanState = (): PersistedScanState | null => {
+    try {
+      const serializedState = window.sessionStorage.getItem(
+        persistedScanStateKey
+      )
+      if (!serializedState) {
+        return null
+      }
+
+      const parsedState = JSON.parse(serializedState) as PersistedScanState
+      if (!Array.isArray(parsedState.packages)) {
+        return null
+      }
+
+      return {
+        packages: parsedState.packages,
+        selectedPackageValues: Array.isArray(parsedState.selectedPackageValues)
+          ? parsedState.selectedPackageValues
+          : [],
+        unsupportedPackageNames: Array.isArray(
+          parsedState.unsupportedPackageNames
+        )
+          ? parsedState.unsupportedPackageNames
+          : [],
+      }
+    } catch (error) {
+      console.error('Could not restore scan state:', error)
+      return null
+    }
+  }
+
+  persistScanState = () => {
+    const { packages, selectedPackageValues } = this.state
+
+    try {
+      if (!packages) {
+        window.sessionStorage.removeItem(persistedScanStateKey)
+        return
+      }
+
+      const persistedState: PersistedScanState = {
+        packages,
+        selectedPackageValues,
+        unsupportedPackageNames: this.state.unsupportedPackageNames,
+      }
+      window.sessionStorage.setItem(
+        persistedScanStateKey,
+        JSON.stringify(persistedState)
+      )
+    } catch (error) {
+      console.error('Could not persist scan state:', error)
+    }
   }
 
   resolveVersionFromRange = (range: string) => {
@@ -59,7 +137,15 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
       return { name, resolvedVersion }
     })
 
-    this.setState({ selectedPackages })
+    this.setState(
+      {
+        selectedPackages,
+        selectedPackageValues: Array.from(checkedInputs).map(
+          ({ value }) => value
+        ),
+      },
+      this.persistScanState
+    )
   }
 
   handleSelectionChange = () => {
@@ -85,6 +171,15 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
       })
   }
 
+  getUnsupportedPackageNames(json: ParsedPackageJson): string[] {
+    const dependencies = json.dependencies ?? {}
+
+    return Object.keys(dependencies).filter(packageName => {
+      const versionRange = dependencies[packageName]
+      return !semver.valid(versionRange) && !semver.validRange(versionRange)
+    })
+  }
+
   handleDropAccepted = ([file]: File[]) => {
     if (!file) {
       this.showInvalidFileError()
@@ -102,8 +197,20 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
             : ''
         const json = JSON.parse(result) as ParsedPackageJson
         const packages = this.getParsedPackages(json)
+        const unsupportedPackageNames = this.getUnsupportedPackageNames(json)
 
-        this.setState({ packages }, this.setSelectedPackages)
+        this.setState(
+          {
+            packages,
+            unsupportedPackageNames,
+            selectedPackageValues: packages
+              .filter(
+                ({ name }) => !scanBlacklist.some(regex => regex.test(name))
+              )
+              .map(({ name, resolvedVersion }) => `${name}#${resolvedVersion}`),
+          },
+          this.setSelectedPackages
+        )
         Analytics.scanPackageJsonDropped(packages.length)
       } catch (err) {
         console.error(err)
@@ -125,6 +232,10 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
 
   handleScanClick = () => {
     const { selectedPackages } = this.state
+    if (selectedPackages.length === 0) {
+      return
+    }
+
     const query = selectedPackages
       .map(pack => `${pack.name}@${pack.resolvedVersion}`)
       .join(',')
@@ -134,7 +245,15 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
   }
 
   handleResetClick = () => {
-    this.setState({ packages: null, selectedPackages: [] })
+    this.setState(
+      {
+        packages: null,
+        selectedPackages: [],
+        selectedPackageValues: [],
+        unsupportedPackageNames: [],
+      },
+      this.persistScanState
+    )
   }
 
   showInvalidFileError() {
@@ -143,7 +262,12 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
   }
 
   render() {
-    const { packages, selectedPackages } = this.state
+    const {
+      packages,
+      selectedPackages,
+      selectedPackageValues,
+      unsupportedPackageNames,
+    } = this.state
     let content: React.ReactNode
 
     if (!packages) {
@@ -171,13 +295,27 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
         <div>
           <header className="scan__selection-header">
             <h1 className="scan__page-title"> Select packages to scan </h1>
-            <button className="scan__btn" onClick={this.handleScanClick}>
+            <button
+              className="scan__btn"
+              disabled={selectedPackages.length === 0}
+              onClick={this.handleScanClick}
+            >
               Scan {selectedPackages.length} packages
             </button>
             <button className="scan__btn" onClick={this.handleResetClick}>
               Reset
             </button>
           </header>
+          {unsupportedPackageNames.length > 0 && (
+            <p className="scan__unsupported-packages">
+              Skipped {unsupportedPackageNames.length}{' '}
+              {unsupportedPackageNames.length === 1
+                ? 'dependency'
+                : 'dependencies'}{' '}
+              with unsupported version specifications:{' '}
+              {unsupportedPackageNames.join(', ')}
+            </p>
+          )}
           <ul
             className="scan__package-container"
             ref={this.packageSelectionContainerRef}
@@ -187,9 +325,9 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
                 <label>
                   <input
                     type="checkbox"
-                    defaultChecked={
-                      !scanBlacklist.some(regex => regex.test(name))
-                    }
+                    defaultChecked={selectedPackageValues.includes(
+                      `${name}#${resolvedVersion}`
+                    )}
                     value={`${name}#${resolvedVersion}`}
                     onChange={this.handleSelectionChange}
                   />
@@ -203,6 +341,11 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
               </li>
             ))}
           </ul>
+          {selectedPackages.length === 0 && (
+            <p className="scan__empty-selection">
+              Select at least one package to start a scan.
+            </p>
+          )}
         </div>
       )
     }
@@ -218,8 +361,4 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
       </ResultLayout>
     )
   }
-}
-
-export const getServerSideProps = () => {
-  return { props: {} }
 }
