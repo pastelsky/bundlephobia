@@ -23,6 +23,7 @@
       "types/*": ["types/*"]
     },
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true

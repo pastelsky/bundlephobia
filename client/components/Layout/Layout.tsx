@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import Link from 'next/link'
 
-import API from '../../api'
 import Heart from '../../assets/heart.svg'
 import DigitalOceanLogo from '../../assets/digital-ocean-logo.svg'
 import { AnnouncementBanner } from '../AnnouncementBanner'
@@ -9,26 +8,11 @@ import { WithClassName } from '../../../types'
 
 type LayoutProps = React.PropsWithChildren & WithClassName
 
-type LayoutState = {
-  recentSearches: string[]
-}
+const popularPackages = ['react', 'axios', 'zod', 'date-fns', 'zustand']
 
-export default class Layout extends Component<LayoutProps, LayoutState> {
-  state = {
-    recentSearches: [],
-  }
-
-  componentDidMount() {
-    API.getRecentSearches(5).then(searches => {
-      this.setState({
-        recentSearches: Object.keys(searches),
-      })
-    })
-  }
-
+export default class Layout extends Component<LayoutProps> {
   render() {
     const { children, className } = this.props
-    const { recentSearches } = this.state
 
     return (
       <section className="layout">
@@ -38,9 +22,9 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
         <footer>
           <div className="footer__recent-search-bar">
             <div className="footer__recent-search-bar__wrap">
-              <h4>Recent searches</h4>
+              <h4>Popular packages</h4>
               <ul className="footer__recent-search-list">
-                {recentSearches.map(search => (
+                {popularPackages.map(search => (
                   <li key={search}>
                     <Link href={`/package/${search}`}>{search}</Link>
                   </li>
