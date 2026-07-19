@@ -3,7 +3,10 @@ import path from 'path'
 
 import axios from 'axios'
 
-import { createPackageApiPath } from '../utils/packageApi.utils'
+import {
+  createPackageApiPath,
+  PackageCacheMode,
+} from '../utils/packageApi.utils'
 
 interface ProgressState {
   completed: Set<string>
@@ -252,7 +255,7 @@ async function buildPackage(
   } catch {}
 
   const url = `${API_BASE}${createPackageApiPath('size', key, {
-    cacheMode: 'force-rebuild',
+    cacheMode: PackageCacheMode.ForceRebuild,
     record: true,
   })}`
 
@@ -321,7 +324,7 @@ async function buildExports(
   } catch {}
 
   const url = `${API_BASE}${createPackageApiPath('exports-sizes', key, {
-    cacheMode: 'force-rebuild',
+    cacheMode: PackageCacheMode.ForceRebuild,
   })}`
 
   try {

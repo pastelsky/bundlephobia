@@ -4,6 +4,7 @@ import type {
   PackageMetadata,
 } from '../../types/package-domain'
 import Cache, { type CacheKey } from '../../utils/cache.utils'
+import { PackageCacheMode } from '../../utils/packageApi.utils'
 import type {
   PackageRequest,
   PackageSizeCacheResult,
@@ -44,7 +45,12 @@ export interface PackageBuildAbortSignal {
 interface PackageSizeServiceDependencies {
   cache?: PackageSizeCache
   resolvePackage?: PackageResolver
-  builder?: PackageSizeBuilder
+}
+
+interface PackageSizeBuildOptions {
+  builder: PackageSizeBuilder
+  priority: number
+  signal?: PackageBuildAbortSignal
 }
 
 function createPackageSizeCache(): PackageSizeCache {
@@ -73,38 +79,21 @@ function resolvedFromCachedResult(
 export class PackageSizeService {
   private readonly cache: PackageSizeCache
   private readonly resolvePackage: PackageResolver
-  private packageSizeBuilder?: PackageSizeBuilder
 
   constructor(dependencies: PackageSizeServiceDependencies = {}) {
     this.cache = dependencies.cache ?? createPackageSizeCache()
     this.resolvePackage = dependencies.resolvePackage ?? resolvePackageRequest
-    this.packageSizeBuilder = dependencies.builder
-  }
-
-  private async getPackageSizeBuilder(): Promise<PackageSizeBuilder> {
-    if (!this.packageSizeBuilder) {
-      const { buildService } = await import('../api/BuildService')
-      this.packageSizeBuilder = {
-        build: (packageString, priority) =>
-          buildService.getPackageBuildStats<PackageSizeBuild>(
-            packageString,
-            priority
-          ),
-        cancel: packageString =>
-          buildService.cancelPackageBuildStats(packageString),
-      }
-    }
-
-    return this.packageSizeBuilder
   }
 
   async findPackageSize(
     packageRequest: PackageRequest
   ): Promise<PackageSizeCacheResult> {
     const { name, cacheMode } = packageRequest
-    const shouldReadCache = cacheMode !== 'force-rebuild'
+    const shouldReadCache = cacheMode !== PackageCacheMode.ForceRebuild
     const exactRequestedVersion = getExactRequestedVersion(packageRequest)
 
+    // Exact versions can be looked up before npm resolution. This is the SSR
+    // fast path: a cache hit remains available even when npm is unavailable.
     if (shouldReadCache && exactRequestedVersion !== null) {
       const exactResult = await this.cache.get({
         name,
@@ -125,6 +114,8 @@ export class PackageSizeService {
 
     const resolvedPackage = await this.resolvePackage(packageRequest)
 
+    // Tags and version ranges must first resolve to one immutable version. A
+    // second cache read then checks that exact key without ever starting a build.
     if (shouldReadCache) {
       const exactVersionWasAlreadyChecked =
         exactRequestedVersion !== null &&
@@ -147,10 +138,8 @@ export class PackageSizeService {
 
   async buildPackageSize(
     resolvedPackage: ResolvedPackage,
-    priority: number,
-    signal?: PackageBuildAbortSignal
+    { builder, priority, signal }: PackageSizeBuildOptions
   ): Promise<PackageBuildResult> {
-    const builder = await this.getPackageSizeBuilder()
     const cancelBuild = () => builder.cancel(resolvedPackage.packageString)
 
     if (signal?.aborted) {
@@ -175,7 +164,10 @@ export class PackageSizeService {
       repository: resolvedPackage.repository,
     }
 
-    void this.cache.set(
+    // Cache the composed domain result for every successful build. This also
+    // replaces the old build-middleware force write, so legacy force requests
+    // and the normalized force-rebuild mode follow the same persistence path.
+    await this.cache.set(
       { name: resolvedPackage.name, version: resolvedPackage.version },
       result
     )

@@ -6,12 +6,12 @@ import {
   resolvePackage,
   type ResolvedPackageManifest,
 } from '../../utils/server.utils'
-import type { PackageCacheMode } from '../../utils/packageApi.utils'
+import { PackageCacheMode } from '../../utils/packageApi.utils'
 import type { PackageRequest, ResolvedPackage } from '../types'
 
 export function createPackageRequest(
   packageString: string,
-  cacheMode: PackageCacheMode = 'cache-first'
+  cacheMode: PackageCacheMode = PackageCacheMode.CacheFirst
 ): PackageRequest {
   return {
     ...parsePackageString(packageString),

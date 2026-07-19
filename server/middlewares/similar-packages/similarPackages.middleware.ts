@@ -80,6 +80,8 @@ async function stripMarkdown(readme: string): Promise<string> {
 }
 
 async function getPackageDetails(packageName: string) {
+  // Classification only consumes Algolia's description and keywords. The
+  // previous repository README fetch was returned here but never scored.
   const { body } = await got<AlgoliaPackageBody>(
     `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(
       packageName

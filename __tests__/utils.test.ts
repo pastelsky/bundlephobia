@@ -2,6 +2,7 @@ import { parsePackageString } from '../utils/common.utils'
 import {
   createPackageApiPath,
   isPackageCacheMode,
+  PackageCacheMode,
 } from '../utils/packageApi.utils'
 
 describe('parsePackageString', () => {
@@ -64,7 +65,7 @@ describe('package API request contract', () => {
   it('builds one encoded URL for package API callers', () => {
     expect(
       createPackageApiPath('size', '@scope/pkg@1.2.3', {
-        cacheMode: 'force-rebuild',
+        cacheMode: PackageCacheMode.ForceRebuild,
         record: true,
       })
     ).toBe(
@@ -73,9 +74,9 @@ describe('package API request contract', () => {
   })
 
   it('accepts only the shared cache modes', () => {
-    expect(isPackageCacheMode('cache-first')).toBe(true)
-    expect(isPackageCacheMode('force-rebuild')).toBe(true)
-    expect(isPackageCacheMode('cache-only')).toBe(true)
+    expect(isPackageCacheMode(PackageCacheMode.CacheFirst)).toBe(true)
+    expect(isPackageCacheMode(PackageCacheMode.ForceRebuild)).toBe(true)
+    expect(isPackageCacheMode(PackageCacheMode.CacheOnly)).toBe(true)
     expect(isPackageCacheMode('unknown')).toBe(false)
   })
 })

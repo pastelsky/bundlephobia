@@ -2,7 +2,9 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 
 import firebaseUtils from '../../../utils/firebase.utils'
+import { PackageCacheMode } from '../../../utils/packageApi.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
+import { buildService } from '../../api/BuildService'
 import type { PackageBuildResult } from '../../types'
 import config from '../../config'
 import logger from '../../Logger'
@@ -10,7 +12,20 @@ import {
   getExactRequestedVersion,
   requireResolvedPackage,
 } from '../../services/packageResolution.service'
-import { packageSizeService } from '../../services/packageSize.service'
+import {
+  packageSizeService,
+  type PackageSizeBuild,
+  type PackageSizeBuilder,
+} from '../../services/packageSize.service'
+
+const packageSizeBuilder: PackageSizeBuilder = {
+  build: (packageString, priority) =>
+    buildService.getPackageBuildStats<PackageSizeBuild>(
+      packageString,
+      priority
+    ),
+  cancel: packageString => buildService.cancelPackageBuildStats(packageString),
+}
 
 // Builds a package only after resolution and all cache stages miss.
 // Publishes and caches the complete size result for the HTTP response.
@@ -39,11 +54,11 @@ const buildMiddleware: Middleware = async ctx => {
 
   let body: PackageBuildResult
   try {
-    body = await packageSizeService.buildPackageSize(
-      resolvedPackage,
+    body = await packageSizeService.buildPackageSize(resolvedPackage, {
+      builder: packageSizeBuilder,
       priority,
-      abortController.signal
-    )
+      signal: abortController.signal,
+    })
   } finally {
     ctx.req.off('close', onAborted)
   }
@@ -51,7 +66,7 @@ const buildMiddleware: Middleware = async ctx => {
 
   ctx.cacheControl = {
     maxAge:
-      cacheMode === 'force-rebuild'
+      cacheMode === PackageCacheMode.ForceRebuild
         ? 0
         : getExactRequestedVersion(ctx.state.packageRequest) !== null
         ? config.CACHE.SIZE_API_HAS_VERSION

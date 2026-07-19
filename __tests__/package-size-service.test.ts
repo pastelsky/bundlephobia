@@ -1,5 +1,6 @@
 import type { PackageBuildInfo } from '../types/package-domain'
 import type { CacheKey } from '../utils/cache.utils'
+import { PackageCacheMode } from '../utils/packageApi.utils'
 import type { PackageRequest, ResolvedPackage } from '../server/types'
 import { createPackageRequest } from '../server/services/packageResolution.service'
 import {
@@ -53,16 +54,14 @@ function createService() {
       set: setCachedPackageSize,
     },
     resolvePackage: resolvePackageRequest,
-    builder: {
-      build,
-      cancel,
-    },
   })
+  const builder = { build, cancel }
 
   return {
     service,
     getCachedPackageSize,
     resolvePackageRequest,
+    builder,
     build,
     cancel,
   }
@@ -87,7 +86,7 @@ describe('PackageSizeService', () => {
   })
 
   it('returns a complete package size after a build', async () => {
-    const { service, build } = createService()
+    const { service, build, builder } = createService()
     const resolvedPackage: ResolvedPackage = {
       name: 'react',
       version: '18.2.0',
@@ -98,20 +97,20 @@ describe('PackageSizeService', () => {
     }
     build.mockResolvedValue(buildResult)
 
-    await expect(service.buildPackageSize(resolvedPackage, 7)).resolves.toEqual(
-      {
-        ...buildResult,
-        scoped: false,
-        name: 'react',
-        version: '18.2.0',
-        description: 'React',
-        repository: 'https://github.com/facebook/react.git',
-      }
-    )
+    await expect(
+      service.buildPackageSize(resolvedPackage, { builder, priority: 7 })
+    ).resolves.toEqual({
+      ...buildResult,
+      scoped: false,
+      name: 'react',
+      version: '18.2.0',
+      description: 'React',
+      repository: 'https://github.com/facebook/react.git',
+    })
   })
 
   it('keeps missing package metadata nullable after a build', async () => {
-    const { service, build } = createService()
+    const { service, build, builder } = createService()
     build.mockResolvedValue(buildResult)
 
     await expect(
@@ -124,7 +123,7 @@ describe('PackageSizeService', () => {
           description: null,
           repository: null,
         },
-        7
+        { builder, priority: 7 }
       )
     ).resolves.toEqual(
       expect.objectContaining({ description: null, repository: null })
@@ -146,7 +145,7 @@ describe('PackageSizeService', () => {
 
     await expect(
       service.findPackageSize(
-        createPackageRequest('react@18.2.0', 'force-rebuild')
+        createPackageRequest('react@18.2.0', PackageCacheMode.ForceRebuild)
       )
     ).resolves.toEqual({
       kind: 'cache-miss',
@@ -155,7 +154,7 @@ describe('PackageSizeService', () => {
   })
 
   it('propagates request aborts to the active package build', async () => {
-    const { service, build, cancel } = createService()
+    const { service, build, cancel, builder } = createService()
     let abortListener: (() => void) | undefined
     const signal: PackageBuildAbortSignal = {
       aborted: false,
@@ -182,8 +181,7 @@ describe('PackageSizeService', () => {
         repository: null,
         packageString: 'react@18.2.0',
       },
-      7,
-      signal
+      { builder, priority: 7, signal }
     )
 
     await Promise.resolve()

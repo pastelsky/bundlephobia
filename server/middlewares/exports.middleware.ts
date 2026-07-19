@@ -1,6 +1,7 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
+import { PackageCacheMode } from '../../utils/packageApi.utils'
 import { getRequestPriority } from '../../utils/server.utils'
 import { buildService } from '../api/BuildService'
 import config from '../config'
@@ -20,7 +21,7 @@ const exportsMiddleware: Middleware = async ctx => {
   )
   const { cacheMode } = ctx.state.packageRequest
 
-  if (cacheMode === 'cache-only') {
+  if (cacheMode === PackageCacheMode.CacheOnly) {
     ctx.status = 404
     return
   }
@@ -34,7 +35,7 @@ const exportsMiddleware: Middleware = async ctx => {
 
   ctx.cacheControl = {
     maxAge:
-      cacheMode === 'force-rebuild'
+      cacheMode === PackageCacheMode.ForceRebuild
         ? 0
         : getExactRequestedVersion(ctx.state.packageRequest) !== null
         ? config.CACHE.SIZE_API_HAS_VERSION

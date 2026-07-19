@@ -27,8 +27,8 @@ import exportsMiddlware from './server/middlewares/exports.middleware'
 import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
 import packageRequestMiddleware from './server/middlewares/results/packageRequest.middleware'
 import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
-import packageSizeCacheMiddleware from './server/middlewares/results/packageSizeCache.middleware'
-import cachedResponseMiddleware from './server/middlewares/results/cachedResponse.middleware'
+import packageSizeMiddleware from './server/middlewares/results/packageSize.middleware'
+import jsonCacheResponseMiddleware from './server/middlewares/results/jsonCacheResponse.middleware'
 import buildMiddleware from './server/middlewares/results/build.middleware'
 import errorMiddleware from './server/middlewares/results/error.middleware'
 import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
@@ -131,9 +131,7 @@ app.prepare().then(() => {
     '/api/size',
     packageRequestMiddleware,
     errorMiddleware,
-    packageSizeCacheMiddleware,
-    blockBlacklistMiddleware,
-    cachedResponseMiddleware,
+    packageSizeMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,
       maxRequests: 10,
@@ -170,7 +168,7 @@ app.prepare().then(() => {
     errorMiddleware,
     resolvePackageMiddleware,
     blockBlacklistMiddleware,
-    cachedResponseMiddleware,
+    jsonCacheResponseMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,
       maxRequests: 10,

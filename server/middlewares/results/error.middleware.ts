@@ -2,6 +2,7 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 import createDebug from 'debug'
 
+import { PackageCacheMode } from '../../../utils/packageApi.utils'
 import config from '../../config'
 import { failureCache } from '../../init'
 import logger from '../../Logger'
@@ -91,7 +92,10 @@ const errorHandler: Middleware = async (ctx, next) => {
   } catch (error) {
     console.error(error)
     ctx.cacheControl = {
-      maxAge: cacheMode === 'force-rebuild' ? 0 : config.CACHE.SIZE_API_ERROR,
+      maxAge:
+        cacheMode === PackageCacheMode.ForceRebuild
+          ? 0
+          : config.CACHE.SIZE_API_ERROR,
     }
 
     if (!(error instanceof Error)) {
@@ -141,7 +145,7 @@ const errorHandler: Middleware = async (ctx, next) => {
       case 'UnsupportedPackageError':
         ctx.cacheControl = {
           maxAge:
-            cacheMode === 'force-rebuild'
+            cacheMode === PackageCacheMode.ForceRebuild
               ? 0
               : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
         }
@@ -199,7 +203,7 @@ const errorHandler: Middleware = async (ctx, next) => {
 
         ctx.cacheControl = {
           maxAge:
-            cacheMode === 'force-rebuild'
+            cacheMode === PackageCacheMode.ForceRebuild
               ? 0
               : config.CACHE.SIZE_API_ERROR_FATAL,
         }
@@ -232,7 +236,7 @@ const errorHandler: Middleware = async (ctx, next) => {
 
         ctx.cacheControl = {
           maxAge:
-            cacheMode === 'force-rebuild'
+            cacheMode === PackageCacheMode.ForceRebuild
               ? 0
               : config.CACHE.SIZE_API_ERROR_FATAL,
         }
@@ -261,7 +265,7 @@ const errorHandler: Middleware = async (ctx, next) => {
 
         ctx.cacheControl = {
           maxAge:
-            cacheMode === 'force-rebuild'
+            cacheMode === PackageCacheMode.ForceRebuild
               ? 0
               : config.CACHE.SIZE_API_ERROR_FATAL,
         }

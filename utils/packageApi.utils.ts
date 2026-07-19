@@ -1,10 +1,10 @@
-export const PACKAGE_CACHE_MODES = [
-  'cache-first',
-  'force-rebuild',
-  'cache-only',
-] as const
+export enum PackageCacheMode {
+  CacheFirst = 'cache-first',
+  ForceRebuild = 'force-rebuild',
+  CacheOnly = 'cache-only',
+}
 
-export type PackageCacheMode = (typeof PACKAGE_CACHE_MODES)[number]
+export const PACKAGE_CACHE_MODES = Object.values(PackageCacheMode)
 export type PackageApiEndpoint =
   | 'size'
   | 'exports'
