@@ -32,7 +32,7 @@ interface PoolLike {
   ): { timeout(ms: number): Promise<unknown> }
 }
 
-export default class BuildService {
+class BuildService {
   constructor() {
     const operations = [
       {
@@ -149,3 +149,5 @@ export default class BuildService {
     )
   }
 }
+
+export const buildService = new BuildService()

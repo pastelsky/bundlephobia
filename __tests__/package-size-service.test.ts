@@ -1,7 +1,7 @@
 import type { PackageBuildInfo } from '../types/package-domain'
 import type { CacheKey } from '../utils/cache.utils'
-import type { ResolvedPackageManifest } from '../utils/server.utils'
-import { createRequestedPackage } from '../server/packageRequest'
+import type { RequestedPackage, ResolvedPackageState } from '../server/types'
+import { createRequestedPackage } from '../server/services/packageResolution.service'
 import {
   PackageSizeService,
   type PackageBuildAbortSignal,
@@ -41,43 +41,38 @@ function createService() {
     Promise<void>,
     [CacheKey, PackageBuildInfo]
   >()
-  const resolvePackageMetadata = jest.fn<
-    Promise<ResolvedPackageManifest>,
-    [string]
+  const resolveRequestedPackage = jest.fn<
+    Promise<ResolvedPackageState>,
+    [RequestedPackage]
   >()
-  const buildPackageSize = jest.fn<
-    Promise<PackageSizeBuild>,
-    [string, number]
-  >()
-  const cancelPackageBuild = jest.fn<void, [string]>()
+  const build = jest.fn<Promise<PackageSizeBuild>, [string, number]>()
+  const cancel = jest.fn<void, [string]>()
   const service = new PackageSizeService({
     cache: {
       get: getCachedPackageSize,
       set: setCachedPackageSize,
     },
-    resolvePackageMetadata,
-    buildPackageSize,
-    cancelPackageBuild,
+    resolvePackage: resolveRequestedPackage,
+    builder: {
+      build,
+      cancel,
+    },
   })
 
   return {
     service,
     getCachedPackageSize,
     setCachedPackageSize,
-    resolvePackageMetadata,
-    buildPackageSize,
-    cancelPackageBuild,
+    resolveRequestedPackage,
+    build,
+    cancel,
   }
 }
 
 describe('PackageSizeService', () => {
   it('answers exact-version cache hits without consulting npm', async () => {
-    const {
-      service,
-      getCachedPackageSize,
-      resolvePackageMetadata,
-      buildPackageSize,
-    } = createService()
+    const { service, getCachedPackageSize, resolveRequestedPackage, build } =
+      createService()
     getCachedPackageSize.mockResolvedValue(cachedResult)
 
     await expect(
@@ -87,23 +82,21 @@ describe('PackageSizeService', () => {
       result: cachedResult,
       resolved: expect.objectContaining({ packageString: 'react@18.2.0' }),
     })
-    expect(resolvePackageMetadata).not.toHaveBeenCalled()
-    expect(buildPackageSize).not.toHaveBeenCalled()
+    expect(resolveRequestedPackage).not.toHaveBeenCalled()
+    expect(build).not.toHaveBeenCalled()
   })
 
   it('returns an explicit cache miss without invoking the builder', async () => {
-    const {
-      service,
-      getCachedPackageSize,
-      resolvePackageMetadata,
-      buildPackageSize,
-    } = createService()
+    const { service, getCachedPackageSize, resolveRequestedPackage, build } =
+      createService()
     getCachedPackageSize.mockResolvedValue(undefined)
-    resolvePackageMetadata.mockResolvedValue({
+    resolveRequestedPackage.mockResolvedValue({
       name: 'react',
       version: '18.2.0',
+      scoped: false,
+      packageString: 'react@18.2.0',
       description: 'React',
-      repository: { url: 'git+https://github.com/facebook/react.git' },
+      repository: 'https://github.com/facebook/react.git',
     })
 
     await expect(
@@ -113,7 +106,7 @@ describe('PackageSizeService', () => {
       resolved: expect.objectContaining({ packageString: 'react@18.2.0' }),
     })
     expect(getCachedPackageSize).toHaveBeenCalledTimes(1)
-    expect(buildPackageSize).not.toHaveBeenCalled()
+    expect(build).not.toHaveBeenCalled()
   })
 
   it('builds and caches only when the caller explicitly requests a build', async () => {
@@ -121,17 +114,19 @@ describe('PackageSizeService', () => {
       service,
       getCachedPackageSize,
       setCachedPackageSize,
-      resolvePackageMetadata,
-      buildPackageSize,
+      resolveRequestedPackage,
+      build,
     } = createService()
     getCachedPackageSize.mockResolvedValue(undefined)
-    resolvePackageMetadata.mockResolvedValue({
+    resolveRequestedPackage.mockResolvedValue({
       name: 'react',
       version: '18.2.0',
+      scoped: false,
+      packageString: 'react@18.2.0',
       description: 'React',
-      repository: { url: 'git+https://github.com/facebook/react.git' },
+      repository: 'https://github.com/facebook/react.git',
     })
-    buildPackageSize.mockResolvedValue(buildResult)
+    build.mockResolvedValue(buildResult)
 
     const lookup = await service.lookupPackageSize(
       createRequestedPackage('react')
@@ -141,7 +136,7 @@ describe('PackageSizeService', () => {
 
     await service.buildPackageSize(lookup.resolved, 7)
 
-    expect(buildPackageSize).toHaveBeenCalledWith('react@18.2.0', 7)
+    expect(build).toHaveBeenCalledWith('react@18.2.0', 7)
     expect(setCachedPackageSize).toHaveBeenCalledWith(
       { name: 'react', version: '18.2.0' },
       expect.objectContaining({
@@ -153,11 +148,13 @@ describe('PackageSizeService', () => {
   })
 
   it('uses an explicit cache policy for forced builds', async () => {
-    const { service, getCachedPackageSize, resolvePackageMetadata } =
+    const { service, getCachedPackageSize, resolveRequestedPackage } =
       createService()
-    resolvePackageMetadata.mockResolvedValue({
+    resolveRequestedPackage.mockResolvedValue({
       name: 'react',
       version: '18.2.0',
+      scoped: false,
+      packageString: 'react@18.2.0',
       description: 'React',
       repository: '',
     })
@@ -168,11 +165,13 @@ describe('PackageSizeService', () => {
     )
 
     expect(getCachedPackageSize).not.toHaveBeenCalled()
-    expect(resolvePackageMetadata).toHaveBeenCalledWith('react@18.2.0')
+    expect(resolveRequestedPackage).toHaveBeenCalledWith(
+      createRequestedPackage('react@18.2.0')
+    )
   })
 
   it('propagates request aborts to the active package build', async () => {
-    const { service, buildPackageSize, cancelPackageBuild } = createService()
+    const { service, build, cancel } = createService()
     let abortListener: (() => void) | undefined
     const signal: PackageBuildAbortSignal = {
       aborted: false,
@@ -184,7 +183,7 @@ describe('PackageSizeService', () => {
       },
     }
     let finishBuild: ((value: PackageSizeBuild) => void) | undefined
-    buildPackageSize.mockReturnValue(
+    build.mockReturnValue(
       new Promise(resolve => {
         finishBuild = resolve
       })
@@ -205,7 +204,7 @@ describe('PackageSizeService', () => {
 
     await Promise.resolve()
     abortListener?.()
-    expect(cancelPackageBuild).toHaveBeenCalledWith('react@18.2.0')
+    expect(cancel).toHaveBeenCalledWith('react@18.2.0')
 
     finishBuild?.(buildResult)
     await buildPromise

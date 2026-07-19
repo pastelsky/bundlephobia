@@ -7,11 +7,13 @@ import { getRequestPriority } from '../../../utils/server.utils'
 import type { PackageBuildResult } from '../../types'
 import config from '../../config'
 import logger from '../../Logger'
+import { requireResolvedPackage } from '../../services/packageResolution.service'
 import { packageSizeService } from '../../services/packageSize.service'
 
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
-  const { name, version, packageString } = ctx.state.resolved
+  const resolved = requireResolvedPackage(ctx.state.resolved)
+  const { name, version, packageString } = resolved
   const { record } = ctx.query
   const { forceBuild } = ctx.state.packageRequestPolicy
 
@@ -34,7 +36,7 @@ const buildMiddleware: Middleware = async ctx => {
   let body: PackageBuildResult
   try {
     body = await packageSizeService.buildPackageSize(
-      ctx.state.resolved,
+      resolved,
       priority,
       abortController.signal
     )

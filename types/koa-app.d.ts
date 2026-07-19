@@ -14,7 +14,7 @@ declare module 'koa' {
     id?: string
     requestedPackage: RequestedPackage
     packageRequestPolicy: PackageRequestPolicy
-    resolved: ResolvedPackageState
+    resolved?: ResolvedPackageState
     packageSizeLookup?: PackageSizeLookup
     buildResult?: PackageBuildResult
   }

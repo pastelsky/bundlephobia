@@ -33,7 +33,8 @@ import ExportAnalysisSection from './components/ExportAnalysisSection'
 import InterLinksSection from './components/InterLinksSection'
 import SimilarPackagesSection from './components/SimilarPackagesSection'
 import TreemapSection from './components/TreemapSection'
-import { createRequestedPackage } from '../../../server/packageRequest'
+import config from '../../../server/config'
+import { createRequestedPackage } from '../../../server/services/packageResolution.service'
 import { packageSizeService } from '../../../server/services/packageSize.service'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
@@ -619,7 +620,8 @@ export const getServerSideProps = async (
   // run for Next.js page responses handled by the catch-all Koa route.
   context.res.setHeader(
     'Cache-Control',
-    'public, s-maxage=300, stale-while-revalidate=86400'
+    `public, s-maxage=${config.CACHE.PACKAGE_PAGE_SHARED}, ` +
+      `stale-while-revalidate=${config.CACHE.PACKAGE_PAGE_STALE}`
   )
 
   if (!packageString) {

@@ -2,13 +2,11 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 
 import { debug, logger } from '../../init'
-import { packageSizeService } from '../../services/packageSize.service'
+import { resolveRequestedPackage } from '../../services/packageResolution.service'
 
 const resolvePackageMiddleware: Middleware = async (ctx, next) => {
   const resolveStart = now()
-  const resolved = await packageSizeService.resolvePackage(
-    ctx.state.requestedPackage
-  )
+  const resolved = await resolveRequestedPackage(ctx.state.requestedPackage)
   const resolveEnd = now()
   ctx.state.resolved = resolved
 

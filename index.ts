@@ -39,6 +39,7 @@ import buildMissRateLimit from './server/middlewares/buildMissRateLimit.middlewa
 import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
+import { requireResolvedPackage } from './server/services/packageResolution.service'
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
@@ -155,10 +156,10 @@ app.prepare().then(() => {
     jsonCacheMiddleware({
       get: (key: Key) => cache.getExportsSize(key),
       set: (key: Key, value: string) => cache.setExportsSize(key, value),
-      hash: (ctx: Context) => ({
-        name: ctx.state.resolved.name,
-        version: ctx.state.resolved.version,
-      }),
+      hash: (ctx: Context) => {
+        const resolved = requireResolvedPackage(ctx.state.resolved)
+        return { name: resolved.name, version: resolved.version }
+      },
     }),
     errorMiddleware,
     resolvePackageMiddleware,

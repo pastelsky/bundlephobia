@@ -4,6 +4,7 @@ import semver from 'semver'
 import config from '../../config'
 import { debug, failureCache } from '../../init'
 import logger from '../../Logger'
+import { requireResolvedPackage } from '../../services/packageResolution.service'
 
 const cachedResponse: Middleware = async (ctx, next) => {
   const { forceBuild, cacheOnly } = ctx.state.packageRequestPolicy
@@ -12,7 +13,9 @@ const cachedResponse: Middleware = async (ctx, next) => {
     return
   }
 
-  const { name, version, packageString } = ctx.state.resolved
+  const { name, version, packageString } = requireResolvedPackage(
+    ctx.state.resolved
+  )
 
   const logCache = ({
     hit,

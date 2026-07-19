@@ -43,6 +43,21 @@ const errorHandler: Middleware = async (ctx, next) => {
   const { forceBuild } = ctx.state.packageRequestPolicy
   const start = now()
 
+  const getPackageContext = () => {
+    if (ctx.state.resolved) return ctx.state.resolved
+
+    const requested = ctx.state.requestedPackage
+    const version = requested.version ?? 'latest'
+    return {
+      name: requested.name,
+      version,
+      scoped: requested.scoped,
+      packageString: `${requested.name}@${version}`,
+      description: '',
+      repository: '',
+    }
+  }
+
   const respondWithError = (
     status: number,
     {
@@ -55,6 +70,7 @@ const errorHandler: Middleware = async (ctx, next) => {
       details?: unknown
     }
   ) => {
+    const packageContext = getPackageContext()
     ctx.status = status
     ctx.body = {
       error: { code, message, details },
@@ -66,10 +82,10 @@ const errorHandler: Middleware = async (ctx, next) => {
         type: code,
         requestId: ctx.state.id,
         time: now() - start,
-        ...ctx.state.resolved,
+        ...packageContext,
         details,
       },
-      `${code} ${ctx.state.resolved.packageString}`
+      `${code} ${packageContext.packageString}`
     )
   }
 
@@ -108,7 +124,7 @@ const errorHandler: Middleware = async (ctx, next) => {
     }
 
     const err = error as BuildErrorShape
-    const packageString = ctx.state.resolved.packageString
+    const packageString = getPackageContext().packageString
 
     switch (err.name) {
       case 'BlocklistedPackageError':

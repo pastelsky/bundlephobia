@@ -1,9 +1,6 @@
 import type { Middleware } from 'koa'
 
-import {
-  createPendingPackageResolution,
-  createRequestedPackage,
-} from '../../packageRequest'
+import { createRequestedPackage } from '../../services/packageResolution.service'
 
 const packageRequestMiddleware: Middleware = async (ctx, next) => {
   const packageQuery = ctx.query.package
@@ -20,9 +17,8 @@ const packageRequestMiddleware: Middleware = async (ctx, next) => {
   ctx.state.packageRequestPolicy = {
     forceBuild: ctx.query.force !== undefined,
     cacheOnly: ctx.query.peep !== undefined,
+    peekOnly: ctx.query.peek !== undefined,
   }
-  ctx.state.resolved = createPendingPackageResolution(requestedPackage)
-
   await next()
 }
 

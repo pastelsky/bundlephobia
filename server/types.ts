@@ -30,6 +30,7 @@ export interface RequestedPackage extends ParsedPackageString {
 export interface PackageRequestPolicy {
   forceBuild: boolean
   cacheOnly: boolean
+  peekOnly: boolean
 }
 
 export type PackageSizeLookup =

@@ -1,4 +1,3 @@
-import gitURLParse from 'git-url-parse'
 import semver from 'semver'
 
 import type {
@@ -7,12 +6,12 @@ import type {
   PackageMetadata,
 } from '../../types/package-domain'
 import Cache, { type CacheKey } from '../../utils/cache.utils'
-import { resolvePackage } from '../../utils/server.utils'
 import type {
   PackageSizeLookup,
   RequestedPackage,
   ResolvedPackageState,
 } from '../types'
+import { resolveRequestedPackage } from './packageResolution.service'
 
 export type PackageSizeCachePolicy = 'read' | 'bypass'
 
@@ -26,12 +25,12 @@ export interface PackageSizeCache {
   set(key: CacheKey, result: PackageBuildInfo): Promise<void>
 }
 
-export type PackageMetadataResolver = typeof resolvePackage
-export type PackageSizeBuilder = (
-  packageString: string,
-  priority: number
-) => Promise<PackageSizeBuild>
-export type PackageBuildCanceler = (packageString: string) => void
+export type RequestedPackageResolver = typeof resolveRequestedPackage
+
+export interface PackageSizeBuilder {
+  build(packageString: string, priority: number): Promise<PackageSizeBuild>
+  cancel(packageString: string): void
+}
 
 export interface PackageBuildAbortSignal {
   readonly aborted: boolean
@@ -45,9 +44,8 @@ export interface PackageBuildAbortSignal {
 
 interface PackageSizeServiceDependencies {
   cache?: PackageSizeCache
-  resolvePackageMetadata?: PackageMetadataResolver
-  buildPackageSize?: PackageSizeBuilder
-  cancelPackageBuild?: PackageBuildCanceler
+  resolvePackage?: RequestedPackageResolver
+  builder?: PackageSizeBuilder
 }
 
 function createPackageSizeCache(): PackageSizeCache {
@@ -57,27 +55,6 @@ function createPackageSizeCache(): PackageSizeCache {
     get: key => cache.getPackageSize<PackageBuildInfo>(key),
     set: (key, result) => cache.setPackageSize(key, result),
   }
-}
-
-function normalizeRepositoryUrl(
-  repository: string | { url?: string } | undefined
-) {
-  if (!repository) return ''
-
-  try {
-    const rawRepository =
-      typeof repository === 'string' ? repository : repository.url ?? ''
-    return gitURLParse(rawRepository).toString('https')
-  } catch {
-    return ''
-  }
-}
-
-function truncateDescription(description: string | undefined) {
-  if (!description) return ''
-  return description.length > 300
-    ? `${description.substring(0, 300)}…`
-    : description
 }
 
 function resolvedFromCachedResult(
@@ -96,49 +73,30 @@ function resolvedFromCachedResult(
 
 export class PackageSizeService {
   private readonly cache: PackageSizeCache
-  private readonly resolvePackageMetadata: PackageMetadataResolver
+  private readonly resolvePackage: RequestedPackageResolver
   private packageSizeBuilder?: PackageSizeBuilder
-  private cancelPackageBuild?: PackageBuildCanceler
 
   constructor(dependencies: PackageSizeServiceDependencies = {}) {
     this.cache = dependencies.cache ?? createPackageSizeCache()
-    this.resolvePackageMetadata =
-      dependencies.resolvePackageMetadata ?? resolvePackage
-    this.packageSizeBuilder = dependencies.buildPackageSize
-    this.cancelPackageBuild = dependencies.cancelPackageBuild
+    this.resolvePackage = dependencies.resolvePackage ?? resolveRequestedPackage
+    this.packageSizeBuilder = dependencies.builder
   }
 
   private async getPackageSizeBuilder(): Promise<PackageSizeBuilder> {
     if (!this.packageSizeBuilder) {
-      const { default: BuildService } = await import('../api/BuildService')
-      const buildService = new BuildService()
-      this.packageSizeBuilder = (packageString, priority) =>
-        buildService.getPackageBuildStats<PackageSizeBuild>(
-          packageString,
-          priority
-        )
-      this.cancelPackageBuild = packageString =>
-        buildService.cancelPackageBuildStats(packageString)
+      const { buildService } = await import('../api/BuildService')
+      this.packageSizeBuilder = {
+        build: (packageString, priority) =>
+          buildService.getPackageBuildStats<PackageSizeBuild>(
+            packageString,
+            priority
+          ),
+        cancel: packageString =>
+          buildService.cancelPackageBuildStats(packageString),
+      }
     }
 
     return this.packageSizeBuilder
-  }
-
-  async resolvePackage(
-    requestedPackage: RequestedPackage
-  ): Promise<ResolvedPackageState> {
-    const manifest = await this.resolvePackageMetadata(
-      requestedPackage.packageString
-    )
-
-    return {
-      name: manifest.name,
-      version: manifest.version,
-      scoped: requestedPackage.scoped,
-      packageString: `${manifest.name}@${manifest.version}`,
-      description: truncateDescription(manifest.description),
-      repository: normalizeRepositoryUrl(manifest.repository),
-    }
   }
 
   async lookupPackageSize(
@@ -188,8 +146,8 @@ export class PackageSizeService {
     priority: number,
     signal?: PackageBuildAbortSignal
   ): Promise<PackageBuildResult> {
-    const buildPackageSize = await this.getPackageSizeBuilder()
-    const cancelBuild = () => this.cancelPackageBuild?.(resolved.packageString)
+    const builder = await this.getPackageSizeBuilder()
+    const cancelBuild = () => builder.cancel(resolved.packageString)
 
     if (signal?.aborted) {
       cancelBuild()
@@ -199,7 +157,7 @@ export class PackageSizeService {
     signal?.addEventListener('abort', cancelBuild, { once: true })
     let buildResult: PackageSizeBuild
     try {
-      buildResult = await buildPackageSize(resolved.packageString, priority)
+      buildResult = await builder.build(resolved.packageString, priority)
     } finally {
       signal?.removeEventListener('abort', cancelBuild)
     }
