@@ -362,7 +362,3 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
     )
   }
 }
-
-export const getServerSideProps = () => {
-  return { props: {} }
-}
