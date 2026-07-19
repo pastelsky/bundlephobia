@@ -2202,7 +2202,7 @@ __metadata:
 
 "@fastify/busboy@npm:^3.0.0":
   version: 3.0.0
-  resolution: "@fastify/busboy@npm:3.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40fastify%2Fbusboy%2F-%2Fbusboy-3.0.0.tgz"
+  resolution: "@fastify/busboy@npm:3.0.0"
   checksum: ecc23afc7ca5c2c1d82fa7baf88c0847dc238d3020d11462e5c8e49fd380a4c90f5b7744b9efe013fb866f1eb34972d472e54fcc83b480f99bf7ee498daa6617
   languageName: node
   linkType: hard
@@ -2263,7 +2263,7 @@ __metadata:
 
 "@firebase/app-check-interop-types@npm:0.3.2":
   version: 0.3.2
-  resolution: "@firebase/app-check-interop-types@npm:0.3.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40firebase%2Fapp-check-interop-types%2F-%2Fapp-check-interop-types-0.3.2.tgz"
+  resolution: "@firebase/app-check-interop-types@npm:0.3.2"
   checksum: 7f1d25bc6cef3e4a209e6db096f6088b132b80f59947026af269406bdfbf140f391aeb94e68ecb4f524b4382b7217cc500cc068eeaf834e9665b7793177cc3f8
   languageName: node
   linkType: hard
@@ -2308,7 +2308,7 @@ __metadata:
 
 "@firebase/app-types@npm:0.9.2":
   version: 0.9.2
-  resolution: "@firebase/app-types@npm:0.9.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40firebase%2Fapp-types%2F-%2Fapp-types-0.9.2.tgz"
+  resolution: "@firebase/app-types@npm:0.9.2"
   checksum: 6bc78395ecadbf4958f1300ce9eb1d80522f05531acbacd88220fb77f4b924355bc920afe7f09c29acc40f374380e36539647604e1dab2fea045622b24988441
   languageName: node
   linkType: hard
@@ -2347,7 +2347,7 @@ __metadata:
 
 "@firebase/auth-interop-types@npm:0.2.3":
   version: 0.2.3
-  resolution: "@firebase/auth-interop-types@npm:0.2.3::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40firebase%2Fauth-interop-types%2F-%2Fauth-interop-types-0.2.3.tgz"
+  resolution: "@firebase/auth-interop-types@npm:0.2.3"
   checksum: a3e72134a5ba177c87e2a35064f88ec6e9272f582c0754664edaabf23e2dcc1e8f9b70f78521c128d20c8ed060e857f333a9c6d5b463e6612bddef01b070da06
   languageName: node
   linkType: hard
@@ -2392,7 +2392,7 @@ __metadata:
 
 "@firebase/component@npm:0.6.9":
   version: 0.6.9
-  resolution: "@firebase/component@npm:0.6.9::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40firebase%2Fcomponent%2F-%2Fcomponent-0.6.9.tgz"
+  resolution: "@firebase/component@npm:0.6.9"
   dependencies:
     "@firebase/util": "npm:1.10.0"
     tslib: "npm:^2.1.0"
@@ -2412,7 +2412,7 @@ __metadata:
 
 "@firebase/database-compat@npm:^1.0.2":
   version: 1.0.8
-  resolution: "@firebase/database-compat@npm:1.0.8::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40firebase%2Fdatabase-compat%2F-%2Fdatabase-compat-1.0.8.tgz"
+  resolution: "@firebase/database-compat@npm:1.0.8"
   dependencies:
     "@firebase/component": "npm:0.6.9"
     "@firebase/database": "npm:1.0.8"
@@ -2460,7 +2460,7 @@ __metadata:
 
 "@firebase/database-types@npm:1.0.5, @firebase/database-types@npm:^1.0.0":
   version: 1.0.5
-  resolution: "@firebase/database-types@npm:1.0.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40firebase%2Fdatabase-types%2F-%2Fdatabase-types-1.0.5.tgz"
+  resolution: "@firebase/database-types@npm:1.0.5"
   dependencies:
     "@firebase/app-types": "npm:0.9.2"
     "@firebase/util": "npm:1.10.0"
@@ -2485,7 +2485,7 @@ __metadata:
 
 "@firebase/database@npm:1.0.8":
   version: 1.0.8
-  resolution: "@firebase/database@npm:1.0.8::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40firebase%2Fdatabase%2F-%2Fdatabase-1.0.8.tgz"
+  resolution: "@firebase/database@npm:1.0.8"
   dependencies:
     "@firebase/app-check-interop-types": "npm:0.3.2"
     "@firebase/auth-interop-types": "npm:0.2.3"
@@ -2600,7 +2600,7 @@ __metadata:
 
 "@firebase/logger@npm:0.4.2":
   version: 0.4.2
-  resolution: "@firebase/logger@npm:0.4.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40firebase%2Flogger%2F-%2Flogger-0.4.2.tgz"
+  resolution: "@firebase/logger@npm:0.4.2"
   dependencies:
     tslib: "npm:^2.1.0"
   checksum: bec040b451ac10fa2dbec54e262093eedab7a684d2f2c80f2549e918db6c4b2091ff7fc1f70f6cd1ec65564dc3b8f9b9d1b4dbfb9708b7ae2b9fd856ee764b3a
@@ -2729,7 +2729,7 @@ __metadata:
 
 "@firebase/util@npm:1.10.0":
   version: 1.10.0
-  resolution: "@firebase/util@npm:1.10.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40firebase%2Futil%2F-%2Futil-1.10.0.tgz"
+  resolution: "@firebase/util@npm:1.10.0"
   dependencies:
     tslib: "npm:^2.1.0"
   checksum: fc152a2cbdd06323f57f66c90cd388369e48e8910d589127f2ea76ca415c43c1c59b5b7b240307ae18f7f4c9cf0f97c71cb06e5ed8cba770b70958903ec52571
@@ -2783,7 +2783,7 @@ __metadata:
 
 "@google-cloud/firestore@npm:^7.7.0":
   version: 7.10.0
-  resolution: "@google-cloud/firestore@npm:7.10.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40google-cloud%2Ffirestore%2F-%2Ffirestore-7.10.0.tgz"
+  resolution: "@google-cloud/firestore@npm:7.10.0"
   dependencies:
     "@opentelemetry/api": "npm:^1.3.0"
     fast-deep-equal: "npm:^3.1.1"
@@ -2796,7 +2796,7 @@ __metadata:
 
 "@google-cloud/paginator@npm:^5.0.0":
   version: 5.0.2
-  resolution: "@google-cloud/paginator@npm:5.0.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40google-cloud%2Fpaginator%2F-%2Fpaginator-5.0.2.tgz"
+  resolution: "@google-cloud/paginator@npm:5.0.2"
   dependencies:
     arrify: "npm:^2.0.0"
     extend: "npm:^3.0.2"
@@ -2806,21 +2806,14 @@ __metadata:
 
 "@google-cloud/projectify@npm:^4.0.0":
   version: 4.0.0
-  resolution: "@google-cloud/projectify@npm:4.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40google-cloud%2Fprojectify%2F-%2Fprojectify-4.0.0.tgz"
+  resolution: "@google-cloud/projectify@npm:4.0.0"
   checksum: 0d0a6ceca76a138973fcb3ad577f209acdbd9d9aed1c645b09f98d5e5a258053dbbe6c1f13e6f85310cc0d9308f5f3a84f8fa4f1a132549a68d86174fb21067f
   languageName: node
   linkType: hard
 
-"@google-cloud/promisify@npm:<4.1.0":
+"@google-cloud/promisify@npm:<4.1.0, @google-cloud/promisify@npm:^4.0.0":
   version: 4.0.0
   resolution: "@google-cloud/promisify@npm:4.0.0"
-  checksum: 4332cbd923d7c6943ecdf46f187f1417c84bb9c801525cd74d719c766bfaad650f7964fb74576345f6537b6d6273a4f2992c8d79ebec6c8b8401b23d626b8dd3
-  languageName: node
-  linkType: hard
-
-"@google-cloud/promisify@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "@google-cloud/promisify@npm:4.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40google-cloud%2Fpromisify%2F-%2Fpromisify-4.0.0.tgz"
   checksum: 4332cbd923d7c6943ecdf46f187f1417c84bb9c801525cd74d719c766bfaad650f7964fb74576345f6537b6d6273a4f2992c8d79ebec6c8b8401b23d626b8dd3
   languageName: node
   linkType: hard
@@ -2850,7 +2843,7 @@ __metadata:
 
 "@google-cloud/storage@npm:^7.7.0":
   version: 7.13.0
-  resolution: "@google-cloud/storage@npm:7.13.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40google-cloud%2Fstorage%2F-%2Fstorage-7.13.0.tgz"
+  resolution: "@google-cloud/storage@npm:7.13.0"
   dependencies:
     "@google-cloud/paginator": "npm:^5.0.0"
     "@google-cloud/projectify": "npm:^4.0.0"
@@ -2873,7 +2866,7 @@ __metadata:
 
 "@grpc/grpc-js@npm:^1.10.9":
   version: 1.12.2
-  resolution: "@grpc/grpc-js@npm:1.12.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40grpc%2Fgrpc-js%2F-%2Fgrpc-js-1.12.2.tgz"
+  resolution: "@grpc/grpc-js@npm:1.12.2"
   dependencies:
     "@grpc/proto-loader": "npm:^0.7.13"
     "@js-sdsl/ordered-map": "npm:^4.4.2"
@@ -2923,7 +2916,7 @@ __metadata:
 
 "@grpc/proto-loader@npm:^0.7.13":
   version: 0.7.13
-  resolution: "@grpc/proto-loader@npm:0.7.13::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40grpc%2Fproto-loader%2F-%2Fproto-loader-0.7.13.tgz"
+  resolution: "@grpc/proto-loader@npm:0.7.13"
   dependencies:
     lodash.camelcase: "npm:^4.3.0"
     long: "npm:^5.0.0"
@@ -3572,7 +3565,7 @@ __metadata:
 
 "@js-sdsl/ordered-map@npm:^4.4.2":
   version: 4.4.2
-  resolution: "@js-sdsl/ordered-map@npm:4.4.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40js-sdsl%2Fordered-map%2F-%2Fordered-map-4.4.2.tgz"
+  resolution: "@js-sdsl/ordered-map@npm:4.4.2"
   checksum: cc7e15dc4acf6d9ef663757279600bab70533d847dcc1ab01332e9e680bd30b77cdf9ad885cc774276f51d98b05a013571c940e5b360985af5eb798dc1a2ee2b
   languageName: node
   linkType: hard
@@ -3918,7 +3911,7 @@ __metadata:
 
 "@opentelemetry/api@npm:^1.3.0":
   version: 1.9.0
-  resolution: "@opentelemetry/api@npm:1.9.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40opentelemetry%2Fapi%2F-%2Fapi-1.9.0.tgz"
+  resolution: "@opentelemetry/api@npm:1.9.0"
   checksum: 9aae2fe6e8a3a3eeb6c1fdef78e1939cf05a0f37f8a4fae4d6bf2e09eb1e06f966ece85805626e01ba5fab48072b94f19b835449e58b6d26720ee19a58298add
   languageName: node
   linkType: hard
@@ -5214,7 +5207,7 @@ __metadata:
 
 "@types/caseless@npm:*":
   version: 0.12.5
-  resolution: "@types/caseless@npm:0.12.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Fcaseless%2F-%2Fcaseless-0.12.5.tgz"
+  resolution: "@types/caseless@npm:0.12.5"
   checksum: b1f8b8a38ce747b643115d37a40ea824c658bd7050e4b69427a10e9d12d1606ed17a0f6018241c08291cd59f70aeb3c1f3754ad61e45f8dbba708ec72dde7ec8
   languageName: node
   linkType: hard
@@ -5311,7 +5304,7 @@ __metadata:
 
 "@types/express@npm:^4.17.17":
   version: 4.17.21
-  resolution: "@types/express@npm:4.17.21::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Fexpress%2F-%2Fexpress-4.17.21.tgz"
+  resolution: "@types/express@npm:4.17.21"
   dependencies:
     "@types/body-parser": "npm:*"
     "@types/express-serve-static-core": "npm:^4.17.33"
@@ -5411,7 +5404,7 @@ __metadata:
 
 "@types/jsonwebtoken@npm:^9.0.2":
   version: 9.0.7
-  resolution: "@types/jsonwebtoken@npm:9.0.7::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Fjsonwebtoken%2F-%2Fjsonwebtoken-9.0.7.tgz"
+  resolution: "@types/jsonwebtoken@npm:9.0.7"
   dependencies:
     "@types/node": "npm:*"
   checksum: e1cd0e48fcae21b1d4378887a23453bd7212b480a131b11bcda2cdeb0687d03c9646ee5ba592e04cfaf76f7cc80f179950e627cdb3ebc90a5923bce49a35631a
@@ -5558,14 +5551,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/long@npm:^4.0.0":
-  version: 4.0.2
-  resolution: "@types/long@npm:4.0.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Flong%2F-%2Flong-4.0.2.tgz"
-  checksum: 42ec66ade1f72ff9d143c5a519a65efc7c1c77be7b1ac5455c530ae9acd87baba065542f8847522af2e3ace2cc999f3ad464ef86e6b7352eece34daf88f8c924
-  languageName: node
-  linkType: hard
-
-"@types/long@npm:^4.0.1":
+"@types/long@npm:^4.0.0, @types/long@npm:^4.0.1":
   version: 4.0.2
   resolution: "@types/long@npm:4.0.2"
   checksum: 42ec66ade1f72ff9d143c5a519a65efc7c1c77be7b1ac5455c530ae9acd87baba065542f8847522af2e3ace2cc999f3ad464ef86e6b7352eece34daf88f8c924
@@ -5621,7 +5607,7 @@ __metadata:
 
 "@types/node@npm:^22.0.1":
   version: 22.7.5
-  resolution: "@types/node@npm:22.7.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Fnode%2F-%2Fnode-22.7.5.tgz"
+  resolution: "@types/node@npm:22.7.5"
   dependencies:
     undici-types: "npm:~6.19.2"
   checksum: cf11f74f1a26053ec58066616e3a8685b6bcd7259bc569738b8f752009f9f0f7f85a1b2d24908e5b0f752482d1e8b6babdf1fbb25758711ec7bb9500bfcd6e60
@@ -5669,7 +5655,7 @@ __metadata:
 
 "@types/progress-stream@npm:^2":
   version: 2.0.5
-  resolution: "@types/progress-stream@npm:2.0.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Fprogress-stream%2F-%2Fprogress-stream-2.0.5.tgz"
+  resolution: "@types/progress-stream@npm:2.0.5"
   dependencies:
     "@types/node": "npm:*"
   checksum: 8d4e80b660621958e5045cc212f47d99a00759680a71bf3ff8aa700407965da2653dbeb636e1f0cda87ee6e487ad26b58666386960fd713dbdcc6e1eb5a9ccd7
@@ -5737,7 +5723,7 @@ __metadata:
 
 "@types/request@npm:^2.48.8":
   version: 2.48.12
-  resolution: "@types/request@npm:2.48.12::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Frequest%2F-%2Frequest-2.48.12.tgz"
+  resolution: "@types/request@npm:2.48.12"
   dependencies:
     "@types/caseless": "npm:*"
     "@types/node": "npm:*"
@@ -5798,7 +5784,7 @@ __metadata:
 
 "@types/stream-chain@npm:*":
   version: 2.1.0
-  resolution: "@types/stream-chain@npm:2.1.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Fstream-chain%2F-%2Fstream-chain-2.1.0.tgz"
+  resolution: "@types/stream-chain@npm:2.1.0"
   dependencies:
     "@types/node": "npm:*"
   checksum: b9acf2740068c20defed8a0066040375d7b75ce3f51100b61b888c9425818d92ef794110468350f51109d9c1aa890a645953abe8fcb25a57ee4e86a19559bda4
@@ -5807,7 +5793,7 @@ __metadata:
 
 "@types/stream-json@npm:^1":
   version: 1.7.7
-  resolution: "@types/stream-json@npm:1.7.7::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Fstream-json%2F-%2Fstream-json-1.7.7.tgz"
+  resolution: "@types/stream-json@npm:1.7.7"
   dependencies:
     "@types/node": "npm:*"
     "@types/stream-chain": "npm:*"
@@ -5817,7 +5803,7 @@ __metadata:
 
 "@types/tough-cookie@npm:*":
   version: 4.0.5
-  resolution: "@types/tough-cookie@npm:4.0.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2F%40types%2Ftough-cookie%2F-%2Ftough-cookie-4.0.5.tgz"
+  resolution: "@types/tough-cookie@npm:4.0.5"
   checksum: 68c6921721a3dcb40451543db2174a145ef915bc8bcbe7ad4e59194a0238e776e782b896c7a59f4b93ac6acefca9161fccb31d1ce3b3445cb6faa467297fb473
   languageName: node
   linkType: hard
@@ -6328,7 +6314,7 @@ __metadata:
 
 "agent-base@npm:^7.0.2":
   version: 7.1.1
-  resolution: "agent-base@npm:7.1.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fagent-base%2F-%2Fagent-base-7.1.1.tgz"
+  resolution: "agent-base@npm:7.1.1"
   dependencies:
     debug: "npm:^4.3.4"
   checksum: e59ce7bed9c63bf071a30cc471f2933862044c97fd9958967bfe22521d7a0f601ce4ed5a8c011799d0c726ca70312142ae193bbebb60f576b52be19d4a363b50
@@ -6900,7 +6886,7 @@ __metadata:
 
 "arrify@npm:^2.0.0":
   version: 2.0.1
-  resolution: "arrify@npm:2.0.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Farrify%2F-%2Farrify-2.0.1.tgz"
+  resolution: "arrify@npm:2.0.1"
   checksum: 3fb30b5e7c37abea1907a60b28a554d2f0fc088757ca9bf5b684786e583fdf14360721eb12575c1ce6f995282eab936712d3c4389122682eafab0e0b57f78dbb
   languageName: node
   linkType: hard
@@ -7008,7 +6994,7 @@ __metadata:
 
 "async-retry@npm:^1.3.3":
   version: 1.3.3
-  resolution: "async-retry@npm:1.3.3::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fasync-retry%2F-%2Fasync-retry-1.3.3.tgz"
+  resolution: "async-retry@npm:1.3.3"
   dependencies:
     retry: "npm:0.13.1"
   checksum: cabced4fb46f8737b95cc88dc9c0ff42656c62dc83ce0650864e891b6c155a063af08d62c446269b51256f6fbcb69a6563b80e76d0ea4a5117b0c0377b6b19d8
@@ -7294,16 +7280,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"base64-js@npm:^1.0.2, base64-js@npm:^1.3.1":
+"base64-js@npm:^1.0.2, base64-js@npm:^1.3.0, base64-js@npm:^1.3.1":
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
-  checksum: f23823513b63173a001030fae4f2dabe283b99a9d324ade3ad3d148e218134676f1ee8568c877cd79ec1c53158dcf2d2ba527a97c606618928ba99dd930102bf
-  languageName: node
-  linkType: hard
-
-"base64-js@npm:^1.3.0":
-  version: 1.5.1
-  resolution: "base64-js@npm:1.5.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fbase64-js%2F-%2Fbase64-js-1.5.1.tgz"
   checksum: f23823513b63173a001030fae4f2dabe283b99a9d324ade3ad3d148e218134676f1ee8568c877cd79ec1c53158dcf2d2ba527a97c606618928ba99dd930102bf
   languageName: node
   linkType: hard
@@ -7375,7 +7354,7 @@ __metadata:
 
 "bfj@npm:^9.0.2":
   version: 9.0.2
-  resolution: "bfj@npm:9.0.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fbfj%2F-%2Fbfj-9.0.2.tgz"
+  resolution: "bfj@npm:9.0.2"
   dependencies:
     check-types: "npm:^11.2.3"
     hoopy: "npm:^0.1.4"
@@ -7408,7 +7387,7 @@ __metadata:
 
 "bignumber.js@npm:^9.0.0":
   version: 9.1.2
-  resolution: "bignumber.js@npm:9.1.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fbignumber.js%2F-%2Fbignumber.js-9.1.2.tgz"
+  resolution: "bignumber.js@npm:9.1.2"
   checksum: e17786545433f3110b868725c449fa9625366a6e675cd70eb39b60938d6adbd0158cb4b3ad4f306ce817165d37e63f4aa3098ba4110db1d9a3b9f66abfbaf10d
   languageName: node
   linkType: hard
@@ -7726,7 +7705,7 @@ __metadata:
 
 "buffer-equal-constant-time@npm:1.0.1":
   version: 1.0.1
-  resolution: "buffer-equal-constant-time@npm:1.0.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fbuffer-equal-constant-time%2F-%2Fbuffer-equal-constant-time-1.0.1.tgz"
+  resolution: "buffer-equal-constant-time@npm:1.0.1"
   checksum: fb2294e64d23c573d0dd1f1e7a466c3e978fe94a4e0f8183937912ca374619773bef8e2aceb854129d2efecbbc515bbd0cc78d2734a3e3031edb0888531bbc8e
   languageName: node
   linkType: hard
@@ -8574,7 +8553,7 @@ __metadata:
 
 "cliui@npm:^8.0.1":
   version: 8.0.1
-  resolution: "cliui@npm:8.0.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fcliui%2F-%2Fcliui-8.0.1.tgz"
+  resolution: "cliui@npm:8.0.1"
   dependencies:
     string-width: "npm:^4.2.0"
     strip-ansi: "npm:^6.0.1"
@@ -10158,7 +10137,7 @@ __metadata:
 
 "duplexify@npm:^4.0.0, duplexify@npm:^4.1.3":
   version: 4.1.3
-  resolution: "duplexify@npm:4.1.3::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fduplexify%2F-%2Fduplexify-4.1.3.tgz"
+  resolution: "duplexify@npm:4.1.3"
   dependencies:
     end-of-stream: "npm:^1.4.1"
     inherits: "npm:^2.0.3"
@@ -10187,7 +10166,7 @@ __metadata:
 
 "ecdsa-sig-formatter@npm:1.0.11, ecdsa-sig-formatter@npm:^1.0.11":
   version: 1.0.11
-  resolution: "ecdsa-sig-formatter@npm:1.0.11::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fecdsa-sig-formatter%2F-%2Fecdsa-sig-formatter-1.0.11.tgz"
+  resolution: "ecdsa-sig-formatter@npm:1.0.11"
   dependencies:
     safe-buffer: "npm:^5.0.1"
   checksum: ebfbf19d4b8be938f4dd4a83b8788385da353d63307ede301a9252f9f7f88672e76f2191618fd8edfc2f24679236064176fab0b78131b161ee73daa37125408c
@@ -10302,18 +10281,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"end-of-stream@npm:^1.0.0, end-of-stream@npm:^1.1.0":
+"end-of-stream@npm:^1.0.0, end-of-stream@npm:^1.1.0, end-of-stream@npm:^1.4.1":
   version: 1.4.4
   resolution: "end-of-stream@npm:1.4.4"
-  dependencies:
-    once: "npm:^1.4.0"
-  checksum: 870b423afb2d54bb8d243c63e07c170409d41e20b47eeef0727547aea5740bd6717aca45597a9f2745525667a6b804c1e7bede41f856818faee5806dd9ff3975
-  languageName: node
-  linkType: hard
-
-"end-of-stream@npm:^1.4.1":
-  version: 1.4.4
-  resolution: "end-of-stream@npm:1.4.4::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fend-of-stream%2F-%2Fend-of-stream-1.4.4.tgz"
   dependencies:
     once: "npm:^1.4.0"
   checksum: 870b423afb2d54bb8d243c63e07c170409d41e20b47eeef0727547aea5740bd6717aca45597a9f2745525667a6b804c1e7bede41f856818faee5806dd9ff3975
@@ -11651,7 +11621,7 @@ __metadata:
 
 "farmhash-modern@npm:^1.1.0":
   version: 1.1.0
-  resolution: "farmhash-modern@npm:1.1.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Ffarmhash-modern%2F-%2Ffarmhash-modern-1.1.0.tgz"
+  resolution: "farmhash-modern@npm:1.1.0"
   checksum: eca8a1e40e5ca78395d585298f813f8e33ef884624795969ac708d7b855ab9a7e543d31fc14ba715bc7aa302d464e1db6ddc38e6c87816ed8f5a75db482d7071
   languageName: node
   linkType: hard
@@ -11792,7 +11762,7 @@ __metadata:
 
 "fast-xml-parser@npm:^4.4.1":
   version: 4.5.0
-  resolution: "fast-xml-parser@npm:4.5.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Ffast-xml-parser%2F-%2Ffast-xml-parser-4.5.0.tgz"
+  resolution: "fast-xml-parser@npm:4.5.0"
   dependencies:
     strnum: "npm:^1.0.5"
   bin:
@@ -11845,7 +11815,7 @@ __metadata:
 
 "faye-websocket@npm:0.11.4":
   version: 0.11.4
-  resolution: "faye-websocket@npm:0.11.4::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Ffaye-websocket%2F-%2Ffaye-websocket-0.11.4.tgz"
+  resolution: "faye-websocket@npm:0.11.4"
   dependencies:
     websocket-driver: "npm:>=0.5.1"
   checksum: c6052a0bb322778ce9f89af92890f6f4ce00d5ec92418a35e5f4c6864a4fe736fec0bcebd47eac7c0f0e979b01530746b1c85c83cb04bae789271abf19737420
@@ -12064,7 +12034,7 @@ __metadata:
 
 "firebase-admin@npm:^12.6.0":
   version: 12.6.0
-  resolution: "firebase-admin@npm:12.6.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Ffirebase-admin%2F-%2Ffirebase-admin-12.6.0.tgz"
+  resolution: "firebase-admin@npm:12.6.0"
   dependencies:
     "@fastify/busboy": "npm:^3.0.0"
     "@firebase/database-compat": "npm:^1.0.2"
@@ -12237,7 +12207,7 @@ __metadata:
 
 "form-data@npm:^2.5.0":
   version: 2.5.2
-  resolution: "form-data@npm:2.5.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fform-data%2F-%2Fform-data-2.5.2.tgz"
+  resolution: "form-data@npm:2.5.2"
   dependencies:
     asynckit: "npm:^0.4.0"
     combined-stream: "npm:^1.0.6"
@@ -12449,7 +12419,7 @@ __metadata:
 
 "functional-red-black-tree@npm:^1.0.1":
   version: 1.0.1
-  resolution: "functional-red-black-tree@npm:1.0.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Ffunctional-red-black-tree%2F-%2Ffunctional-red-black-tree-1.0.1.tgz"
+  resolution: "functional-red-black-tree@npm:1.0.1"
   checksum: 5959eed0375803d9924f47688479bb017e0c6816a0e5ac151e22ba6bfe1d12c41de2f339188885e0aa8eeea2072dad509d8e4448467e816bde0a2ca86a0670d3
   languageName: node
   linkType: hard
@@ -12518,7 +12488,7 @@ __metadata:
 
 "gaxios@npm:^6.0.0, gaxios@npm:^6.0.2, gaxios@npm:^6.1.1":
   version: 6.7.1
-  resolution: "gaxios@npm:6.7.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fgaxios%2F-%2Fgaxios-6.7.1.tgz"
+  resolution: "gaxios@npm:6.7.1"
   dependencies:
     extend: "npm:^3.0.2"
     https-proxy-agent: "npm:^7.0.1"
@@ -12531,7 +12501,7 @@ __metadata:
 
 "gcp-metadata@npm:^6.1.0":
   version: 6.1.0
-  resolution: "gcp-metadata@npm:6.1.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fgcp-metadata%2F-%2Fgcp-metadata-6.1.0.tgz"
+  resolution: "gcp-metadata@npm:6.1.0"
   dependencies:
     gaxios: "npm:^6.0.0"
     json-bigint: "npm:^1.0.0"
@@ -12943,7 +12913,7 @@ __metadata:
 
 "google-auth-library@npm:^9.3.0, google-auth-library@npm:^9.6.3":
   version: 9.14.2
-  resolution: "google-auth-library@npm:9.14.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fgoogle-auth-library%2F-%2Fgoogle-auth-library-9.14.2.tgz"
+  resolution: "google-auth-library@npm:9.14.2"
   dependencies:
     base64-js: "npm:^1.3.0"
     ecdsa-sig-formatter: "npm:^1.0.11"
@@ -12957,7 +12927,7 @@ __metadata:
 
 "google-gax@npm:^4.3.3":
   version: 4.4.1
-  resolution: "google-gax@npm:4.4.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fgoogle-gax%2F-%2Fgoogle-gax-4.4.1.tgz"
+  resolution: "google-gax@npm:4.4.1"
   dependencies:
     "@grpc/grpc-js": "npm:^1.10.9"
     "@grpc/proto-loader": "npm:^0.7.13"
@@ -13040,7 +13010,7 @@ __metadata:
 
 "gtoken@npm:^7.0.0":
   version: 7.1.0
-  resolution: "gtoken@npm:7.1.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fgtoken%2F-%2Fgtoken-7.1.0.tgz"
+  resolution: "gtoken@npm:7.1.0"
   dependencies:
     gaxios: "npm:^6.0.0"
     jws: "npm:^4.0.0"
@@ -13406,7 +13376,7 @@ __metadata:
 
 "html-entities@npm:^2.5.2":
   version: 2.5.2
-  resolution: "html-entities@npm:2.5.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fhtml-entities%2F-%2Fhtml-entities-2.5.2.tgz"
+  resolution: "html-entities@npm:2.5.2"
   checksum: f20ffb4326606245c439c231de40a7c560607f639bf40ffbfb36b4c70729fd95d7964209045f1a4e62fe17f2364cef3d6e49b02ea09016f207fde51c2211e481
   languageName: node
   linkType: hard
@@ -13591,7 +13561,7 @@ __metadata:
 
 "https-proxy-agent@npm:^7.0.1":
   version: 7.0.5
-  resolution: "https-proxy-agent@npm:7.0.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fhttps-proxy-agent%2F-%2Fhttps-proxy-agent-7.0.5.tgz"
+  resolution: "https-proxy-agent@npm:7.0.5"
   dependencies:
     agent-base: "npm:^7.0.2"
     debug: "npm:4"
@@ -15455,7 +15425,7 @@ __metadata:
 
 "jose@npm:^4.14.6":
   version: 4.15.9
-  resolution: "jose@npm:4.15.9::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjose%2F-%2Fjose-4.15.9.tgz"
+  resolution: "jose@npm:4.15.9"
   checksum: 4ed4ddf4a029db04bd167f2215f65d7245e4dc5f36d7ac3c0126aab38d66309a9e692f52df88975d99429e357e5fd8bab340ff20baab544d17684dd1d940a0f4
   languageName: node
   linkType: hard
@@ -15635,7 +15605,7 @@ __metadata:
 
 "json-bigint@npm:^1.0.0":
   version: 1.0.0
-  resolution: "json-bigint@npm:1.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjson-bigint%2F-%2Fjson-bigint-1.0.0.tgz"
+  resolution: "json-bigint@npm:1.0.0"
   dependencies:
     bignumber.js: "npm:^9.0.0"
   checksum: e3f34e43be3284b573ea150a3890c92f06d54d8ded72894556357946aeed9877fd795f62f37fe16509af189fd314ab1104d0fd0f163746ad231b9f378f5b33f4
@@ -15764,7 +15734,7 @@ __metadata:
 
 "jsonparse@npm:~1.0.0":
   version: 1.0.0
-  resolution: "jsonparse@npm:1.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjsonparse%2F-%2Fjsonparse-1.0.0.tgz"
+  resolution: "jsonparse@npm:1.0.0"
   checksum: 90b646bcc304bbd9ced37dc900199689cac90fb9dcd30d6f753ab2a0bd12a667225fa63e5a350005077b569b68de4dcac1d51d9558fb71cfbcf8595c64842a0e
   languageName: node
   linkType: hard
@@ -15782,7 +15752,7 @@ __metadata:
 
 "jsonstream@npm:^1.0.3":
   version: 1.0.3
-  resolution: "jsonstream@npm:1.0.3::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjsonstream%2F-%2Fjsonstream-1.0.3.tgz"
+  resolution: "jsonstream@npm:1.0.3"
   dependencies:
     jsonparse: "npm:~1.0.0"
     through: "npm:>=2.2.7 <3"
@@ -15794,7 +15764,7 @@ __metadata:
 
 "jsonwebtoken@npm:^9.0.0":
   version: 9.0.2
-  resolution: "jsonwebtoken@npm:9.0.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjsonwebtoken%2F-%2Fjsonwebtoken-9.0.2.tgz"
+  resolution: "jsonwebtoken@npm:9.0.2"
   dependencies:
     jws: "npm:^3.2.2"
     lodash.includes: "npm:^4.3.0"
@@ -15856,7 +15826,7 @@ __metadata:
 
 "jwa@npm:^1.4.1":
   version: 1.4.1
-  resolution: "jwa@npm:1.4.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjwa%2F-%2Fjwa-1.4.1.tgz"
+  resolution: "jwa@npm:1.4.1"
   dependencies:
     buffer-equal-constant-time: "npm:1.0.1"
     ecdsa-sig-formatter: "npm:1.0.11"
@@ -15867,7 +15837,7 @@ __metadata:
 
 "jwa@npm:^2.0.0":
   version: 2.0.0
-  resolution: "jwa@npm:2.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjwa%2F-%2Fjwa-2.0.0.tgz"
+  resolution: "jwa@npm:2.0.0"
   dependencies:
     buffer-equal-constant-time: "npm:1.0.1"
     ecdsa-sig-formatter: "npm:1.0.11"
@@ -15878,7 +15848,7 @@ __metadata:
 
 "jwks-rsa@npm:^3.1.0":
   version: 3.1.0
-  resolution: "jwks-rsa@npm:3.1.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjwks-rsa%2F-%2Fjwks-rsa-3.1.0.tgz"
+  resolution: "jwks-rsa@npm:3.1.0"
   dependencies:
     "@types/express": "npm:^4.17.17"
     "@types/jsonwebtoken": "npm:^9.0.2"
@@ -15892,7 +15862,7 @@ __metadata:
 
 "jws@npm:^3.2.2":
   version: 3.2.2
-  resolution: "jws@npm:3.2.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjws%2F-%2Fjws-3.2.2.tgz"
+  resolution: "jws@npm:3.2.2"
   dependencies:
     jwa: "npm:^1.4.1"
     safe-buffer: "npm:^5.0.1"
@@ -15902,7 +15872,7 @@ __metadata:
 
 "jws@npm:^4.0.0":
   version: 4.0.0
-  resolution: "jws@npm:4.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fjws%2F-%2Fjws-4.0.0.tgz"
+  resolution: "jws@npm:4.0.0"
   dependencies:
     jwa: "npm:^2.0.0"
     safe-buffer: "npm:^5.0.1"
@@ -16278,7 +16248,7 @@ __metadata:
 
 "limiter@npm:^1.1.5":
   version: 1.1.5
-  resolution: "limiter@npm:1.1.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Flimiter%2F-%2Flimiter-1.1.5.tgz"
+  resolution: "limiter@npm:1.1.5"
   checksum: ebe2b20a820d1f67b8e1724051246434c419b2da041a7e9cd943f6daf113b8d17a52a1bd88fb79be5b624c10283ecb737f50edb5c1c88c71f4cd367108c97300
   languageName: node
   linkType: hard
@@ -16484,7 +16454,7 @@ __metadata:
 
 "lodash.clonedeep@npm:^4.5.0":
   version: 4.5.0
-  resolution: "lodash.clonedeep@npm:4.5.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Flodash.clonedeep%2F-%2Flodash.clonedeep-4.5.0.tgz"
+  resolution: "lodash.clonedeep@npm:4.5.0"
   checksum: 2caf0e4808f319d761d2939ee0642fa6867a4bbf2cfce43276698828380756b99d4c4fa226d881655e6ac298dd453fe12a5ec8ba49861777759494c534936985
   languageName: node
   linkType: hard
@@ -16505,7 +16475,7 @@ __metadata:
 
 "lodash.includes@npm:^4.3.0":
   version: 4.3.0
-  resolution: "lodash.includes@npm:4.3.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Flodash.includes%2F-%2Flodash.includes-4.3.0.tgz"
+  resolution: "lodash.includes@npm:4.3.0"
   checksum: 7ca498b9b75bf602d04e48c0adb842dfc7d90f77bcb2a91a2b2be34a723ad24bc1c8b3683ec6b2552a90f216c723cdea530ddb11a3320e08fa38265703978f4b
   languageName: node
   linkType: hard
@@ -16526,7 +16496,7 @@ __metadata:
 
 "lodash.isboolean@npm:^3.0.3":
   version: 3.0.3
-  resolution: "lodash.isboolean@npm:3.0.3::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Flodash.isboolean%2F-%2Flodash.isboolean-3.0.3.tgz"
+  resolution: "lodash.isboolean@npm:3.0.3"
   checksum: 0aac604c1ef7e72f9a6b798e5b676606042401dd58e49f051df3cc1e3adb497b3d7695635a5cbec4ae5f66456b951fdabe7d6b387055f13267cde521f10ec7f7
   languageName: node
   linkType: hard
@@ -16540,14 +16510,14 @@ __metadata:
 
 "lodash.isinteger@npm:^4.0.4":
   version: 4.0.4
-  resolution: "lodash.isinteger@npm:4.0.4::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Flodash.isinteger%2F-%2Flodash.isinteger-4.0.4.tgz"
+  resolution: "lodash.isinteger@npm:4.0.4"
   checksum: 4c3e023a2373bf65bf366d3b8605b97ec830bca702a926939bcaa53f8e02789b6a176e7f166b082f9365bfec4121bfeb52e86e9040cb8d450e64c858583f61b7
   languageName: node
   linkType: hard
 
 "lodash.isnumber@npm:^3.0.3":
   version: 3.0.3
-  resolution: "lodash.isnumber@npm:3.0.3::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Flodash.isnumber%2F-%2Flodash.isnumber-3.0.3.tgz"
+  resolution: "lodash.isnumber@npm:3.0.3"
   checksum: 2d01530513a1ee4f72dd79528444db4e6360588adcb0e2ff663db2b3f642d4bb3d687051ae1115751ca9082db4fdef675160071226ca6bbf5f0c123dbf0aa12d
   languageName: node
   linkType: hard
@@ -16586,7 +16556,7 @@ __metadata:
 
 "lodash.once@npm:^4.0.0":
   version: 4.1.1
-  resolution: "lodash.once@npm:4.1.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Flodash.once%2F-%2Flodash.once-4.1.1.tgz"
+  resolution: "lodash.once@npm:4.1.1"
   checksum: 46a9a0a66c45dd812fcc016e46605d85ad599fe87d71a02f6736220554b52ffbe82e79a483ad40f52a8a95755b0d1077fba259da8bfb6694a7abbf4a48f1fc04
   languageName: node
   linkType: hard
@@ -16754,7 +16724,7 @@ __metadata:
 
 "lru-memoizer@npm:^2.2.0":
   version: 2.3.0
-  resolution: "lru-memoizer@npm:2.3.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Flru-memoizer%2F-%2Flru-memoizer-2.3.0.tgz"
+  resolution: "lru-memoizer@npm:2.3.0"
   dependencies:
     lodash.clonedeep: "npm:^4.5.0"
     lru-cache: "npm:6.0.0"
@@ -17115,7 +17085,7 @@ __metadata:
 
 "mime@npm:^3.0.0":
   version: 3.0.0
-  resolution: "mime@npm:3.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fmime%2F-%2Fmime-3.0.0.tgz"
+  resolution: "mime@npm:3.0.0"
   bin:
     mime: cli.js
   checksum: 402e792a8df1b2cc41cb77f0dcc46472b7944b7ec29cb5bbcd398624b6b97096728f1239766d3fdeb20551dd8d94738344c195a6ea10c4f906eb0356323b0531
@@ -17744,7 +17714,7 @@ __metadata:
 
 "node-fetch@npm:^2.6.9":
   version: 2.7.0
-  resolution: "node-fetch@npm:2.7.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fnode-fetch%2F-%2Fnode-fetch-2.7.0.tgz"
+  resolution: "node-fetch@npm:2.7.0"
   dependencies:
     whatwg-url: "npm:^5.0.0"
   peerDependencies:
@@ -17772,7 +17742,7 @@ __metadata:
 
 "node-forge@npm:^1.3.1":
   version: 1.3.1
-  resolution: "node-forge@npm:1.3.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fnode-forge%2F-%2Fnode-forge-1.3.1.tgz"
+  resolution: "node-forge@npm:1.3.1"
   checksum: e882819b251a4321f9fc1d67c85d1501d3004b4ee889af822fd07f64de3d1a8e272ff00b689570af0465d65d6bf5074df9c76e900e0aff23e60b847f2a46fbe8
   languageName: node
   linkType: hard
@@ -18281,7 +18251,7 @@ __metadata:
 
 "object-hash@npm:^3.0.0":
   version: 3.0.0
-  resolution: "object-hash@npm:3.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fobject-hash%2F-%2Fobject-hash-3.0.0.tgz"
+  resolution: "object-hash@npm:3.0.0"
   checksum: a06844537107b960c1c8b96cd2ac8592a265186bfa0f6ccafe0d34eabdb526f6fa81da1f37c43df7ed13b12a4ae3457a16071603bcd39d8beddb5f08c37b0f47
   languageName: node
   linkType: hard
@@ -18799,16 +18769,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-limit@npm:^3.0.1":
-  version: 3.1.0
-  resolution: "p-limit@npm:3.1.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fp-limit%2F-%2Fp-limit-3.1.0.tgz"
-  dependencies:
-    yocto-queue: "npm:^0.1.0"
-  checksum: 9db675949dbdc9c3763c89e748d0ef8bdad0afbb24d49ceaf4c46c02c77d30db4e0652ed36d0a0a7a95154335fab810d95c86153105bb73b3a90448e2bb14e1a
-  languageName: node
-  linkType: hard
-
-"p-limit@npm:^3.0.2":
+"p-limit@npm:^3.0.1, p-limit@npm:^3.0.2":
   version: 3.1.0
   resolution: "p-limit@npm:3.1.0"
   dependencies:
@@ -19908,7 +19869,7 @@ __metadata:
 
 "progress-stream@npm:^2.0.0":
   version: 2.0.0
-  resolution: "progress-stream@npm:2.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fprogress-stream%2F-%2Fprogress-stream-2.0.0.tgz"
+  resolution: "progress-stream@npm:2.0.0"
   dependencies:
     speedometer: "npm:~1.0.0"
     through2: "npm:~2.0.3"
@@ -19997,7 +19958,7 @@ __metadata:
 
 "proto3-json-serializer@npm:^2.0.2":
   version: 2.0.2
-  resolution: "proto3-json-serializer@npm:2.0.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fproto3-json-serializer%2F-%2Fproto3-json-serializer-2.0.2.tgz"
+  resolution: "proto3-json-serializer@npm:2.0.2"
   dependencies:
     protobufjs: "npm:^7.2.5"
   checksum: 802e6a34f6ebf07007b186768f1985494bdfa6dd92e14c89d10cda6c4cc14df707ad59b75054a17a582f481db12c7663d25f91f505d2a85d7d4174eb5d798628
@@ -20050,7 +20011,7 @@ __metadata:
 
 "protobufjs@npm:^7.2.5, protobufjs@npm:^7.2.6, protobufjs@npm:^7.3.2":
   version: 7.4.0
-  resolution: "protobufjs@npm:7.4.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fprotobufjs%2F-%2Fprotobufjs-7.4.0.tgz"
+  resolution: "protobufjs@npm:7.4.0"
   dependencies:
     "@protobufjs/aspromise": "npm:^1.1.2"
     "@protobufjs/base64": "npm:^1.1.2"
@@ -20696,20 +20657,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:2 || 3, readable-stream@npm:^3.4.0, readable-stream@npm:^3.6.0":
+"readable-stream@npm:2 || 3, readable-stream@npm:^3.1.1, readable-stream@npm:^3.4.0, readable-stream@npm:^3.6.0":
   version: 3.6.2
   resolution: "readable-stream@npm:3.6.2"
-  dependencies:
-    inherits: "npm:^2.0.3"
-    string_decoder: "npm:^1.1.1"
-    util-deprecate: "npm:^1.0.1"
-  checksum: e37be5c79c376fdd088a45fa31ea2e423e5d48854be7a22a58869b4e84d25047b193f6acb54f1012331e1bcd667ffb569c01b99d36b0bd59658fb33f513511b7
-  languageName: node
-  linkType: hard
-
-"readable-stream@npm:^3.1.1":
-  version: 3.6.2
-  resolution: "readable-stream@npm:3.6.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Freadable-stream%2F-%2Freadable-stream-3.6.2.tgz"
   dependencies:
     inherits: "npm:^2.0.3"
     string_decoder: "npm:^1.1.1"
@@ -21326,7 +21276,7 @@ __metadata:
 
 "retry-request@npm:^7.0.0":
   version: 7.0.2
-  resolution: "retry-request@npm:7.0.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fretry-request%2F-%2Fretry-request-7.0.2.tgz"
+  resolution: "retry-request@npm:7.0.2"
   dependencies:
     "@types/request": "npm:^2.48.8"
     extend: "npm:^3.0.2"
@@ -21337,7 +21287,7 @@ __metadata:
 
 "retry@npm:0.13.1":
   version: 0.13.1
-  resolution: "retry@npm:0.13.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fretry%2F-%2Fretry-0.13.1.tgz"
+  resolution: "retry@npm:0.13.1"
   checksum: 9ae822ee19db2163497e074ea919780b1efa00431d197c7afdb950e42bf109196774b92a49fc9821f0b8b328a98eea6017410bfc5e8a0fc19c85c6d11adb3772
   languageName: node
   linkType: hard
@@ -21524,16 +21474,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"safe-buffer@npm:5.2.1, safe-buffer@npm:>=5.1.0, safe-buffer@npm:^5.0.1, safe-buffer@npm:^5.1.0, safe-buffer@npm:^5.1.1, safe-buffer@npm:^5.1.2, safe-buffer@npm:^5.2.0, safe-buffer@npm:~5.2.0, safe-buffer@npm:~5.2.1":
+"safe-buffer@npm:5.2.1, safe-buffer@npm:>=5.1.0, safe-buffer@npm:^5.0.1, safe-buffer@npm:^5.1.0, safe-buffer@npm:^5.1.1, safe-buffer@npm:^5.1.2, safe-buffer@npm:^5.2.0, safe-buffer@npm:^5.2.1, safe-buffer@npm:~5.2.0, safe-buffer@npm:~5.2.1":
   version: 5.2.1
   resolution: "safe-buffer@npm:5.2.1"
-  checksum: 6501914237c0a86e9675d4e51d89ca3c21ffd6a31642efeba25ad65720bce6921c9e7e974e5be91a786b25aa058b5303285d3c15dbabf983a919f5f630d349f3
-  languageName: node
-  linkType: hard
-
-"safe-buffer@npm:^5.2.1":
-  version: 5.2.1
-  resolution: "safe-buffer@npm:5.2.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fsafe-buffer%2F-%2Fsafe-buffer-5.2.1.tgz"
   checksum: 6501914237c0a86e9675d4e51d89ca3c21ffd6a31642efeba25ad65720bce6921c9e7e974e5be91a786b25aa058b5303285d3c15dbabf983a919f5f630d349f3
   languageName: node
   linkType: hard
@@ -21820,7 +21763,7 @@ __metadata:
 
 "semver@npm:^7.6.3":
   version: 7.6.3
-  resolution: "semver@npm:7.6.3::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fsemver%2F-%2Fsemver-7.6.3.tgz"
+  resolution: "semver@npm:7.6.3"
   bin:
     semver: bin/semver.js
   checksum: 88f33e148b210c153873cb08cfe1e281d518aaa9a666d4d148add6560db5cd3c582f3a08ccb91f38d5f379ead256da9931234ed122057f40bb5766e65e58adaf
@@ -22536,7 +22479,7 @@ __metadata:
 
 "speedometer@npm:~1.0.0":
   version: 1.0.0
-  resolution: "speedometer@npm:1.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fspeedometer%2F-%2Fspeedometer-1.0.0.tgz"
+  resolution: "speedometer@npm:1.0.0"
   checksum: d5bfafd5721a1d5300be03f1f3dead419fcec715103dcfd72a1cb85d64a7fae1afaf7e5c80b974a44a4550eafa01ae034e0dbddb50be1dba3a58c9241ee8de54
   languageName: node
   linkType: hard
@@ -22708,14 +22651,14 @@ __metadata:
 
 "stream-chain@npm:^2.2.5":
   version: 2.2.5
-  resolution: "stream-chain@npm:2.2.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fstream-chain%2F-%2Fstream-chain-2.2.5.tgz"
+  resolution: "stream-chain@npm:2.2.5"
   checksum: c512f50190d7c92d688fa64e7af540c51b661f9c2b775fc72bca38ea9bca515c64c22c2197b1be463741daacbaaa2dde8a8ea24ebda46f08391224f15249121a
   languageName: node
   linkType: hard
 
 "stream-chain@npm:^3.3.2":
   version: 3.3.2
-  resolution: "stream-chain@npm:3.3.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fstream-chain%2F-%2Fstream-chain-3.3.2.tgz"
+  resolution: "stream-chain@npm:3.3.2"
   checksum: 3fafa86d6a0bebe91949bd063c9bbf3e826bf846c622347c84af19f479d47219429c4fcdc5bc156f860c5f56ce315cc77bbc431069fa472e75ed40403c9ca8da
   languageName: node
   linkType: hard
@@ -22739,7 +22682,7 @@ __metadata:
 
 "stream-events@npm:^1.0.5":
   version: 1.0.5
-  resolution: "stream-events@npm:1.0.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fstream-events%2F-%2Fstream-events-1.0.5.tgz"
+  resolution: "stream-events@npm:1.0.5"
   dependencies:
     stubs: "npm:^3.0.0"
   checksum: 5d235a5799a483e94ea8829526fe9d95d76460032d5e78555fe4f801949ac6a27ea2212e4e0827c55f78726b3242701768adf2d33789465f51b31ed8ebd6b086
@@ -22761,7 +22704,7 @@ __metadata:
 
 "stream-json@npm:^1.8.0":
   version: 1.8.0
-  resolution: "stream-json@npm:1.8.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fstream-json%2F-%2Fstream-json-1.8.0.tgz"
+  resolution: "stream-json@npm:1.8.0"
   dependencies:
     stream-chain: "npm:^2.2.5"
   checksum: 5e6de600a7d86f54f9ced608131f1f840082fa7aa443df9fe72bd255b6b1c098d2c6c756b4b9acd64e50e2b9f52d9a432714bce43e96e9850b819ee9ff6331a1
@@ -22777,7 +22720,7 @@ __metadata:
 
 "stream-shift@npm:^1.0.2":
   version: 1.0.3
-  resolution: "stream-shift@npm:1.0.3::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fstream-shift%2F-%2Fstream-shift-1.0.3.tgz"
+  resolution: "stream-shift@npm:1.0.3"
   checksum: 939cd1051ca750d240a0625b106a2b988c45fb5a3be0cebe9a9858cb01bc1955e8c7b9fac17a9462976bea4a7b704e317c5c2200c70f0ca715a3363b9aa4fd3b
   languageName: node
   linkType: hard
@@ -23077,7 +23020,7 @@ __metadata:
 
 "strnum@npm:^1.0.5":
   version: 1.0.5
-  resolution: "strnum@npm:1.0.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fstrnum%2F-%2Fstrnum-1.0.5.tgz"
+  resolution: "strnum@npm:1.0.5"
   checksum: 64fb8cc2effbd585a6821faa73ad97d4b553c8927e49086a162ffd2cc818787643390b89d567460a8e74300148d11ac052e21c921ef2049f2987f4b1b89a7ff1
   languageName: node
   linkType: hard
@@ -23100,7 +23043,7 @@ __metadata:
 
 "stubs@npm:^3.0.0":
   version: 3.0.0
-  resolution: "stubs@npm:3.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fstubs%2F-%2Fstubs-3.0.0.tgz"
+  resolution: "stubs@npm:3.0.0"
   checksum: 841a4ab8c76795d34aefe129185763b55fbf2e4693208215627caea4dd62e1299423dcd96f708d3128e3dfa0e669bae2cb912e6e906d7d81eaf6493196570923
   languageName: node
   linkType: hard
@@ -23347,7 +23290,7 @@ __metadata:
 
 "teeny-request@npm:^9.0.0":
   version: 9.0.0
-  resolution: "teeny-request@npm:9.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fteeny-request%2F-%2Fteeny-request-9.0.0.tgz"
+  resolution: "teeny-request@npm:9.0.0"
   dependencies:
     http-proxy-agent: "npm:^5.0.0"
     https-proxy-agent: "npm:^5.0.0"
@@ -23474,7 +23417,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"through2@npm:^2.0.0":
+"through2@npm:^2.0.0, through2@npm:~2.0.3":
   version: 2.0.5
   resolution: "through2@npm:2.0.5"
   dependencies:
@@ -23491,16 +23434,6 @@ __metadata:
     inherits: "npm:^2.0.4"
     readable-stream: "npm:2 || 3"
   checksum: 8ea17efa2ce5b78ef5c52d08e29d0dbdad9c321c2add5192bba3434cae25b2319bf9cdac1c54c3bfbd721438a30565ca6f3f19eb79f62341dafc5a12429d2ccc
-  languageName: node
-  linkType: hard
-
-"through2@npm:~2.0.3":
-  version: 2.0.5
-  resolution: "through2@npm:2.0.5::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fthrough2%2F-%2Fthrough2-2.0.5.tgz"
-  dependencies:
-    readable-stream: "npm:~2.3.6"
-    xtend: "npm:~4.0.1"
-  checksum: cbfe5b57943fa12b4f8c043658c2a00476216d79c014895cef1ac7a1d9a8b31f6b438d0e53eecbb81054b93128324a82ecd59ec1a4f91f01f7ac113dcb14eade
   languageName: node
   linkType: hard
 
@@ -24146,7 +24079,7 @@ __metadata:
 
 "undici-types@npm:~6.19.2":
   version: 6.19.8
-  resolution: "undici-types@npm:6.19.8::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fundici-types%2F-%2Fundici-types-6.19.8.tgz"
+  resolution: "undici-types@npm:6.19.8"
   checksum: 078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
   languageName: node
   linkType: hard
@@ -24552,7 +24485,7 @@ __metadata:
 
 "uuid@npm:^10.0.0":
   version: 10.0.0
-  resolution: "uuid@npm:10.0.0::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fuuid%2F-%2Fuuid-10.0.0.tgz"
+  resolution: "uuid@npm:10.0.0"
   bin:
     uuid: dist/bin/uuid
   checksum: eab18c27fe4ab9fb9709a5d5f40119b45f2ec8314f8d4cf12ce27e4c6f4ffa4a6321dc7db6c515068fa373c075b49691ba969f0010bf37f44c37ca40cd6bf7fe
@@ -24579,7 +24512,7 @@ __metadata:
 
 "uuid@npm:^8.0.0":
   version: 8.3.2
-  resolution: "uuid@npm:8.3.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fuuid%2F-%2Fuuid-8.3.2.tgz"
+  resolution: "uuid@npm:8.3.2"
   bin:
     uuid: dist/bin/uuid
   checksum: bcbb807a917d374a49f475fae2e87fdca7da5e5530820ef53f65ba1d12131bd81a92ecf259cc7ce317cbe0f289e7d79fdfebcef9bfa3087c8c8a2fa304c9be54
@@ -24597,7 +24530,7 @@ __metadata:
 
 "uuid@npm:^9.0.1":
   version: 9.0.1
-  resolution: "uuid@npm:9.0.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fuuid%2F-%2Fuuid-9.0.1.tgz"
+  resolution: "uuid@npm:9.0.1"
   bin:
     uuid: dist/bin/uuid
   checksum: 1607dd32ac7fc22f2d8f77051e6a64845c9bce5cd3dd8aa0070c074ec73e666a1f63c7b4e0f4bf2bc8b9d59dc85a15e17807446d9d2b17c8485fbc2147b27f9b
@@ -25478,7 +25411,7 @@ __metadata:
 
 "yargs-parser@npm:^21.1.1":
   version: 21.1.1
-  resolution: "yargs-parser@npm:21.1.1::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fyargs-parser%2F-%2Fyargs-parser-21.1.1.tgz"
+  resolution: "yargs-parser@npm:21.1.1"
   checksum: f84b5e48169479d2f402239c59f084cfd1c3acc197a05c59b98bab067452e6b3ea46d4dd8ba2985ba7b3d32a343d77df0debd6b343e5dae3da2aab2cdf5886b2
   languageName: node
   linkType: hard
@@ -25534,7 +25467,7 @@ __metadata:
 
 "yargs@npm:^17.7.2":
   version: 17.7.2
-  resolution: "yargs@npm:17.7.2::__archiveUrl=https%3A%2F%2Fpackages.atlassian.com%2Fapi%2Fnpm%2Fnpm-remote%2Fyargs%2F-%2Fyargs-17.7.2.tgz"
+  resolution: "yargs@npm:17.7.2"
   dependencies:
     cliui: "npm:^8.0.1"
     escalade: "npm:^3.1.1"
