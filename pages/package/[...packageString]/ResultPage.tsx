@@ -1,4 +1,5 @@
 import Router, { withRouter, type NextRouter } from 'next/router'
+import type { GetServerSidePropsContext } from 'next'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
 
@@ -32,11 +33,17 @@ import ExportAnalysisSection from './components/ExportAnalysisSection'
 import InterLinksSection from './components/InterLinksSection'
 import SimilarPackagesSection from './components/SimilarPackagesSection'
 import TreemapSection from './components/TreemapSection'
+import {
+  getPackageFacts,
+  type PackageFacts,
+} from '../../../server/seo/packageFacts'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
 type ResultPageProps = {
   router: NextRouter
+  initialFacts: PackageFacts | null
+  initialPackageString: string
 }
 
 type ResultPageState = {
@@ -76,6 +83,11 @@ function formatSentence(values: string[]) {
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
+function truncateMetaDescription(description: string) {
+  if (description.length <= 160) return description
+  return `${description.slice(0, 157).trimEnd()}…`
+}
+
 function getResolvedBuildError(resultsError: unknown): ResolvedBuildError {
   return resolveBuildError(resultsError)
 }
@@ -92,11 +104,13 @@ function getPackageStringFromRouter(router: NextRouter) {
 
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   state: ResultPageState = {
-    results: null,
-    resultsPromiseState: null,
+    results: this.props.initialFacts?.result ?? null,
+    resultsPromiseState: this.props.initialFacts?.result ? 'fulfilled' : null,
     resultsError: null,
     historicalResultsPromiseState: null,
-    inputInitialValue: getPackageStringFromRouter(this.props.router),
+    inputInitialValue:
+      this.props.initialPackageString ||
+      getPackageStringFromRouter(this.props.router),
     historicalResults: {},
     similarPackages: [],
     similarPackagesCategory: '',
@@ -108,8 +122,33 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     Analytics.pageView('package result')
 
     const packageString = getPackageStringFromRouter(this.props.router)
-    if (packageString) {
-      this.handleSearchSubmit(packageString)
+    if (!packageString) return
+
+    this.activeQuery = packageString
+
+    if (this.props.initialFacts?.result) {
+      this.scheduleSecondaryFetches(packageString)
+    } else {
+      this.setState(
+        {
+          resultsPromiseState: 'pending',
+          historicalResultsPromiseState: 'pending',
+        },
+        () => this.fetchResults(packageString)
+      )
+    }
+  }
+
+  scheduleSecondaryFetches = (packageString: string) => {
+    const fetchSecondaryData = () => {
+      this.fetchHistory(packageString)
+      this.fetchSimilarPackages(packageString)
+    }
+
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(fetchSecondaryData, { timeout: 2000 })
+    } else {
+      setTimeout(fetchSecondaryData, 1)
     }
   }
 
@@ -140,8 +179,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
     API.getInfo(packageString)
       .then(results => {
-        this.fetchSimilarPackages(packageString)
-
         if (this.activeQuery !== packageString) return
 
         const newPackageString = `${results.name}@${results.version}`
@@ -149,10 +186,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
           {
             inputInitialValue: newPackageString,
             results,
+            resultsPromiseState: 'fulfilled',
           },
           () => {
-            this.activeQuery = newPackageString
-            Router.replace(`/package/${newPackageString}`)
+            this.scheduleSecondaryFetches(packageString)
           }
         )
 
@@ -165,6 +202,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         this.setState({
           resultsError: err,
           resultsPromiseState: 'rejected',
+          historicalResultsPromiseState: null,
         })
         console.error(err)
 
@@ -246,7 +284,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         Router.push(`/package/${normalizedQuery}`)
         Analytics.pageView('package result')
         this.fetchResults(normalizedQuery)
-        this.fetchHistory(normalizedQuery)
       }
     )
   }
@@ -342,6 +379,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       formattedGZIPSizeText = `${formattedGZIPSize.size.toFixed(1)} ${
         formattedGZIPSize.unit
       }`
+    } else if (this.props.initialFacts) {
+      name = this.props.initialFacts.name
+      version = this.props.initialFacts.version
     } else {
       const parsedPackage = parsePackageString(
         getPackageStringFromRouter(router)
@@ -355,20 +395,28 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         ? 'https://bundlephobia.com'
         : window.location.origin
 
-    const title = version ? `${name} v${version}` : name
-    const description =
+    const versionLabel = version ? `${name} v${version}` : name
+    const pageTitle =
       resultsPromiseState === 'fulfilled'
-        ? `Size of ${title} is ${formattedSizeText} (minified), and ${formattedGZIPSizeText} when compressed using GZIP. ${DEFAULT_DESCRIPTION_START}`
-        : `Find the size of javascript package ${title}. ${DEFAULT_DESCRIPTION_START}`
+        ? `${name} bundle size: ${formattedGZIPSizeText} gzip | Bundlephobia`
+        : `${name} bundle size, gzip size & dependencies | Bundlephobia`
+    const packageDescription = this.props.initialFacts?.description
+      ? ` ${this.props.initialFacts.description}`
+      : ''
+    const description = truncateMetaDescription(
+      resultsPromiseState === 'fulfilled'
+        ? `${versionLabel} is ${formattedSizeText} minified and ${formattedGZIPSizeText} with gzip. Check dependencies, exports and package composition.${packageDescription}`
+        : `Check the minified and gzip bundle size of ${versionLabel}, its dependencies, exports and package composition. ${DEFAULT_DESCRIPTION_START}${packageDescription}`
+    )
 
     return (
       <MetaTags
-        title={`${title} ❘ Bundlephobia`}
+        title={pageTitle}
         image={
           origin + `/api/stats-image?name=${name}&version=${version}&wide=true`
         }
         description={description}
-        twitterDescription="Insights into npm packages"
+        twitterDescription={description}
         canonicalPath={`/package/${name}`}
         isLargeImage
       />
@@ -564,8 +612,41 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 }
 
-export const getServerSideProps = () => {
-  return { props: {} }
+export const getServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  const packageParam = context.params?.packageString
+  const packageString = Array.isArray(packageParam)
+    ? packageParam.join('/')
+    : packageParam ?? ''
+
+  context.res.setHeader(
+    'Cache-Control',
+    'public, s-maxage=300, stale-while-revalidate=86400'
+  )
+
+  if (!packageString) {
+    return { notFound: true }
+  }
+
+  try {
+    const initialFacts = await getPackageFacts(packageString)
+    return {
+      props: {
+        initialFacts,
+        initialPackageString: packageString,
+      },
+    }
+  } catch {
+    // Keep the document stable when npm metadata or the cache service is
+    // unavailable. The client can still perform the normal interactive lookup.
+    return {
+      props: {
+        initialFacts: null,
+        initialPackageString: packageString,
+      },
+    }
+  }
 }
 
 export default withRouter(ResultPage)
