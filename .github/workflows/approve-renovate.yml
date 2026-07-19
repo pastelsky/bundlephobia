@@ -30,7 +30,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [[ "$HEAD_REF" != renovate/package-build-stats-* ]]; then
+          if [[ "$HEAD_REF" != "renovate/package-build-stats" && "$HEAD_REF" != renovate/package-build-stats-* ]]; then
             echo "Unexpected Renovate branch: $HEAD_REF"
             exit 1
           fi
