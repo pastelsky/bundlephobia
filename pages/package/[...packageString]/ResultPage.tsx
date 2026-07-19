@@ -35,8 +35,7 @@ import SimilarPackagesSection from './components/SimilarPackagesSection'
 import TreemapSection from './components/TreemapSection'
 import config from '../../../server/config'
 import { createPackageRequest } from '../../../server/services/packageResolution.service'
-import { packageSizeCache } from '../../../server/pipeline/packageResultCache'
-import { readCachedExactVersion } from '../../../server/pipeline/resolveCachedPackage'
+import { readCachedPackageSize } from '../../../server/middlewares/results/packageSize.middleware'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
@@ -596,9 +595,8 @@ export const getServerSideProps = async (
     // Cache-only: never resolve via npm during SSR. A cache miss (or a
     // tag/range that needs resolution) renders with initialResult null, and
     // the client then performs the full resolve-and-build lookup on mount.
-    const initialResult = await readCachedExactVersion(
-      createPackageRequest(packageString),
-      packageSizeCache
+    const initialResult = await readCachedPackageSize(
+      createPackageRequest(packageString)
     )
     return {
       props: {

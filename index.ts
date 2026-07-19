@@ -25,14 +25,28 @@ import limit from './server/middlewares/rateLimit.middleware'
 import requestLoggerMiddleware from './server/middlewares/requestLogger.middleware'
 import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
 import generateImgMiddleware from './server/middlewares/generateImg.middleware'
-import { packageApiPipeline } from './server/pipeline/packageApiPipeline'
+import buildMissRateLimit from './server/middlewares/buildMissRateLimit.middleware'
+import packageRequestMiddleware from './server/middlewares/results/packageRequest.middleware'
+import errorMiddleware from './server/middlewares/results/error.middleware'
+import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
+import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
 import {
-  sizeEndpoint,
-  exportsEndpoint,
-  exportSizesEndpoint,
-} from './server/pipeline/packageEndpoints'
+  resolveAndServePackageSize,
+  buildPackageSize,
+} from './server/middlewares/results/packageSize.middleware'
+import exportsMiddleware from './server/middlewares/exports.middleware'
+import {
+  serveExportSizesFromCache,
+  buildExportSizes,
+} from './server/middlewares/exportsSizes.middleware'
 
 import config from './server/config'
+
+const buildMissRateLimitOptions = {
+  durationMs: 1000 * 60 * 5,
+  maxRequests: 10,
+  whiteList: ['127.0.0.1', '::1'],
+}
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
@@ -113,9 +127,35 @@ app.prepare().then(() => {
     })
   )
 
-  router.get('/api/size', ...packageApiPipeline(sizeEndpoint))
-  router.get('/api/exports', ...packageApiPipeline(exportsEndpoint))
-  router.get('/api/exports-sizes', ...packageApiPipeline(exportSizesEndpoint))
+  router.get(
+    '/api/size',
+    packageRequestMiddleware,
+    errorMiddleware,
+    blockBlacklistMiddleware,
+    resolveAndServePackageSize,
+    buildMissRateLimit(buildMissRateLimitOptions),
+    buildPackageSize
+  )
+
+  router.get(
+    '/api/exports',
+    packageRequestMiddleware,
+    errorMiddleware,
+    blockBlacklistMiddleware,
+    resolvePackageMiddleware,
+    exportsMiddleware
+  )
+
+  router.get(
+    '/api/exports-sizes',
+    packageRequestMiddleware,
+    errorMiddleware,
+    blockBlacklistMiddleware,
+    resolvePackageMiddleware,
+    serveExportSizesFromCache,
+    buildMissRateLimit(buildMissRateLimitOptions),
+    buildExportSizes
+  )
 
   router.get('/api/recent', async ctx => {
     try {

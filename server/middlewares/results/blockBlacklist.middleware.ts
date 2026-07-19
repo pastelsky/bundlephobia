@@ -2,7 +2,7 @@ import type { Middleware } from 'koa'
 
 import config from '../../config'
 import CustomError from '../../CustomError'
-import { cachePolicy } from '../../pipeline/cachePolicy'
+import { cachePolicy } from './packageCache'
 import type { PackageRequest } from '../../types'
 
 export function assertPackageRequestIsBuildable(

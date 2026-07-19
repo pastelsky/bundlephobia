@@ -6,7 +6,7 @@ import { formatSentence } from '../../../utils/common.utils'
 import config from '../../config'
 import { failureCache } from '../../init'
 import logger from '../../Logger'
-import { errorCacheMaxAge } from '../../pipeline/cachePolicy'
+import { errorCacheMaxAge } from './packageCache'
 import type { PackageRequest, ResolvedPackage } from '../../types'
 
 const debug = createDebug('bp:error')
