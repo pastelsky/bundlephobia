@@ -1,5 +1,5 @@
 import type { PackageBuildInfo } from '../../types/package-domain'
-import { getCachedPackageAnalysis } from './cachedPackageAnalysis'
+import { packageAnalysisService } from '../services/packageAnalysis.service'
 
 export type CuratedPackageFacts = {
   name: string
@@ -15,7 +15,9 @@ export async function getCuratedPackageFactsBatch(
   return Promise.all(
     packageNames.map(async name => {
       try {
-        const result = await getCachedPackageAnalysis(name)
+        const { result } = await packageAnalysisService.analyze(name, {
+          mode: 'cache-only',
+        })
         return {
           name: result?.name ?? name,
           version: result?.version ?? '',
