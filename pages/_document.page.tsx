@@ -68,16 +68,6 @@ export default class MyDocument extends Document {
           <meta charSet="utf-8" />
           <meta httpEquiv="x-ua-compatible" content="ie=edge" />
           <meta name="application-name" content="Bundlephobia" />
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
-          <link
-            href="https://fonts.googleapis.com/css?family=Source+Code+Pro:300,400,600"
-            rel="stylesheet"
-          />
           <link
             rel="search"
             type="application/opensearchdescription+xml"
@@ -143,24 +133,30 @@ export default class MyDocument extends Document {
           }}
         />
         <script
+          defer
           src="https://browser.sentry-cdn.com/5.15.0/bundle.min.js"
           crossOrigin="anonymous"
         />
         <script
+          defer
           src="https://browser.sentry-cdn.com/5.15.0/extraerrordata.min.js"
           crossOrigin="anonymous"
         />
         <script
+          defer
           src="https://browser.sentry-cdn.com/5.15.0/captureconsole.min.js"
           crossOrigin="anonymous"
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `Sentry.init({ 
-              dsn: 'https://c28864debd5f47b2a89d05c74cd60c1c@sentry.io/5174673',
-              release: "${process.env.RELEASE_DATE}",
-              environment: "${process.env.NODE_ENV}",
-              attachStacktrace: true
+            __html: `window.addEventListener('load', function () {
+              if (!window.Sentry || !window.Sentry.init) return;
+              window.Sentry.init({
+                dsn: 'https://c28864debd5f47b2a89d05c74cd60c1c@sentry.io/5174673',
+                release: "${process.env.RELEASE_DATE}",
+                environment: "${process.env.NODE_ENV}",
+                attachStacktrace: true
+              });
             })`,
           }}
         />

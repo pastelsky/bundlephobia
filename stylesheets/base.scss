@@ -17,6 +17,17 @@ html {
   transition: background 0.2s, color 0.2s;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 code {
   font-family: $font-family-code;
 }
