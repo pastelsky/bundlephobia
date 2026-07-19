@@ -1,0 +1,40 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "dependencyDashboard": false,
+  "enabledManagers": ["npm"],
+  "prCreation": "immediate",
+  "packageRules": [
+    {
+      "description": "Disable dependency updates unless explicitly allowed",
+      "matchPackageNames": ["/.*/"],
+      "enabled": false
+    },
+    {
+      "description": "Keep both package-build-stats installations current",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["dependencies"],
+      "matchPackageNames": ["package-build-stats"],
+      "enabled": true,
+      "rangeStrategy": "pin",
+      "groupName": "package-build-stats",
+      "groupSlug": "package-build-stats"
+    },
+    {
+      "description": "Require manual handling for package-build-stats majors",
+      "matchPackageNames": ["package-build-stats"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Automerge package-build-stats patches and minors",
+      "matchPackageNames": ["package-build-stats"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "schedule": ["at any time"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "platformAutomerge": true
+    }
+  ]
+}
