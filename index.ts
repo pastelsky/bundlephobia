@@ -18,14 +18,17 @@ import invariant from 'ts-invariant'
 import Cache from './utils/cache.utils'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
+import { createPackageApiPath } from './utils/packageApi.utils'
 import logger from './server/Logger'
 import remoteMcpClient from './server/mcp/remoteClient'
 
 import limit from './server/middlewares/rateLimit.middleware'
 import exportsMiddlware from './server/middlewares/exports.middleware'
 import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
+import packageRequestMiddleware from './server/middlewares/results/packageRequest.middleware'
 import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
-import cachedResponseMiddleware from './server/middlewares/results/cachedResponse.middleware'
+import packageSizeMiddleware from './server/middlewares/results/packageSize.middleware'
+import jsonCacheResponseMiddleware from './server/middlewares/results/jsonCacheResponse.middleware'
 import buildMiddleware from './server/middlewares/results/build.middleware'
 import errorMiddleware from './server/middlewares/results/error.middleware'
 import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
@@ -37,6 +40,7 @@ import buildMissRateLimit from './server/middlewares/buildMissRateLimit.middlewa
 import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
+import { requireResolvedPackage } from './server/services/packageResolution.service'
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
@@ -125,18 +129,9 @@ app.prepare().then(() => {
 
   router.get(
     '/api/size',
-    jsonCacheMiddleware({
-      get: (key: Key) => cache.getPackageSize(key),
-      set: (key: Key, value: string) => cache.setPackageSize(key, value),
-      hash: (ctx: Context) => ({
-        name: ctx.state.resolved.name,
-        version: ctx.state.resolved.version,
-      }),
-    }),
+    packageRequestMiddleware,
     errorMiddleware,
-    resolvePackageMiddleware,
-    blockBlacklistMiddleware,
-    cachedResponseMiddleware,
+    packageSizeMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,
       maxRequests: 10,
@@ -147,6 +142,7 @@ app.prepare().then(() => {
 
   router.get(
     '/api/exports',
+    packageRequestMiddleware,
     errorMiddleware,
     resolvePackageMiddleware,
     blockBlacklistMiddleware,
@@ -155,18 +151,24 @@ app.prepare().then(() => {
 
   router.get(
     '/api/exports-sizes',
+    packageRequestMiddleware,
     jsonCacheMiddleware({
       get: (key: Key) => cache.getExportsSize(key),
       set: (key: Key, value: string) => cache.setExportsSize(key, value),
-      hash: (ctx: Context) => ({
-        name: ctx.state.resolved.name,
-        version: ctx.state.resolved.version,
-      }),
+      hash: (ctx: Context) => {
+        const resolvedPackage = requireResolvedPackage(
+          ctx.state.resolvedPackage
+        )
+        return {
+          name: resolvedPackage.name,
+          version: resolvedPackage.version,
+        }
+      },
     }),
     errorMiddleware,
     resolvePackageMiddleware,
     blockBlacklistMiddleware,
-    cachedResponseMiddleware,
+    jsonCacheResponseMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,
       maxRequests: 10,
@@ -320,9 +322,7 @@ app.prepare().then(() => {
     try {
       const args = payload.arguments ?? {}
       const packageName =
-        typeof args.package === 'string'
-          ? encodeURIComponent(args.package)
-          : undefined
+        typeof args.package === 'string' ? args.package : undefined
 
       const callLocalApi = async (path: string) => {
         const response = await fetch(`http://127.0.0.1:${port}${path}`, {
@@ -344,7 +344,9 @@ app.prepare().then(() => {
             ctx.body = { error: { code: 'InvalidMcpPayload' } }
             return
           }
-          ctx.body = await callLocalApi(`/api/size?package=${packageName}`)
+          ctx.body = await callLocalApi(
+            createPackageApiPath('size', packageName)
+          )
           return
         }
         case 'bundlephobia.exports': {
@@ -353,7 +355,9 @@ app.prepare().then(() => {
             ctx.body = { error: { code: 'InvalidMcpPayload' } }
             return
           }
-          ctx.body = await callLocalApi(`/api/exports?package=${packageName}`)
+          ctx.body = await callLocalApi(
+            createPackageApiPath('exports', packageName)
+          )
           return
         }
         case 'bundlephobia.exportsSizes': {
@@ -363,7 +367,7 @@ app.prepare().then(() => {
             return
           }
           ctx.body = await callLocalApi(
-            `/api/exports-sizes?package=${packageName}`
+            createPackageApiPath('exports-sizes', packageName)
           )
           return
         }
@@ -375,7 +379,7 @@ app.prepare().then(() => {
           }
           const limit = Number(args.limit ?? 10)
           ctx.body = await callLocalApi(
-            `/api/package-history?package=${packageName}&limit=${limit}`
+            createPackageApiPath('package-history', packageName, { limit })
           )
           return
         }
@@ -386,7 +390,7 @@ app.prepare().then(() => {
             return
           }
           ctx.body = await callLocalApi(
-            `/api/similar-packages?package=${packageName}`
+            createPackageApiPath('similar-packages', packageName)
           )
           return
         }

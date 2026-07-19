@@ -1,22 +1,30 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
-import semver from 'semver'
 
-import { parsePackageString } from '../../utils/common.utils'
+import { PackageCacheMode } from '../../utils/packageApi.utils'
 import { getRequestPriority } from '../../utils/server.utils'
-import BuildService from '../api/BuildService'
+import { buildService } from '../api/BuildService'
 import config from '../config'
 import logger from '../Logger'
+import {
+  getExactRequestedVersion,
+  requireResolvedPackage,
+} from '../services/packageResolution.service'
 import type { PackageExportsResult } from '../types'
 
-const buildService = new BuildService()
-
+// Builds the export map for one already resolved package version.
+// Applies response caching from the normalized package request mode.
 const exportsMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
-  const { name, version, packageString } = ctx.state.resolved
-  const { force, package: packageQuery } = ctx.query
-  const requestedPackage =
-    typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+  const { name, version, packageString } = requireResolvedPackage(
+    ctx.state.resolvedPackage
+  )
+  const { cacheMode } = ctx.state.packageRequest
+
+  if (cacheMode === PackageCacheMode.CacheOnly) {
+    ctx.status = 404
+    return
+  }
 
   const buildStart = now()
   const result = await buildService.getPackageExports<PackageExportsResult>(
@@ -27,10 +35,9 @@ const exportsMiddleware: Middleware = async ctx => {
 
   ctx.cacheControl = {
     maxAge:
-      force != null
+      cacheMode === PackageCacheMode.ForceRebuild
         ? 0
-        : requestedPackage &&
-          semver.valid(parsePackageString(requestedPackage).version)
+        : getExactRequestedVersion(ctx.state.packageRequest) !== null
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }

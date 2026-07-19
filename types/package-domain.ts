@@ -12,8 +12,8 @@ export interface PackageIdentity {
 }
 
 export interface PackageMetadata extends PackageIdentity {
-  description: string
-  repository: string
+  description: string | null
+  repository: string | null
 }
 
 // ── Build result ─────────────────────────────────────────────

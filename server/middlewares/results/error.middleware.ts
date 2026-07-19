@@ -2,9 +2,11 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 import createDebug from 'debug'
 
+import { PackageCacheMode } from '../../../utils/packageApi.utils'
 import config from '../../config'
 import { failureCache } from '../../init'
 import logger from '../../Logger'
+import type { PackageRequest, ResolvedPackage } from '../../types'
 
 const debug = createDebug('bp:error')
 
@@ -26,9 +28,9 @@ interface BuildErrorShape extends Error {
   }
 }
 
-function formatSentence(values: string[]): string {
+function formatSentence(values: string[]): string | null {
   if (values.length === 0) {
-    return ''
+    return null
   }
   if (values.length === 1) {
     return values[0]
@@ -39,25 +41,37 @@ function formatSentence(values: string[]): string {
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
+type PackageErrorContext = Omit<PackageRequest, 'cacheMode'> | ResolvedPackage
+
+// Converts package workflow failures into stable API errors and cache policy.
+// Logs either requested or resolved package context without invented metadata.
 const errorHandler: Middleware = async (ctx, next) => {
-  const { force } = ctx.query
+  const { cacheMode, ...requestedPackage } = ctx.state.packageRequest
   const start = now()
+
+  const getPackageContext = (): PackageErrorContext =>
+    ctx.state.resolvedPackage ?? requestedPackage
 
   const respondWithError = (
     status: number,
     {
       code,
-      message = '',
-      details = {},
+      message,
+      details,
     }: {
       code: string
-      message?: string
+      message: string
       details?: unknown
     }
   ) => {
+    const packageContext = getPackageContext()
     ctx.status = status
     ctx.body = {
-      error: { code, message, details },
+      error: {
+        code,
+        message,
+        ...(details === undefined ? {} : { details }),
+      },
     } satisfies ErrorResponseBody
 
     logger.error(
@@ -66,10 +80,10 @@ const errorHandler: Middleware = async (ctx, next) => {
         type: code,
         requestId: ctx.state.id,
         time: now() - start,
-        ...ctx.state.resolved,
-        details,
+        ...packageContext,
+        ...(details === undefined ? {} : { details }),
       },
-      `${code} ${ctx.state.resolved.packageString}`
+      `${code} ${packageContext.packageString}`
     )
   }
 
@@ -78,7 +92,10 @@ const errorHandler: Middleware = async (ctx, next) => {
   } catch (error) {
     console.error(error)
     ctx.cacheControl = {
-      maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR,
+      maxAge:
+        cacheMode === PackageCacheMode.ForceRebuild
+          ? 0
+          : config.CACHE.SIZE_API_ERROR,
     }
 
     if (!(error instanceof Error)) {
@@ -103,12 +120,16 @@ const errorHandler: Middleware = async (ctx, next) => {
         return
       }
 
-      respondWithError(500, { code: 'UnknownError', details: error })
+      respondWithError(500, {
+        code: 'UnknownError',
+        message: 'An unexpected error occurred while building this package.',
+        details: error,
+      })
       return
     }
 
     const err = error as BuildErrorShape
-    const packageString = ctx.state.resolved.packageString
+    const packageString = getPackageContext().packageString
 
     switch (err.name) {
       case 'BlocklistedPackageError':
@@ -123,7 +144,10 @@ const errorHandler: Middleware = async (ctx, next) => {
 
       case 'UnsupportedPackageError':
         ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
+          maxAge:
+            cacheMode === PackageCacheMode.ForceRebuild
+              ? 0
+              : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
         }
         respondWithError(403, {
           code: 'UnsupportedPackageError',
@@ -149,7 +173,9 @@ const errorHandler: Middleware = async (ctx, next) => {
 
         respondWithError(404, {
           code: 'PackageVersionMismatchError',
-          message: `This package has not been published with this particular version. Valid versions - ${validVersions}`,
+          message: validVersions
+            ? `This package has not been published with this particular version. Valid versions - ${validVersions}`
+            : 'This package has not been published with this particular version.',
         })
         break
       }
@@ -176,7 +202,10 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge:
+            cacheMode === PackageCacheMode.ForceRebuild
+              ? 0
+              : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)
@@ -195,7 +224,9 @@ const errorHandler: Middleware = async (ctx, next) => {
           error: {
             code: 'MissingDependencyError',
             message:
-              `This package (or this version) uses ${missingModules}, ` +
+              `This package (or this version) uses ${
+                missingModules ?? 'one or more missing modules'
+              }, ` +
               `but does not specify ${
                 missingModulesList.length > 1 ? 'them' : 'it'
               } either as a dependency or a peer dependency`,
@@ -204,7 +235,10 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge:
+            cacheMode === PackageCacheMode.ForceRebuild
+              ? 0
+              : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)
@@ -230,7 +264,10 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge:
+            cacheMode === PackageCacheMode.ForceRebuild
+              ? 0
+              : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)

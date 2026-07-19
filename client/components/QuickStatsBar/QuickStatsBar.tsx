@@ -20,10 +20,6 @@ type QuickStatsBarProps = Pick<
 >
 
 class QuickStatsBar extends Component<QuickStatsBarProps> {
-  static defaultProps = {
-    description: '',
-  }
-
   getStatItemCount = () => {
     const { isTreeShakeable, hasSideEffects } = this.props
     let statItemCount = 0
@@ -35,7 +31,9 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
 
   getTrimmedDescription = () => {
     const { description } = this.props
-    const trimmed = description.trim()
+    const trimmed = description?.trim()
+
+    if (trimmed === undefined || trimmed.length === 0) return null
 
     if (trimmed.endsWith('.')) {
       return trimmed.substring(0, trimmed.length - 1)
@@ -57,21 +55,23 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
 
     return (
       <div className="quick-stats-bar">
-        <div
-          className="quick-stats-bar__stat quick-stats-bar__stat--description "
-          title={description}
-        >
-          <InfoIcon />
-          {statItemCount < 2 && (
-            <span
-              className="quick-stats-bar__stat--description-content"
-              dangerouslySetInnerHTML={{ __html: sanitizeHTML(description) }}
-              style={{
-                maxWidth: `${500 - statItemCount * 280}px`,
-              }}
-            />
-          )}
-        </div>
+        {description !== null && (
+          <div
+            className="quick-stats-bar__stat quick-stats-bar__stat--description "
+            title={description}
+          >
+            <InfoIcon />
+            {statItemCount < 2 && (
+              <span
+                className="quick-stats-bar__stat--description-content"
+                dangerouslySetInnerHTML={{ __html: sanitizeHTML(description) }}
+                style={{
+                  maxWidth: `${500 - statItemCount * 280}px`,
+                }}
+              />
+            )}
+          </div>
+        )}
 
         {isTreeShakeable && (
           <div className="quick-stats-bar__stat">

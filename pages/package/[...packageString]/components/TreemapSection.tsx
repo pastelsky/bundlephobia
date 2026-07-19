@@ -26,6 +26,7 @@ type TreemapSectionProps = {
 type TreemapSectionState = {
   width: number
   height: number
+  isCompact: boolean
 }
 
 class TreemapSection extends Component<
@@ -35,6 +36,9 @@ class TreemapSection extends Component<
   state: TreemapSectionState = {
     width: 0,
     height: 0,
+    // Keep the server and first client render identical. The viewport-specific
+    // thresholds are applied after hydration in componentDidMount.
+    isCompact: false,
   }
 
   private treemapSectionRef = createRef<HTMLElement>()
@@ -64,6 +68,7 @@ class TreemapSection extends Component<
     this.setState({
       width,
       height,
+      isCompact: window.innerWidth <= 768,
     })
   }
 
@@ -73,14 +78,7 @@ class TreemapSection extends Component<
   }
 
   getCompactThresholds() {
-    if (typeof window === 'undefined') {
-      return {
-        compactLimit: 16,
-        ellipsizeLimit: 1.5,
-      }
-    }
-
-    return window.innerWidth <= 768
+    return this.state.isCompact
       ? {
           compactLimit: 8,
           ellipsizeLimit: 3.5,

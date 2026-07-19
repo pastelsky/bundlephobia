@@ -330,7 +330,9 @@ export default class ExportAnalysisSection extends Component<
     return (
       <div className="export-analysis-section__error">
         <h4> {errorName}</h4>
-        <p dangerouslySetInnerHTML={{ __html: errorBody ?? '' }} />
+        {errorBody !== null && (
+          <p dangerouslySetInnerHTML={{ __html: errorBody }} />
+        )}
         {errorDetails && <pre>{errorDetails}</pre>}
       </div>
     )

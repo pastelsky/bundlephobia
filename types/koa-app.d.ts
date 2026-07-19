@@ -1,15 +1,16 @@
 import 'koa'
 
 import type {
-  FailureCacheEntry,
   PackageBuildResult,
-  ResolvedPackageState,
+  PackageRequest,
+  ResolvedPackage,
 } from '../server/types'
 
 declare module 'koa' {
   interface DefaultState {
     id?: string
-    resolved: ResolvedPackageState
+    packageRequest: PackageRequest
+    resolvedPackage?: ResolvedPackage
     buildResult?: PackageBuildResult
   }
 

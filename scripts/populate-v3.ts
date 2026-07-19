@@ -3,6 +3,11 @@ import path from 'path'
 
 import axios from 'axios'
 
+import {
+  createPackageApiPath,
+  PackageCacheMode,
+} from '../utils/packageApi.utils'
+
 interface ProgressState {
   completed: Set<string>
   completed_exports: Set<string>
@@ -249,9 +254,10 @@ async function buildPackage(
     }
   } catch {}
 
-  const url = `${API_BASE}/api/size?package=${encodeURIComponent(
-    key
-  )}&record=true&force=true`
+  const url = `${API_BASE}${createPackageApiPath('size', key, {
+    cacheMode: PackageCacheMode.ForceRebuild,
+    record: true,
+  })}`
 
   try {
     const cancelSource = axios.CancelToken.source()
@@ -317,9 +323,9 @@ async function buildExports(
     }
   } catch {}
 
-  const url = `${API_BASE}/api/exports-sizes?package=${encodeURIComponent(
-    key
-  )}&force=true`
+  const url = `${API_BASE}${createPackageApiPath('exports-sizes', key, {
+    cacheMode: PackageCacheMode.ForceRebuild,
+  })}`
 
   try {
     const cancelSource = axios.CancelToken.source()

@@ -1,4 +1,5 @@
 import Router, { withRouter, type NextRouter } from 'next/router'
+import type { GetServerSidePropsContext } from 'next'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
 
@@ -32,11 +33,16 @@ import ExportAnalysisSection from './components/ExportAnalysisSection'
 import InterLinksSection from './components/InterLinksSection'
 import SimilarPackagesSection from './components/SimilarPackagesSection'
 import TreemapSection from './components/TreemapSection'
+import config from '../../../server/config'
+import { createPackageRequest } from '../../../server/services/packageResolution.service'
+import { packageSizeService } from '../../../server/services/packageSize.service'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
 type ResultPageProps = {
   router: NextRouter
+  initialResult: PackageBuildInfo | null
+  initialPackageString: string
 }
 
 type ResultPageState = {
@@ -47,7 +53,7 @@ type ResultPageState = {
   inputInitialValue: string
   historicalResults: PackageHistoryResponse
   similarPackages: PackageBuildInfo[]
-  similarPackagesCategory: string
+  similarPackagesCategory: string | null
 }
 
 type ResolvedBuildError = {
@@ -62,7 +68,7 @@ function isEmptySnapshot(reading: PackageBuildInfoSnapshot) {
 
 function formatSentence(values: string[]) {
   if (values.length === 0) {
-    return ''
+    return null
   }
 
   if (values.length === 1) {
@@ -76,6 +82,11 @@ function formatSentence(values: string[]) {
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
+function truncateMetaDescription(description: string) {
+  if (description.length <= 160) return description
+  return `${description.slice(0, 157).trimEnd()}…`
+}
+
 function getResolvedBuildError(resultsError: unknown): ResolvedBuildError {
   return resolveBuildError(resultsError)
 }
@@ -87,19 +98,19 @@ function getPackageStringFromRouter(router: NextRouter) {
     return packageString.join('/')
   }
 
-  return packageString ?? ''
+  return packageString ?? null
 }
 
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   state: ResultPageState = {
-    results: null,
-    resultsPromiseState: null,
+    results: this.props.initialResult,
+    resultsPromiseState: this.props.initialResult ? 'fulfilled' : null,
     resultsError: null,
     historicalResultsPromiseState: null,
-    inputInitialValue: getPackageStringFromRouter(this.props.router),
+    inputInitialValue: this.props.initialPackageString,
     historicalResults: {},
     similarPackages: [],
-    similarPackagesCategory: '',
+    similarPackagesCategory: null,
   }
 
   private activeQuery: string | null = null
@@ -108,8 +119,33 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     Analytics.pageView('package result')
 
     const packageString = getPackageStringFromRouter(this.props.router)
-    if (packageString) {
-      this.handleSearchSubmit(packageString)
+    if (packageString === null) return
+
+    this.activeQuery = packageString
+
+    if (this.props.initialResult) {
+      this.scheduleSecondaryFetches(packageString)
+    } else {
+      this.setState(
+        {
+          resultsPromiseState: 'pending',
+          historicalResultsPromiseState: 'pending',
+        },
+        () => this.fetchResults(packageString)
+      )
+    }
+  }
+
+  scheduleSecondaryFetches = (packageString: string) => {
+    const fetchSecondaryData = () => {
+      this.fetchHistory(packageString)
+      this.fetchSimilarPackages(packageString)
+    }
+
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(fetchSecondaryData, { timeout: 2000 })
+    } else {
+      setTimeout(fetchSecondaryData, 1)
     }
   }
 
@@ -117,7 +153,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const packageString = getPackageStringFromRouter(prevProps.router)
     const nextPackageString = getPackageStringFromRouter(this.props.router)
 
-    if (!nextPackageString) {
+    if (packageString === null || nextPackageString === null) {
       return
     }
 
@@ -140,8 +176,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
     API.getInfo(packageString)
       .then(results => {
-        this.fetchSimilarPackages(packageString)
-
         if (this.activeQuery !== packageString) return
 
         const newPackageString = `${results.name}@${results.version}`
@@ -149,10 +183,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
           {
             inputInitialValue: newPackageString,
             results,
+            resultsPromiseState: 'fulfilled',
           },
           () => {
-            this.activeQuery = newPackageString
-            Router.replace(`/package/${newPackageString}`)
+            this.scheduleSecondaryFetches(packageString)
           }
         )
 
@@ -165,6 +199,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         this.setState({
           resultsError: err,
           resultsPromiseState: 'rejected',
+          historicalResultsPromiseState: null,
         })
         console.error(err)
 
@@ -196,19 +231,18 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
     API.getSimilar(name)
       .then(result => {
-        if (!result.category.label || result.category.score < 12) {
+        const { label, score, similar } = result.category
+        if (label === null || score < 12) {
           return
         }
 
-        const promises = result.category.similar.map(packageName =>
-          API.getInfo(packageName)
-        )
+        const promises = similar.map(packageName => API.getInfo(packageName))
 
         Promise.allSettled(promises).then(results => {
           if (this.activeQuery !== packageString) return
 
           this.setState({
-            similarPackagesCategory: result.category.label ?? '',
+            similarPackagesCategory: label,
             similarPackages: results
               .filter(
                 (
@@ -239,14 +273,13 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         inputInitialValue: normalizedQuery,
         similarPackages: [],
         historicalResults: {},
-        similarPackagesCategory: '',
+        similarPackagesCategory: null,
       },
       () => {
         this.activeQuery = normalizedQuery
         Router.push(`/package/${normalizedQuery}`)
         Analytics.pageView('package result')
         this.fetchResults(normalizedQuery)
-        this.fetchHistory(normalizedQuery)
       }
     )
   }
@@ -326,28 +359,21 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   getMetaTags = () => {
     const { router } = this.props
     const { resultsPromiseState, results } = this.state
-    let name = ''
-    let version: string | null | undefined
-    let formattedSizeText = ''
-    let formattedGZIPSizeText = ''
+    const hasBuildResult = resultsPromiseState === 'fulfilled' && results
+    const requestedPackage = parsePackageString(
+      getPackageStringFromRouter(router) ?? this.props.initialPackageString
+    )
+    const name = hasBuildResult ? results.name : requestedPackage.name
+    const version = hasBuildResult ? results.version : requestedPackage.version
+    let formattedSizes: { minified: string; gzip: string } | null = null
 
-    if (resultsPromiseState === 'fulfilled' && results) {
-      name = results.name
-      version = results.version
+    if (hasBuildResult) {
       const formattedSize = formatSize(results.size)
       const formattedGZIPSize = formatSize(results.gzip)
-      formattedSizeText = `${formattedSize.size.toFixed(1)} ${
-        formattedSize.unit
-      }`
-      formattedGZIPSizeText = `${formattedGZIPSize.size.toFixed(1)} ${
-        formattedGZIPSize.unit
-      }`
-    } else {
-      const parsedPackage = parsePackageString(
-        getPackageStringFromRouter(router)
-      )
-      name = parsedPackage.name
-      version = parsedPackage.version
+      formattedSizes = {
+        minified: `${formattedSize.size.toFixed(1)} ${formattedSize.unit}`,
+        gzip: `${formattedGZIPSize.size.toFixed(1)} ${formattedGZIPSize.unit}`,
+      }
     }
 
     const origin =
@@ -355,20 +381,28 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         ? 'https://bundlephobia.com'
         : window.location.origin
 
-    const title = version ? `${name} v${version}` : name
-    const description =
-      resultsPromiseState === 'fulfilled'
-        ? `Size of ${title} is ${formattedSizeText} (minified), and ${formattedGZIPSizeText} when compressed using GZIP. ${DEFAULT_DESCRIPTION_START}`
-        : `Find the size of javascript package ${title}. ${DEFAULT_DESCRIPTION_START}`
+    const versionLabel = version ? `${name} v${version}` : name
+    const pageTitle = formattedSizes
+      ? `${name} bundle size: ${formattedSizes.gzip} gzip | Bundlephobia`
+      : `${name} bundle size, gzip size & dependencies | Bundlephobia`
+    const packageDescription = this.props.initialResult?.description
+    const summary = formattedSizes
+      ? `${versionLabel} is ${formattedSizes.minified} minified and ${formattedSizes.gzip} with gzip. Check dependencies, exports and package composition.`
+      : `Check the minified and gzip bundle size of ${versionLabel}, its dependencies, exports and package composition. ${DEFAULT_DESCRIPTION_START}`
+    const description = truncateMetaDescription(
+      packageDescription === null || packageDescription === undefined
+        ? summary
+        : `${summary} ${packageDescription}`
+    )
 
     return (
       <MetaTags
-        title={`${title} ❘ Bundlephobia`}
+        title={pageTitle}
         image={
           origin + `/api/stats-image?name=${name}&version=${version}&wide=true`
         }
         description={description}
-        twitterDescription="Insights into npm packages"
+        twitterDescription={description}
         canonicalPath={`/package/${name}`}
         isLargeImage
       />
@@ -510,10 +544,12 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
             <div className="result-error">
               <EmptyBox className="result-error__img" />
               <h2 className="result-error__code">{errorName}</h2>
-              <p
-                className="result-error__message"
-                dangerouslySetInnerHTML={{ __html: errorBody ?? '' }}
-              />
+              {errorBody !== null && (
+                <p
+                  className="result-error__message"
+                  dangerouslySetInnerHTML={{ __html: errorBody }}
+                />
+              )}
               {errorDetails && (
                 <details className="result-error__details">
                   <summary> Stacktrace</summary>
@@ -543,6 +579,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
           {resultsPromiseState === 'fulfilled' &&
             results &&
+            similarPackagesCategory !== null &&
             similarPackages.length > 0 && (
               <div className="content-container">
                 <SimilarPackagesSection
@@ -564,8 +601,48 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 }
 
-export const getServerSideProps = () => {
-  return { props: {} }
+export const getServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  const packageParam = context.params?.packageString
+  const packageString = Array.isArray(packageParam)
+    ? packageParam.join('/')
+    : packageParam
+
+  // This caches the rendered document. API cache-control middleware does not
+  // run for Next.js page responses handled by the catch-all Koa route.
+  context.res.setHeader(
+    'Cache-Control',
+    `public, s-maxage=${config.CACHE.PACKAGE_PAGE_SHARED}, ` +
+      `stale-while-revalidate=${config.CACHE.PACKAGE_PAGE_STALE}`
+  )
+
+  if (packageString === undefined || packageString.length === 0) {
+    return { notFound: true }
+  }
+
+  try {
+    const cacheResult = await packageSizeService.findPackageSize(
+      createPackageRequest(packageString)
+    )
+    const initialResult =
+      cacheResult.kind === 'cache-hit' ? cacheResult.result : null
+    return {
+      props: {
+        initialResult,
+        initialPackageString: packageString,
+      },
+    }
+  } catch {
+    // Keep the document stable when npm metadata or the cache service is
+    // unavailable. The client can still perform the normal interactive lookup.
+    return {
+      props: {
+        initialResult: null,
+        initialPackageString: packageString,
+      },
+    }
+  }
 }
 
 export default withRouter(ResultPage)

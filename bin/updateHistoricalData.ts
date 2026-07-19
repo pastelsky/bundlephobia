@@ -7,6 +7,7 @@ import fetch from 'node-fetch'
 import trending from 'trending-github'
 
 import firebaseUtils from '../utils/firebase.utils'
+import { createPackageApiPath } from '../utils/packageApi.utils'
 
 import 'dotenv/config'
 
@@ -29,11 +30,27 @@ async function runSerial<T>(tasks: Array<() => Promise<T>>) {
 const debug = debugFactory('bp:trending-fetch')
 const github = new GithubAPI({ debug: false })
 
-github.authenticate({
-  type: 'oauth',
-  key: process.env.GITHUB_CLIENT_ID || '',
-  secret: process.env.GITHUB_CLIENT_SECRET || '',
-})
+function getOptionalEnvironmentVariable(name: string): string | null {
+  const value = process.env[name]?.trim()
+  return value === undefined || value.length === 0 ? null : value
+}
+
+const githubClientId = getOptionalEnvironmentVariable('GITHUB_CLIENT_ID')
+const githubClientSecret = getOptionalEnvironmentVariable(
+  'GITHUB_CLIENT_SECRET'
+)
+
+if (githubClientId !== null && githubClientSecret !== null) {
+  github.authenticate({
+    type: 'oauth',
+    key: githubClientId,
+    secret: githubClientSecret,
+  })
+} else if (githubClientId !== null || githubClientSecret !== null) {
+  throw new Error(
+    'GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be configured together'
+  )
+}
 
 firebase.initializeApp({
   apiKey: process.env.FIREBASE_API_KEY,
@@ -89,7 +106,7 @@ async function getTrendingSearches() {
 async function getVersionsToBuild(name: string) {
   const versionsToBuild: string[] = []
   const res = await fetch(
-    `http://localhost:${port}/api/package-history?package=${name}`
+    `http://localhost:${port}${createPackageApiPath('package-history', name)}`
   )
   const versionInfo = (await res.json()) as Record<string, unknown>
 
@@ -111,7 +128,10 @@ async function getVersionsToBuild(name: string) {
 async function buildPackage(name: string, version: string) {
   debug('building package %s %s', name, version)
   const res = await fetch(
-    `http://localhost:${port}/api/size?package=${name + '@' + version}`
+    `http://localhost:${port}${createPackageApiPath(
+      'size',
+      `${name}@${version}`
+    )}`
   )
   debug('result %s %s %O', name, version, await res.json())
 }
