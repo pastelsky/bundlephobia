@@ -82,6 +82,27 @@ const errorHandler: Middleware = async (ctx, next) => {
     }
 
     if (!(error instanceof Error)) {
+      const errObj = error as Record<string, unknown> | null
+      if (errObj && errObj.code === 'JOB_EXPIRED') {
+        ctx.cacheControl = { maxAge: 0 }
+        respondWithError(503, {
+          code: 'QueueTimeoutError',
+          message:
+            'The build queue is currently full and this request timed out. ' +
+            'Please try again in a few minutes.',
+        })
+        return
+      }
+      if (errObj && errObj.code === 'QUEUE_CLEARED') {
+        ctx.cacheControl = { maxAge: 0 }
+        respondWithError(503, {
+          code: 'QueueClearedError',
+          message:
+            'The build queue was cleared. Please try building the package again.',
+        })
+        return
+      }
+
       respondWithError(500, { code: 'UnknownError', details: error })
       return
     }
@@ -144,7 +165,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         break
 
       case 'EntryPointError': {
-        const status = 500
+        const status = 422
         const body = {
           error: {
             code: 'EntryPointError',
@@ -165,7 +186,7 @@ const errorHandler: Middleware = async (ctx, next) => {
       }
 
       case 'MissingDependencyError': {
-        const status = 500
+        const status = 422
         const missingModulesList = err.extra?.missingModules ?? []
         const missingModules = formatSentence(
           missingModulesList.map(module => `\`<code>${module}</code>\``)
@@ -193,7 +214,7 @@ const errorHandler: Middleware = async (ctx, next) => {
       }
 
       case 'MinifyError': {
-        const status = 500
+        const status = 422
         const body = {
           error: {
             code: 'MinifyError',
@@ -220,13 +241,13 @@ const errorHandler: Middleware = async (ctx, next) => {
 
       case 'BuildError':
       default: {
-        const status = 500
+        const status = 422
         const errorJSON = {
           code: 'BuildError',
           message: 'Failed to build this package.',
           details: err,
         }
-        respondWithError(500, errorJSON)
+        respondWithError(status, errorJSON)
         debug('saved %s to failure cache', packageString)
         failureCache.set(packageString, {
           status,

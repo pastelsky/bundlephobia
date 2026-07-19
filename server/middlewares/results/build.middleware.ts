@@ -23,10 +23,31 @@ const buildMiddleware: Middleware = async ctx => {
     typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
   const buildStart = now()
-  const result = await buildService.getPackageBuildStats<PackageBuildResult>(
-    packageString,
-    priority
-  )
+
+  const onAborted = () => {
+    logger.info(
+      'BUILD_ABORTED',
+      {
+        requestId: ctx.state.id,
+        packageString,
+      },
+      `BUILD_ABORTED: client closed connection for package ${packageString}`
+    )
+    buildService.cancelPackageBuildStats(packageString)
+  }
+
+  ctx.req.on('close', onAborted)
+
+  let result: PackageBuildResult
+  try {
+    result = await buildService.getPackageBuildStats<PackageBuildResult>(
+      packageString,
+      priority
+    )
+  } finally {
+    ctx.req.off('close', onAborted)
+  }
+
   const buildEnd = now()
 
   ctx.cacheControl = {

@@ -121,6 +121,10 @@ export default class BuildService {
     )
   }
 
+  cancelPackageBuildStats(packageString: string): void {
+    requestQueue.cancel(packageString, OperationType.PACKAGE_BUILD_STATS)
+  }
+
   async getPackageExports<T>(
     packageString: string,
     priority: number

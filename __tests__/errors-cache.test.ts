@@ -73,7 +73,9 @@ describe('build api', () => {
     expect(result.headers.get('cache-control')).toBe('max-age=60')
     expect(errorJSON.error.code).toBe('BlocklistedPackageError')
     expect(errorJSON.error.message).toBe(
-      'The package you were looking for is blocklisted due to suspicious activity in the past'
+      'The package you were looking for is blocklisted ' +
+        "because it failed to build multiple times in the past and further tries aren't likely to succeed. This can " +
+        "happen if this package wasn't meant to be bundled in a client side application."
     )
   })
 
@@ -82,7 +84,7 @@ describe('build api', () => {
     const result = await fetch(resultURL)
     const errorJSON: ErrorResponse = await result.json()
 
-    expect(result.status).toBe(500)
+    expect(result.status).toBe(422)
     expect(result.headers.get('cache-control')).toBe('max-age=3600')
     expect(errorJSON.error.code).toBe('EntryPointError')
     expect(errorJSON.error.message).toBe(

@@ -29,6 +29,7 @@ interface QueueJob<TParams = unknown, TResult = unknown> {
   params: TParams
   successListeners: Array<(result: TResult) => void>
   failureListeners: Array<(error: unknown) => void>
+  cancel?: () => void
 }
 
 interface QueueOptions {
@@ -133,6 +134,23 @@ class Queue {
     this.jobs = this.jobs.filter(job => job.id !== id || job.type !== type)
   }
 
+  cancel(id: string, type: JobType): void {
+    const job = this.jobs.find(job => job.id === id && job.type === type)
+    if (job) {
+      log('cancelling job %s (%s)', id, job.status.toString())
+      if (job.status === JobStatus.PROCESSING) {
+        if (job.cancel) {
+          job.cancel()
+        }
+      }
+      job.failureListeners.forEach(listener => {
+        listener(new Error('JOB_CANCELLED'))
+      })
+      this.removeJob(id, type)
+      this.executeNextJobIfPossible()
+    }
+  }
+
   clear(): void {
     this.jobs
       .filter(job => job.status === JobStatus.READY)
@@ -190,7 +208,21 @@ class Queue {
 
     try {
       const handler = this.executorMap[nextJob.type]
-      const result = await handler.call(this, nextJob.params)
+      const promiseOrValue = handler.call(this, nextJob.params)
+
+      if (promiseOrValue && typeof promiseOrValue === 'object') {
+        const cancelablePromise = promiseOrValue as Promise<unknown> & {
+          cancel?: () => void
+        }
+        if (typeof cancelablePromise.cancel === 'function') {
+          nextJob.cancel = () => {
+            log('terminating running task for job %s', nextJob.id)
+            cancelablePromise.cancel!()
+          }
+        }
+      }
+
+      const result = await promiseOrValue
       log('job %s was a success, removing it', nextJob.id, nextJob.type)
       nextJob.successListeners.forEach(listener => {
         listener.call(this, result)
