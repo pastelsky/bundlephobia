@@ -1,0 +1,89 @@
+name: Approve Renovate package-build-stats updates
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: approve-renovate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  approve:
+    if: >-
+      github.event.pull_request.user.login == 'renovate[bot]' &&
+      github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+
+    steps:
+      - name: Verify the update is narrowly scoped
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$HEAD_REF" != renovate/package-build-stats-* ]]; then
+            echo "Unexpected Renovate branch: $HEAD_REF"
+            exit 1
+          fi
+
+          files="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[].filename')"
+          required_files=(
+            package.json
+            yarn.lock
+            build-service/package.json
+            build-service/yarn.lock
+          )
+
+          while IFS= read -r file; do
+            case "$file" in
+              package.json|yarn.lock|build-service/package.json|build-service/yarn.lock) ;;
+              *)
+                echo "Unexpected file in Renovate PR: $file"
+                exit 1
+                ;;
+            esac
+          done <<< "$files"
+
+          for required_file in "${required_files[@]}"; do
+            if ! grep -Fxq "$required_file" <<< "$files"; then
+              echo "Expected file is missing: $required_file"
+              exit 1
+            fi
+          done
+
+          package_version() {
+            gh api --method GET "repos/$GITHUB_REPOSITORY/contents/$1" \
+              -f ref="$HEAD_SHA" --jq '.content' |
+              base64 --decode |
+              jq -r '.dependencies["package-build-stats"]'
+          }
+
+          root_version="$(package_version package.json)"
+          build_version="$(package_version build-service/package.json)"
+
+          if [[ "$root_version" != "$build_version" ]]; then
+            echo "The two package-build-stats versions differ"
+            exit 1
+          fi
+
+          if [[ ! "$root_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected an exact stable version, got: $root_version"
+            exit 1
+          fi
+
+          echo "Verified package-build-stats@$root_version in both package roots"
+
+      - name: Approve and enable auto-merge
+        run: |
+          gh pr review "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --approve \
+            --body "Automatically approved after validating the trusted Renovate author, exact file allowlist, and matching pinned versions."
+          gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --auto --squash
