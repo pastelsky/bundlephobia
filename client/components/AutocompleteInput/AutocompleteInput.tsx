@@ -78,6 +78,7 @@ export const AutocompleteInput = ({
               <div
                 style={{ minWidth: inbuiltStyles.minWidth }}
                 className="autocomplete-input__suggestions-menu"
+                role="listbox"
               >
                 {items as any}
               </div>
@@ -112,7 +113,11 @@ export const AutocompleteInput = ({
           )}
         </div>
       </div>
-      <button type="submit" className="autocomplete-input__search-icon">
+      <button
+        type="submit"
+        className="autocomplete-input__search-icon"
+        aria-label="Search package"
+      >
         <SearchIcon className="" />
       </button>
     </form>

@@ -109,6 +109,7 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
             href={'https://npmjs.com/package/' + name}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={`View ${name} on npm`}
           >
             <NPMIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon--npm" />
           </a>
@@ -118,6 +119,7 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
               href={repository}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`View ${name} repository`}
             >
               <GithubIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon quick-stats-bar__logo-icon--github" />
             </a>
