@@ -32,7 +32,7 @@ export default class BuildProgressIndicator extends Component<
   }
 
   componentDidMount() {
-    setTimeout(() => {
+    this.timeoutId = setTimeout(() => {
       if (!this.props.isDone) {
         this.setState({ started: true })
         this.setMessage()
@@ -40,8 +40,8 @@ export default class BuildProgressIndicator extends Component<
     }, OptimisticLoadTimeout)
   }
 
-  componentWillReceiveProps(nextProps: BuildProgressIndicatorProps) {
-    if (nextProps.isDone) {
+  componentDidUpdate(prevProps: BuildProgressIndicatorProps) {
+    if (!prevProps.isDone && this.props.isDone) {
       this.stage = 3
       this.props.onDone()
     }
@@ -58,7 +58,7 @@ export default class BuildProgressIndicator extends Component<
     clearTimeout(this.timeoutId)
   }
 
-  getProgressText = (stage: typeof order[number]) => {
+  getProgressText = (stage: (typeof order)[number]) => {
     const progressText = {
       resolving: 'Resolving version and dependencies',
       building: 'Bundling package',
