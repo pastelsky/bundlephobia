@@ -27,9 +27,9 @@ interface BuildErrorShape extends Error {
   }
 }
 
-function formatSentence(values: string[]): string {
+function formatSentence(values: string[]): string | null {
   if (values.length === 0) {
-    return ''
+    return null
   }
   if (values.length === 1) {
     return values[0]
@@ -55,18 +55,22 @@ const errorHandler: Middleware = async (ctx, next) => {
     status: number,
     {
       code,
-      message = '',
-      details = {},
+      message,
+      details,
     }: {
       code: string
-      message?: string
+      message: string
       details?: unknown
     }
   ) => {
     const packageContext = getPackageContext()
     ctx.status = status
     ctx.body = {
-      error: { code, message, details },
+      error: {
+        code,
+        message,
+        ...(details === undefined ? {} : { details }),
+      },
     } satisfies ErrorResponseBody
 
     logger.error(
@@ -76,7 +80,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         requestId: ctx.state.id,
         time: now() - start,
         ...packageContext,
-        details,
+        ...(details === undefined ? {} : { details }),
       },
       `${code} ${packageContext.packageString}`
     )
@@ -112,7 +116,11 @@ const errorHandler: Middleware = async (ctx, next) => {
         return
       }
 
-      respondWithError(500, { code: 'UnknownError', details: error })
+      respondWithError(500, {
+        code: 'UnknownError',
+        message: 'An unexpected error occurred while building this package.',
+        details: error,
+      })
       return
     }
 
@@ -161,7 +169,9 @@ const errorHandler: Middleware = async (ctx, next) => {
 
         respondWithError(404, {
           code: 'PackageVersionMismatchError',
-          message: `This package has not been published with this particular version. Valid versions - ${validVersions}`,
+          message: validVersions
+            ? `This package has not been published with this particular version. Valid versions - ${validVersions}`
+            : 'This package has not been published with this particular version.',
         })
         break
       }
@@ -210,7 +220,9 @@ const errorHandler: Middleware = async (ctx, next) => {
           error: {
             code: 'MissingDependencyError',
             message:
-              `This package (or this version) uses ${missingModules}, ` +
+              `This package (or this version) uses ${
+                missingModules ?? 'one or more missing modules'
+              }, ` +
               `but does not specify ${
                 missingModulesList.length > 1 ? 'them' : 'it'
               } either as a dependency or a peer dependency`,

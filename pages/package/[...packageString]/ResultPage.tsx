@@ -53,7 +53,7 @@ type ResultPageState = {
   inputInitialValue: string
   historicalResults: PackageHistoryResponse
   similarPackages: PackageBuildInfo[]
-  similarPackagesCategory: string
+  similarPackagesCategory: string | null
 }
 
 type ResolvedBuildError = {
@@ -68,7 +68,7 @@ function isEmptySnapshot(reading: PackageBuildInfoSnapshot) {
 
 function formatSentence(values: string[]) {
   if (values.length === 0) {
-    return ''
+    return null
   }
 
   if (values.length === 1) {
@@ -98,7 +98,7 @@ function getPackageStringFromRouter(router: NextRouter) {
     return packageString.join('/')
   }
 
-  return packageString ?? ''
+  return packageString ?? null
 }
 
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
@@ -107,12 +107,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     resultsPromiseState: this.props.initialResult ? 'fulfilled' : null,
     resultsError: null,
     historicalResultsPromiseState: null,
-    inputInitialValue:
-      this.props.initialPackageString ||
-      getPackageStringFromRouter(this.props.router),
+    inputInitialValue: this.props.initialPackageString,
     historicalResults: {},
     similarPackages: [],
-    similarPackagesCategory: '',
+    similarPackagesCategory: null,
   }
 
   private activeQuery: string | null = null
@@ -121,7 +119,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     Analytics.pageView('package result')
 
     const packageString = getPackageStringFromRouter(this.props.router)
-    if (!packageString) return
+    if (packageString === null) return
 
     this.activeQuery = packageString
 
@@ -155,7 +153,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const packageString = getPackageStringFromRouter(prevProps.router)
     const nextPackageString = getPackageStringFromRouter(this.props.router)
 
-    if (!nextPackageString) {
+    if (packageString === null || nextPackageString === null) {
       return
     }
 
@@ -233,19 +231,18 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
     API.getSimilar(name)
       .then(result => {
-        if (!result.category.label || result.category.score < 12) {
+        const { label, score, similar } = result.category
+        if (label === null || score < 12) {
           return
         }
 
-        const promises = result.category.similar.map(packageName =>
-          API.getInfo(packageName)
-        )
+        const promises = similar.map(packageName => API.getInfo(packageName))
 
         Promise.allSettled(promises).then(results => {
           if (this.activeQuery !== packageString) return
 
           this.setState({
-            similarPackagesCategory: result.category.label ?? '',
+            similarPackagesCategory: label,
             similarPackages: results
               .filter(
                 (
@@ -276,7 +273,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         inputInitialValue: normalizedQuery,
         similarPackages: [],
         historicalResults: {},
-        similarPackagesCategory: '',
+        similarPackagesCategory: null,
       },
       () => {
         this.activeQuery = normalizedQuery
@@ -362,28 +359,21 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   getMetaTags = () => {
     const { router } = this.props
     const { resultsPromiseState, results } = this.state
-    let name = ''
-    let version: string | null | undefined
-    let formattedSizeText = ''
-    let formattedGZIPSizeText = ''
+    const hasBuildResult = resultsPromiseState === 'fulfilled' && results
+    const requestedPackage = parsePackageString(
+      getPackageStringFromRouter(router) ?? this.props.initialPackageString
+    )
+    const name = hasBuildResult ? results.name : requestedPackage.name
+    const version = hasBuildResult ? results.version : requestedPackage.version
+    let formattedSizes: { minified: string; gzip: string } | null = null
 
-    if (resultsPromiseState === 'fulfilled' && results) {
-      name = results.name
-      version = results.version
+    if (hasBuildResult) {
       const formattedSize = formatSize(results.size)
       const formattedGZIPSize = formatSize(results.gzip)
-      formattedSizeText = `${formattedSize.size.toFixed(1)} ${
-        formattedSize.unit
-      }`
-      formattedGZIPSizeText = `${formattedGZIPSize.size.toFixed(1)} ${
-        formattedGZIPSize.unit
-      }`
-    } else {
-      const parsedPackage = parsePackageString(
-        getPackageStringFromRouter(router)
-      )
-      name = parsedPackage.name
-      version = parsedPackage.version
+      formattedSizes = {
+        minified: `${formattedSize.size.toFixed(1)} ${formattedSize.unit}`,
+        gzip: `${formattedGZIPSize.size.toFixed(1)} ${formattedGZIPSize.unit}`,
+      }
     }
 
     const origin =
@@ -392,17 +382,17 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         : window.location.origin
 
     const versionLabel = version ? `${name} v${version}` : name
-    const pageTitle =
-      resultsPromiseState === 'fulfilled'
-        ? `${name} bundle size: ${formattedGZIPSizeText} gzip | Bundlephobia`
-        : `${name} bundle size, gzip size & dependencies | Bundlephobia`
+    const pageTitle = formattedSizes
+      ? `${name} bundle size: ${formattedSizes.gzip} gzip | Bundlephobia`
+      : `${name} bundle size, gzip size & dependencies | Bundlephobia`
     const packageDescription = this.props.initialResult?.description
-      ? ` ${this.props.initialResult.description}`
-      : ''
+    const summary = formattedSizes
+      ? `${versionLabel} is ${formattedSizes.minified} minified and ${formattedSizes.gzip} with gzip. Check dependencies, exports and package composition.`
+      : `Check the minified and gzip bundle size of ${versionLabel}, its dependencies, exports and package composition. ${DEFAULT_DESCRIPTION_START}`
     const description = truncateMetaDescription(
-      resultsPromiseState === 'fulfilled'
-        ? `${versionLabel} is ${formattedSizeText} minified and ${formattedGZIPSizeText} with gzip. Check dependencies, exports and package composition.${packageDescription}`
-        : `Check the minified and gzip bundle size of ${versionLabel}, its dependencies, exports and package composition. ${DEFAULT_DESCRIPTION_START}${packageDescription}`
+      packageDescription === null || packageDescription === undefined
+        ? summary
+        : `${summary} ${packageDescription}`
     )
 
     return (
@@ -554,10 +544,12 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
             <div className="result-error">
               <EmptyBox className="result-error__img" />
               <h2 className="result-error__code">{errorName}</h2>
-              <p
-                className="result-error__message"
-                dangerouslySetInnerHTML={{ __html: errorBody ?? '' }}
-              />
+              {errorBody !== null && (
+                <p
+                  className="result-error__message"
+                  dangerouslySetInnerHTML={{ __html: errorBody }}
+                />
+              )}
               {errorDetails && (
                 <details className="result-error__details">
                   <summary> Stacktrace</summary>
@@ -587,6 +579,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
           {resultsPromiseState === 'fulfilled' &&
             results &&
+            similarPackagesCategory !== null &&
             similarPackages.length > 0 && (
               <div className="content-container">
                 <SimilarPackagesSection
@@ -614,7 +607,7 @@ export const getServerSideProps = async (
   const packageParam = context.params?.packageString
   const packageString = Array.isArray(packageParam)
     ? packageParam.join('/')
-    : packageParam ?? ''
+    : packageParam
 
   // This caches the rendered document. API cache-control middleware does not
   // run for Next.js page responses handled by the catch-all Koa route.
@@ -624,7 +617,7 @@ export const getServerSideProps = async (
       `stale-while-revalidate=${config.CACHE.PACKAGE_PAGE_STALE}`
   )
 
-  if (!packageString) {
+  if (packageString === undefined || packageString.length === 0) {
     return { notFound: true }
   }
 

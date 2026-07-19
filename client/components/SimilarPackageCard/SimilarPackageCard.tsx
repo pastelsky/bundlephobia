@@ -135,12 +135,14 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
               </a>
             )}
           </div>
-          <p
-            className="similar-package-card__description"
-            dangerouslySetInnerHTML={{
-              __html: sanitizeHTML(pack.description ?? ''),
-            }}
-          />
+          {pack.description !== null && (
+            <p
+              className="similar-package-card__description"
+              dangerouslySetInnerHTML={{
+                __html: sanitizeHTML(pack.description),
+              }}
+            />
+          )}
         </div>
         {footer}
       </Link>

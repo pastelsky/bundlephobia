@@ -1,13 +1,15 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
-import semver from 'semver'
 
 import firebaseUtils from '../../../utils/firebase.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
 import type { PackageBuildResult } from '../../types'
 import config from '../../config'
 import logger from '../../Logger'
-import { requireResolvedPackage } from '../../services/packageResolution.service'
+import {
+  getExactRequestedVersion,
+  requireResolvedPackage,
+} from '../../services/packageResolution.service'
 import { packageSizeService } from '../../services/packageSize.service'
 
 // Builds a package only after resolution and all cache stages miss.
@@ -51,7 +53,7 @@ const buildMiddleware: Middleware = async ctx => {
     maxAge:
       cacheMode === 'force-rebuild'
         ? 0
-        : semver.valid(ctx.state.packageRequest.version ?? '')
+        : getExactRequestedVersion(ctx.state.packageRequest) !== null
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }

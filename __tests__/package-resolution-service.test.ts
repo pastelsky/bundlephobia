@@ -35,4 +35,16 @@ describe('package resolution', () => {
     expect(resolved.description).toBe(`${'x'.repeat(300)}…`)
     expect(resolved.repository).toBeNull()
   })
+
+  it('represents blank optional metadata as null', () => {
+    const resolved = createResolvedPackage(createPackageRequest('example'), {
+      name: 'example',
+      version: '1.0.0',
+      description: '   ',
+      repository: { url: '   ' },
+    })
+
+    expect(resolved.description).toBeNull()
+    expect(resolved.repository).toBeNull()
+  })
 })

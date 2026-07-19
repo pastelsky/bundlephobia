@@ -1,12 +1,14 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
-import semver from 'semver'
 
 import { getRequestPriority } from '../../utils/server.utils'
 import { buildService } from '../api/BuildService'
 import config from '../config'
 import logger from '../Logger'
-import { requireResolvedPackage } from '../services/packageResolution.service'
+import {
+  getExactRequestedVersion,
+  requireResolvedPackage,
+} from '../services/packageResolution.service'
 import type { PackageExportsResult } from '../types'
 
 // Builds the export map for one already resolved package version.
@@ -34,7 +36,7 @@ const exportsMiddleware: Middleware = async ctx => {
     maxAge:
       cacheMode === 'force-rebuild'
         ? 0
-        : semver.valid(ctx.state.packageRequest.version ?? '')
+        : getExactRequestedVersion(ctx.state.packageRequest) !== null
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }

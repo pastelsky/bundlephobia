@@ -1,5 +1,3 @@
-import semver from 'semver'
-
 import type {
   PackageBuildInfo,
   PackageBuildResult,
@@ -11,7 +9,10 @@ import type {
   PackageSizeCacheResult,
   ResolvedPackage,
 } from '../types'
-import { resolvePackageRequest } from './packageResolution.service'
+import {
+  getExactRequestedVersion,
+  resolvePackageRequest,
+} from './packageResolution.service'
 
 export type PackageSizeBuild = Omit<
   PackageBuildResult,
@@ -100,12 +101,15 @@ export class PackageSizeService {
   async findPackageSize(
     packageRequest: PackageRequest
   ): Promise<PackageSizeCacheResult> {
-    const { name, version, cacheMode } = packageRequest
+    const { name, cacheMode } = packageRequest
     const shouldReadCache = cacheMode !== 'force-rebuild'
-    const hasExactVersion = version !== null && semver.valid(version) !== null
+    const exactRequestedVersion = getExactRequestedVersion(packageRequest)
 
-    if (shouldReadCache && hasExactVersion) {
-      const exactResult = await this.cache.get({ name, version })
+    if (shouldReadCache && exactRequestedVersion !== null) {
+      const exactResult = await this.cache.get({
+        name,
+        version: exactRequestedVersion,
+      })
 
       if (exactResult) {
         return {
@@ -123,9 +127,9 @@ export class PackageSizeService {
 
     if (shouldReadCache) {
       const exactVersionWasAlreadyChecked =
-        hasExactVersion &&
+        exactRequestedVersion !== null &&
         resolvedPackage.name === name &&
-        resolvedPackage.version === version
+        resolvedPackage.version === exactRequestedVersion
       const cachedResult = exactVersionWasAlreadyChecked
         ? undefined
         : await this.cache.get({

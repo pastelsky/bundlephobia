@@ -37,20 +37,9 @@ interface NaturalModule {
   }
 }
 
-interface RepositoryInfo {
-  host: string
-  user: string
-  project: string
-  branch: string
-  path: string
-}
-
 interface AlgoliaPackageBody {
   description?: string
   keywords?: string[]
-  readme?: string
-  repository: RepositoryInfo
-  [key: string]: unknown
 }
 
 type CategoryLabel = keyof typeof categories
@@ -68,31 +57,6 @@ const MIN_CUTOFF_SCORE = 12
 
 function flatten<T>(items: T[][]): T[] {
   return items.reduce<T[]>((accumulator, item) => accumulator.concat(item), [])
-}
-
-const prefixURL = (
-  url: string,
-  options: {
-    base: string
-    user: string
-    project: string
-    head: string
-    path: string
-  }
-) => {
-  if (url.includes('//')) {
-    return url
-  }
-
-  return new URL(
-    `${options.path ? `${options.path.replace(/^\//, '')}/` : ''}${url.replace(
-      /^(\.?\/?)/,
-      ''
-    )}`,
-    `${options.base}/${options.user}/${options.project}/${
-      options.path ? '' : `${options.head}/`
-    }`
-  )
 }
 
 async function stripMarkdown(readme: string): Promise<string> {
@@ -115,65 +79,7 @@ async function stripMarkdown(readme: string): Promise<string> {
   })
 }
 
-async function getReadme(
-  repository: RepositoryInfo
-): Promise<string | undefined> {
-  const { host, user, project, branch, path } = repository
-
-  if (host === 'github.com') {
-    const getGithubFile = async (fileName: string) => {
-      return got(
-        String(
-          prefixURL(fileName, {
-            base: 'https://raw.githubusercontent.com',
-            user,
-            project,
-            head: branch,
-            path: path.replace(/\/tree\//, ''),
-          })
-        )
-      )
-    }
-
-    try {
-      return (await getGithubFile('README.md')).body
-    } catch {
-      try {
-        return (await getGithubFile('readme.md')).body
-      } catch {
-        return (await getGithubFile('Readme.md')).body
-      }
-    }
-  }
-
-  if (host === 'gitlab.com') {
-    const apiUrl = `https://gitlab.com/api/v4/projects/${user}%2F${project}/repository/files/${encodeURIComponent(
-      `${path}/README.md`
-    )}?ref=${branch}`
-    const { body } = await got<{
-      encoding?: string
-      content: string
-    }>(apiUrl, { json: true })
-
-    return body.encoding === 'base64'
-      ? Buffer.from(body.content, 'base64').toString()
-      : body.content
-  }
-
-  if (host === 'bitbucket.org') {
-    const { body } = await got(
-      `https://bitbucket.org/${user}/${project}${
-        path ? path.replace('src', 'raw') : `/raw/${branch}`
-      }/README.md`
-    )
-    return body
-  }
-
-  return undefined
-}
-
 async function getPackageDetails(packageName: string) {
-  let readme = ''
   const { body } = await got<AlgoliaPackageBody>(
     `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(
       packageName
@@ -181,18 +87,7 @@ async function getPackageDetails(packageName: string) {
     { json: true }
   )
 
-  if (typeof body.readme === 'string' && body.readme.trim()) {
-    readme = await stripMarkdown(body.readme)
-  } else {
-    try {
-      const readmeMarkdown = await getReadme(body.repository)
-      readme = readmeMarkdown ? await stripMarkdown(readmeMarkdown) : ''
-    } catch (error) {
-      console.error(`error getting readme contents for ${packageName}`, error)
-    }
-  }
-
-  return { ...body, readme }
+  return body
 }
 
 function getScore(categoryTokens: CategoryTag[], packageTokens: string[]) {
@@ -221,20 +116,23 @@ async function getCategory(packageName: string) {
     }
   }
 
-  const { description = '', keywords = [] } = await getPackageDetails(
-    packageName
-  )
+  const { description, keywords } = await getPackageDetails(packageName)
   const tokenizer = new natural.WordTokenizer()
-  const tokenString = `${await stripMarkdown(description)} ${keywords.join(
-    ' '
-  )}`
-  const packageTokens = tokenizer
-    .tokenize(tokenString)
+  const descriptionTokens =
+    description === undefined
+      ? []
+      : tokenizer.tokenize(await stripMarkdown(description))
+  const keywordTokens = (keywords ?? []).flatMap(keyword =>
+    tokenizer.tokenize(keyword)
+  )
+  const packageTokens = descriptionTokens
+    .concat(keywordTokens)
     .map(token => token.toLowerCase())
     .map(natural.PorterStemmer.stem)
     .concat(tokenizer.tokenize(packageName).map(natural.PorterStemmer.stem))
 
-  let maxScoreCategory: { label?: CategoryLabel; score: number } = {
+  let maxScoreCategory: { label: CategoryLabel | null; score: number } = {
+    label: null,
     score: 0,
   }
 
@@ -296,7 +194,7 @@ const similarPackagesMiddleware: Middleware = async ctx => {
     const matchedCategory = await getCategory(name)
     debug('Category for %s : %o', name, matchedCategory)
 
-    if (matchedCategory.label) {
+    if (matchedCategory.label !== null) {
       const value = categories[matchedCategory.label]
 
       ctx.cacheControl = {
@@ -320,7 +218,7 @@ const similarPackagesMiddleware: Middleware = async ctx => {
       category: {
         label: null,
         score: 0,
-        similarPackages: [],
+        similar: [],
       },
     }
   } catch (error) {

@@ -21,7 +21,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
 
   const logCache = ({
     hit,
-    type = '',
+    type,
     message,
   }: {
     hit: boolean
@@ -35,7 +35,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
         version,
         packageString,
         hit,
-        type,
+        ...(type === undefined ? {} : { type }),
         requestId: ctx.state.id,
       },
       message

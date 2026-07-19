@@ -1,4 +1,5 @@
 import gitURLParse from 'git-url-parse'
+import semver from 'semver'
 
 import { parsePackageString } from '../../utils/common.utils'
 import {
@@ -29,26 +30,43 @@ export function requireResolvedPackage(
   return resolvedPackage
 }
 
+export function getExactRequestedVersion(
+  packageRequest: Pick<PackageRequest, 'version'>
+): string | null {
+  const { version } = packageRequest
+  return version !== null && semver.valid(version) !== null ? version : null
+}
+
 function normalizeRepositoryUrl(
   repository: string | { url?: string } | undefined
 ): string | null {
-  if (repository === undefined || repository === '') return null
-
   try {
     const rawRepository =
-      typeof repository === 'string' ? repository : repository.url
-    if (rawRepository === undefined || rawRepository === '') return null
-    return gitURLParse(rawRepository).toString('https')
+      typeof repository === 'string' ? repository : repository?.url
+    const normalizedRepository = rawRepository?.trim()
+    if (
+      normalizedRepository === undefined ||
+      normalizedRepository.length === 0
+    ) {
+      return null
+    }
+    return gitURLParse(normalizedRepository).toString('https')
   } catch {
     return null
   }
 }
 
 function truncateDescription(description: string | undefined): string | null {
-  if (description === undefined || description === '') return null
-  return description.length > 300
-    ? `${description.substring(0, 300)}…`
-    : description
+  const normalizedDescription = description?.trim()
+  if (
+    normalizedDescription === undefined ||
+    normalizedDescription.length === 0
+  ) {
+    return null
+  }
+  return normalizedDescription.length > 300
+    ? `${normalizedDescription.substring(0, 300)}…`
+    : normalizedDescription
 }
 
 export function createResolvedPackage(

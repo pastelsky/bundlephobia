@@ -1,19 +1,21 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
-import semver from 'semver'
 
 import Cache from '../../utils/cache.utils'
 import { getRequestPriority } from '../../utils/server.utils'
 import { buildService } from '../api/BuildService'
 import config from '../config'
 import logger from '../Logger'
-import { requireResolvedPackage } from '../services/packageResolution.service'
+import {
+  getExactRequestedVersion,
+  requireResolvedPackage,
+} from '../services/packageResolution.service'
 import type { PackageExportSizesResult } from '../types'
 
 const cache = new Cache()
 
 // Builds per-export sizes for one already resolved package version.
-// Refresh mode also replaces the endpoint's persistent cache entry.
+// Force-rebuild mode also replaces the endpoint's persistent cache entry.
 const exportSizesMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = requireResolvedPackage(
@@ -33,7 +35,7 @@ const exportSizesMiddleware: Middleware = async ctx => {
     maxAge:
       cacheMode === 'force-rebuild'
         ? 0
-        : semver.valid(ctx.state.packageRequest.version ?? '')
+        : getExactRequestedVersion(ctx.state.packageRequest) !== null
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }

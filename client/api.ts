@@ -40,7 +40,7 @@ export type PackageDependencyInfo = PackageIdentity
 
 export type SimilarPackagesResponse = {
   category: {
-    label?: string
+    label: string | null
     score: number
     similar: string[]
   }
