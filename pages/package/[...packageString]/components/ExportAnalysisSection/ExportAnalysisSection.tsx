@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, createRef } from 'react'
 import cx from 'classnames'
 
 import Analytics from '../../../../../client/analytics'
@@ -168,6 +168,9 @@ export default class ExportAnalysisSection extends Component<
   ExportAnalysisSectionProps,
   ExportAnalysisSectionState
 > {
+  private sectionRef = createRef<HTMLDivElement>()
+  private observer: IntersectionObserver | null = null
+
   state: ExportAnalysisSectionState = {
     analysisState: State.TBD,
     exports: {},
@@ -177,9 +180,27 @@ export default class ExportAnalysisSection extends Component<
   }
 
   componentDidMount() {
-    if (!this.getIncompatibleMessage()) {
+    if (this.getIncompatibleMessage()) return
+
+    if (!('IntersectionObserver' in window)) {
       this.startAnalysis()
+      return
     }
+
+    this.observer = new IntersectionObserver(
+      entries => {
+        if (!entries.some(entry => entry.isIntersecting)) return
+        this.observer?.disconnect()
+        this.observer = null
+        this.startAnalysis()
+      },
+      { rootMargin: '400px 0px' }
+    )
+    this.observer.observe(this.sectionRef.current as HTMLDivElement)
+  }
+
+  componentWillUnmount() {
+    this.observer?.disconnect()
   }
 
   startAnalysis = () => {
@@ -340,7 +361,7 @@ export default class ExportAnalysisSection extends Component<
     const { analysisState } = this.state
 
     return (
-      <div className="export-analysis-section">
+      <div className="export-analysis-section" ref={this.sectionRef}>
         <h2 className="result__section-heading"> Exports Analysis </h2>
 
         {this.getIncompatibleMessage() && this.renderIncompatible()}

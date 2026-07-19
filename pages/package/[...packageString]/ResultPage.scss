@@ -138,6 +138,11 @@
   animation: fade-in-full 0.2s;
 }
 
+.content-container-wrap > .content-container:not(:first-child) {
+  content-visibility: auto;
+  contain-intrinsic-size: 700px;
+}
+
 .result-pending,
 .result-error {
   min-height: 75vh;
