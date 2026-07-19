@@ -21,13 +21,15 @@ function createService() {
   }
   const resolve = jest.fn()
   const build = jest.fn()
+  const cancelBuild = jest.fn()
   const service = new PackageAnalysisService({
     cache: cache as never,
     resolve: resolve as never,
     build,
+    cancelBuild,
   })
 
-  return { service, cache, resolve, build }
+  return { service, cache, resolve, build, cancelBuild }
 }
 
 describe('PackageAnalysisService', () => {
@@ -124,5 +126,43 @@ describe('PackageAnalysisService', () => {
 
     expect(cache.getPackageSize).not.toHaveBeenCalled()
     expect(build).toHaveBeenCalled()
+  })
+
+  it('propagates request aborts to the active package build', async () => {
+    const { service, build, cancelBuild } = createService()
+    let abortListener: (() => void) | undefined
+    const signal = {
+      aborted: false,
+      addEventListener: jest.fn(
+        (_event: string, listener: () => void) => (abortListener = listener)
+      ),
+      removeEventListener: jest.fn(),
+    } as unknown as AbortSignal
+    let finishBuild: ((value: typeof cachedResult) => void) | undefined
+    build.mockReturnValue(
+      new Promise(resolve => {
+        finishBuild = resolve
+      })
+    )
+
+    const buildPromise = service.build(
+      {
+        name: 'react',
+        version: '18.2.0',
+        scoped: false,
+        description: 'React',
+        repository: '',
+        packageString: 'react@18.2.0',
+      },
+      7,
+      signal
+    )
+
+    await Promise.resolve()
+    abortListener?.()
+    expect(cancelBuild).toHaveBeenCalledWith('react@18.2.0')
+
+    finishBuild?.(cachedResult)
+    await buildPromise
   })
 })
