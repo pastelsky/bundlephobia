@@ -5,7 +5,7 @@ import { parsePackageString } from '../../../utils/common.utils'
 import { debug, logger } from '../../init'
 import { packageAnalysisService } from '../../services/packageAnalysis.service'
 
-const resolvePackageMiddleware: Middleware = async (ctx, next) => {
+const packageAnalysisLookupMiddleware: Middleware = async (ctx, next) => {
   const packageQuery = ctx.query.package
   const packageString =
     typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
@@ -25,19 +25,28 @@ const resolvePackageMiddleware: Middleware = async (ctx, next) => {
   }
 
   const resolveStart = now()
-  const resolved = await packageAnalysisService.resolve(packageString)
+  const analysis = await packageAnalysisService.lookup(
+    packageString,
+    ctx.query.force != null
+  )
   const resolveEnd = now()
-  ctx.state.resolved = resolved
+  ctx.state.resolved = analysis.resolved
+  ctx.state.packageAnalysis = analysis
 
-  debug('resolved to %s', resolved.packageString)
+  debug('resolved to %s', analysis.resolved.packageString)
   const time = resolveEnd - resolveStart
   logger.info(
     'RESOLVE_PACKAGE',
-    { ...resolved, time, requestId: ctx.state.id },
-    `RESOLVED: ${resolved.packageString} in ${time.toFixed(0)}ms`
+    {
+      ...analysis.resolved,
+      source: analysis.source,
+      time,
+      requestId: ctx.state.id,
+    },
+    `RESOLVED: ${analysis.resolved.packageString} in ${time.toFixed(0)}ms`
   )
 
   await next()
 }
 
-export default resolvePackageMiddleware
+export default packageAnalysisLookupMiddleware

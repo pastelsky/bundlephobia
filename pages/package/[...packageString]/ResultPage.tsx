@@ -33,7 +33,7 @@ import ExportAnalysisSection from './components/ExportAnalysisSection'
 import InterLinksSection from './components/InterLinksSection'
 import SimilarPackagesSection from './components/SimilarPackagesSection'
 import TreemapSection from './components/TreemapSection'
-import { getCachedPackageAnalysis } from '../../../server/seo/cachedPackageAnalysis'
+import { packageAnalysisService } from '../../../server/services/packageAnalysis.service'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
@@ -624,7 +624,10 @@ export const getServerSideProps = async (
   }
 
   try {
-    const initialResult = await getCachedPackageAnalysis(packageString)
+    const { result: initialResult } = await packageAnalysisService.analyze(
+      packageString,
+      { mode: 'cache-only' }
+    )
     return {
       props: {
         initialResult,

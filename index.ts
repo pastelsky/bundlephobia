@@ -25,6 +25,7 @@ import limit from './server/middlewares/rateLimit.middleware'
 import exportsMiddlware from './server/middlewares/exports.middleware'
 import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
 import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
+import packageAnalysisLookupMiddleware from './server/middlewares/results/packageAnalysisLookup.middleware'
 import cachedResponseMiddleware from './server/middlewares/results/cachedResponse.middleware'
 import buildMiddleware from './server/middlewares/results/build.middleware'
 import errorMiddleware from './server/middlewares/results/error.middleware'
@@ -125,16 +126,8 @@ app.prepare().then(() => {
 
   router.get(
     '/api/size',
-    jsonCacheMiddleware({
-      get: (key: Key) => cache.getPackageSize(key),
-      set: (key: Key, value: string) => cache.setPackageSize(key, value),
-      hash: (ctx: Context) => ({
-        name: ctx.state.resolved.name,
-        version: ctx.state.resolved.version,
-      }),
-    }),
     errorMiddleware,
-    resolvePackageMiddleware,
+    packageAnalysisLookupMiddleware,
     blockBlacklistMiddleware,
     cachedResponseMiddleware,
     buildMissRateLimit({

@@ -4,6 +4,7 @@ import semver from 'semver'
 import config from '../../config'
 import { debug, failureCache } from '../../init'
 import logger from '../../Logger'
+import type { PackageAnalysis } from '../../services/packageAnalysis.service'
 
 const cachedResponse: Middleware = async (ctx, next) => {
   const { force, peep } = ctx.query
@@ -36,7 +37,8 @@ const cachedResponse: Middleware = async (ctx, next) => {
       message
     )
 
-  const cached = await ctx.cashed()
+  const analysis = ctx.state.packageAnalysis as PackageAnalysis | undefined
+  const cached = analysis ? Boolean(analysis.result) : await ctx.cashed()
   if (cached) {
     ctx.cacheControl = {
       maxAge:
@@ -46,6 +48,8 @@ const cachedResponse: Middleware = async (ctx, next) => {
           ? config.CACHE.SIZE_API_HAS_VERSION
           : config.CACHE.SIZE_API_DEFAULT,
     }
+
+    if (analysis?.result) ctx.body = analysis.result
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })
     return

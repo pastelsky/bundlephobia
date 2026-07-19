@@ -2,28 +2,23 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 import semver from 'semver'
 
-import Cache from '../../../utils/cache.utils'
 import firebaseUtils from '../../../utils/firebase.utils'
 import { parsePackageString } from '../../../utils/common.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
-import BuildService from '../../api/BuildService'
+import type { PackageBuildResult } from '../../types'
 import config from '../../config'
 import logger from '../../Logger'
-import type { PackageBuildResult } from '../../types'
-
-const cache = new Cache()
-const buildService = new BuildService()
+import { packageAnalysisService } from '../../services/packageAnalysis.service'
 
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
-  const { scoped, name, version, description, repository, packageString } =
-    ctx.state.resolved
+  const { name, version, packageString } = ctx.state.resolved
   const { force, record, package: packageQuery } = ctx.query
   const requestedPackage =
     typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
   const buildStart = now()
-
+  const abortController = new AbortController()
   const onAborted = () => {
     logger.info(
       'BUILD_ABORTED',
@@ -33,21 +28,21 @@ const buildMiddleware: Middleware = async ctx => {
       },
       `BUILD_ABORTED: client closed connection for package ${packageString}`
     )
-    buildService.cancelPackageBuildStats(packageString)
+    abortController.abort()
   }
 
   ctx.req.on('close', onAborted)
 
-  let result: PackageBuildResult
+  let body: PackageBuildResult
   try {
-    result = await buildService.getPackageBuildStats<PackageBuildResult>(
-      packageString,
-      priority
+    body = await packageAnalysisService.build(
+      ctx.state.resolved,
+      priority,
+      abortController.signal
     )
   } finally {
     ctx.req.off('close', onAborted)
   }
-
   const buildEnd = now()
 
   ctx.cacheControl = {
@@ -60,15 +55,6 @@ const buildMiddleware: Middleware = async ctx => {
         : config.CACHE.SIZE_API_DEFAULT,
   }
 
-  const body: PackageBuildResult = {
-    ...result,
-    scoped,
-    name,
-    version,
-    description,
-    repository,
-  }
-
   ctx.body = body
   ctx.state.buildResult = body
   const time = buildEnd - buildStart
@@ -76,22 +62,18 @@ const buildMiddleware: Middleware = async ctx => {
   logger.info(
     'BUILD',
     {
-      result,
+      result: body,
       requestId: ctx.state.id,
       packageString,
       time,
     },
     `BUILD: ${packageString} built in ${time.toFixed()}s and is ${
-      result.size
+      body.size
     } bytes`
   )
 
   if (record === 'true') {
     firebaseUtils.setRecentSearch(name, { name, version })
-  }
-
-  if (force === 'true') {
-    void cache.setPackageSize({ name, version }, body)
   }
 }
 
