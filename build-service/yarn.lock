@@ -2714,7 +2714,7 @@ __metadata:
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^4.25.2"
     now-logs: "npm:^0.0.7"
-    package-build-stats: "npm:8.2.5"
+    package-build-stats: "npm:8.2.8"
   languageName: unknown
   linkType: soft
 
@@ -7233,9 +7233,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-build-stats@npm:8.2.5":
-  version: 8.2.5
-  resolution: "package-build-stats@npm:8.2.5"
+"package-build-stats@npm:8.2.8":
+  version: 8.2.8
+  resolution: "package-build-stats@npm:8.2.8"
   dependencies:
     "@babel/core": "npm:^7.28.5"
     "@rspack/core": "npm:^1.6.0"
@@ -7272,7 +7272,7 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     package-stats: bin/cli.js
-  checksum: 1ca017007fe687a928cb970c4d6a2d0d08416e1acc567f4f2b409ac7c1a3c37edb96521ebe8b0f7f7ff7fcf7abe73e048e25558a56350eccc3dc1be1f4269c3c
+  checksum: 51b6f4f9fcd74e4dfb3ab871131afbb78ed0bbdeba94224a0e2449971fc4c88599dfbb0572bee0ce1a5248c742749ec85b5ef01a72e2c12ac6ae986b6d019925
   languageName: node
   linkType: hard
 

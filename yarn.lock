@@ -7784,7 +7784,7 @@ __metadata:
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^4.25.2"
     now-logs: "npm:^0.0.7"
-    package-build-stats: "npm:8.2.7"
+    package-build-stats: "npm:8.2.8"
   languageName: unknown
   linkType: soft
 
@@ -7906,7 +7906,7 @@ __metadata:
     nodemon: "npm:^2.0.22"
     normalize.css: "npm:^8.0.1"
     p-queue: "npm:^3.2.0"
-    package-build-stats: "npm:8.2.7"
+    package-build-stats: "npm:8.2.8"
     pacote: "npm:^11.3.5"
     performance-now: "npm:^2.1.0"
     postcss: "npm:^8.4.33"
@@ -18912,9 +18912,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-build-stats@npm:8.2.7":
-  version: 8.2.7
-  resolution: "package-build-stats@npm:8.2.7"
+"package-build-stats@npm:8.2.8":
+  version: 8.2.8
+  resolution: "package-build-stats@npm:8.2.8"
   dependencies:
     "@babel/core": "npm:^7.28.5"
     "@rspack/core": "npm:^1.6.0"
@@ -18951,7 +18951,7 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     package-stats: bin/cli.js
-  checksum: b0885d2f76f30338f336ae4ce512c2e4637fb97c27ba08a168fe0444017f66f2e32c4c23055bff607e3c44938a3cdb1564e040b357ae54c0866c128451b3c73f
+  checksum: 5fb8202d311f09c61613479bd065acb20701f7881ac72d8155ad5a3cc8d7559fa7be22ecdbc1a335ae891719ad6f5bc6ffbcce8e09848b85dc49b55b88ca7b14
   languageName: node
   linkType: hard
 
