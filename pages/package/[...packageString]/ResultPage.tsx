@@ -103,6 +103,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   private activeQuery: string | null = null
+  private searchRequestId = 0
+
+  private isActiveSearch = (requestId: number) =>
+    requestId === this.searchRequestId
 
   componentDidMount() {
     Analytics.pageView('package result')
@@ -135,14 +139,14 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     }
   }
 
-  fetchResults = (packageString: string) => {
+  fetchResults = (packageString: string, requestId: number) => {
     const startTime = Date.now()
 
     API.getInfo(packageString)
       .then(results => {
-        this.fetchSimilarPackages(packageString)
+        if (!this.isActiveSearch(requestId)) return
 
-        if (this.activeQuery !== packageString) return
+        this.fetchSimilarPackages(packageString, requestId)
 
         const newPackageString = `${results.name}@${results.version}`
         this.setState(
@@ -162,6 +166,8 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         })
       })
       .catch(err => {
+        if (!this.isActiveSearch(requestId)) return
+
         this.setState({
           resultsError: err,
           resultsPromiseState: 'rejected',
@@ -175,10 +181,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       })
   }
 
-  fetchHistory = (packageString: string) => {
+  fetchHistory = (packageString: string, requestId: number) => {
     API.getHistory(packageString, 15)
       .then(results => {
-        if (this.activeQuery !== packageString) return
+        if (!this.isActiveSearch(requestId)) return
 
         this.setState({
           historicalResultsPromiseState: 'fulfilled',
@@ -186,16 +192,20 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         })
       })
       .catch(err => {
+        if (!this.isActiveSearch(requestId)) return
+
         this.setState({ historicalResultsPromiseState: 'rejected' })
         console.error('Fetching history failed:', err)
       })
   }
 
-  fetchSimilarPackages = (packageString: string) => {
+  fetchSimilarPackages = (packageString: string, requestId: number) => {
     const { name } = parsePackageString(packageString)
 
     API.getSimilar(name)
       .then(result => {
+        if (!this.isActiveSearch(requestId)) return
+
         if (!result.category.label || result.category.score < 12) {
           return
         }
@@ -205,7 +215,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         )
 
         Promise.allSettled(promises).then(results => {
-          if (this.activeQuery !== packageString) return
+          if (!this.isActiveSearch(requestId)) return
 
           this.setState({
             similarPackagesCategory: result.category.label ?? '',
@@ -221,6 +231,8 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         })
       })
       .catch(err => {
+        if (!this.isActiveSearch(requestId)) return
+
         this.setState({ historicalResultsPromiseState: 'rejected' })
         console.error(err)
       })
@@ -229,6 +241,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   handleSearchSubmit = (packageString: string) => {
     Analytics.performedSearch(packageString)
     const normalizedQuery = packageString.trim()
+    const requestId = ++this.searchRequestId
 
     this.setState(
       {
@@ -242,11 +255,13 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         similarPackagesCategory: '',
       },
       () => {
+        if (!this.isActiveSearch(requestId)) return
+
         this.activeQuery = normalizedQuery
         Router.push(`/package/${normalizedQuery}`)
         Analytics.pageView('package result')
-        this.fetchResults(normalizedQuery)
-        this.fetchHistory(normalizedQuery)
+        this.fetchResults(normalizedQuery, requestId)
+        this.fetchHistory(normalizedQuery, requestId)
       }
     )
   }
