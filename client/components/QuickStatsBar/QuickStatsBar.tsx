@@ -20,10 +20,6 @@ type QuickStatsBarProps = Pick<
 >
 
 class QuickStatsBar extends Component<QuickStatsBarProps> {
-  static defaultProps = {
-    description: '',
-  }
-
   getStatItemCount = () => {
     const { isTreeShakeable, hasSideEffects } = this.props
     let statItemCount = 0
@@ -35,7 +31,7 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
 
   getTrimmedDescription = () => {
     const { description } = this.props
-    const trimmed = description.trim()
+    const trimmed = description?.trim() ?? ''
 
     if (trimmed.endsWith('.')) {
       return trimmed.substring(0, trimmed.length - 1)

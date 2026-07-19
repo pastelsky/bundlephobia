@@ -3,18 +3,20 @@ import type { Middleware } from 'koa'
 import config from '../../config'
 import CustomError from '../../CustomError'
 
+// Blocks packages that should not enter the normal cache/build pipeline.
+// Refresh requests may intentionally retry packages despite those rules.
 const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
-  if (ctx.state.packageRequestPolicy.forceBuild) {
+  const { cacheMode, ...requestedPackage } = ctx.state.packageRequest
+
+  if (cacheMode === 'refresh') {
     await next()
     return
   }
 
-  const requestedPackage = ctx.state.requestedPackage
-
   if (config.blackList.some(entry => entry.test(requestedPackage.name))) {
     throw new CustomError(
       'BlocklistedPackageError',
-      { ...requestedPackage },
+      requestedPackage,
       undefined
     )
   }
@@ -24,11 +26,9 @@ const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
   )
 
   if (matchedUnsupportedRule) {
-    throw new CustomError(
-      'UnsupportedPackageError',
-      { ...requestedPackage },
-      { reason: matchedUnsupportedRule.reason }
-    )
+    throw new CustomError('UnsupportedPackageError', requestedPackage, {
+      reason: matchedUnsupportedRule.reason,
+    })
   }
 
   await next()

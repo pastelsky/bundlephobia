@@ -13,35 +13,31 @@ export type {
 } from '../types/package-domain'
 
 /**
- * State attached to Koa's `ctx.state.resolved` after the
- * resolve-package middleware runs.  Extends the public metadata
- * fields with server-only routing information.
+ * Exact npm package identity and metadata produced by resolution.
+ * Missing npm metadata remains null across server and client workflows.
  */
-export interface ResolvedPackageState extends PackageMetadata {
+export interface ResolvedPackage extends PackageMetadata {
   scoped: boolean
   packageString: string
 }
 
-/** The package identity parsed from the incoming HTTP or page request. */
-export interface RequestedPackage extends ParsedPackageString {
+export type PackageCacheMode = 'prefer' | 'refresh' | 'only'
+
+/** Normalized package input and cache behavior for one API or page request. */
+export interface PackageRequest extends ParsedPackageString {
   packageString: string
+  cacheMode: PackageCacheMode
 }
 
-export interface PackageRequestPolicy {
-  forceBuild: boolean
-  cacheOnly: boolean
-  peekOnly: boolean
-}
-
-export type PackageSizeLookup =
+export type PackageSizeCacheResult =
   | {
       kind: 'cache-hit'
-      resolved: ResolvedPackageState
+      resolvedPackage: ResolvedPackage
       result: PackageBuildInfo
     }
   | {
       kind: 'cache-miss'
-      resolved: ResolvedPackageState
+      resolvedPackage: ResolvedPackage
     }
 
 export interface FailureCacheEntry {

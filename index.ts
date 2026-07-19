@@ -26,7 +26,7 @@ import exportsMiddlware from './server/middlewares/exports.middleware'
 import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
 import packageRequestMiddleware from './server/middlewares/results/packageRequest.middleware'
 import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
-import packageSizeLookupMiddleware from './server/middlewares/results/packageSizeLookup.middleware'
+import packageSizeCacheMiddleware from './server/middlewares/results/packageSizeCache.middleware'
 import cachedResponseMiddleware from './server/middlewares/results/cachedResponse.middleware'
 import buildMiddleware from './server/middlewares/results/build.middleware'
 import errorMiddleware from './server/middlewares/results/error.middleware'
@@ -130,7 +130,7 @@ app.prepare().then(() => {
     '/api/size',
     packageRequestMiddleware,
     errorMiddleware,
-    packageSizeLookupMiddleware,
+    packageSizeCacheMiddleware,
     blockBlacklistMiddleware,
     cachedResponseMiddleware,
     buildMissRateLimit({
@@ -157,8 +157,13 @@ app.prepare().then(() => {
       get: (key: Key) => cache.getExportsSize(key),
       set: (key: Key, value: string) => cache.setExportsSize(key, value),
       hash: (ctx: Context) => {
-        const resolved = requireResolvedPackage(ctx.state.resolved)
-        return { name: resolved.name, version: resolved.version }
+        const resolvedPackage = requireResolvedPackage(
+          ctx.state.resolvedPackage
+        )
+        return {
+          name: resolvedPackage.name,
+          version: resolvedPackage.version,
+        }
       },
     }),
     errorMiddleware,

@@ -5,6 +5,7 @@ import createDebug from 'debug'
 import config from '../../config'
 import { failureCache } from '../../init'
 import logger from '../../Logger'
+import type { PackageRequest, ResolvedPackage } from '../../types'
 
 const debug = createDebug('bp:error')
 
@@ -39,24 +40,16 @@ function formatSentence(values: string[]): string {
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
+type PackageErrorContext = Omit<PackageRequest, 'cacheMode'> | ResolvedPackage
+
+// Converts package workflow failures into stable API errors and cache policy.
+// Logs either requested or resolved package context without invented metadata.
 const errorHandler: Middleware = async (ctx, next) => {
-  const { forceBuild } = ctx.state.packageRequestPolicy
+  const { cacheMode, ...requestedPackage } = ctx.state.packageRequest
   const start = now()
 
-  const getPackageContext = () => {
-    if (ctx.state.resolved) return ctx.state.resolved
-
-    const requested = ctx.state.requestedPackage
-    const version = requested.version ?? 'latest'
-    return {
-      name: requested.name,
-      version,
-      scoped: requested.scoped,
-      packageString: `${requested.name}@${version}`,
-      description: '',
-      repository: '',
-    }
-  }
+  const getPackageContext = (): PackageErrorContext =>
+    ctx.state.resolvedPackage ?? requestedPackage
 
   const respondWithError = (
     status: number,
@@ -94,7 +87,7 @@ const errorHandler: Middleware = async (ctx, next) => {
   } catch (error) {
     console.error(error)
     ctx.cacheControl = {
-      maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR,
+      maxAge: cacheMode === 'refresh' ? 0 : config.CACHE.SIZE_API_ERROR,
     }
 
     if (!(error instanceof Error)) {
@@ -139,7 +132,10 @@ const errorHandler: Middleware = async (ctx, next) => {
 
       case 'UnsupportedPackageError':
         ctx.cacheControl = {
-          maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
+          maxAge:
+            cacheMode === 'refresh'
+              ? 0
+              : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
         }
         respondWithError(403, {
           code: 'UnsupportedPackageError',
@@ -192,7 +188,8 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge:
+            cacheMode === 'refresh' ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)
@@ -220,7 +217,8 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge:
+            cacheMode === 'refresh' ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)
@@ -246,7 +244,8 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge:
+            cacheMode === 'refresh' ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)

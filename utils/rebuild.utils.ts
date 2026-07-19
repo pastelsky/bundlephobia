@@ -175,7 +175,7 @@ async function run() {
 
     queue.push(() =>
       got<{ gzip: number; size: number }>(
-        `http://127.0.0.1:5000/api/size?package=${packString}&force=true`,
+        `http://127.0.0.1:5000/api/size?package=${packString}&cache=refresh`,
         { json: true }
       )
         .then(async response => {

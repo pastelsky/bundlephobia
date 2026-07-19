@@ -1,7 +1,14 @@
 import type { Middleware } from 'koa'
 
-import { createRequestedPackage } from '../../services/packageResolution.service'
+import { createPackageRequest } from '../../services/packageResolution.service'
+import type { PackageCacheMode } from '../../types'
 
+function isPackageCacheMode(value: unknown): value is PackageCacheMode {
+  return value === 'prefer' || value === 'refresh' || value === 'only'
+}
+
+// Parses and validates the package request once at the HTTP boundary.
+// Downstream middleware consumes only this normalized request state.
 const packageRequestMiddleware: Middleware = async (ctx, next) => {
   const packageQuery = ctx.query.package
   const packageString =
@@ -12,13 +19,15 @@ const packageRequestMiddleware: Middleware = async (ctx, next) => {
     return
   }
 
-  const requestedPackage = createRequestedPackage(packageString)
-  ctx.state.requestedPackage = requestedPackage
-  ctx.state.packageRequestPolicy = {
-    forceBuild: ctx.query.force !== undefined,
-    cacheOnly: ctx.query.peep !== undefined,
-    peekOnly: ctx.query.peek !== undefined,
+  const cacheQuery = ctx.query.cache
+  const cacheMode = cacheQuery === undefined ? 'prefer' : cacheQuery
+
+  if (!isPackageCacheMode(cacheMode)) {
+    ctx.throw(400, 'cache must be prefer, refresh, or only')
+    return
   }
+
+  ctx.state.packageRequest = createPackageRequest(packageString, cacheMode)
   await next()
 }
 

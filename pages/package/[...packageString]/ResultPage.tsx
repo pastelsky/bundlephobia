@@ -34,7 +34,7 @@ import InterLinksSection from './components/InterLinksSection'
 import SimilarPackagesSection from './components/SimilarPackagesSection'
 import TreemapSection from './components/TreemapSection'
 import config from '../../../server/config'
-import { createRequestedPackage } from '../../../server/services/packageResolution.service'
+import { createPackageRequest } from '../../../server/services/packageResolution.service'
 import { packageSizeService } from '../../../server/services/packageSize.service'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
@@ -629,10 +629,11 @@ export const getServerSideProps = async (
   }
 
   try {
-    const lookup = await packageSizeService.lookupPackageSize(
-      createRequestedPackage(packageString)
+    const cacheResult = await packageSizeService.findPackageSize(
+      createPackageRequest(packageString)
     )
-    const initialResult = lookup.kind === 'cache-hit' ? lookup.result : null
+    const initialResult =
+      cacheResult.kind === 'cache-hit' ? cacheResult.result : null
     return {
       props: {
         initialResult,

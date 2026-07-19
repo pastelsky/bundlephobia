@@ -251,7 +251,7 @@ async function buildPackage(
 
   const url = `${API_BASE}/api/size?package=${encodeURIComponent(
     key
-  )}&record=true&force=true`
+  )}&record=true&cache=refresh`
 
   try {
     const cancelSource = axios.CancelToken.source()
@@ -319,7 +319,7 @@ async function buildExports(
 
   const url = `${API_BASE}/api/exports-sizes?package=${encodeURIComponent(
     key
-  )}&force=true`
+  )}&cache=refresh`
 
   try {
     const cancelSource = axios.CancelToken.source()

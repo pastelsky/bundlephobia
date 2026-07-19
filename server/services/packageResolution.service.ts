@@ -5,20 +5,26 @@ import {
   resolvePackage,
   type ResolvedPackageManifest,
 } from '../../utils/server.utils'
-import type { RequestedPackage, ResolvedPackageState } from '../types'
+import type {
+  PackageCacheMode,
+  PackageRequest,
+  ResolvedPackage,
+} from '../types'
 
-export function createRequestedPackage(
-  packageString: string
-): RequestedPackage {
+export function createPackageRequest(
+  packageString: string,
+  cacheMode: PackageCacheMode = 'prefer'
+): PackageRequest {
   return {
     ...parsePackageString(packageString),
     packageString,
+    cacheMode,
   }
 }
 
 export function requireResolvedPackage(
-  resolvedPackage: ResolvedPackageState | undefined
-): ResolvedPackageState {
+  resolvedPackage: ResolvedPackage | undefined
+): ResolvedPackage {
   if (!resolvedPackage) {
     throw new Error('Package request reached a build stage before resolution')
   }
@@ -28,42 +34,43 @@ export function requireResolvedPackage(
 
 function normalizeRepositoryUrl(
   repository: string | { url?: string } | undefined
-) {
-  if (!repository) return ''
+): string | null {
+  if (repository === undefined || repository === '') return null
 
   try {
     const rawRepository =
-      typeof repository === 'string' ? repository : repository.url ?? ''
+      typeof repository === 'string' ? repository : repository.url
+    if (rawRepository === undefined || rawRepository === '') return null
     return gitURLParse(rawRepository).toString('https')
   } catch {
-    return ''
+    return null
   }
 }
 
-function truncateDescription(description: string | undefined) {
-  if (!description) return ''
+function truncateDescription(description: string | undefined): string | null {
+  if (description === undefined || description === '') return null
   return description.length > 300
     ? `${description.substring(0, 300)}…`
     : description
 }
 
 export function createResolvedPackage(
-  requestedPackage: RequestedPackage,
+  packageRequest: PackageRequest,
   manifest: ResolvedPackageManifest
-): ResolvedPackageState {
+): ResolvedPackage {
   return {
     name: manifest.name,
     version: manifest.version,
-    scoped: requestedPackage.scoped,
+    scoped: packageRequest.scoped,
     packageString: `${manifest.name}@${manifest.version}`,
     description: truncateDescription(manifest.description),
     repository: normalizeRepositoryUrl(manifest.repository),
   }
 }
 
-export async function resolveRequestedPackage(
-  requestedPackage: RequestedPackage
-): Promise<ResolvedPackageState> {
-  const manifest = await resolvePackage(requestedPackage.packageString)
-  return createResolvedPackage(requestedPackage, manifest)
+export async function resolvePackageRequest(
+  packageRequest: PackageRequest
+): Promise<ResolvedPackage> {
+  const manifest = await resolvePackage(packageRequest.packageString)
+  return createResolvedPackage(packageRequest, manifest)
 }

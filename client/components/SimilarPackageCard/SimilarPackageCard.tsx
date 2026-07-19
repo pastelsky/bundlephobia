@@ -45,6 +45,7 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
     }
 
     const { pack, comparisonSizePercent } = this.props
+    const repository = pack.repository
     const { size, unit } = formatSize(pack.gzip)
     const sizeDiff = Math.abs(
       (comparisonSizePercent / 100) * pack.gzip - pack.gzip
@@ -118,15 +119,15 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
         <div className="similar-package-card__wrap">
           <div className="similar-package-card__header">
             <h3 className="similar-package-card__name">{pack.name}</h3>
-            {pack.repository && (
+            {repository && (
               <a
-                href={pack.repository}
+                href={repository}
                 onClick={e => {
                   e.stopPropagation()
-                  window.location.href = pack.repository
+                  window.location.href = repository
                 }}
               >
-                {pack.repository.includes('github.com') ? (
+                {repository.includes('github.com') ? (
                   <GithubIcon className="similar-package-card__github-icon" />
                 ) : (
                   <GitIcon className="similar-package-card__github-icon" />
@@ -137,7 +138,7 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
           <p
             className="similar-package-card__description"
             dangerouslySetInnerHTML={{
-              __html: sanitizeHTML(pack.description),
+              __html: sanitizeHTML(pack.description ?? ''),
             }}
           />
         </div>

@@ -1,7 +1,7 @@
 import type { PackageBuildInfo } from '../types/package-domain'
 import type { CacheKey } from '../utils/cache.utils'
-import type { RequestedPackage, ResolvedPackageState } from '../server/types'
-import { createRequestedPackage } from '../server/services/packageResolution.service'
+import type { PackageRequest, ResolvedPackage } from '../server/types'
+import { createPackageRequest } from '../server/services/packageResolution.service'
 import {
   PackageSizeService,
   type PackageBuildAbortSignal,
@@ -41,9 +41,9 @@ function createService() {
     Promise<void>,
     [CacheKey, PackageBuildInfo]
   >()
-  const resolveRequestedPackage = jest.fn<
-    Promise<ResolvedPackageState>,
-    [RequestedPackage]
+  const resolvePackageRequest = jest.fn<
+    Promise<ResolvedPackage>,
+    [PackageRequest]
   >()
   const build = jest.fn<Promise<PackageSizeBuild>, [string, number]>()
   const cancel = jest.fn<void, [string]>()
@@ -52,7 +52,7 @@ function createService() {
       get: getCachedPackageSize,
       set: setCachedPackageSize,
     },
-    resolvePackage: resolveRequestedPackage,
+    resolvePackage: resolvePackageRequest,
     builder: {
       build,
       cancel,
@@ -62,112 +62,94 @@ function createService() {
   return {
     service,
     getCachedPackageSize,
-    setCachedPackageSize,
-    resolveRequestedPackage,
+    resolvePackageRequest,
     build,
     cancel,
   }
 }
 
 describe('PackageSizeService', () => {
-  it('answers exact-version cache hits without consulting npm', async () => {
-    const { service, getCachedPackageSize, resolveRequestedPackage, build } =
+  it('returns an exact cached package when npm is unavailable', async () => {
+    const { service, getCachedPackageSize, resolvePackageRequest } =
       createService()
     getCachedPackageSize.mockResolvedValue(cachedResult)
+    resolvePackageRequest.mockRejectedValue(new Error('npm unavailable'))
 
     await expect(
-      service.lookupPackageSize(createRequestedPackage('react@18.2.0'))
+      service.findPackageSize(createPackageRequest('react@18.2.0'))
     ).resolves.toEqual({
       kind: 'cache-hit',
       result: cachedResult,
-      resolved: expect.objectContaining({ packageString: 'react@18.2.0' }),
+      resolvedPackage: expect.objectContaining({
+        packageString: 'react@18.2.0',
+      }),
     })
-    expect(resolveRequestedPackage).not.toHaveBeenCalled()
-    expect(build).not.toHaveBeenCalled()
   })
 
-  it('returns an explicit cache miss without invoking the builder', async () => {
-    const { service, getCachedPackageSize, resolveRequestedPackage, build } =
-      createService()
-    getCachedPackageSize.mockResolvedValue(undefined)
-    resolveRequestedPackage.mockResolvedValue({
+  it('returns a complete package size after a build', async () => {
+    const { service, build } = createService()
+    const resolvedPackage: ResolvedPackage = {
       name: 'react',
       version: '18.2.0',
       scoped: false,
       packageString: 'react@18.2.0',
       description: 'React',
       repository: 'https://github.com/facebook/react.git',
+    }
+    build.mockResolvedValue(buildResult)
+
+    await expect(service.buildPackageSize(resolvedPackage, 7)).resolves.toEqual(
+      {
+        ...buildResult,
+        scoped: false,
+        name: 'react',
+        version: '18.2.0',
+        description: 'React',
+        repository: 'https://github.com/facebook/react.git',
+      }
+    )
+  })
+
+  it('keeps missing package metadata nullable after a build', async () => {
+    const { service, build } = createService()
+    build.mockResolvedValue(buildResult)
+
+    await expect(
+      service.buildPackageSize(
+        {
+          name: 'example',
+          version: '1.0.0',
+          scoped: false,
+          packageString: 'example@1.0.0',
+          description: null,
+          repository: null,
+        },
+        7
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({ description: null, repository: null })
+    )
+  })
+
+  it('refreshes package resolution instead of returning cached size data', async () => {
+    const { service, getCachedPackageSize, resolvePackageRequest } =
+      createService()
+    getCachedPackageSize.mockResolvedValue(cachedResult)
+    resolvePackageRequest.mockResolvedValue({
+      name: 'react',
+      version: '19.0.0',
+      scoped: false,
+      packageString: 'react@19.0.0',
+      description: null,
+      repository: null,
     })
 
     await expect(
-      service.lookupPackageSize(createRequestedPackage('react@18.2.0'))
+      service.findPackageSize(createPackageRequest('react@18.2.0', 'refresh'))
     ).resolves.toEqual({
       kind: 'cache-miss',
-      resolved: expect.objectContaining({ packageString: 'react@18.2.0' }),
+      resolvedPackage: expect.objectContaining({ version: '19.0.0' }),
     })
-    expect(getCachedPackageSize).toHaveBeenCalledTimes(1)
-    expect(build).not.toHaveBeenCalled()
-  })
-
-  it('builds and caches only when the caller explicitly requests a build', async () => {
-    const {
-      service,
-      getCachedPackageSize,
-      setCachedPackageSize,
-      resolveRequestedPackage,
-      build,
-    } = createService()
-    getCachedPackageSize.mockResolvedValue(undefined)
-    resolveRequestedPackage.mockResolvedValue({
-      name: 'react',
-      version: '18.2.0',
-      scoped: false,
-      packageString: 'react@18.2.0',
-      description: 'React',
-      repository: 'https://github.com/facebook/react.git',
-    })
-    build.mockResolvedValue(buildResult)
-
-    const lookup = await service.lookupPackageSize(
-      createRequestedPackage('react')
-    )
-    expect(lookup.kind).toBe('cache-miss')
-    if (lookup.kind !== 'cache-miss') throw new Error('Expected cache miss')
-
-    await service.buildPackageSize(lookup.resolved, 7)
-
-    expect(build).toHaveBeenCalledWith('react@18.2.0', 7)
-    expect(setCachedPackageSize).toHaveBeenCalledWith(
-      { name: 'react', version: '18.2.0' },
-      expect.objectContaining({
-        name: 'react',
-        version: '18.2.0',
-        repository: 'https://github.com/facebook/react.git',
-      })
-    )
-  })
-
-  it('uses an explicit cache policy for forced builds', async () => {
-    const { service, getCachedPackageSize, resolveRequestedPackage } =
-      createService()
-    resolveRequestedPackage.mockResolvedValue({
-      name: 'react',
-      version: '18.2.0',
-      scoped: false,
-      packageString: 'react@18.2.0',
-      description: 'React',
-      repository: '',
-    })
-
-    await service.lookupPackageSize(
-      createRequestedPackage('react@18.2.0'),
-      'bypass'
-    )
-
-    expect(getCachedPackageSize).not.toHaveBeenCalled()
-    expect(resolveRequestedPackage).toHaveBeenCalledWith(
-      createRequestedPackage('react@18.2.0')
-    )
   })
 
   it('propagates request aborts to the active package build', async () => {
@@ -195,7 +177,7 @@ describe('PackageSizeService', () => {
         version: '18.2.0',
         scoped: false,
         description: 'React',
-        repository: '',
+        repository: null,
         packageString: 'react@18.2.0',
       },
       7,

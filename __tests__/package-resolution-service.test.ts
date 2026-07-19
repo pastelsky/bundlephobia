@@ -1,12 +1,12 @@
 import {
-  createRequestedPackage,
+  createPackageRequest,
   createResolvedPackage,
 } from '../server/services/packageResolution.service'
 
 describe('package resolution', () => {
   it('normalizes package metadata for every server workflow', () => {
     expect(
-      createResolvedPackage(createRequestedPackage('@scope/pkg'), {
+      createResolvedPackage(createPackageRequest('@scope/pkg'), {
         name: '@scope/pkg',
         version: '1.2.3',
         description: 'Package description',
@@ -25,15 +25,14 @@ describe('package resolution', () => {
   })
 
   it('bounds descriptions and tolerates malformed repository metadata', () => {
-    const resolved = createResolvedPackage(createRequestedPackage('example'), {
+    const resolved = createResolvedPackage(createPackageRequest('example'), {
       name: 'example',
       version: '1.0.0',
       description: 'x'.repeat(301),
       repository: 'not a repository URL',
     })
 
-    expect(resolved.description).toHaveLength(301)
-    expect(resolved.description.endsWith('…')).toBe(true)
-    expect(resolved.repository).toBe('')
+    expect(resolved.description).toBe(`${'x'.repeat(300)}…`)
+    expect(resolved.repository).toBeNull()
   })
 })

@@ -10,12 +10,14 @@ import logger from '../../Logger'
 import { requireResolvedPackage } from '../../services/packageResolution.service'
 import { packageSizeService } from '../../services/packageSize.service'
 
+// Builds a package only after resolution and all cache stages miss.
+// Publishes and caches the complete size result for the HTTP response.
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
-  const resolved = requireResolvedPackage(ctx.state.resolved)
-  const { name, version, packageString } = resolved
+  const resolvedPackage = requireResolvedPackage(ctx.state.resolvedPackage)
+  const { name, version, packageString } = resolvedPackage
   const { record } = ctx.query
-  const { forceBuild } = ctx.state.packageRequestPolicy
+  const { cacheMode } = ctx.state.packageRequest
 
   const buildStart = now()
   const abortController = new AbortController()
@@ -36,7 +38,7 @@ const buildMiddleware: Middleware = async ctx => {
   let body: PackageBuildResult
   try {
     body = await packageSizeService.buildPackageSize(
-      resolved,
+      resolvedPackage,
       priority,
       abortController.signal
     )
@@ -46,11 +48,12 @@ const buildMiddleware: Middleware = async ctx => {
   const buildEnd = now()
 
   ctx.cacheControl = {
-    maxAge: forceBuild
-      ? 0
-      : semver.valid(ctx.state.requestedPackage.version ?? '')
-      ? config.CACHE.SIZE_API_HAS_VERSION
-      : config.CACHE.SIZE_API_DEFAULT,
+    maxAge:
+      cacheMode === 'refresh'
+        ? 0
+        : semver.valid(ctx.state.packageRequest.version ?? '')
+        ? config.CACHE.SIZE_API_HAS_VERSION
+        : config.CACHE.SIZE_API_DEFAULT,
   }
 
   ctx.body = body

@@ -7,13 +7,11 @@ import type {
 } from '../../types/package-domain'
 import Cache, { type CacheKey } from '../../utils/cache.utils'
 import type {
-  PackageSizeLookup,
-  RequestedPackage,
-  ResolvedPackageState,
+  PackageRequest,
+  PackageSizeCacheResult,
+  ResolvedPackage,
 } from '../types'
-import { resolveRequestedPackage } from './packageResolution.service'
-
-export type PackageSizeCachePolicy = 'read' | 'bypass'
+import { resolvePackageRequest } from './packageResolution.service'
 
 export type PackageSizeBuild = Omit<
   PackageBuildResult,
@@ -25,7 +23,7 @@ export interface PackageSizeCache {
   set(key: CacheKey, result: PackageBuildInfo): Promise<void>
 }
 
-export type RequestedPackageResolver = typeof resolveRequestedPackage
+export type PackageResolver = typeof resolvePackageRequest
 
 export interface PackageSizeBuilder {
   build(packageString: string, priority: number): Promise<PackageSizeBuild>
@@ -44,7 +42,7 @@ export interface PackageBuildAbortSignal {
 
 interface PackageSizeServiceDependencies {
   cache?: PackageSizeCache
-  resolvePackage?: RequestedPackageResolver
+  resolvePackage?: PackageResolver
   builder?: PackageSizeBuilder
 }
 
@@ -58,13 +56,13 @@ function createPackageSizeCache(): PackageSizeCache {
 }
 
 function resolvedFromCachedResult(
-  requestedPackage: RequestedPackage,
+  packageRequest: PackageRequest,
   result: PackageBuildInfo
-): ResolvedPackageState {
+): ResolvedPackage {
   return {
     name: result.name,
     version: result.version,
-    scoped: requestedPackage.scoped,
+    scoped: packageRequest.scoped,
     packageString: `${result.name}@${result.version}`,
     description: result.description,
     repository: result.repository,
@@ -73,12 +71,12 @@ function resolvedFromCachedResult(
 
 export class PackageSizeService {
   private readonly cache: PackageSizeCache
-  private readonly resolvePackage: RequestedPackageResolver
+  private readonly resolvePackage: PackageResolver
   private packageSizeBuilder?: PackageSizeBuilder
 
   constructor(dependencies: PackageSizeServiceDependencies = {}) {
     this.cache = dependencies.cache ?? createPackageSizeCache()
-    this.resolvePackage = dependencies.resolvePackage ?? resolveRequestedPackage
+    this.resolvePackage = dependencies.resolvePackage ?? resolvePackageRequest
     this.packageSizeBuilder = dependencies.builder
   }
 
@@ -99,12 +97,11 @@ export class PackageSizeService {
     return this.packageSizeBuilder
   }
 
-  async lookupPackageSize(
-    requestedPackage: RequestedPackage,
-    cachePolicy: PackageSizeCachePolicy = 'read'
-  ): Promise<PackageSizeLookup> {
-    const { name, version } = requestedPackage
-    const shouldReadCache = cachePolicy === 'read'
+  async findPackageSize(
+    packageRequest: PackageRequest
+  ): Promise<PackageSizeCacheResult> {
+    const { name, version, cacheMode } = packageRequest
+    const shouldReadCache = cacheMode !== 'refresh'
     const hasExactVersion = version !== null && semver.valid(version) !== null
 
     if (shouldReadCache && hasExactVersion) {
@@ -113,66 +110,69 @@ export class PackageSizeService {
       if (exactResult) {
         return {
           kind: 'cache-hit',
-          resolved: resolvedFromCachedResult(requestedPackage, exactResult),
+          resolvedPackage: resolvedFromCachedResult(
+            packageRequest,
+            exactResult
+          ),
           result: exactResult,
         }
       }
     }
 
-    const resolved = await this.resolvePackage(requestedPackage)
+    const resolvedPackage = await this.resolvePackage(packageRequest)
 
     if (shouldReadCache) {
       const exactVersionWasAlreadyChecked =
         hasExactVersion &&
-        resolved.name === name &&
-        resolved.version === version
+        resolvedPackage.name === name &&
+        resolvedPackage.version === version
       const cachedResult = exactVersionWasAlreadyChecked
         ? undefined
         : await this.cache.get({
-            name: resolved.name,
-            version: resolved.version,
+            name: resolvedPackage.name,
+            version: resolvedPackage.version,
           })
 
       if (cachedResult) {
-        return { kind: 'cache-hit', resolved, result: cachedResult }
+        return { kind: 'cache-hit', resolvedPackage, result: cachedResult }
       }
     }
 
-    return { kind: 'cache-miss', resolved }
+    return { kind: 'cache-miss', resolvedPackage }
   }
 
   async buildPackageSize(
-    resolved: ResolvedPackageState,
+    resolvedPackage: ResolvedPackage,
     priority: number,
     signal?: PackageBuildAbortSignal
   ): Promise<PackageBuildResult> {
     const builder = await this.getPackageSizeBuilder()
-    const cancelBuild = () => builder.cancel(resolved.packageString)
+    const cancelBuild = () => builder.cancel(resolvedPackage.packageString)
 
     if (signal?.aborted) {
       cancelBuild()
-      throw new Error(`Build aborted for ${resolved.packageString}`)
+      throw new Error(`Build aborted for ${resolvedPackage.packageString}`)
     }
 
     signal?.addEventListener('abort', cancelBuild, { once: true })
     let buildResult: PackageSizeBuild
     try {
-      buildResult = await builder.build(resolved.packageString, priority)
+      buildResult = await builder.build(resolvedPackage.packageString, priority)
     } finally {
       signal?.removeEventListener('abort', cancelBuild)
     }
 
     const result: PackageBuildResult = {
       ...buildResult,
-      scoped: resolved.scoped,
-      name: resolved.name,
-      version: resolved.version,
-      description: resolved.description,
-      repository: resolved.repository,
+      scoped: resolvedPackage.scoped,
+      name: resolvedPackage.name,
+      version: resolvedPackage.version,
+      description: resolvedPackage.description,
+      repository: resolvedPackage.repository,
     }
 
     void this.cache.set(
-      { name: resolved.name, version: resolved.version },
+      { name: resolvedPackage.name, version: resolvedPackage.version },
       result
     )
 

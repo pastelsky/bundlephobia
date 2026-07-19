@@ -12,17 +12,14 @@ import type { PackageExportSizesResult } from '../types'
 
 const cache = new Cache()
 
+// Builds per-export sizes for one already resolved package version.
+// Refresh mode also replaces the endpoint's persistent cache entry.
 const exportSizesMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = requireResolvedPackage(
-    ctx.state.resolved
+    ctx.state.resolvedPackage
   )
-  const { forceBuild, peekOnly } = ctx.state.packageRequestPolicy
-
-  if (peekOnly) {
-    ctx.body = { name, version, peekSuccess: false }
-    return
-  }
+  const { cacheMode } = ctx.state.packageRequest
 
   const buildStart = now()
   const result =
@@ -33,11 +30,12 @@ const exportSizesMiddleware: Middleware = async ctx => {
   const buildEnd = now()
 
   ctx.cacheControl = {
-    maxAge: forceBuild
-      ? 0
-      : semver.valid(ctx.state.requestedPackage.version ?? '')
-      ? config.CACHE.SIZE_API_HAS_VERSION
-      : config.CACHE.SIZE_API_DEFAULT,
+    maxAge:
+      cacheMode === 'refresh'
+        ? 0
+        : semver.valid(ctx.state.packageRequest.version ?? '')
+        ? config.CACHE.SIZE_API_HAS_VERSION
+        : config.CACHE.SIZE_API_DEFAULT,
   }
 
   const body = { name, version, ...result }
@@ -55,7 +53,7 @@ const exportSizesMiddleware: Middleware = async ctx => {
     `BUILD EXPORTS SIZES: ${packageString} built in ${time.toFixed()}s`
   )
 
-  if (forceBuild) {
+  if (cacheMode === 'refresh') {
     void cache.setExportsSize({ name, version }, body)
   }
 }

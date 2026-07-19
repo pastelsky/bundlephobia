@@ -6,15 +6,17 @@ import { debug, failureCache } from '../../init'
 import logger from '../../Logger'
 import { requireResolvedPackage } from '../../services/packageResolution.service'
 
+// Serves successful and failed cache entries before build work begins.
+// Cache-only misses stop here with the same 404 response on every endpoint.
 const cachedResponse: Middleware = async (ctx, next) => {
-  const { forceBuild, cacheOnly } = ctx.state.packageRequestPolicy
-  if (forceBuild) {
+  const { cacheMode } = ctx.state.packageRequest
+  if (cacheMode === 'refresh') {
     await next()
     return
   }
 
   const { name, version, packageString } = requireResolvedPackage(
-    ctx.state.resolved
+    ctx.state.resolvedPackage
   )
 
   const logCache = ({
@@ -39,8 +41,10 @@ const cachedResponse: Middleware = async (ctx, next) => {
       message
     )
 
-  const lookup = ctx.state.packageSizeLookup
-  const cached = lookup ? lookup.kind === 'cache-hit' : await ctx.cashed()
+  const cacheResult = ctx.state.packageSizeCache
+  const cached = cacheResult
+    ? cacheResult.kind === 'cache-hit'
+    : await ctx.cashed()
   if (cached) {
     ctx.cacheControl = {
       maxAge: semver.valid(version)
@@ -48,7 +52,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
         : config.CACHE.SIZE_API_DEFAULT,
     }
 
-    if (lookup?.kind === 'cache-hit') ctx.body = lookup.result
+    if (cacheResult?.kind === 'cache-hit') ctx.body = cacheResult.result
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })
     return
@@ -71,7 +75,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
 
   logCache({ hit: false, message: `CACHE MISS: ${packageString}` })
 
-  if (cacheOnly) {
+  if (cacheMode === 'only') {
     ctx.status = 404
     return
   }
