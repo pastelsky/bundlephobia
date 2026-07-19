@@ -4,7 +4,7 @@ import next from 'next'
 import exec from 'execa'
 import { parse } from 'url'
 
-import Koa, { Context } from 'koa'
+import Koa from 'koa'
 import proxy from 'koa-proxy'
 import serve from 'koa-static'
 import Router from '@koa/router'
@@ -15,7 +15,6 @@ import auth from 'koa-basic-auth'
 import bodyParser from 'koa-bodyparser'
 import invariant from 'ts-invariant'
 
-import Cache from './utils/cache.utils'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
 import { createPackageApiPath } from './utils/packageApi.utils'
@@ -23,24 +22,17 @@ import logger from './server/Logger'
 import remoteMcpClient from './server/mcp/remoteClient'
 
 import limit from './server/middlewares/rateLimit.middleware'
-import exportsMiddlware from './server/middlewares/exports.middleware'
-import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
-import packageRequestMiddleware from './server/middlewares/results/packageRequest.middleware'
-import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
-import packageSizeMiddleware from './server/middlewares/results/packageSize.middleware'
-import jsonCacheResponseMiddleware from './server/middlewares/results/jsonCacheResponse.middleware'
-import buildMiddleware from './server/middlewares/results/build.middleware'
-import errorMiddleware from './server/middlewares/results/error.middleware'
-import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
 import requestLoggerMiddleware from './server/middlewares/requestLogger.middleware'
 import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
 import generateImgMiddleware from './server/middlewares/generateImg.middleware'
-import buildMissRateLimit from './server/middlewares/buildMissRateLimit.middleware'
-
-import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
+import { packageApiPipeline } from './server/pipeline/packageApiPipeline'
+import {
+  sizeEndpoint,
+  exportsEndpoint,
+  exportSizesEndpoint,
+} from './server/pipeline/packageEndpoints'
 
 import config from './server/config'
-import { requireResolvedPackage } from './server/services/packageResolution.service'
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
@@ -58,7 +50,6 @@ function getEnv(env: Record<string, string | undefined | null>) {
 
 const env = getEnv(process.env)
 
-const cache = new Cache()
 const port = env.port
 const dev = env.nodeEnv !== 'production'
 const app = next({ dev })
@@ -122,60 +113,9 @@ app.prepare().then(() => {
     })
   )
 
-  type Key = {
-    name: string
-    version: string
-  }
-
-  router.get(
-    '/api/size',
-    packageRequestMiddleware,
-    errorMiddleware,
-    packageSizeMiddleware,
-    buildMissRateLimit({
-      durationMs: 1000 * 60 * 5,
-      maxRequests: 10,
-      whiteList: ['127.0.0.1', '::1'],
-    }),
-    buildMiddleware
-  )
-
-  router.get(
-    '/api/exports',
-    packageRequestMiddleware,
-    errorMiddleware,
-    resolvePackageMiddleware,
-    blockBlacklistMiddleware,
-    exportsMiddlware
-  )
-
-  router.get(
-    '/api/exports-sizes',
-    packageRequestMiddleware,
-    jsonCacheMiddleware({
-      get: (key: Key) => cache.getExportsSize(key),
-      set: (key: Key, value: string) => cache.setExportsSize(key, value),
-      hash: (ctx: Context) => {
-        const resolvedPackage = requireResolvedPackage(
-          ctx.state.resolvedPackage
-        )
-        return {
-          name: resolvedPackage.name,
-          version: resolvedPackage.version,
-        }
-      },
-    }),
-    errorMiddleware,
-    resolvePackageMiddleware,
-    blockBlacklistMiddleware,
-    jsonCacheResponseMiddleware,
-    buildMissRateLimit({
-      durationMs: 1000 * 60 * 5,
-      maxRequests: 10,
-      whiteList: ['127.0.0.1', '::1'],
-    }),
-    exportsSizesMiddlware
-  )
+  router.get('/api/size', ...packageApiPipeline(sizeEndpoint))
+  router.get('/api/exports', ...packageApiPipeline(exportsEndpoint))
+  router.get('/api/exports-sizes', ...packageApiPipeline(exportSizesEndpoint))
 
   router.get('/api/recent', async ctx => {
     try {

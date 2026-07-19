@@ -37,6 +37,20 @@ export function parsePackageString(packageString: string): ParsedPackageString {
   return { name, version, scope, scoped }
 }
 
+/** Joins values into a human sentence with an Oxford comma; null when empty. */
+export function formatSentence(values: string[]): string | null {
+  if (values.length === 0) {
+    return null
+  }
+  if (values.length === 1) {
+    return values[0]
+  }
+  if (values.length === 2) {
+    return `${values[0]} and ${values[1]}`
+  }
+  return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
+}
+
 export function daysFromToday(date: string | number | Date): number {
   const date1 = new Date()
   const date2 = new Date(date)

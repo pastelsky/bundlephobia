@@ -1,17 +1,12 @@
 import 'koa'
 
-import type {
-  PackageBuildResult,
-  PackageRequest,
-  ResolvedPackage,
-} from '../server/types'
+import type { PackageRequest, ResolvedPackage } from '../server/types'
 
 declare module 'koa' {
   interface DefaultState {
     id?: string
     packageRequest: PackageRequest
     resolvedPackage?: ResolvedPackage
-    buildResult?: PackageBuildResult
   }
 
   interface ExtendableContext {
@@ -19,7 +14,6 @@ declare module 'koa' {
       maxAge?: number
       noCache?: boolean
     }
-    cashed(): Promise<boolean>
   }
 }
 

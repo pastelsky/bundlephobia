@@ -1,8 +1,8 @@
 import type { Middleware } from 'koa'
 
-import { PackageCacheMode } from '../../../utils/packageApi.utils'
 import config from '../../config'
 import CustomError from '../../CustomError'
+import { cachePolicy } from '../../pipeline/cachePolicy'
 import type { PackageRequest } from '../../types'
 
 export function assertPackageRequestIsBuildable(
@@ -25,17 +25,12 @@ export function assertPackageRequestIsBuildable(
   }
 }
 
-// Blocks packages that should not enter the normal cache/build pipeline.
+// Rejects blocklisted / unsupported packages before any resolution or build.
 // Force-rebuild requests may intentionally retry despite those rules.
 const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
-  const { cacheMode } = ctx.state.packageRequest
-
-  if (cacheMode === PackageCacheMode.ForceRebuild) {
-    await next()
-    return
+  if (!cachePolicy(ctx.state.packageRequest.cacheMode).bypassesBlocklist) {
+    assertPackageRequestIsBuildable(ctx.state.packageRequest)
   }
-
-  assertPackageRequestIsBuildable(ctx.state.packageRequest)
 
   await next()
 }

@@ -1,7 +1,7 @@
 // Server-specific types only.
 // Domain types (PackageBuildResult, PackageExports*, etc.) are
 // re-exported from here so callers need only one import site.
-import type { PackageBuildInfo, PackageMetadata } from '../types/package-domain'
+import type { PackageMetadata } from '../types/package-domain'
 import type { ParsedPackageString } from '../utils/common.utils'
 import type { PackageCacheMode } from '../utils/packageApi.utils'
 
@@ -27,17 +27,6 @@ export interface PackageRequest extends ParsedPackageString {
   packageString: string
   cacheMode: PackageCacheMode
 }
-
-export type PackageSizeCacheResult =
-  | {
-      kind: 'cache-hit'
-      resolvedPackage: ResolvedPackage
-      result: PackageBuildInfo
-    }
-  | {
-      kind: 'cache-miss'
-      resolvedPackage: ResolvedPackage
-    }
 
 export interface FailureCacheEntry {
   status: number

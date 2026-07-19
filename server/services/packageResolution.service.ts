@@ -44,10 +44,7 @@ function normalizeRepositoryUrl(
     const rawRepository =
       typeof repository === 'string' ? repository : repository?.url
     const normalizedRepository = rawRepository?.trim()
-    if (
-      normalizedRepository === undefined ||
-      normalizedRepository.length === 0
-    ) {
+    if (!normalizedRepository) {
       return null
     }
     return gitURLParse(normalizedRepository).toString('https')
@@ -58,10 +55,7 @@ function normalizeRepositoryUrl(
 
 function truncateDescription(description: string | undefined): string | null {
   const normalizedDescription = description?.trim()
-  if (
-    normalizedDescription === undefined ||
-    normalizedDescription.length === 0
-  ) {
+  if (!normalizedDescription) {
     return null
   }
   return normalizedDescription.length > 300

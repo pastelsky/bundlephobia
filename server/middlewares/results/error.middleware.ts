@@ -2,10 +2,11 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 import createDebug from 'debug'
 
-import { PackageCacheMode } from '../../../utils/packageApi.utils'
+import { formatSentence } from '../../../utils/common.utils'
 import config from '../../config'
 import { failureCache } from '../../init'
 import logger from '../../Logger'
+import { errorCacheMaxAge } from '../../pipeline/cachePolicy'
 import type { PackageRequest, ResolvedPackage } from '../../types'
 
 const debug = createDebug('bp:error')
@@ -26,19 +27,6 @@ interface BuildErrorShape extends Error {
     missingModules?: string[]
     filePath?: string
   }
-}
-
-function formatSentence(values: string[]): string | null {
-  if (values.length === 0) {
-    return null
-  }
-  if (values.length === 1) {
-    return values[0]
-  }
-  if (values.length === 2) {
-    return `${values[0]} and ${values[1]}`
-  }
-  return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
 type PackageErrorContext = Omit<PackageRequest, 'cacheMode'> | ResolvedPackage
@@ -92,10 +80,7 @@ const errorHandler: Middleware = async (ctx, next) => {
   } catch (error) {
     console.error(error)
     ctx.cacheControl = {
-      maxAge:
-        cacheMode === PackageCacheMode.ForceRebuild
-          ? 0
-          : config.CACHE.SIZE_API_ERROR,
+      maxAge: errorCacheMaxAge(cacheMode, config.CACHE.SIZE_API_ERROR),
     }
 
     if (!(error instanceof Error)) {
@@ -144,10 +129,10 @@ const errorHandler: Middleware = async (ctx, next) => {
 
       case 'UnsupportedPackageError':
         ctx.cacheControl = {
-          maxAge:
-            cacheMode === PackageCacheMode.ForceRebuild
-              ? 0
-              : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
+          maxAge: errorCacheMaxAge(
+            cacheMode,
+            config.CACHE.SIZE_API_ERROR_UNSUPPORTED
+          ),
         }
         respondWithError(403, {
           code: 'UnsupportedPackageError',
@@ -202,10 +187,10 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge:
-            cacheMode === PackageCacheMode.ForceRebuild
-              ? 0
-              : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge: errorCacheMaxAge(
+            cacheMode,
+            config.CACHE.SIZE_API_ERROR_FATAL
+          ),
         }
 
         respondWithError(status, body.error)
@@ -235,10 +220,10 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge:
-            cacheMode === PackageCacheMode.ForceRebuild
-              ? 0
-              : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge: errorCacheMaxAge(
+            cacheMode,
+            config.CACHE.SIZE_API_ERROR_FATAL
+          ),
         }
 
         respondWithError(status, body.error)
@@ -264,10 +249,10 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge:
-            cacheMode === PackageCacheMode.ForceRebuild
-              ? 0
-              : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge: errorCacheMaxAge(
+            cacheMode,
+            config.CACHE.SIZE_API_ERROR_FATAL
+          ),
         }
 
         respondWithError(status, body.error)

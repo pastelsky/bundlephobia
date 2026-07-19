@@ -22,7 +22,7 @@ import QuickStatsBar from '../../../client/components/QuickStatsBar/QuickStatsBa
 import ResultLayout from '../../../client/components/ResultLayout'
 import Stat from '../../../client/components/Stat'
 import Warning from '../../../client/components/Warning/Warning'
-import { parsePackageString } from '../../../utils/common.utils'
+import { formatSentence, parsePackageString } from '../../../utils/common.utils'
 import {
   DownloadSpeed,
   formatSize,
@@ -35,7 +35,8 @@ import SimilarPackagesSection from './components/SimilarPackagesSection'
 import TreemapSection from './components/TreemapSection'
 import config from '../../../server/config'
 import { createPackageRequest } from '../../../server/services/packageResolution.service'
-import { packageSizeService } from '../../../server/services/packageSize.service'
+import { packageSizeCache } from '../../../server/pipeline/packageResultCache'
+import { readCachedExactVersion } from '../../../server/pipeline/resolveCachedPackage'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
@@ -56,39 +57,13 @@ type ResultPageState = {
   similarPackagesCategory: string | null
 }
 
-type ResolvedBuildError = {
-  errorName: string | null
-  errorBody: string | null
-  errorDetails: string | null
-}
-
 function isEmptySnapshot(reading: PackageBuildInfoSnapshot) {
   return Object.keys(reading).length === 0
-}
-
-function formatSentence(values: string[]) {
-  if (values.length === 0) {
-    return null
-  }
-
-  if (values.length === 1) {
-    return values[0]
-  }
-
-  if (values.length === 2) {
-    return `${values[0]} and ${values[1]}`
-  }
-
-  return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
 function truncateMetaDescription(description: string) {
   if (description.length <= 160) return description
   return `${description.slice(0, 157).trimEnd()}…`
-}
-
-function getResolvedBuildError(resultsError: unknown): ResolvedBuildError {
-  return resolveBuildError(resultsError)
 }
 
 function getPackageStringFromRouter(router: NextRouter) {
@@ -390,9 +365,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       ? `${versionLabel} is ${formattedSizes.minified} minified and ${formattedSizes.gzip} with gzip. Check dependencies, exports and package composition.`
       : `Check the minified and gzip bundle size of ${versionLabel}, its dependencies, exports and package composition. ${DEFAULT_DESCRIPTION_START}`
     const description = truncateMetaDescription(
-      packageDescription === null || packageDescription === undefined
-        ? summary
-        : `${summary} ${packageDescription}`
+      packageDescription ? `${summary} ${packageDescription}` : summary
     )
 
     return (
@@ -421,23 +394,26 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     } = this.state
 
     const { errorName, errorBody, errorDetails } =
-      getResolvedBuildError(resultsError)
+      resolveBuildError(resultsError)
 
     const referenceSpeedInfoText = (speed: number, units: string) =>
       `Download Speed: ⬇️ ${speed} ${units}.\nExclusive of HTTP request latency.`
 
+    const buildResult = resultsPromiseState === 'fulfilled' ? results : null
+
     const getQuickStatsBar = () =>
-      resultsPromiseState === 'fulfilled' &&
-      results && (
+      buildResult && (
         <QuickStatsBar
-          description={results.description}
-          dependencyCount={results.dependencyCount}
-          hasSideEffects={results.hasSideEffects}
+          description={buildResult.description}
+          dependencyCount={buildResult.dependencyCount}
+          hasSideEffects={buildResult.hasSideEffects}
           isTreeShakeable={
-            results.hasJSModule || results.hasJSNext || results.isModuleType
+            buildResult.hasJSModule ||
+            buildResult.hasJSNext ||
+            buildResult.isModuleType
           }
-          repository={results.repository}
-          name={results.name}
+          repository={buildResult.repository}
+          name={buildResult.name}
         />
       )
 
@@ -463,18 +439,17 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
                 />
               </div>
             )}
-            {resultsPromiseState === 'fulfilled' &&
-              results &&
-              results.ignoredMissingDependencies &&
-              results.ignoredMissingDependencies.length > 0 && (
+            {buildResult &&
+              buildResult.ignoredMissingDependencies &&
+              buildResult.ignoredMissingDependencies.length > 0 && (
                 <Warning>
                   Ignoring the size of missing{' '}
-                  {results.ignoredMissingDependencies.length > 1
+                  {buildResult.ignoredMissingDependencies.length > 1
                     ? 'dependencies'
                     : 'dependency'}{' '}
                   &nbsp;
                   <code>
-                    {formatSentence(results.ignoredMissingDependencies)}
+                    {formatSentence(buildResult.ignoredMissingDependencies)}
                   </code>
                   .
                   <a
@@ -486,19 +461,19 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
                   </a>
                 </Warning>
               )}
-            {resultsPromiseState === 'fulfilled' && results && (
+            {buildResult && (
               <div className="content-split-container">
                 <div className="stats-container">
                   <div className="size-container">
                     <h3> Bundle Size </h3>
                     <div className="size-stats">
                       <Stat
-                        value={results.size}
+                        value={buildResult.size}
                         type={Stat.type.SIZE}
                         label="Minified"
                       />
                       <Stat
-                        value={results.gzip}
+                        value={buildResult.gzip}
                         type={Stat.type.SIZE}
                         label="Minified + Gzipped"
                       />
@@ -508,7 +483,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
                     <h3> Download Time </h3>
                     <div className="time-stats">
                       <Stat
-                        value={getTimeFromSize(results.gzip).threeG}
+                        value={getTimeFromSize(buildResult.gzip).threeG}
                         type={Stat.type.TIME}
                         label="Slow 3G"
                         infoText={referenceSpeedInfoText(
@@ -517,7 +492,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
                         )}
                       />
                       <Stat
-                        value={getTimeFromSize(results.gzip).fourG}
+                        value={getTimeFromSize(buildResult.gzip).fourG}
                         type={Stat.type.TIME}
                         label="Emerging 4G"
                         infoText={referenceSpeedInfoText(
@@ -558,43 +533,39 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
               )}
             </div>
           )}
-          {resultsPromiseState === 'fulfilled' &&
-            results &&
-            results.dependencySizes &&
-            results.dependencySizes.length > 0 && (
+          {buildResult &&
+            buildResult.dependencySizes &&
+            buildResult.dependencySizes.length > 0 && (
               <div className="content-container">
                 <TreemapSection
-                  packageName={results.name}
-                  packageSize={results.size}
-                  dependencySizes={results.dependencySizes}
+                  packageName={buildResult.name}
+                  packageSize={buildResult.size}
+                  dependencySizes={buildResult.dependencySizes}
                 />
               </div>
             )}
 
-          {resultsPromiseState === 'fulfilled' && results && (
+          {buildResult && (
             <div className="content-container">
-              <ExportAnalysisSection result={results} />
+              <ExportAnalysisSection result={buildResult} />
             </div>
           )}
 
-          {resultsPromiseState === 'fulfilled' &&
-            results &&
+          {buildResult &&
             similarPackagesCategory !== null &&
             similarPackages.length > 0 && (
               <div className="content-container">
                 <SimilarPackagesSection
                   category={similarPackagesCategory}
                   packs={similarPackages}
-                  comparisonGzip={results.gzip}
+                  comparisonGzip={buildResult.gzip}
                 />
               </div>
             )}
 
-          {resultsPromiseState === 'fulfilled' &&
-            results &&
-            parsePackageString(results.name).scoped && (
-              <InterLinksSection packageName={results.name} />
-            )}
+          {buildResult && parsePackageString(buildResult.name).scoped && (
+            <InterLinksSection packageName={buildResult.name} />
+          )}
         </section>
       </ResultLayout>
     )
@@ -622,11 +593,13 @@ export const getServerSideProps = async (
   }
 
   try {
-    const cacheResult = await packageSizeService.findPackageSize(
-      createPackageRequest(packageString)
+    // Cache-only: never resolve via npm during SSR. A cache miss (or a
+    // tag/range that needs resolution) renders with initialResult null, and
+    // the client then performs the full resolve-and-build lookup on mount.
+    const initialResult = await readCachedExactVersion(
+      createPackageRequest(packageString),
+      packageSizeCache
     )
-    const initialResult =
-      cacheResult.kind === 'cache-hit' ? cacheResult.result : null
     return {
       props: {
         initialResult,
@@ -634,8 +607,8 @@ export const getServerSideProps = async (
       },
     }
   } catch {
-    // Keep the document stable when npm metadata or the cache service is
-    // unavailable. The client can still perform the normal interactive lookup.
+    // Keep the document stable when the cache service is unavailable. The
+    // client can still perform the normal interactive lookup.
     return {
       props: {
         initialResult: null,
