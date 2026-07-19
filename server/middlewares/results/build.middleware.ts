@@ -12,7 +12,8 @@ import { packageSizeService } from '../../services/packageSize.service'
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
-  const { force, record } = ctx.query
+  const { record } = ctx.query
+  const { forceBuild } = ctx.state.packageRequestPolicy
 
   const buildStart = now()
   const abortController = new AbortController()
@@ -43,12 +44,11 @@ const buildMiddleware: Middleware = async ctx => {
   const buildEnd = now()
 
   ctx.cacheControl = {
-    maxAge:
-      force !== undefined
-        ? 0
-        : semver.valid(ctx.state.requestedPackage.version ?? '')
-        ? config.CACHE.SIZE_API_HAS_VERSION
-        : config.CACHE.SIZE_API_DEFAULT,
+    maxAge: forceBuild
+      ? 0
+      : semver.valid(ctx.state.requestedPackage.version ?? '')
+      ? config.CACHE.SIZE_API_HAS_VERSION
+      : config.CACHE.SIZE_API_DEFAULT,
   }
 
   ctx.body = body

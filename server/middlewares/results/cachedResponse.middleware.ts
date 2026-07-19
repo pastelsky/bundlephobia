@@ -6,8 +6,7 @@ import { debug, failureCache } from '../../init'
 import logger from '../../Logger'
 
 const cachedResponse: Middleware = async (ctx, next) => {
-  const { force, peep } = ctx.query
-  const forceBuild = force !== undefined
+  const { forceBuild, cacheOnly } = ctx.state.packageRequestPolicy
   if (forceBuild) {
     await next()
     return
@@ -69,7 +68,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
 
   logCache({ hit: false, message: `CACHE MISS: ${packageString}` })
 
-  if (peep) {
+  if (cacheOnly) {
     ctx.status = 404
     return
   }

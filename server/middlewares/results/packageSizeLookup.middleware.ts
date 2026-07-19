@@ -6,7 +6,9 @@ import { packageSizeService } from '../../services/packageSize.service'
 
 const packageSizeLookupMiddleware: Middleware = async (ctx, next) => {
   const startedAt = now()
-  const cachePolicy = ctx.query.force === undefined ? 'read' : 'bypass'
+  const cachePolicy = ctx.state.packageRequestPolicy.forceBuild
+    ? 'bypass'
+    : 'read'
   const lookup = await packageSizeService.lookupPackageSize(
     ctx.state.requestedPackage,
     cachePolicy

@@ -3,6 +3,7 @@ import 'koa'
 import type {
   FailureCacheEntry,
   PackageBuildResult,
+  PackageRequestPolicy,
   PackageSizeLookup,
   RequestedPackage,
   ResolvedPackageState,
@@ -12,6 +13,7 @@ declare module 'koa' {
   interface DefaultState {
     id?: string
     requestedPackage: RequestedPackage
+    packageRequestPolicy: PackageRequestPolicy
     resolved: ResolvedPackageState
     packageSizeLookup?: PackageSizeLookup
     buildResult?: PackageBuildResult

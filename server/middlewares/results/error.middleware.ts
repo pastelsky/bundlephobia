@@ -40,7 +40,7 @@ function formatSentence(values: string[]): string {
 }
 
 const errorHandler: Middleware = async (ctx, next) => {
-  const { force } = ctx.query
+  const { forceBuild } = ctx.state.packageRequestPolicy
   const start = now()
 
   const respondWithError = (
@@ -78,7 +78,7 @@ const errorHandler: Middleware = async (ctx, next) => {
   } catch (error) {
     console.error(error)
     ctx.cacheControl = {
-      maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR,
+      maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR,
     }
 
     if (!(error instanceof Error)) {
@@ -123,7 +123,7 @@ const errorHandler: Middleware = async (ctx, next) => {
 
       case 'UnsupportedPackageError':
         ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
+          maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
         }
         respondWithError(403, {
           code: 'UnsupportedPackageError',
@@ -176,7 +176,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)
@@ -204,7 +204,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)
@@ -230,7 +230,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+          maxAge: forceBuild ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
         }
 
         respondWithError(status, body.error)

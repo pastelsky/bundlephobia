@@ -27,6 +27,11 @@ export interface RequestedPackage extends ParsedPackageString {
   packageString: string
 }
 
+export interface PackageRequestPolicy {
+  forceBuild: boolean
+  cacheOnly: boolean
+}
+
 export type PackageSizeLookup =
   | {
       kind: 'cache-hit'

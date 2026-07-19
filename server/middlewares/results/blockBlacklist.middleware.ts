@@ -4,7 +4,7 @@ import config from '../../config'
 import CustomError from '../../CustomError'
 
 const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
-  if (ctx.query.force !== undefined) {
+  if (ctx.state.packageRequestPolicy.forceBuild) {
     await next()
     return
   }

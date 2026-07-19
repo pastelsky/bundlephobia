@@ -17,6 +17,10 @@ const packageRequestMiddleware: Middleware = async (ctx, next) => {
 
   const requestedPackage = createRequestedPackage(packageString)
   ctx.state.requestedPackage = requestedPackage
+  ctx.state.packageRequestPolicy = {
+    forceBuild: ctx.query.force !== undefined,
+    cacheOnly: ctx.query.peep !== undefined,
+  }
   ctx.state.resolved = createPendingPackageResolution(requestedPackage)
 
   await next()
