@@ -21,7 +21,10 @@ import QuickStatsBar from '../../../client/components/QuickStatsBar/QuickStatsBa
 import ResultLayout from '../../../client/components/ResultLayout'
 import Stat from '../../../client/components/Stat'
 import Warning from '../../../client/components/Warning/Warning'
-import { parsePackageString } from '../../../utils/common.utils'
+import {
+  parsePackageString,
+  sanitizeErrorHTML,
+} from '../../../utils/common.utils'
 import {
   DownloadSpeed,
   formatSize,
@@ -527,7 +530,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
               <h2 className="result-error__code">{errorName}</h2>
               <p
                 className="result-error__message"
-                dangerouslySetInnerHTML={{ __html: errorBody ?? '' }}
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeErrorHTML(errorBody ?? ''),
+                }}
               />
               {errorDetails && (
                 <details className="result-error__details">
