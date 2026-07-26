@@ -21,15 +21,9 @@
       "groupSlug": "package-build-stats"
     },
     {
-      "description": "Require manual handling for package-build-stats majors",
+      "description": "Automerge all package-build-stats updates",
       "matchPackageNames": ["package-build-stats"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false
-    },
-    {
-      "description": "Automerge package-build-stats patches and minors",
-      "matchPackageNames": ["package-build-stats"],
-      "matchUpdateTypes": ["patch", "minor"],
+      "matchUpdateTypes": ["patch", "minor", "major"],
       "schedule": ["at any time"],
       "automerge": true,
       "automergeType": "pr",
