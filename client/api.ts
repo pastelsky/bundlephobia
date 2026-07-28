@@ -53,6 +53,43 @@ export type PackageExportSizesResponse = {
   assets: PackageExportAsset[]
 }
 
+type APIResponse = Awaited<ReturnType<typeof fetch>>
+
+const getFallbackError = (status: number) => {
+  if (status === 502 || status === 503) {
+    return {
+      error: {
+        code: 'ServiceUnavailableError',
+        message:
+          'The build service is temporarily unavailable. Please try again in a few minutes.',
+      },
+    }
+  }
+
+  return {
+    error: {
+      code: 'BuildError',
+      message:
+        "Oops, something went wrong and we don't have an appropriate error for this. Open an issue maybe?",
+    },
+  }
+}
+
+async function parseResponse<T>(response: APIResponse): Promise<T> {
+  if (response.ok) {
+    return response.json() as Promise<T>
+  }
+
+  let error: unknown
+  try {
+    error = await response.json()
+  } catch {
+    throw getFallbackError(response.status)
+  }
+
+  throw error
+}
+
 export default class API {
   static get<T = unknown>(url: string, isInternal = true): Promise<T> {
     const headers: Record<string, string> = {
@@ -62,32 +99,7 @@ export default class API {
     if (isInternal) {
       headers['X-Bundlephobia-User'] = 'bundlephobia website'
     }
-    return fetch(url, { headers }).then(res => {
-      if (!res.ok) {
-        try {
-          return res.json().then(err => Promise.reject(err))
-        } catch (e) {
-          if (res.status === 503) {
-            return Promise.reject({
-              error: {
-                code: 'TimeoutError',
-                message:
-                  'This is taking unusually long. Check back in a couple of minutes?',
-              },
-            })
-          }
-
-          return Promise.reject({
-            error: {
-              code: 'BuildError',
-              message:
-                "Oops, something went wrong and we don't have an appropriate error for this. Open an issue maybe?",
-            },
-          })
-        }
-      }
-      return res.json()
-    })
+    return fetch(url, { headers }).then(parseResponse<T>)
   }
 
   static post<T = unknown>(
@@ -104,22 +116,7 @@ export default class API {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
-    }).then(res => {
-      if (!res.ok) {
-        try {
-          return res.json().then(err => Promise.reject(err))
-        } catch (e) {
-          return Promise.reject({
-            error: {
-              code: 'BuildError',
-              message:
-                "Oops, something went wrong and we don't have an appropriate error for this. Open an issue maybe?",
-            },
-          })
-        }
-      }
-      return res.json()
-    })
+    }).then(parseResponse<T>)
   }
 
   static getInfo(packageString: string) {
