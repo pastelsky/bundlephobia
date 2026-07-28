@@ -90,7 +90,7 @@ export default class BuildService {
     if (axios.isAxiosError(error) && error.request) {
       debug('No response received from build server. Is the server down?')
       throw new CustomError(
-        'BuildError',
+        'BuildServiceUnavailableError',
         {
           operation: operationType,
           reason: 'BUILD_SERVICE_UNREACHABLE',

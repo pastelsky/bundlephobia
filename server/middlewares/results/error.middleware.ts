@@ -111,6 +111,15 @@ const errorHandler: Middleware = async (ctx, next) => {
     const packageString = ctx.state.resolved.packageString
 
     switch (err.name) {
+      case 'BuildServiceUnavailableError':
+        ctx.cacheControl = { maxAge: 0 }
+        respondWithError(503, {
+          code: 'BuildServiceUnavailableError',
+          message:
+            'The build service is temporarily unavailable. Please try again in a few minutes.',
+        })
+        break
+
       case 'BlocklistedPackageError':
         respondWithError(403, {
           code: 'BlocklistedPackageError',
