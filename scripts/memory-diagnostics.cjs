@@ -205,9 +205,17 @@ function createMemoryDiagnostics(options) {
   return { check, stop: () => clearInterval(timer) }
 }
 
+function getStartupEnvironment(environment = process.env) {
+  if (!environment.pm2_env) {
+    return environment
+  }
+  return { ...JSON.parse(environment.pm2_env), ...environment }
+}
+
 function startFromEnvironment() {
-  const service = process.env.MEMORY_DIAGNOSTICS_SERVICE
-  const threshold = process.env.MEMORY_DIAGNOSTICS_RSS_THRESHOLD
+  const environment = getStartupEnvironment()
+  const service = environment.MEMORY_DIAGNOSTICS_SERVICE
+  const threshold = environment.MEMORY_DIAGNOSTICS_RSS_THRESHOLD
   if (!service || !threshold) {
     return false
   }
@@ -216,35 +224,16 @@ function startFromEnvironment() {
     service,
     thresholdBytes: parseBytes(threshold),
     outputRoot:
-      process.env.MEMORY_DIAGNOSTICS_DIR || path.resolve('diagnostics'),
+      environment.MEMORY_DIAGNOSTICS_DIR || path.resolve('diagnostics'),
   })
   return true
 }
 
-function startWhenEnvironmentIsReady({
-  processImpl = process,
-  start = startFromEnvironment,
-  defer = setImmediate,
-} = {}) {
-  if (start()) {
-    return
-  }
-
-  const startAfterMessage = () => {
-    defer(() => {
-      if (start()) {
-        processImpl.off('message', startAfterMessage)
-      }
-    })
-  }
-  processImpl.on('message', startAfterMessage)
-}
-
-startWhenEnvironmentIsReady()
+startFromEnvironment()
 
 module.exports = {
   createMemoryDiagnostics,
   getAvailableBytes,
+  getStartupEnvironment,
   parseBytes,
-  startWhenEnvironmentIsReady,
 }

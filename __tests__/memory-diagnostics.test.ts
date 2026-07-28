@@ -1,12 +1,11 @@
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const { EventEmitter } = require('events')
 
 const {
   createMemoryDiagnostics,
+  getStartupEnvironment,
   parseBytes,
-  startWhenEnvironmentIsReady,
 } = require('../scripts/memory-diagnostics.cjs')
 
 describe('memory diagnostics', () => {
@@ -99,25 +98,17 @@ describe('memory diagnostics', () => {
     diagnostics.stop()
   })
 
-  test('waits for PM2 to inject cluster environment', () => {
-    const processImpl = new EventEmitter()
-    const deferred = []
-    let environmentReady = false
-    const start = jest.fn(() => environmentReady)
-
-    startWhenEnvironmentIsReady({
-      processImpl,
-      start,
-      defer: callback => deferred.push(callback),
+  test('reads cluster environment from the PM2 startup payload', () => {
+    expect(
+      getStartupEnvironment({
+        pm2_env: JSON.stringify({
+          MEMORY_DIAGNOSTICS_SERVICE: 'build-service',
+          MEMORY_DIAGNOSTICS_RSS_THRESHOLD: '850M',
+        }),
+      })
+    ).toMatchObject({
+      MEMORY_DIAGNOSTICS_SERVICE: 'build-service',
+      MEMORY_DIAGNOSTICS_RSS_THRESHOLD: '850M',
     })
-    processImpl.on('message', () => {
-      environmentReady = true
-    })
-    processImpl.emit('message')
-
-    expect(start).toHaveBeenCalledTimes(1)
-    deferred[0]()
-    expect(start).toHaveBeenCalledTimes(2)
-    expect(processImpl.listenerCount('message')).toBe(1)
   })
 })
