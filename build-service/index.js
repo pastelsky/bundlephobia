@@ -7,6 +7,7 @@ import {
   eventQueue,
 } from 'package-build-stats'
 import Amplitude from '@amplitude/node'
+import serializeError from './serializeError.js'
 
 const fastify = Fastify()
 
@@ -37,8 +38,7 @@ fastify.get('/size', async (req, res) => {
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
-    const errorToSend = 'toJSON' in err ? err.toJSON() : err
-    return res.code(500).send(errorToSend)
+    return res.code(500).send(serializeError(err))
   }
 })
 
@@ -52,8 +52,7 @@ fastify.get('/exports-sizes', async (req, res) => {
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
-    const errorToSend = 'toJSON' in err ? err.toJSON() : err
-    return res.code(500).send(errorToSend)
+    return res.code(500).send(serializeError(err))
   }
 })
 
@@ -67,8 +66,7 @@ fastify.get('/exports', async (req, res) => {
     return res.code(200).send(result)
   } catch (err) {
     console.log(err)
-    const errorToSend = 'toJSON' in err ? err.toJSON() : err
-    return res.code(500).send(errorToSend)
+    return res.code(500).send(serializeError(err))
   }
 })
 
