@@ -146,8 +146,10 @@ class Queue {
       job.failureListeners.forEach(listener => {
         listener(new Error('JOB_CANCELLED'))
       })
-      this.removeJob(id, type)
-      this.executeNextJobIfPossible()
+      if (job.status === JobStatus.READY) {
+        this.removeJob(id, type)
+        this.executeNextJobIfPossible()
+      }
     }
   }
 

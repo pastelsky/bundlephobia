@@ -43,6 +43,35 @@ describe('Queue cancellation', () => {
 
     expect(mockCancel).toHaveBeenCalledTimes(1)
     await expect(p1).rejects.toThrow('JOB_CANCELLED')
-    expect(queue.getRunningJobs().length).toBe(0)
+    expect(queue.getRunningJobs().length).toBe(1)
+  })
+
+  it('keeps canceled work counted until its executor settles', async () => {
+    const queue = new Queue({ concurrency: 1 })
+
+    let resolveFirstJob: any
+    const firstJobPromise = new Promise(resolve => {
+      resolveFirstJob = resolve
+    })
+    const executor = jest
+      .fn()
+      .mockReturnValueOnce(firstJobPromise)
+      .mockResolvedValueOnce(undefined)
+    queue.addExecutor('TEST', executor)
+
+    const p1 = queue.process('job-1', 'TEST', {})
+    const p2 = queue.process('job-2', 'TEST', {})
+
+    queue.cancel('job-1', 'TEST')
+
+    await expect(p1).rejects.toThrow('JOB_CANCELLED')
+    expect(executor).toHaveBeenCalledTimes(1)
+    expect(queue.getRunningJobs().length).toBe(1)
+    expect(queue.getReadyJobs().length).toBe(1)
+
+    resolveFirstJob()
+    await p2
+
+    expect(executor).toHaveBeenCalledTimes(2)
   })
 })
