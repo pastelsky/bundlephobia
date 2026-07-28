@@ -1,4 +1,5 @@
 import { parsePackageString } from '../utils/common.utils'
+import { resolveBuildError } from '../utils'
 
 describe('parsePackageString', () => {
   it('handles scoped packages correctly', () => {
@@ -53,5 +54,64 @@ describe('parsePackageString', () => {
       version: '0.7.0-beta',
       scope: undefined,
     })
+  })
+})
+
+describe('resolveBuildError', () => {
+  const resolveDetails = (originalError: unknown) =>
+    resolveBuildError({
+      error: {
+        code: 'BuildError',
+        message: 'Failed to build this package.',
+        details: { originalError },
+      },
+    }).errorDetails
+
+  it('preserves string details', () => {
+    expect(resolveDetails('plain failure')).toBe('plain failure')
+  })
+
+  it('preserves every array entry', () => {
+    expect(resolveDetails(['first failure', 'second failure'])).toBe(
+      'first failure\n\nsecond failure'
+    )
+  })
+
+  it('pretty-prints object details', () => {
+    expect(
+      resolveDetails({
+        reason: 'BUILD_SERVICE_UNREACHABLE',
+        retryable: true,
+      })
+    ).toBe(
+      JSON.stringify(
+        {
+          reason: 'BUILD_SERVICE_UNREACHABLE',
+          retryable: true,
+        },
+        null,
+        2
+      )
+    )
+  })
+
+  it('uses an Error message without exposing its stack', () => {
+    expect(resolveDetails(new Error('safe failure message'))).toBe(
+      'safe failure message'
+    )
+  })
+
+  it.each([null, undefined, '', '   ', []])(
+    'omits empty details: %p',
+    value => {
+      expect(resolveDetails(value)).toBeNull()
+    }
+  )
+
+  it('omits an object that cannot be serialized', () => {
+    const circular: { self?: unknown } = {}
+    circular.self = circular
+
+    expect(resolveDetails(circular)).toBeNull()
   })
 })

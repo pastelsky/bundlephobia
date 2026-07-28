@@ -78,11 +78,35 @@ export function zeroToN(n: number): number[] {
 }
 
 function toErrorDetail(originalError: unknown): string | null {
-  if (Array.isArray(originalError)) {
-    return originalError[0] == null ? null : String(originalError[0])
+  if (originalError == null) {
+    return null
   }
 
-  return originalError == null ? null : String(originalError)
+  if (typeof originalError === 'string') {
+    return originalError.trim() ? originalError : null
+  }
+
+  if (originalError instanceof Error) {
+    return originalError.message || null
+  }
+
+  if (Array.isArray(originalError)) {
+    const details = originalError
+      .map(toErrorDetail)
+      .filter((detail): detail is string => detail !== null)
+
+    return details.length ? details.join('\n\n') : null
+  }
+
+  if (typeof originalError === 'object') {
+    try {
+      return JSON.stringify(originalError, null, 2)
+    } catch {
+      return null
+    }
+  }
+
+  return String(originalError)
 }
 
 function isBuildErrorResponse(value: unknown): value is BuildErrorResponse {

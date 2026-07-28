@@ -536,7 +536,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
               />
               {errorDetails && (
                 <details className="result-error__details">
-                  <summary> Stacktrace</summary>
+                  <summary>Details</summary>
                   <pre>{errorDetails}</pre>
                 </details>
               )}
