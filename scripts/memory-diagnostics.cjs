@@ -209,7 +209,7 @@ function startFromEnvironment() {
   const service = process.env.MEMORY_DIAGNOSTICS_SERVICE
   const threshold = process.env.MEMORY_DIAGNOSTICS_RSS_THRESHOLD
   if (!service || !threshold) {
-    return
+    return false
   }
 
   createMemoryDiagnostics({
@@ -218,12 +218,33 @@ function startFromEnvironment() {
     outputRoot:
       process.env.MEMORY_DIAGNOSTICS_DIR || path.resolve('diagnostics'),
   })
+  return true
 }
 
-startFromEnvironment()
+function startWhenEnvironmentIsReady({
+  processImpl = process,
+  start = startFromEnvironment,
+  defer = setImmediate,
+} = {}) {
+  if (start()) {
+    return
+  }
+
+  const startAfterMessage = () => {
+    defer(() => {
+      if (start()) {
+        processImpl.off('message', startAfterMessage)
+      }
+    })
+  }
+  processImpl.on('message', startAfterMessage)
+}
+
+startWhenEnvironmentIsReady()
 
 module.exports = {
   createMemoryDiagnostics,
   getAvailableBytes,
   parseBytes,
+  startWhenEnvironmentIsReady,
 }

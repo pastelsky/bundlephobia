@@ -1,10 +1,12 @@
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
+const { EventEmitter } = require('events')
 
 const {
   createMemoryDiagnostics,
   parseBytes,
+  startWhenEnvironmentIsReady,
 } = require('../scripts/memory-diagnostics.cjs')
 
 describe('memory diagnostics', () => {
@@ -95,5 +97,27 @@ describe('memory diagnostics', () => {
     expect(diagnostics.check()).toBe(false)
     expect(writeHeapSnapshot).not.toHaveBeenCalled()
     diagnostics.stop()
+  })
+
+  test('waits for PM2 to inject cluster environment', () => {
+    const processImpl = new EventEmitter()
+    const deferred = []
+    let environmentReady = false
+    const start = jest.fn(() => environmentReady)
+
+    startWhenEnvironmentIsReady({
+      processImpl,
+      start,
+      defer: callback => deferred.push(callback),
+    })
+    processImpl.on('message', () => {
+      environmentReady = true
+    })
+    processImpl.emit('message')
+
+    expect(start).toHaveBeenCalledTimes(1)
+    deferred[0]()
+    expect(start).toHaveBeenCalledTimes(2)
+    expect(processImpl.listenerCount('message')).toBe(1)
   })
 })
