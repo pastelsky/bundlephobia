@@ -176,6 +176,9 @@ const errorHandler: Middleware = async (ctx, next) => {
         respondWithError(500, {
           code: 'InstallError',
           message: 'Installing the package failed.',
+          details: {
+            originalError: err.originalError,
+          },
         })
         ctx.cacheControl = {
           maxAge: 0,

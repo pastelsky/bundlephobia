@@ -96,6 +96,28 @@ describe('build service unavailability', () => {
     expect(serializeError({ toJSON: () => serialized })).toBe(serialized)
   })
 
+  it('summarizes install failures without exposing package manager output', () => {
+    const originalError = {
+      exitCode: 128,
+      signal: null,
+      stderr: 'full package manager output',
+    }
+    const error = {
+      originalError,
+      toJSON: () => ({
+        name: 'InstallError',
+        originalError,
+        extra: undefined,
+      }),
+    }
+
+    expect(serializeError(error)).toEqual({
+      name: 'InstallError',
+      originalError: 'Package manager exited with code 128.',
+      extra: undefined,
+    })
+  })
+
   it('identifies a structured internal build-service error', async () => {
     const responseBody = serializeError(
       Object.assign(new Error('disk full'), { code: 'ENOSPC' })
@@ -175,6 +197,50 @@ describe('build service unavailability', () => {
         },
       },
     })
+    expect(mockedFailureCache.set).not.toHaveBeenCalled()
+  })
+
+  it('returns the short install error summary', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+    const ctx = {
+      query: {},
+      state: {
+        id: 'install-error-test',
+        resolved: { packageString: '@example/install-error@1.0.0' },
+      },
+    }
+    const error = new CustomError(
+      'InstallError',
+      'Package manager exited with code 128.',
+      undefined
+    )
+
+    await errorMiddleware(ctx as never, async () => {
+      throw error
+    })
+
+    const responseError = (
+      ctx as unknown as {
+        body: {
+          error: {
+            details: { originalError: string }
+          }
+        }
+      }
+    ).body.error
+    const detail = responseError.details.originalError
+
+    expect(ctx).toMatchObject({
+      status: 500,
+      cacheControl: { maxAge: 0 },
+      body: {
+        error: {
+          code: 'InstallError',
+          message: 'Installing the package failed.',
+        },
+      },
+    })
+    expect(detail).toBe('Package manager exited with code 128.')
     expect(mockedFailureCache.set).not.toHaveBeenCalled()
   })
 
