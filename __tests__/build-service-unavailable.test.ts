@@ -1,5 +1,6 @@
 import axios from 'axios'
 
+import serializeError from '../build-service/serializeError'
 import CustomError from '../server/CustomError'
 import BuildService from '../server/api/BuildService'
 import { failureCache, requestQueue } from '../server/init'
@@ -72,6 +73,47 @@ describe('build service unavailability', () => {
     })
   })
 
+  it('serializes native errors into the build-service error contract', () => {
+    const error = Object.assign(new Error('disk full'), { code: 'ENOSPC' })
+
+    expect(serializeError(error)).toEqual({
+      name: 'BuildServiceError',
+      originalError: {
+        message: 'disk full',
+        code: 'ENOSPC',
+      },
+      extra: { retryable: true },
+    })
+  })
+
+  it('preserves structured package build errors', () => {
+    const serialized = {
+      name: 'EntryPointError',
+      originalError: 'No package entry point',
+      extra: undefined,
+    }
+
+    expect(serializeError({ toJSON: () => serialized })).toBe(serialized)
+  })
+
+  it('identifies a structured internal build-service error', async () => {
+    const responseBody = serializeError(
+      Object.assign(new Error('disk full'), { code: 'ENOSPC' })
+    )
+    const responseError = Object.assign(new Error('Request failed'), {
+      isAxiosError: true,
+      response: { data: responseBody },
+    })
+    jest.spyOn(axios, 'get').mockRejectedValue(responseError)
+
+    new BuildService()
+    const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
+
+    await expect(
+      executor({ packageString: '@example/internal-error@1.0.0' })
+    ).rejects.toMatchObject(responseBody)
+  })
+
   it('returns a retryable response without caching the failure', async () => {
     const ctx = {
       query: {},
@@ -98,6 +140,38 @@ describe('build service unavailability', () => {
           code: 'BuildServiceUnavailableError',
           message:
             'The build service is temporarily unavailable. Please try again in a few minutes.',
+        },
+      },
+    })
+    expect(mockedFailureCache.set).not.toHaveBeenCalled()
+  })
+
+  it('does not cache internal build-service errors', async () => {
+    const ctx = {
+      query: {},
+      state: {
+        id: 'build-service-error-test',
+        resolved: { packageString: '@example/internal-error@1.0.0' },
+      },
+    }
+    const error = new CustomError(
+      'BuildServiceError',
+      { message: 'disk full', code: 'ENOSPC' },
+      { retryable: true }
+    )
+
+    await errorMiddleware(ctx as never, async () => {
+      throw error
+    })
+
+    expect(ctx).toMatchObject({
+      status: 503,
+      cacheControl: { maxAge: 0 },
+      body: {
+        error: {
+          code: 'BuildServiceError',
+          message:
+            'The build service encountered a temporary error. Please try again in a few minutes.',
         },
       },
     })

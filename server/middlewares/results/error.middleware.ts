@@ -111,6 +111,15 @@ const errorHandler: Middleware = async (ctx, next) => {
     const packageString = ctx.state.resolved.packageString
 
     switch (err.name) {
+      case 'BuildServiceError':
+        ctx.cacheControl = { maxAge: 0 }
+        respondWithError(503, {
+          code: 'BuildServiceError',
+          message:
+            'The build service encountered a temporary error. Please try again in a few minutes.',
+        })
+        break
+
       case 'BuildServiceUnavailableError':
         ctx.cacheControl = { maxAge: 0 }
         respondWithError(503, {
