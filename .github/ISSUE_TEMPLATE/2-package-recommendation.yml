@@ -11,8 +11,6 @@ body:
 
         We use the information below to verify objective quality signals automatically. A maintainer still reviews whether the packages genuinely solve the same problem and whether the recommendation improves the category.
 
-        Read the [package recommendation process](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/docs/package-recommendations.md) for the checks and acceptance flow.
-
   - type: input
     id: package
     attributes:
