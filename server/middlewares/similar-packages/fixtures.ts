@@ -50,7 +50,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'inline', weight: Weight.NORMAL },
       { tag: 'in', weight: Weight.MID },
     ],
-    similar: ['styled-components', 'jss', 'emotion', 'linaria'],
+    similar: ['styled-components', '@emotion/css', 'jss', 'linaria'],
   },
   'color-manipulation': {
     name: 'Color parsing and manipulation',
@@ -108,7 +108,13 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'compare', weight: Weight.NORMAL },
       { tag: 'isequal', weight: Weight.HIGH },
     ],
-    similar: ['fast-deep-equal', 'deep-eql', 'deep-equal', 'lodash.isequal'],
+    similar: [
+      'dequal',
+      'fast-deep-equal',
+      'deep-eql',
+      'deep-equal',
+      'lodash.isequal',
+    ],
   },
   'drag-and-drop': {
     name: 'Drag & Drop Libraries',
@@ -192,7 +198,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'webgl', weight: Weight.MAX },
       { tag: 'gl', weight: Weight.HIGH },
     ],
-    similar: ['ogl', 'three', 'babylonjs'],
+    similar: ['ogl', 'playcanvas', 'three', 'babylonjs'],
   },
   'general-purpose-animation': {
     name: 'General purpose animation libraries',
@@ -237,14 +243,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'js', weight: Weight.MID },
       { tag: 'javascript', weight: Weight.MID },
     ],
-    similar: [
-      '@apollo/client',
-      'graphql.js',
-      'lokka',
-      'graphql',
-      'relay-runtime',
-      'urql',
-    ],
+    similar: ['@apollo/client', 'graphql-request', 'relay-runtime', 'urql'],
   },
   'html-sanitization': {
     name: 'HTML Sanitization',
@@ -333,6 +332,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'pixels', weight: Weight.MID },
     ],
     similar: [
+      'extract-colors',
       'img-color-extractor',
       'color-thief-browser',
       'colority',
@@ -352,6 +352,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'cursor', weight: Weight.MID },
     ],
     similar: [
+      'immer',
       'immutable',
       'seamless-immutable',
       'immutability-helper',
@@ -418,7 +419,13 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'client', weight: Weight.NORMAL },
       { tag: 'browser', weight: Weight.NORMAL },
     ],
-    similar: ['jspdf', 'pdfkit', 'pdfmake', '@react-pdf/renderer'],
+    similar: [
+      '@pdfme/generator',
+      'jspdf',
+      'pdfkit',
+      'pdfmake',
+      '@react-pdf/renderer',
+    ],
   },
   'phone-number': {
     name: 'Phone number parsing, validation and formatting',
@@ -509,6 +516,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'internation', weight: Weight.HIGH },
     ],
     similar: [
+      'next-intl',
       'react-intl',
       'react-i18next',
       'react-intl-universal',
@@ -576,7 +584,14 @@ const categories: Record<string, CategoryDefinition> = {
         weight: Weight.NORMAL,
       },
     ],
-    similar: ['lexical', '@milkdown/core', 'slate', 'quill', 'froala-editor'],
+    similar: [
+      'lexical',
+      '@tiptap/core',
+      '@milkdown/core',
+      'slate',
+      'quill',
+      'froala-editor',
+    ],
   },
   'site-tour': {
     name: 'Site Tours',
@@ -607,7 +622,13 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'carousel', weight: Weight.NORMAL },
       { tag: 'slider', weight: Weight.NORMAL },
     ],
-    similar: ['swiper', 'slick-carousel', 'tiny-slider'],
+    similar: [
+      'embla-carousel',
+      'keen-slider',
+      'swiper',
+      'slick-carousel',
+      'tiny-slider',
+    ],
   },
   templating: {
     name: 'General purpose templating',
