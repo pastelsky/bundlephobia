@@ -46,3 +46,15 @@ GitHub Copilot Code Review can load the repository's
 comparison fairness, and whether the proposed shortlist is genuinely useful. The
 normal CI job runs unit tests for the deterministic parser and quality rules so
 changes to the automation are reviewed like application code.
+
+## Enable the agent reviewer
+
+The repository skill and path-specific instructions do not enable Copilot Code
+Review by themselves. A repository administrator must create or update a branch
+ruleset targeting `bundlephobia` and select **Automatically request Copilot code
+review**. Select **Review new pushes** to rerun the review after recommendation
+changes. If that ruleset option is unavailable, enable Copilot Code Review for
+the account or repository first.
+
+Copilot leaves advisory comments; it does not approve a pull request or replace
+the deterministic quality check and maintainer decision.
