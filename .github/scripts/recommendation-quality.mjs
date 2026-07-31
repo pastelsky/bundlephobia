@@ -26,14 +26,12 @@ export function extractIssueFormAnswers(body = '') {
   return {
     packageName:
       answers.get('npm package name') ?? cleanIssueAnswer(legacyPackage?.[1]),
-    category: answers.get('Bundlephobia category') ?? '',
     alternative:
       answers.get('Alternative npm packages') ??
       answers.get('Alternative package or category') ??
       cleanIssueAnswer(legacyAlternative?.[1]),
     overlap: answers.get('Functional overlap') ?? '',
     advantage: answers.get('Why is this a better alternative?') ?? '',
-    relationship: answers.get('Your relationship to the package') ?? '',
   }
 }
 
@@ -77,7 +75,7 @@ function isRecent(date, now = new Date()) {
   return Number.isFinite(age) && age <= RECENT_ACTIVITY_DAYS * 86_400_000
 }
 
-export function isStableVersion(version = '') {
+function isStableVersion(version = '') {
   const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-|$)/)
   return Boolean(match && Number(match[1]) >= 1 && !version.includes('-'))
 }
@@ -109,13 +107,12 @@ export async function collectBundleSize(
       size: result?.size ?? null,
       gzip: result?.gzip ?? null,
     }
-  } catch (error) {
+  } catch {
     return {
       available: false,
       version: null,
       size: null,
       gzip: null,
-      error: error instanceof Error ? error.message : String(error),
     }
   }
 }
@@ -125,11 +122,20 @@ export async function collectPackageSignals(
   { fetchImpl = fetch, githubToken = process.env.GITHUB_TOKEN } = {}
 ) {
   const encodedName = encodeURIComponent(packageName)
-  const registry = await fetchJson(
-    `https://registry.npmjs.org/${encodedName}`,
-    undefined,
-    fetchImpl
-  )
+  let registry
+
+  try {
+    registry = await fetchJson(
+      `https://registry.npmjs.org/${encodedName}`,
+      undefined,
+      fetchImpl
+    )
+  } catch {
+    return {
+      packageName,
+      exists: null,
+    }
+  }
 
   if (!registry) {
     return { packageName, exists: false }
@@ -179,55 +185,57 @@ export async function collectPackageSignals(
     latestVersion,
     publishedAt,
     deprecated: Boolean(latestManifest.deprecated),
-    deprecationMessage: latestManifest.deprecated ?? null,
     repository,
     githubStars,
     repositoryArchived: github?.archived ?? null,
     repositoryPushedAt: github?.pushed_at ?? null,
     weeklyDownloads,
-    popularityPass:
+    popular:
       (weeklyDownloads ?? 0) >= WEEKLY_DOWNLOAD_MINIMUM ||
       (githubStars ?? 0) >= GITHUB_STAR_MINIMUM,
-    maintenancePass: recentActivity || isStableVersion(latestVersion ?? ''),
-    recentActivity,
-    stableVersion: isStableVersion(latestVersion ?? ''),
+    activeOrStable: recentActivity || isStableVersion(latestVersion ?? ''),
     bundleSize,
   }
 }
 
 export function evaluateRecommendation(signals, answers = {}) {
-  const blockers = []
-  const needsEvidence = []
+  const errors = []
+  const notes = []
 
-  if (!signals.exists) blockers.push('The package was not found on npm.')
-  if (signals.deprecated) blockers.push('The latest npm version is deprecated.')
-  if (signals.repositoryArchived) {
-    needsEvidence.push('The linked source repository is archived.')
+  if (signals.exists === false) errors.push('The package was not found on npm.')
+  if (signals.exists === null) {
+    notes.push(
+      'The npm registry could not be checked; retry or review manually.'
+    )
   }
-  if (signals.exists && !signals.popularityPass) {
-    needsEvidence.push(
+  if (signals.deprecated) errors.push('The latest npm version is deprecated.')
+  if (signals.repositoryArchived) {
+    notes.push('The linked source repository is archived.')
+  }
+  if (signals.exists && !signals.popular) {
+    notes.push(
       `Popularity is below ${WEEKLY_DOWNLOAD_MINIMUM.toLocaleString()} weekly npm downloads and ${GITHUB_STAR_MINIMUM.toLocaleString()} GitHub stars.`
     )
   }
-  if (signals.exists && !signals.maintenancePass) {
-    needsEvidence.push(
+  if (signals.exists && !signals.activeOrStable) {
+    notes.push(
       `No activity was found in the last ${RECENT_ACTIVITY_DAYS} days and the latest release is not a stable 1.x-or-newer version.`
     )
   }
   if (answers.overlap !== undefined && answers.overlap.trim().length < 40) {
-    needsEvidence.push('The functional-overlap explanation needs more detail.')
+    notes.push('The functional-overlap explanation needs more detail.')
   }
   if (answers.advantage !== undefined && answers.advantage.trim().length < 40) {
-    needsEvidence.push('The relative-advantage explanation needs more detail.')
+    notes.push('The relative-advantage explanation needs more detail.')
   }
 
   return {
-    blockers,
-    needsEvidence,
-    status: blockers.length
+    errors,
+    notes,
+    status: errors.length
       ? 'invalid'
-      : needsEvidence.length
-      ? 'needs evidence'
+      : notes.length
+      ? 'needs review'
       : 'ready for maintainer review',
   }
 }
@@ -236,39 +244,17 @@ export function evaluateSizeAdvantage(candidate, alternatives) {
   const availableAlternatives = alternatives.filter(
     alternative => alternative.bundleSize?.available
   )
-  const findings = []
-
-  if (!candidate.bundleSize?.available) {
-    findings.push('Bundlephobia could not measure the candidate package.')
-  }
-  if (!availableAlternatives.length) {
-    findings.push('No comparison package size was available.')
-  }
-
   const smallerThan = candidate.bundleSize?.available
     ? availableAlternatives.filter(
         alternative => candidate.bundleSize.gzip < alternative.bundleSize.gzip
       )
     : []
 
-  if (
-    candidate.bundleSize?.available &&
-    availableAlternatives.length &&
-    !smallerThan.length
-  ) {
-    findings.push(
-      'The candidate is not smaller than any of the comparison packages.'
-    )
-  }
-
   return {
-    pass:
+    available:
       Boolean(candidate.bundleSize?.available) &&
-      availableAlternatives.length > 0 &&
-      smallerThan.length > 0,
-    findings,
+      availableAlternatives.length > 0,
     smallerThan: smallerThan.map(alternative => alternative.packageName),
-    availableAlternatives,
   }
 }
 
@@ -302,9 +288,4 @@ export function extractCuratedCategories(source) {
   return categories
 }
 
-export const qualityThresholds = {
-  weeklyDownloads: WEEKLY_DOWNLOAD_MINIMUM,
-  githubStars: GITHUB_STAR_MINIMUM,
-  recentActivityDays: RECENT_ACTIVITY_DAYS,
-  maxRecommendationsPerCategory: MAX_RECOMMENDATIONS_PER_CATEGORY,
-}
+export const maxRecommendationsPerCategory = MAX_RECOMMENDATIONS_PER_CATEGORY

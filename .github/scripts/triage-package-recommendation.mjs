@@ -122,30 +122,36 @@ const sizeEvaluation = evaluateSizeAdvantage(signals, comparisonSizes)
 
 for (const comparisonName of comparisonNames) {
   if (!isPlausiblePackageName(comparisonName)) {
-    evaluation.needsEvidence.push(
+    evaluation.notes.push(
       `\`${comparisonName}\` is not a valid exact npm package name.`
     )
   }
 }
-evaluation.needsEvidence.push(...sizeEvaluation.findings)
-if (evaluation.needsEvidence.length && !evaluation.blockers.length) {
-  evaluation.status = 'needs evidence'
+if (!sizeEvaluation.available) {
+  evaluation.notes.push('Bundle size comparison was unavailable.')
+} else if (!sizeEvaluation.smallerThan.length) {
+  evaluation.notes.push(
+    'The default entry point is not smaller than the measured alternatives.'
+  )
 }
 
 if (alreadyCurated) {
-  evaluation.needsEvidence.push(
+  evaluation.notes.push(
     'This package is already in the curated recommendations.'
   )
-  evaluation.status = 'needs evidence'
 }
 if (duplicates.length) {
-  evaluation.needsEvidence.push(
+  evaluation.notes.push(
     `Found ${duplicates.length} other open recommendation issue(s) for this package.`
   )
-  evaluation.status = 'needs evidence'
 }
 
-const findings = [...evaluation.blockers, ...evaluation.needsEvidence]
+evaluation.status = evaluation.errors.length
+  ? 'invalid'
+  : evaluation.notes.length
+  ? 'needs review'
+  : 'ready for maintainer review'
+const findings = [...evaluation.errors, ...evaluation.notes]
 const duplicateLinks = duplicates
   .map(candidate => `[#${candidate.number}](${candidate.html_url})`)
   .join(', ')
@@ -181,10 +187,12 @@ const report = `${REPORT_MARKER}
 
 | Signal | Result |
 | --- | --- |
-| npm package | ${icon(signals.exists)} ${
-  signals.exists
+| npm package | ${icon(signals.exists === true)} ${
+  signals.exists === true
     ? `[${packageName}](https://www.npmjs.com/package/${packageName})`
-    : 'Not found'
+    : signals.exists === false
+    ? 'Not found'
+    : 'Check unavailable'
 } |
 | Latest version | ${display(signals.latestVersion)}${
   signals.deprecated ? ' — deprecated' : ''

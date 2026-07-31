@@ -40,7 +40,6 @@ It is modular and tree-shakeable, reducing the shipped JavaScript for common tas
 I am a user of the package`)
 
   assert.equal(answers.packageName, 'date-fns')
-  assert.equal(answers.category, 'General purpose date-time utilities')
   assert.equal(answers.alternative, 'moment')
   assert.match(answers.advantage, /tree-shakeable/)
 })
@@ -138,35 +137,50 @@ test('collects objective npm and GitHub quality signals', async () => {
   })
 
   assert.equal(signals.exists, true)
-  assert.equal(signals.popularityPass, true)
-  assert.equal(signals.maintenancePass, true)
+  assert.equal(signals.popular, true)
+  assert.equal(signals.activeOrStable, true)
   assert.equal(signals.repository, 'example/package')
   assert.equal(signals.bundleSize.gzip, 2_000)
 })
 
-test('classifies missing packages as invalid and thin claims as needing evidence', () => {
-  assert.equal(
-    evaluateRecommendation({ exists: false }, { overlap: '', advantage: '' })
-      .status,
-    'invalid'
+test('blocks authoritative failures but keeps incomplete signals advisory', () => {
+  const missing = evaluateRecommendation(
+    { exists: false },
+    { overlap: '', advantage: '' }
   )
+  assert.equal(missing.status, 'invalid')
+  assert.equal(missing.errors.length, 1)
 
-  assert.equal(
-    evaluateRecommendation(
-      {
-        exists: true,
-        deprecated: false,
-        repositoryArchived: false,
-        popularityPass: false,
-        maintenancePass: true,
-      },
-      {
-        overlap: 'Same thing',
-        advantage: 'Smaller',
-      }
-    ).status,
-    'needs evidence'
+  const incomplete = evaluateRecommendation(
+    {
+      exists: true,
+      deprecated: false,
+      repositoryArchived: false,
+      popular: false,
+      activeOrStable: true,
+    },
+    {
+      overlap: 'Same thing',
+      advantage: 'Smaller',
+    }
   )
+  assert.equal(incomplete.status, 'needs review')
+  assert.equal(incomplete.errors.length, 0)
+
+  const unavailable = evaluateRecommendation({ exists: null })
+  assert.equal(unavailable.status, 'needs review')
+  assert.equal(unavailable.errors.length, 0)
+})
+
+test('treats an npm registry outage as unavailable, not missing', async () => {
+  const signals = await collectPackageSignals('example-package', {
+    fetchImpl: async () => {
+      throw new Error('network unavailable')
+    },
+  })
+
+  assert.equal(signals.exists, null)
+  assert.equal(evaluateRecommendation(signals).errors.length, 0)
 })
 
 test('extracts package names only from curated similar arrays', () => {
@@ -209,7 +223,7 @@ test('extracts categories and their curated package lists', () => {
   assert.equal(categories.get('storage').name, 'Storage')
 })
 
-test('requires a candidate to be smaller than at least one comparison', () => {
+test('summarizes size evidence without turning it into a gate', () => {
   const candidate = {
     packageName: 'small',
     bundleSize: { available: true, gzip: 1_000 },
@@ -226,6 +240,6 @@ test('requires a candidate to be smaller than at least one comparison', () => {
   ]
 
   const result = evaluateSizeAdvantage(candidate, alternatives)
-  assert.equal(result.pass, true)
+  assert.equal(result.available, true)
   assert.deepEqual(result.smallerThan, ['large'])
 })

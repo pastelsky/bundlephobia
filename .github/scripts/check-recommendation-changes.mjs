@@ -7,7 +7,7 @@ import {
   evaluateRecommendation,
   evaluateSizeAdvantage,
   extractCuratedCategories,
-  qualityThresholds,
+  maxRecommendationsPerCategory,
 } from './recommendation-quality.mjs'
 
 const fixturePath = 'server/middlewares/similar-packages/fixtures.ts'
@@ -40,7 +40,7 @@ const results = []
 
 for (const { category, packageName } of additions) {
   const signals = await collectPackageSignals(packageName)
-  const evaluation = evaluateRecommendation(signals)
+  const { errors, notes } = evaluateRecommendation(signals)
   const previousPackages = [
     ...(base.get(category.slug)?.packages ?? new Set()),
   ].filter(previousPackage => previousPackage !== packageName)
@@ -53,22 +53,20 @@ for (const { category, packageName } of additions) {
   const sizeEvaluation = previousPackages.length
     ? evaluateSizeAdvantage(signals, comparisonSizes)
     : {
-        pass: null,
-        findings: [],
+        available: false,
         smallerThan: [],
-        availableAlternatives: [],
       }
-  const findings = [
-    ...evaluation.blockers,
-    ...evaluation.needsEvidence,
-    ...sizeEvaluation.findings,
-  ]
+  if (previousPackages.length && !sizeEvaluation.available) {
+    notes.push('Bundle size comparison was unavailable.')
+  } else if (sizeEvaluation.available && !sizeEvaluation.smallerThan.length) {
+    notes.push(
+      'The default entry point is not smaller than the measured category entries.'
+    )
+  }
 
-  if (
-    category.packages.size > qualityThresholds.maxRecommendationsPerCategory
-  ) {
-    findings.push(
-      `${category.name} would contain ${category.packages.size} recommendations; the maximum is ${qualityThresholds.maxRecommendationsPerCategory}. Remove a weaker recommendation in the same pull request.`
+  if (category.packages.size > maxRecommendationsPerCategory) {
+    errors.push(
+      `${category.name} would contain ${category.packages.size} recommendations; the maximum is ${maxRecommendationsPerCategory}. Remove a weaker recommendation in the same pull request.`
     )
   }
 
@@ -76,9 +74,9 @@ for (const { category, packageName } of additions) {
     category,
     packageName,
     signals,
-    evaluation,
     sizeEvaluation,
-    findings,
+    errors,
+    requiresReview: notes.length > 0,
   })
 }
 
@@ -101,28 +99,36 @@ if (additions.length) {
     category,
     packageName,
     signals,
-    evaluation,
     sizeEvaluation,
-    findings,
+    errors,
+    requiresReview,
   } of results) {
     lines.push(
-      `| ${category.name} (${category.packages.size}/${
-        qualityThresholds.maxRecommendationsPerCategory
-      }) | ${packageName} | ${signals.bundleSize?.gzip ?? 'unknown'} | ${
-        signals.weeklyDownloads ?? 'unknown'
-      } | ${signals.githubStars ?? 'unknown'} | ${
-        sizeEvaluation.pass === null
-          ? 'new category: agent review'
-          : sizeEvaluation.pass
+      `| ${category.name} (${
+        category.packages.size
+      }/${maxRecommendationsPerCategory}) | ${packageName} | ${
+        signals.bundleSize?.gzip ?? 'unknown'
+      } | ${signals.weeklyDownloads ?? 'unknown'} | ${
+        signals.githubStars ?? 'unknown'
+      } | ${
+        !sizeEvaluation.available
+          ? 'new category or unavailable'
+          : sizeEvaluation.smallerThan.length
           ? `smaller than ${sizeEvaluation.smallerThan.length}`
-          : 'fail'
-      } | ${findings.length ? 'needs changes' : evaluation.status} |`
+          : 'not smaller by default'
+      } | ${
+        errors.length
+          ? 'blocked'
+          : requiresReview
+          ? 'maintainer review'
+          : 'ready'
+      } |`
     )
   }
 
   lines.push(
     '',
-    '_The build enforces npm existence, non-deprecation, popularity, and maintenance/stability signals. Maintainers still review functional equivalence and relative value._'
+    '_Only authoritative failures block: a missing/deprecated npm package or exceeding the category cap. Popularity, maintenance, repository, and default-entry size data are advisory._'
   )
 }
 
@@ -132,13 +138,13 @@ if (process.env.GITHUB_STEP_SUMMARY) {
   console.log(lines.join('\n'))
 }
 
-const failures = results.filter(({ findings }) => findings.length > 0)
+const failures = results.filter(({ errors }) => errors.length > 0)
 
 if (failures.length) {
-  for (const { category, packageName, findings } of failures) {
+  for (const { category, packageName, errors } of failures) {
     console.error(`\n${packageName} in ${category.name}:`)
-    for (const finding of findings) {
-      console.error(`- ${finding}`)
+    for (const error of errors) {
+      console.error(`- ${error}`)
     }
   }
   process.exitCode = 1

@@ -17,9 +17,11 @@ For every added package:
    primary user problem for the same runtime. Similar keywords alone are not
    sufficient.
 2. Confirm the size comparison is fair. Compare minified and gzipped bytes from
-   Bundlephobia, using equivalent entry points or imports. Require the candidate
-   to be meaningfully smaller than at least one package it is proposed to
-   replace. Prefer candidates in the smallest half of the shortlist.
+   Bundlephobia, using equivalent entry points or imports. Determine whether the
+   candidate is meaningfully smaller than a package it is proposed to replace.
+   If the measured entry points are not equivalent, mark the result inconclusive
+   instead of treating it as a rejection. Prefer candidates in the smallest half
+   of the shortlist.
 3. Confirm quality. Use the automated npm and GitHub evidence for existence,
    deprecation, weekly downloads, release activity, repository activity, archive
    status, and stable versions. Inspect documentation and repository context when
