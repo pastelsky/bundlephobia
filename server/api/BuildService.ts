@@ -111,18 +111,15 @@ export default class BuildService {
 
   async getPackageBuildStats<T>(
     packageString: string,
-    priority: number
+    priority: number,
+    signal?: AbortSignal
   ): Promise<T> {
     return requestQueue.process<T, BuildServiceJobParams>(
       packageString,
       OperationType.PACKAGE_BUILD_STATS,
       { packageString },
-      { priority }
+      { priority, signal }
     )
-  }
-
-  cancelPackageBuildStats(packageString: string): void {
-    requestQueue.cancel(packageString, OperationType.PACKAGE_BUILD_STATS)
   }
 
   async getPackageExports<T>(

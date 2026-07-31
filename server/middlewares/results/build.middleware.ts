@@ -23,8 +23,11 @@ const buildMiddleware: Middleware = async ctx => {
     typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
   const buildStart = now()
+  const abortController = new AbortController()
 
   const onAborted = () => {
+    if (ctx.res.writableEnded) return
+
     logger.info(
       'BUILD_ABORTED',
       {
@@ -33,19 +36,20 @@ const buildMiddleware: Middleware = async ctx => {
       },
       `BUILD_ABORTED: client closed connection for package ${packageString}`
     )
-    buildService.cancelPackageBuildStats(packageString)
+    abortController.abort()
   }
 
-  ctx.req.on('close', onAborted)
+  ctx.res.on('close', onAborted)
 
   let result: PackageBuildResult
   try {
     result = await buildService.getPackageBuildStats<PackageBuildResult>(
       packageString,
-      priority
+      priority,
+      abortController.signal
     )
   } finally {
-    ctx.req.off('close', onAborted)
+    ctx.res.off('close', onAborted)
   }
 
   const buildEnd = now()
