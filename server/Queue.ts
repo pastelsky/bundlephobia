@@ -85,6 +85,37 @@ class Queue {
     }
   }
 
+  getDiagnostics(): {
+    total: number
+    ready: number
+    running: number
+    successListeners: number
+    failureListeners: number
+  } {
+    let ready = 0
+    let running = 0
+    let successListeners = 0
+    let failureListeners = 0
+
+    for (const job of this.jobs) {
+      if (job.status === JobStatus.READY) {
+        ready += 1
+      } else if (job.status === JobStatus.PROCESSING) {
+        running += 1
+      }
+      successListeners += job.successListeners.length
+      failureListeners += job.failureListeners.length
+    }
+
+    return {
+      total: this.jobs.length,
+      ready,
+      running,
+      successListeners,
+      failureListeners,
+    }
+  }
+
   addExecutor<TParams, TResult>(
     jobType: JobType,
     handler: QueueExecutor<TParams, TResult>
