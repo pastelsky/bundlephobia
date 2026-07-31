@@ -86,6 +86,17 @@ const categories: Record<string, CategoryDefinition> = {
     ],
     similar: ['js-cookie', 'browser-cookies', 'universal-cookie'],
   },
+  'browser-2d-game-engine': {
+    name: 'Browser 2D game engines',
+    tags: [
+      { tag: 'game engine', weight: Weight.MAX },
+      { tag: '2d', weight: Weight.HIGH },
+      { tag: 'canvas', weight: Weight.NORMAL },
+      { tag: 'webgl', weight: Weight.NORMAL },
+      { tag: 'browser', weight: Weight.NORMAL },
+    ],
+    similar: ['melonjs', 'excalibur', 'phaser'],
+  },
   'date-nlp': {
     name: 'Natural language date-time utilities',
     tags: [
@@ -519,6 +530,16 @@ const categories: Record<string, CategoryDefinition> = {
       'formsy-react',
       'react-hook-form',
     ],
+  },
+  'react-tooltip': {
+    name: 'React tooltip components',
+    tags: [
+      { tag: 'react', weight: Weight.HIGH },
+      { tag: 'tooltip', weight: Weight.MAX },
+      { tag: 'popover', weight: Weight.MID },
+      { tag: 'hover', weight: Weight.NORMAL },
+    ],
+    similar: ['react-tooltip', '@radix-ui/react-tooltip', 'rc-tooltip'],
   },
   'schema-validation': {
     name: 'Runtime schema validation',
