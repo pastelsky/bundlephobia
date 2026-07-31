@@ -24,6 +24,7 @@ interface BuildErrorShape extends Error {
   extra?: {
     reason?: string
     validVersions?: string[]
+    suggestedVersion?: string
     missingModules?: string[]
     filePath?: string
   }
@@ -227,6 +228,14 @@ const errorHandler: Middleware = async (ctx, next) => {
         break
 
       case 'PackageVersionMismatchError': {
+        if (err.extra?.suggestedVersion) {
+          respondWithError(404, {
+            code: 'PackageVersionMismatchError',
+            message: `This package has not been published with this particular version. The latest version is \`<code>${err.extra.suggestedVersion}</code>\`.`,
+          })
+          break
+        }
+
         const validVersions = formatSentence(
           (err.extra?.validVersions ?? []).map(
             version => `\`<code>${version}</code>\``

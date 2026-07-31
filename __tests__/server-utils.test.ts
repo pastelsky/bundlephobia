@@ -14,8 +14,10 @@ describe('resolvePackage', () => {
   it.each([
     ['next', '/next/latest'],
     ['next@15.0.0', '/next/15.0.0'],
+    ['next@v15.0.0', '/next/15.0.0'],
     ['next@canary', '/next/canary'],
     ['@babel/core', '/@babel%2fcore/latest'],
+    ['next-alias@npm:next@15.0.0', '/next/15.0.0'],
   ])('fetches one manifest for %s', async (packageString, expectedPath) => {
     registryFetch.json.mockResolvedValue({ name: 'next', version: '15.0.0' })
 
@@ -43,6 +45,31 @@ describe('resolvePackage', () => {
     expect(registryFetch.json).toHaveBeenCalledWith('/next/15.5.9')
   })
 
+  it('uses abbreviated metadata to resolve an aliased semver range', async () => {
+    pacote.manifest.mockResolvedValue({ name: 'react', version: '18.3.1' })
+    registryFetch.json.mockResolvedValue({ name: 'react', version: '18.3.1' })
+
+    await resolvePackage('legacy-react@npm:react@^18')
+
+    expect(pacote.manifest).toHaveBeenCalledWith('legacy-react@npm:react@^18', {
+      fullMetadata: false,
+    })
+    expect(registryFetch.json).toHaveBeenCalledWith('/react/18.3.1')
+  })
+
+  it('preserves Pacote resolution for non-registry specs', async () => {
+    pacote.manifest.mockResolvedValue({ name: 'react', version: '18.2.0' })
+
+    await expect(resolvePackage('github:facebook/react')).resolves.toEqual({
+      name: 'react',
+      version: '18.2.0',
+    })
+    expect(pacote.manifest).toHaveBeenCalledWith('github:facebook/react', {
+      fullMetadata: true,
+    })
+    expect(registryFetch.json).not.toHaveBeenCalled()
+  })
+
   it('reports a missing version when the package itself exists', async () => {
     registryFetch.json
       .mockRejectedValueOnce({ code: 'E404' })
@@ -50,7 +77,7 @@ describe('resolvePackage', () => {
 
     await expect(resolvePackage('react@99.0.0')).rejects.toMatchObject({
       name: 'PackageVersionMismatchError',
-      extra: { validVersions: ['19.1.1'] },
+      extra: { suggestedVersion: '19.1.1' },
     })
   })
 

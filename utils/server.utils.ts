@@ -5,7 +5,6 @@ import semver from 'semver'
 
 import CustomError from '../server/CustomError'
 import Queue from '../server/Queue'
-import { parsePackageString } from './common.utils'
 
 interface PacoteModule {
   manifest(
@@ -15,6 +14,23 @@ interface PacoteModule {
 }
 
 const pacote = require('pacote') as PacoteModule
+
+interface PackageSpec {
+  type: string
+  name?: string
+  escapedName?: string
+  fetchSpec?: string | null
+  subSpec?: PackageSpec
+}
+
+interface RegistryPackageSpec extends PackageSpec {
+  type: 'range' | 'tag' | 'version'
+  escapedName: string
+}
+
+const parsePackageSpec = require('npm-package-arg') as (
+  spec: string
+) => PackageSpec
 
 interface NpmRegistryFetchModule {
   json(path: string): Promise<ResolvedPackageManifest>
@@ -50,18 +66,47 @@ async function fetchVersionManifest(name: string, version: string) {
   return registryFetch.json(registryManifestPath(name, version))
 }
 
+function registryPackageSpec(
+  packageString: string
+): RegistryPackageSpec | null {
+  const parsed = parsePackageSpec(packageString)
+  const target = parsed.type === 'alias' ? parsed.subSpec : parsed
+
+  if (
+    !target ||
+    !['range', 'tag', 'version'].includes(target.type) ||
+    !target.escapedName
+  ) {
+    return null
+  }
+
+  return target as RegistryPackageSpec
+}
+
 export async function resolvePackage(
   packageString: string
 ): Promise<ResolvedPackageManifest> {
-  const { name, version } = parsePackageString(packageString)
-  const requestedVersion = version ?? 'latest'
+  let requestedVersion = 'latest'
+  let packageName: string | undefined
 
   try {
-    if (
-      !semver.validRange(requestedVersion) ||
-      semver.valid(requestedVersion)
-    ) {
-      return await fetchVersionManifest(name, requestedVersion)
+    const packageSpec = registryPackageSpec(packageString)
+
+    if (!packageSpec) {
+      return await pacote.manifest(packageString, { fullMetadata: true })
+    }
+
+    const targetName = packageSpec.escapedName
+    packageName = targetName
+    requestedVersion = packageSpec.fetchSpec || 'latest'
+
+    if (packageSpec.type === 'version') {
+      requestedVersion = semver.clean(requestedVersion) ?? requestedVersion
+      return await fetchVersionManifest(targetName, requestedVersion)
+    }
+
+    if (packageSpec.type === 'tag') {
+      return await fetchVersionManifest(targetName, requestedVersion)
     }
 
     const manifest = await pacote.manifest(packageString, {
@@ -80,11 +125,11 @@ export async function resolvePackage(
       })
     }
 
-    if (requestedVersion !== 'latest' && isNotFound(error)) {
+    if (packageName && requestedVersion !== 'latest' && isNotFound(error)) {
       try {
-        const latest = await fetchVersionManifest(name, 'latest')
+        const latest = await fetchVersionManifest(packageName, 'latest')
         throw new CustomError('PackageVersionMismatchError', null, {
-          validVersions: [latest.version],
+          suggestedVersion: latest.version,
         })
       } catch (latestError) {
         if (latestError instanceof CustomError) {
