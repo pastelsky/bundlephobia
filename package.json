@@ -111,6 +111,7 @@
     "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
     "prod": "yarn run build && yarn start",
     "test": "jest",
+    "test:recommendations": "node --test .github/scripts/*.test.mjs",
     "test:watch": "jest --watch",
     "prettier": "prettier --write '**/*.{html,js,json,css,scss,jsx,flow,md,yml,yaml}'",
     "lint": "next lint",

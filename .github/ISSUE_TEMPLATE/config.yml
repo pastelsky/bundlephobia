@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Bundlephobia FAQ
+    url: https://github.com/pastelsky/bundlephobia#faq
+    about: Check common package-build questions before opening an issue.
