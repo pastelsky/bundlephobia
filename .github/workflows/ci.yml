@@ -29,6 +29,8 @@ jobs:
         run: yarn install
       - name: Run lint
         run: yarn lint
+      - name: Test package recommendation automation
+        run: yarn test:recommendations
       - run: yarn build
         env:
           CI: true

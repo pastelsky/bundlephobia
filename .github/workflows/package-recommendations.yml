@@ -1,0 +1,45 @@
+name: Package recommendations
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+  pull_request:
+    branches: [bundlephobia]
+    paths:
+      - server/middlewares/similar-packages/fixtures.ts
+      - .github/scripts/recommendation-quality.mjs
+      - .github/scripts/check-recommendation-changes.mjs
+      - .github/workflows/package-recommendations.yml
+
+permissions:
+  contents: read
+
+jobs:
+  triage-issue:
+    if: >-
+      github.event_name == 'issues' &&
+      contains(github.event.issue.labels.*.name, 'similar suggestion')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check recommendation quality
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/triage-package-recommendation.mjs
+
+  check-curated-data:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check newly curated packages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          node .github/scripts/check-recommendation-changes.mjs
+          ${{ github.event.pull_request.base.sha }}

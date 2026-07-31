@@ -1,0 +1,79 @@
+name: Package recommendation
+description: Suggest a high-quality alternative for Bundlephobia's similar-package results
+title: 'Package recommendation: '
+labels:
+  - similar suggestion
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Bundlephobia's recommendations.
+
+        We use the information below to verify objective quality signals automatically. A maintainer still reviews whether the packages genuinely solve the same problem and whether the recommendation improves the category.
+
+  - type: input
+    id: package
+    attributes:
+      label: npm package name
+      description: Enter the exact, installable package name from npm. Do not enter a URL.
+      placeholder: 'For example: date-fns or @tanstack/query-core'
+    validations:
+      required: true
+
+  - type: input
+    id: category
+    attributes:
+      label: Bundlephobia category
+      description: Which existing category should contain this package? Propose a concise category name if none fits.
+      placeholder: 'For example: General purpose date-time utilities'
+    validations:
+      required: true
+
+  - type: input
+    id: alternative
+    attributes:
+      label: Alternative npm packages
+      description: Enter exact npm package names, separated by commas. The automation compares their minified and gzipped sizes.
+      placeholder: 'For example: moment, luxon'
+    validations:
+      required: true
+
+  - type: textarea
+    id: overlap
+    attributes:
+      label: Functional overlap
+      description: Describe the concrete use cases that both packages support. Links to documentation or comparisons are helpful.
+      placeholder: 'Both packages can...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: advantage
+    attributes:
+      label: Why is this a better alternative?
+      description: Explain what improves on the current recommendations. Include the relevant imports or usage if the size comparison needs more than the package's default export.
+      placeholder: 'Compared with the existing recommendations...'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: relationship
+    attributes:
+      label: Your relationship to the package
+      description: Self-recommendations are welcome; disclosure helps maintainers review the evidence fairly.
+      options:
+        - I am a user of the package
+        - I am a maintainer or contributor
+        - I have no relationship to the package
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checklist
+      options:
+        - label: I searched existing recommendations and issues for duplicates.
+          required: true
+        - label: I understand that automated checks provide evidence but do not guarantee acceptance.
+          required: true

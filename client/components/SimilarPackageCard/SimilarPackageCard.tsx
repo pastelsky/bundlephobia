@@ -20,8 +20,10 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
   getSuggestionIssueUrl = () => {
     const params = queryString.stringify({
       labels: 'similar suggestion',
-      template: '2-similar-package-suggestion.md',
-      title: `Package suggestion: <package-name> for \`${this.props.category}\``,
+      template: '2-package-recommendation.yml',
+      title: `Package recommendation for ${
+        this.props.category ?? 'a package category'
+      }`,
     })
 
     return `https://github.com/pastelsky/bundlephobia/issues/new?${params}`
