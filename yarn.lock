@@ -7794,6 +7794,8 @@ __metadata:
     fastify: "npm:^4.25.2"
     now-logs: "npm:^0.0.7"
     package-build-stats: "npm:9.1.0"
+    safe-stable-stringify: "npm:^2.5.0"
+    truncate: "npm:^3.0.0"
   languageName: unknown
   linkType: soft
 
@@ -7935,6 +7937,7 @@ __metadata:
     react-flip-move: "npm:^3.0.5"
     react-sidebar: "npm:^3.0.2"
     remark: "npm:^9.0.0"
+    safe-stable-stringify: "npm:^2.5.0"
     sass: "npm:^1.70.0"
     sass-loader: "npm:^10.5.2"
     semver: "npm:^7.6.3"
@@ -21665,6 +21668,13 @@ __metadata:
   version: 2.4.3
   resolution: "safe-stable-stringify@npm:2.4.3"
   checksum: 81dede06b8f2ae794efd868b1e281e3c9000e57b39801c6c162267eb9efda17bd7a9eafa7379e1f1cacd528d4ced7c80d7460ad26f62ada7c9e01dec61b2e768
+  languageName: node
+  linkType: hard
+
+"safe-stable-stringify@npm:^2.5.0":
+  version: 2.5.0
+  resolution: "safe-stable-stringify@npm:2.5.0"
+  checksum: baea14971858cadd65df23894a40588ed791769db21bafb7fd7608397dbdce9c5aac60748abae9995e0fc37e15f2061980501e012cd48859740796bea2987f49
   languageName: node
   linkType: hard
 

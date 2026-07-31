@@ -24,11 +24,11 @@ import remoteMcpClient from './server/mcp/remoteClient'
 import limit from './server/middlewares/rateLimit.middleware'
 import exportsMiddlware from './server/middlewares/exports.middleware'
 import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
+import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
 import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
 import cachedResponseMiddleware from './server/middlewares/results/cachedResponse.middleware'
 import buildMiddleware from './server/middlewares/results/build.middleware'
 import errorMiddleware from './server/middlewares/results/error.middleware'
-import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
 import requestLoggerMiddleware from './server/middlewares/requestLogger.middleware'
 import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
 import generateImgMiddleware from './server/middlewares/generateImg.middleware'
@@ -134,8 +134,8 @@ app.prepare().then(() => {
       }),
     }),
     errorMiddleware,
-    resolvePackageMiddleware,
     blockBlacklistMiddleware,
+    resolvePackageMiddleware,
     cachedResponseMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,
@@ -148,8 +148,8 @@ app.prepare().then(() => {
   router.get(
     '/api/exports',
     errorMiddleware,
-    resolvePackageMiddleware,
     blockBlacklistMiddleware,
+    resolvePackageMiddleware,
     exportsMiddlware
   )
 
@@ -164,8 +164,8 @@ app.prepare().then(() => {
       }),
     }),
     errorMiddleware,
-    resolvePackageMiddleware,
     blockBlacklistMiddleware,
+    resolvePackageMiddleware,
     cachedResponseMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,

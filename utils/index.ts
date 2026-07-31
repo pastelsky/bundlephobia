@@ -1,3 +1,6 @@
+import { configure } from 'safe-stable-stringify'
+import truncate from 'truncate'
+
 export interface FormattedValue {
   unit: 'B' | 'kB' | 'MB' | 'μs' | 'ms' | 's'
   size: number
@@ -77,17 +80,24 @@ export function zeroToN(n: number): number[] {
   return Array.from(Array(n).keys())
 }
 
-function toErrorDetail(originalError: unknown): string | null {
+const MAX_ERROR_DETAIL_LENGTH = 12_000
+const stringifyError = configure({ maximumBreadth: 20, maximumDepth: 4 })
+
+export function toErrorDetail(originalError: unknown): string | null {
   if (originalError == null) {
     return null
   }
 
   if (typeof originalError === 'string') {
-    return originalError.trim() ? originalError : null
+    return originalError.trim()
+      ? truncate(originalError, MAX_ERROR_DETAIL_LENGTH)
+      : null
   }
 
   if (originalError instanceof Error) {
-    return originalError.message || null
+    return originalError.message
+      ? truncate(originalError.message, MAX_ERROR_DETAIL_LENGTH)
+      : null
   }
 
   if (Array.isArray(originalError)) {
@@ -95,18 +105,17 @@ function toErrorDetail(originalError: unknown): string | null {
       .map(toErrorDetail)
       .filter((detail): detail is string => detail !== null)
 
-    return details.length ? details.join('\n\n') : null
+    return details.length
+      ? truncate(details.join('\n\n'), MAX_ERROR_DETAIL_LENGTH)
+      : null
   }
 
   if (typeof originalError === 'object') {
-    try {
-      return JSON.stringify(originalError, null, 2)
-    } catch {
-      return null
-    }
+    const serialized = stringifyError(originalError, null, 2)
+    return serialized ? truncate(serialized, MAX_ERROR_DETAIL_LENGTH) : null
   }
 
-  return String(originalError)
+  return truncate(String(originalError), MAX_ERROR_DETAIL_LENGTH)
 }
 
 function isBuildErrorResponse(value: unknown): value is BuildErrorResponse {

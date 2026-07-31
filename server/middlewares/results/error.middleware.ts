@@ -2,12 +2,14 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 import createDebug from 'debug'
 
+import { toErrorDetail } from '../../../utils'
 import config from '../../config'
 import { failureCache } from '../../init'
 import logger from '../../Logger'
 import { isJobCancelledError } from '../../Queue'
 
 const debug = createDebug('bp:error')
+const MAX_ERROR_LIST_ITEMS = 20
 
 interface ErrorResponseBody {
   error: {
@@ -41,6 +43,12 @@ function isClientHttpError(error: Error): error is ClientHttpError {
 }
 
 function formatSentence(values: string[]): string {
+  const omittedCount = values.length - MAX_ERROR_LIST_ITEMS
+  values = values.slice(0, MAX_ERROR_LIST_ITEMS)
+  if (omittedCount > 0) {
+    values.push(`${omittedCount} more`)
+  }
+
   if (values.length === 0) {
     return ''
   }
@@ -53,10 +61,23 @@ function formatSentence(values: string[]): string {
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
+function getErrorDetails(originalError: unknown) {
+  const detail = toErrorDetail(originalError)
+  return detail ? { originalError: detail } : undefined
+}
+
 const errorHandler: Middleware = async (ctx, next) => {
   const { force } = ctx.query
   const start = now()
-  const packageString = ctx.state.resolved?.packageString
+  let packageString = ctx.state.resolved?.packageString
+
+  const cacheFailure = (status: number, body: unknown) => {
+    if (!packageString) {
+      return
+    }
+    debug('saved %s to failure cache', packageString)
+    failureCache.set(packageString, { status, body })
+  }
 
   const respondWithError = (
     status: number,
@@ -91,6 +112,7 @@ const errorHandler: Middleware = async (ctx, next) => {
   try {
     await next()
   } catch (error) {
+    packageString = ctx.state.resolved?.packageString
     ctx.cacheControl = {
       maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR,
     }
@@ -117,8 +139,6 @@ const errorHandler: Middleware = async (ctx, next) => {
       return
     }
 
-    console.error(error)
-
     if (!(error instanceof Error)) {
       const errObj = error as Record<string, unknown> | null
       if (errObj && errObj.code === 'JOB_EXPIRED') {
@@ -141,7 +161,10 @@ const errorHandler: Middleware = async (ctx, next) => {
         return
       }
 
-      respondWithError(500, { code: 'UnknownError', details: error })
+      respondWithError(500, {
+        code: 'UnknownError',
+        details: getErrorDetails(error),
+      })
       return
     }
 
@@ -243,8 +266,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         respondWithError(status, body.error)
-        debug('saved %s to failure cache', packageString)
-        failureCache.set(packageString, { status, body })
+        cacheFailure(status, body)
         break
       }
 
@@ -262,7 +284,7 @@ const errorHandler: Middleware = async (ctx, next) => {
               `but does not specify ${
                 missingModulesList.length > 1 ? 'them' : 'it'
               } either as a dependency or a peer dependency`,
-            details: err,
+            details: getErrorDetails(err.originalError) ?? {},
           },
         }
 
@@ -271,8 +293,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         respondWithError(status, body.error)
-        debug('saved %s to failure cache', packageString)
-        failureCache.set(packageString, { status, body })
+        cacheFailure(status, body)
         break
       }
 
@@ -287,7 +308,7 @@ const errorHandler: Middleware = async (ctx, next) => {
                 err.extra?.filePath ?? 'unknown file'
               }</code> can be minified using <a href="https://try.terser.org/" target="_blank">terser</a>.`,
             details: {
-              originalError: JSON.stringify(err.originalError, null, 2),
+              ...getErrorDetails(err.originalError),
             },
           },
         }
@@ -297,24 +318,22 @@ const errorHandler: Middleware = async (ctx, next) => {
         }
 
         respondWithError(status, body.error)
-        debug('saved %s to failure cache', packageString)
-        failureCache.set(packageString, { status, body })
+        cacheFailure(status, body)
         break
       }
 
       case 'BuildError':
       default: {
         const status = 422
+        const details = getErrorDetails(err.originalError) ?? {}
         const errorJSON = {
           code: 'BuildError',
           message: 'Failed to build this package.',
-          details: err,
+          details,
         }
         respondWithError(status, errorJSON)
-        debug('saved %s to failure cache', packageString)
-        failureCache.set(packageString, {
-          status,
-          body: { error: errorJSON },
+        cacheFailure(status, {
+          error: errorJSON,
         })
         break
       }

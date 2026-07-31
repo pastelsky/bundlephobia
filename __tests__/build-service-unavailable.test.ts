@@ -3,7 +3,9 @@ import axios from 'axios'
 
 import serializeError from '../build-service/serializeError'
 import CustomError from '../server/CustomError'
-import BuildService from '../server/api/BuildService'
+import BuildService, {
+  MAX_BUILD_SERVICE_RESPONSE_BYTES,
+} from '../server/api/BuildService'
 import { failureCache, pool, requestQueue } from '../server/init'
 import errorMiddleware from '../server/middlewares/results/error.middleware'
 
@@ -101,7 +103,30 @@ describe('build service unavailability', () => {
       extra: undefined,
     }
 
-    expect(serializeError({ toJSON: () => serialized })).toBe(serialized)
+    expect(serializeError({ toJSON: () => serialized })).toEqual(serialized)
+  })
+
+  it('preserves custom error details containing circular data', () => {
+    const originalError: { message: string; self?: unknown } = {
+      message: 'the useful build error',
+    }
+    originalError.self = originalError
+
+    expect(
+      serializeError({
+        toJSON: () => ({
+          name: 'BuildError',
+          originalError,
+          extra: undefined,
+        }),
+      })
+    ).toEqual({
+      name: 'BuildError',
+      originalError: {
+        message: 'the useful build error',
+        self: '[Circular]',
+      },
+    })
   })
 
   it('identifies a structured internal build-service error', async () => {
@@ -158,6 +183,7 @@ describe('build service unavailability', () => {
     expect(axios.get).toHaveBeenCalledWith(
       'http://127.0.0.1:7002/size?p=%40example%2Fcancelled%401.0.0',
       expect.objectContaining({
+        maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES,
         signal: controller.signal,
       })
     )
