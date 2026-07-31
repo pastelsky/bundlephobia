@@ -60,6 +60,7 @@ interface ProcessOptions<TResult> {
   maxAge?: number
   onSuccess?: (result: TResult) => void
   onFailure?: (error: unknown) => void
+  signal?: AbortSignal
 }
 
 class Queue {
@@ -287,14 +288,69 @@ class Queue {
       maxAge = this.options.maxAge,
       onSuccess = () => {},
       onFailure = () => {},
+      signal,
     } = options
 
     this.pruneQueue()
 
     return new Promise<TResult>((resolve, reject) => {
+      let settled = false
+      const resolveSubscriber = (result: TResult) => {
+        if (settled) return
+        settled = true
+        signal?.removeEventListener('abort', cancelSubscriber)
+        resolve(result)
+        onSuccess(result)
+      }
+      const rejectSubscriber = (error: unknown) => {
+        if (settled) return
+        settled = true
+        signal?.removeEventListener('abort', cancelSubscriber)
+        reject(error)
+        onFailure(error)
+      }
+      const successListener = resolveSubscriber as (result: unknown) => void
+      const failureListener = rejectSubscriber
+      const cancelSubscriber = () => {
+        const job = this.jobs.find(
+          queuedJob => queuedJob.id === id && queuedJob.type === type
+        )
+        if (!job || settled) return
+
+        job.successListeners = job.successListeners.filter(
+          listener => listener !== successListener
+        )
+        job.failureListeners = job.failureListeners.filter(
+          listener => listener !== failureListener
+        )
+
+        const error = new JobCancelledError()
+        rejectSubscriber(error)
+
+        if (job.failureListeners.length === 0) {
+          log('cancelling orphaned job %s (%s)', id, job.status.toString())
+          if (job.status === JobStatus.PROCESSING) {
+            job.cancel?.()
+          } else {
+            this.removeJob(id, type)
+            this.executeNextJobIfPossible()
+          }
+        }
+      }
+
+      if (signal?.aborted) {
+        rejectSubscriber(new JobCancelledError())
+        return
+      }
+
+      signal?.addEventListener('abort', cancelSubscriber, { once: true })
+
       if (this.hasJob(id, type)) {
         log('job id %s already present, adding callbacks', id)
-        this.addListenersToJob(id, type, { resolve, reject })
+        this.addListenersToJob(id, type, {
+          resolve: successListener as (value: never) => void,
+          reject: failureListener,
+        })
         return
       }
 
@@ -306,11 +362,8 @@ class Queue {
         addedTime: new Date(),
         status: JobStatus.READY,
         params: jobParams,
-        successListeners: [
-          resolve as unknown as (result: unknown) => void,
-          onSuccess as (result: unknown) => void,
-        ],
-        failureListeners: [reject, onFailure],
+        successListeners: [successListener],
+        failureListeners: [failureListener],
       })
 
       this.executeNextJobIfPossible()

@@ -1,3 +1,5 @@
+import AbortController from 'abort-controller'
+
 import Queue from '../server/Queue'
 
 describe('Queue cancellation', () => {
@@ -82,5 +84,114 @@ describe('Queue cancellation', () => {
     await p2
 
     expect(executor).toHaveBeenCalledTimes(2)
+  })
+
+  it('keeps shared work running when one subscriber aborts', async () => {
+    const queue = new Queue({ concurrency: 1 })
+    const firstSubscriber = new AbortController()
+    const secondSubscriber = new AbortController()
+    const cancelExecutor = jest.fn()
+    let resolveJob: (value: string) => void = () => {}
+    const jobPromise = new Promise<string>(resolve => {
+      resolveJob = resolve
+    }) as Promise<string> & { cancel?: () => void }
+    jobPromise.cancel = cancelExecutor
+
+    queue.addExecutor('TEST', () => jobPromise)
+
+    const firstResult = queue.process<string, object>(
+      'shared-job',
+      'TEST',
+      {},
+      {
+        signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
+      }
+    )
+    const secondResult = queue.process<string, object>(
+      'shared-job',
+      'TEST',
+      {},
+      {
+        signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
+      }
+    )
+
+    firstSubscriber.abort()
+
+    await expect(firstResult).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+    })
+    expect(cancelExecutor).not.toHaveBeenCalled()
+
+    resolveJob('result')
+
+    await expect(secondResult).resolves.toBe('result')
+    expect(cancelExecutor).not.toHaveBeenCalled()
+  })
+
+  it('cancels shared work after its final subscriber aborts', async () => {
+    const queue = new Queue({ concurrency: 1 })
+    const firstSubscriber = new AbortController()
+    const secondSubscriber = new AbortController()
+    const cancelExecutor = jest.fn()
+    const jobPromise = new Promise(() => {}) as Promise<never> & {
+      cancel?: () => void
+    }
+    jobPromise.cancel = cancelExecutor
+
+    queue.addExecutor('TEST', () => jobPromise)
+
+    const firstResult = queue.process(
+      'shared-job',
+      'TEST',
+      {},
+      {
+        signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
+      }
+    )
+    const secondResult = queue.process(
+      'shared-job',
+      'TEST',
+      {},
+      {
+        signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
+      }
+    )
+
+    firstSubscriber.abort()
+    await expect(firstResult).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+    })
+    expect(cancelExecutor).not.toHaveBeenCalled()
+
+    secondSubscriber.abort()
+    await expect(secondResult).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+    })
+    expect(cancelExecutor).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not enqueue work for an already aborted subscriber', async () => {
+    const queue = new Queue({ concurrency: 1 })
+    const subscriber = new AbortController()
+    const executor = jest.fn()
+    subscriber.abort()
+    queue.addExecutor('TEST', executor)
+
+    const result = queue.process(
+      'job',
+      'TEST',
+      {},
+      {
+        signal: subscriber.signal as unknown as globalThis.AbortSignal,
+      }
+    )
+
+    await expect(result).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+    })
+    expect(executor).not.toHaveBeenCalled()
+    expect(queue.getReadyJobs()).toHaveLength(0)
+    expect(queue.getRunningJobs()).toHaveLength(0)
   })
 })
