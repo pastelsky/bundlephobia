@@ -389,6 +389,12 @@ class Queue {
 
       if (this.hasJob(id, type)) {
         log('job id %s already present, adding callbacks', id)
+        const existingJob = this.jobs.find(
+          queuedJob => queuedJob.id === id && queuedJob.type === type
+        )
+        if (existingJob) {
+          existingJob.priority = Math.max(existingJob.priority, priority)
+        }
         this.addListenersToJob(id, type, {
           resolve: successListener as (value: never) => void,
           reject: failureListener,
