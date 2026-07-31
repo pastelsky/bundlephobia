@@ -265,3 +265,68 @@ describe('Queue cancellation', () => {
     expect(queue.getRunningJobs()).toHaveLength(0)
   })
 })
+
+describe('Queue priority', () => {
+  const nativeAbortController = global.AbortController
+
+  beforeAll(() => {
+    global.AbortController =
+      AbortController as unknown as typeof global.AbortController
+  })
+
+  afterAll(() => {
+    global.AbortController = nativeAbortController
+  })
+
+  it('upgrades a queued job when a higher-priority subscriber joins it', async () => {
+    const queue = new Queue({ concurrency: 1, aging: false })
+    const executionOrder: string[] = []
+    let releaseBlocker: () => void = () => {}
+    const blocker = new Promise<void>(resolve => {
+      releaseBlocker = resolve
+    })
+
+    queue.addExecutor<string, string>('TEST', async id => {
+      executionOrder.push(id)
+      if (id === 'blocker') {
+        await blocker
+      }
+      return id
+    })
+
+    const blockerResult = queue.process<string, string>(
+      'blocker',
+      'TEST',
+      'blocker'
+    )
+    const firstSharedResult = queue.process<string, string>(
+      'shared',
+      'TEST',
+      'shared',
+      { priority: Queue.priority.LOW }
+    )
+    const mediumResult = queue.process<string, string>(
+      'medium',
+      'TEST',
+      'medium',
+      { priority: Queue.priority.MEDIUM }
+    )
+    const secondSharedResult = queue.process<string, string>(
+      'shared',
+      'TEST',
+      'shared',
+      { priority: Queue.priority.HIGH }
+    )
+
+    releaseBlocker()
+
+    await Promise.all([
+      blockerResult,
+      firstSharedResult,
+      mediumResult,
+      secondSharedResult,
+    ])
+
+    expect(executionOrder).toEqual(['blocker', 'shared', 'medium'])
+  })
+})

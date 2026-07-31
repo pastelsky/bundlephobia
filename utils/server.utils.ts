@@ -58,9 +58,10 @@ export function getRequestPriority(ctx: Context): number {
   switch (client) {
     case 'bundlephobia website':
       return Queue.priority.HIGH
-    case 'yarn website':
-      return Queue.priority.LOW
-    default:
+    case 'bundlephobia mcp tool':
       return Queue.priority.MEDIUM
+    case 'yarn website':
+    default:
+      return Queue.priority.LOW
   }
 }
