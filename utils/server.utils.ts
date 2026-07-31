@@ -1,6 +1,7 @@
 import 'dotenv-defaults/config'
 
 import type { Context } from 'koa'
+import parsePackageSpec from 'npm-package-arg'
 import semver from 'semver'
 
 import CustomError from '../server/CustomError'
@@ -15,22 +16,21 @@ interface PacoteModule {
 
 const pacote = require('pacote') as PacoteModule
 
-interface PackageSpec {
-  type: string
-  name?: string
-  escapedName?: string
-  fetchSpec?: string | null
-  subSpec?: PackageSpec
-}
-
-interface RegistryPackageSpec extends PackageSpec {
-  type: 'range' | 'tag' | 'version'
+type RegistryPackageSpec = parsePackageSpec.RegistryResult & {
   escapedName: string
 }
 
-const parsePackageSpec = require('npm-package-arg') as (
-  spec: string
-) => PackageSpec
+function isAliasPackageSpec(
+  spec: parsePackageSpec.Result
+): spec is parsePackageSpec.AliasResult {
+  return spec.type === 'alias'
+}
+
+function isRegistryPackageSpec(
+  spec: parsePackageSpec.Result
+): spec is RegistryPackageSpec {
+  return spec.registry && Boolean(spec.escapedName)
+}
 
 interface NpmRegistryFetchModule {
   json(path: string): Promise<ResolvedPackageManifest>
@@ -70,17 +70,13 @@ function registryPackageSpec(
   packageString: string
 ): RegistryPackageSpec | null {
   const parsed = parsePackageSpec(packageString)
-  const target = parsed.type === 'alias' ? parsed.subSpec : parsed
+  const target = isAliasPackageSpec(parsed) ? parsed.subSpec : parsed
 
-  if (
-    !target ||
-    !['range', 'tag', 'version'].includes(target.type) ||
-    !target.escapedName
-  ) {
+  if (!isRegistryPackageSpec(target)) {
     return null
   }
 
-  return target as RegistryPackageSpec
+  return target
 }
 
 export async function resolvePackage(

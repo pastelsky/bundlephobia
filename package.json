@@ -154,6 +154,7 @@
     "@types/koa-static": "^4.0.4",
     "@types/node": "^24.0.0",
     "@types/node-fetch": "^2.6.13",
+    "@types/npm-package-arg": "6.1.4",
     "@types/progress-stream": "^2",
     "@types/react": "18.2.48",
     "@types/react-autocomplete": "1.8.10",
