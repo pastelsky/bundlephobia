@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Package Recommendation Review'
+  short_description: 'Review package size, quality, and category fit'
+  default_prompt: 'Use $package-recommendation-code-review to review a package recommendation pull request.'

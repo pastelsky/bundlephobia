@@ -23,11 +23,20 @@ body:
       required: true
 
   - type: input
+    id: category
+    attributes:
+      label: Bundlephobia category
+      description: Which existing category should contain this package? Propose a concise category name if none fits.
+      placeholder: 'For example: General purpose date-time utilities'
+    validations:
+      required: true
+
+  - type: input
     id: alternative
     attributes:
-      label: Alternative package or category
-      description: Which existing package or Bundlephobia category would this be an alternative to?
-      placeholder: 'For example: moment, or General purpose date-time utilities'
+      label: Alternative npm packages
+      description: Enter exact npm package names, separated by commas. The automation compares their minified and gzipped sizes.
+      placeholder: 'For example: moment, luxon'
     validations:
       required: true
 
@@ -44,7 +53,7 @@ body:
     id: advantage
     attributes:
       label: Why is this a better alternative?
-      description: Explain what improves on the current recommendations, such as bundle size, API, performance, compatibility, or maintenance.
+      description: Explain what improves on the current recommendations. Include the relevant imports or usage if the size comparison needs more than the package's default export.
       placeholder: 'Compared with the existing recommendations...'
     validations:
       required: true

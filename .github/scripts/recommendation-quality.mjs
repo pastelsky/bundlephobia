@@ -1,6 +1,7 @@
 const WEEKLY_DOWNLOAD_MINIMUM = 1_000
 const GITHUB_STAR_MINIMUM = 100
 const RECENT_ACTIVITY_DAYS = 730
+const MAX_RECOMMENDATIONS_PER_CATEGORY = 6
 
 function cleanIssueAnswer(value = '') {
   const answer = value.trim()
@@ -25,13 +26,21 @@ export function extractIssueFormAnswers(body = '') {
   return {
     packageName:
       answers.get('npm package name') ?? cleanIssueAnswer(legacyPackage?.[1]),
+    category: answers.get('Bundlephobia category') ?? '',
     alternative:
+      answers.get('Alternative npm packages') ??
       answers.get('Alternative package or category') ??
       cleanIssueAnswer(legacyAlternative?.[1]),
     overlap: answers.get('Functional overlap') ?? '',
     advantage: answers.get('Why is this a better alternative?') ?? '',
     relationship: answers.get('Your relationship to the package') ?? '',
   }
+}
+
+export function parsePackageNames(value = '') {
+  return [
+    ...new Set(value.split(/[,\n]/).map(normalizePackageName).filter(Boolean)),
+  ]
 }
 
 export function normalizePackageName(value = '') {
@@ -74,14 +83,41 @@ export function isStableVersion(version = '') {
 }
 
 async function fetchJson(url, options, fetchImpl) {
-  const response = await fetchImpl(url, options)
+  const requestUrl = String(url)
+  const response = await fetchImpl(requestUrl, options)
 
   if (response.status === 404) return null
   if (!response.ok) {
-    throw new Error(`${url} returned HTTP ${response.status}`)
+    throw new Error(`${requestUrl} returned HTTP ${response.status}`)
   }
 
   return response.json()
+}
+
+export async function collectBundleSize(
+  packageName,
+  { fetchImpl = fetch } = {}
+) {
+  const url = new URL('https://bundlephobia.com/api/size')
+  url.searchParams.set('package', packageName)
+
+  try {
+    const result = await fetchJson(url, undefined, fetchImpl)
+    return {
+      available: Number.isFinite(result?.gzip),
+      version: result?.version ?? null,
+      size: result?.size ?? null,
+      gzip: result?.gzip ?? null,
+    }
+  } catch (error) {
+    return {
+      available: false,
+      version: null,
+      size: null,
+      gzip: null,
+      error: error instanceof Error ? error.message : String(error),
+    }
+  }
 }
 
 export async function collectPackageSignals(
@@ -107,7 +143,7 @@ export async function collectPackageSignals(
     latestManifest.repository ?? registry.repository
   )
 
-  const [downloads, github] = await Promise.all([
+  const [downloads, github, bundleSize] = await Promise.all([
     fetchJson(
       `https://api.npmjs.org/downloads/point/last-week/${encodedName}`,
       undefined,
@@ -128,6 +164,7 @@ export async function collectPackageSignals(
           fetchImpl
         ).catch(() => null)
       : null,
+    collectBundleSize(packageName, { fetchImpl }),
   ])
 
   const publishedAt = latestVersion ? registry.time?.[latestVersion] : null
@@ -154,6 +191,7 @@ export async function collectPackageSignals(
     maintenancePass: recentActivity || isStableVersion(latestVersion ?? ''),
     recentActivity,
     stableVersion: isStableVersion(latestVersion ?? ''),
+    bundleSize,
   }
 }
 
@@ -194,6 +232,46 @@ export function evaluateRecommendation(signals, answers = {}) {
   }
 }
 
+export function evaluateSizeAdvantage(candidate, alternatives) {
+  const availableAlternatives = alternatives.filter(
+    alternative => alternative.bundleSize?.available
+  )
+  const findings = []
+
+  if (!candidate.bundleSize?.available) {
+    findings.push('Bundlephobia could not measure the candidate package.')
+  }
+  if (!availableAlternatives.length) {
+    findings.push('No comparison package size was available.')
+  }
+
+  const smallerThan = candidate.bundleSize?.available
+    ? availableAlternatives.filter(
+        alternative => candidate.bundleSize.gzip < alternative.bundleSize.gzip
+      )
+    : []
+
+  if (
+    candidate.bundleSize?.available &&
+    availableAlternatives.length &&
+    !smallerThan.length
+  ) {
+    findings.push(
+      'The candidate is not smaller than any of the comparison packages.'
+    )
+  }
+
+  return {
+    pass:
+      Boolean(candidate.bundleSize?.available) &&
+      availableAlternatives.length > 0 &&
+      smallerThan.length > 0,
+    findings,
+    smallerThan: smallerThan.map(alternative => alternative.packageName),
+    availableAlternatives,
+  }
+}
+
 export function extractCuratedRecommendations(source) {
   const recommendations = new Set()
   const similarArrayPattern = /\bsimilar:\s*\[([\s\S]*?)\]/g
@@ -207,8 +285,26 @@ export function extractCuratedRecommendations(source) {
   return recommendations
 }
 
+export function extractCuratedCategories(source) {
+  const categories = new Map()
+  const categoryPattern =
+    /^  (?:'([^']+)'|"([^"]+)"|([a-zA-Z0-9-]+)):\s*\{([\s\S]*?)^  \},/gm
+
+  for (const match of source.matchAll(categoryPattern)) {
+    const slug = match[1] ?? match[2] ?? match[3]
+    const body = match[4]
+    const name = body.match(/^    name:\s*['"]([^'"]+)['"],/m)?.[1] ?? slug
+    const packages = extractCuratedRecommendations(body)
+
+    categories.set(slug, { slug, name, packages })
+  }
+
+  return categories
+}
+
 export const qualityThresholds = {
   weeklyDownloads: WEEKLY_DOWNLOAD_MINIMUM,
   githubStars: GITHUB_STAR_MINIMUM,
   recentActivityDays: RECENT_ACTIVITY_DAYS,
+  maxRecommendationsPerCategory: MAX_RECOMMENDATIONS_PER_CATEGORY,
 }

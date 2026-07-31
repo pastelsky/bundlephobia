@@ -1,12 +1,15 @@
 import { readFile } from 'node:fs/promises'
 
 import {
+  collectBundleSize,
   collectPackageSignals,
   evaluateRecommendation,
+  evaluateSizeAdvantage,
   extractCuratedRecommendations,
   extractIssueFormAnswers,
   isPlausiblePackageName,
   normalizePackageName,
+  parsePackageNames,
 } from './recommendation-quality.mjs'
 
 const REPORT_MARKER = '<!-- bundlephobia-recommendation-quality -->'
@@ -83,6 +86,7 @@ async function upsertReport(body) {
 
 const answers = extractIssueFormAnswers(issue.body)
 const packageName = normalizePackageName(answers.packageName)
+const comparisonNames = parsePackageNames(answers.alternative)
 
 if (!isPlausiblePackageName(packageName)) {
   await upsertReport(`${REPORT_MARKER}
@@ -96,14 +100,37 @@ _This automation checks objective signals only. Maintainers decide functional eq
   process.exit(0)
 }
 
-const [signals, duplicates, fixtureSource] = await Promise.all([
-  collectPackageSignals(packageName, { githubToken: token }),
-  findOpenDuplicates(packageName),
-  readFile('server/middlewares/similar-packages/fixtures.ts', 'utf8'),
-])
+const [signals, duplicates, fixtureSource, comparisonSizes] = await Promise.all(
+  [
+    collectPackageSignals(packageName, { githubToken: token }),
+    findOpenDuplicates(packageName),
+    readFile('server/middlewares/similar-packages/fixtures.ts', 'utf8'),
+    Promise.all(
+      comparisonNames
+        .filter(isPlausiblePackageName)
+        .map(async comparisonName => ({
+          packageName: comparisonName,
+          bundleSize: await collectBundleSize(comparisonName),
+        }))
+    ),
+  ]
+)
 const alreadyCurated =
   extractCuratedRecommendations(fixtureSource).has(packageName)
 const evaluation = evaluateRecommendation(signals, answers)
+const sizeEvaluation = evaluateSizeAdvantage(signals, comparisonSizes)
+
+for (const comparisonName of comparisonNames) {
+  if (!isPlausiblePackageName(comparisonName)) {
+    evaluation.needsEvidence.push(
+      `\`${comparisonName}\` is not a valid exact npm package name.`
+    )
+  }
+}
+evaluation.needsEvidence.push(...sizeEvaluation.findings)
+if (evaluation.needsEvidence.length && !evaluation.blockers.length) {
+  evaluation.status = 'needs evidence'
+}
 
 if (alreadyCurated) {
   evaluation.needsEvidence.push(
@@ -122,6 +149,31 @@ const findings = [...evaluation.blockers, ...evaluation.needsEvidence]
 const duplicateLinks = duplicates
   .map(candidate => `[#${candidate.number}](${candidate.html_url})`)
   .join(', ')
+const sizeRows = [
+  { packageName, bundleSize: signals.bundleSize },
+  ...comparisonSizes,
+]
+  .map(({ packageName: sizePackageName, bundleSize }) => {
+    const delta =
+      signals.bundleSize?.available &&
+      bundleSize?.available &&
+      sizePackageName !== packageName
+        ? (() => {
+            const percentage = Math.round(
+              (Math.abs(signals.bundleSize.gzip - bundleSize.gzip) /
+                bundleSize.gzip) *
+                100
+            )
+            return `candidate is ${percentage}% ${
+              signals.bundleSize.gzip < bundleSize.gzip ? 'smaller' : 'larger'
+            }`
+          })()
+        : 'candidate'
+    return `| ${sizePackageName} | ${
+      bundleSize?.available ? bundleSize.gzip.toLocaleString() : 'Unavailable'
+    } | ${delta} |`
+  })
+  .join('\n')
 const report = `${REPORT_MARKER}
 ## Automated recommendation check
 
@@ -148,6 +200,12 @@ const report = `${REPORT_MARKER}
 | Last repository push | ${display(signals.repositoryPushedAt)} |
 | Already curated | ${alreadyCurated ? 'Yes' : 'No'} |
 | Other open suggestions | ${duplicateLinks || 'None found'} |
+
+### Minified + gzip size
+
+| Package | Bytes | Difference |
+| --- | ---: | ---: |
+${sizeRows}
 
 ${
   findings.length

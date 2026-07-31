@@ -2,9 +2,12 @@ import { appendFile, readFile } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
 
 import {
+  collectBundleSize,
   collectPackageSignals,
   evaluateRecommendation,
-  extractCuratedRecommendations,
+  evaluateSizeAdvantage,
+  extractCuratedCategories,
+  qualityThresholds,
 } from './recommendation-quality.mjs'
 
 const fixturePath = 'server/middlewares/similar-packages/fixtures.ts'
@@ -18,17 +21,65 @@ const currentSource = await readFile(fixturePath, 'utf8')
 const baseSource = execFileSync('git', ['show', `${baseSha}:${fixturePath}`], {
   encoding: 'utf8',
 })
-const current = extractCuratedRecommendations(currentSource)
-const base = extractCuratedRecommendations(baseSource)
-const additions = [...current]
-  .filter(packageName => !base.has(packageName))
-  .sort()
+const current = extractCuratedCategories(currentSource)
+const base = extractCuratedCategories(baseSource)
+const additions = [...current.values()]
+  .flatMap(category =>
+    [...category.packages]
+      .filter(
+        packageName => !base.get(category.slug)?.packages.has(packageName)
+      )
+      .map(packageName => ({ category, packageName }))
+  )
+  .sort((left, right) =>
+    `${left.category.slug}/${left.packageName}`.localeCompare(
+      `${right.category.slug}/${right.packageName}`
+    )
+  )
 const results = []
 
-for (const packageName of additions) {
+for (const { category, packageName } of additions) {
   const signals = await collectPackageSignals(packageName)
   const evaluation = evaluateRecommendation(signals)
-  results.push({ packageName, signals, evaluation })
+  const previousPackages = [
+    ...(base.get(category.slug)?.packages ?? new Set()),
+  ].filter(previousPackage => previousPackage !== packageName)
+  const comparisonSizes = await Promise.all(
+    previousPackages.map(async previousPackage => ({
+      packageName: previousPackage,
+      bundleSize: await collectBundleSize(previousPackage),
+    }))
+  )
+  const sizeEvaluation = previousPackages.length
+    ? evaluateSizeAdvantage(signals, comparisonSizes)
+    : {
+        pass: null,
+        findings: [],
+        smallerThan: [],
+        availableAlternatives: [],
+      }
+  const findings = [
+    ...evaluation.blockers,
+    ...evaluation.needsEvidence,
+    ...sizeEvaluation.findings,
+  ]
+
+  if (
+    category.packages.size > qualityThresholds.maxRecommendationsPerCategory
+  ) {
+    findings.push(
+      `${category.name} would contain ${category.packages.size} recommendations; the maximum is ${qualityThresholds.maxRecommendationsPerCategory}. Remove a weaker recommendation in the same pull request.`
+    )
+  }
+
+  results.push({
+    category,
+    packageName,
+    signals,
+    evaluation,
+    sizeEvaluation,
+    findings,
+  })
 }
 
 const lines = [
@@ -42,19 +93,30 @@ const lines = [
 
 if (additions.length) {
   lines.push(
-    '| Package | npm | Downloads/week | GitHub stars | Maintenance | Result |',
-    '| --- | --- | ---: | ---: | --- | --- |'
+    '| Category | Package | Gzip | Downloads/week | GitHub stars | Size advantage | Result |',
+    '| --- | --- | ---: | ---: | ---: | --- | --- |'
   )
 
-  for (const { packageName, signals, evaluation } of results) {
+  for (const {
+    category,
+    packageName,
+    signals,
+    evaluation,
+    sizeEvaluation,
+    findings,
+  } of results) {
     lines.push(
-      `| ${packageName} | ${
-        signals.exists && !signals.deprecated ? 'pass' : 'fail'
-      } | ${signals.weeklyDownloads ?? 'unknown'} | ${
-        signals.githubStars ?? 'unknown'
-      } | ${signals.maintenancePass ? 'pass' : 'needs evidence'} | ${
-        evaluation.status
-      } |`
+      `| ${category.name} (${category.packages.size}/${
+        qualityThresholds.maxRecommendationsPerCategory
+      }) | ${packageName} | ${signals.bundleSize?.gzip ?? 'unknown'} | ${
+        signals.weeklyDownloads ?? 'unknown'
+      } | ${signals.githubStars ?? 'unknown'} | ${
+        sizeEvaluation.pass === null
+          ? 'new category: agent review'
+          : sizeEvaluation.pass
+          ? `smaller than ${sizeEvaluation.smallerThan.length}`
+          : 'fail'
+      } | ${findings.length ? 'needs changes' : evaluation.status} |`
     )
   }
 
@@ -70,18 +132,12 @@ if (process.env.GITHUB_STEP_SUMMARY) {
   console.log(lines.join('\n'))
 }
 
-const failures = results.filter(
-  ({ evaluation }) =>
-    evaluation.blockers.length > 0 || evaluation.needsEvidence.length > 0
-)
+const failures = results.filter(({ findings }) => findings.length > 0)
 
 if (failures.length) {
-  for (const { packageName, evaluation } of failures) {
-    console.error(`\n${packageName}:`)
-    for (const finding of [
-      ...evaluation.blockers,
-      ...evaluation.needsEvidence,
-    ]) {
+  for (const { category, packageName, findings } of failures) {
+    console.error(`\n${packageName} in ${category.name}:`)
+    for (const finding of findings) {
       console.error(`- ${finding}`)
     }
   }

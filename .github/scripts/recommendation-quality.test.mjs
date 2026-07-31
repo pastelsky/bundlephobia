@@ -4,11 +4,14 @@ import assert from 'node:assert/strict'
 import {
   collectPackageSignals,
   evaluateRecommendation,
+  evaluateSizeAdvantage,
+  extractCuratedCategories,
   extractCuratedRecommendations,
   extractGitHubRepository,
   extractIssueFormAnswers,
   isPlausiblePackageName,
   normalizePackageName,
+  parsePackageNames,
 } from './recommendation-quality.mjs'
 
 test('extracts required answers from a GitHub issue form body', () => {
@@ -16,7 +19,11 @@ test('extracts required answers from a GitHub issue form body', () => {
 
 date-fns
 
-### Alternative package or category
+### Bundlephobia category
+
+General purpose date-time utilities
+
+### Alternative npm packages
 
 moment
 
@@ -33,8 +40,17 @@ It is modular and tree-shakeable, reducing the shipped JavaScript for common tas
 I am a user of the package`)
 
   assert.equal(answers.packageName, 'date-fns')
+  assert.equal(answers.category, 'General purpose date-time utilities')
   assert.equal(answers.alternative, 'moment')
   assert.match(answers.advantage, /tree-shakeable/)
+})
+
+test('parses unique comma and newline separated comparison packages', () => {
+  assert.deepEqual(parsePackageNames('moment, luxon\n`date-fns`, moment'), [
+    'moment',
+    'luxon',
+    'date-fns',
+  ])
 })
 
 test('extracts package details from legacy recommendation issues', () => {
@@ -105,6 +121,10 @@ test('collects objective npm and GitHub quality signals', async () => {
         pushed_at: '2026-01-02T00:00:00.000Z',
       },
     ],
+    [
+      'https://bundlephobia.com/api/size?package=example-package',
+      { version: '2.0.0', size: 5_000, gzip: 2_000 },
+    ],
   ])
   const fetchImpl = async url => ({
     ok: responses.has(url),
@@ -121,6 +141,7 @@ test('collects objective npm and GitHub quality signals', async () => {
   assert.equal(signals.popularityPass, true)
   assert.equal(signals.maintenancePass, true)
   assert.equal(signals.repository, 'example/package')
+  assert.equal(signals.bundleSize.gzip, 2_000)
 })
 
 test('classifies missing packages as invalid and thin claims as needing evidence', () => {
@@ -161,4 +182,50 @@ test('extracts package names only from curated similar arrays', () => {
     [...extractCuratedRecommendations(source)],
     ['one-package', '@scope/two-package']
   )
+})
+
+test('extracts categories and their curated package lists', () => {
+  const source = `const categories = {
+  'date-time': {
+    name: 'Date and time',
+    tags: [{ tag: 'date', weight: 5 }],
+    similar: ['moment', 'date-fns'],
+  },
+  storage: {
+    name: 'Storage',
+    tags: [],
+    similar: [
+      'localforage',
+      'idb',
+    ],
+  },
+}`
+  const categories = extractCuratedCategories(source)
+
+  assert.deepEqual(
+    [...categories.get('date-time').packages],
+    ['moment', 'date-fns']
+  )
+  assert.equal(categories.get('storage').name, 'Storage')
+})
+
+test('requires a candidate to be smaller than at least one comparison', () => {
+  const candidate = {
+    packageName: 'small',
+    bundleSize: { available: true, gzip: 1_000 },
+  }
+  const alternatives = [
+    {
+      packageName: 'large',
+      bundleSize: { available: true, gzip: 5_000 },
+    },
+    {
+      packageName: 'tiny',
+      bundleSize: { available: true, gzip: 500 },
+    },
+  ]
+
+  const result = evaluateSizeAdvantage(candidate, alternatives)
+  assert.equal(result.pass, true)
+  assert.deepEqual(result.smallerThan, ['large'])
 })
