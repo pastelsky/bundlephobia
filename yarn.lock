@@ -7916,6 +7916,7 @@ __metadata:
     node-fetch: "npm:^2.7.0"
     nodemon: "npm:^2.0.22"
     normalize.css: "npm:^8.0.1"
+    npm-registry-fetch: "npm:^11.0.0"
     p-queue: "npm:^3.2.0"
     package-build-stats: "npm:9.1.0"
     pacote: "npm:^11.3.5"
