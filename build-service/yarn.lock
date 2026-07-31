@@ -2726,6 +2726,8 @@ __metadata:
     fastify: "npm:^4.25.2"
     now-logs: "npm:^0.0.7"
     package-build-stats: "npm:9.1.0"
+    safe-stable-stringify: "npm:^2.5.0"
+    truncate: "npm:^3.0.0"
   languageName: unknown
   linkType: soft
 
@@ -8507,7 +8509,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"safe-stable-stringify@npm:^2.3.1":
+"safe-stable-stringify@npm:^2.3.1, safe-stable-stringify@npm:^2.5.0":
   version: 2.5.0
   resolution: "safe-stable-stringify@npm:2.5.0"
   checksum: 2697fa186c17c38c3ca5309637b4ac6de2f1c3d282da27cd5e1e3c88eca0fb1f9aea568a6aabdf284111592c8782b94ee07176f17126031be72ab1313ed46c5c
@@ -9489,6 +9491,13 @@ __metadata:
   dependencies:
     utf8-byte-length: "npm:^1.0.1"
   checksum: 366e47a0e22cc271d37eb4e62820453fb877784b55b37218842758b7aa1d402eedd0f8833cfb5d6f7a6cae1535d84289bd5e32c4ee962d2a86962fb7038a6983
+  languageName: node
+  linkType: hard
+
+"truncate@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "truncate@npm:3.0.0"
+  checksum: 9e3c5b4a6bb7626197c7f396f621ba2426b8e1854f1b17e331ccd1fb6a8df7ca38c76d496fee716c7f5765f2b3180e8164a7c7e38425f668b922b72093e8c381
   languageName: node
   linkType: hard
 

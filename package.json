@@ -88,6 +88,7 @@
     "react-flip-move": "^3.0.5",
     "react-sidebar": "^3.0.2",
     "remark": "^9.0.0",
+    "safe-stable-stringify": "^2.5.0",
     "sass": "^1.70.0",
     "semver": "^7.6.3",
     "stream-chain": "^3.3.2",

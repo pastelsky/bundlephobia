@@ -7,11 +7,16 @@ jest.mock('../server/Logger', () => ({
   default: { error: jest.fn() },
 }))
 
+import { failureCache } from '../server/init'
+import CustomError from '../server/CustomError'
 import errorHandler from '../server/middlewares/results/error.middleware'
 
 describe('build API error middleware', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   it('preserves client HTTP errors before package resolution', async () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation()
     const error = Object.assign(
       new Error('package query parameter is required'),
       {
@@ -39,7 +44,31 @@ describe('build API error middleware', () => {
         message: 'package query parameter is required',
       },
     })
-    expect(consoleError).toHaveBeenCalledWith(error)
-    consoleError.mockRestore()
+  })
+
+  it('caches build errors under the package resolved downstream', async () => {
+    const packageString = '@example/build-error@1.0.0'
+    const ctx = {
+      body: undefined,
+      cacheControl: undefined,
+      query: {},
+      state: { id: 'request-id' } as {
+        id: string
+        resolved?: { packageString: string }
+      },
+      status: undefined,
+    }
+    const error = new CustomError('BuildError', 'compiler failed', undefined)
+
+    await errorHandler(ctx as never, async () => {
+      ctx.state.resolved = { packageString }
+      throw error
+    })
+
+    const responseBody = ctx.body
+    expect(failureCache.set).toHaveBeenCalledWith(packageString, {
+      status: 422,
+      body: responseBody,
+    })
   })
 })

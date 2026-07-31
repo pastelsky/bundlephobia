@@ -7,6 +7,7 @@ import config from '../config'
 import { pool, requestQueue } from '../init'
 
 const debug = createDebug('bp:build')
+export const MAX_BUILD_SERVICE_RESPONSE_BYTES = 8 * 1024 * 1024
 
 const OperationType = {
   PACKAGE_BUILD_STATS: 'PACKAGE_BUILD_STATS',
@@ -56,7 +57,10 @@ export default class BuildService {
                 `${process.env.BUILD_SERVICE_ENDPOINT}${
                   operation.endpoint
                 }?p=${encodeURIComponent(packageString)}`,
-                { signal }
+                {
+                  signal,
+                  maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES,
+                }
               )
               return response.data
             } catch (error) {

@@ -11,6 +11,16 @@ import serializeError from './serializeError.js'
 
 const fastify = Fastify()
 
+function sendBuildError(res, packageString, error) {
+  const serialized = serializeError(error)
+  console.error('PACKAGE_BUILD_FAILED', {
+    packageString,
+    name: serialized.name,
+    originalError: serialized.originalError,
+  })
+  return res.code(500).send(serialized)
+}
+
 if (process.env.AMPLITUDE_API_KEY) {
   const client = Amplitude.init(process.env.AMPLITUDE_API_KEY)
 
@@ -37,8 +47,7 @@ fastify.get('/size', async (req, res) => {
     })
     return res.code(200).send(result)
   } catch (err) {
-    console.log(err)
-    return res.code(500).send(serializeError(err))
+    return sendBuildError(res, packageString, err)
   }
 })
 
@@ -51,8 +60,7 @@ fastify.get('/exports-sizes', async (req, res) => {
     })
     return res.code(200).send(result)
   } catch (err) {
-    console.log(err)
-    return res.code(500).send(serializeError(err))
+    return sendBuildError(res, packageString, err)
   }
 })
 
@@ -65,8 +73,7 @@ fastify.get('/exports', async (req, res) => {
     })
     return res.code(200).send(result)
   } catch (err) {
-    console.log(err)
-    return res.code(500).send(serializeError(err))
+    return sendBuildError(res, packageString, err)
   }
 })
 

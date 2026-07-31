@@ -9,7 +9,9 @@
     "dotenv-defaults": "^2.0.2",
     "fastify": "^4.25.2",
     "now-logs": "^0.0.7",
-    "package-build-stats": "9.1.0"
+    "package-build-stats": "9.1.0",
+    "safe-stable-stringify": "^2.5.0",
+    "truncate": "^3.0.0"
   },
   "engines": {
     "node": ">= 9.x.x",

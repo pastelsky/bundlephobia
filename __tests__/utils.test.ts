@@ -108,10 +108,10 @@ describe('resolveBuildError', () => {
     }
   )
 
-  it('omits an object that cannot be serialized', () => {
+  it('handles circular error details', () => {
     const circular: { self?: unknown } = {}
     circular.self = circular
 
-    expect(resolveDetails(circular)).toBeNull()
+    expect(resolveDetails(circular)).toContain('[Circular]')
   })
 })
