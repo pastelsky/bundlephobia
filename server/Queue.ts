@@ -15,6 +15,10 @@ const JobPriority = {
 
 type JobType = string
 
+interface QueueExecutorContext {
+  signal: AbortSignal
+}
+
 export class JobCancelledError extends Error {
   readonly code = 'JOB_CANCELLED'
 
@@ -33,7 +37,8 @@ export function isJobCancelledError(
 }
 
 type QueueExecutor<TParams = unknown, TResult = unknown> = (
-  params: TParams
+  params: TParams,
+  context: QueueExecutorContext
 ) => TResult | Promise<TResult>
 
 interface QueueJob<TParams = unknown, TResult = unknown> {
@@ -46,6 +51,7 @@ interface QueueJob<TParams = unknown, TResult = unknown> {
   params: TParams
   successListeners: Array<(result: TResult) => void>
   failureListeners: Array<(error: unknown) => void>
+  abortController: AbortController
   cancel?: () => void
 }
 
@@ -152,14 +158,17 @@ class Queue {
     this.jobs = this.jobs.filter(job => job.id !== id || job.type !== type)
   }
 
+  cancelJob(job: QueueJob): void {
+    job.abortController.abort()
+    job.cancel?.()
+  }
+
   cancel(id: string, type: JobType): void {
     const job = this.jobs.find(job => job.id === id && job.type === type)
     if (job) {
       log('cancelling job %s (%s)', id, job.status.toString())
       if (job.status === JobStatus.PROCESSING) {
-        if (job.cancel) {
-          job.cancel()
-        }
+        this.cancelJob(job)
       }
       job.failureListeners.forEach(listener => {
         listener(new JobCancelledError())
@@ -228,7 +237,9 @@ class Queue {
 
     try {
       const handler = this.executorMap[nextJob.type]
-      const promiseOrValue = handler.call(this, nextJob.params)
+      const promiseOrValue = handler.call(this, nextJob.params, {
+        signal: nextJob.abortController.signal,
+      })
 
       if (promiseOrValue && typeof promiseOrValue === 'object') {
         const cancelablePromise = promiseOrValue as Promise<unknown> & {
@@ -330,7 +341,7 @@ class Queue {
         if (job.failureListeners.length === 0) {
           log('cancelling orphaned job %s (%s)', id, job.status.toString())
           if (job.status === JobStatus.PROCESSING) {
-            job.cancel?.()
+            this.cancelJob(job)
           } else {
             this.removeJob(id, type)
             this.executeNextJobIfPossible()
@@ -364,6 +375,7 @@ class Queue {
         params: jobParams,
         successListeners: [successListener],
         failureListeners: [failureListener],
+        abortController: new AbortController(),
       })
 
       this.executeNextJobIfPossible()

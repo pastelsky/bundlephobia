@@ -2,6 +2,7 @@ import axios from 'axios'
 import createDebug from 'debug'
 
 import CustomError from '../CustomError'
+import { JobCancelledError } from '../Queue'
 import config from '../config'
 import { pool, requestQueue } from '../init'
 
@@ -23,13 +24,6 @@ interface BuildServerErrorPayload {
   name?: string
   originalError?: unknown
   extra?: unknown
-}
-
-interface PoolLike {
-  exec(
-    method: string,
-    params: unknown[]
-  ): { timeout(ms: number): Promise<unknown> }
 }
 
 export default class BuildService {
@@ -55,23 +49,34 @@ export default class BuildService {
     operations.forEach(operation => {
       requestQueue.addExecutor<BuildServiceJobParams, unknown>(
         operation.type,
-        async ({ packageString }) => {
+        async ({ packageString }, { signal }) => {
           if (process.env.BUILD_SERVICE_ENDPOINT) {
             try {
               const response = await axios.get(
                 `${process.env.BUILD_SERVICE_ENDPOINT}${
                   operation.endpoint
-                }?p=${encodeURIComponent(packageString)}`
+                }?p=${encodeURIComponent(packageString)}`,
+                { signal }
               )
               return response.data
             } catch (error) {
+              if (axios.isCancel(error)) {
+                throw new JobCancelledError()
+              }
               this.handleError(error, operation.type)
             }
           }
 
-          return (pool as PoolLike)
+          const execution = pool
             .exec(operation.methodName, [packageString])
             .timeout(config.WORKER_TIMEOUT)
+          const cancelExecution = () => execution.cancel?.()
+          signal.addEventListener('abort', cancelExecution, { once: true })
+          try {
+            return await execution
+          } finally {
+            signal.removeEventListener('abort', cancelExecution)
+          }
         }
       )
     })

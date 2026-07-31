@@ -3,6 +3,17 @@ import AbortController from 'abort-controller'
 import Queue from '../server/Queue'
 
 describe('Queue cancellation', () => {
+  const nativeAbortController = global.AbortController
+
+  beforeAll(() => {
+    global.AbortController =
+      AbortController as unknown as typeof global.AbortController
+  })
+
+  afterAll(() => {
+    global.AbortController = nativeAbortController
+  })
+
   it('cancels a ready job in the queue', async () => {
     const queue = new Queue({ concurrency: 1 })
 
@@ -169,6 +180,58 @@ describe('Queue cancellation', () => {
       code: 'JOB_CANCELLED',
     })
     expect(cancelExecutor).toHaveBeenCalledTimes(1)
+  })
+
+  it('aborts a non-cancelable executor after its final subscriber leaves', async () => {
+    const queue = new Queue({ concurrency: 1 })
+    const firstSubscriber = new AbortController()
+    const secondSubscriber = new AbortController()
+    let executorSignal: globalThis.AbortSignal | undefined
+    let rejectExecution: (error: Error) => void = () => {}
+    const execution = new Promise((_resolve, reject) => {
+      rejectExecution = reject
+    })
+
+    queue.addExecutor('TEST', (_params, { signal }) => {
+      executorSignal = signal
+      return execution
+    })
+
+    const firstResult = queue.process(
+      'shared-job',
+      'TEST',
+      {},
+      {
+        signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
+      }
+    )
+    const secondResult = queue.process(
+      'shared-job',
+      'TEST',
+      {},
+      {
+        signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
+      }
+    )
+
+    firstSubscriber.abort()
+    await expect(firstResult).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+    })
+    expect(executorSignal?.aborted).toBe(false)
+
+    secondSubscriber.abort()
+    await expect(secondResult).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+    })
+    expect(executorSignal?.aborted).toBe(true)
+    expect(queue.getRunningJobs()).toHaveLength(1)
+
+    rejectExecution(new Error('executor stopped'))
+    await execution.catch(() => {})
+    await Promise.resolve()
+
+    expect(queue.getRunningJobs()).toHaveLength(0)
   })
 
   it('does not enqueue work for an already aborted subscriber', async () => {
