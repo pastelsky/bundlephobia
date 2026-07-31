@@ -108,13 +108,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'compare', weight: Weight.NORMAL },
       { tag: 'isequal', weight: Weight.HIGH },
     ],
-    similar: [
-      'dequal',
-      'fast-deep-equal',
-      'deep-eql',
-      'deep-equal',
-      'lodash.isequal',
-    ],
+    similar: ['dequal', 'fast-deep-equal', 'deep-eql', 'deep-equal'],
   },
   'drag-and-drop': {
     name: 'Drag & Drop Libraries',
@@ -307,7 +301,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'xhr', weight: Weight.NORMAL },
       { tag: 'browser', weight: Weight.NORMAL },
     ],
-    similar: ['axios', 'ky', 'superagent', 'redaxios', 'unfetch'],
+    similar: ['axios', 'ky', 'xior', 'superagent', 'redaxios'],
   },
   'icu-message-fromatter': {
     name: 'ICU message string formatters',
@@ -468,7 +462,12 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'transform', weight: Weight.NORMAL },
       { tag: 'motion', weight: Weight.NORMAL },
     ],
-    similar: ['react-spring', 'framer-motion', 'react-motion', 'react-move'],
+    similar: [
+      'react-spring',
+      'framer-motion',
+      'react-transition-group',
+      'react-motion',
+    ],
   },
   'react-autocomplete': {
     name: 'React based autocomplete components',
@@ -519,8 +518,8 @@ const categories: Record<string, CategoryDefinition> = {
       'next-intl',
       'react-intl',
       'react-i18next',
+      'next-translate',
       'react-intl-universal',
-      'eo-locale',
       '@lingui/react',
     ],
   },
@@ -535,7 +534,7 @@ const categories: Record<string, CategoryDefinition> = {
     similar: [
       'formik',
       'react-final-form',
-      'react-form',
+      'informed',
       'formsy-react',
       'react-hook-form',
     ],
