@@ -126,6 +126,22 @@ const categories: Record<string, CategoryDefinition> = {
       'interactjs',
     ],
   },
+  'dom-capture': {
+    name: 'DOM screenshot and image capture',
+    tags: [
+      { tag: 'screenshot', weight: Weight.MAX },
+      { tag: 'capture', weight: Weight.HIGH },
+      { tag: 'dom', weight: Weight.HIGH },
+      { tag: 'image', weight: Weight.NORMAL },
+      { tag: 'canvas', weight: Weight.MID },
+    ],
+    similar: [
+      'dom-to-image-more',
+      'html-to-image',
+      'modern-screenshot',
+      'html2canvas',
+    ],
+  },
   'excel-parsers': {
     name: 'Excel File Readers, Manipulators & Writers',
     tags: [
@@ -135,7 +151,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'manipulate', weight: Weight.SMALL },
       { tag: 'parse', weight: Weight.SMALL },
     ],
-    similar: ['xlsx', 'exceljs', 'node-xlsx', 'excel4node'],
+    similar: ['read-excel-file', 'xlsx', 'exceljs', 'node-xlsx', 'excel4node'],
   },
   'full-text-search': {
     name: 'Text search',
@@ -167,7 +183,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'parser', weight: Weight.MID },
       { tag: 'format', weight: Weight.MID },
     ],
-    similar: ['moment', 'luxon', 'dayjs', 'date-fns'],
+    similar: ['@formkit/tempo', 'moment', 'luxon', 'dayjs', 'date-fns'],
   },
   'general-purpose-3d': {
     name: 'General purpose 3D libraries',
@@ -205,11 +221,10 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'data', weight: Weight.MID },
     ],
     similar: [
+      'ag-charts-community',
       'd3',
       'chart.js',
       'echarts',
-      'chartist',
-      'frappe-charts',
       'highcharts',
       'uplot',
     ],
@@ -244,6 +259,16 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'whitelist', weight: Weight.SMALL },
     ],
     similar: ['sanitize-html', 'xss', 'dompurify', 'sanitizer'],
+  },
+  'input-masking': {
+    name: 'Input masking and formatting',
+    tags: [
+      { tag: 'mask', weight: Weight.MAX },
+      { tag: 'input', weight: Weight.HIGH },
+      { tag: 'format', weight: Weight.NORMAL },
+      { tag: 'pattern', weight: Weight.MID },
+    ],
+    similar: ['maska', '@maskito/core', 'imask', 'inputmask'],
   },
   i18n: {
     name: 'Internationalization',
@@ -395,6 +420,22 @@ const categories: Record<string, CategoryDefinition> = {
     ],
     similar: ['jspdf', 'pdfkit', 'pdfmake', '@react-pdf/renderer'],
   },
+  'phone-number': {
+    name: 'Phone number parsing, validation and formatting',
+    tags: [
+      { tag: 'phone', weight: Weight.MAX },
+      { tag: 'telephone', weight: Weight.HIGH },
+      { tag: 'number', weight: Weight.NORMAL },
+      { tag: 'validate', weight: Weight.MID },
+      { tag: 'format', weight: Weight.MID },
+    ],
+    similar: [
+      'phone',
+      'libphonenumber-js',
+      'awesome-phonenumber',
+      'google-libphonenumber',
+    ],
+  },
   'promise-polyfill': {
     name: 'Promise polyfills',
     tags: [
@@ -447,7 +488,17 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'title', weight: Weight.MID },
       { tag: 'meta tags', weight: Weight.MID },
     ],
-    similar: ['react-helment', 'react-meta-tags', 'react-document-title'],
+    similar: ['react-helmet-async', 'react-meta-tags', 'react-document-title'],
+  },
+  'react-hooks': {
+    name: 'React hook collections',
+    tags: [
+      { tag: 'react', weight: Weight.NORMAL },
+      { tag: 'hooks', weight: Weight.MAX },
+      { tag: 'hook', weight: Weight.HIGH },
+      { tag: 'utilities', weight: Weight.NORMAL },
+    ],
+    similar: ['@react-hookz/web', 'react-use', 'ahooks', 'usehooks-ts'],
   },
   'react-i18n': {
     name: 'React based internationalization',
@@ -493,7 +544,14 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'check', weight: Weight.SMALL },
       { tag: 'structure', weight: Weight.MID },
     ],
-    similar: ['jsonschema', 'valibot', 'ajv', 'superstruct', 'yup', 'zod'],
+    similar: [
+      '@sinclair/typebox',
+      'valibot',
+      'ajv',
+      'jsonschema',
+      'yup',
+      'zod',
+    ],
   },
   'querystring-parser': {
     name: 'Query String Parsers',
@@ -518,7 +576,7 @@ const categories: Record<string, CategoryDefinition> = {
         weight: Weight.NORMAL,
       },
     ],
-    similar: ['lexical', 'slate', 'quill', 'froala-editor'],
+    similar: ['lexical', '@milkdown/core', 'slate', 'quill', 'froala-editor'],
   },
   'site-tour': {
     name: 'Site Tours',
@@ -529,6 +587,18 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'guide', weight: Weight.NORMAL },
     ],
     similar: ['intro.js', 'hopscotch', 'driver.js'],
+  },
+  'state-management': {
+    name: 'State management libraries',
+    tags: [
+      { tag: 'state', weight: Weight.HIGH },
+      { tag: 'management', weight: Weight.HIGH },
+      { tag: 'store', weight: Weight.NORMAL },
+      { tag: 'react', weight: Weight.MID },
+      { tag: 'observable', weight: Weight.MID },
+      { tag: 'atom', weight: Weight.MID },
+    ],
+    similar: ['valtio', 'zustand', 'jotai', 'mobx', '@reduxjs/toolkit'],
   },
   slider: {
     name: 'General purpose sliders & carousels',
