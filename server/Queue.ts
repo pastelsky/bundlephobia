@@ -15,6 +15,23 @@ const JobPriority = {
 
 type JobType = string
 
+export class JobCancelledError extends Error {
+  readonly code = 'JOB_CANCELLED'
+
+  constructor() {
+    super('JOB_CANCELLED')
+    this.name = 'JobCancelledError'
+  }
+}
+
+export function isJobCancelledError(
+  error: unknown
+): error is JobCancelledError {
+  return (
+    error instanceof Error && 'code' in error && error.code === 'JOB_CANCELLED'
+  )
+}
+
 type QueueExecutor<TParams = unknown, TResult = unknown> = (
   params: TParams
 ) => TResult | Promise<TResult>
@@ -144,7 +161,7 @@ class Queue {
         }
       }
       job.failureListeners.forEach(listener => {
-        listener(new Error('JOB_CANCELLED'))
+        listener(new JobCancelledError())
       })
       if (job.status === JobStatus.READY) {
         this.removeJob(id, type)

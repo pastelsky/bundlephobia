@@ -5,6 +5,7 @@ import createDebug from 'debug'
 import config from '../../config'
 import { failureCache } from '../../init'
 import logger from '../../Logger'
+import { isJobCancelledError } from '../../Queue'
 
 const debug = createDebug('bp:error')
 
@@ -90,10 +91,33 @@ const errorHandler: Middleware = async (ctx, next) => {
   try {
     await next()
   } catch (error) {
-    console.error(error)
     ctx.cacheControl = {
       maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR,
     }
+
+    if (isJobCancelledError(error)) {
+      ctx.cacheControl = { maxAge: 0 }
+      ctx.status = 408
+      ctx.body = {
+        error: {
+          code: 'BuildCancelledError',
+          message:
+            'The package build was cancelled because the client disconnected.',
+        },
+      } satisfies ErrorResponseBody
+      logger.info(
+        'BUILD_CANCELLED',
+        {
+          requestId: ctx.state.id,
+          time: now() - start,
+          ...ctx.state.resolved,
+        },
+        packageString ? `BUILD_CANCELLED ${packageString}` : 'BUILD_CANCELLED'
+      )
+      return
+    }
+
+    console.error(error)
 
     if (!(error instanceof Error)) {
       const errObj = error as Record<string, unknown> | null

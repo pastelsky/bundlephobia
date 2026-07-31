@@ -19,7 +19,10 @@ describe('Queue cancellation', () => {
 
     queue.cancel('job-2', 'TEST')
 
-    await expect(p2).rejects.toThrow('JOB_CANCELLED')
+    await expect(p2).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+      name: 'JobCancelledError',
+    })
     expect(queue.getReadyJobs().length).toBe(0)
 
     resolveFirstJob()
@@ -42,7 +45,10 @@ describe('Queue cancellation', () => {
     queue.cancel('job-1', 'TEST')
 
     expect(mockCancel).toHaveBeenCalledTimes(1)
-    await expect(p1).rejects.toThrow('JOB_CANCELLED')
+    await expect(p1).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+      name: 'JobCancelledError',
+    })
     expect(queue.getRunningJobs().length).toBe(1)
   })
 
@@ -64,7 +70,10 @@ describe('Queue cancellation', () => {
 
     queue.cancel('job-1', 'TEST')
 
-    await expect(p1).rejects.toThrow('JOB_CANCELLED')
+    await expect(p1).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+      name: 'JobCancelledError',
+    })
     expect(executor).toHaveBeenCalledTimes(1)
     expect(queue.getRunningJobs().length).toBe(1)
     expect(queue.getReadyJobs().length).toBe(1)
