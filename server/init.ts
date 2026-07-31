@@ -5,11 +5,13 @@ import Queue from './Queue'
 import config from './config'
 import type { FailureCacheEntry } from './types'
 
+interface WorkerPoolExecution extends Promise<unknown> {
+  cancel?: () => void
+  timeout(ms: number): WorkerPoolExecution
+}
+
 interface WorkerPoolLike {
-  exec(
-    method: string,
-    params: unknown[]
-  ): { timeout(ms: number): Promise<unknown> }
+  exec(method: string, params: unknown[]): WorkerPoolExecution
   terminate(): void
 }
 

@@ -1,9 +1,10 @@
+import AbortController from 'abort-controller'
 import axios from 'axios'
 
 import serializeError from '../build-service/serializeError'
 import CustomError from '../server/CustomError'
 import BuildService from '../server/api/BuildService'
-import { failureCache, requestQueue } from '../server/init'
+import { failureCache, pool, requestQueue } from '../server/init'
 import errorMiddleware from '../server/middlewares/results/error.middleware'
 
 jest.mock('../server/init', () => ({
@@ -28,6 +29,7 @@ jest.mock('../server/Logger', () => ({
 }))
 
 const mockedFailureCache = failureCache as jest.Mocked<typeof failureCache>
+const mockedPool = pool as jest.Mocked<typeof pool>
 const mockedRequestQueue = requestQueue as jest.Mocked<typeof requestQueue>
 
 describe('build service unavailability', () => {
@@ -60,9 +62,15 @@ describe('build service unavailability', () => {
 
     new BuildService()
     const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
+    const controller = new AbortController()
 
     await expect(
-      executor({ packageString: '@example/unavailable@1.0.0' })
+      executor(
+        { packageString: '@example/unavailable@1.0.0' },
+        {
+          signal: controller.signal as unknown as globalThis.AbortSignal,
+        }
+      )
     ).rejects.toMatchObject({
       name: 'BuildServiceUnavailableError',
       originalError: {
@@ -108,10 +116,79 @@ describe('build service unavailability', () => {
 
     new BuildService()
     const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
+    const controller = new AbortController()
 
     await expect(
-      executor({ packageString: '@example/internal-error@1.0.0' })
+      executor(
+        { packageString: '@example/internal-error@1.0.0' },
+        {
+          signal: controller.signal as unknown as globalThis.AbortSignal,
+        }
+      )
     ).rejects.toMatchObject(responseBody)
+  })
+
+  it('cancels an in-flight build-service request when its job aborts', async () => {
+    const controller = new AbortController()
+    jest.spyOn(axios, 'get').mockImplementation((_url, options) => {
+      return new Promise((_resolve, reject) => {
+        options?.signal?.addEventListener?.(
+          'abort',
+          () => reject(new axios.CanceledError()),
+          { once: true }
+        )
+      })
+    })
+
+    new BuildService()
+    const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
+    const result = executor(
+      { packageString: '@example/cancelled@1.0.0' },
+      {
+        signal: controller.signal as unknown as globalThis.AbortSignal,
+      }
+    )
+
+    controller.abort()
+
+    await expect(result).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+      name: 'JobCancelledError',
+    })
+    expect(axios.get).toHaveBeenCalledWith(
+      'http://127.0.0.1:7002/size?p=%40example%2Fcancelled%401.0.0',
+      expect.objectContaining({
+        signal: controller.signal,
+      })
+    )
+  })
+
+  it('cancels an in-process worker execution when its job aborts', async () => {
+    delete process.env.BUILD_SERVICE_ENDPOINT
+    const controller = new AbortController()
+    let rejectExecution: (error: Error) => void = () => {}
+    const execution = new Promise((_resolve, reject) => {
+      rejectExecution = reject
+    }) as ReturnType<typeof pool.exec>
+    execution.timeout = jest.fn().mockReturnValue(execution)
+    execution.cancel = jest.fn(() => {
+      rejectExecution(new Error('worker execution cancelled'))
+    })
+    mockedPool.exec.mockReturnValue(execution)
+
+    new BuildService()
+    const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
+    const result = executor(
+      { packageString: '@example/cancelled@1.0.0' },
+      {
+        signal: controller.signal as unknown as globalThis.AbortSignal,
+      }
+    )
+
+    controller.abort()
+
+    await expect(result).rejects.toThrow('worker execution cancelled')
+    expect(execution.cancel).toHaveBeenCalledTimes(1)
   })
 
   it('returns a retryable response without caching the failure', async () => {
