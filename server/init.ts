@@ -4,6 +4,7 @@ import logger from './Logger'
 import Queue from './Queue'
 import config from './config'
 import type { FailureCacheEntry } from './types'
+import { registerMetricsProvider } from './MemoryDiagnostics'
 
 interface WorkerPoolExecution extends Promise<unknown> {
   cancel?: () => void
@@ -20,6 +21,7 @@ interface WorkerpoolModule {
 }
 
 interface LruCacheInstance<K, V> {
+  itemCount: number
   get(key: K): V | undefined
   set(key: K, value: V): this
   del?(key: K): void
@@ -51,5 +53,10 @@ const pool = workerpool.pool('./server/worker.js', {
 if (process.env.BUILD_SERVICE_ENDPOINT) {
   pool.terminate()
 }
+
+registerMetricsProvider('main', () => ({
+  queue: requestQueue.getDiagnostics(),
+  failureCacheEntries: failureCache.itemCount,
+}))
 
 export { debug, failureCache, logger, pool, requestQueue }

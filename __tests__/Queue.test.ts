@@ -29,6 +29,13 @@ describe('Queue cancellation', () => {
 
     expect(queue.getReadyJobs().length).toBe(1)
     expect(queue.getRunningJobs().length).toBe(1)
+    expect(queue.getDiagnostics()).toEqual({
+      total: 2,
+      ready: 1,
+      running: 1,
+      successListeners: 2,
+      failureListeners: 2,
+    })
 
     queue.cancel('job-2', 'TEST')
 
