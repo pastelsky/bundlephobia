@@ -71,4 +71,29 @@ describe('build API error middleware', () => {
       body: responseBody,
     })
   })
+
+  it('labels a single mismatch suggestion as the latest version', async () => {
+    const ctx = {
+      body: undefined,
+      cacheControl: undefined,
+      query: {},
+      state: { id: 'request-id' },
+      status: undefined,
+    }
+
+    await errorHandler(ctx as never, async () => {
+      throw new CustomError('PackageVersionMismatchError', null, {
+        suggestedVersion: '19.1.1',
+      })
+    })
+
+    expect(ctx.status).toBe(404)
+    expect(ctx.body).toMatchObject({
+      error: {
+        code: 'PackageVersionMismatchError',
+        message:
+          'This package has not been published with this particular version. The latest version is `<code>19.1.1</code>`.',
+      },
+    })
+  })
 })

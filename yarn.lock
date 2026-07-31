@@ -5657,6 +5657,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/npm-package-arg@npm:6.1.4":
+  version: 6.1.4
+  resolution: "@types/npm-package-arg@npm:6.1.4"
+  checksum: aa881ce030580fcf7fa64c0e47171a7b2d6053253b6ee14c4fa1d779017a797f4865939cdcbd4095d8afc82b78c16532e67caea7aa7561a9c2a669a695121b36
+  languageName: node
+  linkType: hard
+
 "@types/parse-json@npm:^4.0.0":
   version: 4.0.0
   resolution: "@types/parse-json@npm:4.0.0"
@@ -7851,6 +7858,7 @@ __metadata:
     "@types/koa__router": "npm:^12.0.4"
     "@types/node": "npm:^24.0.0"
     "@types/node-fetch": "npm:^2.6.13"
+    "@types/npm-package-arg": "npm:6.1.4"
     "@types/progress-stream": "npm:^2"
     "@types/react": "npm:18.2.48"
     "@types/react-autocomplete": "npm:1.8.10"
@@ -7916,6 +7924,8 @@ __metadata:
     node-fetch: "npm:^2.7.0"
     nodemon: "npm:^2.0.22"
     normalize.css: "npm:^8.0.1"
+    npm-package-arg: "npm:^8.1.5"
+    npm-registry-fetch: "npm:^11.0.0"
     p-queue: "npm:^3.2.0"
     package-build-stats: "npm:9.1.0"
     pacote: "npm:^11.3.5"
@@ -18127,7 +18137,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"npm-package-arg@npm:^8.0.0, npm-package-arg@npm:^8.0.1, npm-package-arg@npm:^8.1.2":
+"npm-package-arg@npm:^8.0.0, npm-package-arg@npm:^8.0.1, npm-package-arg@npm:^8.1.2, npm-package-arg@npm:^8.1.5":
   version: 8.1.5
   resolution: "npm-package-arg@npm:8.1.5"
   dependencies:
