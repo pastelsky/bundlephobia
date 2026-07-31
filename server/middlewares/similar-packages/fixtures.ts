@@ -25,7 +25,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'construct', weight: Weight.MID },
       { tag: 'conditional', weight: Weight.MID },
     ],
-    similar: ['clsx', 'classnames', 'classcat', 'merge-class-names'],
+    similar: ['clsx', 'classnames', 'classcat', 'classix'],
   },
   clipboard: {
     name: 'Clipboard Utilities',
@@ -145,7 +145,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'fuzzy', weight: Weight.NORMAL },
       { tag: 'text', weight: Weight.NORMAL },
     ],
-    similar: ['flexsearch', 'lunr', 'wade', 'js-search', 'fuse.js'],
+    similar: ['minisearch', 'flexsearch', 'fuse.js', 'lunr'],
   },
   'fetch-polyfill': {
     name: 'Fetch polyfills',
@@ -176,7 +176,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'webgl', weight: Weight.MAX },
       { tag: 'gl', weight: Weight.HIGH },
     ],
-    similar: ['three', 'babylonjs'],
+    similar: ['ogl', 'three', 'babylonjs'],
   },
   'general-purpose-animation': {
     name: 'General purpose animation libraries',
@@ -268,7 +268,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'xhr', weight: Weight.NORMAL },
       { tag: 'node node.js', weight: Weight.NORMAL },
     ],
-    similar: ['got', 'phin', 'axios', 'node-fetch', 'superagent'],
+    similar: ['wretch', 'ofetch', 'axios', 'got'],
   },
   'browser-http-request': {
     name: 'HTTP client libraries for Browser',
@@ -493,7 +493,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'check', weight: Weight.SMALL },
       { tag: 'structure', weight: Weight.MID },
     ],
-    similar: ['jsonschema', 'joi', 'ajv', 'superstruct', 'yup', 'zod'],
+    similar: ['jsonschema', 'valibot', 'ajv', 'superstruct', 'yup', 'zod'],
   },
   'querystring-parser': {
     name: 'Query String Parsers',
@@ -518,7 +518,7 @@ const categories: Record<string, CategoryDefinition> = {
         weight: Weight.NORMAL,
       },
     ],
-    similar: ['slate', 'quill', 'draft-js', 'medium-editor', 'froala-editor'],
+    similar: ['lexical', 'slate', 'quill', 'froala-editor'],
   },
   'site-tour': {
     name: 'Site Tours',
