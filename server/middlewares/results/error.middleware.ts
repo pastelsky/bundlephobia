@@ -26,6 +26,19 @@ interface BuildErrorShape extends Error {
   }
 }
 
+interface ClientHttpError extends Error {
+  status: number
+}
+
+function isClientHttpError(error: Error): error is ClientHttpError {
+  if (!('status' in error) || typeof error.status !== 'number') {
+    return false
+  }
+  return (
+    Number.isInteger(error.status) && error.status >= 400 && error.status < 500
+  )
+}
+
 function formatSentence(values: string[]): string {
   if (values.length === 0) {
     return ''
@@ -42,6 +55,7 @@ function formatSentence(values: string[]): string {
 const errorHandler: Middleware = async (ctx, next) => {
   const { force } = ctx.query
   const start = now()
+  const packageString = ctx.state.resolved?.packageString
 
   const respondWithError = (
     status: number,
@@ -69,7 +83,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         ...ctx.state.resolved,
         details,
       },
-      `${code} ${ctx.state.resolved.packageString}`
+      packageString ? `${code} ${packageString}` : code
     )
   }
 
@@ -107,8 +121,15 @@ const errorHandler: Middleware = async (ctx, next) => {
       return
     }
 
+    if (isClientHttpError(error)) {
+      respondWithError(error.status, {
+        code: error.name,
+        message: error.message,
+      })
+      return
+    }
+
     const err = error as BuildErrorShape
-    const packageString = ctx.state.resolved.packageString
 
     switch (err.name) {
       case 'BuildServiceError':
