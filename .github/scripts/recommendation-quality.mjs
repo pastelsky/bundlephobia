@@ -30,7 +30,6 @@ export function extractIssueFormAnswers(body = '') {
       answers.get('Alternative npm packages') ??
       answers.get('Alternative package or category') ??
       cleanIssueAnswer(legacyAlternative?.[1]),
-    overlap: answers.get('Functional overlap') ?? '',
     advantage: answers.get('Why is this a better alternative?') ?? '',
   }
 }
@@ -221,9 +220,6 @@ export function evaluateRecommendation(signals, answers = {}) {
     notes.push(
       `No activity was found in the last ${RECENT_ACTIVITY_DAYS} days and the latest release is not a stable 1.x-or-newer version.`
     )
-  }
-  if (answers.overlap !== undefined && answers.overlap.trim().length < 40) {
-    notes.push('The functional-overlap explanation needs more detail.')
   }
   if (answers.advantage !== undefined && answers.advantage.trim().length < 40) {
     notes.push('The relative-advantage explanation needs more detail.')

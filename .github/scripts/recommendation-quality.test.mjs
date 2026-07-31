@@ -19,17 +19,13 @@ test('extracts required answers from a GitHub issue form body', () => {
 
 date-fns
 
-### Bundlephobia category
+### Package category name
 
 General purpose date-time utilities
 
 ### Alternative npm packages
 
 moment
-
-### Functional overlap
-
-Both packages parse, format, and manipulate dates in browser applications.
 
 ### Why is this a better alternative?
 
@@ -144,10 +140,7 @@ test('collects objective npm and GitHub quality signals', async () => {
 })
 
 test('blocks authoritative failures but keeps incomplete signals advisory', () => {
-  const missing = evaluateRecommendation(
-    { exists: false },
-    { overlap: '', advantage: '' }
-  )
+  const missing = evaluateRecommendation({ exists: false }, { advantage: '' })
   assert.equal(missing.status, 'invalid')
   assert.equal(missing.errors.length, 1)
 
@@ -160,7 +153,6 @@ test('blocks authoritative failures but keeps incomplete signals advisory', () =
       activeOrStable: true,
     },
     {
-      overlap: 'Same thing',
       advantage: 'Smaller',
     }
   )

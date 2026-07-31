@@ -23,8 +23,8 @@ body:
   - type: input
     id: category
     attributes:
-      label: Bundlephobia category
-      description: Which existing category should contain this package? Propose a concise category name if none fits.
+      label: Package category name
+      description: Use a category name from [the supported package categories](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/server/middlewares/similar-packages/fixtures.ts), or propose a concise name if none fits.
       placeholder: 'For example: General purpose date-time utilities'
     validations:
       required: true
@@ -35,15 +35,6 @@ body:
       label: Alternative npm packages
       description: Enter exact npm package names, separated by commas. The automation compares their minified and gzipped sizes.
       placeholder: 'For example: moment, luxon'
-    validations:
-      required: true
-
-  - type: textarea
-    id: overlap
-    attributes:
-      label: Functional overlap
-      description: Describe the concrete use cases that both packages support. Links to documentation or comparisons are helpful.
-      placeholder: 'Both packages can...'
     validations:
       required: true
 
@@ -74,6 +65,4 @@ body:
       label: Submission checklist
       options:
         - label: I searched existing recommendations and issues for duplicates.
-          required: true
-        - label: I understand that automated checks provide evidence but do not guarantee acceptance.
           required: true
