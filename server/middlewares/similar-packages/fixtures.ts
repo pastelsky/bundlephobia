@@ -566,6 +566,42 @@ const categories: Record<string, CategoryDefinition> = {
     ],
     similar: ['recharts', 'react-chartjs-2', 'victory'],
   },
+  'react-inline-svg': {
+    name: 'React inline SVG loaders',
+    tags: [
+      { tag: 'react', weight: Weight.HIGH },
+      { tag: 'svg', weight: Weight.MAX },
+      { tag: 'inline', weight: Weight.MAX },
+      { tag: 'inject', weight: Weight.HIGH },
+      { tag: 'loader', weight: Weight.NORMAL },
+    ],
+    similar: ['react-inlinesvg', 'react-svg'],
+  },
+  'react-native-charting': {
+    name: 'React Native charting components',
+    tags: [
+      { tag: 'react native', weight: Weight.MAX },
+      { tag: 'chart', weight: Weight.MAX },
+      { tag: 'visualization', weight: Weight.HIGH },
+      { tag: 'mobile', weight: Weight.NORMAL },
+    ],
+    similar: [
+      'victory-native',
+      'react-native-gifted-charts',
+      'react-native-chart-kit',
+    ],
+  },
+  'react-range-slider': {
+    name: 'React range slider components',
+    tags: [
+      { tag: 'react', weight: Weight.HIGH },
+      { tag: 'range', weight: Weight.HIGH },
+      { tag: 'slider', weight: Weight.MAX },
+      { tag: 'input', weight: Weight.HIGH },
+      { tag: 'handle', weight: Weight.MID },
+    ],
+    similar: ['rc-slider', 'react-range', 'react-slider'],
+  },
   'react-tooltip': {
     name: 'React tooltip components',
     tags: [
