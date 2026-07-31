@@ -169,6 +169,30 @@ const categories: Record<string, CategoryDefinition> = {
     ],
     similar: ['read-excel-file', 'xlsx', 'exceljs'],
   },
+  'excel-export-browser': {
+    name: 'Browser spreadsheet export',
+    tags: [
+      { tag: 'export', weight: Weight.MAX },
+      { tag: 'excel', weight: Weight.HIGH },
+      { tag: 'spreadsheet', weight: Weight.HIGH },
+      { tag: 'xlsx', weight: Weight.HIGH },
+      { tag: 'csv', weight: Weight.MID },
+      { tag: 'browser', weight: Weight.NORMAL },
+      { tag: 'table', weight: Weight.NORMAL },
+    ],
+    similar: ['excellentexport', 'write-excel-file', 'export-from-json'],
+  },
+  'finite-state-machine': {
+    name: 'Finite state machine libraries',
+    tags: [
+      { tag: 'state machine', weight: Weight.MAX },
+      { tag: 'finite state', weight: Weight.HIGH },
+      { tag: 'statechart', weight: Weight.HIGH },
+      { tag: 'fsm', weight: Weight.HIGH },
+      { tag: 'actor', weight: Weight.MID },
+    ],
+    similar: ['robot3', 'xstate', '@zag-js/core'],
+  },
   'full-text-search': {
     name: 'Text search',
     tags: [
@@ -530,6 +554,17 @@ const categories: Record<string, CategoryDefinition> = {
       'formsy-react',
       'react-hook-form',
     ],
+  },
+  'react-charting': {
+    name: 'React charting components',
+    tags: [
+      { tag: 'react', weight: Weight.HIGH },
+      { tag: 'chart', weight: Weight.MAX },
+      { tag: 'visualization', weight: Weight.HIGH },
+      { tag: 'dataviz', weight: Weight.HIGH },
+      { tag: 'svg', weight: Weight.MID },
+    ],
+    similar: ['recharts', 'react-chartjs-2', 'victory'],
   },
   'react-tooltip': {
     name: 'React tooltip components',
