@@ -108,7 +108,13 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'compare', weight: Weight.NORMAL },
       { tag: 'isequal', weight: Weight.HIGH },
     ],
-    similar: ['dequal', 'fast-deep-equal', 'deep-eql', 'deep-equal'],
+    similar: [
+      'dequal',
+      'fast-deep-equal',
+      '@gilbarbara/deep-equal',
+      'deep-eql',
+      'deep-equal',
+    ],
   },
   'drag-and-drop': {
     name: 'Drag & Drop Libraries',
@@ -526,14 +532,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'check', weight: Weight.SMALL },
       { tag: 'structure', weight: Weight.MID },
     ],
-    similar: [
-      '@sinclair/typebox',
-      'valibot',
-      'ajv',
-      'jsonschema',
-      'yup',
-      'zod',
-    ],
+    similar: ['@sinclair/typebox', 'valibot', 'ajv', 'yup', 'zod'],
   },
   'querystring-parser': {
     name: 'Query String Parsers',
