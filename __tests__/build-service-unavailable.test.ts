@@ -130,6 +130,7 @@ describe('build service unavailability', () => {
   })
 
   it('identifies a structured internal build-service error', async () => {
+    const onComplete = jest.fn()
     const responseBody = serializeError(
       Object.assign(new Error('disk full'), { code: 'ENOSPC' })
     )
@@ -145,12 +146,40 @@ describe('build service unavailability', () => {
 
     await expect(
       executor(
-        { packageString: '@example/internal-error@1.0.0' },
+        {
+          packageString: '@example/internal-error@1.0.0',
+          onComplete,
+        },
         {
           signal: controller.signal as unknown as globalThis.AbortSignal,
         }
       )
     ).rejects.toMatchObject(responseBody)
+    expect(onComplete).toHaveBeenCalledWith(expect.any(Number))
+  })
+
+  it('reports measured duration from a successful build-service response', async () => {
+    const onComplete = jest.fn()
+    jest.spyOn(axios, 'get').mockResolvedValue({
+      data: { size: 123 },
+    })
+
+    new BuildService()
+    const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
+    const controller = new AbortController()
+
+    await expect(
+      executor(
+        {
+          packageString: '@example/success@1.0.0',
+          onComplete,
+        },
+        {
+          signal: controller.signal as unknown as globalThis.AbortSignal,
+        }
+      )
+    ).resolves.toEqual({ size: 123 })
+    expect(onComplete).toHaveBeenCalledWith(expect.any(Number))
   })
 
   it('cancels an in-flight build-service request when its job aborts', async () => {
