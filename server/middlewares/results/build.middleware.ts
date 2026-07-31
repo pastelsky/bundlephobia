@@ -6,7 +6,7 @@ import Cache from '../../../utils/cache.utils'
 import firebaseUtils from '../../../utils/firebase.utils'
 import { parsePackageString } from '../../../utils/common.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
-import BuildService from '../../api/BuildService'
+import BuildService, { BUILD_DURATION_HEADER } from '../../api/BuildService'
 import config from '../../config'
 import logger from '../../Logger'
 import type { PackageBuildResult } from '../../types'
@@ -46,7 +46,12 @@ const buildMiddleware: Middleware = async ctx => {
     result = await buildService.getPackageBuildStats<PackageBuildResult>(
       packageString,
       priority,
-      abortController.signal
+      {
+        signal: abortController.signal,
+        onComplete: durationMs => {
+          ctx.set(BUILD_DURATION_HEADER, String(durationMs))
+        },
+      }
     )
   } finally {
     ctx.res.off('close', onAborted)

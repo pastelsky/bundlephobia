@@ -19,7 +19,15 @@ type OperationType = (typeof OperationType)[keyof typeof OperationType]
 
 interface BuildServiceJobParams {
   packageString: string
+  onComplete?: (durationMs: number) => void
 }
+
+interface BuildRequestOptions {
+  signal?: AbortSignal
+  onComplete?: (durationMs: number) => void
+}
+
+export const BUILD_DURATION_HEADER = 'x-bundlephobia-build-duration-ms'
 
 interface BuildServerErrorPayload {
   name?: string
@@ -50,7 +58,8 @@ export default class BuildService {
     operations.forEach(operation => {
       requestQueue.addExecutor<BuildServiceJobParams, unknown>(
         operation.type,
-        async ({ packageString }, { signal }) => {
+        async ({ packageString, onComplete }, { signal }) => {
+          const startedAt = performance.now()
           if (process.env.BUILD_SERVICE_ENDPOINT) {
             try {
               const response = await axios.get(
@@ -68,6 +77,10 @@ export default class BuildService {
                 throw new JobCancelledError()
               }
               this.handleError(error, operation.type)
+            } finally {
+              onComplete?.(
+                Math.max(1, Math.ceil(performance.now() - startedAt))
+              )
             }
           }
 
@@ -79,6 +92,7 @@ export default class BuildService {
           try {
             return await execution
           } finally {
+            onComplete?.(Math.max(1, Math.ceil(performance.now() - startedAt)))
             signal.removeEventListener('abort', cancelExecution)
           }
         }
@@ -121,36 +135,47 @@ export default class BuildService {
   async getPackageBuildStats<T>(
     packageString: string,
     priority: number,
-    signal?: AbortSignal
+    options: BuildRequestOptions = {}
   ): Promise<T> {
     return requestQueue.process<T, BuildServiceJobParams>(
       packageString,
       OperationType.PACKAGE_BUILD_STATS,
-      { packageString },
-      { priority, signal }
+      {
+        packageString,
+        onComplete: options.onComplete,
+      },
+      { priority, signal: options.signal }
     )
   }
 
   async getPackageExports<T>(
     packageString: string,
-    priority: number
+    priority: number,
+    options: BuildRequestOptions = {}
   ): Promise<T> {
     return requestQueue.process<T, BuildServiceJobParams>(
       packageString,
       OperationType.PACKAGE_EXPORTS,
-      { packageString },
+      {
+        packageString,
+        onComplete: options.onComplete,
+      },
       { priority }
     )
   }
 
   async getPackageExportSizes<T>(
     packageString: string,
-    priority: number
+    priority: number,
+    options: BuildRequestOptions = {}
   ): Promise<T> {
     return requestQueue.process<T, BuildServiceJobParams>(
       packageString,
       OperationType.PACKAGE_EXPORTS_SIZES,
-      { packageString },
+      {
+        packageString,
+        onComplete: options.onComplete,
+      },
       { priority }
     )
   }

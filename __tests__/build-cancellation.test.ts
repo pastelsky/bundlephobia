@@ -37,14 +37,18 @@ function createContext() {
   const response = Object.assign(new EventEmitter(), {
     writableEnded: false,
   })
+  const headers: Record<string, string> = {}
   return {
     context: {
       body: undefined,
       cacheControl: undefined,
-      headers: {},
+      headers,
       query: {},
       req: request,
       res: response,
+      set: jest.fn((name: string, value: string) => {
+        headers[name] = value
+      }),
       state: {
         id: 'request-id',
         resolved: {
@@ -81,10 +85,10 @@ describe('build request cancellation', () => {
   it('aborts a build only when the response closes prematurely', async () => {
     let buildSignal: AbortSignal | undefined
     mockGetPackageBuildStats.mockImplementation(
-      (_packageString, _priority, signal: AbortSignal) => {
-        buildSignal = signal
+      (_packageString, _priority, options: { signal: AbortSignal }) => {
+        buildSignal = options.signal
         return new Promise((_resolve, reject) => {
-          signal.addEventListener(
+          options.signal.addEventListener(
             'abort',
             () => reject(new JobCancelledError()),
             { once: true }
@@ -117,8 +121,8 @@ describe('build request cancellation', () => {
     let buildSignal: AbortSignal | undefined
     let resolveBuild: (result: { size: number }) => void = () => {}
     mockGetPackageBuildStats.mockImplementation(
-      (_packageString, _priority, signal: AbortSignal) => {
-        buildSignal = signal
+      (_packageString, _priority, options: { signal: AbortSignal }) => {
+        buildSignal = options.signal
         return new Promise(resolve => {
           resolveBuild = resolve
         })
@@ -147,5 +151,23 @@ describe('build request cancellation', () => {
       expect.anything(),
       expect.anything()
     )
+  })
+
+  it('sets the measured build duration for the proxy', async () => {
+    mockGetPackageBuildStats.mockImplementation(
+      (
+        _packageString,
+        _priority,
+        options: { onComplete: (durationMs: number) => void }
+      ) => {
+        options.onComplete(321)
+        return Promise.resolve({ size: 123 })
+      }
+    )
+    const { context } = createContext()
+
+    await buildMiddleware(context as never, jest.fn())
+
+    expect(context.headers['x-bundlephobia-build-duration-ms']).toBe('321')
   })
 })

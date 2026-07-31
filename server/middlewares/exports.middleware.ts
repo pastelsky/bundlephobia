@@ -4,7 +4,7 @@ import semver from 'semver'
 
 import { parsePackageString } from '../../utils/common.utils'
 import { getRequestPriority } from '../../utils/server.utils'
-import BuildService from '../api/BuildService'
+import BuildService, { BUILD_DURATION_HEADER } from '../api/BuildService'
 import config from '../config'
 import logger from '../Logger'
 import type { PackageExportsResult } from '../types'
@@ -21,7 +21,12 @@ const exportsMiddleware: Middleware = async ctx => {
   const buildStart = now()
   const result = await buildService.getPackageExports<PackageExportsResult>(
     packageString,
-    priority
+    priority,
+    {
+      onComplete: durationMs => {
+        ctx.set(BUILD_DURATION_HEADER, String(durationMs))
+      },
+    }
   )
   const buildEnd = now()
 
