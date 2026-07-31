@@ -220,7 +220,7 @@ ${
     ? `### Follow-up needed\n\n${findings
         .map(finding => `- ${finding}`)
         .join('\n')}`
-    : 'The objective checks passed. A maintainer still needs to verify functional overlap and whether this improves the category.'
+    : 'The objective checks passed. A maintainer still needs to verify category fit and whether this improves the recommendations.'
 }
 
 _Thresholds: at least 1,000 weekly npm downloads or 100 GitHub stars; maintenance is indicated by activity in the last two years or a stable 1.x-or-newer release. These are triage signals, not automatic acceptance._`
