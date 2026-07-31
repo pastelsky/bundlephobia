@@ -143,15 +143,14 @@ const categories: Record<string, CategoryDefinition> = {
     ],
   },
   'excel-parsers': {
-    name: 'Excel File Readers, Manipulators & Writers',
+    name: 'Excel file readers',
     tags: [
-      { tag: 'excel', weight: Weight.MAX },
-      { tag: 'read', weight: Weight.SMALL },
-      { tag: 'write', weight: Weight.SMALL },
-      { tag: 'manipulate', weight: Weight.SMALL },
-      { tag: 'parse', weight: Weight.SMALL },
+      { tag: 'excel', weight: Weight.HIGH },
+      { tag: 'read', weight: Weight.NORMAL },
+      { tag: 'parse', weight: Weight.NORMAL },
+      { tag: 'import', weight: Weight.MID },
     ],
-    similar: ['read-excel-file', 'xlsx', 'exceljs', 'node-xlsx', 'excel4node'],
+    similar: ['read-excel-file', 'xlsx', 'exceljs'],
   },
   'full-text-search': {
     name: 'Text search',
@@ -325,13 +324,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'palette', weight: Weight.HIGH },
       { tag: 'pixels', weight: Weight.MID },
     ],
-    similar: [
-      'extract-colors',
-      'img-color-extractor',
-      'color-thief-browser',
-      'colority',
-      'node-vibrant',
-    ],
+    similar: ['extract-colors', 'node-vibrant'],
   },
   'immutable-data-structures': {
     name: 'Immutable Data',
@@ -345,13 +338,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'freeze', weight: Weight.MID },
       { tag: 'cursor', weight: Weight.MID },
     ],
-    similar: [
-      'immer',
-      'immutable',
-      'seamless-immutable',
-      'immutability-helper',
-      'baobab',
-    ],
+    similar: ['immer', 'immutable', 'immutability-helper'],
   },
   'lazy-load-content': {
     name: 'Lazy Loading Content',
@@ -375,7 +362,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'abstract syntax tree', weight: Weight.MID },
       { tag: 'md', weight: Weight.HIGH },
     ],
-    similar: ['marked', 'markdown-it', 'showdown', 'remarkable', 'snarkdown'],
+    similar: ['marked', 'markdown-it', 'showdown'],
   },
   memoization: {
     name: 'Memoization',
@@ -457,17 +444,11 @@ const categories: Record<string, CategoryDefinition> = {
   'react-animation': {
     name: 'React based animation',
     tags: [
-      { tag: 'react', weight: Weight.NORMAL },
       { tag: 'animation', weight: Weight.HIGH },
       { tag: 'transform', weight: Weight.NORMAL },
       { tag: 'motion', weight: Weight.NORMAL },
     ],
-    similar: [
-      'react-spring',
-      'framer-motion',
-      'react-transition-group',
-      'react-motion',
-    ],
+    similar: ['react-spring', 'framer-motion'],
   },
   'react-autocomplete': {
     name: 'React based autocomplete components',
@@ -477,13 +458,7 @@ const categories: Record<string, CategoryDefinition> = {
       { tag: 'autosuggest', weight: Weight.NORMAL },
       { tag: 'typeahead', weight: Weight.NORMAL },
     ],
-    similar: [
-      'react-autosuggest',
-      'downshift',
-      'react-autowhatever',
-      'react-autocomplete',
-      'react-select',
-    ],
+    similar: ['react-autosuggest', 'downshift', 'react-select'],
   },
   'react-head-meta': {
     name: 'React based meta tags management',
@@ -540,7 +515,7 @@ const categories: Record<string, CategoryDefinition> = {
     ],
   },
   'schema-validation': {
-    name: 'JSON schema validation',
+    name: 'Runtime schema validation',
     tags: [
       { tag: 'JSON', weight: Weight.MID },
       { tag: 'object', weight: Weight.MID },
@@ -625,8 +600,8 @@ const categories: Record<string, CategoryDefinition> = {
       'embla-carousel',
       'keen-slider',
       'swiper',
+      '@glidejs/glide',
       'slick-carousel',
-      'tiny-slider',
     ],
   },
   templating: {
