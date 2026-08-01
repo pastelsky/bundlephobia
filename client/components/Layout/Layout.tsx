@@ -19,11 +19,13 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
   }
 
   componentDidMount() {
-    API.getRecentSearches(5).then(searches => {
-      this.setState({
-        recentSearches: Object.keys(searches),
+    API.getRecentSearches(5)
+      .then(searches => {
+        this.setState({
+          recentSearches: Object.keys(searches),
+        })
       })
-    })
+      .catch(() => undefined)
   }
 
   render() {
