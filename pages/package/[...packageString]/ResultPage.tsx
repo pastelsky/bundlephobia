@@ -159,7 +159,11 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
           },
           () => {
             this.activeQuery = newPackageString
-            Router.replace(`/package/${newPackageString}`)
+            if (
+              getPackageStringFromRouter(this.props.router) !== newPackageString
+            ) {
+              Router.replace(`/package/${newPackageString}`)
+            }
           }
         )
 
@@ -261,7 +265,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         if (!this.isActiveSearch(requestId)) return
 
         this.activeQuery = normalizedQuery
-        Router.push(`/package/${normalizedQuery}`)
+        if (getPackageStringFromRouter(this.props.router) !== normalizedQuery) {
+          Router.push(`/package/${normalizedQuery}`)
+        }
         Analytics.pageView('package result')
         this.fetchResults(normalizedQuery, requestId)
         this.fetchHistory(normalizedQuery, requestId)
