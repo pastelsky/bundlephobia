@@ -265,12 +265,18 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         if (!this.isActiveSearch(requestId)) return
 
         this.activeQuery = normalizedQuery
-        if (getPackageStringFromRouter(this.props.router) !== normalizedQuery) {
-          Router.push(`/package/${normalizedQuery}`)
-        }
-        Analytics.pageView('package result')
-        this.fetchResults(normalizedQuery, requestId)
-        this.fetchHistory(normalizedQuery, requestId)
+        const navigation =
+          getPackageStringFromRouter(this.props.router) !== normalizedQuery
+            ? Router.push(`/package/${normalizedQuery}`)
+            : Promise.resolve(true)
+
+        navigation.then(() => {
+          if (!this.isActiveSearch(requestId)) return
+
+          Analytics.pageView('package result')
+          this.fetchResults(normalizedQuery, requestId)
+          this.fetchHistory(normalizedQuery, requestId)
+        })
       }
     )
   }
