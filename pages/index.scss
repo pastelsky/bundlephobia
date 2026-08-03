@@ -14,6 +14,18 @@
   align-items: center;
   max-width: 100%;
   height: calc(100vh - 90px);
+
+  // Preserve the vertical position created by the former inline ad slot.
+  &::after {
+    content: '';
+    flex: 0 0 calc(102px + 10vh);
+  }
+
+  @media screen and (max-width: 40em) {
+    &::after {
+      flex-basis: calc(102px + 7vh);
+    }
+  }
 }
 
 .homepage__tagline {
@@ -120,7 +132,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  position: fixed;
+  position: absolute;
   right: $global-spacing * 2;
   bottom: $global-spacing * 2;
   width: min($global-spacing * 36, calc(100vw - #{$global-spacing * 4}));
