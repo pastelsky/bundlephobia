@@ -1,0 +1,256 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Bundlephobia API",
+    "description": "Read-only APIs for the cost of adding an npm package to a frontend bundle. Sizes are produced by building the package with a real bundler, so a first request for an uncached package version may take several seconds while the build runs.\n\nNo authentication. Requests are rate limited per IP, and requests that trigger a fresh build are limited more tightly than requests served from cache.",
+    "version": "1.0.0",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    },
+    "externalDocs": {
+      "url": "https://github.com/pastelsky/bundlephobia#readme"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://bundlephobia.com"
+    }
+  ],
+  "tags": [
+    { "name": "size", "description": "Bundle size of a package and its exports" },
+    { "name": "discovery", "description": "Finding and comparing packages" }
+  ],
+  "paths": {
+    "/api/size": {
+      "get": {
+        "operationId": "getPackageSize",
+        "tags": ["size"],
+        "summary": "Minified and gzipped size of an npm package",
+        "parameters": [{ "$ref": "#/components/parameters/package" }],
+        "responses": {
+          "200": {
+            "description": "Build result for the resolved package version.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PackageBuild" }
+              }
+            }
+          },
+          "422": { "$ref": "#/components/responses/BuildError" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/exports": {
+      "get": {
+        "operationId": "getPackageExports",
+        "tags": ["size"],
+        "summary": "Named exports of an npm package",
+        "parameters": [{ "$ref": "#/components/parameters/package" }],
+        "responses": {
+          "200": {
+            "description": "Map of export name to the resolved file that provides it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": { "type": "string" }
+                }
+              }
+            }
+          },
+          "422": { "$ref": "#/components/responses/BuildError" }
+        }
+      }
+    },
+    "/api/exports-sizes": {
+      "get": {
+        "operationId": "getExportSizes",
+        "tags": ["size"],
+        "summary": "Size of each named export, for judging tree-shaking",
+        "parameters": [{ "$ref": "#/components/parameters/package" }],
+        "responses": {
+          "200": {
+            "description": "One entry per export.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ExportAsset" }
+                }
+              }
+            }
+          },
+          "422": { "$ref": "#/components/responses/BuildError" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/package-history": {
+      "get": {
+        "operationId": "getPackageHistory",
+        "tags": ["size"],
+        "summary": "Size across published versions of a package",
+        "description": "Any version parameter in `package` is ignored; the whole known history for the package name is returned. Entries are partial, since a version is only present once it has been built.",
+        "parameters": [{ "$ref": "#/components/parameters/package" }],
+        "responses": {
+          "200": {
+            "description": "Map of version string to a partial build result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/PackageBuild"
+                  }
+                }
+              }
+            }
+          },
+          "422": { "$ref": "#/components/responses/BuildError" }
+        }
+      }
+    },
+    "/api/similar-packages": {
+      "get": {
+        "operationId": "getSimilarPackages",
+        "tags": ["discovery"],
+        "summary": "Packages that serve a similar purpose",
+        "parameters": [{ "$ref": "#/components/parameters/package" }],
+        "responses": {
+          "200": {
+            "description": "Suggested alternatives to the given package.",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "422": { "$ref": "#/components/responses/BuildError" }
+        }
+      }
+    },
+    "/api/recent": {
+      "get": {
+        "operationId": "getRecentSearches",
+        "tags": ["discovery"],
+        "summary": "Recently looked up packages",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of entries to return.",
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recently requested packages.",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "type": "object" } } } }
+          },
+          "422": { "$ref": "#/components/responses/BuildError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "package": {
+        "name": "package",
+        "in": "query",
+        "required": true,
+        "description": "Package name, optionally with a semver version or range, for example `react`, `react@18.2.0` or `@tanstack/react-query`.",
+        "schema": { "type": "string" },
+        "examples": {
+          "unscoped": { "value": "react" },
+          "pinned": { "value": "react@18.2.0" },
+          "scoped": { "value": "@tanstack/react-query" }
+        }
+      }
+    },
+    "schemas": {
+      "PackageBuild": {
+        "type": "object",
+        "description": "Result of bundling a single resolved package version.",
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "description": { "type": "string" },
+          "repository": { "type": "string" },
+          "size": {
+            "type": "integer",
+            "description": "Minified size in bytes."
+          },
+          "gzip": {
+            "type": "integer",
+            "description": "Minified and gzipped size in bytes."
+          },
+          "dependencyCount": { "type": "integer" },
+          "hasSideEffects": {
+            "description": "`false` for none, `true` when unknown, or the specific files declaring side effects.",
+            "oneOf": [
+              { "type": "boolean" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          },
+          "hasJSModule": { "type": "boolean" },
+          "hasJSNext": { "type": "boolean" },
+          "isModuleType": {
+            "type": "boolean",
+            "description": "Whether the package declares `\"type\": \"module\"`."
+          },
+          "ignoredMissingDependencies": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "dependencySizes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DependencySize" }
+          }
+        }
+      },
+      "DependencySize": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "approximateSize": {
+            "type": "integer",
+            "description": "Approximate contribution to the bundle, in bytes."
+          }
+        }
+      },
+      "ExportAsset": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "gzip": {
+            "type": "integer",
+            "description": "Minified and gzipped size in bytes."
+          },
+          "type": { "type": "string" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Error class, for example `PackageNotFoundError` or `BuildError`."
+          },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "BuildError": {
+        "description": "The package could not be resolved or built.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Too many requests that require a fresh build. Retry later, or request a package version that is already cached."
+      }
+    }
+  }
+}
