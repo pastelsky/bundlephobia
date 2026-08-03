@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Analytics from '../client/analytics'
 import { AutocompleteInput } from '../client/components/AutocompleteInput'
 import AutocompleteInputBox from '../client/components/AutocompleteInputBox/AutocompleteInputBox'
+import CarbonAd from '../client/components/CarbonAd'
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
@@ -97,28 +98,9 @@ const Logo = () => (
 
 const Home = () => {
   const router = useRouter()
-  const carbonAdRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
     Analytics.pageView('home')
-  }, [])
-
-  React.useEffect(() => {
-    const container = carbonAdRef.current
-    if (!container) return
-
-    const script = document.createElement('script')
-    script.async = true
-    script.type = 'text/javascript'
-    script.src =
-      '//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=cover'
-    script.id = '_carbonads_js'
-    container.appendChild(script)
-
-    return () => {
-      container.querySelector('#carbonads')?.remove()
-      script.remove()
-    }
   }, [])
 
   const handleSearchSubmit = (value: string) => {
@@ -162,7 +144,7 @@ const Home = () => {
               <sup>beta</sup>
             </Link>
           </div>
-          <div ref={carbonAdRef} className="homepage__carbon-ad" />
+          <CarbonAd className="homepage__carbon-ad" />
         </div>
       </div>
     </Layout>

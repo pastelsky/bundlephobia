@@ -138,6 +138,16 @@
   animation: fade-in-full 0.2s;
 }
 
+.result-page__carbon-ad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min($global-spacing * 36, calc(100% - #{$global-spacing * 4}));
+  min-height: 280px;
+  margin: 4vh auto;
+}
+
 .result-pending,
 .result-error {
   min-height: 75vh;

@@ -14,6 +14,7 @@ import AutocompleteInputBox from '../../../client/components/AutocompleteInputBo
 import BarGraph from '../../../client/components/BarGraph'
 import { type Reading } from '../../../client/components/BarGraph/BarGraph'
 import BuildProgressIndicator from '../../../client/components/BuildProgressIndicator'
+import CarbonAd from '../../../client/components/CarbonAd'
 import MetaTags, {
   DEFAULT_DESCRIPTION_START,
 } from '../../../client/components/MetaTags'
@@ -571,6 +572,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
             <div className="content-container">
               <ExportAnalysisSection result={results} />
             </div>
+          )}
+
+          {resultsPromiseState === 'fulfilled' && results && (
+            <CarbonAd className="result-page__carbon-ad" />
           )}
 
           {resultsPromiseState === 'fulfilled' &&
