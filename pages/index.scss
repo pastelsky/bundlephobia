@@ -116,31 +116,11 @@
   }
 }
 
-.homepage__ethical-ad {
-  --ea-bgcolor: transparent;
-  --ea-bgcolor-dark: transparent;
-  --ea-font-family: #{$font-family-body};
-  --ea-font-size: 12px;
-
+.homepage__carbon-ad {
   width: min(32rem, 100%);
-  min-height: 102px;
+  min-height: 155px;
   margin-top: 5vh;
   margin-bottom: 5vh;
-  color: var(--color-text-muted);
-
-  &.loaded {
-    .ea-content {
-      margin: 0;
-      padding: $global-spacing;
-      text-align: center;
-    }
-
-    .ea-callout {
-      margin: $global-spacing * 0.5 0 0;
-      padding: 0;
-      text-align: center;
-    }
-  }
 
   @media screen and (max-width: 40em) {
     margin-top: 4vh;

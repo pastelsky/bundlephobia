@@ -1,7 +1,6 @@
 import React from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import Script from 'next/script'
 
 import Analytics from '../client/analytics'
 import { AutocompleteInput } from '../client/components/AutocompleteInput'
@@ -96,16 +95,6 @@ const Logo = () => (
   </svg>
 )
 
-const loadEthicalAd = () => {
-  const ethicalads = (
-    window as typeof window & {
-      ethicalads?: { load: () => void }
-    }
-  ).ethicalads
-
-  ethicalads?.load()
-}
-
 const Home = () => {
   const router = useRouter()
 
@@ -125,12 +114,6 @@ const Home = () => {
       <MetaTags
         title="Bundlephobia | Size of npm dependencies"
         canonicalPath=""
-      />
-      <Script
-        id="ethicalads-client"
-        src="https://media.ethicalads.io/media/client/ethicalads.min.js"
-        strategy="afterInteractive"
-        onReady={loadEthicalAd}
       />
       <div className="homepage__container">
         <PageNav minimal={true} />
@@ -160,14 +143,14 @@ const Home = () => {
               <sup>beta</sup>
             </Link>
           </div>
-          <div
-            id="homepage-text"
-            className="homepage__ethical-ad flat adaptive-css"
-            data-ea-publisher="bundlephobiacom"
-            data-ea-type="text"
-            data-ea-manual="true"
-            data-ea-verbosity="quiet"
-          />
+          <div className="homepage__carbon-ad">
+            <script
+              async
+              type="text/javascript"
+              src="//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=responsive"
+              id="_carbonads_js"
+            />
+          </div>
         </div>
       </div>
     </Layout>
