@@ -97,9 +97,28 @@ const Logo = () => (
 
 const Home = () => {
   const router = useRouter()
+  const carbonAdRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
     Analytics.pageView('home')
+  }, [])
+
+  React.useEffect(() => {
+    const container = carbonAdRef.current
+    if (!container) return
+
+    const script = document.createElement('script')
+    script.async = true
+    script.type = 'text/javascript'
+    script.src =
+      '//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=cover'
+    script.id = '_carbonads_js'
+    container.appendChild(script)
+
+    return () => {
+      container.querySelector('#carbonads')?.remove()
+      script.remove()
+    }
   }, [])
 
   const handleSearchSubmit = (value: string) => {
@@ -143,14 +162,7 @@ const Home = () => {
               <sup>beta</sup>
             </Link>
           </div>
-          <div className="homepage__carbon-ad">
-            <script
-              async
-              type="text/javascript"
-              src="//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=cover"
-              id="_carbonads_js"
-            />
-          </div>
+          <div ref={carbonAdRef} className="homepage__carbon-ad" />
         </div>
       </div>
     </Layout>
