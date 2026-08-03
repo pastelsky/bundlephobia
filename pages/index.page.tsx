@@ -147,7 +147,7 @@ const Home = () => {
             <script
               async
               type="text/javascript"
-              src="//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=responsive"
+              src="//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=cover"
               id="_carbonads_js"
             />
           </div>
