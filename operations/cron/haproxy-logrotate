@@ -1,0 +1,2 @@
+# Check frequently so maxsize can bound access-log growth during traffic spikes.
+*/10 * * * * root /usr/sbin/logrotate /etc/logrotate.d/haproxy
