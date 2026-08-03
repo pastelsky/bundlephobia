@@ -14,6 +14,18 @@
   align-items: center;
   max-width: 100%;
   height: calc(100vh - 90px);
+
+  // Preserve the vertical position created by the former inline ad slot.
+  &::after {
+    content: '';
+    flex: 0 0 calc(102px + 10vh);
+  }
+
+  @media screen and (max-width: 40em) {
+    &::after {
+      flex-basis: calc(102px + 7vh);
+    }
+  }
 }
 
 .homepage__tagline {
@@ -116,36 +128,17 @@
   }
 }
 
-.homepage__ethical-ad {
-  --ea-bgcolor: transparent;
-  --ea-bgcolor-dark: transparent;
-  --ea-font-family: #{$font-family-body};
-  --ea-font-size: 12px;
-
-  width: min(32rem, 100%);
-  min-height: 102px;
-  margin-top: 5vh;
-  margin-bottom: 5vh;
-  color: var(--color-text-muted);
-
-  &.loaded {
-    .ea-content {
-      margin: 0;
-      padding: $global-spacing;
-      text-align: center;
-    }
-
-    .ea-callout {
-      margin: $global-spacing * 0.5 0 0;
-      padding: 0;
-      text-align: center;
-    }
-  }
-
-  @media screen and (max-width: 40em) {
-    margin-top: 4vh;
-    margin-bottom: 3vh;
-  }
+.homepage__carbon-ad {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: absolute;
+  right: $global-spacing * 2;
+  bottom: $global-spacing * 2;
+  width: min($global-spacing * 36, calc(100vw - #{$global-spacing * 4}));
+  min-height: 280px;
+  margin: 0;
+  z-index: 1;
 }
 
 // Adapt the silver pocket element in the logo for dark mode
