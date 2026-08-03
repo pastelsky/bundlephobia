@@ -112,13 +112,20 @@ export default class ProgressHexAnimator {
     fadeInTimeline.add(fadeInRings)
     quakeTimeline.add(quakeCircles)
 
+    let quakeStartTimer: ReturnType<typeof setTimeout> | undefined
+
     return {
       ...quakeTimeline,
       play: () => {
         fadeInTimeline.play()
-        setTimeout(() => {
+        quakeStartTimer = setTimeout(() => {
           quakeTimeline.play()
         }, DURATION)
+      },
+      pause: () => {
+        if (quakeStartTimer) clearTimeout(quakeStartTimer)
+        fadeInTimeline.pause()
+        quakeTimeline.pause()
       },
     }
   }

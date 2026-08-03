@@ -1,6 +1,6 @@
 import React from 'react'
 import cx from 'classnames'
-import AutoComplete from 'react-autocomplete'
+import { useCombobox } from 'downshift'
 
 import SearchIcon from '../Icons/SearchIcon'
 import { parsePackageString } from '../../../utils/common.utils'
@@ -25,17 +25,35 @@ export const AutocompleteInput = ({
   autoFocus,
   onSearchSubmit,
 }: AutocompleteInputProps) => {
-  const searchInput = React.useRef<AutoComplete | null>(null)
   const {
     value,
-    isMenuVisible,
     suggestions,
     handleSubmit,
-    handleInputChange,
-    setIsMenuVisible,
+    handleInputValueChange,
     setSuggestions,
   } = useAutocompleteInput({ initialValue, onSubmit: onSearchSubmit })
   const { searchFontSize } = useFontSize({ value })
+
+  const {
+    isOpen,
+    highlightedIndex,
+    getInputProps,
+    getItemProps,
+    getMenuProps,
+  } = useCombobox({
+    items: suggestions,
+    inputValue: value,
+    itemToString: item => item?.package.name ?? '',
+    onInputValueChange: ({ inputValue = '' }) => {
+      handleInputValueChange(inputValue)
+    },
+    onSelectedItemChange: ({ selectedItem }) => {
+      if (!selectedItem) return
+
+      setSuggestions([selectedItem])
+      onSearchSubmit(selectedItem.package.name)
+    },
+  })
 
   const { name, version } = React.useMemo(
     () => parsePackageString(value),
@@ -50,51 +68,42 @@ export const AutocompleteInput = ({
       <div
         className={cx('autocomplete-input__container', className, {
           'autocomplete-input__container--menu-visible':
-            isMenuVisible && !!suggestions.length,
+            isOpen && !!suggestions.length,
         })}
       >
-        <AutoComplete
-          getItemValue={item => item.package.name}
-          inputProps={{
-            placeholder: 'find package',
-            className: 'autocomplete-input',
-            autoCorrect: 'off',
-            autoFocus: autoFocus,
-            autoCapitalize: 'off',
-            spellCheck: false,
-            style: { fontSize: searchFontSize! },
-          }}
-          onMenuVisibilityChange={isOpen => setIsMenuVisible(isOpen)}
-          onChange={handleInputChange}
-          ref={searchInput}
-          value={value}
-          items={suggestions}
-          onSelect={(value, item) => {
-            setSuggestions([item])
-            onSearchSubmit(value)
-          }}
-          renderMenu={(items, value, inbuiltStyles) => {
-            return (
-              <div
-                style={{ minWidth: inbuiltStyles.minWidth }}
-                className="autocomplete-input__suggestions-menu"
-                role="listbox"
-              >
-                {items as any}
-              </div>
-            )
-          }}
-          wrapperStyle={{
+        <div
+          style={{
             display: 'inline-block',
             width: '100%',
             position: 'relative',
           }}
-          renderItem={(item, isHighlighted) => (
-            <div key={item.package.name}>
-              <SuggestionItem item={item} isHighlighted={isHighlighted} />
-            </div>
-          )}
-        />
+        >
+          <input
+            {...getInputProps({
+              placeholder: 'find package',
+              className: 'autocomplete-input',
+              autoCorrect: 'off',
+              autoFocus,
+              autoCapitalize: 'off',
+              spellCheck: false,
+              style: { fontSize: searchFontSize! },
+            })}
+          />
+          <div
+            {...getMenuProps()}
+            className="autocomplete-input__suggestions-menu"
+          >
+            {isOpen &&
+              suggestions.map((item, index) => (
+                <SuggestionItem
+                  {...getItemProps({ item, index })}
+                  key={item.package.name}
+                  item={item}
+                  isHighlighted={highlightedIndex === index}
+                />
+              ))}
+          </div>
+        </div>
         <div
           style={{ fontSize: searchFontSize! }}
           className="autocomplete-input__dummy-input"

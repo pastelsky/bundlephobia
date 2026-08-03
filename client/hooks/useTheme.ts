@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 export type Theme = 'light' | 'dark'
 
@@ -8,6 +8,12 @@ export const useTheme = () => {
     // actual pre-hydration value on the client).
     return 'light'
   })
+
+  const apply = useCallback((next: Theme) => {
+    document.documentElement.setAttribute('data-theme', next)
+    localStorage.setItem('theme', next)
+    setTheme(next)
+  }, [])
 
   useEffect(() => {
     // Read the value already applied by the FOUC script
@@ -25,13 +31,7 @@ export const useTheme = () => {
     } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       apply('dark')
     }
-  }, [])
-
-  const apply = (next: Theme) => {
-    document.documentElement.setAttribute('data-theme', next)
-    localStorage.setItem('theme', next)
-    setTheme(next)
-  }
+  }, [apply])
 
   const toggleTheme = () => apply(theme === 'light' ? 'dark' : 'light')
 
