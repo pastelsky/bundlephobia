@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { Component } from 'react'
-import FlipMove from 'react-flip-move'
 import cx from 'classnames'
 import PQueue from 'p-queue'
 import { stringify } from 'query-string'
@@ -33,6 +32,7 @@ type ScanPackage = ParsedPackage & {
 type ResultCardProps = {
   pack: ScanPackage
   index: number
+  viewTransitionName: string
 }
 
 type ScanResultsProps = {
@@ -73,7 +73,7 @@ function getSortModeFromRouter(router: NextRouter): SortMode {
 
 class ResultCard extends Component<ResultCardProps> {
   render() {
-    const { pack, index } = this.props
+    const { pack, index, viewTransitionName } = this.props
 
     let content: React.ReactNode = null
 
@@ -143,6 +143,7 @@ class ResultCard extends Component<ResultCardProps> {
 
     return (
       <li
+        style={{ viewTransitionName }}
         className={cx('scan-results__item', {
           'scan-results__item--loading': pack.promiseState === 'pending',
           'scan-results__item--error': pack.promiseState === 'rejected',
@@ -256,7 +257,32 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
       `/scan-results?${stringify(updatedQuery, { encode: false })}`
     )
 
-    this.setState({ sortMode })
+    const documentWithViewTransitions = document as Document & {
+      startViewTransition?: (update: () => Promise<void>) => {
+        finished: Promise<void>
+      }
+    }
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches
+
+    if (
+      !documentWithViewTransitions.startViewTransition ||
+      prefersReducedMotion
+    ) {
+      React.startTransition(() => this.setState({ sortMode }))
+      return
+    }
+
+    const transition = documentWithViewTransitions.startViewTransition(
+      () =>
+        new Promise<void>(resolve => {
+          React.startTransition(() => {
+            this.setState({ sortMode }, () => resolve())
+          })
+        })
+    )
+    transition.finished.catch(() => {})
   }
 
   handleSortAlphabetic = () => {
@@ -322,14 +348,16 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
           </button>
         </div>
         <ul className="scan-results__container">
-          <FlipMove
-            duration={350}
-            easing="cubic-bezier(0.175, 0.885, 0.325, 1.040)"
-          >
-            {packages.map((pack, index) => (
-              <ResultCard pack={pack} index={index} key={pack.packageString} />
-            ))}
-          </FlipMove>
+          {packages.map((pack, index) => (
+            <ResultCard
+              pack={pack}
+              index={index}
+              key={pack.packageString}
+              viewTransitionName={`scan-result-${this.state.packages.indexOf(
+                pack
+              )}`}
+            />
+          ))}
           <li className="scan-results__item scan-results__item--total">
             <div className="scan-results__name">Total</div>
             <div className="scan-results__stat-container">

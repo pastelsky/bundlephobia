@@ -1,6 +1,0 @@
-{
-  "extends": ["next", "prettier"],
-  "plugins": [],
-  "root": true,
-  "rules": {}
-}

@@ -21,6 +21,13 @@
   box-shadow: 0 0 4px var(--color-border-primary);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(*) {
+    animation-duration: 200ms;
+    animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+  }
+}
+
 .scan-results__note {
   @include font-size-xs;
   color: var(--color-text-muted);

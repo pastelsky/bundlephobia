@@ -1,8 +1,8 @@
 import cx from 'classnames'
 
-interface SuggestionItemProps {
+interface SuggestionItemProps extends React.HTMLAttributes<HTMLDivElement> {
   item: {
-    highlight: string | null
+    highlight?: string
     package: {
       name: string
       description: string
@@ -11,9 +11,14 @@ interface SuggestionItemProps {
   isHighlighted: boolean
 }
 
-export function SuggestionItem({ item, isHighlighted }: SuggestionItemProps) {
+export function SuggestionItem({
+  item,
+  isHighlighted,
+  ...props
+}: SuggestionItemProps) {
   return (
     <div
+      {...props}
       key={item.package.name}
       className={cx('autocomplete-input__suggestion', {
         'autocomplete-input__suggestion--highlight': isHighlighted,
@@ -22,12 +27,18 @@ export function SuggestionItem({ item, isHighlighted }: SuggestionItemProps) {
       aria-selected={isHighlighted}
     >
       {item.highlight != null ? (
-        <div dangerouslySetInnerHTML={{ __html: item.highlight }} />
+        <div
+          key="highlight"
+          dangerouslySetInnerHTML={{ __html: item.highlight }}
+        />
       ) : (
-        <div>{item.package.name}</div>
+        <div key="name">{item.package.name}</div>
       )}
 
-      <div className="autocomplete-input__suggestion-description">
+      <div
+        key="description"
+        className="autocomplete-input__suggestion-description"
+      >
         {item.package.description}
       </div>
     </div>

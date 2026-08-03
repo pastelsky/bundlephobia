@@ -15,16 +15,16 @@ export function useAutocompleteInput({
 }: UseAutocompleteInputArgs) {
   const [value, setValue] = React.useState(initialValue)
   const [suggestions, setSuggestions] = React.useState<PackageSuggestion[]>([])
-  const [isMenuVisible, setIsMenuVisible] = React.useState(false)
+  const [, startTransition] = React.useTransition()
 
   const getSuggestions = React.useMemo(
     () =>
       debounce((value: string) => {
         API.getSuggestions(value).then(result => {
-          setSuggestions(result)
+          startTransition(() => setSuggestions(result))
         })
       }, 150),
-    []
+    [startTransition]
   )
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,12 +32,9 @@ export function useAutocompleteInput({
     onSubmit(value)
   }
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    value: string
-  ) => {
-    setValue(e.target.value)
-    const trimmedValue = e.target.value.trim()
+  const handleInputValueChange = (nextValue: string) => {
+    setValue(nextValue)
+    const trimmedValue = nextValue.trim()
     const { name } = parsePackageString(trimmedValue)
 
     if (trimmedValue.length > 1) {
@@ -52,10 +49,8 @@ export function useAutocompleteInput({
   return {
     value,
     suggestions,
-    isMenuVisible,
     handleSubmit,
-    handleInputChange,
-    setIsMenuVisible,
+    handleInputValueChange,
     setSuggestions,
   }
 }

@@ -5,6 +5,7 @@ const mockGetPackageBuildStats = jest.fn()
 
 jest.mock('../server/api/BuildService', () => ({
   __esModule: true,
+  BUILD_DURATION_HEADER: 'x-bundlephobia-build-duration-ms',
   default: jest.fn().mockImplementation(() => ({
     getPackageBuildStats: (...args: unknown[]) =>
       mockGetPackageBuildStats(...args),
