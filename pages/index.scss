@@ -117,6 +117,9 @@
 }
 
 .homepage__carbon-ad {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   position: fixed;
   right: $global-spacing * 2;
   bottom: $global-spacing * 2;
@@ -124,13 +127,6 @@
   min-height: 280px;
   margin: 0;
   z-index: 1;
-
-  @media screen and (max-width: 70em) {
-    position: static;
-    width: min(32rem, 100%);
-    margin-top: 4vh;
-    margin-bottom: 3vh;
-  }
 }
 
 // Adapt the silver pocket element in the logo for dark mode
