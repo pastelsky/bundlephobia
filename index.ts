@@ -20,6 +20,11 @@ import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
 import logger from './server/Logger'
 import remoteMcpClient from './server/mcp/remoteClient'
+import {
+  buildApiCatalog,
+  CATALOG_CONTENT_TYPE,
+  linkHeaderMiddleware,
+} from './server/agentDiscovery'
 
 import limit from './server/middlewares/rateLimit.middleware'
 import exportsMiddlware from './server/middlewares/exports.middleware'
@@ -68,6 +73,7 @@ app.prepare().then(() => {
   server.use(bodyParser())
   server.use(requestLoggerMiddleware)
   server.use(cacheControl())
+  server.use(linkHeaderMiddleware)
 
   if (!dev) {
     server.use(
@@ -456,6 +462,16 @@ app.prepare().then(() => {
       }
     }
   )
+
+  router.get('/.well-known/api-catalog', async ctx => {
+    ctx.cacheControl = {
+      maxAge: config.CACHE.PUBLIC_ASSETS,
+    }
+    // Set explicitly rather than via ctx.type, which would run the media type
+    // through mime lookup and append a charset after the profile parameter.
+    ctx.set('Content-Type', CATALOG_CONTENT_TYPE)
+    ctx.body = buildApiCatalog()
+  })
 
   router.get('/result', async ctx => {
     invariant(ctx.query.p, 'p parameter is required')
