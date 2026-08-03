@@ -117,12 +117,17 @@
 }
 
 .homepage__carbon-ad {
-  width: min(32rem, 100%);
+  position: fixed;
+  right: $global-spacing * 2;
+  bottom: $global-spacing * 2;
+  width: min($global-spacing * 36, calc(100vw - #{$global-spacing * 4}));
   min-height: 280px;
-  margin-top: 5vh;
-  margin-bottom: 5vh;
+  margin: 0;
+  z-index: 1;
 
-  @media screen and (max-width: 40em) {
+  @media screen and (max-width: 70em) {
+    position: static;
+    width: min(32rem, 100%);
     margin-top: 4vh;
     margin-bottom: 3vh;
   }
