@@ -224,30 +224,62 @@ class Scan extends Component<ScanProps, ScanState> {
     if (!inputUrl.trim()) return
 
     const normalizedUrl = normalizePackageJsonUrl(inputUrl)
-    this.setState({ isLoadingRemoteUrl: true, remoteUrlError: null })
+    this.setState({
+      isLoadingRemoteUrl: true,
+      remoteUrlError: null,
+      isUrlFormOpen: true,
+    })
 
     try {
-      const response = await fetch(normalizedUrl)
+      const response = await fetch(normalizedUrl).catch((err: Error) => {
+        if (
+          err.name === 'TypeError' ||
+          err.message.includes('Failed to fetch')
+        ) {
+          throw new Error(
+            'Network or CORS restriction prevented fetching this URL. Make sure the URL points to a public GitHub repo or raw JSON file with CORS enabled, or upload package.json manually.'
+          )
+        }
+        throw err
+      })
+
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(
+            'Could not find package.json at this URL (HTTP 404). Please check the repository link or upload manually.'
+          )
+        }
         throw new Error(
-          `Failed to fetch package.json (${response.status} ${response.statusText})`
+          `Failed to fetch package.json (HTTP ${response.status} ${response.statusText}).`
         )
       }
 
-      const json = (await response.json()) as ParsedPackageJson
+      let json: ParsedPackageJson
+      try {
+        json = (await response.json()) as ParsedPackageJson
+      } catch {
+        throw new Error(
+          'The response from this URL is not valid JSON. Please check the link or upload package.json manually.'
+        )
+      }
+
       if (
         !json ||
         typeof json !== 'object' ||
         (!json.dependencies && !json.devDependencies)
       ) {
-        throw new Error('Fetched file does not contain a dependencies block.')
+        throw new Error(
+          'Fetched package.json does not contain a dependencies or devDependencies block.'
+        )
       }
 
       const packages = this.getParsedPackages(json)
       const unsupportedPackageNames = this.getUnsupportedPackageNames(json)
 
       if (packages.length === 0) {
-        throw new Error('No valid dependencies found in fetched package.json.')
+        throw new Error(
+          'No valid npm dependencies found in the fetched package.json file.'
+        )
       }
 
       this.setState(
@@ -354,6 +386,7 @@ class Scan extends Component<ScanProps, ScanState> {
         selectedPackageValues: [],
         unsupportedPackageNames: [],
         remoteUrlError: null,
+        isUrlFormOpen: false,
       },
       this.persistScanState
     )
@@ -387,62 +420,103 @@ class Scan extends Component<ScanProps, ScanState> {
             multiple={false}
             accept="application/json"
           >
-            <p>
-              Drop a <code> package.json </code> file here
-            </p>
-            <Separator />
-            <div
-              className="scan__dropzone-actions"
-              onClick={e => e.stopPropagation()}
-            >
-              <button className="scan__btn" type="button">
-                Upload <code> package.json </code>
-              </button>
-              <button
-                className="scan__btn"
-                type="button"
-                onClick={e => {
-                  e.stopPropagation()
-                  this.setState(prev => ({
-                    isUrlFormOpen: !prev.isUrlFormOpen,
-                  }))
-                }}
-              >
-                {isUrlFormOpen ? 'Hide URL input' : 'Scan from URL / GitHub'}
-              </button>
-            </div>
-            {isUrlFormOpen && (
-              <div
-                className="scan__url-inline-container"
-                onClick={e => e.stopPropagation()}
-              >
-                <form
-                  className="scan__url-form"
-                  onSubmit={this.handleRemoteUrlSubmit}
+            {!isUrlFormOpen ? (
+              <>
+                <p>
+                  Drop a <code> package.json </code> file here
+                </p>
+                <Separator />
+                <div
+                  className="scan__dropzone-actions"
+                  onClick={e => e.stopPropagation()}
                 >
-                  <input
-                    type="text"
-                    className="scan__url-input"
-                    placeholder="e.g. github.com/facebook/react or raw package.json URL"
-                    value={remoteUrlInput}
-                    onChange={e =>
-                      this.setState({ remoteUrlInput: e.target.value })
-                    }
-                    disabled={isLoadingRemoteUrl}
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    className="scan__btn scan__url-btn"
-                    disabled={isLoadingRemoteUrl || !remoteUrlInput.trim()}
-                  >
-                    {isLoadingRemoteUrl ? 'Fetching...' : 'Fetch'}
+                  <button className="scan__btn" type="button">
+                    Upload <code> package.json </code>
                   </button>
-                </form>
-                {remoteUrlError && (
-                  <p className="scan__url-error">{remoteUrlError}</p>
-                )}
-              </div>
+                  <button
+                    className="scan__btn"
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation()
+                      this.setState({
+                        isUrlFormOpen: true,
+                        remoteUrlError: null,
+                      })
+                    }}
+                  >
+                    Scan from URL / GitHub
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>
+                  Fetch <code> package.json </code> from URL or GitHub
+                </p>
+                <Separator />
+                <div
+                  className="scan__url-form-wrapper"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <form
+                    className="scan__url-form"
+                    onSubmit={this.handleRemoteUrlSubmit}
+                  >
+                    <input
+                      type="text"
+                      className="scan__url-input"
+                      placeholder="e.g. github.com/facebook/react or raw package.json URL"
+                      value={remoteUrlInput}
+                      onChange={e =>
+                        this.setState({ remoteUrlInput: e.target.value })
+                      }
+                      disabled={isLoadingRemoteUrl}
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      className="scan__btn scan__url-btn"
+                      disabled={isLoadingRemoteUrl || !remoteUrlInput.trim()}
+                    >
+                      {isLoadingRemoteUrl ? 'Fetching...' : 'Fetch'}
+                    </button>
+                    <button
+                      type="button"
+                      className="scan__url-cancel-btn"
+                      onClick={e => {
+                        e.stopPropagation()
+                        this.setState({
+                          isUrlFormOpen: false,
+                          remoteUrlError: null,
+                          isLoadingRemoteUrl: false,
+                        })
+                      }}
+                      title="Cancel and return to upload view"
+                      aria-label="Cancel"
+                    >
+                      ✕
+                    </button>
+                  </form>
+                  {remoteUrlError && (
+                    <div className="scan__url-error-box">
+                      <p className="scan__url-error">{remoteUrlError}</p>
+                      <button
+                        type="button"
+                        className="scan__url-error-fallback-btn"
+                        onClick={e => {
+                          e.stopPropagation()
+                          this.setState({
+                            isUrlFormOpen: false,
+                            remoteUrlError: null,
+                          })
+                        }}
+                      >
+                        Upload package.json manually instead
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </Dropzone>
         </div>
