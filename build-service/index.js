@@ -3,7 +3,7 @@ import Fastify from 'fastify'
 import {
   getPackageStats,
   getPackageExportSizes,
-  getPackageExports,
+  getAllPackageExports as getPackageExports,
   eventQueue,
 } from 'package-build-stats'
 import Amplitude from '@amplitude/node'
