@@ -186,29 +186,69 @@
   }
 }
 
-.scan__url-error-box {
+.scan__url-examples {
   display: flex;
-  align-items: flex-start;
-  gap: $global-spacing;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: math.div($global-spacing, 2) $global-spacing;
   margin-top: $global-spacing * 1.5;
+  @include font-size-xxs;
+  color: var(--color-text-muted);
+
+  code {
+    font-family: $font-family-code;
+    background: var(--color-error-pre-bg);
+    padding: math.div($global-spacing, 4) math.div($global-spacing, 1.5);
+    border-radius: 4px;
+    border: 1px solid var(--color-btn-border);
+    color: var(--color-text-muted);
+    font-size: 90%;
+  }
+}
+
+.scan__url-examples-label {
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.scan__url-error-box {
+  margin-top: $global-spacing * 2;
   width: 100%;
-  padding: $global-spacing * 1.25 $global-spacing * 1.5;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--color-error-pre-bg);
+  border: 1px solid var(--color-divider);
+  padding: $global-spacing * 1.5 $global-spacing * 2;
   border-radius: 8px;
-  background: rgba(255, 82, 82, 0.08);
-  border: 1px solid rgba(255, 82, 82, 0.25);
   box-sizing: border-box;
 }
 
-.scan__url-error-icon {
-  font-size: 0.9rem;
-  line-height: 1.4;
-  flex-shrink: 0;
+.scan__url-error-code {
+  font-family: $font-family-code;
+  @include font-size-xs;
+  color: var(--color-result-heading);
+  margin: 0 0 $global-spacing * 0.5 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: $font-weight-bold;
 }
 
-.scan__url-error-text {
+.scan__url-error-message {
   @include font-size-xs;
-  color: var(--color-text-base);
+  font-weight: $font-weight-light;
+  color: var(--color-text-muted);
+  line-height: 1.5;
   margin: 0;
-  line-height: 1.4;
-  text-align: left;
+  max-width: 460px;
+  text-align: center;
+
+  code {
+    font-family: $font-family-code;
+    color: var(--color-text-base);
+  }
 }

@@ -497,10 +497,22 @@ class Scan extends Component<ScanProps, ScanState> {
                       ✕
                     </button>
                   </form>
+
+                  <div className="scan__url-examples">
+                    <span className="scan__url-examples-label">
+                      Supported formats:
+                    </span>
+                    <code>github.com/facebook/react</code>
+                    <code>.../blob/main/package.json</code>
+                    <code>raw.githubusercontent.com/...</code>
+                  </div>
+
                   {remoteUrlError && (
                     <div className="scan__url-error-box">
-                      <span className="scan__url-error-icon">⚠️</span>
-                      <p className="scan__url-error-text">{remoteUrlError}</p>
+                      <h4 className="scan__url-error-code">FetchError</h4>
+                      <p className="scan__url-error-message">
+                        {remoteUrlError}
+                      </p>
                     </div>
                   )}
                 </div>
