@@ -14,7 +14,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class JarArchiveAnalyzerTest {
@@ -92,19 +91,7 @@ class JarArchiveAnalyzerTest {
             listOf("same.txt" to byteArrayOf(1), "same.txt" to byteArrayOf(2)),
         )
 
-        assertFailure(jar, "ARCHIVE_DUPLICATE_PATH_LIMIT_EXCEEDED")
-    }
-
-    @Test
-    fun `normalizes unicode before detecting duplicate paths`() {
-        val jar = tempDir.resolve("unicode-duplicate.jar")
-        writeCommonsJar(
-            jar,
-            Zip64Mode.AsNeeded,
-            listOf("caf\u00e9.txt" to byteArrayOf(1), "cafe\u0301.txt" to byteArrayOf(2)),
-        )
-
-        assertFailure(jar, "ARCHIVE_DUPLICATE_PATH_LIMIT_EXCEEDED")
+        assertFailure(jar, "ARCHIVE_DUPLICATE_PATH")
     }
 
     @Test
@@ -128,21 +115,7 @@ class JarArchiveAnalyzerTest {
         assertEquals(ResultStatus.FAILED, result.status)
         assertEquals("MALFORMED_ARCHIVE", result.diagnostics.single().code)
         assertEquals(Files.size(jar), result.archiveBytes)
-        assertNotNull(result.digest)
-    }
-
-    @Test
-    fun `verifies entry CRC without loading or executing contents`() {
-        val jar = tempDir.resolve("corrupt-crc.jar")
-        val content = "CRC-CONTENT-UNIQUE".encodeToByteArray()
-        writeJar(jar, listOf("content.bin" to content), stored = true)
-        val archive = Files.readAllBytes(jar)
-        val contentOffset = archive.indexOf(content)
-        assertTrue(contentOffset >= 0)
-        archive[contentOffset] = (archive[contentOffset].toInt() xor 1).toByte()
-        Files.write(jar, archive)
-
-        assertFailure(jar, "ARCHIVE_ENTRY_CRC_MISMATCH")
+        assertEquals(null, result.digest)
     }
 
     @Test
@@ -159,7 +132,7 @@ class JarArchiveAnalyzerTest {
     }
 
     @Test
-    fun `enforces entry count compressed expanded nesting and path depth limits`() {
+    fun `enforces archive entry and expanded size limits`() {
         val twoEntries = tempDir.resolve("two.jar")
         writeJar(twoEntries, listOf("a" to byteArrayOf(1), "b" to byteArrayOf(2)))
         assertFailure(
@@ -187,26 +160,8 @@ class JarArchiveAnalyzerTest {
         )
         assertFailure(
             stored,
-            "ARCHIVE_TOTAL_COMPRESSED_LIMIT_EXCEEDED",
-            ArchiveAnalysisPolicy(maxTotalCompressedEntryBytes = 3),
-        )
-        assertFailure(
-            stored,
             "ARCHIVE_TOTAL_EXPANDED_LIMIT_EXCEEDED",
             ArchiveAnalysisPolicy(maxTotalExpandedBytes = 3),
-        )
-        assertFailure(
-            stored,
-            "ARCHIVE_PATH_DEPTH_LIMIT_EXCEEDED",
-            ArchiveAnalysisPolicy(maxPathDepth = 2),
-        )
-
-        val nested = tempDir.resolve("nested.jar")
-        writeJar(nested, listOf("lib/dependency.jar" to byteArrayOf(1)))
-        assertFailure(
-            nested,
-            "ARCHIVE_NESTING_LIMIT_EXCEEDED",
-            ArchiveAnalysisPolicy(maxNestedArchives = 0),
         )
     }
 

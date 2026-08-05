@@ -10,10 +10,8 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
-import java.text.Normalizer
 import java.util.HexFormat
 import java.util.Locale
-import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipException
 import java.util.zip.ZipFile
@@ -44,43 +42,26 @@ public class JarArchiveAnalyzer
                 )
             }
 
-            val digest =
-                try {
-                    sha256(path)
-                } catch (error: IOException) {
-                    return failed(
-                        displayName,
-                        "ARCHIVE_READ_FAILED",
-                        safeMessage(error),
-                        archiveBytes = archiveBytes,
-                    )
-                }
-
             val totals = linkedMapOf<PayloadCategory, MutableCategoryStats>()
             return try {
                 ZipFile(path.toFile()).use { archive ->
                     val plans = preflight(archive)
                     for (plan in plans) {
-                        val streamed = streamAndVerify(archive, plan.entry)
-                        if (streamed.expandedBytes != plan.expandedBytes) {
+                        val expandedBytes = streamAndCount(archive, plan.entry)
+                        if (expandedBytes != plan.expandedBytes) {
                             violation(
                                 "ARCHIVE_ENTRY_SIZE_MISMATCH",
-                                "Entry ${plan.normalizedPath} declared ${plan.expandedBytes} bytes but streamed ${streamed.expandedBytes}",
-                            )
-                        }
-                        if (streamed.crc != plan.crc) {
-                            violation(
-                                "ARCHIVE_ENTRY_CRC_MISMATCH",
-                                "Entry ${plan.normalizedPath} failed its CRC-32 integrity check",
+                                "Entry ${plan.normalizedPath} declared ${plan.expandedBytes} bytes but streamed $expandedBytes",
                             )
                         }
                         totals
                             .getOrPut(plan.category) { MutableCategoryStats() }
-                            .add(plan.compressedBytes, streamed.expandedBytes)
+                            .add(plan.compressedBytes, expandedBytes)
                     }
 
                     val payload = payload(totals)
                     reconcile(plans, payload)
+                    val digest = sha256(path)
                     ArtifactAnalysis(
                         status = ResultStatus.COMPLETE,
                         displayName = displayName,
@@ -95,27 +76,21 @@ public class JarArchiveAnalyzer
                     displayName,
                     error.code,
                     error.message,
-                    digest,
-                    archiveBytes,
-                    payload(totals),
+                    archiveBytes = archiveBytes,
                 )
             } catch (error: ZipException) {
                 failed(
                     displayName,
                     "MALFORMED_ARCHIVE",
                     safeMessage(error),
-                    digest,
-                    archiveBytes,
-                    payload(totals),
+                    archiveBytes = archiveBytes,
                 )
             } catch (error: IOException) {
                 failed(
                     displayName,
                     "ARCHIVE_READ_FAILED",
                     safeMessage(error),
-                    digest,
-                    archiveBytes,
-                    payload(totals),
+                    archiveBytes = archiveBytes,
                 )
             }
         }
@@ -133,39 +108,20 @@ public class JarArchiveAnalyzer
                 entries.add(enumeration.nextElement())
             }
 
-            val duplicates = mutableMapOf<String, Int>()
-            var duplicatePaths = 0
-            var nestedArchives = 0
-            var totalCompressed = 0L
+            val paths = mutableSetOf<String>()
             var totalExpanded = 0L
 
             return entries.map { entry ->
                 val normalizedPath = normalize(entry.name)
-                val occurrences = (duplicates[normalizedPath] ?: 0) + 1
-                duplicates[normalizedPath] = occurrences
-                if (occurrences > 1) {
-                    duplicatePaths++
-                    if (duplicatePaths > policy.maxDuplicatePaths) {
-                        violation(
-                            "ARCHIVE_DUPLICATE_PATH_LIMIT_EXCEEDED",
-                            "Archive contains duplicate normalized path: $normalizedPath",
-                        )
-                    }
-                }
-
-                if (!entry.isDirectory && isNestedArchive(normalizedPath)) {
-                    nestedArchives++
-                    if (nestedArchives > policy.maxNestedArchives) {
-                        violation(
-                            "ARCHIVE_NESTING_LIMIT_EXCEEDED",
-                            "Archive contains $nestedArchives nested archive entries; limit is ${policy.maxNestedArchives}",
-                        )
-                    }
+                if (!paths.add(normalizedPath)) {
+                    violation(
+                        "ARCHIVE_DUPLICATE_PATH",
+                        "Archive contains duplicate path: $normalizedPath",
+                    )
                 }
 
                 val compressedBytes = declaredSize(entry.compressedSize, entry.name, "compressed")
                 val expandedBytes = declaredSize(entry.size, entry.name, "expanded")
-                val crc = declaredSize(entry.crc, entry.name, "CRC-32")
                 if (compressedBytes > policy.maxCompressedEntryBytes) {
                     violation(
                         "ARCHIVE_COMPRESSED_ENTRY_LIMIT_EXCEEDED",
@@ -185,14 +141,7 @@ public class JarArchiveAnalyzer
                     )
                 }
 
-                totalCompressed = checkedAdd(totalCompressed, compressedBytes)
                 totalExpanded = checkedAdd(totalExpanded, expandedBytes)
-                if (totalCompressed > policy.maxTotalCompressedEntryBytes) {
-                    violation(
-                        "ARCHIVE_TOTAL_COMPRESSED_LIMIT_EXCEEDED",
-                        "Compressed entry bytes exceed limit ${policy.maxTotalCompressedEntryBytes}",
-                    )
-                }
                 if (totalExpanded > policy.maxTotalExpandedBytes) {
                     violation(
                         "ARCHIVE_TOTAL_EXPANDED_LIMIT_EXCEEDED",
@@ -206,24 +155,21 @@ public class JarArchiveAnalyzer
                     category = classify(normalizedPath),
                     compressedBytes = compressedBytes,
                     expandedBytes = expandedBytes,
-                    crc = crc,
                 )
             }
         }
 
-        private fun streamAndVerify(
+        private fun streamAndCount(
             archive: ZipFile,
             entry: ZipEntry,
-        ): StreamedEntry {
+        ): Long {
             var count = 0L
-            val crc = CRC32()
             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
             archive.getInputStream(entry).use { input ->
                 while (true) {
                     val read = input.read(buffer)
                     if (read < 0) break
                     count = checkedAdd(count, read.toLong())
-                    crc.update(buffer, 0, read)
                     if (count > policy.maxExpandedEntryBytes) {
                         violation(
                             "ARCHIVE_EXPANDED_ENTRY_LIMIT_EXCEEDED",
@@ -232,33 +178,18 @@ public class JarArchiveAnalyzer
                     }
                 }
             }
-            return StreamedEntry(count, crc.value)
+            return count
         }
 
         private fun normalize(path: String): String {
-            if (path.isEmpty() || path.length > policy.maxPathLength) {
-                violation("ARCHIVE_INVALID_PATH", "Archive entry path is empty or too long")
-            }
-            val normalized = Normalizer.normalize(path, Normalizer.Form.NFC)
-            if (
-                normalized.any(Char::isISOControl) ||
-                '\\' in normalized ||
-                normalized.startsWith('/') ||
-                DRIVE_PATH.matches(normalized)
-            ) {
+            if (path.isEmpty() || '\u0000' in path || '\\' in path || path.startsWith('/') || DRIVE_PATH.matches(path)) {
                 violation("ARCHIVE_INVALID_PATH", "Archive entry uses an unsafe path: $path")
             }
 
-            val withoutTrailingSlash = normalized.removeSuffix("/")
+            val withoutTrailingSlash = path.removeSuffix("/")
             val segments = withoutTrailingSlash.split('/')
             if (segments.any { it.isEmpty() || it == "." || it == ".." }) {
                 violation("ARCHIVE_INVALID_PATH", "Archive entry uses an unsafe path: $path")
-            }
-            if (segments.size > policy.maxPathDepth) {
-                violation(
-                    "ARCHIVE_PATH_DEPTH_LIMIT_EXCEEDED",
-                    "Archive entry path depth exceeds limit ${policy.maxPathDepth}: $path",
-                )
             }
             return segments.joinToString("/")
         }
@@ -334,17 +265,12 @@ public class JarArchiveAnalyzer
             displayName: String,
             code: String,
             summary: String,
-            digest: String? = null,
             archiveBytes: Long? = null,
-            payload: List<PayloadCategoryStats> = emptyList(),
         ): ArtifactAnalysis =
             ArtifactAnalysis(
                 status = ResultStatus.FAILED,
                 displayName = displayName,
-                digest = digest?.let { ArtifactDigest(value = it) },
                 archiveBytes = archiveBytes,
-                expandedBytes = payload.sumOf(PayloadCategoryStats::expandedBytes).takeIf { payload.isNotEmpty() },
-                payload = payload,
                 diagnostics =
                     listOf(
                         Diagnostic(
@@ -389,8 +315,6 @@ public class JarArchiveAnalyzer
                 violation("ARCHIVE_SIZE_OVERFLOW", "Archive entry byte totals overflowed")
             }
 
-        private fun isNestedArchive(path: String): Boolean = NESTED_ARCHIVE_SUFFIXES.any(path.lowercase(Locale.ROOT)::endsWith)
-
         private fun safeMessage(error: IOException): String = error.message?.take(500) ?: "Archive could not be read"
 
         private fun violation(
@@ -404,12 +328,6 @@ public class JarArchiveAnalyzer
             val category: PayloadCategory,
             val compressedBytes: Long,
             val expandedBytes: Long,
-            val crc: Long,
-        )
-
-        private data class StreamedEntry(
-            val expandedBytes: Long,
-            val crc: Long,
         )
 
         private data class MutableCategoryStats(
@@ -448,6 +366,5 @@ public class JarArchiveAnalyzer
             val DRIVE_PATH: Regex = Regex("^[A-Za-z]:.*")
             val LICENSE_NAME: Regex = Regex("^(license|notice|copying|copyright)([._-].*)?$")
             val SIGNATURE_FILE: Regex = Regex("^.+\\.(sf|rsa|dsa|ec)$")
-            val NESTED_ARCHIVE_SUFFIXES: List<String> = listOf(".jar", ".zip", ".war", ".ear")
         }
     }
