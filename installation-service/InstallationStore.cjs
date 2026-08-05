@@ -1,154 +1,178 @@
-const { randomUUID } = require('node:crypto')
+const { createHash } = require('node:crypto')
+const fs = require('node:fs/promises')
+const path = require('node:path')
+
+const METADATA_FILE = '.bundlephobia-installation.json'
 
 class InstallationStore {
   constructor(
     installationApi,
     {
       queue,
-      idleMs = 5_000,
-      leaseMs = 5 * 60_000,
+      rootPath = '/tmp/tmp-build/installations',
+      retentionMs = 20 * 60_000,
       onError = console.error,
     } = {}
   ) {
     this.installationApi = installationApi
-    this.idleMs = idleMs
-    this.leaseMs = leaseMs
-    this.onError = onError
     this.queue = queue
-    this.installations = new Map()
-    this.leases = new Map()
+    this.rootPath = rootPath
+    this.retentionMs = retentionMs
+    this.onError = onError
+    this.sweepTimer = undefined
   }
 
-  key(packageString, options) {
+  key(exactPackageString, options) {
     return JSON.stringify([
-      packageString,
+      exactPackageString,
       options.client,
-      options.limitConcurrency,
-      options.networkConcurrency,
       options.additionalPackages,
-      options.installTimeout,
       process.platform,
       process.arch,
       process.versions.node.split('.')[0],
     ])
   }
 
-  async getInstallation(packageString, options) {
-    const key = this.key(packageString, options)
-    const cached = this.installations.get(key)
-    if (cached) return cached
+  directory(key) {
+    const hash = createHash('sha256').update(key).digest('hex').slice(0, 24)
+    return path.join(this.rootPath, hash)
+  }
 
-    return this.queue.run(key, async () => {
-      const concurrentlyCached = this.installations.get(key)
-      if (concurrentlyCached) return concurrentlyCached
-
-      const installation = await this.installationApi.installPackage(
-        packageString,
-        options
+  async read(directory) {
+    try {
+      const metadata = JSON.parse(
+        await fs.readFile(path.join(directory, METADATA_FILE), 'utf8')
       )
-      const canonicalKey = this.key(
-        `${installation.packageName}@${installation.packageVersion}`,
-        options
-      )
-      const keys = new Set([key, canonicalKey])
-      const entry = { keys, installation, leases: 0, cleanupTimer: undefined }
-      for (const installationKey of keys) {
-        if (!this.installations.has(installationKey)) {
-          this.installations.set(installationKey, entry)
-        }
+      const installation = metadata?.installation
+      if (
+        typeof metadata?.key !== 'string' ||
+        typeof metadata.lastUsedAt !== 'number' ||
+        typeof installation?.packageVersion !== 'string' ||
+        path.resolve(installation.installPath) !== path.resolve(directory) ||
+        !path
+          .resolve(installation.packagePath)
+          .startsWith(`${path.resolve(directory)}${path.sep}`)
+      ) {
+        return undefined
       }
-      return entry
+      return metadata
+    } catch {
+      return undefined
+    }
+  }
+
+  async write(entry) {
+    const metadataPath = path.join(
+      entry.installation.installPath,
+      METADATA_FILE
+    )
+    const temporaryPath = `${metadataPath}.tmp`
+    await fs.writeFile(temporaryPath, JSON.stringify(entry))
+    await fs.rename(temporaryPath, metadataPath)
+  }
+
+  async install(key, exactPackageString, options) {
+    const installed = await this.installationApi.installPackage(
+      exactPackageString,
+      options
+    )
+    const directory = this.directory(key)
+    const relativePackagePath = path.relative(
+      installed.installPath,
+      installed.packagePath
+    )
+    if (relativePackagePath.startsWith('..')) {
+      await this.installationApi.disposePackage(installed)
+      throw new Error('Installed package path is outside its installation')
+    }
+
+    try {
+      await fs.rm(directory, { recursive: true, force: true })
+      await fs.rename(installed.installPath, directory)
+      return {
+        ...installed,
+        installPath: directory,
+        packagePath: path.join(directory, relativePackagePath),
+      }
+    } catch (error) {
+      await this.installationApi.disposePackage(installed)
+      throw error
+    }
+  }
+
+  async get(exactPackageString, options = {}) {
+    const key = this.key(exactPackageString, options)
+    return this.queue.run(key, async () => {
+      const directory = this.directory(key)
+      const cached = await this.read(directory)
+      const installation =
+        (cached?.key === key ? cached.installation : undefined) ??
+        (await this.install(key, exactPackageString, options))
+      const entry = { key, installation, lastUsedAt: Date.now() }
+      try {
+        await this.write(entry)
+        return installation
+      } catch (error) {
+        if (cached?.key !== key) {
+          await this.installationApi.disposePackage(installation)
+        }
+        throw error
+      }
     })
   }
 
-  cancelCleanup(entry) {
-    if (!entry.cleanupTimer) return
-    clearTimeout(entry.cleanupTimer)
-    entry.cleanupTimer = undefined
+  async entries() {
+    const directories = await fs.readdir(this.rootPath, { withFileTypes: true })
+    return Promise.all(
+      directories
+        .filter(entry => entry.isDirectory())
+        .map(entry => this.read(path.join(this.rootPath, entry.name)))
+    )
   }
 
-  scheduleCleanup(entry) {
-    this.cancelCleanup(entry)
-    if (entry.leases > 0) return
-
-    entry.cleanupTimer = setTimeout(() => {
-      if (entry.leases > 0) return
-      for (const key of entry.keys) {
-        if (this.installations.get(key) === entry)
-          this.installations.delete(key)
-      }
-      void this.installationApi
-        .disposePackage(entry.installation)
-        .catch(this.onError)
-    }, this.idleMs)
-    entry.cleanupTimer.unref()
+  async sweep() {
+    const directories = await fs.readdir(this.rootPath, { withFileTypes: true })
+    await Promise.all(
+      directories
+        .filter(entry => entry.isDirectory())
+        .map(async entry => {
+          const directory = path.join(this.rootPath, entry.name)
+          const metadata = await this.read(directory)
+          if (
+            !metadata ||
+            metadata.lastUsedAt + this.retentionMs <= Date.now()
+          ) {
+            await this.installationApi.disposePackage({
+              installPath: directory,
+            })
+          }
+        })
+    )
   }
 
-  async acquire(packageString, options = {}) {
-    const entry = await this.getInstallation(packageString, options)
-    this.cancelCleanup(entry)
-    entry.leases += 1
-
-    let workspace
-    try {
-      workspace = await this.installationApi.createPackageWorkspace(
-        entry.installation
-      )
-    } catch (error) {
-      entry.leases -= 1
-      this.scheduleCleanup(entry)
-      throw error
-    }
-
-    const id = randomUUID()
-    const expiryTimer = setTimeout(() => {
-      void this.release(id).catch(this.onError)
-    }, this.leaseMs)
-    expiryTimer.unref()
-    this.leases.set(id, { entry, workspace, expiryTimer })
-
-    return { id, ...workspace }
+  async start() {
+    await fs.mkdir(this.rootPath, { recursive: true })
+    await this.sweep()
+    this.sweepTimer = setInterval(() => {
+      void this.sweep().catch(this.onError)
+    }, this.retentionMs)
+    this.sweepTimer.unref?.()
   }
 
-  async release(id) {
-    const lease = this.leases.get(id)
-    if (!lease) return false
-
-    this.leases.delete(id)
-    clearTimeout(lease.expiryTimer)
-    try {
-      await this.installationApi.disposePackage(lease.workspace)
-    } finally {
-      lease.entry.leases -= 1
-      this.scheduleCleanup(lease.entry)
-    }
-    return true
-  }
-
-  diagnostics() {
-    const installations = [...new Set(this.installations.values())]
+  async diagnostics() {
+    const entries = (await this.entries()).filter(Boolean)
     return {
       queue: this.queue.diagnostics(),
-      installations: installations.map(entry => ({
+      installations: entries.map(entry => ({
         packageString: entry.installation.packageString,
-        packageName: entry.installation.packageName,
         packageVersion: entry.installation.packageVersion,
-        leases: entry.leases,
+        lastUsedAt: entry.lastUsedAt,
       })),
-      leases: this.leases.size,
     }
   }
 
   async close() {
-    await Promise.all([...this.leases.keys()].map(id => this.release(id)))
-    const installations = [...new Set(this.installations.values())]
-    this.installations.clear()
-    await Promise.all(
-      installations.map(entry => {
-        this.cancelCleanup(entry)
-        return this.installationApi.disposePackage(entry.installation)
-      })
-    )
+    clearInterval(this.sweepTimer)
   }
 }
 

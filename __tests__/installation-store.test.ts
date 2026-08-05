@@ -1,123 +1,137 @@
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+
 const InstallationStore = require('../installation-service/InstallationStore.cjs')
 const createInstallQueue = require('../installation-service/createInstallQueue.cjs')
 
-type Installation = {
-  packageString: string
-  packageName: string
-  packageVersion: string
-  installPath: string
-  packagePath: string
+const roots: string[] = []
+
+async function temporaryRoot() {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'installation-store-'))
+  roots.push(root)
+  return root
 }
 
-function installation(
-  packageString: string,
-  installPath: string,
-  packageVersion = '1.0.0'
-): Installation {
+function installationApi(root: string) {
   return {
-    packageString,
-    packageName: packageString.split('@')[0],
-    packageVersion,
-    installPath,
-    packagePath: `${installPath}/node_modules/${packageString}`,
+    installPackage: jest.fn(async (packageString: string) => {
+      const [packageName, packageVersion] = packageString.split('@')
+      const installPath = await fs.mkdtemp(path.join(root, 'installed-'))
+      const packagePath = path.join(installPath, 'node_modules', packageName)
+      await fs.mkdir(packagePath, { recursive: true })
+      return {
+        packageString,
+        packageName,
+        packageVersion,
+        installPath,
+        packagePath,
+      }
+    }),
+    disposePackage: jest.fn(async ({ installPath }) => {
+      await fs.rm(installPath, { recursive: true, force: true })
+    }),
   }
 }
 
+function createStore(api, rootPath, retentionMs = 60_000) {
+  return new InstallationStore(api, {
+    queue: createInstallQueue(2),
+    rootPath,
+    retentionMs,
+  })
+}
+
 describe('installation service store', () => {
-  afterEach(() => {
+  afterEach(async () => {
     jest.useRealTimers()
+    await Promise.all(
+      roots.splice(0).map(root => fs.rm(root, { recursive: true, force: true }))
+    )
   })
 
-  it('deduplicates installs while giving concurrent analyses separate workspaces', async () => {
-    let workspaceNumber = 0
-    const installationApi = {
-      installPackage: jest.fn(async packageString =>
-        installation(packageString, `/installed/${packageString}`)
-      ),
-      createPackageWorkspace: jest.fn(async installed =>
-        installation(installed.packageString, `/workspace/${++workspaceNumber}`)
-      ),
-      disposePackage: jest.fn(async () => undefined),
-    }
-    const store = new InstallationStore(installationApi, {
-      queue: createInstallQueue(2),
-      idleMs: 60_000,
-    })
+  it('deduplicates concurrent requests for one exact package version', async () => {
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    const store = createStore(api, root)
+    await store.start()
 
     const [first, second] = await Promise.all([
-      store.acquire('lodash'),
-      store.acquire('lodash'),
+      store.get('lodash@4.17.21', { installTimeout: 30_000 }),
+      store.get('lodash@4.17.21', { installTimeout: 60_000 }),
     ])
 
-    expect(installationApi.installPackage).toHaveBeenCalledTimes(1)
-    expect(installationApi.createPackageWorkspace).toHaveBeenCalledTimes(2)
-    expect(first.installPath).not.toBe(second.installPath)
-    expect(store.diagnostics()).toMatchObject({
-      installations: [{ packageString: 'lodash', leases: 2 }],
-      leases: 2,
-    })
-
-    await store.release(first.id)
-    await store.release(second.id)
+    expect(api.installPackage).toHaveBeenCalledTimes(1)
+    expect(first.installPath).toBe(second.installPath)
+    expect((await store.diagnostics()).installations).toEqual([
+      expect.objectContaining({
+        packageString: 'lodash@4.17.21',
+        packageVersion: '4.17.21',
+      }),
+    ])
     await store.close()
   })
 
-  it('reuses an idle installation for the next results-page request', async () => {
-    jest.useFakeTimers()
-    let workspaceNumber = 0
-    const installationApi = {
-      installPackage: jest.fn(async packageString =>
-        installation(packageString, `/installed/${packageString}`)
-      ),
-      createPackageWorkspace: jest.fn(async installed =>
-        installation(installed.packageString, `/workspace/${++workspaceNumber}`)
-      ),
-      disposePackage: jest.fn(async () => undefined),
-    }
-    const store = new InstallationStore(installationApi, {
-      queue: createInstallQueue(2),
-      idleMs: 1_000,
-    })
+  it('restores completed installations after a service restart', async () => {
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    const firstStore = createStore(api, root)
+    await firstStore.start()
+    const first = await firstStore.get('date-fns@4.1.0')
+    await firstStore.close()
 
-    const first = await store.acquire('date-fns')
-    await store.release(first.id)
-    await jest.advanceTimersByTimeAsync(500)
-    const second = await store.acquire('date-fns@1.0.0')
+    const restartedStore = createStore(api, root)
+    await restartedStore.start()
+    const restored = await restartedStore.get('date-fns@4.1.0')
 
-    expect(installationApi.installPackage).toHaveBeenCalledTimes(1)
-    expect(second.installPath).not.toBe(first.installPath)
+    expect(restored.installPath).toBe(first.installPath)
+    expect(api.installPackage).toHaveBeenCalledTimes(1)
+    await restartedStore.close()
+  })
 
-    await store.release(second.id)
-    await jest.advanceTimersByTimeAsync(1_000)
-    expect(store.diagnostics().installations).toHaveLength(0)
-    expect(installationApi.disposePackage).toHaveBeenCalledTimes(3)
+  it('checks the full key stored inside a deterministic directory', async () => {
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    const store = createStore(api, root)
+    store.directory = () => path.join(root, 'forced-collision')
+    await store.start()
+
+    await store.get('lodash@4.17.21')
+    const react = await store.get('react@19.1.1')
+
+    expect(react.packageString).toBe('react@19.1.1')
+    expect(api.installPackage).toHaveBeenCalledTimes(2)
     await store.close()
   })
 
-  it('expires abandoned workspace leases', async () => {
+  it('removes installations after the restart-safe retention window', async () => {
     jest.useFakeTimers()
-    const installationApi = {
-      installPackage: jest.fn(async packageString =>
-        installation(packageString, `/installed/${packageString}`)
-      ),
-      createPackageWorkspace: jest.fn(async installed =>
-        installation(installed.packageString, '/workspace/abandoned')
-      ),
-      disposePackage: jest.fn(async () => undefined),
-    }
-    const store = new InstallationStore(installationApi, {
-      queue: createInstallQueue(2),
-      idleMs: 1_000,
-      leaseMs: 500,
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    const store = createStore(api, root, 1_000)
+    await store.start()
+    const installed = await store.get('three@0.170.0')
+
+    await jest.advanceTimersByTimeAsync(1_100)
+    await store.sweep()
+
+    expect((await store.diagnostics()).installations).toHaveLength(0)
+    expect(api.disposePackage).toHaveBeenCalledWith({
+      installPath: installed.installPath,
     })
+    await store.close()
+  })
 
-    await store.acquire('three')
-    await jest.advanceTimersByTimeAsync(500)
+  it('removes incomplete directories when the service starts', async () => {
+    const root = await temporaryRoot()
+    const abandonedPath = await fs.mkdtemp(path.join(root, 'abandoned-'))
+    const api = installationApi(root)
+    const store = createStore(api, root, 1_000)
+    await store.start()
 
-    expect(store.diagnostics().leases).toBe(0)
-    expect(installationApi.disposePackage).toHaveBeenCalledWith(
-      expect.objectContaining({ installPath: '/workspace/abandoned' })
-    )
+    expect(api.disposePackage).toHaveBeenCalledWith({
+      installPath: abandonedPath,
+    })
     await store.close()
   })
 })

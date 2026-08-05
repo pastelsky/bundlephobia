@@ -69,9 +69,11 @@ See [Contributing](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/C
 ### Installation service
 
 Build workers use `INSTALLATION_SERVICE_ENDPOINT` when configured. The singleton
-installation service queues package-manager work, shares completed installations
-briefly across requests, and gives each analysis an isolated writable workspace.
-Without the service, package-build-stats installs packages locally as before.
+installation service resolves registry tags and ranges immediately before install,
+then queues exact-version package-manager work and reuses each completed
+installation across requests and service restarts. Analyses write generated entries
+and bundles to separate temporary artifact directories. Without the service,
+package-build-stats installs packages locally as before.
 
 ## Sponsors
 
