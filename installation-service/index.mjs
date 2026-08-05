@@ -9,6 +9,7 @@ import {
 } from 'package-build-stats/installation'
 import npa from 'npm-package-arg'
 import InstallationStore from './InstallationStore.cjs'
+import createInstallQueue from './createInstallQueue.cjs'
 import serializeError from '../build-service/serializeError.js'
 
 function positiveInteger(value, fallback) {
@@ -64,7 +65,9 @@ const store = new InstallationStore(
     disposePackage,
   },
   {
-    concurrency: positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
+    queue: createInstallQueue(
+      positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2)
+    ),
     idleMs: positiveInteger(process.env.INSTALLATION_IDLE_MS, 5_000),
     leaseMs: positiveInteger(process.env.INSTALLATION_LEASE_MS, 5 * 60_000),
   }
@@ -99,7 +102,6 @@ fastify.delete('/installations/:id', async (request, reply) => {
 })
 
 fastify.get('/diagnostics', async () => store.diagnostics())
-
 fastify.addHook('onClose', async () => store.close())
 
 const port = positiveInteger(process.env.PORT, 7003)

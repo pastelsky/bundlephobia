@@ -1,4 +1,5 @@
 const InstallationStore = require('../installation-service/InstallationStore.cjs')
+const createInstallQueue = require('../installation-service/createInstallQueue.cjs')
 
 type Installation = {
   packageString: string
@@ -38,7 +39,10 @@ describe('installation service store', () => {
       ),
       disposePackage: jest.fn(async () => undefined),
     }
-    const store = new InstallationStore(installationApi, { idleMs: 60_000 })
+    const store = new InstallationStore(installationApi, {
+      queue: createInstallQueue(2),
+      idleMs: 60_000,
+    })
 
     const [first, second] = await Promise.all([
       store.acquire('lodash'),
@@ -70,7 +74,10 @@ describe('installation service store', () => {
       ),
       disposePackage: jest.fn(async () => undefined),
     }
-    const store = new InstallationStore(installationApi, { idleMs: 1_000 })
+    const store = new InstallationStore(installationApi, {
+      queue: createInstallQueue(2),
+      idleMs: 1_000,
+    })
 
     const first = await store.acquire('date-fns')
     await store.release(first.id)
@@ -99,6 +106,7 @@ describe('installation service store', () => {
       disposePackage: jest.fn(async () => undefined),
     }
     const store = new InstallationStore(installationApi, {
+      queue: createInstallQueue(2),
       idleMs: 1_000,
       leaseMs: 500,
     })

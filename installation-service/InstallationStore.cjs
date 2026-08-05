@@ -1,53 +1,10 @@
 const { randomUUID } = require('node:crypto')
 
-class InstallQueue {
-  constructor(concurrency) {
-    this.concurrency = concurrency
-    this.active = 0
-    this.pending = []
-    this.inFlight = new Map()
-  }
-
-  run(key, task) {
-    const existing = this.inFlight.get(key)
-    if (existing) return existing
-
-    const promise = new Promise((resolve, reject) => {
-      this.pending.push({ task, resolve, reject })
-      this.drain()
-    }).finally(() => this.inFlight.delete(key))
-    this.inFlight.set(key, promise)
-    return promise
-  }
-
-  drain() {
-    while (this.active < this.concurrency && this.pending.length > 0) {
-      const job = this.pending.shift()
-      this.active += 1
-      Promise.resolve()
-        .then(job.task)
-        .then(job.resolve, job.reject)
-        .finally(() => {
-          this.active -= 1
-          this.drain()
-        })
-    }
-  }
-
-  diagnostics() {
-    return {
-      active: this.active,
-      pending: this.pending.length,
-      inFlight: this.inFlight.size,
-    }
-  }
-}
-
 class InstallationStore {
   constructor(
     installationApi,
     {
-      concurrency = 2,
+      queue,
       idleMs = 5_000,
       leaseMs = 5 * 60_000,
       onError = console.error,
@@ -57,7 +14,7 @@ class InstallationStore {
     this.idleMs = idleMs
     this.leaseMs = leaseMs
     this.onError = onError
-    this.queue = new InstallQueue(concurrency)
+    this.queue = queue
     this.installations = new Map()
     this.leases = new Map()
   }
