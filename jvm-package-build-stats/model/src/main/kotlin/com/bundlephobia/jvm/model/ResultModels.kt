@@ -170,26 +170,81 @@ public data class ArtifactAnalysis(
     public val diagnostics: List<Diagnostic> = emptyList(),
 )
 
+/** A selected Gradle variant with normalized attribute values and capabilities. */
 @Serializable
-public data class ResolvedComponent(
+public data class ResolvedVariant(
+    public val name: String,
+    public val attributes: Map<String, String> = emptyMap(),
+    public val capabilities: List<String> = emptyList(),
+)
+
+/** A Gradle-selected component and the JVM runtime variants that participated in resolution. */
+@Serializable
+public data class ResolvedComponent
+    @JvmOverloads
+    constructor(
+        public val coordinate: MavenCoordinate,
+        public val variant: String? = null,
+        public val direct: Boolean,
+        public val artifacts: List<ArtifactAnalysis> = emptyList(),
+        public val variants: List<ResolvedVariant> = emptyList(),
+        public val selectionReasons: List<String> = emptyList(),
+    )
+
+/** One requested dependency edge. A `null` selection represents an unresolved edge. */
+@Serializable
+public data class DependencyEdge
+    @JvmOverloads
+    constructor(
+        public val from: MavenCoordinate,
+        public val requested: String,
+        public val selected: MavenCoordinate? = null,
+        public val variant: String? = null,
+        public val attributes: Map<String, String> = emptyMap(),
+        public val failure: String? = null,
+    )
+
+/**
+ * A resolved runtime artifact together with its immutable digest and selected variant.
+ *
+ * @property path normalized absolute path used by the later analysis stage; callers should omit it when comparing hosts.
+ * @property extension lowercase artifact extension used to reject non-JAR runtime artifacts.
+ */
+@Serializable
+public data class ResolvedArtifact(
     public val coordinate: MavenCoordinate,
-    public val variant: String? = null,
-    public val direct: Boolean,
-    public val artifacts: List<ArtifactAnalysis> = emptyList(),
+    public val fileName: String,
+    public val path: String,
+    public val extension: String,
+    public val variant: String,
+    public val attributes: Map<String, String> = emptyMap(),
+    public val digest: ArtifactDigest,
 )
 
+/**
+ * Deterministic evidence returned by Gradle for one exact JVM runtime coordinate.
+ *
+ * [repositories] is the complete ordered allowlist; Gradle does not expose reliable per-artifact provenance.
+ */
 @Serializable
-public data class DependencyEdge(
-    public val from: MavenCoordinate,
-    public val requested: String,
-    public val selected: MavenCoordinate? = null,
-)
+public data class ResolutionStats
+    @JvmOverloads
+    constructor(
+        public val requested: MavenCoordinate,
+        public val components: List<ResolvedComponent> = emptyList(),
+        public val edges: List<DependencyEdge> = emptyList(),
+        public val artifacts: List<ResolvedArtifact> = emptyList(),
+        public val repositories: List<String> = emptyList(),
+    )
 
+/** Standalone schema-versioned resolver output written by the sealed Gradle resolution build. */
 @Serializable
-public data class ResolutionStats(
-    public val requested: MavenCoordinate,
-    public val components: List<ResolvedComponent> = emptyList(),
-    public val edges: List<DependencyEdge> = emptyList(),
+public data class JvmResolutionResult(
+    public val schemaVersion: Int = 1,
+    public val status: ResultStatus,
+    public val target: TargetProfile = TargetProfile.JVM_RUNTIME,
+    public val resolution: ResolutionStats,
+    public val diagnostics: List<Diagnostic> = emptyList(),
 )
 
 @Serializable

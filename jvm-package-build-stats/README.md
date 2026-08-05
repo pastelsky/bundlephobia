@@ -4,8 +4,6 @@ This workspace contains the JVM implementation of Bundlephobia's package build
 statistics tooling. The initial foundation targets Kotlin 2.4.10 on JDK 21 and
 uses the checked-in Gradle 9.5.1 wrapper.
 
-The modules intentionally contain no analysis behavior yet:
-
 - `model`: stable request and result types;
 - `core`: public library facade and orchestration;
 - `resolver`: Gradle-backed Maven coordinate resolution;
@@ -61,3 +59,41 @@ protected API counts, implementation classes, JPMS modules and exports, and
 multi-release versions. It also reports static indicators for Kotlin metadata,
 reflection, service loading, JNI, and unsupported future bytecode. Indicators
 describe bytecode evidence; they do not claim that a code path executes.
+
+## Gradle resolver plugin
+
+Coordinate resolution is implemented as a settings plugin so repository policy
+is established before project evaluation. The sealed resolver build configures
+Maven Central followed by Google Maven, ignores and reports project repository
+declarations, and installs Gradle's JVM ecosystem compatibility rules.
+
+Apply the plugin in a dedicated `settings.gradle.kts`:
+
+```kotlin
+plugins {
+    id("com.bundlephobia.jvm-runtime-resolver")
+}
+```
+
+Then run the owned task with one exact coordinate:
+
+```sh
+./gradlew resolveJvmRuntime \
+  -PjvmResolver.coordinate=com.google.code.gson:gson:2.14.0
+```
+
+The task writes `build/jvm-resolver/result.json`. It records sorted components,
+selected JVM runtime variants and attributes, dependency edges and selection
+reasons, artifact paths and SHA-256 digests, and the permitted repository IDs.
+Unresolved edges, forbidden project repositories, and non-JAR runtime artifacts
+produce stable structured diagnostics. Gradle's public resolution API does not
+expose reliable per-artifact repository provenance, so repository IDs describe
+the complete ordered repository set rather than claiming which repository
+served an individual artifact.
+
+The root coordinate remains strictly exact. Transitive dependencies may request
+ranges because Gradle normalizes them to selected exact components and preserves
+both the requested edge and selected version in the result.
+
+The public `analyze` API remains disconnected until the end-to-end orchestration
+milestone; this plugin is the isolated resolver boundary it will invoke.
