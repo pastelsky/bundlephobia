@@ -1,8 +1,8 @@
 # JVM package build stats
 
 This workspace contains the JVM implementation of Bundlephobia's package build
-statistics tooling. The initial foundation targets Kotlin 2.4.10 on JDK 21 and
-uses the checked-in Gradle 9.5.1 wrapper.
+statistics tooling. It targets JDK 21, uses Kotlin 2.4.10 and a pinned Gradle
+9.5.1 resolver, and never executes code from the package being measured.
 
 - `model`: stable request and result types;
 - `core`: public library facade and orchestration;
@@ -24,6 +24,29 @@ yarn jvm:test
 Java Format to Java sources. `jvm:check` verifies formatting and compiles Kotlin
 and Java with warnings treated as errors; javac runs with all lint warnings
 enabled.
+
+## Published artifacts
+
+After the first release, use the Java/Kotlin library with:
+
+```kotlin
+dependencies {
+    implementation("com.bundlephobia:jvm-package-build-stats-core:VERSION")
+}
+```
+
+```java
+MavenCoordinate coordinate = MavenCoordinate.parse("com.google.code.gson:gson:2.14.0");
+PackageBuildStatsResult result =
+    new PackageBuildStatsAnalyzer().analyze(new AnalyzeRequest(coordinate));
+String json = ResultJson.encode(result);
+```
+
+The executable artifact is
+`com.bundlephobia:jvm-package-build-stats-cli:VERSION`. Both published JARs are
+self-contained so the internal analyzer modules are not part of the public
+Maven surface. The CLI JAR has a main-class manifest and can run with
+`java -jar`.
 
 ## API and CLI
 
@@ -76,14 +99,14 @@ multi-release versions. It also reports static indicators for Kotlin metadata,
 reflection, service loading, JNI, and unsupported future bytecode. Indicators
 describe bytecode evidence; they do not claim that a code path executes.
 
-## Gradle resolver plugin
+## Internal Gradle resolver plugin
 
 Coordinate resolution is implemented as a settings plugin so repository policy
 is established before project evaluation. The sealed resolver build configures
 Maven Central followed by Google Maven, ignores and reports project repository
 declarations, and installs Gradle's JVM ecosystem compatibility rules.
 
-Apply the plugin in a dedicated `settings.gradle.kts`:
+Within this workspace, apply the plugin in a dedicated `settings.gradle.kts`:
 
 ```kotlin
 plugins {
@@ -113,3 +136,7 @@ both the requested edge and selected version in the result.
 
 The public `analyze` API invokes this plugin through the sealed temporary build;
 the standalone task remains useful for inspecting normalized resolver evidence.
+
+## Contract and operations
+
+- [Release process](docs/RELEASING.md) documents signing and Maven Central verification.

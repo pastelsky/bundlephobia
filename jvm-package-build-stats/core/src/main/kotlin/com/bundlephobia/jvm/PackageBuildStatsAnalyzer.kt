@@ -133,6 +133,7 @@ public class PackageBuildStatsAnalyzer
             diagnostics: MutableList<Diagnostic>,
         ): PackageBuildStatsResult {
             diagnostics += conflictDiagnostics(resolverResult.resolution)
+            diagnostics += graphLimitDiagnostics(resolverResult.resolution)
             val analysesByDigest = evidence.associateBy { item -> item.artifact.digest.value }
             val enrichedResolution =
                 resolverResult.resolution.copy(
@@ -153,7 +154,7 @@ public class PackageBuildStatsAnalyzer
                     .filter { item -> item.artifact.coordinate == request.coordinate }
                     .minByOrNull { item -> item.artifact.fileName }
                     ?.analysis
-            val status = finalStatus(resolverResult, uniqueAnalyses, directArtifact)
+            val status = finalStatus(resolverResult, uniqueAnalyses, directArtifact, diagnostics)
 
             return PackageBuildStatsResult(
                 status = status,
@@ -172,10 +173,12 @@ public class PackageBuildStatsAnalyzer
             resolverResult: JvmResolutionResult,
             analyses: List<ArtifactAnalysis>,
             directArtifact: ArtifactAnalysis?,
+            diagnostics: List<Diagnostic>,
         ): ResultStatus {
             if (analyses.isEmpty() || directArtifact == null) return ResultStatus.FAILED
             val allStaticComplete = analyses.all { analysis -> analysis.status == ResultStatus.COMPLETE }
-            return if (resolverResult.status == ResultStatus.COMPLETE && allStaticComplete) {
+            val noBlockingDiagnostics = diagnostics.none { diagnostic -> diagnostic.severity == DiagnosticSeverity.ERROR }
+            return if (resolverResult.status == ResultStatus.COMPLETE && allStaticComplete && noBlockingDiagnostics) {
                 ResultStatus.COMPLETE
             } else {
                 ResultStatus.PARTIAL
@@ -191,7 +194,12 @@ public class PackageBuildStatsAnalyzer
                 evidence.filter { item -> item.artifact.coordinate == requested }.sumOf { item -> item.analysis.archiveBytes ?: 0 }
             val transitiveBytes =
                 evidence.filter { item -> item.artifact.coordinate != requested }.sumOf { item -> item.analysis.archiveBytes ?: 0 }
-            val paths = shortestPaths(requested, resolution)
+            val paths =
+                if (withinGraphLimits(resolution)) {
+                    shortestPaths(requested, resolution)
+                } else {
+                    emptyList()
+                }
             val largest =
                 evidence
                     .filter { item -> item.artifact.coordinate != requested }
@@ -261,10 +269,28 @@ public class PackageBuildStatsAnalyzer
                     )
                 }
 
+        private fun graphLimitDiagnostics(resolution: ResolutionStats): List<Diagnostic> =
+            if (withinGraphLimits(resolution)) {
+                emptyList()
+            } else {
+                listOf(
+                    Diagnostic(
+                        code = "DEPENDENCY_GRAPH_LIMIT_EXCEEDED",
+                        summary =
+                            "Selected graph has ${resolution.components.size} components and ${resolution.edges.size} edges; " +
+                                "limits are $MAX_GRAPH_COMPONENTS components and $MAX_GRAPH_EDGES edges",
+                        stage = AnalysisStage.ASSEMBLY,
+                    ),
+                )
+            }
+
+        private fun withinGraphLimits(resolution: ResolutionStats): Boolean =
+            resolution.components.size <= MAX_GRAPH_COMPONENTS && resolution.edges.size <= MAX_GRAPH_EDGES
+
         private fun currentToolchain(): ToolchainManifest =
             ToolchainManifest(
                 generation = "jvm-2026-08-g1",
-                analyzerVersion = "0.0.0-SNAPSHOT+$STATIC_ANALYZER_VERSION",
+                analyzerVersion = "${implementationVersion()}+$STATIC_ANALYZER_VERSION",
                 jdkVersion = System.getProperty("java.version"),
                 jdkVendor = System.getProperty("java.vendor"),
                 kotlinVersion = "2.4.10",
@@ -272,6 +298,9 @@ public class PackageBuildStatsAnalyzer
             )
 
         private fun elapsedMilliseconds(start: Long): Long = (System.nanoTime() - start) / NANOS_PER_MILLISECOND
+
+        private fun implementationVersion(): String =
+            PackageBuildStatsAnalyzer::class.java.`package`.implementationVersion ?: "0.1.0-SNAPSHOT"
 
         private data class ArtifactEvidence(
             val artifact: ResolvedArtifact,
@@ -282,5 +311,7 @@ public class PackageBuildStatsAnalyzer
             private const val STATIC_ANALYZER_VERSION = "static-v1"
             private const val LARGEST_ARTIFACT_LIMIT = 10
             private const val NANOS_PER_MILLISECOND = 1_000_000
+            private const val MAX_GRAPH_COMPONENTS = 10_000
+            private const val MAX_GRAPH_EDGES = 50_000
         }
     }

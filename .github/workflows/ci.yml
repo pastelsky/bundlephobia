@@ -52,3 +52,16 @@ jobs:
       - name: Build JVM package workspace
         working-directory: jvm-package-build-stats
         run: ./gradlew build --no-daemon
+      - name: Verify Maven publication layout
+        working-directory: jvm-package-build-stats
+        run: |
+          ./gradlew :core:publishMavenPublicationToReleaseTestRepository :cli:publishMavenPublicationToReleaseTestRepository --no-daemon
+          CORE_JAR=$(find build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -1)
+          CLI_JAR=$(find build/release-test-repository/com/bundlephobia/jvm-package-build-stats-cli/0.1.0-SNAPSHOT -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -1)
+          CORE_POM=$(find build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT -name '*.pom' | head -1)
+          test -n "$CORE_JAR" && test -n "$CLI_JAR" && test -n "$CORE_POM"
+          jar tf "$CORE_JAR" | grep -q 'com/bundlephobia/jvm/PackageBuildStatsAnalyzer.class'
+          jar tf "$CORE_JAR" | grep -q 'org/objectweb/asm/ClassReader.class'
+          jar tf "$CLI_JAR" | grep -q 'com/bundlephobia/jvm/cli/MainKt.class'
+          java -jar "$CLI_JAR" --help | grep -q 'Analyze published JVM package size'
+          ! grep -q '<dependencies>' "$CORE_POM"
