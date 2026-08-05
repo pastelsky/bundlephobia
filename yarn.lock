@@ -17228,6 +17228,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jvm-package-build-stats@workspace:jvm-package-build-stats":
+  version: 0.0.0-use.local
+  resolution: "jvm-package-build-stats@workspace:jvm-package-build-stats"
+  languageName: unknown
+  linkType: soft
+
 "jwa@npm:^1.4.1":
   version: 1.4.1
   resolution: "jwa@npm:1.4.1"
