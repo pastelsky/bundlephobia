@@ -2,14 +2,31 @@ import 'dotenv-defaults/config.js'
 import Fastify from 'fastify'
 import {
   getPackageStats,
-  getAllPackageExports,
   getPackageExportSizes,
+  getPackageExports,
   eventQueue,
 } from 'package-build-stats'
 import Amplitude from '@amplitude/node'
 import serializeError from './serializeError.js'
 
 const fastify = Fastify()
+
+async function analyzePackage(req, res, packageString, analyze) {
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  req.raw.once('aborted', abort)
+  res.raw.once('close', abort)
+
+  try {
+    return await analyze(packageString, {
+      installTimeout: 60000,
+      signal: controller.signal,
+    })
+  } finally {
+    req.raw.off('aborted', abort)
+    res.raw.off('close', abort)
+  }
+}
 
 function sendBuildError(res, packageString, error) {
   const serialized = serializeError(error)
@@ -42,9 +59,12 @@ if (process.env.AMPLITUDE_API_KEY) {
 fastify.get('/size', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
   try {
-    const result = await getPackageStats(packageString, {
-      installTimeout: 60000,
-    })
+    const result = await analyzePackage(
+      req,
+      res,
+      packageString,
+      getPackageStats
+    )
     return res.code(200).send(result)
   } catch (err) {
     return sendBuildError(res, packageString, err)
@@ -55,9 +75,12 @@ fastify.get('/exports-sizes', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
 
   try {
-    const result = await getPackageExportSizes(packageString, {
-      installTimeout: 60000,
-    })
+    const result = await analyzePackage(
+      req,
+      res,
+      packageString,
+      getPackageExportSizes
+    )
     return res.code(200).send(result)
   } catch (err) {
     return sendBuildError(res, packageString, err)
@@ -68,17 +91,22 @@ fastify.get('/exports', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
 
   try {
-    const result = await getAllPackageExports(packageString, {
-      installTimeout: 60000,
-    })
+    const result = await analyzePackage(
+      req,
+      res,
+      packageString,
+      getPackageExports
+    )
     return res.code(200).send(result)
   } catch (err) {
     return sendBuildError(res, packageString, err)
   }
 })
 
+const port = Number(process.env.PORT ?? 7002)
+
 fastify
-  .listen({ port: 7002 })
+  .listen({ port })
   .then(() => {
     console.log(`server listening on ${fastify.server.address().port}`)
   })

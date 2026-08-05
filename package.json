@@ -47,6 +47,7 @@
     "github": "^10.1.0",
     "got": "^9.6.0",
     "hot-shots": "^6.8.7",
+    "ioredis": "^5.10.0",
     "ipchecker": "^0.0.2",
     "is-empty-object": "^1.1.1",
     "jsdom": "^24.0.0",

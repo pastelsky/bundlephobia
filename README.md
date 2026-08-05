@@ -66,6 +66,13 @@ You can see a detailed stack trace in your devtools console, and [open an issue]
 
 See [Contributing](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/CONTRIBUTING.md)
 
+### Build worker coordination
+
+Build workers are independently addressable so every analysis for a package can
+reuse the same in-process installation. Set `REDIS_URL` to make the temporary
+package-to-worker affinity shared across web processes and topology changes.
+Without Redis, Bundlephobia falls back to deterministic rendezvous hashing.
+
 ## Sponsors
 
 <a href="https://www.digitalocean.com?utm_medium=opensource&utm_source=bundlephobia"><img width="100px" src="https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg"/></a>

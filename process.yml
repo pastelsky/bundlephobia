@@ -15,7 +15,7 @@ apps:
       DEBUG: 'bp:*'
       PORT: 5400
       CACHE_SERVICE_ENDPOINT: http://localhost:7001
-      BUILD_SERVICE_ENDPOINT: http://localhost:7002
+      BUILD_SERVICE_ENDPOINTS: http://localhost:7002,http://localhost:7003,http://localhost:7004
       MEMORY_DIAGNOSTICS_SERVICE: main
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 425M
       MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics
@@ -26,14 +26,18 @@ apps:
     node_args:
       - --require=./scripts/memory-diagnostics.cjs
     instances: 3
+    increment_var: PORT
     max_memory_restart: 1000M
-    exec_mode: cluster
+    # Each worker owns in-memory installation state, so it needs a stable port
+    # instead of PM2's cluster load balancer distributing requests arbitrarily.
+    exec_mode: fork
     error_file: logs/build-service.log
     out_file: logs/build-service.log
     kill_timeout: 20000
     env:
       NODE_ENV: production
       DEBUG: 'bp:*'
+      PORT: 7002
       MEMORY_DIAGNOSTICS_SERVICE: build-service
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
       MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics

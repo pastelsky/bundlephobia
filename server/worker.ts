@@ -4,17 +4,17 @@ interface WorkerpoolModule {
 
 interface PackageBuildStatsModule {
   getPackageStats(packageString: string): unknown
-  getAllPackageExports(packageString: string): unknown
+  getPackageExports(packageString: string): unknown
   getPackageExportSizes(packageString: string): unknown
 }
 
 const workerpool = require('workerpool') as WorkerpoolModule
-const { getPackageStats, getAllPackageExports, getPackageExportSizes } =
+const { getPackageStats, getPackageExports, getPackageExportSizes } =
   require('package-build-stats') as PackageBuildStatsModule
 
 workerpool.worker({
   getPackageStats,
-  getAllPackageExports,
+  getPackageExports,
   getPackageExportSizes,
 })
 
