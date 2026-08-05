@@ -9,6 +9,7 @@ import com.bundlephobia.jvm.model.ResultStatus
 import com.bundlephobia.jvm.model.TargetProfile
 import picocli.CommandLine
 import picocli.CommandLine.Command
+import picocli.CommandLine.IVersionProvider
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -39,13 +40,20 @@ public class JvmPackageBuildStatsCli(
     name = "jvm-package-build-stats",
     description = ["Analyze published JVM package size and dependency statistics."],
     mixinStandardHelpOptions = true,
-    version = ["jvm-package-build-stats 0.0.0-SNAPSHOT"],
+    versionProvider = CliVersionProvider::class,
 )
 private class RootCommand : Runnable {
     @Spec private lateinit var spec: CommandSpec
 
     override fun run() {
         spec.commandLine().usage(spec.commandLine().out)
+    }
+}
+
+private class CliVersionProvider : IVersionProvider {
+    override fun getVersion(): Array<String> {
+        val version = JvmPackageBuildStatsCli::class.java.`package`.implementationVersion ?: "0.1.0-SNAPSHOT"
+        return arrayOf("jvm-package-build-stats $version")
     }
 }
 

@@ -124,6 +124,46 @@ class PackageBuildStatsAnalyzerTest {
     }
 
     @Test
+    fun `oversized dependency graphs are bounded and preserve direct evidence`() {
+        val coordinates = (0..10_000).map { index -> MavenCoordinate.parse("example:node$index:1.0") }
+        val directPath = jar("root.jar", 1)
+        val resolution =
+            JvmResolutionResult(
+                status = ResultStatus.COMPLETE,
+                resolution =
+                    ResolutionStats(
+                        requested = coordinates.first(),
+                        components =
+                            coordinates.mapIndexed { index, coordinate ->
+                                ResolvedComponent(coordinate, direct = index == 0)
+                            },
+                        edges =
+                            coordinates.zipWithNext { from, selected ->
+                                DependencyEdge(from, selected.notation, selected)
+                            },
+                        artifacts =
+                            listOf(
+                                ResolvedArtifact(
+                                    coordinate = coordinates.first(),
+                                    fileName = directPath.fileName.toString(),
+                                    path = directPath.toString(),
+                                    extension = "jar",
+                                    variant = "runtime",
+                                    digest = ArtifactDigest(value = sha256(directPath)),
+                                ),
+                            ),
+                    ),
+            )
+
+        val result = analyzer(resolution).analyze(AnalyzeRequest(coordinates.first()))
+
+        assertEquals(ResultStatus.PARTIAL, result.status)
+        assertEquals(ResultStatus.COMPLETE, result.directArtifact?.status)
+        assertTrue(result.runtimeClosure.shortestPaths.isEmpty())
+        assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "DEPENDENCY_GRAPH_LIMIT_EXCEEDED" })
+    }
+
+    @Test
     fun `resolver timeouts are retryable structured failures`() {
         val executable = tempDir.resolve("slow-gradle")
         Files.writeString(executable, "#!/bin/sh\nsleep 2\n")

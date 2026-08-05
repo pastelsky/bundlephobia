@@ -91,6 +91,15 @@ class JvmPackageBuildStatsCliTest {
         assertEquals("", execution.stderr)
     }
 
+    @Test
+    fun `version follows the published implementation version`() {
+        val execution = execute("--version")
+
+        assertEquals(ExitCode.SUCCESS, execution.exitCode)
+        assertTrue(execution.stdout.matches(Regex("jvm-package-build-stats \\d+\\.\\d+\\.\\d+.*\\R")))
+        assertEquals("", execution.stderr)
+    }
+
     private fun execute(vararg args: String): Execution {
         val stdout = StringWriter()
         val stderr = StringWriter()

@@ -1,0 +1,88 @@
+name: Release JVM package build stats
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Maven release version, for example 0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jvm-package-build-stats-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/bundlephobia'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: maven-central
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate release version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'Version must use stable semantic version form such as 0.1.0' >&2
+            exit 2
+          fi
+      - name: Use JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: Build and test release
+        working-directory: jvm-package-build-stats
+        run: ./gradlew clean build --no-daemon -PjvmPackageBuildStatsVersion=${{ inputs.version }}
+      - name: Verify reproducible release archives
+        working-directory: jvm-package-build-stats
+        run: |
+          ./gradlew clean :core:shadowJar :cli:shadowJar --rerun-tasks --no-build-cache --no-daemon -PjvmPackageBuildStatsVersion=${{ inputs.version }}
+          sha256sum core/build/libs/core-${{ inputs.version }}.jar cli/build/libs/cli-${{ inputs.version }}.jar > "$RUNNER_TEMP/jvm-release.sha256"
+          ./gradlew clean :core:shadowJar :cli:shadowJar --rerun-tasks --no-build-cache --no-daemon -PjvmPackageBuildStatsVersion=${{ inputs.version }}
+          sha256sum --check "$RUNNER_TEMP/jvm-release.sha256"
+      - name: Publish signed artifacts to Maven Central
+        working-directory: jvm-package-build-stats
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.MAVEN_SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
+        run: |
+          ./gradlew :core:publishAndReleaseToMavenCentral :cli:publishAndReleaseToMavenCentral --no-daemon -PjvmPackageBuildStatsVersion=${{ inputs.version }}
+      - name: Verify released artifacts and checksums
+        working-directory: jvm-package-build-stats
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          VERIFY_DIR="$RUNNER_TEMP/jvm-central-verify"
+          mkdir -p "$VERIFY_DIR"
+          cp "core/build/libs/core-$RELEASE_VERSION.jar" "$VERIFY_DIR/expected-core.jar"
+          cp "cli/build/libs/cli-$RELEASE_VERSION.jar" "$VERIFY_DIR/expected-cli.jar"
+          for attempt in $(seq 1 60); do
+            CORE_URL="https://repo1.maven.org/maven2/com/bundlephobia/jvm-package-build-stats-core/$RELEASE_VERSION/jvm-package-build-stats-core-$RELEASE_VERSION.jar"
+            CLI_URL="https://repo1.maven.org/maven2/com/bundlephobia/jvm-package-build-stats-cli/$RELEASE_VERSION/jvm-package-build-stats-cli-$RELEASE_VERSION.jar"
+            if curl --fail --silent --show-error "$CORE_URL" --output "$VERIFY_DIR/actual-core.jar" && curl --fail --silent --show-error "$CLI_URL" --output "$VERIFY_DIR/actual-cli.jar"; then
+              break
+            fi
+            sleep 30
+          done
+          test -s "$VERIFY_DIR/actual-core.jar" && test -s "$VERIFY_DIR/actual-cli.jar"
+          cmp "$VERIFY_DIR/expected-core.jar" "$VERIFY_DIR/actual-core.jar"
+          cmp "$VERIFY_DIR/expected-cli.jar" "$VERIFY_DIR/actual-cli.jar"
+          REMOTE_CORE_SHA1=$(curl --fail --silent --show-error "$CORE_URL.sha1")
+          REMOTE_CLI_SHA1=$(curl --fail --silent --show-error "$CLI_URL.sha1")
+          test "$REMOTE_CORE_SHA1" = "$(sha1sum "$VERIFY_DIR/actual-core.jar" | cut -d ' ' -f 1)"
+          test "$REMOTE_CLI_SHA1" = "$(sha1sum "$VERIFY_DIR/actual-cli.jar" | cut -d ' ' -f 1)"
+          sha256sum "$VERIFY_DIR"/*.jar
