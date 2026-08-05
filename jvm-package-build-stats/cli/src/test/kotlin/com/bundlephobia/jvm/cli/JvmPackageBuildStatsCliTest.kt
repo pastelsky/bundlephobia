@@ -47,7 +47,7 @@ class JvmPackageBuildStatsCliTest {
     fun `inspect streams a local jar and writes complete JSON`() {
         val jar = tempDir.resolve("fixture.jar")
         ZipOutputStream(Files.newOutputStream(jar)).use { output ->
-            output.putNextEntry(ZipEntry("example/Fixture.class"))
+            output.putNextEntry(ZipEntry("example/resource.txt"))
             output.write(byteArrayOf(1, 2, 3))
             output.closeEntry()
         }
@@ -59,7 +59,8 @@ class JvmPackageBuildStatsCliTest {
         val result = ResultJson.decodeArtifactAnalysis(execution.stdout.trim())
         assertEquals(ResultStatus.COMPLETE, result.status)
         assertEquals(3, result.expandedBytes)
-        assertEquals("bytecode", result.payload.single().category)
+        assertEquals("other", result.payload.single().category)
+        assertEquals(0, result.classfiles?.analyzedClasses)
     }
 
     @Test

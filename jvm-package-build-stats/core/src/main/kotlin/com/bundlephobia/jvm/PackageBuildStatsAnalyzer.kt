@@ -1,6 +1,7 @@
 package com.bundlephobia.jvm
 
 import com.bundlephobia.jvm.archive.JarArchiveAnalyzer
+import com.bundlephobia.jvm.classfile.JarClassfileAnalyzer
 import com.bundlephobia.jvm.model.AnalysisStage
 import com.bundlephobia.jvm.model.AnalyzeRequest
 import com.bundlephobia.jvm.model.ArtifactAnalysis
@@ -13,6 +14,7 @@ import java.nio.file.Path
 
 public class PackageBuildStatsAnalyzer {
     private val archiveAnalyzer = JarArchiveAnalyzer()
+    private val classfileAnalyzer = JarClassfileAnalyzer()
 
     public fun analyze(request: AnalyzeRequest): PackageBuildStatsResult =
         PackageBuildStatsResult(
@@ -24,7 +26,18 @@ public class PackageBuildStatsAnalyzer {
             diagnostics = listOf(notImplementedDiagnostic()),
         )
 
-    public fun inspect(path: Path): ArtifactAnalysis = archiveAnalyzer.analyze(path)
+    public fun inspect(path: Path): ArtifactAnalysis {
+        val archive = archiveAnalyzer.analyze(path)
+        if (archive.status != ResultStatus.COMPLETE) return archive
+
+        val classfiles = classfileAnalyzer.analyze(path)
+        return archive.copy(
+            status = if (classfiles.diagnostics.isEmpty()) ResultStatus.COMPLETE else ResultStatus.PARTIAL,
+            namespaces = classfiles.namespaces,
+            classfiles = classfiles.stats,
+            diagnostics = classfiles.diagnostics,
+        )
+    }
 
     private fun notImplementedDiagnostic(): Diagnostic =
         Diagnostic(

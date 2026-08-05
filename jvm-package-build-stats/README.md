@@ -54,3 +54,10 @@ bytecode, metadata, services, licenses, signatures, Kotlin metadata, and other
 content. It rejects unsafe paths, duplicates, excessive entry counts and sizes,
 suspicious compression ratios, and malformed archives. ZIP64 archives are
 supported subject to the same long-valued size and count limits.
+
+For valid archives, inspection uses ASM visitors without class loading to report
+the effective Java 21 class view, deterministic package namespaces, public and
+protected API counts, implementation classes, JPMS modules and exports, and
+multi-release versions. It also reports static indicators for Kotlin metadata,
+reflection, service loading, JNI, and unsupported future bytecode. Indicators
+describe bytecode evidence; they do not claim that a code path executes.

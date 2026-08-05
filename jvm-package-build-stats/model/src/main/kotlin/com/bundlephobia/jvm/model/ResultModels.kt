@@ -117,6 +117,7 @@ public data class PayloadCategoryStats(
     public val entries: Int,
 )
 
+/** Per-package classfile measurements derived from JVM internal class names. */
 @Serializable
 public data class NamespaceStats(
     public val name: String,
@@ -124,6 +125,34 @@ public data class NamespaceStats(
     public val classes: Int,
     public val publicTypes: Int,
     public val publicMembers: Int,
+    public val protectedTypes: Int = 0,
+    public val protectedMembers: Int = 0,
+    public val implementationClasses: Int = 0,
+)
+
+/**
+ * Static measurements collected from the effective classfiles in a JAR.
+ *
+ * Indicator counts are evidence of relevant bytecode references, not proof that the behavior runs.
+ * Multi-release versions list every declared version while class counts reflect the configured runtime view.
+ */
+@Serializable
+public data class ClassfileStats(
+    public val analyzedClasses: Int = 0,
+    public val implementationClasses: Int = 0,
+    public val publicTypes: Int = 0,
+    public val protectedTypes: Int = 0,
+    public val publicMembers: Int = 0,
+    public val protectedMembers: Int = 0,
+    public val moduleInfoPresent: Boolean = false,
+    public val moduleNames: List<String> = emptyList(),
+    public val moduleExports: List<String> = emptyList(),
+    public val multiReleaseVersions: List<Int> = emptyList(),
+    public val kotlinMetadataClasses: Int = 0,
+    public val reflectionIndicatorClasses: Int = 0,
+    public val serviceLoaderIndicatorClasses: Int = 0,
+    public val jniIndicatorClasses: Int = 0,
+    public val unsupportedBytecodeVersions: List<Int> = emptyList(),
 )
 
 @Serializable
@@ -136,6 +165,8 @@ public data class ArtifactAnalysis(
     public val expandedBytes: Long? = null,
     public val payload: List<PayloadCategoryStats> = emptyList(),
     public val namespaces: List<NamespaceStats> = emptyList(),
+    /** Classfile measurements, or `null` when classfile analysis did not run. */
+    public val classfiles: ClassfileStats? = null,
     public val diagnostics: List<Diagnostic> = emptyList(),
 )
 
