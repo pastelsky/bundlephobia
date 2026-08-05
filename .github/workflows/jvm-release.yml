@@ -23,7 +23,7 @@ jobs:
     environment: maven-central
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate release version
         env:
           RELEASE_VERSION: ${{ inputs.version }}
@@ -33,7 +33,7 @@ jobs:
             exit 2
           fi
       - name: Use JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
