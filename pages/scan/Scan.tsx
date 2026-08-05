@@ -40,6 +40,7 @@ type ScanState = {
   remoteUrlInput: string
   isLoadingRemoteUrl: boolean
   remoteUrlError: string | null
+  isUrlFormOpen: boolean
 }
 
 type PersistedScanState = {
@@ -59,6 +60,7 @@ class Scan extends Component<ScanProps, ScanState> {
     remoteUrlInput: '',
     isLoadingRemoteUrl: false,
     remoteUrlError: null,
+    isUrlFormOpen: false,
   }
 
   private packageSelectionContainerRef = createRef<HTMLUListElement>()
