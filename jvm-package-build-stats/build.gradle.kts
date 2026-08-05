@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     base
     kotlin("jvm") version "2.4.10" apply false
+    kotlin("plugin.serialization") version "2.4.10" apply false
     id("com.diffplug.spotless") version "8.9.0"
 }
 
@@ -44,6 +45,14 @@ subprojects {
 
     dependencyLocking {
         lockAllConfigurations()
+    }
+
+    dependencies {
+        add("testImplementation", kotlin("test"))
+    }
+
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
     }
 }
 
