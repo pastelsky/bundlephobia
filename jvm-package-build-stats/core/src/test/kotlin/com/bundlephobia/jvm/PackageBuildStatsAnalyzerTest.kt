@@ -70,9 +70,16 @@ class PackageBuildStatsAnalyzerTest {
                 .path,
         )
         assertEquals(
-            result.runtimeClosure.compressedBytes,
+            result.runtimeClosure.archiveBytes,
             result.runtimeClosure.directArtifactBytes + result.runtimeClosure.transitiveArtifactBytes,
         )
+        assertEquals(result.runtimeClosure.archiveBytes, result.sizes.runtimeArchiveBytes)
+        assertEquals(result.runtimeClosure.expandedBytes, result.sizes.runtimeExpandedBytes)
+        assertEquals(3, result.dependencySizes.size)
+        assertEquals(root, result.dependencySizes.single { it.requested }.coordinate)
+        assertEquals(1, result.dependencySizes.single { it.coordinate == middle }.depth)
+        assertTrue(result.dependencySizes.single { it.coordinate == middle }.direct)
+        assertEquals(2, result.dependencySizes.single { it.coordinate == leaf }.depth)
         assertEquals(2, result.runtimeClosure.largestTransitiveArtifacts.size)
         assertEquals(
             1,
@@ -135,7 +142,7 @@ class PackageBuildStatsAnalyzerTest {
                         requested = coordinates.first(),
                         components =
                             coordinates.mapIndexed { index, coordinate ->
-                                ResolvedComponent(coordinate, direct = index == 0)
+                                ResolvedComponent(coordinate, requested = index == 0)
                             },
                         edges =
                             coordinates.zipWithNext { from, selected ->
@@ -247,7 +254,7 @@ class PackageBuildStatsAnalyzerTest {
             resolution =
                 ResolutionStats(
                     requested = requested,
-                    components = coordinates.map { coordinate -> ResolvedComponent(coordinate, direct = coordinate == requested) },
+                    components = coordinates.map { coordinate -> ResolvedComponent(coordinate, requested = coordinate == requested) },
                     edges = edges,
                     artifacts = artifacts,
                     repositories = listOf("maven-central", "google-maven"),

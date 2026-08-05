@@ -185,7 +185,8 @@ public data class ResolvedComponent
     constructor(
         public val coordinate: MavenCoordinate,
         public val variant: String? = null,
-        public val direct: Boolean,
+        /** Whether this is the coordinate explicitly requested by the caller. */
+        public val requested: Boolean,
         public val artifacts: List<ArtifactAnalysis> = emptyList(),
         public val variants: List<ResolvedVariant> = emptyList(),
         public val selectionReasons: List<String> = emptyList(),
@@ -250,7 +251,7 @@ public data class JvmResolutionResult(
 @Serializable
 public data class RuntimeClosureStats(
     /** Bytes occupied by every unique runtime JAR, including the requested artifact. */
-    public val compressedBytes: Long = 0,
+    public val archiveBytes: Long = 0,
     /** Sum of uncompressed entry bytes across every unique runtime JAR. */
     public val expandedBytes: Long = 0,
     /** Archive bytes belonging to the requested component. */
@@ -265,6 +266,33 @@ public data class RuntimeClosureStats(
     public val shortestPaths: List<DependencyPath> = emptyList(),
     /** Up to ten largest transitive runtime JARs, ordered by archive bytes. */
     public val largestTransitiveArtifacts: List<RuntimeArtifactSummary> = emptyList(),
+)
+
+/** Headline package-size measurements for the selected JVM runtime closure. */
+@Serializable
+public data class PackageSizeStats(
+    /** Complete bytes of every unique selected runtime JAR. */
+    public val runtimeArchiveBytes: Long = 0,
+    /** Sum of uncompressed entry bytes across every unique selected runtime JAR. */
+    public val runtimeExpandedBytes: Long = 0,
+    /** Complete archive bytes belonging to the requested coordinate. */
+    public val directArtifactArchiveBytes: Long = 0,
+    /** Complete archive bytes belonging to selected transitive coordinates. */
+    public val transitiveArtifactArchiveBytes: Long = 0,
+)
+
+/** Exact selected-artifact contribution for one component in the runtime closure. */
+@Serializable
+public data class DependencySizeStats(
+    public val coordinate: MavenCoordinate,
+    public val archiveBytes: Long,
+    public val expandedBytes: Long,
+    public val artifactCount: Int,
+    public val depth: Int,
+    public val requested: Boolean,
+    /** True for dependencies selected one edge away from the requested coordinate. */
+    public val direct: Boolean,
+    public val path: List<MavenCoordinate>,
 )
 
 /** A shortest selected-dependency path beginning at the requested component. */
@@ -299,6 +327,8 @@ public data class PackageBuildStatsResult(
     public val target: TargetProfile,
     public val toolchain: ToolchainManifest,
     public val resolution: ResolutionStats,
+    public val sizes: PackageSizeStats = PackageSizeStats(),
+    public val dependencySizes: List<DependencySizeStats> = emptyList(),
     public val artifacts: List<ArtifactAnalysis> = emptyList(),
     public val directArtifact: ArtifactAnalysis? = null,
     public val runtimeClosure: RuntimeClosureStats = RuntimeClosureStats(),

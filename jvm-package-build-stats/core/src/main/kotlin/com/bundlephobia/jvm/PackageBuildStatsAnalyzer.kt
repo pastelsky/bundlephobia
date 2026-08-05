@@ -6,11 +6,13 @@ import com.bundlephobia.jvm.model.AnalysisStage
 import com.bundlephobia.jvm.model.AnalyzeRequest
 import com.bundlephobia.jvm.model.ArtifactAnalysis
 import com.bundlephobia.jvm.model.DependencyPath
+import com.bundlephobia.jvm.model.DependencySizeStats
 import com.bundlephobia.jvm.model.Diagnostic
 import com.bundlephobia.jvm.model.DiagnosticSeverity
 import com.bundlephobia.jvm.model.JvmResolutionResult
 import com.bundlephobia.jvm.model.MavenCoordinate
 import com.bundlephobia.jvm.model.PackageBuildStatsResult
+import com.bundlephobia.jvm.model.PackageSizeStats
 import com.bundlephobia.jvm.model.ResolutionStats
 import com.bundlephobia.jvm.model.ResolvedArtifact
 import com.bundlephobia.jvm.model.ResultStatus
@@ -155,6 +157,8 @@ public class PackageBuildStatsAnalyzer
                     .minByOrNull { item -> item.artifact.fileName }
                     ?.analysis
             val status = finalStatus(resolverResult, uniqueAnalyses, directArtifact, diagnostics)
+            val closure = closureStats(request.coordinate, enrichedResolution, evidence)
+            val dependencySizes = dependencySizes(request.coordinate, enrichedResolution, evidence)
 
             return PackageBuildStatsResult(
                 status = status,
@@ -162,9 +166,17 @@ public class PackageBuildStatsAnalyzer
                 target = request.target,
                 toolchain = currentToolchain(),
                 resolution = enrichedResolution,
+                sizes =
+                    PackageSizeStats(
+                        runtimeArchiveBytes = closure.archiveBytes,
+                        runtimeExpandedBytes = closure.expandedBytes,
+                        directArtifactArchiveBytes = closure.directArtifactBytes,
+                        transitiveArtifactArchiveBytes = closure.transitiveArtifactBytes,
+                    ),
+                dependencySizes = dependencySizes,
                 artifacts = uniqueAnalyses,
                 directArtifact = directArtifact,
-                runtimeClosure = closureStats(request.coordinate, enrichedResolution, evidence),
+                runtimeClosure = closure,
                 diagnostics = diagnostics.distinctBy { it.code to it.summary }.sortedWith(compareBy(Diagnostic::code, Diagnostic::summary)),
             )
         }
@@ -215,7 +227,7 @@ public class PackageBuildStatsAnalyzer
                     .take(LARGEST_ARTIFACT_LIMIT)
 
             return RuntimeClosureStats(
-                compressedBytes = directBytes + transitiveBytes,
+                archiveBytes = directBytes + transitiveBytes,
                 expandedBytes = evidence.sumOf { item -> item.analysis.expandedBytes ?: 0 },
                 directArtifactBytes = directBytes,
                 transitiveArtifactBytes = transitiveBytes,
@@ -229,6 +241,30 @@ public class PackageBuildStatsAnalyzer
                 shortestPaths = paths,
                 largestTransitiveArtifacts = largest,
             )
+        }
+
+        private fun dependencySizes(
+            requested: MavenCoordinate,
+            resolution: ResolutionStats,
+            evidence: List<ArtifactEvidence>,
+        ): List<DependencySizeStats> {
+            val paths = shortestPaths(requested, resolution).associateBy(DependencyPath::coordinate)
+            return evidence
+                .groupBy { item -> item.artifact.coordinate }
+                .map { (coordinate, items) ->
+                    val dependencyPath = paths[coordinate]
+                    val depth = dependencyPath?.depth ?: if (coordinate == requested) 0 else -1
+                    DependencySizeStats(
+                        coordinate = coordinate,
+                        archiveBytes = items.sumOf { item -> item.analysis.archiveBytes ?: 0 },
+                        expandedBytes = items.sumOf { item -> item.analysis.expandedBytes ?: 0 },
+                        artifactCount = items.size,
+                        depth = depth,
+                        requested = coordinate == requested,
+                        direct = depth == 1,
+                        path = dependencyPath?.path.orEmpty(),
+                    )
+                }.sortedWith(compareBy(DependencySizeStats::depth, { it.coordinate.notation }))
         }
 
         private fun shortestPaths(

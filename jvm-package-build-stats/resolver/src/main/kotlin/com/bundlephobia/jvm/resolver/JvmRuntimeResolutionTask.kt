@@ -171,14 +171,14 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
         )
     }
 
-    private fun ResolvedComponentResult.toModel(direct: Boolean): ResolvedComponent? {
+    private fun ResolvedComponentResult.toModel(requested: Boolean): ResolvedComponent? {
         val identifier = id as? ModuleComponentIdentifier ?: return null
         val coordinate = MavenCoordinate.parse("${identifier.group}:${identifier.module}:${identifier.version}")
         val normalizedVariants = variants.map { variant -> variant.toModel() }.sortedBy(ResolvedVariant::name)
         return ResolvedComponent(
             coordinate = coordinate,
             variant = normalizedVariants.singleOrNull()?.name,
-            direct = direct,
+            requested = requested,
             variants = normalizedVariants,
             selectionReasons =
                 selectionReason.descriptions

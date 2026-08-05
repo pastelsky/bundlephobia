@@ -23,7 +23,7 @@ class ResultJsonTest {
                         gradleVersion = "9.5.1",
                     ),
                 resolution = ResolutionStats(coordinate),
-                runtimeClosure = RuntimeClosureStats(compressedBytes = 1_024),
+                runtimeClosure = RuntimeClosureStats(archiveBytes = 1_024),
             )
 
         val encoded = ResultJson.encode(result)
@@ -32,7 +32,7 @@ class ResultJsonTest {
         assertEquals(result, decoded)
         assertTrue(encoded.contains("\"schemaVersion\":1"))
         assertTrue(encoded.contains("\"target\":\"jvm-runtime\""))
-        assertTrue(encoded.contains("\"compressedBytes\":1024"))
+        assertTrue(encoded.contains("\"archiveBytes\":1024"))
         assertTrue(encoded.contains("\"directArtifact\":null"))
     }
 

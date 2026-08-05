@@ -27,7 +27,7 @@ class JvmPackageBuildStatsCliTest {
         val result = ResultJson.decodeResult(execution.stdout.trim())
         assertEquals(ResultStatus.COMPLETE, result.status)
         assertEquals("com.google.code.gson:gson:2.14.0", result.coordinate.notation)
-        assertTrue(result.runtimeClosure.compressedBytes > 0)
+        assertTrue(result.runtimeClosure.archiveBytes > 0)
         assertTrue(result.artifacts.isNotEmpty())
         assertEquals("gson-2.14.0.jar", result.directArtifact?.displayName)
     }
