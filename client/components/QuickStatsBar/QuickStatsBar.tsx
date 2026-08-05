@@ -84,7 +84,9 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
           <div className="quick-stats-bar__stat">
             <SideEffectIcon className="quick-stats-bar__stat-icon" />{' '}
             <span>
-              {!(hasSideEffects === false) && hasSideEffects.length
+              {!(hasSideEffects === false) &&
+              Array.isArray(hasSideEffects) &&
+              hasSideEffects.length
                 ? 'some side-effects'
                 : 'side-effect free'}
             </span>
