@@ -1,13 +1,21 @@
 package com.bundlephobia.jvm.cli
 
 import com.bundlephobia.jvm.model.ResultJson
+import com.bundlephobia.jvm.model.ResultStatus
+import org.junit.jupiter.api.io.TempDir
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class JvmPackageBuildStatsCliTest {
+    @TempDir lateinit var tempDir: Path
+
     @Test
     fun `analyze validates the coordinate and writes only JSON to stdout`() {
         val execution = execute("analyze", "com.google.code.gson:gson:2.13.1")
@@ -25,15 +33,33 @@ class JvmPackageBuildStatsCliTest {
     }
 
     @Test
-    fun `inspect exposes the command contract without reading the file`() {
+    fun `inspect emits a structured input failure for a missing file`() {
         val execution = execute("inspect", "missing.jar")
 
         assertEquals(ExitCode.ANALYSIS_FAILED, execution.exitCode)
         assertEquals("", execution.stderr)
-        assertEquals(
-            "missing.jar",
-            ResultJson.decodeArtifactAnalysis(execution.stdout.trim()).displayName,
-        )
+        val result = ResultJson.decodeArtifactAnalysis(execution.stdout.trim())
+        assertEquals("missing.jar", result.displayName)
+        assertEquals("ARCHIVE_NOT_REGULAR_FILE", result.diagnostics.single().code)
+    }
+
+    @Test
+    fun `inspect streams a local jar and writes complete JSON`() {
+        val jar = tempDir.resolve("fixture.jar")
+        ZipOutputStream(Files.newOutputStream(jar)).use { output ->
+            output.putNextEntry(ZipEntry("example/Fixture.class"))
+            output.write(byteArrayOf(1, 2, 3))
+            output.closeEntry()
+        }
+
+        val execution = execute("inspect", jar.toString())
+
+        assertEquals(ExitCode.SUCCESS, execution.exitCode)
+        assertEquals("", execution.stderr)
+        val result = ResultJson.decodeArtifactAnalysis(execution.stdout.trim())
+        assertEquals(ResultStatus.COMPLETE, result.status)
+        assertEquals(3, result.expandedBytes)
+        assertEquals("bytecode", result.payload.single().category)
     }
 
     @Test

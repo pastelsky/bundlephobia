@@ -1,5 +1,6 @@
 package com.bundlephobia.jvm
 
+import com.bundlephobia.jvm.archive.JarArchiveAnalyzer
 import com.bundlephobia.jvm.model.AnalysisStage
 import com.bundlephobia.jvm.model.AnalyzeRequest
 import com.bundlephobia.jvm.model.ArtifactAnalysis
@@ -11,6 +12,8 @@ import com.bundlephobia.jvm.model.ToolchainManifest
 import java.nio.file.Path
 
 public class PackageBuildStatsAnalyzer {
+    private val archiveAnalyzer = JarArchiveAnalyzer()
+
     public fun analyze(request: AnalyzeRequest): PackageBuildStatsResult =
         PackageBuildStatsResult(
             status = ResultStatus.FAILED,
@@ -21,12 +24,7 @@ public class PackageBuildStatsAnalyzer {
             diagnostics = listOf(notImplementedDiagnostic()),
         )
 
-    public fun inspect(path: Path): ArtifactAnalysis =
-        ArtifactAnalysis(
-            status = ResultStatus.FAILED,
-            displayName = path.fileName?.toString() ?: "<jar>",
-            diagnostics = listOf(notImplementedDiagnostic()),
-        )
+    public fun inspect(path: Path): ArtifactAnalysis = archiveAnalyzer.analyze(path)
 
     private fun notImplementedDiagnostic(): Diagnostic =
         Diagnostic(
