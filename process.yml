@@ -28,7 +28,7 @@ apps:
     instances: 3
     increment_var: PORT
     max_memory_restart: 1000M
-    # Each worker owns in-memory installation state, so it needs a stable port
+    # Each worker holds in-memory installation state, so it needs a stable port
     # instead of PM2's cluster load balancer distributing requests arbitrarily.
     exec_mode: fork
     error_file: logs/build-service.log
