@@ -1,12 +1,10 @@
 import createDebug from 'debug'
-import Redis from 'ioredis'
 
 import logger from './Logger'
 import Queue from './Queue'
 import config from './config'
 import type { FailureCacheEntry } from './types'
 import { registerMetricsProvider } from './MemoryDiagnostics'
-import PackageWorkerRegistry from './api/PackageWorkerRegistry'
 
 interface WorkerPoolExecution extends Promise<unknown> {
   cancel?: () => void
@@ -48,23 +46,11 @@ const requestQueue = new Queue({
   maxAge: 60 * 2,
 })
 
-const affinityRedis = process.env.REDIS_URL
-  ? new Redis(process.env.REDIS_URL, {
-      lazyConnect: true,
-      connectTimeout: 1_000,
-      maxRetriesPerRequest: 1,
-    })
-  : undefined
-affinityRedis?.on('error', error => {
-  debug('Redis package-worker connection failed: %O', error)
-})
-const packageWorkerRegistry = new PackageWorkerRegistry(affinityRedis)
-
 const pool = workerpool.pool('./server/worker.js', {
   maxWorkers: config.MAX_WORKERS,
 }) as WorkerPoolLike
 
-if (process.env.BUILD_SERVICE_ENDPOINT || process.env.BUILD_SERVICE_ENDPOINTS) {
+if (process.env.BUILD_SERVICE_ENDPOINT) {
   pool.terminate()
 }
 
@@ -73,11 +59,4 @@ registerMetricsProvider('main', () => ({
   failureCacheEntries: failureCache.itemCount,
 }))
 
-export {
-  debug,
-  failureCache,
-  logger,
-  packageWorkerRegistry,
-  pool,
-  requestQueue,
-}
+export { debug, failureCache, logger, pool, requestQueue }

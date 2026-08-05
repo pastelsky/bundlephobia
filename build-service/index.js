@@ -20,6 +20,9 @@ async function analyzePackage(req, res, packageString, analyze) {
   try {
     return await analyze(packageString, {
       installTimeout: 60000,
+      installationService: process.env.INSTALLATION_SERVICE_ENDPOINT
+        ? { url: process.env.INSTALLATION_SERVICE_ENDPOINT }
+        : undefined,
       signal: controller.signal,
     })
   } finally {
@@ -103,10 +106,8 @@ fastify.get('/exports', async (req, res) => {
   }
 })
 
-const port = Number(process.env.PORT ?? 7002)
-
 fastify
-  .listen({ port })
+  .listen({ port: 7002 })
   .then(() => {
     console.log(`server listening on ${fastify.server.address().port}`)
   })

@@ -66,12 +66,12 @@ You can see a detailed stack trace in your devtools console, and [open an issue]
 
 See [Contributing](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/CONTRIBUTING.md)
 
-### Build worker coordination
+### Installation service
 
-Build workers are independently addressable so every analysis for a package can
-reuse the same in-process installation. Set `REDIS_URL` to make the temporary
-package-to-worker affinity shared across web processes and topology changes.
-Without Redis, Bundlephobia falls back to deterministic rendezvous hashing.
+Build workers use `INSTALLATION_SERVICE_ENDPOINT` when configured. The singleton
+installation service queues package-manager work, shares completed installations
+briefly across requests, and gives each analysis an isolated writable workspace.
+Without the service, package-build-stats installs packages locally as before.
 
 ## Sponsors
 

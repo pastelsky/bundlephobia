@@ -16,10 +16,6 @@ jest.mock('../server/init', () => ({
   pool: {
     exec: jest.fn(),
   },
-  packageWorkerRegistry: {
-    rank: jest.fn((_packageString, endpoints) => endpoints),
-    markUnavailable: jest.fn(),
-  },
   requestQueue: {
     addExecutor: jest.fn(),
     cancel: jest.fn(),
@@ -40,11 +36,9 @@ const mockedRequestQueue = requestQueue as jest.Mocked<typeof requestQueue>
 
 describe('build service unavailability', () => {
   const originalBuildServiceEndpoint = process.env.BUILD_SERVICE_ENDPOINT
-  const originalBuildServiceEndpoints = process.env.BUILD_SERVICE_ENDPOINTS
 
   beforeEach(() => {
     jest.clearAllMocks()
-    delete process.env.BUILD_SERVICE_ENDPOINTS
     process.env.BUILD_SERVICE_ENDPOINT = 'http://127.0.0.1:7002'
   })
 
@@ -57,11 +51,6 @@ describe('build service unavailability', () => {
       delete process.env.BUILD_SERVICE_ENDPOINT
     } else {
       process.env.BUILD_SERVICE_ENDPOINT = originalBuildServiceEndpoint
-    }
-    if (originalBuildServiceEndpoints === undefined) {
-      delete process.env.BUILD_SERVICE_ENDPOINTS
-    } else {
-      process.env.BUILD_SERVICE_ENDPOINTS = originalBuildServiceEndpoints
     }
   })
 
@@ -92,39 +81,6 @@ describe('build service unavailability', () => {
         url,
       },
     })
-  })
-
-  it('falls back to the next package worker when one is unreachable', async () => {
-    delete process.env.BUILD_SERVICE_ENDPOINT
-    process.env.BUILD_SERVICE_ENDPOINTS =
-      'http://127.0.0.1:7002,http://127.0.0.1:7003'
-    const networkError = Object.assign(new Error('connect ECONNREFUSED'), {
-      isAxiosError: true,
-      request: {},
-    })
-    jest
-      .spyOn(axios, 'get')
-      .mockRejectedValueOnce(networkError)
-      .mockResolvedValueOnce({ data: { size: 123 } })
-
-    new BuildService()
-    const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
-    const controller = new AbortController()
-
-    await expect(
-      executor(
-        { packageString: '@example/fallback@1.0.0' },
-        {
-          signal: controller.signal as unknown as globalThis.AbortSignal,
-        }
-      )
-    ).resolves.toEqual({ size: 123 })
-    expect(axios.get).toHaveBeenCalledTimes(2)
-    expect(
-      new Set(
-        (axios.get as jest.Mock).mock.calls.map(([url]) => new URL(url).origin)
-      )
-    ).toEqual(new Set(['http://127.0.0.1:7002', 'http://127.0.0.1:7003']))
   })
 
   it('serializes native errors into the build-service error contract', () => {
@@ -247,8 +203,6 @@ describe('build service unavailability', () => {
       }
     )
 
-    // Worker selection is asynchronous; let the request attach its abort listener.
-    await Promise.resolve()
     controller.abort()
 
     await expect(result).rejects.toMatchObject({
@@ -286,8 +240,6 @@ describe('build service unavailability', () => {
       }
     )
 
-    // Worker selection is asynchronous; let the worker attach its abort listener.
-    await Promise.resolve()
     controller.abort()
 
     await expect(result).rejects.toThrow('worker execution cancelled')
