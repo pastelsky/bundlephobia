@@ -19,8 +19,14 @@ public object ResultJson {
     public fun encode(analysis: ArtifactAnalysis): String = json.encodeToString(analysis)
 
     @JvmStatic
+    public fun encode(result: JvmResolutionResult): String = json.encodeToString(result)
+
+    @JvmStatic
     public fun decodeResult(value: String): PackageBuildStatsResult = json.decodeFromString(value)
 
     @JvmStatic
     public fun decodeArtifactAnalysis(value: String): ArtifactAnalysis = json.decodeFromString(value)
+
+    @JvmStatic
+    public fun decodeResolution(value: String): JvmResolutionResult = json.decodeFromString(value)
 }

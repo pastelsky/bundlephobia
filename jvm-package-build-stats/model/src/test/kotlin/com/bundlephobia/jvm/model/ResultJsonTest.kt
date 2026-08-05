@@ -35,4 +35,20 @@ class ResultJsonTest {
         assertTrue(encoded.contains("\"compressedBytes\":1024"))
         assertTrue(encoded.contains("\"directArtifact\":null"))
     }
+
+    @Test
+    fun `round trips standalone resolution evidence`() {
+        val coordinate = MavenCoordinate.parse("com.google.code.gson:gson:2.14.0")
+        val result =
+            JvmResolutionResult(
+                status = ResultStatus.COMPLETE,
+                resolution =
+                    ResolutionStats(
+                        requested = coordinate,
+                        repositories = listOf("maven-central", "google-maven"),
+                    ),
+            )
+
+        assertEquals(result, ResultJson.decodeResolution(ResultJson.encode(result)))
+    }
 }
