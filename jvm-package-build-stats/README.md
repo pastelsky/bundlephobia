@@ -44,6 +44,14 @@ JSON analysis results are written to stdout. Usage and operational messages are
 written to stderr. Exit codes are `0` for success, `1` for an unexpected CLI
 failure, `2` for invalid usage, and `3` for a structured analysis failure.
 
-This milestone intentionally returns `ANALYSIS_NOT_IMPLEMENTED` from both
-analysis commands. Local JAR inspection is implemented in the next milestone;
-Maven resolution is implemented later.
+Coordinate analysis intentionally returns `ANALYSIS_NOT_IMPLEMENTED` until the
+resolver milestone. Local `inspect` analysis is available now: it hashes the JAR,
+reads its ZIP central directory, validates all declared entry metadata, and then
+streams each safe entry without extracting or executing it.
+
+Inspection reports exact archive bytes and mutually exclusive byte totals for
+bytecode, metadata, services, licenses, signatures, Kotlin metadata, and other
+content. It rejects unsafe paths, duplicates, excessive entry counts and sizes,
+deep paths, nested archives beyond policy, suspicious compression ratios,
+malformed archives, and CRC mismatches. ZIP64 archives are supported subject to
+the same long-valued size and count limits.

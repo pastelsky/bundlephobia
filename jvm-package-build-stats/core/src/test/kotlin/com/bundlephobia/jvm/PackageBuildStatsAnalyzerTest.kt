@@ -22,11 +22,11 @@ class PackageBuildStatsAnalyzerTest {
     }
 
     @Test
-    fun `does not inspect local files in the API shell milestone`() {
+    fun `returns a structured input failure for a missing local jar`() {
         val result = analyzer.inspect(Path.of("example.jar"))
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertEquals("example.jar", result.displayName)
-        assertEquals("ANALYSIS_NOT_IMPLEMENTED", result.diagnostics.single().code)
+        assertEquals("ARCHIVE_NOT_REGULAR_FILE", result.diagnostics.single().code)
     }
 }
