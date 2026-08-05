@@ -27,7 +27,8 @@ subprojects {
 
     tasks.withType<JavaCompile>().configureEach {
         options.release.set(21)
-        options.compilerArgs.add("-Werror")
+        options.encoding = "UTF-8"
+        options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
     }
 
     tasks.withType<KotlinJvmCompile>().configureEach {
@@ -57,6 +58,10 @@ subprojects {
 }
 
 spotless {
+    java {
+        target("**/*.java")
+        googleJavaFormat("1.35.0")
+    }
     kotlin {
         target("**/*.kt")
         ktlint()

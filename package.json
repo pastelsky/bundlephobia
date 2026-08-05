@@ -115,6 +115,7 @@
     "test": "jest",
     "jvm:build": "yarn workspace jvm-package-build-stats build",
     "jvm:check": "yarn workspace jvm-package-build-stats check",
+    "jvm:format": "yarn workspace jvm-package-build-stats format",
     "jvm:test": "yarn workspace jvm-package-build-stats test",
     "test:recommendations": "node --test .github/scripts/*.test.mjs",
     "test:watch": "jest --watch",

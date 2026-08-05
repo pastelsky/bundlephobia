@@ -18,11 +18,14 @@ From the repository root, run:
 ```sh
 yarn jvm:build
 yarn jvm:check
+yarn jvm:format
 yarn jvm:test
 ```
 
-Use `yarn workspace jvm-package-build-stats format` to format Gradle and Kotlin
-sources.
+`jvm:format` applies ktlint to Kotlin and Gradle Kotlin DSL sources and Google
+Java Format to Java sources. `jvm:check` verifies formatting and compiles Kotlin
+and Java with warnings treated as errors; javac runs with all lint warnings
+enabled.
 
 ## API and CLI milestone
 
