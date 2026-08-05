@@ -499,20 +499,8 @@ class Scan extends Component<ScanProps, ScanState> {
                   </form>
                   {remoteUrlError && (
                     <div className="scan__url-error-box">
-                      <p className="scan__url-error">{remoteUrlError}</p>
-                      <button
-                        type="button"
-                        className="scan__url-error-fallback-btn"
-                        onClick={e => {
-                          e.stopPropagation()
-                          this.setState({
-                            isUrlFormOpen: false,
-                            remoteUrlError: null,
-                          })
-                        }}
-                      >
-                        Upload package.json manually instead
-                      </button>
+                      <span className="scan__url-error-icon">⚠️</span>
+                      <p className="scan__url-error-text">{remoteUrlError}</p>
                     </div>
                   )}
                 </div>
