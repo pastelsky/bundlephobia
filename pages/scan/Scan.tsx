@@ -1,4 +1,4 @@
-import Router from 'next/router'
+import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { Component, createRef } from 'react'
 import Dropzone from 'react-dropzone'
 import * as semver from 'semver'
@@ -8,11 +8,13 @@ import MetaTags from '../../client/components/MetaTags'
 import ResultLayout from '../../client/components/ResultLayout'
 import Separator from '../../client/components/Separator'
 import scanBlacklist from '../../client/config/scanBlacklist'
+import { normalizePackageJsonUrl } from '../../utils/common.utils'
 
 type PackageJsonDependencies = Record<string, string>
 
 type ParsedPackageJson = {
   dependencies?: PackageJsonDependencies
+  devDependencies?: PackageJsonDependencies
 }
 
 type ScannablePackage = {
@@ -26,11 +28,19 @@ type SelectedPackage = {
   resolvedVersion: string
 }
 
+type ScanProps = {
+  router: NextRouter
+}
+
 type ScanState = {
   packages: ScannablePackage[] | null
   selectedPackages: SelectedPackage[]
   selectedPackageValues: string[]
   unsupportedPackageNames: string[]
+  remoteUrlInput: string
+  isLoadingRemoteUrl: boolean
+  remoteUrlError: string | null
+  isUrlFormOpen: boolean
 }
 
 type PersistedScanState = {
@@ -41,12 +51,16 @@ type PersistedScanState = {
 
 const persistedScanStateKey = 'bundlephobia.scan-state'
 
-export default class Scan extends Component<Record<string, never>, ScanState> {
+class Scan extends Component<ScanProps, ScanState> {
   state: ScanState = {
     packages: null,
     selectedPackages: [],
     selectedPackageValues: [],
     unsupportedPackageNames: [],
+    remoteUrlInput: '',
+    isLoadingRemoteUrl: false,
+    remoteUrlError: null,
+    isUrlFormOpen: false,
   }
 
   private packageSelectionContainerRef = createRef<HTMLUListElement>()
@@ -64,6 +78,28 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
         },
         this.setSelectedPackages
       )
+    } else {
+      const urlQuery = this.props.router?.query?.url
+      if (urlQuery && typeof urlQuery === 'string') {
+        this.setState({ remoteUrlInput: urlQuery, isUrlFormOpen: true })
+        this.fetchRemotePackageJson(urlQuery)
+      }
+    }
+  }
+
+  componentDidUpdate(prevProps: ScanProps) {
+    const currentUrl = this.props.router?.query?.url
+    const prevUrl = prevProps.router?.query?.url
+
+    if (
+      currentUrl &&
+      typeof currentUrl === 'string' &&
+      currentUrl !== prevUrl &&
+      !this.state.packages &&
+      !this.state.isLoadingRemoteUrl
+    ) {
+      this.setState({ remoteUrlInput: currentUrl, isUrlFormOpen: true })
+      this.fetchRemotePackageJson(currentUrl)
     }
   }
 
@@ -153,7 +189,10 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
   }
 
   getParsedPackages(json: ParsedPackageJson): ScannablePackage[] {
-    const dependencies = json.dependencies ?? {}
+    const dependencies = {
+      ...(json.dependencies ?? {}),
+      ...(json.devDependencies ?? {}),
+    }
 
     return Object.keys(dependencies)
       .filter(packageName => {
@@ -172,12 +211,109 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
   }
 
   getUnsupportedPackageNames(json: ParsedPackageJson): string[] {
-    const dependencies = json.dependencies ?? {}
+    const dependencies = {
+      ...(json.dependencies ?? {}),
+      ...(json.devDependencies ?? {}),
+    }
 
     return Object.keys(dependencies).filter(packageName => {
       const versionRange = dependencies[packageName]
       return !semver.valid(versionRange) && !semver.validRange(versionRange)
     })
+  }
+
+  fetchRemotePackageJson = async (inputUrl: string) => {
+    if (!inputUrl.trim()) return
+
+    const normalizedUrl = normalizePackageJsonUrl(inputUrl)
+    this.setState({
+      isLoadingRemoteUrl: true,
+      remoteUrlError: null,
+      isUrlFormOpen: true,
+    })
+
+    try {
+      const response = await fetch(normalizedUrl).catch((err: Error) => {
+        if (
+          err.name === 'TypeError' ||
+          err.message.includes('Failed to fetch')
+        ) {
+          throw new Error(
+            'Network or CORS restriction prevented fetching this URL. Make sure the URL points to a public GitHub repo or raw JSON file with CORS enabled, or upload package.json manually.'
+          )
+        }
+        throw err
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(
+            'Could not find package.json at this URL (HTTP 404). Please check the repository link or upload manually.'
+          )
+        }
+        throw new Error(
+          `Failed to fetch package.json (HTTP ${response.status} ${response.statusText}).`
+        )
+      }
+
+      let json: ParsedPackageJson
+      try {
+        json = (await response.json()) as ParsedPackageJson
+      } catch {
+        throw new Error(
+          'The response from this URL is not valid JSON. Please check the link or upload package.json manually.'
+        )
+      }
+
+      if (
+        !json ||
+        typeof json !== 'object' ||
+        (!json.dependencies && !json.devDependencies)
+      ) {
+        throw new Error(
+          'Fetched package.json does not contain a dependencies or devDependencies block.'
+        )
+      }
+
+      const packages = this.getParsedPackages(json)
+      const unsupportedPackageNames = this.getUnsupportedPackageNames(json)
+
+      if (packages.length === 0) {
+        throw new Error(
+          'No valid npm dependencies found in the fetched package.json file.'
+        )
+      }
+
+      this.setState(
+        {
+          packages,
+          unsupportedPackageNames,
+          selectedPackageValues: packages
+            .filter(
+              ({ name }) => !scanBlacklist.some(regex => regex.test(name))
+            )
+            .map(({ name, resolvedVersion }) => `${name}#${resolvedVersion}`),
+          isLoadingRemoteUrl: false,
+        },
+        this.setSelectedPackages
+      )
+      Analytics.scanPackageJsonDropped(packages.length)
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Could not fetch or parse the package.json file.'
+      this.setState({
+        remoteUrlError: errorMessage,
+        isLoadingRemoteUrl: false,
+      })
+      Analytics.scanParseError()
+    }
+  }
+
+  handleRemoteUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    this.fetchRemotePackageJson(this.state.remoteUrlInput)
   }
 
   handleDropAccepted = ([file]: File[]) => {
@@ -251,6 +387,8 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
         selectedPackages: [],
         selectedPackageValues: [],
         unsupportedPackageNames: [],
+        remoteUrlError: null,
+        isUrlFormOpen: false,
       },
       this.persistScanState
     )
@@ -267,6 +405,10 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
       selectedPackages,
       selectedPackageValues,
       unsupportedPackageNames,
+      remoteUrlInput,
+      isLoadingRemoteUrl,
+      remoteUrlError,
+      isUrlFormOpen,
     } = this.state
     let content: React.ReactNode
 
@@ -280,13 +422,95 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
             multiple={false}
             accept="application/json"
           >
-            <p>
-              Drop a <code> package.json </code> file here
-            </p>
-            <Separator />
-            <button className="scan__btn">
-              Upload <code> package.json </code>
-            </button>
+            {!isUrlFormOpen ? (
+              <>
+                <p>
+                  Drop a <code> package.json </code> file here
+                </p>
+                <Separator />
+                <div
+                  className="scan__dropzone-actions"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <button className="scan__btn" type="button">
+                    Upload <code> package.json </code>
+                  </button>
+                  <button
+                    className="scan__btn"
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation()
+                      this.setState({
+                        isUrlFormOpen: true,
+                        remoteUrlError: null,
+                      })
+                    }}
+                  >
+                    Scan from URL / GitHub
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>
+                  Fetch <code> package.json </code> from URL or GitHub
+                </p>
+                <Separator />
+                <div
+                  className="scan__url-form-wrapper"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <form
+                    className="scan__url-form"
+                    onSubmit={this.handleRemoteUrlSubmit}
+                  >
+                    <input
+                      type="text"
+                      className="scan__url-input"
+                      placeholder="e.g. github.com/facebook/react or raw package.json URL"
+                      value={remoteUrlInput}
+                      onChange={e =>
+                        this.setState({ remoteUrlInput: e.target.value })
+                      }
+                      disabled={isLoadingRemoteUrl}
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      className="scan__btn scan__url-btn"
+                      disabled={isLoadingRemoteUrl || !remoteUrlInput.trim()}
+                    >
+                      {isLoadingRemoteUrl ? 'Fetching...' : 'Fetch'}
+                    </button>
+                    <button
+                      type="button"
+                      className="scan__url-cancel-btn"
+                      onClick={e => {
+                        e.stopPropagation()
+                        this.setState({
+                          isUrlFormOpen: false,
+                          remoteUrlError: null,
+                          isLoadingRemoteUrl: false,
+                        })
+                      }}
+                      title="Cancel and return to upload view"
+                      aria-label="Cancel"
+                    >
+                      ✕
+                    </button>
+                  </form>
+
+                  {remoteUrlError && (
+                    <div className="scan__url-error-box">
+                      <h4 className="scan__url-error-code">FetchError</h4>
+                      <p className="scan__url-error-message">
+                        {remoteUrlError}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </Dropzone>
         </div>
       )
@@ -362,3 +586,5 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
     )
   }
 }
+
+export default withRouter(Scan)

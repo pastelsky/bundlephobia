@@ -123,3 +123,105 @@
   margin: 0 $global-spacing * 2 $global-spacing * 2;
   overflow-wrap: anywhere;
 }
+
+.scan__dropzone-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $global-spacing * 1.5;
+
+  .scan__btn {
+    margin-top: 0;
+  }
+}
+
+.scan__url-form-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90%;
+  max-width: 520px;
+}
+
+.scan__url-form {
+  display: flex;
+  width: 100%;
+  gap: $global-spacing;
+  align-items: center;
+}
+
+.scan__url-input {
+  @include font-size-xs;
+  font-family: $font-family-code;
+  flex: 1;
+  padding: $global-spacing $global-spacing * 1.5;
+  border-radius: 6px;
+  border: 1px solid var(--color-btn-border);
+  background: var(--color-bg-base);
+  color: var(--color-text-base);
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+}
+
+.scan__url-btn {
+  margin-top: 0 !important;
+  white-space: nowrap;
+}
+
+.scan__url-cancel-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 $global-spacing * 0.5;
+  transition: color 0.2s;
+  line-height: 1;
+
+  &:hover {
+    color: var(--color-text-base);
+  }
+}
+
+.scan__url-error-box {
+  margin-top: $global-spacing * 2;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--color-error-pre-bg);
+  border: 1px solid var(--color-divider);
+  padding: $global-spacing * 1.5 $global-spacing * 2;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.scan__url-error-code {
+  font-family: $font-family-code;
+  @include font-size-xs;
+  color: var(--color-result-heading);
+  margin: 0 0 $global-spacing * 0.5 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: $font-weight-bold;
+}
+
+.scan__url-error-message {
+  @include font-size-xs;
+  font-weight: $font-weight-light;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 460px;
+  text-align: center;
+
+  code {
+    font-family: $font-family-code;
+    color: var(--color-text-base);
+  }
+}

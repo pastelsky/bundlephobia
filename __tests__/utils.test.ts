@@ -1,4 +1,7 @@
-import { parsePackageString } from '../utils/common.utils'
+import {
+  parsePackageString,
+  normalizePackageJsonUrl,
+} from '../utils/common.utils'
 import { resolveBuildError } from '../utils'
 
 describe('parsePackageString', () => {
@@ -113,5 +116,36 @@ describe('resolveBuildError', () => {
     circular.self = circular
 
     expect(resolveDetails(circular)).toContain('[Circular]')
+  })
+})
+
+describe('normalizePackageJsonUrl', () => {
+  it('converts GitHub repo URL to raw package.json URL', () => {
+    expect(normalizePackageJsonUrl('https://github.com/facebook/react')).toBe(
+      'https://raw.githubusercontent.com/facebook/react/HEAD/package.json'
+    )
+    expect(normalizePackageJsonUrl('github.com/facebook/react')).toBe(
+      'https://raw.githubusercontent.com/facebook/react/HEAD/package.json'
+    )
+  })
+
+  it('converts GitHub blob URL to raw URL', () => {
+    expect(
+      normalizePackageJsonUrl(
+        'https://github.com/pastelsky/bundlephobia/blob/bundlephobia/package.json'
+      )
+    ).toBe(
+      'https://raw.githubusercontent.com/pastelsky/bundlephobia/bundlephobia/package.json'
+    )
+  })
+
+  it('leaves direct raw URLs and non-github URLs untouched', () => {
+    expect(
+      normalizePackageJsonUrl(
+        'https://raw.githubusercontent.com/pastelsky/bundlephobia/bundlephobia/package.json'
+      )
+    ).toBe(
+      'https://raw.githubusercontent.com/pastelsky/bundlephobia/bundlephobia/package.json'
+    )
   })
 })

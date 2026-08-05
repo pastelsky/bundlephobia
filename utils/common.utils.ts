@@ -60,3 +60,37 @@ export function sanitizeErrorHTML(html: string): string {
     ALLOW_DATA_ATTR: false,
   })
 }
+
+export function normalizePackageJsonUrl(inputUrl: string): string {
+  const trimmed = inputUrl.trim()
+  if (!trimmed) return ''
+
+  try {
+    const urlToParse =
+      trimmed.startsWith('http://') || trimmed.startsWith('https://')
+        ? trimmed
+        : `https://${trimmed}`
+    const parsed = new URL(urlToParse)
+
+    if (parsed.hostname === 'github.com') {
+      const parts = parsed.pathname.split('/').filter(Boolean)
+      if (parts.length >= 2) {
+        const owner = parts[0]
+        const repo = parts[1].replace(/\.git$/, '')
+
+        if (parts.length === 2) {
+          return `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/package.json`
+        }
+
+        if ((parts[2] === 'blob' || parts[2] === 'raw') && parts.length >= 4) {
+          const branch = parts[3]
+          const filePath = parts.slice(4).join('/') || 'package.json'
+          return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`
+        }
+      }
+    }
+    return urlToParse
+  } catch {
+    return trimmed
+  }
+}
