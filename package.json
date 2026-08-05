@@ -9,6 +9,7 @@
   "workspaces": [
     "build-service",
     "cache-service",
+    "jvm-package-build-stats",
     "scripts"
   ],
   "engines": {
@@ -112,6 +113,9 @@
     "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
     "prod": "yarn run build && yarn start",
     "test": "jest",
+    "jvm:build": "yarn workspace jvm-package-build-stats build",
+    "jvm:check": "yarn workspace jvm-package-build-stats check",
+    "jvm:test": "yarn workspace jvm-package-build-stats test",
     "test:recommendations": "node --test .github/scripts/*.test.mjs",
     "test:watch": "jest --watch",
     "prettier": "prettier --write '**/*.{html,js,json,css,scss,jsx,flow,md,yml,yaml}'",

@@ -1,0 +1,11 @@
+{
+  "name": "jvm-package-build-stats",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "./gradlew build --no-daemon",
+    "check": "./gradlew check --no-daemon",
+    "format": "./gradlew spotlessApply --no-daemon",
+    "test": "./gradlew test --no-daemon"
+  }
+}
