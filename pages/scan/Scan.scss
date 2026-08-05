@@ -186,33 +186,6 @@
   }
 }
 
-.scan__url-examples {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: math.div($global-spacing, 2) $global-spacing;
-  margin-top: $global-spacing * 1.5;
-  @include font-size-xxs;
-  color: var(--color-text-muted);
-
-  code {
-    font-family: $font-family-code;
-    background: var(--color-error-pre-bg);
-    padding: math.div($global-spacing, 4) math.div($global-spacing, 1.5);
-    border-radius: 4px;
-    border: 1px solid var(--color-btn-border);
-    color: var(--color-text-muted);
-    font-size: 90%;
-  }
-}
-
-.scan__url-examples-label {
-  font-weight: $font-weight-bold;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
 .scan__url-error-box {
   margin-top: $global-spacing * 2;
   width: 100%;
