@@ -1,4 +1,4 @@
-import Router from 'next/router'
+import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { Component, createRef } from 'react'
 import Dropzone from 'react-dropzone'
 import * as semver from 'semver'
@@ -8,11 +8,13 @@ import MetaTags from '../../client/components/MetaTags'
 import ResultLayout from '../../client/components/ResultLayout'
 import Separator from '../../client/components/Separator'
 import scanBlacklist from '../../client/config/scanBlacklist'
+import { normalizePackageJsonUrl } from '../../utils/common.utils'
 
 type PackageJsonDependencies = Record<string, string>
 
 type ParsedPackageJson = {
   dependencies?: PackageJsonDependencies
+  devDependencies?: PackageJsonDependencies
 }
 
 type ScannablePackage = {
@@ -26,11 +28,18 @@ type SelectedPackage = {
   resolvedVersion: string
 }
 
+type ScanProps = {
+  router: NextRouter
+}
+
 type ScanState = {
   packages: ScannablePackage[] | null
   selectedPackages: SelectedPackage[]
   selectedPackageValues: string[]
   unsupportedPackageNames: string[]
+  remoteUrlInput: string
+  isLoadingRemoteUrl: boolean
+  remoteUrlError: string | null
 }
 
 type PersistedScanState = {
@@ -41,12 +50,15 @@ type PersistedScanState = {
 
 const persistedScanStateKey = 'bundlephobia.scan-state'
 
-export default class Scan extends Component<Record<string, never>, ScanState> {
+class Scan extends Component<ScanProps, ScanState> {
   state: ScanState = {
     packages: null,
     selectedPackages: [],
     selectedPackageValues: [],
     unsupportedPackageNames: [],
+    remoteUrlInput: '',
+    isLoadingRemoteUrl: false,
+    remoteUrlError: null,
   }
 
   private packageSelectionContainerRef = createRef<HTMLUListElement>()
@@ -64,6 +76,28 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
         },
         this.setSelectedPackages
       )
+    } else {
+      const urlQuery = this.props.router?.query?.url
+      if (urlQuery && typeof urlQuery === 'string') {
+        this.setState({ remoteUrlInput: urlQuery })
+        this.fetchRemotePackageJson(urlQuery)
+      }
+    }
+  }
+
+  componentDidUpdate(prevProps: ScanProps) {
+    const currentUrl = this.props.router?.query?.url
+    const prevUrl = prevProps.router?.query?.url
+
+    if (
+      currentUrl &&
+      typeof currentUrl === 'string' &&
+      currentUrl !== prevUrl &&
+      !this.state.packages &&
+      !this.state.isLoadingRemoteUrl
+    ) {
+      this.setState({ remoteUrlInput: currentUrl })
+      this.fetchRemotePackageJson(currentUrl)
     }
   }
 
@@ -153,7 +187,10 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
   }
 
   getParsedPackages(json: ParsedPackageJson): ScannablePackage[] {
-    const dependencies = json.dependencies ?? {}
+    const dependencies = {
+      ...(json.dependencies ?? {}),
+      ...(json.devDependencies ?? {}),
+    }
 
     return Object.keys(dependencies)
       .filter(packageName => {
@@ -172,12 +209,77 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
   }
 
   getUnsupportedPackageNames(json: ParsedPackageJson): string[] {
-    const dependencies = json.dependencies ?? {}
+    const dependencies = {
+      ...(json.dependencies ?? {}),
+      ...(json.devDependencies ?? {}),
+    }
 
     return Object.keys(dependencies).filter(packageName => {
       const versionRange = dependencies[packageName]
       return !semver.valid(versionRange) && !semver.validRange(versionRange)
     })
+  }
+
+  fetchRemotePackageJson = async (inputUrl: string) => {
+    if (!inputUrl.trim()) return
+
+    const normalizedUrl = normalizePackageJsonUrl(inputUrl)
+    this.setState({ isLoadingRemoteUrl: true, remoteUrlError: null })
+
+    try {
+      const response = await fetch(normalizedUrl)
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch package.json (${response.status} ${response.statusText})`
+        )
+      }
+
+      const json = (await response.json()) as ParsedPackageJson
+      if (
+        !json ||
+        typeof json !== 'object' ||
+        (!json.dependencies && !json.devDependencies)
+      ) {
+        throw new Error('Fetched file does not contain a dependencies block.')
+      }
+
+      const packages = this.getParsedPackages(json)
+      const unsupportedPackageNames = this.getUnsupportedPackageNames(json)
+
+      if (packages.length === 0) {
+        throw new Error('No valid dependencies found in fetched package.json.')
+      }
+
+      this.setState(
+        {
+          packages,
+          unsupportedPackageNames,
+          selectedPackageValues: packages
+            .filter(
+              ({ name }) => !scanBlacklist.some(regex => regex.test(name))
+            )
+            .map(({ name, resolvedVersion }) => `${name}#${resolvedVersion}`),
+          isLoadingRemoteUrl: false,
+        },
+        this.setSelectedPackages
+      )
+      Analytics.scanPackageJsonDropped(packages.length)
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Could not fetch or parse the package.json file.'
+      this.setState({
+        remoteUrlError: errorMessage,
+        isLoadingRemoteUrl: false,
+      })
+      Analytics.scanParseError()
+    }
+  }
+
+  handleRemoteUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    this.fetchRemotePackageJson(this.state.remoteUrlInput)
   }
 
   handleDropAccepted = ([file]: File[]) => {
@@ -251,6 +353,7 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
         selectedPackages: [],
         selectedPackageValues: [],
         unsupportedPackageNames: [],
+        remoteUrlError: null,
       },
       this.persistScanState
     )
@@ -267,6 +370,9 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
       selectedPackages,
       selectedPackageValues,
       unsupportedPackageNames,
+      remoteUrlInput,
+      isLoadingRemoteUrl,
+      remoteUrlError,
     } = this.state
     let content: React.ReactNode
 
@@ -288,6 +394,37 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
               Upload <code> package.json </code>
             </button>
           </Dropzone>
+          <div className="scan__url-container">
+            <Separator />
+            <p className="scan__url-title">
+              Or fetch from a URL / GitHub repository:
+            </p>
+            <form
+              className="scan__url-form"
+              onSubmit={this.handleRemoteUrlSubmit}
+            >
+              <input
+                type="text"
+                className="scan__url-input"
+                placeholder="e.g. github.com/facebook/react or raw package.json URL"
+                value={remoteUrlInput}
+                onChange={e =>
+                  this.setState({ remoteUrlInput: e.target.value })
+                }
+                disabled={isLoadingRemoteUrl}
+              />
+              <button
+                type="submit"
+                className="scan__btn scan__url-btn"
+                disabled={isLoadingRemoteUrl || !remoteUrlInput.trim()}
+              >
+                {isLoadingRemoteUrl ? 'Fetching...' : 'Fetch'}
+              </button>
+            </form>
+            {remoteUrlError && (
+              <p className="scan__url-error">{remoteUrlError}</p>
+            )}
+          </div>
         </div>
       )
     } else {
@@ -362,3 +499,5 @@ export default class Scan extends Component<Record<string, never>, ScanState> {
     )
   }
 }
+
+export default withRouter(Scan)
