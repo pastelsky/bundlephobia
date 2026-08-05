@@ -249,13 +249,40 @@ public data class JvmResolutionResult(
 
 @Serializable
 public data class RuntimeClosureStats(
+    /** Bytes occupied by every unique runtime JAR, including the requested artifact. */
     public val compressedBytes: Long = 0,
+    /** Sum of uncompressed entry bytes across every unique runtime JAR. */
     public val expandedBytes: Long = 0,
+    /** Archive bytes belonging to the requested component. */
     public val directArtifactBytes: Long = 0,
+    /** Archive bytes belonging to selected transitive components. */
     public val transitiveArtifactBytes: Long = 0,
     public val components: Int = 0,
     public val artifacts: Int = 0,
+    /** Maximum shortest-path distance from the requested component. */
     public val dependencyDepth: Int = 0,
+    /** Deterministic shortest path to every reachable selected component. */
+    public val shortestPaths: List<DependencyPath> = emptyList(),
+    /** Up to ten largest transitive runtime JARs, ordered by archive bytes. */
+    public val largestTransitiveArtifacts: List<RuntimeArtifactSummary> = emptyList(),
+)
+
+/** A shortest selected-dependency path beginning at the requested component. */
+@Serializable
+public data class DependencyPath(
+    public val coordinate: MavenCoordinate,
+    public val depth: Int,
+    public val path: List<MavenCoordinate>,
+)
+
+/** Size summary for a runtime artifact without exposing a machine-local path. */
+@Serializable
+public data class RuntimeArtifactSummary(
+    public val coordinate: MavenCoordinate,
+    public val fileName: String,
+    public val digest: ArtifactDigest,
+    public val archiveBytes: Long,
+    public val expandedBytes: Long,
 )
 
 @Serializable

@@ -1,5 +1,7 @@
 package com.bundlephobia.jvm.cli
 
+import com.bundlephobia.jvm.PackageBuildStatsAnalyzer
+import com.bundlephobia.jvm.PackageBuildStatsConfig
 import com.bundlephobia.jvm.model.ResultJson
 import com.bundlephobia.jvm.model.ResultStatus
 import org.junit.jupiter.api.io.TempDir
@@ -17,19 +19,17 @@ class JvmPackageBuildStatsCliTest {
     @TempDir lateinit var tempDir: Path
 
     @Test
-    fun `analyze validates the coordinate and writes only JSON to stdout`() {
-        val execution = execute("analyze", "com.google.code.gson:gson:2.13.1")
+    fun `analyze resolves the coordinate and writes only JSON to stdout`() {
+        val execution = execute("analyze", "com.google.code.gson:gson:2.14.0")
 
-        assertEquals(ExitCode.ANALYSIS_FAILED, execution.exitCode)
+        assertEquals(ExitCode.SUCCESS, execution.exitCode, execution.stdout)
         assertEquals("", execution.stderr)
-        assertEquals(
-            "ANALYSIS_NOT_IMPLEMENTED",
-            ResultJson
-                .decodeResult(execution.stdout.trim())
-                .diagnostics
-                .single()
-                .code,
-        )
+        val result = ResultJson.decodeResult(execution.stdout.trim())
+        assertEquals(ResultStatus.COMPLETE, result.status)
+        assertEquals("com.google.code.gson:gson:2.14.0", result.coordinate.notation)
+        assertTrue(result.runtimeClosure.compressedBytes > 0)
+        assertTrue(result.artifacts.isNotEmpty())
+        assertEquals("gson-2.14.0.jar", result.directArtifact?.displayName)
     }
 
     @Test
@@ -95,12 +95,17 @@ class JvmPackageBuildStatsCliTest {
         val stdout = StringWriter()
         val stderr = StringWriter()
         val exitCode =
-            JvmPackageBuildStatsCli()
-                .execute(
-                    args = arrayOf(*args),
-                    out = PrintWriter(stdout, true),
-                    err = PrintWriter(stderr, true),
-                )
+            JvmPackageBuildStatsCli(
+                PackageBuildStatsAnalyzer(
+                    PackageBuildStatsConfig(
+                        cacheDirectory = tempDir.resolve("cache"),
+                    ),
+                ),
+            ).execute(
+                args = arrayOf(*args),
+                out = PrintWriter(stdout, true),
+                err = PrintWriter(stderr, true),
+            )
         return Execution(exitCode, stdout.toString(), stderr.toString())
     }
 

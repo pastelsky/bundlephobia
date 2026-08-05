@@ -25,7 +25,7 @@ Java Format to Java sources. `jvm:check` verifies formatting and compiles Kotlin
 and Java with warnings treated as errors; javac runs with all lint warnings
 enabled.
 
-## API and CLI milestone
+## API and CLI
 
 The public model accepts only exact `groupId:artifactId:version` coordinates and
 the `jvm-runtime` target. Snapshot, range, dynamic, URL, path, repository, and
@@ -42,10 +42,26 @@ JSON analysis results are written to stdout. Usage and operational messages are
 written to stderr. Exit codes are `0` for success, `1` for an unexpected CLI
 failure, `2` for invalid usage, and `3` for a structured analysis failure.
 
-Coordinate analysis intentionally returns `ANALYSIS_NOT_IMPLEMENTED` until the
-resolver milestone. Local `inspect` analysis is available now: it hashes the JAR,
-reads its ZIP central directory, validates declared entry sizes, and then
-streams each safe entry without extracting or executing it.
+`analyze` resolves the selected JVM runtime graph, copies each unique JAR into
+an immutable SHA-256 cache, and combines archive, classfile, dependency, and
+namespace evidence. It reports direct and transitive bytes, dependency depth,
+shortest selected paths, largest transitive JARs, and conflict-selection
+diagnostics. `inspect` performs the same static JAR analysis without resolving
+dependencies.
+
+The default cache is
+`~/.cache/bundlephobia/jvm-package-build-stats`; library callers can supply an
+explicit cache directory, Gradle wrapper, and resolution timeout through
+`PackageBuildStatsConfig`. Static evidence is keyed by artifact digest and
+analyzer version. Repeated analysis therefore reuses immutable bytes and static
+results while still resolving the current requested graph.
+
+Resolution runs in a temporary empty Gradle build. It evaluates only the owned
+settings plugin and an empty build script: dependency-provided classes, tests,
+annotation processors, build plugins, and scripts are never loaded or run.
+Cancellation and timeouts stop that subprocess, and temporary build files are
+removed. If graph resolution is incomplete after some artifacts were selected,
+the result remains `partial` and preserves the completed static evidence.
 
 Inspection reports exact archive bytes and mutually exclusive byte totals for
 bytecode, metadata, services, licenses, signatures, Kotlin metadata, and other
@@ -95,5 +111,5 @@ The root coordinate remains strictly exact. Transitive dependencies may request
 ranges because Gradle normalizes them to selected exact components and preserves
 both the requested edge and selected version in the result.
 
-The public `analyze` API remains disconnected until the end-to-end orchestration
-milestone; this plugin is the isolated resolver boundary it will invoke.
+The public `analyze` API invokes this plugin through the sealed temporary build;
+the standalone task remains useful for inspecting normalized resolver evidence.

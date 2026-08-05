@@ -1,6 +1,7 @@
 package com.bundlephobia.jvm;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.bundlephobia.jvm.model.AnalyzeRequest;
 import com.bundlephobia.jvm.model.MavenCoordinate;
@@ -16,7 +17,7 @@ class JavaApiCompatibilityTest {
 
     PackageBuildStatsResult result = new PackageBuildStatsAnalyzer().analyze(request);
 
-    assertEquals(ResultStatus.FAILED, result.getStatus());
+    assertNotEquals(ResultStatus.FAILED, result.getStatus());
     assertEquals(coordinate, result.getCoordinate());
   }
 }
