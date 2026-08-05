@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     base
     kotlin("jvm") version "2.4.10" apply false
+    kotlin("plugin.serialization") version "2.4.10" apply false
     id("com.diffplug.spotless") version "8.9.0"
 }
 
@@ -26,7 +27,8 @@ subprojects {
 
     tasks.withType<JavaCompile>().configureEach {
         options.release.set(21)
-        options.compilerArgs.add("-Werror")
+        options.encoding = "UTF-8"
+        options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
     }
 
     tasks.withType<KotlinJvmCompile>().configureEach {
@@ -45,9 +47,21 @@ subprojects {
     dependencyLocking {
         lockAllConfigurations()
     }
+
+    dependencies {
+        add("testImplementation", kotlin("test"))
+    }
+
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
+    }
 }
 
 spotless {
+    java {
+        target("**/*.java")
+        googleJavaFormat("1.35.0")
+    }
     kotlin {
         target("**/*.kt")
         ktlint()
