@@ -309,6 +309,36 @@ class PackageBuildStatsAnalyzerTest {
     }
 
     @Test
+    fun `resolver child process receives the running JVM home`() {
+        val executable = tempDir.resolve("java-home-gradle")
+        Files.writeString(executable, "#!/bin/sh\necho \"JAVA_HOME=${'$'}JAVA_HOME\" >&2\nexit 7\n")
+        Files.setPosixFilePermissions(
+            executable,
+            setOf(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE,
+            ),
+        )
+        val coordinate = MavenCoordinate.parse("example:java-home:1.0")
+
+        val result =
+            GradleResolverClient(
+                PackageBuildStatsConfig(
+                    gradleExecutable = executable,
+                    diagnosticOutputLimitBytes = 1_024,
+                ),
+            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
+
+        assertTrue(
+            result.diagnostics
+                .single()
+                .summary
+                .contains("JAVA_HOME=${System.getProperty("java.home")}"),
+        )
+    }
+
+    @Test
     fun `returns a structured input failure for a missing local jar`() {
         val result = PackageBuildStatsAnalyzer().inspect(Path.of("example.jar"))
 

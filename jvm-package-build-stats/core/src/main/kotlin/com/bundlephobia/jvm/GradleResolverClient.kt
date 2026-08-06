@@ -107,7 +107,7 @@ internal class GradleResolverClient(
         javaVersion: Int,
         cancellation: AnalysisCancellation,
     ): JvmResolutionResult {
-        val process =
+        val processBuilder =
             ProcessBuilder(
                 gradleCommand(directory),
                 "--no-daemon",
@@ -118,7 +118,13 @@ internal class GradleResolverClient(
             ).directory(directory.toFile())
                 .redirectOutput(directory.resolve("gradle.stdout").toFile())
                 .redirectError(directory.resolve("gradle.stderr").toFile())
-                .start()
+        processBuilder.environment()["JAVA_HOME"] =
+            Path
+                .of(System.getProperty("java.home"))
+                .toAbsolutePath()
+                .normalize()
+                .toString()
+        val process = processBuilder.start()
 
         val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(config.resolutionTimeoutMilliseconds)
         while (process.isAlive && System.nanoTime() < deadline && !cancellation.isCancelled()) {
