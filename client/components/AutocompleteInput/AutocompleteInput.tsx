@@ -31,6 +31,7 @@ export const AutocompleteInput = ({
     suggestions,
     potatoRainId,
     handleSubmit,
+    handleKeyDown,
     handleInputValueChange,
     setSuggestions,
     stopPotatoRain,
@@ -90,6 +91,7 @@ export const AutocompleteInput = ({
               autoCapitalize: 'off',
               spellCheck: false,
               style: { fontSize: searchFontSize! },
+              onKeyDown: handleKeyDown,
             })}
           />
           <div

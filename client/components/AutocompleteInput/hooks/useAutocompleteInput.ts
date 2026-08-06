@@ -31,16 +31,32 @@ export function useAutocompleteInput({
 
   const stopPotatoRain = React.useCallback(() => setPotatoRainId(null), [])
 
+  const startPotatoRain = () => {
+    setSuggestions([])
+    setPotatoRainId(id => (id ?? 0) + 1)
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (isPotatoQuery(value)) {
-      setSuggestions([])
-      setPotatoRainId(id => (id ?? 0) + 1)
+      startPotatoRain()
       return
     }
 
     onSubmit(value)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter' || !isPotatoQuery(value)) return
+
+    // downshift swallows Enter while the suggestions menu is open, so the
+    // easter egg has to claim the keypress before the form is submitted
+    e.preventDefault()
+    ;(
+      e.nativeEvent as KeyboardEvent & { preventDownshiftDefault?: boolean }
+    ).preventDownshiftDefault = true
+    startPotatoRain()
   }
 
   const handleInputValueChange = (nextValue: string) => {
@@ -62,6 +78,7 @@ export function useAutocompleteInput({
     suggestions,
     potatoRainId,
     handleSubmit,
+    handleKeyDown,
     handleInputValueChange,
     setSuggestions,
     stopPotatoRain,
