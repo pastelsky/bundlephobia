@@ -158,7 +158,91 @@ public data class ClassfileStats(
     public val reflectionIndicatorClasses: Int = 0,
     public val serviceLoaderIndicatorClasses: Int = 0,
     public val jniIndicatorClasses: Int = 0,
+    public val classesWithStaticInitializers: Int = 0,
+    public val nativeMethodClasses: Int = 0,
     public val unsupportedBytecodeVersions: List<Int> = emptyList(),
+)
+
+@Serializable
+public enum class ModuleKind {
+    @SerialName("explicit")
+    EXPLICIT,
+
+    @SerialName("automatic")
+    AUTOMATIC,
+
+    @SerialName("unnamed")
+    UNNAMED,
+}
+
+@Serializable
+public data class ModuleRequirement(
+    public val name: String,
+    public val transitive: Boolean = false,
+    public val static: Boolean = false,
+    public val version: String? = null,
+)
+
+@Serializable
+public data class ModuleExport(
+    public val packageName: String,
+    public val targets: List<String> = emptyList(),
+)
+
+@Serializable
+public data class ModuleOpen(
+    public val packageName: String,
+    public val targets: List<String> = emptyList(),
+)
+
+@Serializable
+public data class ModuleProvider(
+    public val service: String,
+    public val implementations: List<String>,
+)
+
+/** Effective Java module metadata for the selected runtime view of one artifact. */
+@Serializable
+public data class ModuleStats(
+    public val kind: ModuleKind,
+    public val name: String? = null,
+    public val version: String? = null,
+    public val mainClass: String? = null,
+    public val requires: List<ModuleRequirement> = emptyList(),
+    public val exports: List<ModuleExport> = emptyList(),
+    public val opens: List<ModuleOpen> = emptyList(),
+    public val uses: List<String> = emptyList(),
+    public val provides: List<ModuleProvider> = emptyList(),
+)
+
+/** One externally visible JVM type and its physical classfile contribution. */
+@Serializable
+public data class ApiMemberStats(
+    public val name: String,
+    public val kind: String,
+    public val descriptor: String,
+    public val visibility: String,
+    public val static: Boolean = false,
+)
+
+/** One externally visible JVM type and its physical classfile contribution. */
+@Serializable
+public data class ApiTypeStats(
+    public val name: String,
+    public val packageName: String,
+    public val language: String,
+    public val visibility: String,
+    public val classfileBytes: Long,
+    public val publicMembers: Int,
+    public val protectedMembers: Int,
+    /** Stable JVM signatures for the type's externally visible fields and methods. */
+    public val members: List<ApiMemberStats> = emptyList(),
+)
+
+/** Public and protected type surface for an artifact's effective runtime view. */
+@Serializable
+public data class ApiSurfaceStats(
+    public val types: List<ApiTypeStats> = emptyList(),
 )
 
 @Serializable
@@ -173,6 +257,8 @@ public data class ArtifactAnalysis(
     public val namespaces: List<NamespaceStats> = emptyList(),
     /** Classfile measurements, or `null` when classfile analysis did not run. */
     public val classfiles: ClassfileStats? = null,
+    public val module: ModuleStats? = null,
+    public val apiSurface: ApiSurfaceStats? = null,
     public val diagnostics: List<Diagnostic> = emptyList(),
 )
 

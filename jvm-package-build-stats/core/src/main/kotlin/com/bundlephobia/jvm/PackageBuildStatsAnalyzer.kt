@@ -103,6 +103,8 @@ public class PackageBuildStatsAnalyzer
                 status = if (classfiles.diagnostics.isEmpty()) ResultStatus.COMPLETE else ResultStatus.PARTIAL,
                 namespaces = classfiles.namespaces,
                 classfiles = classfiles.stats,
+                module = classfiles.module,
+                apiSurface = classfiles.apiSurface,
                 diagnostics = classfiles.diagnostics,
             )
         }
