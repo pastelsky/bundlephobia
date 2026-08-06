@@ -79,17 +79,11 @@ class JarClassfileAnalyzerTest {
             ),
             first.namespaces,
         )
-        assertEquals(
-            listOf(
-                "protectedField",
-                "publicField",
-                "protectedMethod",
-                "publicMethod",
-            ),
-            first.apiSurface.types.single { it.name == "com.acme.PublicApi" }.members.map {
-                it.name
-            },
-        )
+        assertEquals(1, first.apiSurface.publicTypes)
+        assertEquals(1, first.apiSurface.protectedTypes)
+        assertEquals(3, first.apiSurface.publicMembers)
+        assertEquals(2, first.apiSurface.protectedMembers)
+        assertEquals(2, first.apiSurface.largestTypes.size)
     }
 
     @Test
@@ -119,7 +113,7 @@ class JarClassfileAnalyzerTest {
         assertEquals(2, result.stats.kotlinMetadataClasses)
         assertEquals(1, result.stats.publicTypes)
         assertEquals(1, result.stats.implementationClasses)
-        assertEquals(listOf(PublicKotlinApi::class.java.name), result.apiSurface.types.map { it.name })
+        assertEquals(listOf(PublicKotlinApi::class.java.name), result.apiSurface.largestTypes.map { it.name })
     }
 
     @Test

@@ -45,12 +45,7 @@ class JvmPackageBuildStatsCliTest {
 
     @Test
     fun `inspect streams a local jar and writes complete JSON`() {
-        val jar = tempDir.resolve("fixture.jar")
-        ZipOutputStream(Files.newOutputStream(jar)).use { output ->
-            output.putNextEntry(ZipEntry("example/resource.txt"))
-            output.write(byteArrayOf(1, 2, 3))
-            output.closeEntry()
-        }
+        val jar = fixtureJar()
 
         val execution = execute("inspect", jar.toString())
 
@@ -61,6 +56,49 @@ class JvmPackageBuildStatsCliTest {
         assertEquals(3, result.expandedBytes)
         assertEquals("other", result.payload.single().category)
         assertEquals(0, result.classfiles?.analyzedClasses)
+    }
+
+    @Test
+    fun `interactive output is a concise colored report`() {
+        val execution = executeInteractive("inspect", fixtureJar().toString())
+
+        assertEquals(ExitCode.SUCCESS, execution.exitCode)
+        assertTrue(execution.stdout.contains("JVM ARTIFACT STATS"))
+        assertTrue(execution.stdout.contains("Published JAR"))
+        assertTrue(execution.stdout.contains("CONTENTS"))
+        assertTrue(!execution.stdout.trimStart().startsWith("{"))
+    }
+
+    @Test
+    fun `terminal renderer supports ANSI colors`() {
+        val result = PackageBuildStatsAnalyzer().inspect(fixtureJar())
+
+        assertTrue(TerminalRenderer(color = true).render(result).contains("\u001B["))
+    }
+
+    @Test
+    fun `json overrides interactive terminal output`() {
+        val execution = executeInteractive("inspect", fixtureJar().toString(), "--json")
+
+        assertEquals(ExitCode.SUCCESS, execution.exitCode)
+        assertEquals(ResultStatus.COMPLETE, ResultJson.decodeArtifactAnalysis(execution.stdout.trim()).status)
+    }
+
+    @Test
+    fun `pretty output can be forced without ANSI colors`() {
+        val execution = execute("inspect", fixtureJar().toString(), "--pretty", "--no-color")
+
+        assertEquals(ExitCode.SUCCESS, execution.exitCode)
+        assertTrue(execution.stdout.contains("JVM ARTIFACT STATS"))
+        assertTrue(!execution.stdout.contains("\u001B["))
+    }
+
+    @Test
+    fun `json and pretty modes are mutually exclusive`() {
+        val execution = execute("inspect", fixtureJar().toString(), "--json", "--pretty")
+
+        assertEquals(ExitCode.USAGE, execution.exitCode)
+        assertTrue(execution.stderr.contains("cannot be used together"))
     }
 
     @Test
@@ -117,20 +155,36 @@ class JvmPackageBuildStatsCliTest {
         assertEquals("", execution.stderr)
     }
 
-    private fun execute(vararg args: String): Execution {
+    private fun fixtureJar(): Path {
+        val jar = tempDir.resolve("fixture.jar")
+        ZipOutputStream(Files.newOutputStream(jar)).use { output ->
+            output.putNextEntry(ZipEntry("example/resource.txt"))
+            output.write(byteArrayOf(1, 2, 3))
+            output.closeEntry()
+        }
+        return jar
+    }
+
+    private fun execute(vararg args: String): Execution = executeWithMode(interactiveOutput = false, args)
+
+    private fun executeInteractive(vararg args: String): Execution = executeWithMode(interactiveOutput = true, args)
+
+    private fun executeWithMode(
+        interactiveOutput: Boolean,
+        args: Array<out String>,
+    ): Execution {
         val stdout = StringWriter()
         val stderr = StringWriter()
         val exitCode =
             JvmPackageBuildStatsCli(
                 PackageBuildStatsAnalyzer(
-                    PackageBuildStatsConfig(
-                        cacheDirectory = tempDir.resolve("cache"),
-                    ),
+                    PackageBuildStatsConfig(),
                 ),
             ).execute(
                 args = arrayOf(*args),
                 out = PrintWriter(stdout, true),
                 err = PrintWriter(stderr, true),
+                interactiveOutput = interactiveOutput,
             )
         return Execution(exitCode, stdout.toString(), stderr.toString())
     }

@@ -14,7 +14,10 @@ import com.bundlephobia.jvm.model.MavenCoordinate
 import com.bundlephobia.jvm.model.PackageBuildStatsResult
 import com.bundlephobia.jvm.model.PackageSizeStats
 import com.bundlephobia.jvm.model.ResolutionStats
+import com.bundlephobia.jvm.model.ResolutionSummary
 import com.bundlephobia.jvm.model.ResolvedArtifact
+import com.bundlephobia.jvm.model.ResolvedArtifactSummary
+import com.bundlephobia.jvm.model.ResolvedComponent
 import com.bundlephobia.jvm.model.ResultStatus
 import com.bundlephobia.jvm.model.RetryClassification
 import com.bundlephobia.jvm.model.RuntimeArtifactSummary
@@ -58,7 +61,6 @@ public class PackageBuildStatsAnalyzer
             val resolverResult = resolutionTimed.value
             diagnostics += resolverResult.diagnostics
 
-            val cache = AnalysisCache(config.cacheDirectory, "$STATIC_ANALYZER_VERSION-java${request.javaVersion}")
             val evidence = mutableListOf<ArtifactEvidence>()
             val analysisTimed =
                 measureTimedValue {
@@ -72,7 +74,7 @@ public class PackageBuildStatsAnalyzer
                                 diagnostics += cancellationDiagnostic()
                                 return@measureTimedValue
                             }
-                            analyzeArtifact(cache, artifact, request.javaVersion, diagnostics)?.let(evidence::add)
+                            analyzeArtifact(artifact, request.javaVersion, diagnostics)?.let(evidence::add)
                         }
                 }
             stageTimings["artifact-analysis"] = analysisTimed.duration.inWholeMilliseconds
@@ -128,27 +130,22 @@ public class PackageBuildStatsAnalyzer
         }
 
         private fun analyzeArtifact(
-            cache: AnalysisCache,
             artifact: ResolvedArtifact,
             javaVersion: Int,
             diagnostics: MutableList<Diagnostic>,
         ): ArtifactEvidence? =
             try {
-                val cachedPath = cache.materialize(artifact)
-                val analysis =
-                    cache.analyze(
-                        digest = artifact.digest.value,
-                        displayName = artifact.fileName,
-                        artifactPath = cachedPath,
-                        inspector = { path -> inspect(path, javaVersion) },
-                    )
+                val analysis = inspect(Path.of(artifact.path), javaVersion).copy(displayName = artifact.fileName)
+                check(analysis.digest == null || analysis.digest == artifact.digest) {
+                    "Artifact digest changed after resolution"
+                }
                 diagnostics += analysis.diagnostics
                 ArtifactEvidence(artifact, analysis)
             } catch (_: Exception) {
                 diagnostics +=
                     Diagnostic(
                         code = "ARTIFACT_ANALYSIS_FAILED",
-                        summary = "Could not cache or analyze ${artifact.coordinate.notation} (${artifact.fileName})",
+                        summary = "Could not analyze ${artifact.coordinate.notation} (${artifact.fileName})",
                         stage = AnalysisStage.ARCHIVE_ANALYSIS,
                         retry = RetryClassification.UNKNOWN,
                     )
@@ -163,29 +160,54 @@ public class PackageBuildStatsAnalyzer
         ): PackageBuildStatsResult {
             diagnostics += conflictDiagnostics(resolverResult.resolution)
             diagnostics += graphLimitDiagnostics(resolverResult.resolution)
-            val analysesByDigest = evidence.associateBy { item -> item.artifact.digest.value }
-            val enrichedResolution =
-                resolverResult.resolution.copy(
-                    components =
-                        resolverResult.resolution.components.map { component ->
-                            component.copy(
-                                artifacts =
-                                    resolverResult.resolution.artifacts
-                                        .filter { artifact -> artifact.coordinate == component.coordinate }
-                                        .mapNotNull { artifact -> analysesByDigest[artifact.digest.value]?.analysis }
-                                        .sortedBy(ArtifactAnalysis::displayName),
-                            )
-                        },
-                )
             val uniqueAnalyses = evidence.map { it.analysis }.sortedBy { it.digest?.value ?: "" }
+            val contributionCoordinates = contributionCoordinates(request.coordinate, resolverResult.resolution, evidence)
             val directArtifact =
                 evidence
-                    .filter { item -> item.artifact.coordinate == request.coordinate }
+                    .filter { item -> item.artifact.coordinate in contributionCoordinates }
                     .minByOrNull { item -> item.artifact.fileName }
                     ?.analysis
+            if (contributionCoordinates.isEmpty()) {
+                diagnostics +=
+                    Diagnostic(
+                        code = "REQUESTED_ARTIFACT_NOT_ANALYZED",
+                        summary = "No analyzable JVM JAR was selected for ${request.coordinate.notation}",
+                        stage = AnalysisStage.ASSEMBLY,
+                        severity = DiagnosticSeverity.ERROR,
+                    )
+            } else if (request.coordinate !in contributionCoordinates) {
+                diagnostics +=
+                    Diagnostic(
+                        code = "REQUESTED_VARIANT_REDIRECTED",
+                        summary =
+                            "${request.coordinate.notation} contributes through " +
+                                contributionCoordinates.sortedBy(MavenCoordinate::notation).joinToString { it.notation },
+                        stage = AnalysisStage.ASSEMBLY,
+                        severity = DiagnosticSeverity.INFO,
+                    )
+            }
             val status = finalStatus(resolverResult, uniqueAnalyses, directArtifact, diagnostics)
-            val closure = closureStats(request.coordinate, enrichedResolution, evidence)
-            val dependencySizes = dependencySizes(request.coordinate, enrichedResolution, evidence)
+            val closure = closureStats(request.coordinate, contributionCoordinates, resolverResult.resolution, evidence)
+            val allDependencySizes = dependencySizes(request.coordinate, contributionCoordinates, resolverResult.resolution, evidence)
+            val dependencySizes =
+                allDependencySizes
+                    .sortedWith(
+                        compareByDescending<DependencySizeStats> { it.requested }
+                            .thenByDescending(DependencySizeStats::archiveBytes)
+                            .thenBy { it.coordinate.notation },
+                    ).take(DEPENDENCY_SIZE_LIMIT)
+            val compactArtifacts =
+                evidence
+                    .sortedWith(
+                        compareByDescending<ArtifactEvidence> { it.artifact.coordinate in contributionCoordinates }
+                            .thenByDescending { it.analysis.archiveBytes ?: 0 }
+                            .thenBy { it.artifact.coordinate.notation }
+                            .thenBy { it.artifact.fileName },
+                    ).take(ARTIFACT_ANALYSIS_LIMIT)
+                    .map(ArtifactEvidence::analysis)
+            val distinctDiagnostics =
+                diagnostics.distinctBy { it.code to it.summary }.sortedWith(compareBy(Diagnostic::code, Diagnostic::summary))
+            val compactDiagnostics = distinctDiagnostics.take(DIAGNOSTIC_LIMIT)
 
             return PackageBuildStatsResult(
                 status = status,
@@ -193,7 +215,7 @@ public class PackageBuildStatsAnalyzer
                 target = request.target,
                 javaVersion = request.javaVersion,
                 toolchain = currentToolchain(),
-                resolution = enrichedResolution,
+                resolution = resolutionSummary(resolverResult.resolution),
                 sizes =
                     PackageSizeStats(
                         runtimeArchiveBytes = closure.archiveBytes,
@@ -202,10 +224,16 @@ public class PackageBuildStatsAnalyzer
                         transitiveArtifactArchiveBytes = closure.transitiveArtifactBytes,
                     ),
                 dependencySizes = dependencySizes,
-                artifacts = uniqueAnalyses,
+                dependencyCount = allDependencySizes.size,
+                dependencySizesTruncated = allDependencySizes.size > dependencySizes.size,
+                artifacts = compactArtifacts,
+                artifactCount = uniqueAnalyses.size,
+                artifactsTruncated = uniqueAnalyses.size > compactArtifacts.size,
                 directArtifact = directArtifact,
                 runtimeClosure = closure,
-                diagnostics = diagnostics.distinctBy { it.code to it.summary }.sortedWith(compareBy(Diagnostic::code, Diagnostic::summary)),
+                diagnostics = compactDiagnostics,
+                diagnosticCount = distinctDiagnostics.size,
+                diagnosticsTruncated = distinctDiagnostics.size > compactDiagnostics.size,
             )
         }
 
@@ -215,7 +243,8 @@ public class PackageBuildStatsAnalyzer
             directArtifact: ArtifactAnalysis?,
             diagnostics: List<Diagnostic>,
         ): ResultStatus {
-            if (analyses.isEmpty() || directArtifact == null) return ResultStatus.FAILED
+            if (analyses.isEmpty()) return ResultStatus.FAILED
+            if (directArtifact == null) return ResultStatus.PARTIAL
             val allStaticComplete = analyses.all { analysis -> analysis.status == ResultStatus.COMPLETE }
             val noBlockingDiagnostics = diagnostics.none { diagnostic -> diagnostic.severity == DiagnosticSeverity.ERROR }
             return if (resolverResult.status == ResultStatus.COMPLETE && allStaticComplete && noBlockingDiagnostics) {
@@ -227,22 +256,30 @@ public class PackageBuildStatsAnalyzer
 
         private fun closureStats(
             requested: MavenCoordinate,
+            contributionCoordinates: Set<MavenCoordinate>,
             resolution: ResolutionStats,
             evidence: List<ArtifactEvidence>,
         ): RuntimeClosureStats {
             val directBytes =
-                evidence.filter { item -> item.artifact.coordinate == requested }.sumOf { item -> item.analysis.archiveBytes ?: 0 }
+                evidence.filter { item -> item.artifact.coordinate in contributionCoordinates }.sumOf { item ->
+                    item.analysis.archiveBytes
+                        ?: 0
+                }
             val transitiveBytes =
-                evidence.filter { item -> item.artifact.coordinate != requested }.sumOf { item -> item.analysis.archiveBytes ?: 0 }
-            val paths =
+                evidence.filter { item -> item.artifact.coordinate !in contributionCoordinates }.sumOf { item ->
+                    item.analysis.archiveBytes
+                        ?: 0
+                }
+            val allPaths =
                 if (withinGraphLimits(resolution)) {
                     shortestPaths(requested, resolution)
                 } else {
                     emptyList()
                 }
+            val paths = allPaths.take(SHORTEST_PATH_LIMIT)
             val largest =
                 evidence
-                    .filter { item -> item.artifact.coordinate != requested }
+                    .filter { item -> item.artifact.coordinate !in contributionCoordinates }
                     .map { item ->
                         RuntimeArtifactSummary(
                             coordinate = item.artifact.coordinate,
@@ -265,14 +302,17 @@ public class PackageBuildStatsAnalyzer
                         .distinct()
                         .size,
                 artifacts = evidence.size,
-                dependencyDepth = paths.maxOfOrNull(DependencyPath::depth) ?: 0,
+                dependencyDepth = allPaths.maxOfOrNull(DependencyPath::depth) ?: 0,
                 shortestPaths = paths,
+                shortestPathCount = allPaths.size,
+                shortestPathsTruncated = allPaths.size > paths.size,
                 largestTransitiveArtifacts = largest,
             )
         }
 
         private fun dependencySizes(
             requested: MavenCoordinate,
+            contributionCoordinates: Set<MavenCoordinate>,
             resolution: ResolutionStats,
             evidence: List<ArtifactEvidence>,
         ): List<DependencySizeStats> {
@@ -288,11 +328,68 @@ public class PackageBuildStatsAnalyzer
                         expandedBytes = items.sumOf { item -> item.analysis.expandedBytes ?: 0 },
                         artifactCount = items.size,
                         depth = depth,
-                        requested = coordinate == requested,
-                        direct = depth == 1,
+                        requested = coordinate in contributionCoordinates,
+                        direct = depth == 1 && coordinate !in contributionCoordinates,
                         path = dependencyPath?.path.orEmpty(),
                     )
                 }.sortedWith(compareBy(DependencySizeStats::depth, { it.coordinate.notation }))
+        }
+
+        private fun contributionCoordinates(
+            requested: MavenCoordinate,
+            resolution: ResolutionStats,
+            evidence: List<ArtifactEvidence>,
+        ): Set<MavenCoordinate> {
+            if (evidence.any { item -> item.artifact.coordinate == requested }) return setOf(requested)
+            // A selected non-JAR root (for example an AAR) is not a metadata-only JVM redirect.
+            if (resolution.artifacts.any { artifact -> artifact.coordinate == requested }) return emptySet()
+            val depths = shortestPaths(requested, resolution).associate { path -> path.coordinate to path.depth }
+            val nearestDepth =
+                evidence
+                    .mapNotNull { item -> depths[item.artifact.coordinate] }
+                    .filter { depth -> depth > 0 }
+                    .minOrNull() ?: return emptySet()
+            return evidence
+                .map { item -> item.artifact.coordinate }
+                .filterTo(linkedSetOf()) { coordinate -> depths[coordinate] == nearestDepth }
+        }
+
+        private fun resolutionSummary(resolution: ResolutionStats): ResolutionSummary {
+            val components =
+                resolution.components
+                    .sortedWith(
+                        compareByDescending<ResolvedComponent> { it.requested }
+                            .thenBy { it.coordinate.notation },
+                    ).take(RESOLUTION_COMPONENT_LIMIT)
+            val edges = resolution.edges.take(RESOLUTION_EDGE_LIMIT)
+            val artifacts =
+                resolution.artifacts
+                    .sortedWith(compareBy<ResolvedArtifact>({ it.coordinate.notation }, ResolvedArtifact::fileName))
+                    .take(RESOLUTION_ARTIFACT_LIMIT)
+                    .map { artifact ->
+                        ResolvedArtifactSummary(
+                            coordinate = artifact.coordinate,
+                            fileName = artifact.fileName,
+                            extension = artifact.extension,
+                            variant = artifact.variant,
+                            attributes = artifact.attributes,
+                            digest = artifact.digest,
+                        )
+                    }
+            return ResolutionSummary(
+                requested = resolution.requested,
+                components = components,
+                componentCount = resolution.components.size,
+                edges = edges,
+                edgeCount = resolution.edges.size,
+                artifacts = artifacts,
+                artifactCount = resolution.artifacts.size,
+                repositories = resolution.repositories,
+                truncated =
+                    components.size < resolution.components.size ||
+                        edges.size < resolution.edges.size ||
+                        artifacts.size < resolution.artifacts.size,
+            )
         }
 
         private fun shortestPaths(
@@ -374,6 +471,13 @@ public class PackageBuildStatsAnalyzer
         private companion object {
             private const val STATIC_ANALYZER_VERSION = "static-v1"
             private const val LARGEST_ARTIFACT_LIMIT = 10
+            private const val ARTIFACT_ANALYSIS_LIMIT = 25
+            private const val DEPENDENCY_SIZE_LIMIT = 50
+            private const val SHORTEST_PATH_LIMIT = 50
+            private const val RESOLUTION_COMPONENT_LIMIT = 100
+            private const val RESOLUTION_EDGE_LIMIT = 200
+            private const val RESOLUTION_ARTIFACT_LIMIT = 100
+            private const val DIAGNOSTIC_LIMIT = 100
             private const val NANOS_PER_MILLISECOND = 1_000_000
             private const val MAX_GRAPH_COMPONENTS = 10_000
             private const val MAX_GRAPH_EDGES = 50_000

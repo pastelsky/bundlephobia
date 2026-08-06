@@ -9,6 +9,7 @@ import com.bundlephobia.jvm.model.MavenCoordinate
 import com.bundlephobia.jvm.model.ResolutionStats
 import com.bundlephobia.jvm.model.ResolvedArtifact
 import com.bundlephobia.jvm.model.ResolvedComponent
+import com.bundlephobia.jvm.model.ResultJson
 import com.bundlephobia.jvm.model.ResultStatus
 import com.bundlephobia.jvm.model.TimingStats
 import org.junit.jupiter.api.io.TempDir
@@ -83,26 +84,22 @@ class PackageBuildStatsAnalyzerTest {
         assertEquals(2, result.runtimeClosure.largestTransitiveArtifacts.size)
         assertEquals(
             1,
-            result.resolution.components
-                .single { it.coordinate == root }
-                .artifacts.size,
+            result.resolution.artifacts.count { artifact -> artifact.coordinate == root },
         )
         assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "DEPENDENCY_CONFLICT_SELECTED" })
     }
 
     @Test
-    fun `repeated analysis uses immutable caches and returns identical normalized evidence`() {
+    fun `repeated analysis returns identical evidence without a result cache`() {
         val coordinate = MavenCoordinate.parse("example:cached:1.0")
         val resolution = resolution(coordinate, listOf(coordinate))
         val analyzer = analyzer(resolution)
 
         val first = analyzer.analyze(AnalyzeRequest(coordinate))
-        resolution.resolution.artifacts.forEach { Files.delete(Path.of(it.path)) }
         val second = analyzer.analyze(AnalyzeRequest(coordinate))
 
         assertEquals(ResultStatus.COMPLETE, second.status)
         assertEquals(first.copy(timings = TimingStats()), second.copy(timings = TimingStats()))
-        assertTrue(Files.walk(tempDir.resolve("cache/analysis")).use { paths -> paths.anyMatch(Files::isRegularFile) })
     }
 
     @Test
@@ -167,7 +164,101 @@ class PackageBuildStatsAnalyzerTest {
         assertEquals(ResultStatus.PARTIAL, result.status)
         assertEquals(ResultStatus.COMPLETE, result.directArtifact?.status)
         assertTrue(result.runtimeClosure.shortestPaths.isEmpty())
+        assertEquals(10_001, result.resolution.componentCount)
+        assertEquals(100, result.resolution.components.size)
+        assertTrue(result.resolution.truncated)
+        val encoded = ResultJson.encode(result)
+        assertTrue(encoded.toByteArray().size < 1_000_000)
+        assertTrue(!encoded.contains(directPath.toString()))
         assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "DEPENDENCY_GRAPH_LIMIT_EXCEEDED" })
+    }
+
+    @Test
+    fun `attributes a metadata-only Kotlin package to its nearest JVM variant`() {
+        val root = MavenCoordinate.parse("example:multiplatform:1.0")
+        val jvm = MavenCoordinate.parse("example:multiplatform-jvm:1.0")
+        val jvmJar = jar("multiplatform-jvm.jar", 10)
+        val resolution =
+            JvmResolutionResult(
+                status = ResultStatus.COMPLETE,
+                resolution =
+                    ResolutionStats(
+                        requested = root,
+                        components =
+                            listOf(
+                                ResolvedComponent(root, requested = true),
+                                ResolvedComponent(jvm, requested = false),
+                            ),
+                        edges = listOf(DependencyEdge(root, jvm.notation, jvm)),
+                        artifacts =
+                            listOf(
+                                ResolvedArtifact(
+                                    coordinate = jvm,
+                                    fileName = jvmJar.fileName.toString(),
+                                    path = jvmJar.toString(),
+                                    extension = "jar",
+                                    variant = "runtime",
+                                    digest = ArtifactDigest(value = sha256(jvmJar)),
+                                ),
+                            ),
+                    ),
+            )
+
+        val result = analyzer(resolution).analyze(AnalyzeRequest(root))
+
+        assertEquals(ResultStatus.COMPLETE, result.status)
+        assertTrue(result.sizes.directArtifactArchiveBytes > 0)
+        assertEquals(jvm, result.dependencySizes.single { it.requested }.coordinate)
+        assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "REQUESTED_VARIANT_REDIRECTED" })
+    }
+
+    @Test
+    fun `does not attribute transitive jars to a requested non-jar artifact`() {
+        val root = MavenCoordinate.parse("example:android-only:1.0")
+        val dependency = MavenCoordinate.parse("example:jvm-dependency:1.0")
+        val rootAar = tempDir.resolve("android-only.aar").also { path -> Files.write(path, byteArrayOf(1)) }
+        val dependencyJar = jar("jvm-dependency.jar", 10)
+        val resolution =
+            JvmResolutionResult(
+                status = ResultStatus.PARTIAL,
+                resolution =
+                    ResolutionStats(
+                        requested = root,
+                        components =
+                            listOf(
+                                ResolvedComponent(root, requested = true),
+                                ResolvedComponent(dependency, requested = false),
+                            ),
+                        edges = listOf(DependencyEdge(root, dependency.notation, dependency)),
+                        artifacts =
+                            listOf(
+                                ResolvedArtifact(
+                                    coordinate = root,
+                                    fileName = rootAar.fileName.toString(),
+                                    path = rootAar.toString(),
+                                    extension = "aar",
+                                    variant = "runtime",
+                                    digest = ArtifactDigest(value = sha256(rootAar)),
+                                ),
+                                ResolvedArtifact(
+                                    coordinate = dependency,
+                                    fileName = dependencyJar.fileName.toString(),
+                                    path = dependencyJar.toString(),
+                                    extension = "jar",
+                                    variant = "runtime",
+                                    digest = ArtifactDigest(value = sha256(dependencyJar)),
+                                ),
+                            ),
+                    ),
+            )
+
+        val result = analyzer(resolution).analyze(AnalyzeRequest(root))
+
+        assertEquals(ResultStatus.PARTIAL, result.status)
+        assertEquals(null, result.directArtifact)
+        assertTrue(result.dependencySizes.none { it.requested })
+        assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "REQUESTED_ARTIFACT_NOT_ANALYZED" })
+        assertTrue(result.diagnostics.none { diagnostic -> diagnostic.code == "REQUESTED_VARIANT_REDIRECTED" })
     }
 
     @Test
@@ -187,7 +278,6 @@ class PackageBuildStatsAnalyzerTest {
         val result =
             GradleResolverClient(
                 PackageBuildStatsConfig(
-                    cacheDirectory = tempDir.resolve("cache"),
                     gradleExecutable = executable,
                     resolutionTimeoutMilliseconds = 25,
                 ),
@@ -216,7 +306,6 @@ class PackageBuildStatsAnalyzerTest {
         val result =
             GradleResolverClient(
                 PackageBuildStatsConfig(
-                    cacheDirectory = tempDir.resolve("cache"),
                     gradleExecutable = executable,
                 ),
             ).resolve(coordinate, 21, AnalysisCancellation { System.nanoTime() - started > 50_000_000 })
@@ -243,7 +332,6 @@ class PackageBuildStatsAnalyzerTest {
         val result =
             GradleResolverClient(
                 PackageBuildStatsConfig(
-                    cacheDirectory = tempDir.resolve("cache"),
                     gradleExecutable = executable,
                     temporaryDirectory = temporaryDirectory,
                     diagnosticOutputLimitBytes = 128,
@@ -258,6 +346,36 @@ class PackageBuildStatsAnalyzerTest {
                 .contains("fixture resolution detail"),
         )
         assertTrue(Files.list(temporaryDirectory).use { paths -> paths.findAny().isEmpty })
+    }
+
+    @Test
+    fun `resolver child process receives the running JVM home`() {
+        val executable = tempDir.resolve("java-home-gradle")
+        Files.writeString(executable, "#!/bin/sh\necho \"JAVA_HOME=${'$'}JAVA_HOME\" >&2\nexit 7\n")
+        Files.setPosixFilePermissions(
+            executable,
+            setOf(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE,
+            ),
+        )
+        val coordinate = MavenCoordinate.parse("example:java-home:1.0")
+
+        val result =
+            GradleResolverClient(
+                PackageBuildStatsConfig(
+                    gradleExecutable = executable,
+                    diagnosticOutputLimitBytes = 1_024,
+                ),
+            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
+
+        assertTrue(
+            result.diagnostics
+                .single()
+                .summary
+                .contains("JAVA_HOME=${System.getProperty("java.home")}"),
+        )
     }
 
     @Test
@@ -290,7 +408,7 @@ class PackageBuildStatsAnalyzerTest {
 
     private fun analyzer(resolution: JvmResolutionResult): PackageBuildStatsAnalyzer =
         PackageBuildStatsAnalyzer(
-            config = PackageBuildStatsConfig(cacheDirectory = tempDir.resolve("cache")),
+            config = PackageBuildStatsConfig(),
             resolverClient = ResolverClient { _, _, _ -> resolution },
         )
 

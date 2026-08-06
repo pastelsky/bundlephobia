@@ -217,16 +217,6 @@ public data class ModuleStats(
 
 /** One externally visible JVM type and its physical classfile contribution. */
 @Serializable
-public data class ApiMemberStats(
-    public val name: String,
-    public val kind: String,
-    public val descriptor: String,
-    public val visibility: String,
-    public val static: Boolean = false,
-)
-
-/** One externally visible JVM type and its physical classfile contribution. */
-@Serializable
 public data class ApiTypeStats(
     public val name: String,
     public val packageName: String,
@@ -235,14 +225,20 @@ public data class ApiTypeStats(
     public val classfileBytes: Long,
     public val publicMembers: Int,
     public val protectedMembers: Int,
-    /** Stable JVM signatures for the type's externally visible fields and methods. */
-    public val members: List<ApiMemberStats> = emptyList(),
 )
 
-/** Public and protected type surface for an artifact's effective runtime view. */
+/** Compact public and protected type surface for an artifact's effective runtime view. */
 @Serializable
 public data class ApiSurfaceStats(
-    public val types: List<ApiTypeStats> = emptyList(),
+    public val publicTypes: Int = 0,
+    public val protectedTypes: Int = 0,
+    public val publicMembers: Int = 0,
+    public val protectedMembers: Int = 0,
+    public val classfileBytes: Long = 0,
+    /** Largest externally visible types, bounded by the analyzer for compact results. */
+    public val largestTypes: List<ApiTypeStats> = emptyList(),
+    public val reportedTypes: Int = largestTypes.size,
+    public val truncated: Boolean = false,
 )
 
 @Serializable
@@ -279,7 +275,6 @@ public data class ResolvedComponent
         public val variant: String? = null,
         /** Whether this is the coordinate explicitly requested by the caller. */
         public val requested: Boolean,
-        public val artifacts: List<ArtifactAnalysis> = emptyList(),
         public val variants: List<ResolvedVariant> = emptyList(),
         public val selectionReasons: List<String> = emptyList(),
     )
@@ -330,6 +325,31 @@ public data class ResolutionStats
         public val repositories: List<String> = emptyList(),
     )
 
+/** Path-free selected artifact reference used in public package results. */
+@Serializable
+public data class ResolvedArtifactSummary(
+    public val coordinate: MavenCoordinate,
+    public val fileName: String,
+    public val extension: String,
+    public val variant: String,
+    public val attributes: Map<String, String> = emptyMap(),
+    public val digest: ArtifactDigest,
+)
+
+/** Compact, bounded resolution evidence suitable for API and CLI output. */
+@Serializable
+public data class ResolutionSummary(
+    public val requested: MavenCoordinate,
+    public val components: List<ResolvedComponent> = emptyList(),
+    public val componentCount: Int = components.size,
+    public val edges: List<DependencyEdge> = emptyList(),
+    public val edgeCount: Int = edges.size,
+    public val artifacts: List<ResolvedArtifactSummary> = emptyList(),
+    public val artifactCount: Int = artifacts.size,
+    public val repositories: List<String> = emptyList(),
+    public val truncated: Boolean = false,
+)
+
 /** Standalone schema-versioned resolver output written by the sealed Gradle resolution build. */
 @Serializable
 public data class JvmResolutionResult(
@@ -355,8 +375,10 @@ public data class RuntimeClosureStats(
     public val artifacts: Int = 0,
     /** Maximum shortest-path distance from the requested component. */
     public val dependencyDepth: Int = 0,
-    /** Deterministic shortest path to every reachable selected component. */
+    /** A bounded deterministic sample of shortest selected-dependency paths. */
     public val shortestPaths: List<DependencyPath> = emptyList(),
+    public val shortestPathCount: Int = shortestPaths.size,
+    public val shortestPathsTruncated: Boolean = false,
     /** Up to ten largest transitive runtime JARs, ordered by archive bytes. */
     public val largestTransitiveArtifacts: List<RuntimeArtifactSummary> = emptyList(),
 )
@@ -414,18 +436,24 @@ public data class TimingStats(
 
 @Serializable
 public data class PackageBuildStatsResult(
-    public val schemaVersion: Int = 1,
+    public val schemaVersion: Int = 2,
     public val status: ResultStatus,
     public val coordinate: MavenCoordinate,
     public val target: TargetProfile,
     public val javaVersion: Int = 21,
     public val toolchain: ToolchainManifest,
-    public val resolution: ResolutionStats,
+    public val resolution: ResolutionSummary,
     public val sizes: PackageSizeStats = PackageSizeStats(),
     public val dependencySizes: List<DependencySizeStats> = emptyList(),
+    public val dependencyCount: Int = dependencySizes.size,
+    public val dependencySizesTruncated: Boolean = false,
     public val artifacts: List<ArtifactAnalysis> = emptyList(),
+    public val artifactCount: Int = artifacts.size,
+    public val artifactsTruncated: Boolean = false,
     public val directArtifact: ArtifactAnalysis? = null,
     public val runtimeClosure: RuntimeClosureStats = RuntimeClosureStats(),
     public val diagnostics: List<Diagnostic> = emptyList(),
+    public val diagnosticCount: Int = diagnostics.size,
+    public val diagnosticsTruncated: Boolean = false,
     public val timings: TimingStats = TimingStats(),
 )

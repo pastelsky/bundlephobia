@@ -21,7 +21,7 @@ class ResultJsonTest {
         val decoded = ResultJson.decodeResult(encoded)
 
         assertEquals(result, decoded)
-        assertTrue(encoded.contains("\"schemaVersion\":1"))
+        assertTrue(encoded.contains("\"schemaVersion\":2"))
         assertTrue(encoded.contains("\"target\":\"jvm-runtime\""))
         assertTrue(encoded.contains("\"archiveBytes\":1024"))
         assertTrue(encoded.contains("\"directArtifact\":null"))
@@ -58,7 +58,7 @@ class ResultJsonTest {
                     kotlinVersion = "2.4.10",
                     gradleVersion = "9.5.1",
                 ),
-            resolution = ResolutionStats(coordinate),
+            resolution = ResolutionSummary(coordinate),
             runtimeClosure = RuntimeClosureStats(archiveBytes = 1_024),
         )
     }

@@ -1,7 +1,6 @@
 package com.bundlephobia.jvm.classfile
 
 import com.bundlephobia.jvm.model.AnalysisStage
-import com.bundlephobia.jvm.model.ApiMemberStats
 import com.bundlephobia.jvm.model.ApiSurfaceStats
 import com.bundlephobia.jvm.model.ApiTypeStats
 import com.bundlephobia.jvm.model.ClassfileStats
@@ -215,7 +214,7 @@ public class JarClassfileAnalyzer(
                     ModuleStats(kind = ModuleKind.UNNAMED, mainClass = manifestMainClass)
                 }
             }
-        val apiTypes =
+        val allApiTypes =
             types
                 .filter { type -> type.visibility != TypeVisibility.IMPLEMENTATION }
                 .map { type ->
@@ -227,9 +226,12 @@ public class JarClassfileAnalyzer(
                         classfileBytes = type.classBytes,
                         publicMembers = type.publicMembers,
                         protectedMembers = type.protectedMembers,
-                        members = type.apiMembers,
                     )
-                }.sortedBy(ApiTypeStats::name)
+                }
+        val largestApiTypes =
+            allApiTypes
+                .sortedWith(compareByDescending(ApiTypeStats::classfileBytes).thenBy(ApiTypeStats::name))
+                .take(MAX_REPORTED_API_TYPES)
 
         return ClassfileArtifactAnalysis(
             stats =
@@ -254,7 +256,16 @@ public class JarClassfileAnalyzer(
                 ),
             namespaces = namespaces,
             module = module,
-            apiSurface = ApiSurfaceStats(apiTypes),
+            apiSurface =
+                ApiSurfaceStats(
+                    publicTypes = allApiTypes.count { type -> type.visibility == "public" },
+                    protectedTypes = allApiTypes.count { type -> type.visibility == "protected" },
+                    publicMembers = allApiTypes.sumOf(ApiTypeStats::publicMembers),
+                    protectedMembers = allApiTypes.sumOf(ApiTypeStats::protectedMembers),
+                    classfileBytes = allApiTypes.sumOf(ApiTypeStats::classfileBytes),
+                    largestTypes = largestApiTypes,
+                    truncated = allApiTypes.size > largestApiTypes.size,
+                ),
             diagnostics = diagnostics,
         )
     }
@@ -286,6 +297,7 @@ public class JarClassfileAnalyzer(
 
     private companion object {
         const val MAX_CLASSFILE_BYTES: Int = 16 * 1024 * 1024
+        const val MAX_REPORTED_API_TYPES: Int = 20
         val MULTI_RELEASE_PATH: Regex = Regex("^META-INF/versions/([0-9]+)/(.+\\.class)$")
     }
 }
@@ -305,7 +317,6 @@ private class InspectingClassVisitor(
     private var jniIndicator: Boolean = false
     private var staticInitializer: Boolean = false
     private var nativeMethods: Boolean = false
-    private val apiMembers = mutableListOf<ApiMemberStats>()
     private var moduleName: String? = null
     private var moduleVersion: String? = null
     private var moduleMainClass: String? = null
@@ -417,7 +428,6 @@ private class InspectingClassVisitor(
         value: Any?,
     ): FieldVisitor? {
         countMember(access)
-        recordMember(name, "field", descriptor, access)
         return null
     }
 
@@ -431,7 +441,6 @@ private class InspectingClassVisitor(
         if (name == "<clinit>") staticInitializer = true
         if (name != "<clinit>") {
             countMember(access)
-            recordMember(name, if (name == "<init>") "constructor" else "method", descriptor, access)
         }
         if (access and Opcodes.ACC_NATIVE != 0) {
             jniIndicator = true
@@ -462,14 +471,6 @@ private class InspectingClassVisitor(
             visibility = visibility,
             publicMembers = if (apiVisible) publicMembers else 0,
             protectedMembers = if (apiVisible) protectedMembers else 0,
-            apiMembers =
-                if (apiVisible) {
-                    apiMembers.sortedWith(
-                        compareBy(ApiMemberStats::kind, ApiMemberStats::name, ApiMemberStats::descriptor),
-                    )
-                } else {
-                    emptyList()
-                },
             kotlinMetadata = kotlinMetadata,
             reflectionIndicator = reflectionIndicator,
             serviceLoaderIndicator = serviceLoaderIndicator,
@@ -495,29 +496,6 @@ private class InspectingClassVisitor(
             access and Opcodes.ACC_PUBLIC != 0 -> publicMembers++
             access and Opcodes.ACC_PROTECTED != 0 -> protectedMembers++
         }
-    }
-
-    private fun recordMember(
-        name: String,
-        kind: String,
-        descriptor: String,
-        access: Int,
-    ) {
-        if (access and (Opcodes.ACC_SYNTHETIC or Opcodes.ACC_BRIDGE) != 0) return
-        val memberVisibility =
-            when {
-                access and Opcodes.ACC_PUBLIC != 0 -> "public"
-                access and Opcodes.ACC_PROTECTED != 0 -> "protected"
-                else -> return
-            }
-        apiMembers +=
-            ApiMemberStats(
-                name = name,
-                kind = kind,
-                descriptor = descriptor,
-                visibility = memberVisibility,
-                static = access and Opcodes.ACC_STATIC != 0,
-            )
     }
 
     private fun visibility(access: Int): TypeVisibility =
@@ -561,7 +539,6 @@ private data class ParsedClass(
     val visibility: TypeVisibility,
     val publicMembers: Int,
     val protectedMembers: Int,
-    val apiMembers: List<ApiMemberStats>,
     val kotlinMetadata: Boolean,
     val reflectionIndicator: Boolean,
     val serviceLoaderIndicator: Boolean,
