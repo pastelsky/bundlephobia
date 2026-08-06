@@ -50,6 +50,10 @@ Maven surface. The CLI JAR has a main-class manifest and can run with
 
 ## API and CLI
 
+See [JavaScript and JVM package-stat concepts](docs/JAVASCRIPT-JVM-CONCEPTS.md)
+for the shared terminology and the intentional ecosystem differences around
+compressed size, exports, tree shaking, ESM, JPMS, and Gradle variants.
+
 The public model accepts only exact `groupId:artifactId:version` coordinates and
 the `jvm-runtime` target. Snapshot, range, dynamic, URL, path, repository, and
 Android inputs are rejected.
@@ -57,27 +61,28 @@ Android inputs are rejected.
 The CLI contract is:
 
 ```text
-jvm-package-build-stats analyze GROUP:ARTIFACT:VERSION [--target jvm-runtime]
-jvm-package-build-stats inspect FILE.jar
+jvm-package-stats stats GROUP:ARTIFACT:VERSION [--target jvm-runtime] [--java-version VERSION]
+jvm-package-stats inspect FILE.jar [--java-version VERSION]
 ```
 
 JSON analysis results are written to stdout. Usage and operational messages are
 written to stderr. Exit codes are `0` for success, `1` for an unexpected CLI
 failure, `2` for invalid usage, and `3` for a structured analysis failure.
 
-`analyze` resolves the selected JVM runtime graph, copies each unique JAR into
+`stats` (also available through the `analyze` alias) resolves the selected JVM runtime graph, copies each unique JAR into
 an immutable SHA-256 cache, and combines archive, classfile, dependency, and
 namespace evidence. It reports direct and transitive bytes, dependency depth,
 shortest selected paths, largest transitive JARs, and conflict-selection
 diagnostics. `inspect` performs the same static JAR analysis without resolving
 dependencies.
 
-The default cache is
-`~/.cache/bundlephobia/jvm-package-build-stats`; library callers can supply an
-explicit cache directory, Gradle wrapper, and resolution timeout through
-`PackageBuildStatsConfig`. Static evidence is keyed by artifact digest and
-analyzer version. Repeated analysis therefore reuses immutable bytes and static
-results while still resolving the current requested graph.
+The default cache follows the host convention: `XDG_CACHE_HOME` on Unix,
+`~/Library/Caches` on macOS, and `LOCALAPPDATA` on Windows. Set
+`BUNDLEPHOBIA_JVM_CACHE_DIR` to override it. Library callers can supply an
+explicit cache directory, Gradle wrapper, resolution timeout, temporary root,
+and diagnostic-output bound through `PackageBuildStatsConfig`. Static evidence
+is keyed by artifact digest, analyzer version, and consumer Java target.
+Corrupt immutable entries are discarded and recomputed.
 
 Resolution runs in a temporary empty Gradle build. It evaluates only the owned
 settings plugin and an empty build script: dependency-provided classes, tests,
@@ -93,11 +98,14 @@ suspicious compression ratios, and malformed archives. ZIP64 archives are
 supported subject to the same long-valued size and count limits.
 
 For valid archives, inspection uses ASM visitors without class loading to report
-the effective Java 21 class view, deterministic package namespaces, public and
-protected API counts, implementation classes, JPMS modules and exports, and
-multi-release versions. It also reports static indicators for Kotlin metadata,
-reflection, service loading, JNI, and unsupported future bytecode. Indicators
-describe bytecode evidence; they do not claim that a code path executes.
+the effective requested-Java class view, deterministic package namespaces,
+public/protected type and member signatures, implementation classes, explicit,
+automatic or unnamed JPMS modules, and multi-release versions. Kotlin source
+visibility is recovered from metadata, so `internal` declarations are not
+misreported as public API. It also reports static indicators for reflection,
+service loading, JNI, static initializers, native methods, and unsupported
+future bytecode. Indicators describe bytecode evidence; they do not claim that
+a code path executes or that an implementation class can safely be removed.
 
 ## Internal Gradle resolver plugin
 
