@@ -1,12 +1,17 @@
 package com.bundlephobia.jvm.cli
 
+import com.bundlephobia.jvm.model.AndroidDexStats
+import com.bundlephobia.jvm.model.AndroidDexStatus
+import com.bundlephobia.jvm.model.AndroidPreflightStats
 import com.bundlephobia.jvm.model.ApiSurfaceStats
 import com.bundlephobia.jvm.model.ArtifactAnalysis
+import com.bundlephobia.jvm.model.ClassfileStats
 import com.bundlephobia.jvm.model.DependencySizeStats
 import com.bundlephobia.jvm.model.Diagnostic
 import com.bundlephobia.jvm.model.DiagnosticSeverity
 import com.bundlephobia.jvm.model.PackageBuildStatsResult
 import com.bundlephobia.jvm.model.ResultStatus
+import com.bundlephobia.jvm.model.TargetProfile
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -16,15 +21,25 @@ internal class TerminalRenderer(
 ) {
     fun render(result: PackageBuildStatsResult): String =
         buildString {
-            title("JVM PACKAGE STATS")
+            title(if (result.target == TargetProfile.ANDROID_RUNTIME) "ANDROID PACKAGE STATS" else "JVM PACKAGE STATS")
             appendLine(style(BOLD_CYAN, result.coordinate.notation))
-            appendLine("${status(result.status)}  ${dim("JVM runtime · Java ${result.javaVersion}")}")
+            val target = if (result.target == TargetProfile.ANDROID_RUNTIME) "Android runtime" else "JVM runtime"
+            appendLine("${status(result.status)}  ${dim("$target · Java ${result.javaVersion}")}")
 
             section("SIZE")
-            metric("Published JARs", bytes(result.sizes.runtimeArchiveBytes))
+            metric(
+                if (result.target == TargetProfile.ANDROID_RUNTIME) "Runtime archives" else "Published JARs",
+                bytes(result.sizes.runtimeArchiveBytes),
+            )
             metric("Expanded contents", bytes(result.sizes.runtimeExpandedBytes))
             metric("Requested package", bytes(result.sizes.directArtifactArchiveBytes))
             metric("Dependencies", bytes(result.sizes.transitiveArtifactArchiveBytes))
+
+            result.androidPreflight?.let { preflight -> androidPreflight(preflight) }
+            if (result.target == TargetProfile.ANDROID_RUNTIME) {
+                result.directArtifact?.classfiles?.let { classfiles -> directAndroidCode(classfiles) }
+            }
+            result.androidDex?.let { dex -> androidDex(dex) }
 
             section("RUNTIME CLOSURE")
             metric("Artifacts", count(result.runtimeClosure.artifacts, result.artifactsTruncated))
@@ -45,6 +60,48 @@ internal class TerminalRenderer(
             metric("Total", duration(result.timings.totalMilliseconds))
             result.timings.stagesMilliseconds.forEach { (stage, milliseconds) -> metric(stage, duration(milliseconds)) }
         }.trimEnd()
+
+    private fun StringBuilder.androidPreflight(preflight: AndroidPreflightStats) {
+        section("ANDROID PREFLIGHT")
+        metric("Required minSdk", preflight.requiredMinSdk.toString())
+        metric("Required compileSdk", preflight.requiredCompileSdk.toString())
+        if (preflight.requiredCompileSdkExtension > 0) {
+            metric("SDK extension", preflight.requiredCompileSdkExtension.toString())
+        }
+        preflight.requiredCompileSdkPreview?.let { metric("SDK preview", it) }
+        preflight.requiredAgpVersion?.let { metric("Minimum AGP", it) }
+        metric("Profile", preflight.selectedProfile?.id ?: "unsupported")
+        metric("Tooling", preflight.toolingStatus.name.lowercase(Locale.ROOT))
+        metric("Confidence", preflight.confidence.name.lowercase(Locale.ROOT))
+        if (preflight.missingToolingPackages.isNotEmpty()) {
+            metric("Missing", preflight.missingToolingPackages.joinToString())
+        }
+    }
+
+    private fun StringBuilder.androidDex(dex: AndroidDexStats) {
+        section("DEX · D8 UNSHRUNK")
+        metric("Status", dex.status.name.lowercase(Locale.ROOT))
+        if (dex.status == AndroidDexStatus.COMPLETE) {
+            dex.dexBytes?.let { metric("DEX size", bytes(it)) }
+            metric("DEX files", dex.dexFiles.toString())
+            dex.referencedMethods?.let { metric("Method references", it.toString()) }
+            dex.maxReferencedMethodsPerDex?.let { metric("Largest DEX methods", it.toString()) }
+            dex.referencedFields?.let { metric("Field references", it.toString()) }
+            dex.definedClasses?.let { metric("Defined classes", it.toString()) }
+        } else if (dex.status == AndroidDexStatus.SKIPPED) {
+            metric("Method references", "not measured")
+        }
+        metric("minSdk", dex.minSdk.toString())
+        metric("Build Tools", dex.buildToolsVersion)
+    }
+
+    private fun StringBuilder.directAndroidCode(classfiles: ClassfileStats) {
+        section("DIRECT LIBRARY CODE")
+        metric("Defined classes", classfiles.analyzedClasses.toString())
+        metric("Defined methods", classfiles.definedMethods.toString())
+        metric("Defined fields", classfiles.definedFields.toString())
+        metric("Classfile bytes", bytes(classfiles.classfileBytes))
+    }
 
     fun render(result: ArtifactAnalysis): String =
         buildString {
@@ -67,6 +124,9 @@ internal class TerminalRenderer(
             result.classfiles?.let { classfiles ->
                 section("CLASSFILES")
                 metric("Analyzed classes", classfiles.analyzedClasses.toString())
+                metric("Defined methods", classfiles.definedMethods.toString())
+                metric("Defined fields", classfiles.definedFields.toString())
+                metric("Classfile bytes", bytes(classfiles.classfileBytes))
                 metric("Implementation", classfiles.implementationClasses.toString())
                 metric("Kotlin metadata", classfiles.kotlinMetadataClasses.toString())
             }

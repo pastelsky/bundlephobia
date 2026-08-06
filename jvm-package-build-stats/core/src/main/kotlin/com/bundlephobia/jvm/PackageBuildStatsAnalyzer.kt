@@ -4,6 +4,8 @@ import com.bundlephobia.jvm.archive.JarArchiveAnalyzer
 import com.bundlephobia.jvm.classfile.JarClassfileAnalyzer
 import com.bundlephobia.jvm.model.AnalysisStage
 import com.bundlephobia.jvm.model.AnalyzeRequest
+import com.bundlephobia.jvm.model.AndroidDexStats
+import com.bundlephobia.jvm.model.AndroidPreflightStats
 import com.bundlephobia.jvm.model.ArtifactAnalysis
 import com.bundlephobia.jvm.model.DependencyPath
 import com.bundlephobia.jvm.model.DependencySizeStats
@@ -22,6 +24,7 @@ import com.bundlephobia.jvm.model.ResultStatus
 import com.bundlephobia.jvm.model.RetryClassification
 import com.bundlephobia.jvm.model.RuntimeArtifactSummary
 import com.bundlephobia.jvm.model.RuntimeClosureStats
+import com.bundlephobia.jvm.model.TargetProfile
 import com.bundlephobia.jvm.model.TimingStats
 import com.bundlephobia.jvm.model.ToolchainManifest
 import java.nio.file.Path
@@ -56,18 +59,56 @@ public class PackageBuildStatsAnalyzer
             val stageTimings = linkedMapOf<String, Long>()
             val diagnostics = mutableListOf<Diagnostic>()
 
-            val resolutionTimed = measureTimedValue { resolverClient.resolve(request.coordinate, request.javaVersion, cancellation) }
+            val resolutionTimed =
+                measureTimedValue {
+                    resolverClient.resolve(request.coordinate, request.target, request.javaVersion, cancellation)
+                }
             stageTimings["resolution"] = resolutionTimed.duration.inWholeMilliseconds
             val resolverResult = resolutionTimed.value
             diagnostics += resolverResult.diagnostics
+
+            val androidPreflight: AndroidPreflightStats?
+            val preflightTimed =
+                measureTimedValue {
+                    if (request.target == TargetProfile.ANDROID_RUNTIME && resolverResult.resolution.artifacts.isNotEmpty()) {
+                        AndroidPreflightAnalyzer(config)
+                            .analyze(resolverResult.resolution, cancellation)
+                            .also {
+                                diagnostics += it.diagnostics
+                            }.stats
+                    } else {
+                        null
+                    }
+                }
+            androidPreflight = preflightTimed.value
+            if (request.target == TargetProfile.ANDROID_RUNTIME) {
+                stageTimings["android-preflight"] = preflightTimed.duration.inWholeMilliseconds
+            }
+
+            val dexTimed =
+                measureTimedValue {
+                    androidPreflight?.let { preflight ->
+                        AndroidDexAnalyzer(config)
+                            .analyze(resolverResult.resolution, preflight, cancellation)
+                            .also {
+                                diagnostics += it.diagnostics
+                            }.stats
+                    }
+                }
+            val androidDex = dexTimed.value
+            if (request.target == TargetProfile.ANDROID_RUNTIME) {
+                stageTimings["dex-analysis"] = dexTimed.duration.inWholeMilliseconds
+            }
 
             val evidence = mutableListOf<ArtifactEvidence>()
             val analysisTimed =
                 measureTimedValue {
                     resolverResult.resolution.artifacts
                         .asSequence()
-                        .filter { artifact -> artifact.extension == "jar" }
-                        .distinctBy { artifact -> artifact.digest.value }
+                        .filter { artifact ->
+                            artifact.extension == "jar" ||
+                                (request.target == TargetProfile.ANDROID_RUNTIME && artifact.extension == "aar")
+                        }.distinctBy { artifact -> artifact.digest.value }
                         .sortedBy { artifact -> artifact.digest.value }
                         .forEach { artifact ->
                             if (cancellation.isCancelled()) {
@@ -85,6 +126,8 @@ public class PackageBuildStatsAnalyzer
                         request = request,
                         resolverResult = resolverResult,
                         evidence = evidence,
+                        androidPreflight = androidPreflight,
+                        androidDex = androidDex,
                         diagnostics = diagnostics,
                     )
                 }
@@ -135,7 +178,12 @@ public class PackageBuildStatsAnalyzer
             diagnostics: MutableList<Diagnostic>,
         ): ArtifactEvidence? =
             try {
-                val analysis = inspect(Path.of(artifact.path), javaVersion).copy(displayName = artifact.fileName)
+                val analysis =
+                    if (artifact.extension == "aar") {
+                        inspectAndroidArchive(Path.of(artifact.path), javaVersion).copy(displayName = artifact.fileName)
+                    } else {
+                        inspect(Path.of(artifact.path), javaVersion).copy(displayName = artifact.fileName)
+                    }
                 check(analysis.digest == null || analysis.digest == artifact.digest) {
                     "Artifact digest changed after resolution"
                 }
@@ -152,10 +200,27 @@ public class PackageBuildStatsAnalyzer
                 null
             }
 
+        private fun inspectAndroidArchive(
+            path: Path,
+            javaVersion: Int,
+        ): ArtifactAnalysis {
+            val archive = archiveAnalyzer.analyze(path)
+            if (archive.status != ResultStatus.COMPLETE) return archive
+
+            val classfiles = AndroidAarClassfileAnalyzer(config, javaVersion).analyze(path)
+            return archive.copy(
+                status = if (classfiles.diagnostics.isEmpty()) ResultStatus.COMPLETE else ResultStatus.PARTIAL,
+                classfiles = classfiles.stats,
+                diagnostics = classfiles.diagnostics,
+            )
+        }
+
         private fun assemble(
             request: AnalyzeRequest,
             resolverResult: JvmResolutionResult,
             evidence: List<ArtifactEvidence>,
+            androidPreflight: AndroidPreflightStats?,
+            androidDex: AndroidDexStats?,
             diagnostics: MutableList<Diagnostic>,
         ): PackageBuildStatsResult {
             diagnostics += conflictDiagnostics(resolverResult.resolution)
@@ -171,7 +236,7 @@ public class PackageBuildStatsAnalyzer
                 diagnostics +=
                     Diagnostic(
                         code = "REQUESTED_ARTIFACT_NOT_ANALYZED",
-                        summary = "No analyzable JVM JAR was selected for ${request.coordinate.notation}",
+                        summary = "No analyzable runtime archive was selected for ${request.coordinate.notation}",
                         stage = AnalysisStage.ASSEMBLY,
                         severity = DiagnosticSeverity.ERROR,
                     )
@@ -231,6 +296,8 @@ public class PackageBuildStatsAnalyzer
                 artifactsTruncated = uniqueAnalyses.size > compactArtifacts.size,
                 directArtifact = directArtifact,
                 runtimeClosure = closure,
+                androidPreflight = androidPreflight,
+                androidDex = androidDex,
                 diagnostics = compactDiagnostics,
                 diagnosticCount = distinctDiagnostics.size,
                 diagnosticsTruncated = distinctDiagnostics.size > compactDiagnostics.size,

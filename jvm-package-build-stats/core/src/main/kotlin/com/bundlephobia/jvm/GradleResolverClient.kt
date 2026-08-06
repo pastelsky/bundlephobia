@@ -8,6 +8,7 @@ import com.bundlephobia.jvm.model.ResolutionStats
 import com.bundlephobia.jvm.model.ResultJson
 import com.bundlephobia.jvm.model.ResultStatus
 import com.bundlephobia.jvm.model.RetryClassification
+import com.bundlephobia.jvm.model.TargetProfile
 import com.bundlephobia.jvm.resolver.ResolverPluginClasspathAnchor
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit
 internal fun interface ResolverClient {
     fun resolve(
         coordinate: MavenCoordinate,
+        target: TargetProfile,
         javaVersion: Int,
         cancellation: AnalysisCancellation,
     ): JvmResolutionResult
@@ -30,6 +32,7 @@ internal class GradleResolverClient(
 ) : ResolverClient {
     override fun resolve(
         coordinate: MavenCoordinate,
+        target: TargetProfile,
         javaVersion: Int,
         cancellation: AnalysisCancellation,
     ): JvmResolutionResult {
@@ -40,13 +43,14 @@ internal class GradleResolverClient(
             } ?: Files.createTempDirectory("jvm-package-build-stats-")
         return try {
             writeBuild(directory)
-            runGradle(directory, coordinate, javaVersion, cancellation)
+            runGradle(directory, coordinate, target, javaVersion, cancellation)
         } catch (_: InterruptedException) {
             Thread.currentThread().interrupt()
-            failure(coordinate, javaVersion, "RESOLUTION_CANCELLED", "Resolution was cancelled", RetryClassification.RETRYABLE)
+            failure(coordinate, target, javaVersion, "RESOLUTION_CANCELLED", "Resolution was cancelled", RetryClassification.RETRYABLE)
         } catch (_: Exception) {
             failure(
                 coordinate,
+                target,
                 javaVersion,
                 "RESOLVER_PROCESS_FAILED",
                 "The sealed Gradle resolver could not start or return a result",
@@ -104,6 +108,7 @@ internal class GradleResolverClient(
     private fun runGradle(
         directory: Path,
         coordinate: MavenCoordinate,
+        target: TargetProfile,
         javaVersion: Int,
         cancellation: AnalysisCancellation,
     ): JvmResolutionResult {
@@ -114,6 +119,7 @@ internal class GradleResolverClient(
                 "--console=plain",
                 ResolverPluginClasspathAnchor.RESOLVE_TASK_NAME,
                 "-P${ResolverPluginClasspathAnchor.COORDINATE_PROPERTY}=${coordinate.notation}",
+                "-P${ResolverPluginClasspathAnchor.TARGET_PROPERTY}=${target.serializedValue}",
                 "-P${ResolverPluginClasspathAnchor.JAVA_VERSION_PROPERTY}=$javaVersion",
             ).directory(directory.toFile())
                 .redirectOutput(directory.resolve("gradle.stdout").toFile())
@@ -139,6 +145,7 @@ internal class GradleResolverClient(
             stop(process)
             return failure(
                 coordinate,
+                target,
                 javaVersion,
                 "RESOLUTION_CANCELLED",
                 "Resolution was cancelled",
@@ -149,6 +156,7 @@ internal class GradleResolverClient(
             stop(process)
             return failure(
                 coordinate,
+                target,
                 javaVersion,
                 "RESOLUTION_TIMEOUT",
                 "Resolution exceeded ${config.resolutionTimeoutMilliseconds} ms",
@@ -162,6 +170,7 @@ internal class GradleResolverClient(
         val detail = if (stderr.isEmpty()) "" else ": $stderr"
         return failure(
             coordinate,
+            target,
             javaVersion,
             "RESOLVER_PROCESS_FAILED",
             "The sealed Gradle resolver exited with status ${process.exitValue()} without a result$detail",
@@ -187,6 +196,7 @@ internal class GradleResolverClient(
 
     private fun failure(
         coordinate: MavenCoordinate,
+        target: TargetProfile,
         javaVersion: Int,
         code: String,
         summary: String,
@@ -194,6 +204,7 @@ internal class GradleResolverClient(
     ): JvmResolutionResult =
         JvmResolutionResult(
             status = ResultStatus.FAILED,
+            target = target,
             javaVersion = javaVersion,
             resolution = ResolutionStats(coordinate),
             diagnostics =

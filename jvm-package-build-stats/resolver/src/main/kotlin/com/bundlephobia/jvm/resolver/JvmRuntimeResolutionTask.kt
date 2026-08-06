@@ -13,6 +13,7 @@ import com.bundlephobia.jvm.model.ResolvedVariant
 import com.bundlephobia.jvm.model.ResultJson
 import com.bundlephobia.jvm.model.ResultStatus
 import com.bundlephobia.jvm.model.RetryClassification
+import com.bundlephobia.jvm.model.TargetProfile
 import org.gradle.api.DefaultTask
 import org.gradle.api.Named
 import org.gradle.api.artifacts.Configuration
@@ -50,6 +51,10 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
     /** Consumer Java feature version used for Gradle variant selection. */
     @get:Input
     public abstract val javaVersion: Property<Int>
+
+    /** Consumer ecosystem used for Gradle variant and artifact selection. */
+    @get:Input
+    public abstract val target: Property<String>
 
     /** Project repositories observed after the settings plugin sealed repository resolution. */
     @get:Input
@@ -116,6 +121,7 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
     }
 
     private fun resolveWithGradle(requested: MavenCoordinate): JvmResolutionResult {
+        val targetProfile = TargetProfile.parse(target.get())
         val configuration = resolutionConfiguration
         val resolution = configuration.incoming.resolutionResult
         val artifactCollection = configuration.incoming.artifactView { it.lenient(true) }.artifacts
@@ -153,7 +159,7 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
                     retry = RetryClassification.UNKNOWN,
                 )
         }
-        artifacts.filter { it.extension != JAR_EXTENSION }.forEach { artifact ->
+        artifacts.filterNot { targetProfile.supports(it.extension) }.forEach { artifact ->
             diagnostics +=
                 diagnostic(
                     "UNSUPPORTED_RUNTIME_ARTIFACT",
@@ -163,6 +169,7 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
 
         return JvmResolutionResult(
             status = if (diagnostics.isEmpty()) ResultStatus.COMPLETE else ResultStatus.FAILED,
+            target = targetProfile,
             javaVersion = javaVersion.get(),
             resolution =
                 ResolutionStats(
@@ -291,6 +298,7 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
     ): JvmResolutionResult =
         JvmResolutionResult(
             status = ResultStatus.FAILED,
+            target = target.orNull?.let(TargetProfile::parse) ?: TargetProfile.JVM_RUNTIME,
             javaVersion = javaVersion.getOrElse(21),
             resolution = ResolutionStats(requested = requested, repositories = REPOSITORY_IDS),
             diagnostics = listOf(diagnostic(code, summary, retry)),
@@ -316,6 +324,11 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
 
     private companion object {
         const val JAR_EXTENSION: String = "jar"
+        const val AAR_EXTENSION: String = "aar"
+
+        fun TargetProfile.supports(extension: String): Boolean =
+            extension == JAR_EXTENSION || (this == TargetProfile.ANDROID_RUNTIME && extension == AAR_EXTENSION)
+
         val REPOSITORY_IDS: List<String> =
             listOf(
                 JvmRuntimeResolverPlugin.MAVEN_CENTRAL_ID,

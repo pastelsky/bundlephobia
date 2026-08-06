@@ -7,7 +7,7 @@ statistics tooling. It targets JDK 21, uses Kotlin 2.4.10 and a pinned Gradle
 - `model`: stable request and result types;
 - `core`: public library facade and orchestration;
 - `resolver`: Gradle-backed Maven coordinate resolution;
-- `archive-analyzer`: defensive JAR archive analysis;
+- `archive-analyzer`: defensive JAR/AAR archive analysis;
 - `classfile-analyzer`: non-loading JVM classfile analysis;
 - `cli`: command-line application.
 
@@ -55,13 +55,13 @@ for the shared terminology and the intentional ecosystem differences around
 compressed size, exports, tree shaking, ESM, JPMS, and Gradle variants.
 
 The public model accepts only exact `groupId:artifactId:version` coordinates and
-the `jvm-runtime` target. Snapshot, range, dynamic, URL, path, repository, and
-Android inputs are rejected.
+the `jvm-runtime` or `android-runtime` target. Snapshot, range, dynamic, URL,
+path, and repository inputs are rejected.
 
 The CLI contract is:
 
 ```text
-jvm-package-stats stats GROUP:ARTIFACT:VERSION [--target jvm-runtime] [--java-version VERSION]
+jvm-package-stats stats GROUP:ARTIFACT:VERSION [--target jvm-runtime|android-runtime] [--java-version VERSION]
 jvm-package-stats inspect FILE.jar [--java-version VERSION]
 ```
 
@@ -80,9 +80,62 @@ shortest selected paths, largest transitive JARs, and conflict-selection
 diagnostics. `inspect` performs the same static JAR analysis without resolving
 dependencies.
 
+### Android compatibility preflight
+
+`--target android-runtime` asks Gradle for Android runtime variants and accepts
+both AAR and JAR artifacts. Before any Android compilation, D8, or R8 work, the
+analyzer reads bounded `aar-metadata.properties` and manifest inputs without
+executing package code. It reports the effective `minSdk`, required
+`compileSdk`, SDK extension, minimum Android Gradle Plugin version, selected
+immutable toolchain profile, missing SDK packages, and bounded per-AAR evidence.
+
+The default policy tries the canonical stable profile first: API 36, Build Tools
+36.0.0, AGP 9.3.1, Gradle 9.5.0, and JDK 17. It uses a pinned API 37 preview
+profile only when dependency metadata requires it. Callers can replace this
+small profile list as Android evolves; the analyzer contains no growing matrix
+of library-specific exceptions.
+
+Tool installation is disabled by default. A service or CLI caller may provide
+an SDK root and `sdkmanager`, then opt in:
+
+```sh
+java -jar jvm-package-build-stats-cli.jar stats \
+  androidx.recyclerview:recyclerview:1.4.0 \
+  --target android-runtime --pretty \
+  --android-sdk-root /opt/android-sdk \
+  --sdkmanager /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+  --install-missing-android-tooling
+```
+
+Only the exact selected `platforms;android-N` and `build-tools;VERSION` packages
+are passed to `sdkmanager`. Installation uses a small SDK-root lock, has a hard
+timeout, and discards tool output.
+
+When the selected platform and Build Tools are ready, Android analysis runs the
+pinned D8 executable over the complete resolved runtime closure. JSON and
+`--pretty` output report unshrunk DEX bytes, DEX file count, total and largest
+per-DEX method references, field references, and defined classes. Nested
+`classes.jar` and `libs/*.jar` inputs are extracted only into the analysis
+temporary directory with count and byte limits, and generated DEX files are
+deleted after their bounded headers are read. Use `--android-dex-timeout` to
+override the D8 timeout.
+
+The requested AAR is also attributed separately: `directArtifact.classfiles`
+reports the classes, methods, fields, and classfile bytes physically defined by
+its `classes.jar` and embedded `libs/*.jar`. Pretty output shows these as
+`DIRECT LIBRARY CODE` before the closure-wide DEX section. Defined methods
+include constructors, static initializers, and compiler-generated methods; they
+are an ownership count, not a prediction of what R8 will retain in a specific
+application.
+
+These are canonical unshrunk D8 measurements, not an estimate. R8-shrunk counts
+are intentionally not reported yet because a meaningful shrink result requires
+an explicit consumer entry-point and keep-rule policy.
+
 The library does not persist artifacts or results; service callers own caching
 and retention policy. Library callers can supply a Gradle wrapper, resolution
-timeout, temporary root, and diagnostic-output bound through
+timeout, temporary root, diagnostic-output bound, Android profiles, SDK root,
+optional `sdkmanager` provisioning, and D8 timeout through
 `PackageBuildStatsConfig`.
 
 Resolution runs in a temporary empty Gradle build. It evaluates only the owned
@@ -139,7 +192,7 @@ Then run the owned task with one exact coordinate:
 The task writes `build/jvm-resolver/result.json`. It records sorted components,
 selected JVM runtime variants and attributes, dependency edges and selection
 reasons, artifact paths and SHA-256 digests, and the permitted repository IDs.
-Unresolved edges, forbidden project repositories, and non-JAR runtime artifacts
+Unresolved edges, forbidden project repositories, and unsupported runtime artifacts
 produce stable structured diagnostics. Gradle's public resolution API does not
 expose reliable per-artifact repository provenance, so repository IDs describe
 the complete ordered repository set rather than claiming which repository

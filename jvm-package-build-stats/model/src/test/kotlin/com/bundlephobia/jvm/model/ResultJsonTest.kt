@@ -43,6 +43,29 @@ class ResultJsonTest {
         assertEquals(result, ResultJson.decodeResolution(ResultJson.encode(result)))
     }
 
+    @Test
+    fun `round trips Android DEX statistics`() {
+        val result =
+            fixtureResult().copy(
+                target = TargetProfile.ANDROID_RUNTIME,
+                androidDex =
+                    AndroidDexStats(
+                        status = AndroidDexStatus.COMPLETE,
+                        dexBytes = 4_096,
+                        dexFiles = 2,
+                        referencedMethods = 70_000,
+                        maxReferencedMethodsPerDex = 60_000,
+                        referencedFields = 12_000,
+                        definedClasses = 800,
+                        minSdk = 23,
+                        buildToolsVersion = "36.0.0",
+                    ),
+            )
+
+        assertEquals(result, ResultJson.decodeResult(ResultJson.encode(result)))
+        assertTrue(ResultJson.encode(result).contains("\"referencedMethods\":70000"))
+    }
+
     private fun fixtureResult(): PackageBuildStatsResult {
         val coordinate = MavenCoordinate.parse("com.google.code.gson:gson:2.13.1")
         return PackageBuildStatsResult(

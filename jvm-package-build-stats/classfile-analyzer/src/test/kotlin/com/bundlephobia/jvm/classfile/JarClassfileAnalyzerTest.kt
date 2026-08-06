@@ -56,6 +56,9 @@ class JarClassfileAnalyzerTest {
         assertEquals(
             ClassfileStats(
                 analyzedClasses = 3,
+                definedMethods = 2,
+                definedFields = 5,
+                classfileBytes = (publicApi.size + internal.size + protectedNested.size).toLong(),
                 implementationClasses = 1,
                 publicTypes = 1,
                 protectedTypes = 1,

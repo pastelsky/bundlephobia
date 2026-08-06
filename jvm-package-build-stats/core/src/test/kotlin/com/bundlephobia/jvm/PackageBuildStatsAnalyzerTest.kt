@@ -1,6 +1,7 @@
 package com.bundlephobia.jvm
 
 import com.bundlephobia.jvm.model.AnalyzeRequest
+import com.bundlephobia.jvm.model.AndroidDexStatus
 import com.bundlephobia.jvm.model.ArtifactDigest
 import com.bundlephobia.jvm.model.DependencyEdge
 import com.bundlephobia.jvm.model.Diagnostic
@@ -11,6 +12,7 @@ import com.bundlephobia.jvm.model.ResolvedArtifact
 import com.bundlephobia.jvm.model.ResolvedComponent
 import com.bundlephobia.jvm.model.ResultJson
 import com.bundlephobia.jvm.model.ResultStatus
+import com.bundlephobia.jvm.model.TargetProfile
 import com.bundlephobia.jvm.model.TimingStats
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -281,7 +283,7 @@ class PackageBuildStatsAnalyzerTest {
                     gradleExecutable = executable,
                     resolutionTimeoutMilliseconds = 25,
                 ),
-            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
+            ).resolve(coordinate, TargetProfile.JVM_RUNTIME, 21, AnalysisCancellation.NONE)
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertEquals("RESOLUTION_TIMEOUT", result.diagnostics.single().code)
@@ -308,7 +310,12 @@ class PackageBuildStatsAnalyzerTest {
                 PackageBuildStatsConfig(
                     gradleExecutable = executable,
                 ),
-            ).resolve(coordinate, 21, AnalysisCancellation { System.nanoTime() - started > 50_000_000 })
+            ).resolve(
+                coordinate,
+                TargetProfile.JVM_RUNTIME,
+                21,
+                AnalysisCancellation { System.nanoTime() - started > 50_000_000 },
+            )
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertEquals("RESOLUTION_CANCELLED", result.diagnostics.single().code)
@@ -336,7 +343,7 @@ class PackageBuildStatsAnalyzerTest {
                     temporaryDirectory = temporaryDirectory,
                     diagnosticOutputLimitBytes = 128,
                 ),
-            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
+            ).resolve(coordinate, TargetProfile.JVM_RUNTIME, 21, AnalysisCancellation.NONE)
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertTrue(
@@ -368,7 +375,7 @@ class PackageBuildStatsAnalyzerTest {
                     gradleExecutable = executable,
                     diagnosticOutputLimitBytes = 1_024,
                 ),
-            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
+            ).resolve(coordinate, TargetProfile.JVM_RUNTIME, 21, AnalysisCancellation.NONE)
 
         assertTrue(
             result.diagnostics
@@ -406,10 +413,49 @@ class PackageBuildStatsAnalyzerTest {
         assertEquals(classBytes.size.toLong(), result.namespaces.single().classBytes)
     }
 
+    @Test
+    fun `assembles Android AAR size and preflight evidence`() {
+        val coordinate = MavenCoordinate.parse("androidx.example:fixture:1.0")
+        val archive = androidArchive()
+        val resolution =
+            JvmResolutionResult(
+                status = ResultStatus.COMPLETE,
+                target = TargetProfile.ANDROID_RUNTIME,
+                resolution =
+                    ResolutionStats(
+                        requested = coordinate,
+                        components = listOf(ResolvedComponent(coordinate, requested = true)),
+                        artifacts =
+                            listOf(
+                                ResolvedArtifact(
+                                    coordinate = coordinate,
+                                    fileName = archive.fileName.toString(),
+                                    path = archive.toString(),
+                                    extension = "aar",
+                                    variant = "releaseRuntimeElements",
+                                    digest = ArtifactDigest(value = sha256(archive)),
+                                ),
+                            ),
+                    ),
+            )
+
+        val result = analyzer(resolution).analyze(AnalyzeRequest(coordinate, TargetProfile.ANDROID_RUNTIME))
+
+        assertEquals(ResultStatus.COMPLETE, result.status)
+        assertEquals("fixture.aar", result.directArtifact?.displayName)
+        assertEquals(1, result.directArtifact?.classfiles?.analyzedClasses)
+        assertTrue(requireNotNull(result.directArtifact?.classfiles?.definedMethods) > 0)
+        assertTrue(requireNotNull(result.directArtifact?.classfiles?.classfileBytes) > 0)
+        assertEquals(26, result.androidPreflight?.requiredMinSdk)
+        assertEquals("android-36-stable", result.androidPreflight?.selectedProfile?.id)
+        assertEquals(AndroidDexStatus.SKIPPED, result.androidDex?.status)
+        assertTrue(result.sizes.runtimeArchiveBytes > 0)
+    }
+
     private fun analyzer(resolution: JvmResolutionResult): PackageBuildStatsAnalyzer =
         PackageBuildStatsAnalyzer(
             config = PackageBuildStatsConfig(),
-            resolverClient = ResolverClient { _, _, _ -> resolution },
+            resolverClient = ResolverClient { _, _, _, _ -> resolution },
         )
 
     private fun resolution(
@@ -453,6 +499,36 @@ class PackageBuildStatsAnalyzerTest {
             output.closeEntry()
         }
         return jar
+    }
+
+    private fun androidArchive(): Path {
+        val archive = tempDir.resolve("fixture.aar")
+        val resourceName = PackageBuildStatsAnalyzerTest::class.java.name.replace('.', '/') + ".class"
+        val classBytes = requireNotNull(javaClass.classLoader.getResourceAsStream(resourceName)).use { it.readAllBytes() }
+        val classesJar =
+            java.io.ByteArrayOutputStream().use { bytes ->
+                ZipOutputStream(bytes).use { output ->
+                    output.putNextEntry(ZipEntry(resourceName))
+                    output.write(classBytes)
+                    output.closeEntry()
+                }
+                bytes.toByteArray()
+            }
+        ZipOutputStream(Files.newOutputStream(archive)).use { output ->
+            output.putNextEntry(ZipEntry("AndroidManifest.xml"))
+            output.write(
+                """<manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-sdk android:minSdkVersion="26" /></manifest>"""
+                    .toByteArray(),
+            )
+            output.closeEntry()
+            output.putNextEntry(ZipEntry("META-INF/com/android/build/gradle/aar-metadata.properties"))
+            output.write("minCompileSdk=35\nminAndroidGradlePluginVersion=8.0.0\n".toByteArray())
+            output.closeEntry()
+            output.putNextEntry(ZipEntry("classes.jar"))
+            output.write(classesJar)
+            output.closeEntry()
+        }
+        return archive
     }
 
     private fun sha256(path: Path): String = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)))
