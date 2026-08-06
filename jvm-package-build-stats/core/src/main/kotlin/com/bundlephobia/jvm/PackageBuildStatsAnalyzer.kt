@@ -180,7 +180,7 @@ public class PackageBuildStatsAnalyzer
             try {
                 val analysis =
                     if (artifact.extension == "aar") {
-                        archiveAnalyzer.analyze(Path.of(artifact.path)).copy(displayName = artifact.fileName)
+                        inspectAndroidArchive(Path.of(artifact.path), javaVersion).copy(displayName = artifact.fileName)
                     } else {
                         inspect(Path.of(artifact.path), javaVersion).copy(displayName = artifact.fileName)
                     }
@@ -199,6 +199,21 @@ public class PackageBuildStatsAnalyzer
                     )
                 null
             }
+
+        private fun inspectAndroidArchive(
+            path: Path,
+            javaVersion: Int,
+        ): ArtifactAnalysis {
+            val archive = archiveAnalyzer.analyze(path)
+            if (archive.status != ResultStatus.COMPLETE) return archive
+
+            val classfiles = AndroidAarClassfileAnalyzer(config, javaVersion).analyze(path)
+            return archive.copy(
+                status = if (classfiles.diagnostics.isEmpty()) ResultStatus.COMPLETE else ResultStatus.PARTIAL,
+                classfiles = classfiles.stats,
+                diagnostics = classfiles.diagnostics,
+            )
+        }
 
         private fun assemble(
             request: AnalyzeRequest,

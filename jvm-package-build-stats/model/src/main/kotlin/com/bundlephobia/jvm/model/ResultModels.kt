@@ -308,6 +308,9 @@ public data class NamespaceStats(
 @Serializable
 public data class ClassfileStats(
     public val analyzedClasses: Int = 0,
+    public val definedMethods: Int = 0,
+    public val definedFields: Int = 0,
+    public val classfileBytes: Long = 0,
     public val implementationClasses: Int = 0,
     public val publicTypes: Int = 0,
     public val protectedTypes: Int = 0,

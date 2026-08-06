@@ -443,6 +443,9 @@ class PackageBuildStatsAnalyzerTest {
 
         assertEquals(ResultStatus.COMPLETE, result.status)
         assertEquals("fixture.aar", result.directArtifact?.displayName)
+        assertEquals(1, result.directArtifact?.classfiles?.analyzedClasses)
+        assertTrue(requireNotNull(result.directArtifact?.classfiles?.definedMethods) > 0)
+        assertTrue(requireNotNull(result.directArtifact?.classfiles?.classfileBytes) > 0)
         assertEquals(26, result.androidPreflight?.requiredMinSdk)
         assertEquals("android-36-stable", result.androidPreflight?.selectedProfile?.id)
         assertEquals(AndroidDexStatus.SKIPPED, result.androidDex?.status)
@@ -500,6 +503,17 @@ class PackageBuildStatsAnalyzerTest {
 
     private fun androidArchive(): Path {
         val archive = tempDir.resolve("fixture.aar")
+        val resourceName = PackageBuildStatsAnalyzerTest::class.java.name.replace('.', '/') + ".class"
+        val classBytes = requireNotNull(javaClass.classLoader.getResourceAsStream(resourceName)).use { it.readAllBytes() }
+        val classesJar =
+            java.io.ByteArrayOutputStream().use { bytes ->
+                ZipOutputStream(bytes).use { output ->
+                    output.putNextEntry(ZipEntry(resourceName))
+                    output.write(classBytes)
+                    output.closeEntry()
+                }
+                bytes.toByteArray()
+            }
         ZipOutputStream(Files.newOutputStream(archive)).use { output ->
             output.putNextEntry(ZipEntry("AndroidManifest.xml"))
             output.write(
@@ -509,6 +523,9 @@ class PackageBuildStatsAnalyzerTest {
             output.closeEntry()
             output.putNextEntry(ZipEntry("META-INF/com/android/build/gradle/aar-metadata.properties"))
             output.write("minCompileSdk=35\nminAndroidGradlePluginVersion=8.0.0\n".toByteArray())
+            output.closeEntry()
+            output.putNextEntry(ZipEntry("classes.jar"))
+            output.write(classesJar)
             output.closeEntry()
         }
         return archive

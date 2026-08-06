@@ -237,6 +237,9 @@ public class JarClassfileAnalyzer(
             stats =
                 ClassfileStats(
                     analyzedClasses = types.size,
+                    definedMethods = types.sumOf(ParsedClass::definedMethods),
+                    definedFields = types.sumOf(ParsedClass::definedFields),
+                    classfileBytes = types.sumOf(ParsedClass::classBytes),
                     implementationClasses = types.count { it.visibility == TypeVisibility.IMPLEMENTATION },
                     publicTypes = types.count { it.visibility == TypeVisibility.PUBLIC },
                     protectedTypes = types.count { it.visibility == TypeVisibility.PROTECTED },
@@ -310,6 +313,8 @@ private class InspectingClassVisitor(
     private var innerClassAccess: Int? = null
     private var publicMembers: Int = 0
     private var protectedMembers: Int = 0
+    private var definedMethods: Int = 0
+    private var definedFields: Int = 0
     private var kotlinMetadata: Boolean = false
     private var kotlinVisibility: TypeVisibility? = null
     private var reflectionIndicator: Boolean = false
@@ -427,6 +432,7 @@ private class InspectingClassVisitor(
         signature: String?,
         value: Any?,
     ): FieldVisitor? {
+        definedFields++
         countMember(access)
         return null
     }
@@ -438,6 +444,7 @@ private class InspectingClassVisitor(
         signature: String?,
         exceptions: Array<out String>?,
     ): MethodVisitor? {
+        definedMethods++
         if (name == "<clinit>") staticInitializer = true
         if (name != "<clinit>") {
             countMember(access)
@@ -471,6 +478,8 @@ private class InspectingClassVisitor(
             visibility = visibility,
             publicMembers = if (apiVisible) publicMembers else 0,
             protectedMembers = if (apiVisible) protectedMembers else 0,
+            definedMethods = definedMethods,
+            definedFields = definedFields,
             kotlinMetadata = kotlinMetadata,
             reflectionIndicator = reflectionIndicator,
             serviceLoaderIndicator = serviceLoaderIndicator,
@@ -539,6 +548,8 @@ private data class ParsedClass(
     val visibility: TypeVisibility,
     val publicMembers: Int,
     val protectedMembers: Int,
+    val definedMethods: Int,
+    val definedFields: Int,
     val kotlinMetadata: Boolean,
     val reflectionIndicator: Boolean,
     val serviceLoaderIndicator: Boolean,
