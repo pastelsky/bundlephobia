@@ -77,7 +77,9 @@ jvm-package-stats inspect FILE.jar [--java-version VERSION]
 
 `analyze` remains an alias for `stats`. JVM-specific resolver controls use
 canonical names: `--gradle-executable` and `--resolution-timeout`. Both CLIs
-keep structured results on stdout and operational or usage output on stderr.
+keep operational or usage output on stderr. The JVM CLI presents a bounded,
+colored summary on an interactive terminal while preserving complete JSON when
+stdout is redirected; `--pretty` and `--json` make that choice explicit.
 
 ## Deliberate differences
 

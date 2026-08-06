@@ -11,6 +11,7 @@ import com.bundlephobia.jvm.model.TargetProfile
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.IVersionProvider
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Model.CommandSpec
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -26,11 +27,12 @@ public class JvmPackageBuildStatsCli(
         args: Array<String>,
         out: PrintWriter = PrintWriter(System.out, true),
         err: PrintWriter = PrintWriter(System.err, true),
+        interactiveOutput: Boolean = System.console() != null,
     ): Int {
         val commandLine =
             CommandLine(RootCommand())
-                .addSubcommand("stats", AnalyzeCommand(analyzer))
-                .addSubcommand("inspect", InspectCommand(analyzer))
+                .addSubcommand("stats", AnalyzeCommand(analyzer, interactiveOutput))
+                .addSubcommand("inspect", InspectCommand(analyzer, interactiveOutput))
                 .setOut(out)
                 .setErr(err)
         return commandLine.execute(*args)
@@ -66,6 +68,7 @@ private class CliVersionProvider : IVersionProvider {
 )
 private class AnalyzeCommand(
     private val analyzer: PackageBuildStatsAnalyzer?,
+    private val interactiveOutput: Boolean,
 ) : Callable<Int> {
     @Spec private lateinit var spec: CommandSpec
 
@@ -89,6 +92,8 @@ private class AnalyzeCommand(
     @Option(names = ["--resolution-timeout"], paramLabel = "MILLISECONDS", description = ["Resolution timeout in milliseconds."])
     private var resolutionTimeoutMilliseconds: Long? = null
 
+    @Mixin private lateinit var outputOptions: OutputOptions
+
     override fun call(): Int {
         val coordinate = parseCoordinate(coordinateValue)
         val target = parseTarget(targetValue)
@@ -96,7 +101,12 @@ private class AnalyzeCommand(
             throw CommandLine.ParameterException(spec.commandLine(), "Java version must be at least 8")
         }
         val result = configuredAnalyzer().analyze(AnalyzeRequest(coordinate, target, javaVersion))
-        spec.commandLine().out.println(ResultJson.encode(result))
+        outputOptions.write(
+            spec = spec,
+            interactiveOutput = interactiveOutput,
+            jsonResult = { ResultJson.encode(result) },
+            prettyResult = { color -> TerminalRenderer(color).render(result) },
+        )
         return if (result.status == ResultStatus.FAILED) ExitCode.ANALYSIS_FAILED else ExitCode.SUCCESS
     }
 
@@ -139,6 +149,7 @@ private class AnalyzeCommand(
 )
 private class InspectCommand(
     private val analyzer: PackageBuildStatsAnalyzer?,
+    private val interactiveOutput: Boolean,
 ) : Callable<Int> {
     @Spec private lateinit var spec: CommandSpec
 
@@ -153,13 +164,50 @@ private class InspectCommand(
     )
     private var javaVersion: Int = 21
 
+    @Mixin private lateinit var outputOptions: OutputOptions
+
     override fun call(): Int {
         if (javaVersion < 8) {
             throw CommandLine.ParameterException(spec.commandLine(), "Java version must be at least 8")
         }
         val result = (analyzer ?: PackageBuildStatsAnalyzer()).inspect(path, javaVersion)
-        spec.commandLine().out.println(ResultJson.encode(result))
+        outputOptions.write(
+            spec = spec,
+            interactiveOutput = interactiveOutput,
+            jsonResult = { ResultJson.encode(result) },
+            prettyResult = { color -> TerminalRenderer(color).render(result) },
+        )
         return if (result.status == ResultStatus.FAILED) ExitCode.ANALYSIS_FAILED else ExitCode.SUCCESS
+    }
+}
+
+private class OutputOptions {
+    @Option(names = ["--json"], description = ["Write the complete JSON result, including in an interactive terminal."])
+    private var json: Boolean = false
+
+    @Option(names = ["--pretty"], description = ["Write a concise human-readable report, including when output is redirected."])
+    private var pretty: Boolean = false
+
+    @Option(names = ["--no-color"], description = ["Disable ANSI colors in the human-readable report."])
+    private var noColor: Boolean = false
+
+    fun write(
+        spec: CommandSpec,
+        interactiveOutput: Boolean,
+        jsonResult: () -> String,
+        prettyResult: (Boolean) -> String,
+    ) {
+        if (json && pretty) {
+            throw CommandLine.ParameterException(spec.commandLine(), "--json and --pretty cannot be used together")
+        }
+        val humanReadable = pretty || (!json && interactiveOutput)
+        val output =
+            if (humanReadable) {
+                prettyResult(!noColor && System.getenv("NO_COLOR") == null)
+            } else {
+                jsonResult()
+            }
+        spec.commandLine().out.println(output)
     }
 }
 

@@ -65,9 +65,14 @@ jvm-package-stats stats GROUP:ARTIFACT:VERSION [--target jvm-runtime] [--java-ve
 jvm-package-stats inspect FILE.jar [--java-version VERSION]
 ```
 
-JSON analysis results are written to stdout. Usage and operational messages are
-written to stderr. Exit codes are `0` for success, `1` for an unexpected CLI
-failure, `2` for invalid usage, and `3` for a structured analysis failure.
+Interactive terminals receive a concise colored report with headline sizes,
+largest dependencies, API surface, module metadata, diagnostics, and timings.
+Piped or redirected output remains complete JSON for backwards-compatible
+automation. Use `--pretty` to force the terminal report, `--json` to force JSON,
+or `--no-color` to omit ANSI colors; the standard `NO_COLOR` environment
+variable is also honored. Usage and operational messages are written to stderr.
+Exit codes are `0` for success, `1` for an unexpected CLI failure, `2` for
+invalid usage, and `3` for a structured analysis failure.
 
 `stats` (also available through the `analyze` alias) resolves the selected JVM runtime graph and combines archive, classfile, dependency, and
 namespace evidence. It reports direct and transitive bytes, dependency depth,
