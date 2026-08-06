@@ -56,9 +56,15 @@ public class JvmRuntimeResolverPlugin : Plugin<Settings> {
     ) {
         project.pluginManager.apply("jvm-ecosystem")
         val coordinate = project.providers.gradleProperty(COORDINATE_PROPERTY)
-        val runtimeConfiguration = runtimeConfiguration(project, coordinate)
+        val javaVersion =
+            project.providers
+                .gradleProperty(JAVA_VERSION_PROPERTY)
+                .map(String::toInt)
+                .orElse(DEFAULT_TARGET_JVM_VERSION)
+        val runtimeConfiguration = runtimeConfiguration(project, coordinate, javaVersion)
         project.tasks.register(RESOLVE_TASK_NAME, JvmRuntimeResolutionTask::class.java) { task ->
             task.coordinate.convention(coordinate)
+            task.javaVersion.convention(javaVersion)
             task.forbiddenRepositories.convention(state.forbiddenRepositories)
             task.outputFile.convention(project.layout.buildDirectory.file("jvm-resolver/result.json"))
             task.resolutionConfiguration = runtimeConfiguration
@@ -68,6 +74,7 @@ public class JvmRuntimeResolverPlugin : Plugin<Settings> {
     private fun runtimeConfiguration(
         project: Project,
         coordinate: Provider<String>,
+        javaVersion: Provider<Int>,
     ): Configuration =
         project.configurations
             .resolvable("jvmResolverRuntime") { configuration ->
@@ -92,7 +99,7 @@ public class JvmRuntimeResolverPlugin : Plugin<Settings> {
                         TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
                         project.objects.named(TargetJvmEnvironment::class.java, TargetJvmEnvironment.STANDARD_JVM),
                     )
-                    it.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, TARGET_JVM_VERSION)
+                    it.attributeProvider(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, javaVersion)
                 }
             }.get()
 
@@ -100,9 +107,10 @@ public class JvmRuntimeResolverPlugin : Plugin<Settings> {
         public const val PLUGIN_ID: String = "com.bundlephobia.jvm-runtime-resolver"
         public const val RESOLVE_TASK_NAME: String = "resolveJvmRuntime"
         public const val COORDINATE_PROPERTY: String = "jvmResolver.coordinate"
+        public const val JAVA_VERSION_PROPERTY: String = "jvmResolver.javaVersion"
         public const val MAVEN_CENTRAL_ID: String = "maven-central"
         public const val GOOGLE_MAVEN_ID: String = "google-maven"
-        private const val TARGET_JVM_VERSION: Int = 21
+        private const val DEFAULT_TARGET_JVM_VERSION: Int = 21
     }
 }
 

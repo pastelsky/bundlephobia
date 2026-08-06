@@ -70,9 +70,16 @@ class PackageBuildStatsAnalyzerTest {
                 .path,
         )
         assertEquals(
-            result.runtimeClosure.compressedBytes,
+            result.runtimeClosure.archiveBytes,
             result.runtimeClosure.directArtifactBytes + result.runtimeClosure.transitiveArtifactBytes,
         )
+        assertEquals(result.runtimeClosure.archiveBytes, result.sizes.runtimeArchiveBytes)
+        assertEquals(result.runtimeClosure.expandedBytes, result.sizes.runtimeExpandedBytes)
+        assertEquals(3, result.dependencySizes.size)
+        assertEquals(root, result.dependencySizes.single { it.requested }.coordinate)
+        assertEquals(1, result.dependencySizes.single { it.coordinate == middle }.depth)
+        assertTrue(result.dependencySizes.single { it.coordinate == middle }.direct)
+        assertEquals(2, result.dependencySizes.single { it.coordinate == leaf }.depth)
         assertEquals(2, result.runtimeClosure.largestTransitiveArtifacts.size)
         assertEquals(
             1,
@@ -135,7 +142,7 @@ class PackageBuildStatsAnalyzerTest {
                         requested = coordinates.first(),
                         components =
                             coordinates.mapIndexed { index, coordinate ->
-                                ResolvedComponent(coordinate, direct = index == 0)
+                                ResolvedComponent(coordinate, requested = index == 0)
                             },
                         edges =
                             coordinates.zipWithNext { from, selected ->
@@ -184,11 +191,73 @@ class PackageBuildStatsAnalyzerTest {
                     gradleExecutable = executable,
                     resolutionTimeoutMilliseconds = 25,
                 ),
-            ).resolve(coordinate)
+            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertEquals("RESOLUTION_TIMEOUT", result.diagnostics.single().code)
         assertEquals(com.bundlephobia.jvm.model.RetryClassification.RETRYABLE, result.diagnostics.single().retry)
+    }
+
+    @Test
+    fun `cancellation stops a running resolver process`() {
+        val executable = tempDir.resolve("cancelled-gradle")
+        Files.writeString(executable, "#!/bin/sh\nsleep 2\n")
+        Files.setPosixFilePermissions(
+            executable,
+            setOf(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE,
+            ),
+        )
+        val started = System.nanoTime()
+        val coordinate = MavenCoordinate.parse("example:cancelled:1.0")
+
+        val result =
+            GradleResolverClient(
+                PackageBuildStatsConfig(
+                    cacheDirectory = tempDir.resolve("cache"),
+                    gradleExecutable = executable,
+                ),
+            ).resolve(coordinate, 21, AnalysisCancellation { System.nanoTime() - started > 50_000_000 })
+
+        assertEquals(ResultStatus.FAILED, result.status)
+        assertEquals("RESOLUTION_CANCELLED", result.diagnostics.single().code)
+    }
+
+    @Test
+    fun `resolver failures retain bounded stderr and clean their configured temporary directory`() {
+        val executable = tempDir.resolve("failing-gradle")
+        Files.writeString(executable, "#!/bin/sh\necho 'fixture resolution detail' >&2\nexit 7\n")
+        Files.setPosixFilePermissions(
+            executable,
+            setOf(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE,
+            ),
+        )
+        val temporaryDirectory = tempDir.resolve("resolver-temporary")
+        val coordinate = MavenCoordinate.parse("example:failed:1.0")
+
+        val result =
+            GradleResolverClient(
+                PackageBuildStatsConfig(
+                    cacheDirectory = tempDir.resolve("cache"),
+                    gradleExecutable = executable,
+                    temporaryDirectory = temporaryDirectory,
+                    diagnosticOutputLimitBytes = 128,
+                ),
+            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
+
+        assertEquals(ResultStatus.FAILED, result.status)
+        assertTrue(
+            result.diagnostics
+                .single()
+                .summary
+                .contains("fixture resolution detail"),
+        )
+        assertTrue(Files.list(temporaryDirectory).use { paths -> paths.findAny().isEmpty })
     }
 
     @Test
@@ -222,7 +291,7 @@ class PackageBuildStatsAnalyzerTest {
     private fun analyzer(resolution: JvmResolutionResult): PackageBuildStatsAnalyzer =
         PackageBuildStatsAnalyzer(
             config = PackageBuildStatsConfig(cacheDirectory = tempDir.resolve("cache")),
-            resolverClient = ResolverClient { resolution },
+            resolverClient = ResolverClient { _, _, _ -> resolution },
         )
 
     private fun resolution(
@@ -247,7 +316,7 @@ class PackageBuildStatsAnalyzerTest {
             resolution =
                 ResolutionStats(
                     requested = requested,
-                    components = coordinates.map { coordinate -> ResolvedComponent(coordinate, direct = coordinate == requested) },
+                    components = coordinates.map { coordinate -> ResolvedComponent(coordinate, requested = coordinate == requested) },
                     edges = edges,
                     artifacts = artifacts,
                     repositories = listOf("maven-central", "google-maven"),

@@ -1,6 +1,7 @@
 package com.bundlephobia.jvm.classfile
 
 import com.bundlephobia.jvm.model.ClassfileStats
+import com.bundlephobia.jvm.model.ModuleKind
 import com.bundlephobia.jvm.model.NamespaceStats
 import org.junit.jupiter.api.io.TempDir
 import org.objectweb.asm.ClassWriter
@@ -78,6 +79,17 @@ class JarClassfileAnalyzerTest {
             ),
             first.namespaces,
         )
+        assertEquals(
+            listOf(
+                "protectedField",
+                "publicField",
+                "protectedMethod",
+                "publicMethod",
+            ),
+            first.apiSurface.types.single { it.name == "com.acme.PublicApi" }.members.map {
+                it.name
+            },
+        )
     }
 
     @Test
@@ -93,6 +105,24 @@ class JarClassfileAnalyzerTest {
     }
 
     @Test
+    fun `uses Kotlin source visibility instead of JVM access flags`() {
+        val classes = listOf(InternalKotlinApi::class.java, PublicKotlinApi::class.java)
+        val entries =
+            classes.associate { type ->
+                val resourceName = type.name.replace('.', '/') + ".class"
+                resourceName to requireNotNull(type.classLoader.getResourceAsStream(resourceName)).use { it.readAllBytes() }
+            }
+        val jar = writeJar("kotlin-visibility.jar", entries)
+
+        val result = JarClassfileAnalyzer().analyze(jar)
+
+        assertEquals(2, result.stats.kotlinMetadataClasses)
+        assertEquals(1, result.stats.publicTypes)
+        assertEquals(1, result.stats.implementationClasses)
+        assertEquals(listOf(PublicKotlinApi::class.java.name), result.apiSurface.types.map { it.name })
+    }
+
+    @Test
     fun `reads JPMS module names and exports`() {
         val moduleInfo = moduleInfoBytes("com.acme.module", listOf("com/acme/api", "com/acme/spi"))
         val jar = writeJar("module.jar", mapOf("module-info.class" to moduleInfo))
@@ -102,8 +132,29 @@ class JarClassfileAnalyzerTest {
         assertTrue(result.stats.moduleInfoPresent)
         assertEquals(listOf("com.acme.module"), result.stats.moduleNames)
         assertEquals(listOf("com.acme.api", "com.acme.spi"), result.stats.moduleExports)
+        assertEquals(ModuleKind.EXPLICIT, result.module.kind)
+        assertEquals("com.acme.module", result.module.name)
+        assertEquals(listOf("com.acme.api", "com.acme.spi"), result.module.exports.map { it.packageName })
         assertEquals(0, result.stats.analyzedClasses)
         assertTrue(result.namespaces.isEmpty())
+    }
+
+    @Test
+    fun `distinguishes automatic and unnamed modules`() {
+        val manifest =
+            Manifest().apply {
+                mainAttributes[Attributes.Name.MANIFEST_VERSION] = "1.0"
+                mainAttributes.putValue("Automatic-Module-Name", "com.acme.automatic")
+            }
+        val classfile = classBytes("com/acme/Api", Opcodes.ACC_PUBLIC)
+
+        val automatic = JarClassfileAnalyzer().analyze(writeJar("automatic.jar", mapOf("com/acme/Api.class" to classfile), manifest))
+        val unnamed = JarClassfileAnalyzer().analyze(writeJar("unnamed.jar", mapOf("com/acme/Api.class" to classfile)))
+
+        assertEquals(ModuleKind.AUTOMATIC, automatic.module.kind)
+        assertEquals("com.acme.automatic", automatic.module.name)
+        assertEquals(ModuleKind.UNNAMED, unnamed.module.kind)
+        assertEquals(null, unnamed.module.name)
     }
 
     @Test
@@ -185,6 +236,7 @@ class JarClassfileAnalyzerTest {
         assertEquals(1, result.stats.reflectionIndicatorClasses)
         assertEquals(1, result.stats.serviceLoaderIndicatorClasses)
         assertEquals(1, result.stats.jniIndicatorClasses)
+        assertEquals(1, result.stats.nativeMethodClasses)
     }
 
     @Test

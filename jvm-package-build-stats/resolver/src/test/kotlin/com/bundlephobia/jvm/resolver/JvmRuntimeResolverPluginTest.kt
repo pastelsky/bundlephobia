@@ -28,7 +28,7 @@ class JvmRuntimeResolverPluginTest {
             assertEquals(ResultStatus.COMPLETE, result.status, result.diagnostics.toString())
             assertEquals(coordinate, result.resolution.requested.notation)
             assertEquals(listOf("maven-central", "google-maven"), result.resolution.repositories)
-            assertTrue(result.resolution.components.any { it.direct && it.coordinate.notation == coordinate })
+            assertTrue(result.resolution.components.any { it.requested && it.coordinate.notation == coordinate })
             assertTrue(result.resolution.artifacts.isNotEmpty())
             assertTrue(result.resolution.artifacts.all { it.extension == "jar" })
             assertTrue(result.resolution.artifacts.all { it.digest.value.matches(Regex("[0-9a-f]{64}")) })

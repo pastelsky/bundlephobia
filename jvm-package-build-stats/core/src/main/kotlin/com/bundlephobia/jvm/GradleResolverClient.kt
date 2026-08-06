@@ -17,24 +17,37 @@ import java.util.Comparator
 import java.util.concurrent.TimeUnit
 
 internal fun interface ResolverClient {
-    fun resolve(coordinate: MavenCoordinate): JvmResolutionResult
+    fun resolve(
+        coordinate: MavenCoordinate,
+        javaVersion: Int,
+        cancellation: AnalysisCancellation,
+    ): JvmResolutionResult
 }
 
 /** Runs the owned resolver plugin in an empty build whose repositories and tasks are sealed. */
 internal class GradleResolverClient(
     private val config: PackageBuildStatsConfig,
 ) : ResolverClient {
-    override fun resolve(coordinate: MavenCoordinate): JvmResolutionResult {
-        val directory = Files.createTempDirectory("jvm-package-build-stats-")
+    override fun resolve(
+        coordinate: MavenCoordinate,
+        javaVersion: Int,
+        cancellation: AnalysisCancellation,
+    ): JvmResolutionResult {
+        val directory =
+            config.temporaryDirectory?.let { parent ->
+                Files.createDirectories(parent)
+                Files.createTempDirectory(parent, "jvm-package-build-stats-")
+            } ?: Files.createTempDirectory("jvm-package-build-stats-")
         return try {
             writeBuild(directory)
-            runGradle(directory, coordinate)
+            runGradle(directory, coordinate, javaVersion, cancellation)
         } catch (_: InterruptedException) {
             Thread.currentThread().interrupt()
-            failure(coordinate, "RESOLUTION_CANCELLED", "Resolution was cancelled", RetryClassification.RETRYABLE)
+            failure(coordinate, javaVersion, "RESOLUTION_CANCELLED", "Resolution was cancelled", RetryClassification.RETRYABLE)
         } catch (_: Exception) {
             failure(
                 coordinate,
+                javaVersion,
                 "RESOLVER_PROCESS_FAILED",
                 "The sealed Gradle resolver could not start or return a result",
                 RetryClassification.UNKNOWN,
@@ -91,6 +104,8 @@ internal class GradleResolverClient(
     private fun runGradle(
         directory: Path,
         coordinate: MavenCoordinate,
+        javaVersion: Int,
+        cancellation: AnalysisCancellation,
     ): JvmResolutionResult {
         val process =
             ProcessBuilder(
@@ -99,22 +114,36 @@ internal class GradleResolverClient(
                 "--console=plain",
                 ResolverPluginClasspathAnchor.RESOLVE_TASK_NAME,
                 "-P${ResolverPluginClasspathAnchor.COORDINATE_PROPERTY}=${coordinate.notation}",
+                "-P${ResolverPluginClasspathAnchor.JAVA_VERSION_PROPERTY}=$javaVersion",
             ).directory(directory.toFile())
                 .redirectOutput(directory.resolve("gradle.stdout").toFile())
                 .redirectError(directory.resolve("gradle.stderr").toFile())
                 .start()
 
-        val completed =
+        val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(config.resolutionTimeoutMilliseconds)
+        while (process.isAlive && System.nanoTime() < deadline && !cancellation.isCancelled()) {
             try {
-                process.waitFor(config.resolutionTimeoutMilliseconds, TimeUnit.MILLISECONDS)
+                process.waitFor(PROCESS_POLL_MILLISECONDS, TimeUnit.MILLISECONDS)
             } catch (error: InterruptedException) {
                 stop(process)
                 throw error
             }
-        if (!completed) {
+        }
+        if (cancellation.isCancelled()) {
             stop(process)
             return failure(
                 coordinate,
+                javaVersion,
+                "RESOLUTION_CANCELLED",
+                "Resolution was cancelled",
+                RetryClassification.RETRYABLE,
+            )
+        }
+        if (process.isAlive) {
+            stop(process)
+            return failure(
+                coordinate,
+                javaVersion,
                 "RESOLUTION_TIMEOUT",
                 "Resolution exceeded ${config.resolutionTimeoutMilliseconds} ms",
                 RetryClassification.RETRYABLE,
@@ -123,10 +152,13 @@ internal class GradleResolverClient(
 
         val resultFile = directory.resolve("build/jvm-resolver/result.json")
         if (Files.isRegularFile(resultFile)) return ResultJson.decodeResolution(Files.readString(resultFile))
+        val stderr = diagnosticTail(directory.resolve("gradle.stderr"))
+        val detail = if (stderr.isEmpty()) "" else ": $stderr"
         return failure(
             coordinate,
+            javaVersion,
             "RESOLVER_PROCESS_FAILED",
-            "The sealed Gradle resolver exited with status ${process.exitValue()} without a result",
+            "The sealed Gradle resolver exited with status ${process.exitValue()} without a result$detail",
             RetryClassification.UNKNOWN,
         )
     }
@@ -149,12 +181,14 @@ internal class GradleResolverClient(
 
     private fun failure(
         coordinate: MavenCoordinate,
+        javaVersion: Int,
         code: String,
         summary: String,
         retry: RetryClassification,
     ): JvmResolutionResult =
         JvmResolutionResult(
             status = ResultStatus.FAILED,
+            javaVersion = javaVersion,
             resolution = ResolutionStats(coordinate),
             diagnostics =
                 listOf(
@@ -179,10 +213,25 @@ internal class GradleResolverClient(
         if (!process.waitFor(PROCESS_SHUTDOWN_SECONDS, TimeUnit.SECONDS)) process.destroyForcibly()
     }
 
+    private fun diagnosticTail(path: Path): String {
+        if (config.diagnosticOutputLimitBytes == 0 || !Files.isRegularFile(path)) return ""
+        val bytes = Files.readAllBytes(path)
+        val start = (bytes.size - config.diagnosticOutputLimitBytes).coerceAtLeast(0)
+        return bytes
+            .copyOfRange(start, bytes.size)
+            .toString(Charsets.UTF_8)
+            .lineSequence()
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .joinToString(" | ")
+            .take(config.diagnosticOutputLimitBytes)
+    }
+
     private fun Path.escapeKotlinString(): String = toString().replace("\\", "\\\\").replace("\"", "\\\"")
 
     private companion object {
         private const val PROCESS_SHUTDOWN_SECONDS = 5L
+        private const val PROCESS_POLL_MILLISECONDS = 100L
         private val BUNDLED_WRAPPER_FILES =
             listOf(
                 "bundled-gradle/gradlew",

@@ -47,6 +47,10 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
     @get:Optional
     public abstract val coordinate: Property<String>
 
+    /** Consumer Java feature version used for Gradle variant selection. */
+    @get:Input
+    public abstract val javaVersion: Property<Int>
+
     /** Project repositories observed after the settings plugin sealed repository resolution. */
     @get:Input
     public abstract val forbiddenRepositories: ListProperty<String>
@@ -159,6 +163,7 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
 
         return JvmResolutionResult(
             status = if (diagnostics.isEmpty()) ResultStatus.COMPLETE else ResultStatus.FAILED,
+            javaVersion = javaVersion.get(),
             resolution =
                 ResolutionStats(
                     requested = requested,
@@ -171,14 +176,14 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
         )
     }
 
-    private fun ResolvedComponentResult.toModel(direct: Boolean): ResolvedComponent? {
+    private fun ResolvedComponentResult.toModel(requested: Boolean): ResolvedComponent? {
         val identifier = id as? ModuleComponentIdentifier ?: return null
         val coordinate = MavenCoordinate.parse("${identifier.group}:${identifier.module}:${identifier.version}")
         val normalizedVariants = variants.map { variant -> variant.toModel() }.sortedBy(ResolvedVariant::name)
         return ResolvedComponent(
             coordinate = coordinate,
             variant = normalizedVariants.singleOrNull()?.name,
-            direct = direct,
+            requested = requested,
             variants = normalizedVariants,
             selectionReasons =
                 selectionReason.descriptions
@@ -286,6 +291,7 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
     ): JvmResolutionResult =
         JvmResolutionResult(
             status = ResultStatus.FAILED,
+            javaVersion = javaVersion.getOrElse(21),
             resolution = ResolutionStats(requested = requested, repositories = REPOSITORY_IDS),
             diagnostics = listOf(diagnostic(code, summary, retry)),
         )

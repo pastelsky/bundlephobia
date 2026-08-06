@@ -20,14 +20,14 @@ class JvmPackageBuildStatsCliTest {
 
     @Test
     fun `analyze resolves the coordinate and writes only JSON to stdout`() {
-        val execution = execute("analyze", "com.google.code.gson:gson:2.14.0")
+        val execution = execute("stats", "com.google.code.gson:gson:2.14.0")
 
         assertEquals(ExitCode.SUCCESS, execution.exitCode, execution.stdout)
         assertEquals("", execution.stderr)
         val result = ResultJson.decodeResult(execution.stdout.trim())
         assertEquals(ResultStatus.COMPLETE, result.status)
         assertEquals("com.google.code.gson:gson:2.14.0", result.coordinate.notation)
-        assertTrue(result.runtimeClosure.compressedBytes > 0)
+        assertTrue(result.runtimeClosure.archiveBytes > 0)
         assertTrue(result.artifacts.isNotEmpty())
         assertEquals("gson-2.14.0.jar", result.directArtifact?.displayName)
     }
@@ -73,6 +73,14 @@ class JvmPackageBuildStatsCliTest {
     }
 
     @Test
+    fun `analyze remains an alias for stats`() {
+        val execution = execute("analyze", "g:a:1-SNAPSHOT")
+
+        assertEquals(ExitCode.USAGE, execution.exitCode)
+        assertTrue(execution.stderr.contains("immutable published release"))
+    }
+
+    @Test
     fun `Android targets are rejected`() {
         val execution = execute("analyze", "g:a:1", "--target", "android-release")
 
@@ -82,11 +90,20 @@ class JvmPackageBuildStatsCliTest {
     }
 
     @Test
+    fun `Java versions below eight are usage errors`() {
+        val execution = execute("analyze", "g:a:1", "--java-version", "7")
+
+        assertEquals(ExitCode.USAGE, execution.exitCode)
+        assertEquals("", execution.stdout)
+        assertTrue(execution.stderr.contains("Java version must be at least 8"))
+    }
+
+    @Test
     fun `help is successful`() {
         val execution = execute("--help")
 
         assertEquals(ExitCode.SUCCESS, execution.exitCode)
-        assertTrue(execution.stdout.contains("analyze"))
+        assertTrue(execution.stdout.contains("stats"))
         assertTrue(execution.stdout.contains("inspect"))
         assertEquals("", execution.stderr)
     }
@@ -96,7 +113,7 @@ class JvmPackageBuildStatsCliTest {
         val execution = execute("--version")
 
         assertEquals(ExitCode.SUCCESS, execution.exitCode)
-        assertTrue(execution.stdout.matches(Regex("jvm-package-build-stats \\d+\\.\\d+\\.\\d+.*\\R")))
+        assertTrue(execution.stdout.matches(Regex("jvm-package-stats \\d+\\.\\d+\\.\\d+.*\\R")))
         assertEquals("", execution.stderr)
     }
 

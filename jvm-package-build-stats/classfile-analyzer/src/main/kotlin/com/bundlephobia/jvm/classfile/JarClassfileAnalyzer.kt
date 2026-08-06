@@ -1,9 +1,18 @@
 package com.bundlephobia.jvm.classfile
 
 import com.bundlephobia.jvm.model.AnalysisStage
+import com.bundlephobia.jvm.model.ApiMemberStats
+import com.bundlephobia.jvm.model.ApiSurfaceStats
+import com.bundlephobia.jvm.model.ApiTypeStats
 import com.bundlephobia.jvm.model.ClassfileStats
 import com.bundlephobia.jvm.model.Diagnostic
 import com.bundlephobia.jvm.model.DiagnosticSeverity
+import com.bundlephobia.jvm.model.ModuleExport
+import com.bundlephobia.jvm.model.ModuleKind
+import com.bundlephobia.jvm.model.ModuleOpen
+import com.bundlephobia.jvm.model.ModuleProvider
+import com.bundlephobia.jvm.model.ModuleRequirement
+import com.bundlephobia.jvm.model.ModuleStats
 import com.bundlephobia.jvm.model.NamespaceStats
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassReader
@@ -18,11 +27,17 @@ import java.util.TreeMap
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 import java.util.zip.ZipEntry
+import kotlin.Metadata
+import kotlin.metadata.Visibility
+import kotlin.metadata.jvm.KotlinClassMetadata
+import kotlin.metadata.visibility
 
 /** The deterministic classfile evidence produced for one local JAR. */
 public data class ClassfileArtifactAnalysis(
     public val stats: ClassfileStats,
     public val namespaces: List<NamespaceStats>,
+    public val module: ModuleStats,
+    public val apiSurface: ApiSurfaceStats,
     public val diagnostics: List<Diagnostic> = emptyList(),
 )
 
@@ -47,6 +62,8 @@ public class JarClassfileAnalyzer(
                         ?.mainAttributes
                         ?.getValue(Attributes.Name.MULTI_RELEASE)
                         ?.equals("true", ignoreCase = true) == true
+                val automaticModuleName = jar.manifest?.mainAttributes?.getValue("Automatic-Module-Name")
+                val manifestMainClass = jar.manifest?.mainAttributes?.getValue(Attributes.Name.MAIN_CLASS)
                 val selected = selectEntries(jar, multiRelease, multiReleaseVersions, diagnostics)
                 for (entry in selected) {
                     if (entry.zipEntry.size > MAX_CLASSFILE_BYTES) {
@@ -96,6 +113,8 @@ public class JarClassfileAnalyzer(
                     multiRelease = multiRelease,
                     multiReleaseVersions = multiReleaseVersions,
                     unsupportedVersions = unsupportedVersions,
+                    automaticModuleName = automaticModuleName,
+                    manifestMainClass = manifestMainClass,
                     diagnostics = diagnostics,
                 )
             }
@@ -106,7 +125,13 @@ public class JarClassfileAnalyzer(
                     summary = error.message?.take(500) ?: "Classfiles could not be read",
                     stage = AnalysisStage.CLASSFILE_ANALYSIS,
                 )
-            return ClassfileArtifactAnalysis(ClassfileStats(), emptyList(), diagnostics)
+            return ClassfileArtifactAnalysis(
+                stats = ClassfileStats(),
+                namespaces = emptyList(),
+                module = ModuleStats(ModuleKind.UNNAMED),
+                apiSurface = ApiSurfaceStats(),
+                diagnostics = diagnostics,
+            )
         }
     }
 
@@ -162,6 +187,8 @@ public class JarClassfileAnalyzer(
         multiRelease: Boolean,
         multiReleaseVersions: Set<Int>,
         unsupportedVersions: Set<Int>,
+        automaticModuleName: String?,
+        manifestMainClass: String?,
         diagnostics: List<Diagnostic>,
     ): ClassfileArtifactAnalysis {
         val trie = PackageTrie()
@@ -169,6 +196,40 @@ public class JarClassfileAnalyzer(
         val namespaces = trie.namespaces()
         val types = parsedClasses.filterNot(ParsedClass::moduleInfo)
         val moduleClasses = parsedClasses.filter(ParsedClass::moduleInfo)
+        val explicitModule = moduleClasses.singleOrNull()
+        val module =
+            when {
+                explicitModule != null -> {
+                    explicitModule.toModuleStats(manifestMainClass)
+                }
+
+                automaticModuleName != null -> {
+                    ModuleStats(
+                        kind = ModuleKind.AUTOMATIC,
+                        name = automaticModuleName,
+                        mainClass = manifestMainClass,
+                    )
+                }
+
+                else -> {
+                    ModuleStats(kind = ModuleKind.UNNAMED, mainClass = manifestMainClass)
+                }
+            }
+        val apiTypes =
+            types
+                .filter { type -> type.visibility != TypeVisibility.IMPLEMENTATION }
+                .map { type ->
+                    ApiTypeStats(
+                        name = type.internalName.replace('/', '.'),
+                        packageName = type.internalName.substringBeforeLast('/', "").replace('/', '.'),
+                        language = if (type.kotlinMetadata) "kotlin" else "java",
+                        visibility = type.visibility.name.lowercase(),
+                        classfileBytes = type.classBytes,
+                        publicMembers = type.publicMembers,
+                        protectedMembers = type.protectedMembers,
+                        members = type.apiMembers,
+                    )
+                }.sortedBy(ApiTypeStats::name)
 
         return ClassfileArtifactAnalysis(
             stats =
@@ -187,9 +248,13 @@ public class JarClassfileAnalyzer(
                     reflectionIndicatorClasses = types.count(ParsedClass::reflectionIndicator),
                     serviceLoaderIndicatorClasses = types.count(ParsedClass::serviceLoaderIndicator),
                     jniIndicatorClasses = types.count(ParsedClass::jniIndicator),
+                    classesWithStaticInitializers = types.count(ParsedClass::staticInitializer),
+                    nativeMethodClasses = types.count(ParsedClass::nativeMethods),
                     unsupportedBytecodeVersions = unsupportedVersions.sorted(),
                 ),
             namespaces = namespaces,
+            module = module,
+            apiSurface = ApiSurfaceStats(apiTypes),
             diagnostics = diagnostics,
         )
     }
@@ -234,11 +299,22 @@ private class InspectingClassVisitor(
     private var publicMembers: Int = 0
     private var protectedMembers: Int = 0
     private var kotlinMetadata: Boolean = false
+    private var kotlinVisibility: TypeVisibility? = null
     private var reflectionIndicator: Boolean = false
     private var serviceLoaderIndicator: Boolean = false
     private var jniIndicator: Boolean = false
+    private var staticInitializer: Boolean = false
+    private var nativeMethods: Boolean = false
+    private val apiMembers = mutableListOf<ApiMemberStats>()
     private var moduleName: String? = null
+    private var moduleVersion: String? = null
+    private var moduleMainClass: String? = null
     private val moduleExports = sortedSetOf<String>()
+    private val moduleExportDetails = mutableListOf<ModuleExport>()
+    private val moduleRequires = mutableListOf<ModuleRequirement>()
+    private val moduleOpens = mutableListOf<ModuleOpen>()
+    private val moduleUses = sortedSetOf<String>()
+    private val moduleProvides = mutableListOf<ModuleProvider>()
 
     override fun visit(
         version: Int,
@@ -265,8 +341,11 @@ private class InspectingClassVisitor(
         descriptor: String,
         visible: Boolean,
     ): AnnotationVisitor? {
-        if (descriptor == KOTLIN_METADATA_DESCRIPTOR) kotlinMetadata = true
-        return null
+        if (descriptor != KOTLIN_METADATA_DESCRIPTOR) return null
+        kotlinMetadata = true
+        return KotlinMetadataAnnotationVisitor { metadata ->
+            kotlinVisibility = metadata.kotlinTypeVisibility()
+        }
     }
 
     override fun visitModule(
@@ -275,13 +354,57 @@ private class InspectingClassVisitor(
         version: String?,
     ): ModuleVisitor {
         moduleName = name
+        moduleVersion = version
         return object : ModuleVisitor(Opcodes.ASM9) {
+            override fun visitMainClass(mainClass: String) {
+                moduleMainClass = mainClass.replace('/', '.')
+            }
+
+            override fun visitRequire(
+                module: String,
+                access: Int,
+                version: String?,
+            ) {
+                moduleRequires +=
+                    ModuleRequirement(
+                        name = module,
+                        transitive = access and Opcodes.ACC_TRANSITIVE != 0,
+                        static = access and Opcodes.ACC_STATIC_PHASE != 0,
+                        version = version,
+                    )
+            }
+
             override fun visitExport(
                 packaze: String,
                 access: Int,
                 modules: Array<out String>?,
             ) {
-                moduleExports += packaze.replace('/', '.')
+                val packageName = packaze.replace('/', '.')
+                moduleExports += packageName
+                moduleExportDetails += ModuleExport(packageName, modules.orEmpty().sorted())
+            }
+
+            override fun visitOpen(
+                packaze: String,
+                access: Int,
+                modules: Array<out String>?,
+            ) {
+                moduleOpens += ModuleOpen(packaze.replace('/', '.'), modules.orEmpty().sorted())
+            }
+
+            override fun visitUse(service: String) {
+                moduleUses += service.replace('/', '.')
+            }
+
+            override fun visitProvide(
+                service: String,
+                providers: Array<out String>,
+            ) {
+                moduleProvides +=
+                    ModuleProvider(
+                        service = service.replace('/', '.'),
+                        implementations = providers.map { provider -> provider.replace('/', '.') }.sorted(),
+                    )
             }
         }
     }
@@ -294,6 +417,7 @@ private class InspectingClassVisitor(
         value: Any?,
     ): FieldVisitor? {
         countMember(access)
+        recordMember(name, "field", descriptor, access)
         return null
     }
 
@@ -304,8 +428,15 @@ private class InspectingClassVisitor(
         signature: String?,
         exceptions: Array<out String>?,
     ): MethodVisitor? {
-        if (name != "<clinit>") countMember(access)
-        if (access and Opcodes.ACC_NATIVE != 0) jniIndicator = true
+        if (name == "<clinit>") staticInitializer = true
+        if (name != "<clinit>") {
+            countMember(access)
+            recordMember(name, if (name == "<init>") "constructor" else "method", descriptor, access)
+        }
+        if (access and Opcodes.ACC_NATIVE != 0) {
+            jniIndicator = true
+            nativeMethods = true
+        }
         return object : MethodVisitor(Opcodes.ASM9) {
             override fun visitMethodInsn(
                 opcode: Int,
@@ -323,7 +454,7 @@ private class InspectingClassVisitor(
 
     fun result(): ParsedClass {
         val moduleInfo = internalName == "module-info"
-        val visibility = visibility(innerClassAccess ?: classAccess)
+        val visibility = kotlinVisibility ?: visibility(innerClassAccess ?: classAccess)
         val apiVisible = visibility == TypeVisibility.PUBLIC || visibility == TypeVisibility.PROTECTED
         return ParsedClass(
             internalName = internalName,
@@ -331,13 +462,30 @@ private class InspectingClassVisitor(
             visibility = visibility,
             publicMembers = if (apiVisible) publicMembers else 0,
             protectedMembers = if (apiVisible) protectedMembers else 0,
+            apiMembers =
+                if (apiVisible) {
+                    apiMembers.sortedWith(
+                        compareBy(ApiMemberStats::kind, ApiMemberStats::name, ApiMemberStats::descriptor),
+                    )
+                } else {
+                    emptyList()
+                },
             kotlinMetadata = kotlinMetadata,
             reflectionIndicator = reflectionIndicator,
             serviceLoaderIndicator = serviceLoaderIndicator,
             jniIndicator = jniIndicator,
+            staticInitializer = staticInitializer,
+            nativeMethods = nativeMethods,
             moduleInfo = moduleInfo,
             moduleName = moduleName,
+            moduleVersion = moduleVersion,
+            moduleMainClass = moduleMainClass,
             moduleExports = moduleExports.toList(),
+            moduleExportDetails = moduleExportDetails.sortedBy(ModuleExport::packageName),
+            moduleRequires = moduleRequires.sortedBy(ModuleRequirement::name),
+            moduleOpens = moduleOpens.sortedBy(ModuleOpen::packageName),
+            moduleUses = moduleUses.toList(),
+            moduleProvides = moduleProvides.sortedBy(ModuleProvider::service),
         )
     }
 
@@ -347,6 +495,29 @@ private class InspectingClassVisitor(
             access and Opcodes.ACC_PUBLIC != 0 -> publicMembers++
             access and Opcodes.ACC_PROTECTED != 0 -> protectedMembers++
         }
+    }
+
+    private fun recordMember(
+        name: String,
+        kind: String,
+        descriptor: String,
+        access: Int,
+    ) {
+        if (access and (Opcodes.ACC_SYNTHETIC or Opcodes.ACC_BRIDGE) != 0) return
+        val memberVisibility =
+            when {
+                access and Opcodes.ACC_PUBLIC != 0 -> "public"
+                access and Opcodes.ACC_PROTECTED != 0 -> "protected"
+                else -> return
+            }
+        apiMembers +=
+            ApiMemberStats(
+                name = name,
+                kind = kind,
+                descriptor = descriptor,
+                visibility = memberVisibility,
+                static = access and Opcodes.ACC_STATIC != 0,
+            )
     }
 
     private fun visibility(access: Int): TypeVisibility =
@@ -390,14 +561,111 @@ private data class ParsedClass(
     val visibility: TypeVisibility,
     val publicMembers: Int,
     val protectedMembers: Int,
+    val apiMembers: List<ApiMemberStats>,
     val kotlinMetadata: Boolean,
     val reflectionIndicator: Boolean,
     val serviceLoaderIndicator: Boolean,
     val jniIndicator: Boolean,
+    val staticInitializer: Boolean,
+    val nativeMethods: Boolean,
     val moduleInfo: Boolean,
     val moduleName: String?,
+    val moduleVersion: String?,
+    val moduleMainClass: String?,
     val moduleExports: List<String>,
+    val moduleExportDetails: List<ModuleExport>,
+    val moduleRequires: List<ModuleRequirement>,
+    val moduleOpens: List<ModuleOpen>,
+    val moduleUses: List<String>,
+    val moduleProvides: List<ModuleProvider>,
 )
+
+private class KotlinMetadataAnnotationVisitor(
+    private val completed: (Metadata) -> Unit,
+) : AnnotationVisitor(Opcodes.ASM9) {
+    private var kind: Int = 1
+    private var metadataVersion: IntArray = intArrayOf()
+    private var bytecodeVersion: IntArray = intArrayOf()
+    private var data1: Array<String> = emptyArray()
+    private var data2: Array<String> = emptyArray()
+    private var extraString: String = ""
+    private var packageName: String = ""
+    private var extraInt: Int = 0
+
+    override fun visit(
+        name: String?,
+        value: Any?,
+    ) {
+        when (name) {
+            "k" -> kind = value as Int
+            "mv" -> metadataVersion = value as IntArray
+            "bv" -> bytecodeVersion = value as IntArray
+            "xs" -> extraString = value as String
+            "pn" -> packageName = value as String
+            "xi" -> extraInt = value as Int
+        }
+    }
+
+    override fun visitArray(name: String): AnnotationVisitor {
+        val values = mutableListOf<Any>()
+        return object : AnnotationVisitor(Opcodes.ASM9) {
+            override fun visit(
+                ignored: String?,
+                value: Any,
+            ) {
+                values += value
+            }
+
+            override fun visitEnd() {
+                when (name) {
+                    "mv" -> metadataVersion = values.map(Any::toString).map(String::toInt).toIntArray()
+                    "bv" -> bytecodeVersion = values.map(Any::toString).map(String::toInt).toIntArray()
+                    "d1" -> data1 = values.map(Any::toString).toTypedArray()
+                    "d2" -> data2 = values.map(Any::toString).toTypedArray()
+                }
+            }
+        }
+    }
+
+    override fun visitEnd() {
+        completed(
+            Metadata(
+                kind = kind,
+                metadataVersion = metadataVersion,
+                bytecodeVersion = bytecodeVersion,
+                data1 = data1,
+                data2 = data2,
+                extraString = extraString,
+                packageName = packageName,
+                extraInt = extraInt,
+            ),
+        )
+    }
+}
+
+private fun Metadata.kotlinTypeVisibility(): TypeVisibility? =
+    runCatching {
+        val metadata = KotlinClassMetadata.readLenient(this)
+        if (metadata !is KotlinClassMetadata.Class) return@runCatching null
+        when (metadata.kmClass.visibility) {
+            Visibility.PUBLIC -> TypeVisibility.PUBLIC
+            Visibility.PROTECTED -> TypeVisibility.PROTECTED
+            else -> TypeVisibility.IMPLEMENTATION
+        }
+    }.getOrNull()
+
+private fun ParsedClass.toModuleStats(manifestMainClass: String?): ModuleStats =
+    ModuleStats(
+        kind = ModuleKind.EXPLICIT,
+        name = moduleName,
+        version = moduleVersion,
+        mainClass = moduleMainClass ?: manifestMainClass,
+        requires = moduleRequires,
+        exports = moduleExportDetails,
+        opens = moduleOpens,
+        uses = moduleUses,
+        provides = moduleProvides,
+    )
 
 private enum class TypeVisibility {
     PUBLIC,

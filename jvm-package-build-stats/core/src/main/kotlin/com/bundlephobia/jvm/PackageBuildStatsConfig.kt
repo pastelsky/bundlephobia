@@ -12,14 +12,45 @@ public data class PackageBuildStatsConfig
         public val gradleExecutable: Path? = null,
         /** Hard wall-clock limit for the sealed Gradle resolution process. */
         public val resolutionTimeoutMilliseconds: Long = 120_000,
+        /** Parent for isolated resolver builds. Defaults to the host temporary-file policy. */
+        public val temporaryDirectory: Path? = null,
+        /** Maximum resolver stderr included in a structured failure diagnostic. */
+        public val diagnosticOutputLimitBytes: Int = 4_096,
     ) {
         init {
             require(resolutionTimeoutMilliseconds > 0) { "resolutionTimeoutMilliseconds must be positive" }
+            require(diagnosticOutputLimitBytes >= 0) { "diagnosticOutputLimitBytes must not be negative" }
         }
 
         public companion object {
             @JvmStatic
-            public fun defaultCacheDirectory(): Path =
-                Path.of(System.getProperty("user.home"), ".cache", "bundlephobia", "jvm-package-build-stats")
+            public fun defaultCacheDirectory(): Path {
+                environmentPath("BUNDLEPHOBIA_JVM_CACHE_DIR")?.let { return it }
+                environmentPath("XDG_CACHE_HOME")?.let { return it.resolve("bundlephobia/jvm-package-build-stats") }
+
+                val userHome = Path.of(System.getProperty("user.home"))
+                val os = System.getProperty("os.name").lowercase()
+                return when {
+                    os.contains("mac") -> {
+                        userHome.resolve("Library/Caches/bundlephobia/jvm-package-build-stats")
+                    }
+
+                    os.contains("win") -> {
+                        environmentPath("LOCALAPPDATA")
+                            ?.resolve("Bundlephobia/jvm-package-build-stats")
+                            ?: userHome.resolve("AppData/Local/Bundlephobia/jvm-package-build-stats")
+                    }
+
+                    else -> {
+                        userHome.resolve(".cache/bundlephobia/jvm-package-build-stats")
+                    }
+                }
+            }
+
+            private fun environmentPath(name: String): Path? =
+                System
+                    .getenv(name)
+                    ?.takeIf(String::isNotBlank)
+                    ?.let(Path::of)
         }
     }
