@@ -58,7 +58,7 @@ class ResultJsonTest {
                     kotlinVersion = "2.4.10",
                     gradleVersion = "9.5.1",
                 ),
-            resolution = ResolutionStats(coordinate),
+            resolution = ResolutionSummary(coordinate),
             runtimeClosure = RuntimeClosureStats(archiveBytes = 1_024),
         )
     }

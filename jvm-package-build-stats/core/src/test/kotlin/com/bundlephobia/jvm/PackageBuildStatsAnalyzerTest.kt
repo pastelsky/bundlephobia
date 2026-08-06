@@ -9,6 +9,7 @@ import com.bundlephobia.jvm.model.MavenCoordinate
 import com.bundlephobia.jvm.model.ResolutionStats
 import com.bundlephobia.jvm.model.ResolvedArtifact
 import com.bundlephobia.jvm.model.ResolvedComponent
+import com.bundlephobia.jvm.model.ResultJson
 import com.bundlephobia.jvm.model.ResultStatus
 import com.bundlephobia.jvm.model.TimingStats
 import org.junit.jupiter.api.io.TempDir
@@ -83,9 +84,7 @@ class PackageBuildStatsAnalyzerTest {
         assertEquals(2, result.runtimeClosure.largestTransitiveArtifacts.size)
         assertEquals(
             1,
-            result.resolution.components
-                .single { it.coordinate == root }
-                .artifacts.size,
+            result.resolution.artifacts.count { artifact -> artifact.coordinate == root },
         )
         assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "DEPENDENCY_CONFLICT_SELECTED" })
     }
@@ -165,7 +164,61 @@ class PackageBuildStatsAnalyzerTest {
         assertEquals(ResultStatus.PARTIAL, result.status)
         assertEquals(ResultStatus.COMPLETE, result.directArtifact?.status)
         assertTrue(result.runtimeClosure.shortestPaths.isEmpty())
+        assertEquals(10_001, result.resolution.componentCount)
+        assertEquals(100, result.resolution.components.size)
+        assertTrue(result.resolution.truncated)
+        val encoded = ResultJson.encode(result)
+        assertTrue(encoded.toByteArray().size < 1_000_000)
+        assertTrue(!encoded.contains(directPath.toString()))
         assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "DEPENDENCY_GRAPH_LIMIT_EXCEEDED" })
+    }
+
+    @Test
+    fun `attributes a metadata-only Kotlin package to its nearest JVM variant`() {
+        val root = MavenCoordinate.parse("example:multiplatform:1.0")
+        val jvm = MavenCoordinate.parse("example:multiplatform-jvm:1.0")
+        val jvmJar = jar("multiplatform-jvm.jar", 10)
+        val resolution =
+            JvmResolutionResult(
+                status = ResultStatus.COMPLETE,
+                resolution =
+                    ResolutionStats(
+                        requested = root,
+                        components =
+                            listOf(
+                                ResolvedComponent(root, requested = true),
+                                ResolvedComponent(jvm, requested = false),
+                            ),
+                        edges = listOf(DependencyEdge(root, jvm.notation, jvm)),
+                        artifacts =
+                            listOf(
+                                ResolvedArtifact(
+                                    coordinate = jvm,
+                                    fileName = jvmJar.fileName.toString(),
+                                    path = jvmJar.toString(),
+                                    extension = "jar",
+                                    variant = "runtime",
+                                    digest = ArtifactDigest(value = sha256(jvmJar)),
+                                ),
+                            ),
+                    ),
+            )
+
+        val result = analyzer(resolution).analyze(AnalyzeRequest(root))
+
+        assertEquals(ResultStatus.COMPLETE, result.status)
+        assertTrue(result.sizes.directArtifactArchiveBytes > 0)
+        assertEquals(jvm, result.dependencySizes.single { it.requested }.coordinate)
+        assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "REQUESTED_VARIANT_REDIRECTED" })
+    }
+
+    @Test
+    fun `reports when resolution selects no analyzable JVM jar`() {
+        val root = MavenCoordinate.parse("example:android-only:1.0")
+        val result = analyzer(resolution(root, emptyList())).analyze(AnalyzeRequest(root))
+
+        assertEquals(ResultStatus.FAILED, result.status)
+        assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "REQUESTED_ARTIFACT_NOT_ANALYZED" })
     }
 
     @Test
