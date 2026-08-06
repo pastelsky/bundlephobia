@@ -20,7 +20,7 @@ class JvmPackageBuildStatsCliTest {
 
     @Test
     fun `analyze resolves the coordinate and writes only JSON to stdout`() {
-        val execution = execute("analyze", "com.google.code.gson:gson:2.14.0")
+        val execution = execute("stats", "com.google.code.gson:gson:2.14.0")
 
         assertEquals(ExitCode.SUCCESS, execution.exitCode, execution.stdout)
         assertEquals("", execution.stderr)
@@ -73,6 +73,14 @@ class JvmPackageBuildStatsCliTest {
     }
 
     @Test
+    fun `analyze remains an alias for stats`() {
+        val execution = execute("analyze", "g:a:1-SNAPSHOT")
+
+        assertEquals(ExitCode.USAGE, execution.exitCode)
+        assertTrue(execution.stderr.contains("immutable published release"))
+    }
+
+    @Test
     fun `Android targets are rejected`() {
         val execution = execute("analyze", "g:a:1", "--target", "android-release")
 
@@ -95,7 +103,7 @@ class JvmPackageBuildStatsCliTest {
         val execution = execute("--help")
 
         assertEquals(ExitCode.SUCCESS, execution.exitCode)
-        assertTrue(execution.stdout.contains("analyze"))
+        assertTrue(execution.stdout.contains("stats"))
         assertTrue(execution.stdout.contains("inspect"))
         assertEquals("", execution.stderr)
     }
@@ -105,7 +113,7 @@ class JvmPackageBuildStatsCliTest {
         val execution = execute("--version")
 
         assertEquals(ExitCode.SUCCESS, execution.exitCode)
-        assertTrue(execution.stdout.matches(Regex("jvm-package-build-stats \\d+\\.\\d+\\.\\d+.*\\R")))
+        assertTrue(execution.stdout.matches(Regex("jvm-package-stats \\d+\\.\\d+\\.\\d+.*\\R")))
         assertEquals("", execution.stderr)
     }
 

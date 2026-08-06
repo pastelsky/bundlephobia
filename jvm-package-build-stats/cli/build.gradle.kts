@@ -18,7 +18,7 @@ dependencies {
 }
 
 application {
-    applicationName = "jvm-package-build-stats"
+    applicationName = "jvm-package-stats"
     mainClass = "com.bundlephobia.jvm.cli.MainKt"
 }
 
