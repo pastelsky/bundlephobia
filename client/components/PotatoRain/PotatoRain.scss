@@ -1,0 +1,66 @@
+.potato-rain {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+  // sits above the sticky page nav so potatoes fall in front of everything
+  z-index: 10000;
+}
+
+.potato-rain__potato {
+  --potato-top: 0vh;
+  --potato-drift: 0vw;
+  --potato-spin: 0deg;
+
+  position: absolute;
+  top: 0;
+  animation-name: potato-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  will-change: transform;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+@keyframes potato-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -25vh, 0) rotate(0deg);
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(var(--potato-drift), 115vh, 0)
+      rotate(var(--potato-spin));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .potato-rain__potato {
+    top: var(--potato-top);
+    animation-name: potato-appear;
+  }
+
+  @keyframes potato-appear {
+    0%,
+    100% {
+      opacity: 0;
+    }
+
+    20%,
+    70% {
+      opacity: 1;
+    }
+  }
+}

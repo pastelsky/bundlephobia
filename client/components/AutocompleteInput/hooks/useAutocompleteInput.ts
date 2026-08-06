@@ -3,6 +3,7 @@ import debounce from 'debounce'
 
 import { parsePackageString } from '../../../../utils/common.utils'
 import API, { type PackageSuggestion } from '../../../api'
+import { isPotatoQuery } from '../../PotatoRain'
 
 interface UseAutocompleteInputArgs {
   initialValue: string
@@ -15,6 +16,7 @@ export function useAutocompleteInput({
 }: UseAutocompleteInputArgs) {
   const [value, setValue] = React.useState(initialValue)
   const [suggestions, setSuggestions] = React.useState<PackageSuggestion[]>([])
+  const [potatoRainId, setPotatoRainId] = React.useState<number | null>(null)
   const [, startTransition] = React.useTransition()
 
   const getSuggestions = React.useMemo(
@@ -27,8 +29,17 @@ export function useAutocompleteInput({
     [startTransition]
   )
 
+  const stopPotatoRain = React.useCallback(() => setPotatoRainId(null), [])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (isPotatoQuery(value)) {
+      setSuggestions([])
+      setPotatoRainId(id => (id ?? 0) + 1)
+      return
+    }
+
     onSubmit(value)
   }
 
@@ -49,8 +60,10 @@ export function useAutocompleteInput({
   return {
     value,
     suggestions,
+    potatoRainId,
     handleSubmit,
     handleInputValueChange,
     setSuggestions,
+    stopPotatoRain,
   }
 }

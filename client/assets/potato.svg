@@ -1,0 +1,13 @@
+<svg width="100" height="76" viewBox="0 0 100 76" xmlns="http://www.w3.org/2000/svg">
+    <g fill-rule="evenodd">
+        <path d="M8.5 40C6 26 16 12 32 7.5 46 3.5 62 4.5 76 10c13 5 20.5 15 19 28-1.5 13-12 24-27 30-15 6-32 6.5-45 0C12.5 62.5 10.5 52 8.5 40z" fill="#D3A15F" stroke="#8A5C2B" stroke-width="3.5"/>
+        <path d="M23 23c6-7 16-11.5 27-11.5" stroke="#F0C68A" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+        <g fill="#8A5C2B" opacity=".55">
+            <ellipse cx="34" cy="29" rx="4.2" ry="3"/>
+            <ellipse cx="59" cy="21" rx="3.4" ry="2.4"/>
+            <ellipse cx="71" cy="44" rx="4" ry="2.8"/>
+            <ellipse cx="47" cy="53" rx="3.6" ry="2.6"/>
+            <ellipse cx="25" cy="49" rx="3" ry="2.2"/>
+        </g>
+    </g>
+</svg>
