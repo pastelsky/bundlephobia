@@ -99,8 +99,11 @@ stdout is redirected; `--pretty` and `--json` make that choice explicit.
 - Android runtime selection and compatibility preflight are package-level
   operations. Declared AAR requirements select a pinned stable or preview SDK
   profile before any compiler, D8, or R8 process is started.
+- With that profile ready, unshrunk DEX bytes and reference counts are measured
+  by D8 over the complete runtime closure. This is the Android analogue of a
+  reproducible package-level bundled measurement, not reachability analysis.
 
 Per-member marginal byte size, whole-program reachability, ProGuard/R8 shrinker
-simulation and DEX counts, native-image reachability, and runtime memory are
-not claimed by the current schema. Those require an explicit consumer program
-and toolchain policy rather than package-only static analysis.
+simulation, native-image reachability, and runtime memory are not claimed by
+the current schema. Those require an explicit consumer program and toolchain
+policy rather than package-only static analysis.

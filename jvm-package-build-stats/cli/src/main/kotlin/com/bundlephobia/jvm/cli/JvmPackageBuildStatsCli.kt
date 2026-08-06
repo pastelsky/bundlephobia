@@ -112,6 +112,9 @@ private class AnalyzeCommand(
     )
     private var androidBaselineMinSdk: Int = 23
 
+    @Option(names = ["--android-dex-timeout"], paramLabel = "MILLISECONDS", description = ["D8 timeout in milliseconds."])
+    private var androidDexTimeoutMilliseconds: Long? = null
+
     @Mixin private lateinit var outputOptions: OutputOptions
 
     override fun call(): Int {
@@ -153,8 +156,12 @@ private class AnalyzeCommand(
         }
         val defaults = PackageBuildStatsConfig()
         val timeout = resolutionTimeoutMilliseconds ?: defaults.resolutionTimeoutMilliseconds
+        val dexTimeout = androidDexTimeoutMilliseconds ?: defaults.androidDexTimeoutMilliseconds
         if (timeout <= 0) {
             throw CommandLine.ParameterException(spec.commandLine(), "Resolution timeout must be positive")
+        }
+        if (dexTimeout <= 0) {
+            throw CommandLine.ParameterException(spec.commandLine(), "Android DEX timeout must be positive")
         }
         return PackageBuildStatsAnalyzer(
             PackageBuildStatsConfig(
@@ -164,6 +171,7 @@ private class AnalyzeCommand(
                 androidSdkRoot = androidSdkRoot,
                 androidSdkManagerExecutable = sdkManagerExecutable,
                 installMissingAndroidTooling = installMissingAndroidTooling,
+                androidDexTimeoutMilliseconds = dexTimeout,
             ),
         )
     }
@@ -172,6 +180,7 @@ private class AnalyzeCommand(
         androidSdkRoot != null ||
             sdkManagerExecutable != null ||
             installMissingAndroidTooling ||
+            androidDexTimeoutMilliseconds != null ||
             androidBaselineMinSdk != PackageBuildStatsConfig().androidBaselineMinSdk
 }
 

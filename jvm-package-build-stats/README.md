@@ -109,13 +109,26 @@ java -jar jvm-package-build-stats-cli.jar stats \
 
 Only the exact selected `platforms;android-N` and `build-tools;VERSION` packages
 are passed to `sdkmanager`. Installation uses a small SDK-root lock, has a hard
-timeout, and discards tool output. The preflight is the compatibility gate for
-DEX measurement; DEX method counts are not yet part of this result schema.
+timeout, and discards tool output.
+
+When the selected platform and Build Tools are ready, Android analysis runs the
+pinned D8 executable over the complete resolved runtime closure. JSON and
+`--pretty` output report unshrunk DEX bytes, DEX file count, total and largest
+per-DEX method references, field references, and defined classes. Nested
+`classes.jar` and `libs/*.jar` inputs are extracted only into the analysis
+temporary directory with count and byte limits, and generated DEX files are
+deleted after their bounded headers are read. Use `--android-dex-timeout` to
+override the D8 timeout.
+
+These are canonical unshrunk D8 measurements, not an estimate. R8-shrunk counts
+are intentionally not reported yet because a meaningful shrink result requires
+an explicit consumer entry-point and keep-rule policy.
 
 The library does not persist artifacts or results; service callers own caching
 and retention policy. Library callers can supply a Gradle wrapper, resolution
 timeout, temporary root, diagnostic-output bound, Android profiles, SDK root,
-and optional `sdkmanager` provisioning through `PackageBuildStatsConfig`.
+optional `sdkmanager` provisioning, and D8 timeout through
+`PackageBuildStatsConfig`.
 
 Resolution runs in a temporary empty Gradle build. It evaluates only the owned
 settings plugin and an empty build script: dependency-provided classes, tests,

@@ -1,5 +1,7 @@
 package com.bundlephobia.jvm.cli
 
+import com.bundlephobia.jvm.model.AndroidDexStats
+import com.bundlephobia.jvm.model.AndroidDexStatus
 import com.bundlephobia.jvm.model.AndroidPreflightStats
 import com.bundlephobia.jvm.model.ApiSurfaceStats
 import com.bundlephobia.jvm.model.ArtifactAnalysis
@@ -33,6 +35,7 @@ internal class TerminalRenderer(
             metric("Dependencies", bytes(result.sizes.transitiveArtifactArchiveBytes))
 
             result.androidPreflight?.let { preflight -> androidPreflight(preflight) }
+            result.androidDex?.let { dex -> androidDex(dex) }
 
             section("RUNTIME CLOSURE")
             metric("Artifacts", count(result.runtimeClosure.artifacts, result.artifactsTruncated))
@@ -69,6 +72,23 @@ internal class TerminalRenderer(
         if (preflight.missingToolingPackages.isNotEmpty()) {
             metric("Missing", preflight.missingToolingPackages.joinToString())
         }
+    }
+
+    private fun StringBuilder.androidDex(dex: AndroidDexStats) {
+        section("DEX · D8 UNSHRUNK")
+        metric("Status", dex.status.name.lowercase(Locale.ROOT))
+        if (dex.status == AndroidDexStatus.COMPLETE) {
+            dex.dexBytes?.let { metric("DEX size", bytes(it)) }
+            metric("DEX files", dex.dexFiles.toString())
+            dex.referencedMethods?.let { metric("Method references", it.toString()) }
+            dex.maxReferencedMethodsPerDex?.let { metric("Largest DEX methods", it.toString()) }
+            dex.referencedFields?.let { metric("Field references", it.toString()) }
+            dex.definedClasses?.let { metric("Defined classes", it.toString()) }
+        } else if (dex.status == AndroidDexStatus.SKIPPED) {
+            metric("Method references", "not measured")
+        }
+        metric("minSdk", dex.minSdk.toString())
+        metric("Build Tools", dex.buildToolsVersion)
     }
 
     fun render(result: ArtifactAnalysis): String =

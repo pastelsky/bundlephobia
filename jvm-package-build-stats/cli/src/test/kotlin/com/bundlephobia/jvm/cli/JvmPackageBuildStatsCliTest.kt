@@ -2,8 +2,15 @@ package com.bundlephobia.jvm.cli
 
 import com.bundlephobia.jvm.PackageBuildStatsAnalyzer
 import com.bundlephobia.jvm.PackageBuildStatsConfig
+import com.bundlephobia.jvm.model.AndroidDexStats
+import com.bundlephobia.jvm.model.AndroidDexStatus
+import com.bundlephobia.jvm.model.MavenCoordinate
+import com.bundlephobia.jvm.model.PackageBuildStatsResult
+import com.bundlephobia.jvm.model.ResolutionSummary
 import com.bundlephobia.jvm.model.ResultJson
 import com.bundlephobia.jvm.model.ResultStatus
+import com.bundlephobia.jvm.model.TargetProfile
+import com.bundlephobia.jvm.model.ToolchainManifest
 import org.junit.jupiter.api.io.TempDir
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -74,6 +81,45 @@ class JvmPackageBuildStatsCliTest {
         val result = PackageBuildStatsAnalyzer().inspect(fixtureJar())
 
         assertTrue(TerminalRenderer(color = true).render(result).contains("\u001B["))
+    }
+
+    @Test
+    fun `Android pretty output includes unshrunk DEX statistics`() {
+        val coordinate = MavenCoordinate.parse("androidx.example:fixture:1.0")
+        val result =
+            PackageBuildStatsResult(
+                status = ResultStatus.COMPLETE,
+                coordinate = coordinate,
+                target = TargetProfile.ANDROID_RUNTIME,
+                toolchain =
+                    ToolchainManifest(
+                        generation = "test",
+                        analyzerVersion = "test",
+                        jdkVersion = "21",
+                        jdkVendor = "test",
+                        kotlinVersion = "test",
+                        gradleVersion = "9.5.1",
+                    ),
+                resolution = ResolutionSummary(coordinate),
+                androidDex =
+                    AndroidDexStats(
+                        status = AndroidDexStatus.COMPLETE,
+                        dexBytes = 4_096,
+                        dexFiles = 2,
+                        referencedMethods = 70_000,
+                        maxReferencedMethodsPerDex = 60_000,
+                        referencedFields = 12_000,
+                        definedClasses = 800,
+                        minSdk = 23,
+                        buildToolsVersion = "36.0.0",
+                    ),
+            )
+
+        val output = TerminalRenderer(color = false).render(result)
+
+        assertTrue(output.contains("DEX · D8 UNSHRUNK"))
+        assertTrue(output.contains("Method references      70000"))
+        assertTrue(output.contains("DEX files              2"))
     }
 
     @Test
