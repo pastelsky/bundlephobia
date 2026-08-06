@@ -3,7 +3,9 @@ import { createPortal } from 'react-dom'
 
 import Potato from '../../assets/potato.svg'
 
-const POTATO_COUNT = 28
+const MIN_POTATOES = 24
+const MAX_POTATOES = 56
+const VIEWPORT_PX_PER_POTATO = 46
 
 type FallingPotato = {
   id: number
@@ -19,12 +21,18 @@ type FallingPotato = {
 const randomBetween = (min: number, max: number) =>
   min + Math.random() * (max - min)
 
+const getPotatoCount = () => {
+  const scaledCount = Math.round(window.innerWidth / VIEWPORT_PX_PER_POTATO)
+
+  return Math.min(MAX_POTATOES, Math.max(MIN_POTATOES, scaledCount))
+}
+
 const createPotatoes = (): FallingPotato[] =>
-  Array.from({ length: POTATO_COUNT }, (_, id) => ({
+  Array.from({ length: getPotatoCount() }, (_, id) => ({
     id,
     left: randomBetween(-2, 94),
     top: randomBetween(5, 80),
-    size: randomBetween(26, 64),
+    size: randomBetween(30, 72),
     delay: randomBetween(0, 2.4),
     duration: randomBetween(2.4, 4.4),
     drift: randomBetween(-12, 12),
