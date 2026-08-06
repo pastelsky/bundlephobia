@@ -21,7 +21,7 @@ class ResultJsonTest {
         val decoded = ResultJson.decodeResult(encoded)
 
         assertEquals(result, decoded)
-        assertTrue(encoded.contains("\"schemaVersion\":1"))
+        assertTrue(encoded.contains("\"schemaVersion\":2"))
         assertTrue(encoded.contains("\"target\":\"jvm-runtime\""))
         assertTrue(encoded.contains("\"archiveBytes\":1024"))
         assertTrue(encoded.contains("\"directArtifact\":null"))

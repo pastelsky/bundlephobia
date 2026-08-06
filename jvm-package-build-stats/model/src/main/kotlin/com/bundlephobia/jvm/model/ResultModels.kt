@@ -436,7 +436,7 @@ public data class TimingStats(
 
 @Serializable
 public data class PackageBuildStatsResult(
-    public val schemaVersion: Int = 1,
+    public val schemaVersion: Int = 2,
     public val status: ResultStatus,
     public val coordinate: MavenCoordinate,
     public val target: TargetProfile,
