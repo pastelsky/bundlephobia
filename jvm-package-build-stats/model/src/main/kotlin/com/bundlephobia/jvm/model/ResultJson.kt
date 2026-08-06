@@ -8,7 +8,7 @@ public object ResultJson {
         Json {
             encodeDefaults = true
             explicitNulls = true
-            ignoreUnknownKeys = false
+            ignoreUnknownKeys = true
             prettyPrint = false
         }
 

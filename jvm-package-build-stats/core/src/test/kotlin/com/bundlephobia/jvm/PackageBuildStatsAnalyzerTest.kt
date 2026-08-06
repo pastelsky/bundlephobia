@@ -191,11 +191,38 @@ class PackageBuildStatsAnalyzerTest {
                     gradleExecutable = executable,
                     resolutionTimeoutMilliseconds = 25,
                 ),
-            ).resolve(coordinate, 21)
+            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertEquals("RESOLUTION_TIMEOUT", result.diagnostics.single().code)
         assertEquals(com.bundlephobia.jvm.model.RetryClassification.RETRYABLE, result.diagnostics.single().retry)
+    }
+
+    @Test
+    fun `cancellation stops a running resolver process`() {
+        val executable = tempDir.resolve("cancelled-gradle")
+        Files.writeString(executable, "#!/bin/sh\nsleep 2\n")
+        Files.setPosixFilePermissions(
+            executable,
+            setOf(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE,
+            ),
+        )
+        val started = System.nanoTime()
+        val coordinate = MavenCoordinate.parse("example:cancelled:1.0")
+
+        val result =
+            GradleResolverClient(
+                PackageBuildStatsConfig(
+                    cacheDirectory = tempDir.resolve("cache"),
+                    gradleExecutable = executable,
+                ),
+            ).resolve(coordinate, 21, AnalysisCancellation { System.nanoTime() - started > 50_000_000 })
+
+        assertEquals(ResultStatus.FAILED, result.status)
+        assertEquals("RESOLUTION_CANCELLED", result.diagnostics.single().code)
     }
 
     @Test
@@ -221,7 +248,7 @@ class PackageBuildStatsAnalyzerTest {
                     temporaryDirectory = temporaryDirectory,
                     diagnosticOutputLimitBytes = 128,
                 ),
-            ).resolve(coordinate, 21)
+            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertTrue(
@@ -264,7 +291,7 @@ class PackageBuildStatsAnalyzerTest {
     private fun analyzer(resolution: JvmResolutionResult): PackageBuildStatsAnalyzer =
         PackageBuildStatsAnalyzer(
             config = PackageBuildStatsConfig(cacheDirectory = tempDir.resolve("cache")),
-            resolverClient = ResolverClient { _, _ -> resolution },
+            resolverClient = ResolverClient { _, _, _ -> resolution },
         )
 
     private fun resolution(

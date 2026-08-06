@@ -20,6 +20,7 @@ internal fun interface ResolverClient {
     fun resolve(
         coordinate: MavenCoordinate,
         javaVersion: Int,
+        cancellation: AnalysisCancellation,
     ): JvmResolutionResult
 }
 
@@ -30,6 +31,7 @@ internal class GradleResolverClient(
     override fun resolve(
         coordinate: MavenCoordinate,
         javaVersion: Int,
+        cancellation: AnalysisCancellation,
     ): JvmResolutionResult {
         val directory =
             config.temporaryDirectory?.let { parent ->
@@ -38,7 +40,7 @@ internal class GradleResolverClient(
             } ?: Files.createTempDirectory("jvm-package-build-stats-")
         return try {
             writeBuild(directory)
-            runGradle(directory, coordinate, javaVersion)
+            runGradle(directory, coordinate, javaVersion, cancellation)
         } catch (_: InterruptedException) {
             Thread.currentThread().interrupt()
             failure(coordinate, javaVersion, "RESOLUTION_CANCELLED", "Resolution was cancelled", RetryClassification.RETRYABLE)
@@ -103,6 +105,7 @@ internal class GradleResolverClient(
         directory: Path,
         coordinate: MavenCoordinate,
         javaVersion: Int,
+        cancellation: AnalysisCancellation,
     ): JvmResolutionResult {
         val process =
             ProcessBuilder(
@@ -117,14 +120,26 @@ internal class GradleResolverClient(
                 .redirectError(directory.resolve("gradle.stderr").toFile())
                 .start()
 
-        val completed =
+        val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(config.resolutionTimeoutMilliseconds)
+        while (process.isAlive && System.nanoTime() < deadline && !cancellation.isCancelled()) {
             try {
-                process.waitFor(config.resolutionTimeoutMilliseconds, TimeUnit.MILLISECONDS)
+                process.waitFor(PROCESS_POLL_MILLISECONDS, TimeUnit.MILLISECONDS)
             } catch (error: InterruptedException) {
                 stop(process)
                 throw error
             }
-        if (!completed) {
+        }
+        if (cancellation.isCancelled()) {
+            stop(process)
+            return failure(
+                coordinate,
+                javaVersion,
+                "RESOLUTION_CANCELLED",
+                "Resolution was cancelled",
+                RetryClassification.RETRYABLE,
+            )
+        }
+        if (process.isAlive) {
             stop(process)
             return failure(
                 coordinate,
@@ -216,6 +231,7 @@ internal class GradleResolverClient(
 
     private companion object {
         private const val PROCESS_SHUTDOWN_SECONDS = 5L
+        private const val PROCESS_POLL_MILLISECONDS = 100L
         private val BUNDLED_WRAPPER_FILES =
             listOf(
                 "bundled-gradle/gradlew",

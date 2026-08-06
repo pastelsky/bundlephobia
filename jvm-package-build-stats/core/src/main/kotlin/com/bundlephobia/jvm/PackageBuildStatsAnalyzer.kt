@@ -42,12 +42,18 @@ public class PackageBuildStatsAnalyzer
         }
 
         /** Resolves and statically analyzes one exact JVM runtime dependency closure. */
-        public fun analyze(request: AnalyzeRequest): PackageBuildStatsResult {
+        public fun analyze(request: AnalyzeRequest): PackageBuildStatsResult = analyze(request, AnalysisCancellation.NONE)
+
+        /** Resolves and analyzes a package while cooperatively observing [cancellation]. */
+        public fun analyze(
+            request: AnalyzeRequest,
+            cancellation: AnalysisCancellation,
+        ): PackageBuildStatsResult {
             val totalStart = System.nanoTime()
             val stageTimings = linkedMapOf<String, Long>()
             val diagnostics = mutableListOf<Diagnostic>()
 
-            val resolutionTimed = measureTimedValue { resolverClient.resolve(request.coordinate, request.javaVersion) }
+            val resolutionTimed = measureTimedValue { resolverClient.resolve(request.coordinate, request.javaVersion, cancellation) }
             stageTimings["resolution"] = resolutionTimed.duration.inWholeMilliseconds
             val resolverResult = resolutionTimed.value
             diagnostics += resolverResult.diagnostics
@@ -62,6 +68,10 @@ public class PackageBuildStatsAnalyzer
                         .distinctBy { artifact -> artifact.digest.value }
                         .sortedBy { artifact -> artifact.digest.value }
                         .forEach { artifact ->
+                            if (cancellation.isCancelled()) {
+                                diagnostics += cancellationDiagnostic()
+                                return@measureTimedValue
+                            }
                             analyzeArtifact(cache, artifact, request.javaVersion, diagnostics)?.let(evidence::add)
                         }
                 }
@@ -85,6 +95,14 @@ public class PackageBuildStatsAnalyzer
                     ),
             )
         }
+
+        private fun cancellationDiagnostic(): Diagnostic =
+            Diagnostic(
+                code = "ANALYSIS_CANCELLED",
+                summary = "Analysis was cancelled before all selected artifacts were inspected",
+                stage = AnalysisStage.ARCHIVE_ANALYSIS,
+                retry = RetryClassification.RETRYABLE,
+            )
 
         /** Inspects a local JAR without resolving dependencies or loading any classes. */
         public fun inspect(path: Path): ArtifactAnalysis = inspect(path, DEFAULT_JAVA_VERSION)
