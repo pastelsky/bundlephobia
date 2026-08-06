@@ -412,6 +412,41 @@ class PackageBuildStatsAnalyzerTest {
         assertEquals(classBytes.size.toLong(), result.namespaces.single().classBytes)
     }
 
+    @Test
+    fun `assembles Android AAR size and preflight evidence`() {
+        val coordinate = MavenCoordinate.parse("androidx.example:fixture:1.0")
+        val archive = androidArchive()
+        val resolution =
+            JvmResolutionResult(
+                status = ResultStatus.COMPLETE,
+                target = TargetProfile.ANDROID_RUNTIME,
+                resolution =
+                    ResolutionStats(
+                        requested = coordinate,
+                        components = listOf(ResolvedComponent(coordinate, requested = true)),
+                        artifacts =
+                            listOf(
+                                ResolvedArtifact(
+                                    coordinate = coordinate,
+                                    fileName = archive.fileName.toString(),
+                                    path = archive.toString(),
+                                    extension = "aar",
+                                    variant = "releaseRuntimeElements",
+                                    digest = ArtifactDigest(value = sha256(archive)),
+                                ),
+                            ),
+                    ),
+            )
+
+        val result = analyzer(resolution).analyze(AnalyzeRequest(coordinate, TargetProfile.ANDROID_RUNTIME))
+
+        assertEquals(ResultStatus.COMPLETE, result.status)
+        assertEquals("fixture.aar", result.directArtifact?.displayName)
+        assertEquals(26, result.androidPreflight?.requiredMinSdk)
+        assertEquals("android-36-stable", result.androidPreflight?.selectedProfile?.id)
+        assertTrue(result.sizes.runtimeArchiveBytes > 0)
+    }
+
     private fun analyzer(resolution: JvmResolutionResult): PackageBuildStatsAnalyzer =
         PackageBuildStatsAnalyzer(
             config = PackageBuildStatsConfig(),
@@ -459,6 +494,22 @@ class PackageBuildStatsAnalyzerTest {
             output.closeEntry()
         }
         return jar
+    }
+
+    private fun androidArchive(): Path {
+        val archive = tempDir.resolve("fixture.aar")
+        ZipOutputStream(Files.newOutputStream(archive)).use { output ->
+            output.putNextEntry(ZipEntry("AndroidManifest.xml"))
+            output.write(
+                """<manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-sdk android:minSdkVersion="26" /></manifest>"""
+                    .toByteArray(),
+            )
+            output.closeEntry()
+            output.putNextEntry(ZipEntry("META-INF/com/android/build/gradle/aar-metadata.properties"))
+            output.write("minCompileSdk=35\nminAndroidGradlePluginVersion=8.0.0\n".toByteArray())
+            output.closeEntry()
+        }
+        return archive
     }
 
     private fun sha256(path: Path): String = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)))
