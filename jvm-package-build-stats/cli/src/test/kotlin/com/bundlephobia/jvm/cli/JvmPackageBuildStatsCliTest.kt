@@ -82,6 +82,15 @@ class JvmPackageBuildStatsCliTest {
     }
 
     @Test
+    fun `Java versions below eight are usage errors`() {
+        val execution = execute("analyze", "g:a:1", "--java-version", "7")
+
+        assertEquals(ExitCode.USAGE, execution.exitCode)
+        assertEquals("", execution.stdout)
+        assertTrue(execution.stderr.contains("Java version must be at least 8"))
+    }
+
+    @Test
     fun `help is successful`() {
         val execution = execute("--help")
 

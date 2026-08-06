@@ -73,10 +73,21 @@ private class AnalyzeCommand(
     @Option(names = ["--target"], defaultValue = "jvm-runtime", paramLabel = "TARGET")
     private lateinit var targetValue: String
 
+    @Option(
+        names = ["--java-version"],
+        defaultValue = "21",
+        paramLabel = "VERSION",
+        description = ["Consumer Java feature version used for variant and multi-release JAR selection."],
+    )
+    private var javaVersion: Int = 21
+
     override fun call(): Int {
         val coordinate = parseCoordinate(coordinateValue)
         val target = parseTarget(targetValue)
-        val result = analyzer.analyze(AnalyzeRequest(coordinate, target))
+        if (javaVersion < 8) {
+            throw CommandLine.ParameterException(spec.commandLine(), "Java version must be at least 8")
+        }
+        val result = analyzer.analyze(AnalyzeRequest(coordinate, target, javaVersion))
         spec.commandLine().out.println(ResultJson.encode(result))
         return if (result.status == ResultStatus.FAILED) ExitCode.ANALYSIS_FAILED else ExitCode.SUCCESS
     }

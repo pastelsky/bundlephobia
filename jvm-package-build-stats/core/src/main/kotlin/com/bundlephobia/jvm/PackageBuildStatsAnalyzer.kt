@@ -32,7 +32,6 @@ public class PackageBuildStatsAnalyzer
         public val config: PackageBuildStatsConfig = PackageBuildStatsConfig(),
     ) {
         private val archiveAnalyzer = JarArchiveAnalyzer()
-        private val classfileAnalyzer = JarClassfileAnalyzer()
         private var resolverClient: ResolverClient = GradleResolverClient(config)
 
         internal constructor(
@@ -48,12 +47,12 @@ public class PackageBuildStatsAnalyzer
             val stageTimings = linkedMapOf<String, Long>()
             val diagnostics = mutableListOf<Diagnostic>()
 
-            val resolutionTimed = measureTimedValue { resolverClient.resolve(request.coordinate) }
+            val resolutionTimed = measureTimedValue { resolverClient.resolve(request.coordinate, request.javaVersion) }
             stageTimings["resolution"] = resolutionTimed.duration.inWholeMilliseconds
             val resolverResult = resolutionTimed.value
             diagnostics += resolverResult.diagnostics
 
-            val cache = AnalysisCache(config.cacheDirectory, STATIC_ANALYZER_VERSION)
+            val cache = AnalysisCache(config.cacheDirectory, "$STATIC_ANALYZER_VERSION-java${request.javaVersion}")
             val evidence = mutableListOf<ArtifactEvidence>()
             val analysisTimed =
                 measureTimedValue {
@@ -63,7 +62,7 @@ public class PackageBuildStatsAnalyzer
                         .distinctBy { artifact -> artifact.digest.value }
                         .sortedBy { artifact -> artifact.digest.value }
                         .forEach { artifact ->
-                            analyzeArtifact(cache, artifact, diagnostics)?.let(evidence::add)
+                            analyzeArtifact(cache, artifact, request.javaVersion, diagnostics)?.let(evidence::add)
                         }
                 }
             stageTimings["artifact-analysis"] = analysisTimed.duration.inWholeMilliseconds
@@ -88,11 +87,18 @@ public class PackageBuildStatsAnalyzer
         }
 
         /** Inspects a local JAR without resolving dependencies or loading any classes. */
-        public fun inspect(path: Path): ArtifactAnalysis {
+        public fun inspect(path: Path): ArtifactAnalysis = inspect(path, DEFAULT_JAVA_VERSION)
+
+        /** Inspects a local JAR using the effective multi-release view for [javaVersion]. */
+        public fun inspect(
+            path: Path,
+            javaVersion: Int,
+        ): ArtifactAnalysis {
+            require(javaVersion >= 8) { "javaVersion must be at least 8" }
             val archive = archiveAnalyzer.analyze(path)
             if (archive.status != ResultStatus.COMPLETE) return archive
 
-            val classfiles = classfileAnalyzer.analyze(path)
+            val classfiles = JarClassfileAnalyzer(javaVersion).analyze(path)
             return archive.copy(
                 status = if (classfiles.diagnostics.isEmpty()) ResultStatus.COMPLETE else ResultStatus.PARTIAL,
                 namespaces = classfiles.namespaces,
@@ -104,6 +110,7 @@ public class PackageBuildStatsAnalyzer
         private fun analyzeArtifact(
             cache: AnalysisCache,
             artifact: ResolvedArtifact,
+            javaVersion: Int,
             diagnostics: MutableList<Diagnostic>,
         ): ArtifactEvidence? =
             try {
@@ -113,7 +120,7 @@ public class PackageBuildStatsAnalyzer
                         digest = artifact.digest.value,
                         displayName = artifact.fileName,
                         artifactPath = cachedPath,
-                        inspector = ::inspect,
+                        inspector = { path -> inspect(path, javaVersion) },
                     )
                 diagnostics += analysis.diagnostics
                 ArtifactEvidence(artifact, analysis)
@@ -164,6 +171,7 @@ public class PackageBuildStatsAnalyzer
                 status = status,
                 coordinate = request.coordinate,
                 target = request.target,
+                javaVersion = request.javaVersion,
                 toolchain = currentToolchain(),
                 resolution = enrichedResolution,
                 sizes =
@@ -349,5 +357,6 @@ public class PackageBuildStatsAnalyzer
             private const val NANOS_PER_MILLISECOND = 1_000_000
             private const val MAX_GRAPH_COMPONENTS = 10_000
             private const val MAX_GRAPH_EDGES = 50_000
+            private const val DEFAULT_JAVA_VERSION = 21
         }
     }

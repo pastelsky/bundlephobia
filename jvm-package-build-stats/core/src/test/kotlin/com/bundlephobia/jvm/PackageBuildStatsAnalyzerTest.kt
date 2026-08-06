@@ -191,7 +191,7 @@ class PackageBuildStatsAnalyzerTest {
                     gradleExecutable = executable,
                     resolutionTimeoutMilliseconds = 25,
                 ),
-            ).resolve(coordinate)
+            ).resolve(coordinate, 21)
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertEquals("RESOLUTION_TIMEOUT", result.diagnostics.single().code)
@@ -229,7 +229,7 @@ class PackageBuildStatsAnalyzerTest {
     private fun analyzer(resolution: JvmResolutionResult): PackageBuildStatsAnalyzer =
         PackageBuildStatsAnalyzer(
             config = PackageBuildStatsConfig(cacheDirectory = tempDir.resolve("cache")),
-            resolverClient = ResolverClient { resolution },
+            resolverClient = ResolverClient { _, _ -> resolution },
         )
 
     private fun resolution(

@@ -91,7 +91,13 @@ public data class AnalyzeRequest
     constructor(
         public val coordinate: MavenCoordinate,
         public val target: TargetProfile = TargetProfile.JVM_RUNTIME,
-    )
+        /** Consumer Java feature version used for variant and multi-release JAR selection. */
+        public val javaVersion: Int = 21,
+    ) {
+        init {
+            require(javaVersion >= 8) { "javaVersion must be at least 8" }
+        }
+    }
 
 @Serializable
 public data class ToolchainManifest(
@@ -244,6 +250,7 @@ public data class JvmResolutionResult(
     public val schemaVersion: Int = 1,
     public val status: ResultStatus,
     public val target: TargetProfile = TargetProfile.JVM_RUNTIME,
+    public val javaVersion: Int = 21,
     public val resolution: ResolutionStats,
     public val diagnostics: List<Diagnostic> = emptyList(),
 )
@@ -325,6 +332,7 @@ public data class PackageBuildStatsResult(
     public val status: ResultStatus,
     public val coordinate: MavenCoordinate,
     public val target: TargetProfile,
+    public val javaVersion: Int = 21,
     public val toolchain: ToolchainManifest,
     public val resolution: ResolutionStats,
     public val sizes: PackageSizeStats = PackageSizeStats(),

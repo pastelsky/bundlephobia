@@ -9,4 +9,5 @@ public object ResolverPluginClasspathAnchor {
     public const val PLUGIN_CLASS: String = "com.bundlephobia.jvm.resolver.JvmRuntimeResolverPlugin"
     public const val RESOLVE_TASK_NAME: String = "resolveJvmRuntime"
     public const val COORDINATE_PROPERTY: String = "jvmResolver.coordinate"
+    public const val JAVA_VERSION_PROPERTY: String = "jvmResolver.javaVersion"
 }

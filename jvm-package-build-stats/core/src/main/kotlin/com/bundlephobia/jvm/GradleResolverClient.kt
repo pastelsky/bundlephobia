@@ -17,24 +17,31 @@ import java.util.Comparator
 import java.util.concurrent.TimeUnit
 
 internal fun interface ResolverClient {
-    fun resolve(coordinate: MavenCoordinate): JvmResolutionResult
+    fun resolve(
+        coordinate: MavenCoordinate,
+        javaVersion: Int,
+    ): JvmResolutionResult
 }
 
 /** Runs the owned resolver plugin in an empty build whose repositories and tasks are sealed. */
 internal class GradleResolverClient(
     private val config: PackageBuildStatsConfig,
 ) : ResolverClient {
-    override fun resolve(coordinate: MavenCoordinate): JvmResolutionResult {
+    override fun resolve(
+        coordinate: MavenCoordinate,
+        javaVersion: Int,
+    ): JvmResolutionResult {
         val directory = Files.createTempDirectory("jvm-package-build-stats-")
         return try {
             writeBuild(directory)
-            runGradle(directory, coordinate)
+            runGradle(directory, coordinate, javaVersion)
         } catch (_: InterruptedException) {
             Thread.currentThread().interrupt()
-            failure(coordinate, "RESOLUTION_CANCELLED", "Resolution was cancelled", RetryClassification.RETRYABLE)
+            failure(coordinate, javaVersion, "RESOLUTION_CANCELLED", "Resolution was cancelled", RetryClassification.RETRYABLE)
         } catch (_: Exception) {
             failure(
                 coordinate,
+                javaVersion,
                 "RESOLVER_PROCESS_FAILED",
                 "The sealed Gradle resolver could not start or return a result",
                 RetryClassification.UNKNOWN,
@@ -91,6 +98,7 @@ internal class GradleResolverClient(
     private fun runGradle(
         directory: Path,
         coordinate: MavenCoordinate,
+        javaVersion: Int,
     ): JvmResolutionResult {
         val process =
             ProcessBuilder(
@@ -99,6 +107,7 @@ internal class GradleResolverClient(
                 "--console=plain",
                 ResolverPluginClasspathAnchor.RESOLVE_TASK_NAME,
                 "-P${ResolverPluginClasspathAnchor.COORDINATE_PROPERTY}=${coordinate.notation}",
+                "-P${ResolverPluginClasspathAnchor.JAVA_VERSION_PROPERTY}=$javaVersion",
             ).directory(directory.toFile())
                 .redirectOutput(directory.resolve("gradle.stdout").toFile())
                 .redirectError(directory.resolve("gradle.stderr").toFile())
@@ -115,6 +124,7 @@ internal class GradleResolverClient(
             stop(process)
             return failure(
                 coordinate,
+                javaVersion,
                 "RESOLUTION_TIMEOUT",
                 "Resolution exceeded ${config.resolutionTimeoutMilliseconds} ms",
                 RetryClassification.RETRYABLE,
@@ -125,6 +135,7 @@ internal class GradleResolverClient(
         if (Files.isRegularFile(resultFile)) return ResultJson.decodeResolution(Files.readString(resultFile))
         return failure(
             coordinate,
+            javaVersion,
             "RESOLVER_PROCESS_FAILED",
             "The sealed Gradle resolver exited with status ${process.exitValue()} without a result",
             RetryClassification.UNKNOWN,
@@ -149,12 +160,14 @@ internal class GradleResolverClient(
 
     private fun failure(
         coordinate: MavenCoordinate,
+        javaVersion: Int,
         code: String,
         summary: String,
         retry: RetryClassification,
     ): JvmResolutionResult =
         JvmResolutionResult(
             status = ResultStatus.FAILED,
+            javaVersion = javaVersion,
             resolution = ResolutionStats(coordinate),
             diagnostics =
                 listOf(

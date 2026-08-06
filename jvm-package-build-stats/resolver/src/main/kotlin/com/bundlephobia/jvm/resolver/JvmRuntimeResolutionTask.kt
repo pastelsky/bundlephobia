@@ -47,6 +47,10 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
     @get:Optional
     public abstract val coordinate: Property<String>
 
+    /** Consumer Java feature version used for Gradle variant selection. */
+    @get:Input
+    public abstract val javaVersion: Property<Int>
+
     /** Project repositories observed after the settings plugin sealed repository resolution. */
     @get:Input
     public abstract val forbiddenRepositories: ListProperty<String>
@@ -159,6 +163,7 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
 
         return JvmResolutionResult(
             status = if (diagnostics.isEmpty()) ResultStatus.COMPLETE else ResultStatus.FAILED,
+            javaVersion = javaVersion.get(),
             resolution =
                 ResolutionStats(
                     requested = requested,
@@ -286,6 +291,7 @@ public abstract class JvmRuntimeResolutionTask : DefaultTask() {
     ): JvmResolutionResult =
         JvmResolutionResult(
             status = ResultStatus.FAILED,
+            javaVersion = javaVersion.getOrElse(21),
             resolution = ResolutionStats(requested = requested, repositories = REPOSITORY_IDS),
             diagnostics = listOf(diagnostic(code, summary, retry)),
         )
