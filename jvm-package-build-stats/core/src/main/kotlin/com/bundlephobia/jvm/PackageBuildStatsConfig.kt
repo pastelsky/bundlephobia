@@ -28,6 +28,8 @@ public data class PackageBuildStatsConfig
         public val installMissingAndroidTooling: Boolean = false,
         /** Hard wall-clock limit for one Android CLI SDK installation. */
         public val androidToolingInstallTimeoutMilliseconds: Long = 180_000,
+        /** Hard wall-clock limit for unshrunk D8 measurement. */
+        public val androidDexTimeoutMilliseconds: Long = 120_000,
     ) {
         init {
             require(resolutionTimeoutMilliseconds > 0) { "resolutionTimeoutMilliseconds must be positive" }
@@ -40,6 +42,7 @@ public data class PackageBuildStatsConfig
             require(androidToolingInstallTimeoutMilliseconds > 0) {
                 "Android tooling install timeout must be positive"
             }
+            require(androidDexTimeoutMilliseconds > 0) { "Android DEX timeout must be positive" }
             require(!installMissingAndroidTooling || androidSdkRoot != null) {
                 "androidSdkRoot is required when Android tooling installation is enabled"
             }

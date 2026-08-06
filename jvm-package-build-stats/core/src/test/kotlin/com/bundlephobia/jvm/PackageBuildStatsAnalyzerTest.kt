@@ -1,6 +1,7 @@
 package com.bundlephobia.jvm
 
 import com.bundlephobia.jvm.model.AnalyzeRequest
+import com.bundlephobia.jvm.model.AndroidDexStatus
 import com.bundlephobia.jvm.model.ArtifactDigest
 import com.bundlephobia.jvm.model.DependencyEdge
 import com.bundlephobia.jvm.model.Diagnostic
@@ -444,6 +445,7 @@ class PackageBuildStatsAnalyzerTest {
         assertEquals("fixture.aar", result.directArtifact?.displayName)
         assertEquals(26, result.androidPreflight?.requiredMinSdk)
         assertEquals("android-36-stable", result.androidPreflight?.selectedProfile?.id)
+        assertEquals(AndroidDexStatus.SKIPPED, result.androidDex?.status)
         assertTrue(result.sizes.runtimeArchiveBytes > 0)
     }
 

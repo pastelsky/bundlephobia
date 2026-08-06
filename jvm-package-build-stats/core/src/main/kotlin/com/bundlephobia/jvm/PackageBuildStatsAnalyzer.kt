@@ -4,6 +4,7 @@ import com.bundlephobia.jvm.archive.JarArchiveAnalyzer
 import com.bundlephobia.jvm.classfile.JarClassfileAnalyzer
 import com.bundlephobia.jvm.model.AnalysisStage
 import com.bundlephobia.jvm.model.AnalyzeRequest
+import com.bundlephobia.jvm.model.AndroidDexStats
 import com.bundlephobia.jvm.model.AndroidPreflightStats
 import com.bundlephobia.jvm.model.ArtifactAnalysis
 import com.bundlephobia.jvm.model.DependencyPath
@@ -84,6 +85,21 @@ public class PackageBuildStatsAnalyzer
                 stageTimings["android-preflight"] = preflightTimed.duration.inWholeMilliseconds
             }
 
+            val dexTimed =
+                measureTimedValue {
+                    androidPreflight?.let { preflight ->
+                        AndroidDexAnalyzer(config)
+                            .analyze(resolverResult.resolution, preflight, cancellation)
+                            .also {
+                                diagnostics += it.diagnostics
+                            }.stats
+                    }
+                }
+            val androidDex = dexTimed.value
+            if (request.target == TargetProfile.ANDROID_RUNTIME) {
+                stageTimings["dex-analysis"] = dexTimed.duration.inWholeMilliseconds
+            }
+
             val evidence = mutableListOf<ArtifactEvidence>()
             val analysisTimed =
                 measureTimedValue {
@@ -111,6 +127,7 @@ public class PackageBuildStatsAnalyzer
                         resolverResult = resolverResult,
                         evidence = evidence,
                         androidPreflight = androidPreflight,
+                        androidDex = androidDex,
                         diagnostics = diagnostics,
                     )
                 }
@@ -188,6 +205,7 @@ public class PackageBuildStatsAnalyzer
             resolverResult: JvmResolutionResult,
             evidence: List<ArtifactEvidence>,
             androidPreflight: AndroidPreflightStats?,
+            androidDex: AndroidDexStats?,
             diagnostics: MutableList<Diagnostic>,
         ): PackageBuildStatsResult {
             diagnostics += conflictDiagnostics(resolverResult.resolution)
@@ -264,6 +282,7 @@ public class PackageBuildStatsAnalyzer
                 directArtifact = directArtifact,
                 runtimeClosure = closure,
                 androidPreflight = androidPreflight,
+                androidDex = androidDex,
                 diagnostics = compactDiagnostics,
                 diagnosticCount = distinctDiagnostics.size,
                 diagnosticsTruncated = distinctDiagnostics.size > compactDiagnostics.size,

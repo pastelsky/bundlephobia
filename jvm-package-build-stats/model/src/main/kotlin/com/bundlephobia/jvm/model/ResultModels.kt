@@ -74,6 +74,9 @@ public enum class AnalysisStage {
     @SerialName("toolchain-provisioning")
     TOOLCHAIN_PROVISIONING,
 
+    @SerialName("dex-analysis")
+    DEX_ANALYSIS,
+
     @SerialName("assembly")
     ASSEMBLY,
 }
@@ -223,6 +226,51 @@ public data class AndroidPreflightStats(
     public val artifactRequirementCount: Int = artifactRequirements.size,
     public val artifactRequirementsTruncated: Boolean = false,
 )
+
+@Serializable
+public enum class AndroidDexStatus {
+    @SerialName("complete")
+    COMPLETE,
+
+    @SerialName("skipped")
+    SKIPPED,
+
+    @SerialName("failed")
+    FAILED,
+}
+
+/** Whole-runtime-closure D8 output. Counts are unshrunk and summed across generated DEX files. */
+@Serializable
+public data class AndroidDexStats(
+    public val status: AndroidDexStatus,
+    public val dexBytes: Long? = null,
+    public val dexFiles: Int = 0,
+    public val referencedMethods: Long? = null,
+    public val maxReferencedMethodsPerDex: Long? = null,
+    public val referencedFields: Long? = null,
+    public val definedClasses: Long? = null,
+    public val multidex: Boolean = dexFiles > 1,
+    public val minSdk: Int,
+    public val buildToolsVersion: String,
+) {
+    init {
+        require(dexFiles >= 0) { "dexFiles must not be negative" }
+        require(listOfNotNull(dexBytes, referencedMethods, maxReferencedMethodsPerDex, referencedFields, definedClasses).all { it >= 0 }) {
+            "DEX measurements must not be negative"
+        }
+        require(multidex == (dexFiles > 1)) { "multidex must match dexFiles" }
+        require(minSdk > 0) { "DEX minSdk must be positive" }
+        require(buildToolsVersion.isNotBlank()) { "DEX Build Tools version must not be blank" }
+        if (status == AndroidDexStatus.COMPLETE) {
+            require(dexFiles > 0) { "Complete DEX statistics require at least one DEX file" }
+            requireNotNull(dexBytes) { "Complete DEX statistics require dexBytes" }
+            requireNotNull(referencedMethods) { "Complete DEX statistics require referencedMethods" }
+            requireNotNull(maxReferencedMethodsPerDex) { "Complete DEX statistics require maxReferencedMethodsPerDex" }
+            requireNotNull(referencedFields) { "Complete DEX statistics require referencedFields" }
+            requireNotNull(definedClasses) { "Complete DEX statistics require definedClasses" }
+        }
+    }
+}
 
 @Serializable
 public data class ArtifactDigest(
@@ -568,6 +616,7 @@ public data class PackageBuildStatsResult(
     public val directArtifact: ArtifactAnalysis? = null,
     public val runtimeClosure: RuntimeClosureStats = RuntimeClosureStats(),
     public val androidPreflight: AndroidPreflightStats? = null,
+    public val androidDex: AndroidDexStats? = null,
     public val diagnostics: List<Diagnostic> = emptyList(),
     public val diagnosticCount: Int = diagnostics.size,
     public val diagnosticsTruncated: Boolean = false,
