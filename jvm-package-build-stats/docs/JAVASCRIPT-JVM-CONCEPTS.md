@@ -102,6 +102,10 @@ stdout is redirected; `--pretty` and `--json` make that choice explicit.
 - With that profile ready, unshrunk DEX bytes and reference counts are measured
   by D8 over the complete runtime closure. This is the Android analogue of a
   reproducible package-level bundled measurement, not reachability analysis.
+- For Android AARs, classes, methods, fields, and classfile bytes physically
+  defined by the requested artifact are reported separately from the complete
+  closure. This is the package-attributable headline; DEX references remain the
+  deployable closure context.
 
 Per-member marginal byte size, whole-program reachability, ProGuard/R8 shrinker
 simulation, native-image reachability, and runtime memory are not claimed by

@@ -4,6 +4,8 @@ import com.bundlephobia.jvm.PackageBuildStatsAnalyzer
 import com.bundlephobia.jvm.PackageBuildStatsConfig
 import com.bundlephobia.jvm.model.AndroidDexStats
 import com.bundlephobia.jvm.model.AndroidDexStatus
+import com.bundlephobia.jvm.model.ArtifactAnalysis
+import com.bundlephobia.jvm.model.ClassfileStats
 import com.bundlephobia.jvm.model.MavenCoordinate
 import com.bundlephobia.jvm.model.PackageBuildStatsResult
 import com.bundlephobia.jvm.model.ResolutionSummary
@@ -101,6 +103,18 @@ class JvmPackageBuildStatsCliTest {
                         gradleVersion = "9.5.1",
                     ),
                 resolution = ResolutionSummary(coordinate),
+                directArtifact =
+                    ArtifactAnalysis(
+                        status = ResultStatus.COMPLETE,
+                        displayName = "fixture.aar",
+                        classfiles =
+                            ClassfileStats(
+                                analyzedClasses = 120,
+                                definedMethods = 1_200,
+                                definedFields = 240,
+                                classfileBytes = 524_288,
+                            ),
+                    ),
                 androidDex =
                     AndroidDexStats(
                         status = AndroidDexStatus.COMPLETE,
@@ -117,6 +131,8 @@ class JvmPackageBuildStatsCliTest {
 
         val output = TerminalRenderer(color = false).render(result)
 
+        assertTrue(output.contains("DIRECT LIBRARY CODE"))
+        assertTrue(output.contains("Defined methods        1200"))
         assertTrue(output.contains("DEX · D8 UNSHRUNK"))
         assertTrue(output.contains("Method references      70000"))
         assertTrue(output.contains("DEX files              2"))

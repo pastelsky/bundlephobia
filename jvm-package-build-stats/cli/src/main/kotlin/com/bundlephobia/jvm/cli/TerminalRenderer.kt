@@ -5,6 +5,7 @@ import com.bundlephobia.jvm.model.AndroidDexStatus
 import com.bundlephobia.jvm.model.AndroidPreflightStats
 import com.bundlephobia.jvm.model.ApiSurfaceStats
 import com.bundlephobia.jvm.model.ArtifactAnalysis
+import com.bundlephobia.jvm.model.ClassfileStats
 import com.bundlephobia.jvm.model.DependencySizeStats
 import com.bundlephobia.jvm.model.Diagnostic
 import com.bundlephobia.jvm.model.DiagnosticSeverity
@@ -35,6 +36,9 @@ internal class TerminalRenderer(
             metric("Dependencies", bytes(result.sizes.transitiveArtifactArchiveBytes))
 
             result.androidPreflight?.let { preflight -> androidPreflight(preflight) }
+            if (result.target == TargetProfile.ANDROID_RUNTIME) {
+                result.directArtifact?.classfiles?.let { classfiles -> directAndroidCode(classfiles) }
+            }
             result.androidDex?.let { dex -> androidDex(dex) }
 
             section("RUNTIME CLOSURE")
@@ -91,6 +95,14 @@ internal class TerminalRenderer(
         metric("Build Tools", dex.buildToolsVersion)
     }
 
+    private fun StringBuilder.directAndroidCode(classfiles: ClassfileStats) {
+        section("DIRECT LIBRARY CODE")
+        metric("Defined classes", classfiles.analyzedClasses.toString())
+        metric("Defined methods", classfiles.definedMethods.toString())
+        metric("Defined fields", classfiles.definedFields.toString())
+        metric("Classfile bytes", bytes(classfiles.classfileBytes))
+    }
+
     fun render(result: ArtifactAnalysis): String =
         buildString {
             title("JVM ARTIFACT STATS")
@@ -112,6 +124,9 @@ internal class TerminalRenderer(
             result.classfiles?.let { classfiles ->
                 section("CLASSFILES")
                 metric("Analyzed classes", classfiles.analyzedClasses.toString())
+                metric("Defined methods", classfiles.definedMethods.toString())
+                metric("Defined fields", classfiles.definedFields.toString())
+                metric("Classfile bytes", bytes(classfiles.classfileBytes))
                 metric("Implementation", classfiles.implementationClasses.toString())
                 metric("Kotlin metadata", classfiles.kotlinMetadataClasses.toString())
             }

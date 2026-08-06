@@ -120,6 +120,14 @@ temporary directory with count and byte limits, and generated DEX files are
 deleted after their bounded headers are read. Use `--android-dex-timeout` to
 override the D8 timeout.
 
+The requested AAR is also attributed separately: `directArtifact.classfiles`
+reports the classes, methods, fields, and classfile bytes physically defined by
+its `classes.jar` and embedded `libs/*.jar`. Pretty output shows these as
+`DIRECT LIBRARY CODE` before the closure-wide DEX section. Defined methods
+include constructors, static initializers, and compiler-generated methods; they
+are an ownership count, not a prediction of what R8 will retain in a specific
+application.
+
 These are canonical unshrunk D8 measurements, not an estimate. R8-shrunk counts
 are intentionally not reported yet because a meaningful shrink result requires
 an explicit consumer entry-point and keep-rule policy.
