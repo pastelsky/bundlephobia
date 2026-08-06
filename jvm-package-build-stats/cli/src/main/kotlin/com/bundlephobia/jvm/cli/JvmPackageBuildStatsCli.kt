@@ -92,6 +92,26 @@ private class AnalyzeCommand(
     @Option(names = ["--resolution-timeout"], paramLabel = "MILLISECONDS", description = ["Resolution timeout in milliseconds."])
     private var resolutionTimeoutMilliseconds: Long? = null
 
+    @Option(names = ["--android-sdk-root"], paramLabel = "DIRECTORY", description = ["Android SDK root used for tooling checks."])
+    private var androidSdkRoot: Path? = null
+
+    @Option(names = ["--sdkmanager"], paramLabel = "FILE", description = ["sdkmanager executable used for opt-in SDK provisioning."])
+    private var sdkManagerExecutable: Path? = null
+
+    @Option(
+        names = ["--install-missing-android-tooling"],
+        description = ["Install only the platform and Build Tools selected by Android preflight."],
+    )
+    private var installMissingAndroidTooling: Boolean = false
+
+    @Option(
+        names = ["--android-min-sdk"],
+        defaultValue = "23",
+        paramLabel = "API",
+        description = ["Baseline minSdk; metadata may raise it."],
+    )
+    private var androidBaselineMinSdk: Int = 23
+
     @Mixin private lateinit var outputOptions: OutputOptions
 
     override fun call(): Int {
@@ -99,6 +119,9 @@ private class AnalyzeCommand(
         val target = parseTarget(targetValue)
         if (javaVersion < 8) {
             throw CommandLine.ParameterException(spec.commandLine(), "Java version must be at least 8")
+        }
+        if (target != TargetProfile.ANDROID_RUNTIME && androidOptionsPresent()) {
+            throw CommandLine.ParameterException(spec.commandLine(), "Android tooling options require --target android-runtime")
         }
         val result = configuredAnalyzer().analyze(AnalyzeRequest(coordinate, target, javaVersion))
         outputOptions.write(
@@ -125,7 +148,7 @@ private class AnalyzeCommand(
         }
 
     private fun configuredAnalyzer(): PackageBuildStatsAnalyzer {
-        if (gradleExecutable == null && resolutionTimeoutMilliseconds == null) {
+        if (gradleExecutable == null && resolutionTimeoutMilliseconds == null && !androidOptionsPresent()) {
             return analyzer ?: PackageBuildStatsAnalyzer()
         }
         val defaults = PackageBuildStatsConfig()
@@ -137,9 +160,19 @@ private class AnalyzeCommand(
             PackageBuildStatsConfig(
                 gradleExecutable = gradleExecutable,
                 resolutionTimeoutMilliseconds = timeout,
+                androidBaselineMinSdk = androidBaselineMinSdk,
+                androidSdkRoot = androidSdkRoot,
+                androidSdkManagerExecutable = sdkManagerExecutable,
+                installMissingAndroidTooling = installMissingAndroidTooling,
             ),
         )
     }
+
+    private fun androidOptionsPresent(): Boolean =
+        androidSdkRoot != null ||
+            sdkManagerExecutable != null ||
+            installMissingAndroidTooling ||
+            androidBaselineMinSdk != PackageBuildStatsConfig().androidBaselineMinSdk
 }
 
 @Command(

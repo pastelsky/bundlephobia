@@ -6,19 +6,19 @@ different ecosystems into the same measurement model.
 
 ## Concept map
 
-| Developer question | Node/package-build-stats | JVM equivalent | JVM result field |
-| --- | --- | --- | --- |
-| What is the package's headline weight? | Built main asset after bundling | Selected runtime JARs as published | `sizes.runtimeArchiveBytes` |
-| What belongs to the requested package? | Main package contribution | JARs selected for the requested coordinate | `sizes.directArtifactArchiveBytes` |
-| What do dependencies add? | Bundler dependency contribution | Selected transitive runtime JARs | `sizes.transitiveArtifactArchiveBytes` |
-| What is the expanded payload? | Bundler/module output | Uncompressed entries inside selected JARs | `sizes.runtimeExpandedBytes` |
-| Which dependency contributes each byte total? | Dependency size tree | Exact selected-component totals and shortest paths | `dependencySizes` |
-| What can consumers call? | ESM/CommonJS exports | Aggregate public/protected JVM types and members | `apiSurface.publicTypes`, `apiSurface.publicMembers` |
-| Which API types are physically largest? | Independently tree-shaken export bundle | Largest visible classfiles, not marginal export sizes | `apiSurface.largestTypes[].classfileBytes` |
-| Which module boundary applies? | ESM/CommonJS package entry points | Explicit, automatic, or unnamed JPMS module | `module.kind` |
-| Which namespaces are exported? | Package export map | JPMS exports, including qualified exports | `module.exports` |
-| Which runtime variant was selected? | Conditional exports and bundler target | Gradle attributes, capabilities, Java target, and multi-release view | `resolution.components[].variants`, `javaVersion` |
-| Is unused code removable? | Bundler tree shaking | No general JVM equivalent; report API versus implementation classes and dynamic-linkage evidence | `classfiles`, `apiSurface` |
+| Developer question                            | Node/package-build-stats                | JVM equivalent                                                                                   | JVM result field                                     |
+| --------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| What is the package's headline weight?        | Built main asset after bundling         | Selected runtime JARs as published                                                               | `sizes.runtimeArchiveBytes`                          |
+| What belongs to the requested package?        | Main package contribution               | JARs selected for the requested coordinate                                                       | `sizes.directArtifactArchiveBytes`                   |
+| What do dependencies add?                     | Bundler dependency contribution         | Selected transitive runtime JARs                                                                 | `sizes.transitiveArtifactArchiveBytes`               |
+| What is the expanded payload?                 | Bundler/module output                   | Uncompressed entries inside selected JARs                                                        | `sizes.runtimeExpandedBytes`                         |
+| Which dependency contributes each byte total? | Dependency size tree                    | Exact selected-component totals and shortest paths                                               | `dependencySizes`                                    |
+| What can consumers call?                      | ESM/CommonJS exports                    | Aggregate public/protected JVM types and members                                                 | `apiSurface.publicTypes`, `apiSurface.publicMembers` |
+| Which API types are physically largest?       | Independently tree-shaken export bundle | Largest visible classfiles, not marginal export sizes                                            | `apiSurface.largestTypes[].classfileBytes`           |
+| Which module boundary applies?                | ESM/CommonJS package entry points       | Explicit, automatic, or unnamed JPMS module                                                      | `module.kind`                                        |
+| Which namespaces are exported?                | Package export map                      | JPMS exports, including qualified exports                                                        | `module.exports`                                     |
+| Which runtime variant was selected?           | Conditional exports and bundler target  | Gradle attributes, capabilities, Java target, and multi-release view                             | `resolution.components[].variants`, `javaVersion`    |
+| Is unused code removable?                     | Bundler tree shaking                    | No general JVM equivalent; report API versus implementation classes and dynamic-linkage evidence | `classfiles`, `apiSurface`                           |
 
 ## Size terminology
 
@@ -96,8 +96,11 @@ stdout is redirected; `--pretty` and `--json` make that choice explicit.
   diagnostic.
 - Persistent caching and result retention belong to the calling service, not
   this analysis library.
+- Android runtime selection and compatibility preflight are package-level
+  operations. Declared AAR requirements select a pinned stable or preview SDK
+  profile before any compiler, D8, or R8 process is started.
 
 Per-member marginal byte size, whole-program reachability, ProGuard/R8 shrinker
-simulation, Android variants, native-image reachability, and runtime memory are
+simulation and DEX counts, native-image reachability, and runtime memory are
 not claimed by the current schema. Those require an explicit consumer program
 and toolchain policy rather than package-only static analysis.

@@ -119,12 +119,21 @@ class JvmPackageBuildStatsCliTest {
     }
 
     @Test
-    fun `Android targets are rejected`() {
+    fun `unknown targets are rejected`() {
         val execution = execute("analyze", "g:a:1", "--target", "android-release")
 
         assertEquals(ExitCode.USAGE, execution.exitCode)
         assertEquals("", execution.stdout)
         assertTrue(execution.stderr.contains("Unsupported target profile"))
+    }
+
+    @Test
+    fun `Android tooling options require the Android target`() {
+        val execution = execute("analyze", "g:a:1", "--android-sdk-root", tempDir.toString())
+
+        assertEquals(ExitCode.USAGE, execution.exitCode)
+        assertEquals("", execution.stdout)
+        assertTrue(execution.stderr.contains("require --target android-runtime"))
     }
 
     @Test
