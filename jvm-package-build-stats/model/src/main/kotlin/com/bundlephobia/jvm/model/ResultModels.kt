@@ -19,13 +19,24 @@ public enum class ResultStatus {
 public enum class TargetProfile {
     @SerialName("jvm-runtime")
     JVM_RUNTIME,
+
+    @SerialName("android-runtime")
+    ANDROID_RUNTIME,
     ;
+
+    public val serializedValue: String
+        get() =
+            when (this) {
+                JVM_RUNTIME -> "jvm-runtime"
+                ANDROID_RUNTIME -> "android-runtime"
+            }
 
     public companion object {
         @JvmStatic
         public fun parse(value: String): TargetProfile =
             when (value) {
                 "jvm-runtime" -> JVM_RUNTIME
+                "android-runtime" -> ANDROID_RUNTIME
                 else -> throw IllegalArgumentException("Unsupported target profile: $value")
             }
     }
@@ -56,6 +67,12 @@ public enum class AnalysisStage {
 
     @SerialName("classfile-analysis")
     CLASSFILE_ANALYSIS,
+
+    @SerialName("android-preflight")
+    ANDROID_PREFLIGHT,
+
+    @SerialName("toolchain-provisioning")
+    TOOLCHAIN_PROVISIONING,
 
     @SerialName("assembly")
     ASSEMBLY,
@@ -107,6 +124,104 @@ public data class ToolchainManifest(
     public val jdkVendor: String,
     public val kotlinVersion: String,
     public val gradleVersion: String,
+)
+
+@Serializable
+public enum class AndroidSdkChannel {
+    @SerialName("stable")
+    STABLE,
+
+    @SerialName("preview")
+    PREVIEW,
+}
+
+/** One immutable Android build environment supported by the analyzer. */
+@Serializable
+public data class AndroidToolchainProfile
+    @JvmOverloads
+    constructor(
+        public val id: String,
+        public val compileSdk: Int,
+        public val targetSdk: Int,
+        public val buildToolsVersion: String,
+        public val agpVersion: String,
+        public val gradleVersion: String,
+        public val compileSdkExtension: Int = 0,
+        public val compileSdkPreview: String? = null,
+        public val jdkVersion: Int = 17,
+        public val channel: AndroidSdkChannel = AndroidSdkChannel.STABLE,
+    ) {
+        init {
+            require(id.isNotBlank()) { "Android profile id must not be blank" }
+            require(compileSdk > 0) { "compileSdk must be positive" }
+            require(compileSdkExtension >= 0) { "compileSdkExtension must not be negative" }
+            require(compileSdkPreview == null || compileSdkPreview.matches(Regex("[A-Za-z][A-Za-z0-9_]*"))) {
+                "compileSdkPreview is invalid"
+            }
+            require(targetSdk > 0) { "targetSdk must be positive" }
+            require(buildToolsVersion.matches(Regex("\\d+\\.\\d+\\.\\d+"))) { "Build Tools version must be numeric" }
+            require(agpVersion.matches(Regex("\\d+(?:\\.\\d+)+(?:[-.][A-Za-z0-9]+)*"))) { "AGP version is invalid" }
+            require(gradleVersion.matches(Regex("\\d+(?:\\.\\d+)+(?:[-.][A-Za-z0-9]+)*"))) { "Gradle version is invalid" }
+            require(jdkVersion >= 17) { "Android toolchains require JDK 17 or newer" }
+        }
+    }
+
+@Serializable
+public enum class AndroidRequirementConfidence {
+    @SerialName("declared")
+    DECLARED,
+
+    @SerialName("inferred")
+    INFERRED,
+
+    @SerialName("unknown")
+    UNKNOWN,
+}
+
+@Serializable
+public enum class AndroidToolingStatus {
+    @SerialName("ready")
+    READY,
+
+    @SerialName("missing")
+    MISSING,
+
+    @SerialName("installed")
+    INSTALLED,
+
+    @SerialName("unsupported")
+    UNSUPPORTED,
+}
+
+/** Bounded compatibility evidence from one selected Android runtime artifact. */
+@Serializable
+public data class AndroidArtifactRequirement(
+    public val coordinate: MavenCoordinate,
+    public val fileName: String,
+    public val minSdk: Int? = null,
+    public val minCompileSdk: Int? = null,
+    public val minCompileSdkExtension: Int? = null,
+    public val compileSdkPreview: String? = null,
+    public val minAgpVersion: String? = null,
+    public val metadataDeclared: Boolean = false,
+)
+
+/** Requirements calculated before any Android compilation, D8, or R8 work starts. */
+@Serializable
+public data class AndroidPreflightStats(
+    public val requiredMinSdk: Int,
+    public val requiredCompileSdk: Int,
+    public val requiredCompileSdkExtension: Int = 0,
+    public val requiredCompileSdkPreview: String? = null,
+    public val requiredAgpVersion: String? = null,
+    public val confidence: AndroidRequirementConfidence,
+    public val selectedProfile: AndroidToolchainProfile? = null,
+    public val effectiveMinSdk: Int = requiredMinSdk,
+    public val toolingStatus: AndroidToolingStatus,
+    public val missingToolingPackages: List<String> = emptyList(),
+    public val artifactRequirements: List<AndroidArtifactRequirement> = emptyList(),
+    public val artifactRequirementCount: Int = artifactRequirements.size,
+    public val artifactRequirementsTruncated: Boolean = false,
 )
 
 @Serializable
@@ -363,9 +478,9 @@ public data class JvmResolutionResult(
 
 @Serializable
 public data class RuntimeClosureStats(
-    /** Bytes occupied by every unique runtime JAR, including the requested artifact. */
+    /** Bytes occupied by every unique runtime archive, including the requested artifact. */
     public val archiveBytes: Long = 0,
-    /** Sum of uncompressed entry bytes across every unique runtime JAR. */
+    /** Sum of uncompressed entry bytes across every unique runtime archive. */
     public val expandedBytes: Long = 0,
     /** Archive bytes belonging to the requested component. */
     public val directArtifactBytes: Long = 0,
@@ -379,16 +494,16 @@ public data class RuntimeClosureStats(
     public val shortestPaths: List<DependencyPath> = emptyList(),
     public val shortestPathCount: Int = shortestPaths.size,
     public val shortestPathsTruncated: Boolean = false,
-    /** Up to ten largest transitive runtime JARs, ordered by archive bytes. */
+    /** Up to ten largest transitive runtime archives, ordered by archive bytes. */
     public val largestTransitiveArtifacts: List<RuntimeArtifactSummary> = emptyList(),
 )
 
 /** Headline package-size measurements for the selected JVM runtime closure. */
 @Serializable
 public data class PackageSizeStats(
-    /** Complete bytes of every unique selected runtime JAR. */
+    /** Complete bytes of every unique selected runtime archive. */
     public val runtimeArchiveBytes: Long = 0,
-    /** Sum of uncompressed entry bytes across every unique selected runtime JAR. */
+    /** Sum of uncompressed entry bytes across every unique selected runtime archive. */
     public val runtimeExpandedBytes: Long = 0,
     /** Complete archive bytes belonging to the requested coordinate. */
     public val directArtifactArchiveBytes: Long = 0,
@@ -452,6 +567,7 @@ public data class PackageBuildStatsResult(
     public val artifactsTruncated: Boolean = false,
     public val directArtifact: ArtifactAnalysis? = null,
     public val runtimeClosure: RuntimeClosureStats = RuntimeClosureStats(),
+    public val androidPreflight: AndroidPreflightStats? = null,
     public val diagnostics: List<Diagnostic> = emptyList(),
     public val diagnosticCount: Int = diagnostics.size,
     public val diagnosticsTruncated: Boolean = false,

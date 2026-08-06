@@ -1,5 +1,6 @@
 package com.bundlephobia.jvm.resolver
 
+import com.bundlephobia.jvm.model.TargetProfile
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -61,10 +62,13 @@ public class JvmRuntimeResolverPlugin : Plugin<Settings> {
                 .gradleProperty(JAVA_VERSION_PROPERTY)
                 .map(String::toInt)
                 .orElse(DEFAULT_TARGET_JVM_VERSION)
-        val runtimeConfiguration = runtimeConfiguration(project, coordinate, javaVersion)
+        val target = project.providers.gradleProperty(TARGET_PROPERTY).orElse(TargetProfile.JVM_RUNTIME.serializedValue)
+        val parsedTarget = TargetProfile.parse(target.get())
+        val runtimeConfiguration = runtimeConfiguration(project, coordinate, javaVersion, parsedTarget)
         project.tasks.register(RESOLVE_TASK_NAME, JvmRuntimeResolutionTask::class.java) { task ->
             task.coordinate.convention(coordinate)
             task.javaVersion.convention(javaVersion)
+            task.target.convention(target)
             task.forbiddenRepositories.convention(state.forbiddenRepositories)
             task.outputFile.convention(project.layout.buildDirectory.file("jvm-resolver/result.json"))
             task.resolutionConfiguration = runtimeConfiguration
@@ -75,6 +79,7 @@ public class JvmRuntimeResolverPlugin : Plugin<Settings> {
         project: Project,
         coordinate: Provider<String>,
         javaVersion: Provider<Int>,
+        target: TargetProfile,
     ): Configuration =
         project.configurations
             .resolvable("jvmResolverRuntime") { configuration ->
@@ -87,17 +92,26 @@ public class JvmRuntimeResolverPlugin : Plugin<Settings> {
                 configuration.attributes {
                     it.attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage::class.java, Usage.JAVA_RUNTIME))
                     it.attribute(Category.CATEGORY_ATTRIBUTE, project.objects.named(Category::class.java, Category.LIBRARY))
-                    it.attribute(
-                        LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
-                        project.objects.named(LibraryElements::class.java, LibraryElements.JAR),
-                    )
+                    if (target == TargetProfile.JVM_RUNTIME) {
+                        it.attribute(
+                            LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                            project.objects.named(LibraryElements::class.java, LibraryElements.JAR),
+                        )
+                    }
                     it.attribute(
                         Bundling.BUNDLING_ATTRIBUTE,
                         project.objects.named(Bundling::class.java, Bundling.EXTERNAL),
                     )
                     it.attribute(
                         TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
-                        project.objects.named(TargetJvmEnvironment::class.java, TargetJvmEnvironment.STANDARD_JVM),
+                        project.objects.named(
+                            TargetJvmEnvironment::class.java,
+                            if (target == TargetProfile.ANDROID_RUNTIME) {
+                                TargetJvmEnvironment.ANDROID
+                            } else {
+                                TargetJvmEnvironment.STANDARD_JVM
+                            },
+                        ),
                     )
                     it.attributeProvider(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, javaVersion)
                 }
@@ -108,6 +122,7 @@ public class JvmRuntimeResolverPlugin : Plugin<Settings> {
         public const val RESOLVE_TASK_NAME: String = "resolveJvmRuntime"
         public const val COORDINATE_PROPERTY: String = "jvmResolver.coordinate"
         public const val JAVA_VERSION_PROPERTY: String = "jvmResolver.javaVersion"
+        public const val TARGET_PROPERTY: String = "jvmResolver.target"
         public const val MAVEN_CENTRAL_ID: String = "maven-central"
         public const val GOOGLE_MAVEN_ID: String = "google-maven"
         private const val DEFAULT_TARGET_JVM_VERSION: Int = 21

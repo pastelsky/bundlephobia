@@ -11,6 +11,7 @@ import com.bundlephobia.jvm.model.ResolvedArtifact
 import com.bundlephobia.jvm.model.ResolvedComponent
 import com.bundlephobia.jvm.model.ResultJson
 import com.bundlephobia.jvm.model.ResultStatus
+import com.bundlephobia.jvm.model.TargetProfile
 import com.bundlephobia.jvm.model.TimingStats
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -281,7 +282,7 @@ class PackageBuildStatsAnalyzerTest {
                     gradleExecutable = executable,
                     resolutionTimeoutMilliseconds = 25,
                 ),
-            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
+            ).resolve(coordinate, TargetProfile.JVM_RUNTIME, 21, AnalysisCancellation.NONE)
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertEquals("RESOLUTION_TIMEOUT", result.diagnostics.single().code)
@@ -308,7 +309,12 @@ class PackageBuildStatsAnalyzerTest {
                 PackageBuildStatsConfig(
                     gradleExecutable = executable,
                 ),
-            ).resolve(coordinate, 21, AnalysisCancellation { System.nanoTime() - started > 50_000_000 })
+            ).resolve(
+                coordinate,
+                TargetProfile.JVM_RUNTIME,
+                21,
+                AnalysisCancellation { System.nanoTime() - started > 50_000_000 },
+            )
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertEquals("RESOLUTION_CANCELLED", result.diagnostics.single().code)
@@ -336,7 +342,7 @@ class PackageBuildStatsAnalyzerTest {
                     temporaryDirectory = temporaryDirectory,
                     diagnosticOutputLimitBytes = 128,
                 ),
-            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
+            ).resolve(coordinate, TargetProfile.JVM_RUNTIME, 21, AnalysisCancellation.NONE)
 
         assertEquals(ResultStatus.FAILED, result.status)
         assertTrue(
@@ -368,7 +374,7 @@ class PackageBuildStatsAnalyzerTest {
                     gradleExecutable = executable,
                     diagnosticOutputLimitBytes = 1_024,
                 ),
-            ).resolve(coordinate, 21, AnalysisCancellation.NONE)
+            ).resolve(coordinate, TargetProfile.JVM_RUNTIME, 21, AnalysisCancellation.NONE)
 
         assertTrue(
             result.diagnostics
@@ -409,7 +415,7 @@ class PackageBuildStatsAnalyzerTest {
     private fun analyzer(resolution: JvmResolutionResult): PackageBuildStatsAnalyzer =
         PackageBuildStatsAnalyzer(
             config = PackageBuildStatsConfig(),
-            resolverClient = ResolverClient { _, _, _ -> resolution },
+            resolverClient = ResolverClient { _, _, _, _ -> resolution },
         )
 
     private fun resolution(

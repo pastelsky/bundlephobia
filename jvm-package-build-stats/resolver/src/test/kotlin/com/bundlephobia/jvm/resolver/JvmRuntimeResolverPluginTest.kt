@@ -3,6 +3,7 @@ package com.bundlephobia.jvm.resolver
 import com.bundlephobia.jvm.model.JvmResolutionResult
 import com.bundlephobia.jvm.model.ResultJson
 import com.bundlephobia.jvm.model.ResultStatus
+import com.bundlephobia.jvm.model.TargetProfile
 import org.gradle.testkit.runner.GradleRunner
 import java.nio.file.Files
 import java.nio.file.Path
@@ -65,6 +66,16 @@ class JvmRuntimeResolverPluginTest {
     }
 
     @Test
+    fun `accepts AARs for an Android runtime target`() {
+        val result = resolve("androidx.recyclerview:recyclerview:1.4.0", TargetProfile.ANDROID_RUNTIME)
+
+        assertEquals(ResultStatus.COMPLETE, result.status, result.diagnostics.toString())
+        assertEquals(TargetProfile.ANDROID_RUNTIME, result.target)
+        assertTrue(result.resolution.artifacts.any { it.extension == "aar" })
+        assertTrue(result.diagnostics.none { it.code == "UNSUPPORTED_RUNTIME_ARTIFACT" })
+    }
+
+    @Test
     fun `returns stable diagnostics for an unresolved dependency`() {
         val result = resolve("com.bundlephobia.missing:definitely-not-published:1.0.0")
 
@@ -105,6 +116,7 @@ class JvmRuntimeResolverPluginTest {
 
     private fun resolve(
         coordinate: String,
+        target: TargetProfile = TargetProfile.JVM_RUNTIME,
         buildScript: String = "",
     ): JvmResolutionResult {
         val projectDirectory = Files.createTempDirectory("jvm-resolver-test-")
@@ -133,6 +145,7 @@ class JvmRuntimeResolverPluginTest {
             .withArguments(
                 JvmRuntimeResolverPlugin.RESOLVE_TASK_NAME,
                 "-P${JvmRuntimeResolverPlugin.COORDINATE_PROPERTY}=$coordinate",
+                "-P${JvmRuntimeResolverPlugin.TARGET_PROPERTY}=${target.serializedValue}",
                 "--stacktrace",
             ).build()
 
