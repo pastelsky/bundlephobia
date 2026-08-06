@@ -199,6 +199,41 @@ class PackageBuildStatsAnalyzerTest {
     }
 
     @Test
+    fun `resolver failures retain bounded stderr and clean their configured temporary directory`() {
+        val executable = tempDir.resolve("failing-gradle")
+        Files.writeString(executable, "#!/bin/sh\necho 'fixture resolution detail' >&2\nexit 7\n")
+        Files.setPosixFilePermissions(
+            executable,
+            setOf(
+                PosixFilePermission.OWNER_READ,
+                PosixFilePermission.OWNER_WRITE,
+                PosixFilePermission.OWNER_EXECUTE,
+            ),
+        )
+        val temporaryDirectory = tempDir.resolve("resolver-temporary")
+        val coordinate = MavenCoordinate.parse("example:failed:1.0")
+
+        val result =
+            GradleResolverClient(
+                PackageBuildStatsConfig(
+                    cacheDirectory = tempDir.resolve("cache"),
+                    gradleExecutable = executable,
+                    temporaryDirectory = temporaryDirectory,
+                    diagnosticOutputLimitBytes = 128,
+                ),
+            ).resolve(coordinate, 21)
+
+        assertEquals(ResultStatus.FAILED, result.status)
+        assertTrue(
+            result.diagnostics
+                .single()
+                .summary
+                .contains("fixture resolution detail"),
+        )
+        assertTrue(Files.list(temporaryDirectory).use { paths -> paths.findAny().isEmpty })
+    }
+
+    @Test
     fun `returns a structured input failure for a missing local jar`() {
         val result = PackageBuildStatsAnalyzer().inspect(Path.of("example.jar"))
 

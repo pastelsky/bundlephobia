@@ -31,7 +31,11 @@ internal class GradleResolverClient(
         coordinate: MavenCoordinate,
         javaVersion: Int,
     ): JvmResolutionResult {
-        val directory = Files.createTempDirectory("jvm-package-build-stats-")
+        val directory =
+            config.temporaryDirectory?.let { parent ->
+                Files.createDirectories(parent)
+                Files.createTempDirectory(parent, "jvm-package-build-stats-")
+            } ?: Files.createTempDirectory("jvm-package-build-stats-")
         return try {
             writeBuild(directory)
             runGradle(directory, coordinate, javaVersion)
@@ -133,11 +137,13 @@ internal class GradleResolverClient(
 
         val resultFile = directory.resolve("build/jvm-resolver/result.json")
         if (Files.isRegularFile(resultFile)) return ResultJson.decodeResolution(Files.readString(resultFile))
+        val stderr = diagnosticTail(directory.resolve("gradle.stderr"))
+        val detail = if (stderr.isEmpty()) "" else ": $stderr"
         return failure(
             coordinate,
             javaVersion,
             "RESOLVER_PROCESS_FAILED",
-            "The sealed Gradle resolver exited with status ${process.exitValue()} without a result",
+            "The sealed Gradle resolver exited with status ${process.exitValue()} without a result$detail",
             RetryClassification.UNKNOWN,
         )
     }
@@ -190,6 +196,20 @@ internal class GradleResolverClient(
     private fun stop(process: Process) {
         process.destroy()
         if (!process.waitFor(PROCESS_SHUTDOWN_SECONDS, TimeUnit.SECONDS)) process.destroyForcibly()
+    }
+
+    private fun diagnosticTail(path: Path): String {
+        if (config.diagnosticOutputLimitBytes == 0 || !Files.isRegularFile(path)) return ""
+        val bytes = Files.readAllBytes(path)
+        val start = (bytes.size - config.diagnosticOutputLimitBytes).coerceAtLeast(0)
+        return bytes
+            .copyOfRange(start, bytes.size)
+            .toString(Charsets.UTF_8)
+            .lineSequence()
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .joinToString(" | ")
+            .take(config.diagnosticOutputLimitBytes)
     }
 
     private fun Path.escapeKotlinString(): String = toString().replace("\\", "\\\\").replace("\"", "\\\"")

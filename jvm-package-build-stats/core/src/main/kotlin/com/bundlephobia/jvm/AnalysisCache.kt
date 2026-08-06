@@ -21,7 +21,10 @@ internal class AnalysisCache(
     fun materialize(artifact: ResolvedArtifact): Path {
         require(artifact.digest.algorithm == "sha256") { "Unsupported digest ${artifact.digest.algorithm}" }
         val target = digestPath(root.resolve("artifacts/sha256"), artifact.digest.value, ".jar")
-        if (Files.isRegularFile(target)) return target
+        if (Files.isRegularFile(target)) {
+            if (sha256(target) == artifact.digest.value) return target
+            Files.deleteIfExists(target)
+        }
 
         Files.createDirectories(target.parent)
         val temporary = Files.createTempFile(target.parent, ".${artifact.digest.value}.", ".tmp")
@@ -57,9 +60,12 @@ internal class AnalysisCache(
         digest: String,
     ): ArtifactAnalysis? {
         if (!Files.isRegularFile(path)) return null
-        return runCatching { ResultJson.decodeArtifactAnalysis(Files.readString(path)) }
-            .getOrNull()
-            ?.takeIf { analysis -> analysis.digest?.value == digest }
+        val analysis =
+            runCatching { ResultJson.decodeArtifactAnalysis(Files.readString(path)) }
+                .getOrNull()
+                ?.takeIf { analysis -> analysis.digest?.value == digest }
+        if (analysis == null) Files.deleteIfExists(path)
+        return analysis
     }
 
     private fun write(
@@ -84,7 +90,11 @@ internal class AnalysisCache(
         try {
             Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE)
         } catch (_: AtomicMoveNotSupportedException) {
-            if (!Files.exists(target)) Files.move(temporary, target)
+            try {
+                Files.move(temporary, target)
+            } catch (_: FileAlreadyExistsException) {
+                // A concurrent analyzer published the same immutable digest first.
+            }
         } catch (_: FileAlreadyExistsException) {
             // A concurrent analyzer published the same immutable digest first.
         }
