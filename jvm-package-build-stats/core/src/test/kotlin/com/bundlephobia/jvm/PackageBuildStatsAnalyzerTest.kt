@@ -213,12 +213,52 @@ class PackageBuildStatsAnalyzerTest {
     }
 
     @Test
-    fun `reports when resolution selects no analyzable JVM jar`() {
+    fun `does not attribute transitive jars to a requested non-jar artifact`() {
         val root = MavenCoordinate.parse("example:android-only:1.0")
-        val result = analyzer(resolution(root, emptyList())).analyze(AnalyzeRequest(root))
+        val dependency = MavenCoordinate.parse("example:jvm-dependency:1.0")
+        val rootAar = tempDir.resolve("android-only.aar").also { path -> Files.write(path, byteArrayOf(1)) }
+        val dependencyJar = jar("jvm-dependency.jar", 10)
+        val resolution =
+            JvmResolutionResult(
+                status = ResultStatus.PARTIAL,
+                resolution =
+                    ResolutionStats(
+                        requested = root,
+                        components =
+                            listOf(
+                                ResolvedComponent(root, requested = true),
+                                ResolvedComponent(dependency, requested = false),
+                            ),
+                        edges = listOf(DependencyEdge(root, dependency.notation, dependency)),
+                        artifacts =
+                            listOf(
+                                ResolvedArtifact(
+                                    coordinate = root,
+                                    fileName = rootAar.fileName.toString(),
+                                    path = rootAar.toString(),
+                                    extension = "aar",
+                                    variant = "runtime",
+                                    digest = ArtifactDigest(value = sha256(rootAar)),
+                                ),
+                                ResolvedArtifact(
+                                    coordinate = dependency,
+                                    fileName = dependencyJar.fileName.toString(),
+                                    path = dependencyJar.toString(),
+                                    extension = "jar",
+                                    variant = "runtime",
+                                    digest = ArtifactDigest(value = sha256(dependencyJar)),
+                                ),
+                            ),
+                    ),
+            )
 
-        assertEquals(ResultStatus.FAILED, result.status)
+        val result = analyzer(resolution).analyze(AnalyzeRequest(root))
+
+        assertEquals(ResultStatus.PARTIAL, result.status)
+        assertEquals(null, result.directArtifact)
+        assertTrue(result.dependencySizes.none { it.requested })
         assertTrue(result.diagnostics.any { diagnostic -> diagnostic.code == "REQUESTED_ARTIFACT_NOT_ANALYZED" })
+        assertTrue(result.diagnostics.none { diagnostic -> diagnostic.code == "REQUESTED_VARIANT_REDIRECTED" })
     }
 
     @Test

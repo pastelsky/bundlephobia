@@ -243,7 +243,8 @@ public class PackageBuildStatsAnalyzer
             directArtifact: ArtifactAnalysis?,
             diagnostics: List<Diagnostic>,
         ): ResultStatus {
-            if (analyses.isEmpty() || directArtifact == null) return ResultStatus.FAILED
+            if (analyses.isEmpty()) return ResultStatus.FAILED
+            if (directArtifact == null) return ResultStatus.PARTIAL
             val allStaticComplete = analyses.all { analysis -> analysis.status == ResultStatus.COMPLETE }
             val noBlockingDiagnostics = diagnostics.none { diagnostic -> diagnostic.severity == DiagnosticSeverity.ERROR }
             return if (resolverResult.status == ResultStatus.COMPLETE && allStaticComplete && noBlockingDiagnostics) {
@@ -340,6 +341,8 @@ public class PackageBuildStatsAnalyzer
             evidence: List<ArtifactEvidence>,
         ): Set<MavenCoordinate> {
             if (evidence.any { item -> item.artifact.coordinate == requested }) return setOf(requested)
+            // A selected non-JAR root (for example an AAR) is not a metadata-only JVM redirect.
+            if (resolution.artifacts.any { artifact -> artifact.coordinate == requested }) return emptySet()
             val depths = shortestPaths(requested, resolution).associate { path -> path.coordinate to path.depth }
             val nearestDepth =
                 evidence
