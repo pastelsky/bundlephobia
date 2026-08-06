@@ -123,9 +123,7 @@ class JvmPackageBuildStatsCliTest {
         val exitCode =
             JvmPackageBuildStatsCli(
                 PackageBuildStatsAnalyzer(
-                    PackageBuildStatsConfig(
-                        cacheDirectory = tempDir.resolve("cache"),
-                    ),
+                    PackageBuildStatsConfig(),
                 ),
             ).execute(
                 args = arrayOf(*args),

@@ -91,18 +91,16 @@ class PackageBuildStatsAnalyzerTest {
     }
 
     @Test
-    fun `repeated analysis uses immutable caches and returns identical normalized evidence`() {
+    fun `repeated analysis returns identical evidence without a result cache`() {
         val coordinate = MavenCoordinate.parse("example:cached:1.0")
         val resolution = resolution(coordinate, listOf(coordinate))
         val analyzer = analyzer(resolution)
 
         val first = analyzer.analyze(AnalyzeRequest(coordinate))
-        resolution.resolution.artifacts.forEach { Files.delete(Path.of(it.path)) }
         val second = analyzer.analyze(AnalyzeRequest(coordinate))
 
         assertEquals(ResultStatus.COMPLETE, second.status)
         assertEquals(first.copy(timings = TimingStats()), second.copy(timings = TimingStats()))
-        assertTrue(Files.walk(tempDir.resolve("cache/analysis")).use { paths -> paths.anyMatch(Files::isRegularFile) })
     }
 
     @Test
@@ -187,7 +185,6 @@ class PackageBuildStatsAnalyzerTest {
         val result =
             GradleResolverClient(
                 PackageBuildStatsConfig(
-                    cacheDirectory = tempDir.resolve("cache"),
                     gradleExecutable = executable,
                     resolutionTimeoutMilliseconds = 25,
                 ),
@@ -216,7 +213,6 @@ class PackageBuildStatsAnalyzerTest {
         val result =
             GradleResolverClient(
                 PackageBuildStatsConfig(
-                    cacheDirectory = tempDir.resolve("cache"),
                     gradleExecutable = executable,
                 ),
             ).resolve(coordinate, 21, AnalysisCancellation { System.nanoTime() - started > 50_000_000 })
@@ -243,7 +239,6 @@ class PackageBuildStatsAnalyzerTest {
         val result =
             GradleResolverClient(
                 PackageBuildStatsConfig(
-                    cacheDirectory = tempDir.resolve("cache"),
                     gradleExecutable = executable,
                     temporaryDirectory = temporaryDirectory,
                     diagnosticOutputLimitBytes = 128,
@@ -290,7 +285,7 @@ class PackageBuildStatsAnalyzerTest {
 
     private fun analyzer(resolution: JvmResolutionResult): PackageBuildStatsAnalyzer =
         PackageBuildStatsAnalyzer(
-            config = PackageBuildStatsConfig(cacheDirectory = tempDir.resolve("cache")),
+            config = PackageBuildStatsConfig(),
             resolverClient = ResolverClient { _, _, _ -> resolution },
         )
 

@@ -83,9 +83,6 @@ private class AnalyzeCommand(
     )
     private var javaVersion: Int = 21
 
-    @Option(names = ["--cache-dir"], paramLabel = "DIRECTORY", description = ["Persistent analysis cache directory."])
-    private var cacheDirectory: Path? = null
-
     @Option(names = ["--gradle-executable"], paramLabel = "FILE", description = ["Gradle executable or wrapper to use for resolution."])
     private var gradleExecutable: Path? = null
 
@@ -118,7 +115,7 @@ private class AnalyzeCommand(
         }
 
     private fun configuredAnalyzer(): PackageBuildStatsAnalyzer {
-        if (cacheDirectory == null && gradleExecutable == null && resolutionTimeoutMilliseconds == null) {
+        if (gradleExecutable == null && resolutionTimeoutMilliseconds == null) {
             return analyzer ?: PackageBuildStatsAnalyzer()
         }
         val defaults = PackageBuildStatsConfig()
@@ -128,7 +125,6 @@ private class AnalyzeCommand(
         }
         return PackageBuildStatsAnalyzer(
             PackageBuildStatsConfig(
-                cacheDirectory = cacheDirectory ?: defaults.cacheDirectory,
                 gradleExecutable = gradleExecutable,
                 resolutionTimeoutMilliseconds = timeout,
             ),

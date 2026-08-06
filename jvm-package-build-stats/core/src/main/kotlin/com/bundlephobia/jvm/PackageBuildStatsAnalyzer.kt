@@ -58,7 +58,6 @@ public class PackageBuildStatsAnalyzer
             val resolverResult = resolutionTimed.value
             diagnostics += resolverResult.diagnostics
 
-            val cache = AnalysisCache(config.cacheDirectory, "$STATIC_ANALYZER_VERSION-java${request.javaVersion}")
             val evidence = mutableListOf<ArtifactEvidence>()
             val analysisTimed =
                 measureTimedValue {
@@ -72,7 +71,7 @@ public class PackageBuildStatsAnalyzer
                                 diagnostics += cancellationDiagnostic()
                                 return@measureTimedValue
                             }
-                            analyzeArtifact(cache, artifact, request.javaVersion, diagnostics)?.let(evidence::add)
+                            analyzeArtifact(artifact, request.javaVersion, diagnostics)?.let(evidence::add)
                         }
                 }
             stageTimings["artifact-analysis"] = analysisTimed.duration.inWholeMilliseconds
@@ -128,27 +127,22 @@ public class PackageBuildStatsAnalyzer
         }
 
         private fun analyzeArtifact(
-            cache: AnalysisCache,
             artifact: ResolvedArtifact,
             javaVersion: Int,
             diagnostics: MutableList<Diagnostic>,
         ): ArtifactEvidence? =
             try {
-                val cachedPath = cache.materialize(artifact)
-                val analysis =
-                    cache.analyze(
-                        digest = artifact.digest.value,
-                        displayName = artifact.fileName,
-                        artifactPath = cachedPath,
-                        inspector = { path -> inspect(path, javaVersion) },
-                    )
+                val analysis = inspect(Path.of(artifact.path), javaVersion).copy(displayName = artifact.fileName)
+                check(analysis.digest == null || analysis.digest == artifact.digest) {
+                    "Artifact digest changed after resolution"
+                }
                 diagnostics += analysis.diagnostics
                 ArtifactEvidence(artifact, analysis)
             } catch (_: Exception) {
                 diagnostics +=
                     Diagnostic(
                         code = "ARTIFACT_ANALYSIS_FAILED",
-                        summary = "Could not cache or analyze ${artifact.coordinate.notation} (${artifact.fileName})",
+                        summary = "Could not analyze ${artifact.coordinate.notation} (${artifact.fileName})",
                         stage = AnalysisStage.ARCHIVE_ANALYSIS,
                         retry = RetryClassification.UNKNOWN,
                     )
