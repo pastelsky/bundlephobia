@@ -2,16 +2,14 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 
 import { createJavaScriptPackageReference } from '../../../languages/javascript'
-import Cache from '../../../utils/cache.utils'
-import firebaseUtils from '../../../utils/firebase.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
 import { packageAnalysisGateway } from '../../analysis'
 import { BUILD_DURATION_HEADER } from '../../api/BuildService'
 import config from '../../config'
 import logger from '../../Logger'
 import type { PackageBuildResult } from '../../types'
+import { javascriptStorage } from '../../storage'
 
-const cache = new Cache()
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { scoped, name, version, description, repository, packageString } =
@@ -97,11 +95,11 @@ const buildMiddleware: Middleware = async ctx => {
   )
 
   if (record === 'true') {
-    firebaseUtils.setRecentSearch(name, { name, version })
+    javascriptStorage.recentSearches.record(name, { name, version })
   }
 
   if (force === 'true') {
-    void cache.setPackageSize({ name, version }, body)
+    void javascriptStorage.packageAnalysis.set({ name, version }, body)
   }
 }
 

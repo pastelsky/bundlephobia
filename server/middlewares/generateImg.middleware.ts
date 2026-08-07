@@ -3,9 +3,9 @@ import send from 'koa-send'
 import queryString from 'query-string'
 
 import { createJavaScriptPackageReference } from '../../languages/javascript'
-import Cache from '../../utils/cache.utils'
 import { drawStatsImg } from '../../utils/draw.utils'
 import { packageAnalysisGateway } from '../analysis'
+import { javascriptStorage } from '../storage'
 
 interface StatsImageResult {
   name: string
@@ -17,8 +17,6 @@ interface StatsImageResult {
 function isThemeName(value: string | undefined): value is 'dark' | 'light' {
   return value === 'dark' || value === 'light'
 }
-
-const cache = new Cache()
 
 const generateImgMiddleware: Middleware = async ctx => {
   const url = ctx.url.replace(/&amp;/g, '&')
@@ -51,10 +49,11 @@ const generateImgMiddleware: Middleware = async ctx => {
       resolvedVersion = version
     }
 
-    const result = await cache.getPackageSize<StatsImageResult>({
-      name,
-      version: resolvedVersion,
-    })
+    const result =
+      await javascriptStorage.packageAnalysis.get<StatsImageResult>({
+        name,
+        version: resolvedVersion,
+      })
 
     if (!result) {
       throw new Error(

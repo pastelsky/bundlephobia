@@ -2,14 +2,13 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 
 import { createJavaScriptPackageReference } from '../../languages/javascript'
-import Cache from '../../utils/cache.utils'
 import { getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
 import { BUILD_DURATION_HEADER } from '../api/BuildService'
 import config from '../config'
 import logger from '../Logger'
+import { javascriptStorage } from '../storage'
 
-const cache = new Cache()
 const exportSizesMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
@@ -65,7 +64,7 @@ const exportSizesMiddleware: Middleware = async ctx => {
   )
 
   if (force === 'true') {
-    void cache.setExportsSize({ name, version }, body)
+    void javascriptStorage.exportSizes.set({ name, version }, body)
   }
 }
 
