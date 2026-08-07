@@ -29,27 +29,36 @@ type HasAction = {
 }
 
 export default class Analytics {
+  private static logEvent(
+    eventName: string,
+    eventProperties?: Record<string, unknown>
+  ) {
+    if (typeof amplitude !== 'undefined') {
+      amplitude.getInstance().logEvent(eventName, eventProperties)
+    }
+  }
+
   static pageView(pageType: string) {
-    amplitude.getInstance().logEvent(`Viewed ${pageType}`, {
+    Analytics.logEvent(`Viewed ${pageType}`, {
       path: window.location.pathname,
     })
   }
 
   static performedSearch(packageName: string) {
-    amplitude.getInstance().logEvent('Search Performed', {
+    Analytics.logEvent('Search Performed', {
       package: packageName,
     })
   }
 
   static searchSuccess({ packageName, timeTaken }: HasPackageNameAndTimeTaken) {
-    amplitude.getInstance().logEvent('Search Successful', {
+    Analytics.logEvent('Search Successful', {
       package: packageName,
       timeTaken,
     })
   }
 
   static searchFailure({ packageName, timeTaken }: HasPackageNameAndTimeTaken) {
-    amplitude.getInstance().logEvent('Search Failed', {
+    Analytics.logEvent('Search Failed', {
       package: packageName,
       timeTaken,
     })
@@ -59,38 +68,38 @@ export default class Analytics {
     packageName,
     isDisabled,
   }: HasPackageName & HasIsDisabled) {
-    amplitude.getInstance().logEvent('Bar Graph Clicked', {
+    Analytics.logEvent('Bar Graph Clicked', {
       package: packageName,
       isDisabled,
     })
   }
 
   static scanPackageJsonDropped(itemCount: number) {
-    amplitude.getInstance().logEvent('Scan packageJSON dropped', {
+    Analytics.logEvent('Scan packageJSON dropped', {
       itemCount,
     })
   }
 
   static performedScan() {
-    amplitude.getInstance().logEvent('Scan Performed')
+    Analytics.logEvent('Scan Performed')
   }
 
   static scanParseError() {
-    amplitude.getInstance().logEvent('Scan Parse Error')
+    Analytics.logEvent('Scan Parse Error')
   }
 
   static scanCompleted({
     timeTaken,
     successRatio,
   }: HasTimeTaken & HasSuccessRatio) {
-    amplitude.getInstance().logEvent('Scan Parse Completed', {
+    Analytics.logEvent('Scan Parse Completed', {
       successRatio,
       timeTaken,
     })
   }
 
   static performedExportsAnalysis(packageName: string) {
-    amplitude.getInstance().logEvent('Exports Analysis Performed', {
+    Analytics.logEvent('Exports Analysis Performed', {
       package: packageName,
     })
   }
@@ -99,7 +108,7 @@ export default class Analytics {
     packageName,
     timeTaken,
   }: HasPackageNameAndTimeTaken) {
-    amplitude.getInstance().logEvent('Exports Analysis Successful', {
+    Analytics.logEvent('Exports Analysis Successful', {
       package: packageName,
       timeTaken,
     })
@@ -109,7 +118,7 @@ export default class Analytics {
     packageName,
     timeTaken,
   }: HasPackageNameAndTimeTaken) {
-    amplitude.getInstance().logEvent('Exports Analysis Failed', {
+    Analytics.logEvent('Exports Analysis Failed', {
       package: packageName,
       timeTaken,
     })
@@ -119,7 +128,7 @@ export default class Analytics {
     packageName,
     timeTaken,
   }: HasPackageNameAndTimeTaken) {
-    amplitude.getInstance().logEvent('Exports Size Calculated', {
+    Analytics.logEvent('Exports Size Calculated', {
       package: packageName,
       timeTaken,
     })
@@ -129,41 +138,41 @@ export default class Analytics {
     packageName,
     timeTaken,
   }: HasPackageNameAndTimeTaken) {
-    amplitude.getInstance().logEvent('Exports Size Failed', {
+    Analytics.logEvent('Exports Size Failed', {
       package: packageName,
       timeTaken,
     })
   }
 
   static mcpHeaderClicked({ open }: HasOpen) {
-    amplitude.getInstance().logEvent('MCP Header Clicked', {
+    Analytics.logEvent('MCP Header Clicked', {
       open,
     })
   }
 
   static mcpToolsListed({ toolCount }: HasToolCount) {
-    amplitude.getInstance().logEvent('MCP Tools Listed', {
+    Analytics.logEvent('MCP Tools Listed', {
       toolCount,
     })
   }
 
   static mcpToolCalled({ toolName }: HasToolName) {
-    amplitude.getInstance().logEvent('MCP Tool Called', {
+    Analytics.logEvent('MCP Tool Called', {
       toolName,
     })
   }
 
   static mcpActionFailed({ action }: HasAction) {
-    amplitude.getInstance().logEvent('MCP Action Failed', {
+    Analytics.logEvent('MCP Action Failed', {
       action,
     })
   }
 
   static mcpSetupSnippetCopied() {
-    amplitude.getInstance().logEvent('MCP Setup Snippet Copied')
+    Analytics.logEvent('MCP Setup Snippet Copied')
   }
 
   static mcpDocsOpened() {
-    amplitude.getInstance().logEvent('MCP Docs Opened')
+    Analytics.logEvent('MCP Docs Opened')
   }
 }

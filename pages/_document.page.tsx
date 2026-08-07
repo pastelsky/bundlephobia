@@ -22,6 +22,7 @@ const themeScript = `
 })();
 `
 
+/*
 const amplitudeScript = `
 (function(e,t){var n=e.amplitude||{_q:[],_iq:{}};var r=t.createElement("script")
 ;r.type="text/javascript"
@@ -54,6 +55,7 @@ e=(!e||e.length===0?"$default_instance":e).toLowerCase()
       {includeReferrer: true, includeUtm: true, includeGclid: true}
     );
 `
+*/
 
 export default class MyDocument extends Document {
   static async getInitialProps(ctx: DocumentContext) {
@@ -111,10 +113,11 @@ export default class MyDocument extends Document {
             name="google-site-verification"
             content="XizU-iXvsrtQJG5G4DWEGhD57SRRA8x3Y9FnSwk53X0"
           />
+          {/* Amplitude analytics disabled in favor of Umami. */}
           <script
-            dangerouslySetInnerHTML={{
-              __html: amplitudeScript,
-            }}
+            defer
+            src="https://cloud.umami.is/script.js"
+            data-website-id="7db89c7e-4397-42b1-9fd7-ef0133ee31e5"
           />
         </DocumentHead>
         <body>
