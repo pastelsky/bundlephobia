@@ -34,6 +34,12 @@ jobs:
       - run: yarn build
         env:
           CI: true
+      - name: Install Playwright Chromium
+        run: yarn playwright install --with-deps chromium
+      - name: Run end-to-end tests
+        run: yarn test:e2e
+        env:
+          CI: true
 
   jvm-build:
     runs-on: ubuntu-latest
