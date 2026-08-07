@@ -1,11 +1,13 @@
 import React from 'react'
+import cx from 'classnames'
 
 type CarbonAdProps = {
   className?: string
 }
 
 const CarbonAd = ({ className }: CarbonAdProps) => {
-  const containerRef = React.useRef<HTMLElement>(null)
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = React.useState(true)
 
   React.useEffect(() => {
     const container = containerRef.current
@@ -25,12 +27,22 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
     }
   }, [])
 
+  if (!isVisible) return null
+
   return (
-    <aside
-      ref={containerRef}
-      className={className}
-      aria-label="Advertisement"
-    />
+    <aside className={cx('carbon-ad', className)} aria-label="Advertisement">
+      <div ref={containerRef} className="carbon-ad__content">
+        <button
+          type="button"
+          className="carbon-ad__dismiss"
+          aria-label="Dismiss advertisement"
+          title="Dismiss advertisement"
+          onClick={() => setIsVisible(false)}
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+    </aside>
   )
 }
 

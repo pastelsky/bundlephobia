@@ -1,0 +1,37 @@
+.carbon-ad__content {
+  position: relative;
+  width: 100%;
+}
+
+.carbon-ad__dismiss {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 50%;
+  background: var(--color-bg-surface);
+  color: var(--color-icon-secondary);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  transition: color 0.2s, border-color 0.2s;
+
+  &:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-link);
+    outline-offset: 2px;
+  }
+}
