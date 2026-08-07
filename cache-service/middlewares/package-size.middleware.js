@@ -3,20 +3,28 @@ const firebase = require('firebase')
 const LRU = require('lru-cache')
 const debug = require('debug')('bp:cache')
 const { encodeFirebaseKey } = require('../cache.utils')
+const {
+  createNamespaceStorageKey,
+  getLanguageStorageNamespace,
+} = require('../../storage/language-storage')
 const LRUCache = new LRU({ max: 3000 })
 
-// Configurable Firebase keys for read/write operations
-// This allows safe migration from modules-v2 (old) to modules-v3 (new package-build-stats 8.x)
-// When FIREBASE_READ_KEY is 'modules-v3', it will try v3 first, then fall back to v2
-// When FIREBASE_READ_KEY is 'modules-v2', it will only read from v2
-const FIREBASE_READ_KEY = process.env.FIREBASE_READ_KEY || 'modules-v3'
-const FIREBASE_WRITE_KEY = process.env.FIREBASE_WRITE_KEY || 'modules-v3'
+const STORAGE = getLanguageStorageNamespace('javascript')
+const PACKAGE_ROOT = STORAGE.roots.packageAnalysis
+
+function getMemoryKey(name, version) {
+  return createNamespaceStorageKey(
+    STORAGE,
+    'package-analysis',
+    `${name}@${version}`
+  )
+}
 
 debug(
   'Firebase config: READ from %s (with fallback: %s), WRITE to %s',
-  FIREBASE_READ_KEY,
-  FIREBASE_READ_KEY === 'modules-v3' ? 'yes, to modules-v2' : 'no',
-  FIREBASE_WRITE_KEY
+  PACKAGE_ROOT.read,
+  PACKAGE_ROOT.fallback ? `yes, to ${PACKAGE_ROOT.fallback}` : 'no',
+  PACKAGE_ROOT.write
 )
 
 async function getPackageResultFromKey(key, { name, version }) {
@@ -32,7 +40,7 @@ async function getPackageResultFromKey(key, { name, version }) {
 }
 
 async function getPackageResult({ name, version, readKey }) {
-  const targetReadKey = readKey || FIREBASE_READ_KEY
+  const targetReadKey = readKey || PACKAGE_ROOT.read
   // Try primary read key first
   const result = await getPackageResultFromKey(targetReadKey, { name, version })
 
@@ -42,15 +50,14 @@ async function getPackageResult({ name, version, readKey }) {
   }
 
   // If reading from default v3 and not found, fall back to v2
-  if (
-    targetReadKey === 'modules-v3' &&
-    !readKey &&
-    !process.env.DISABLE_FIREBASE_V2_FALLBACK
-  ) {
-    const fallbackResult = await getPackageResultFromKey('modules-v2', {
-      name,
-      version,
-    })
+  if (!readKey && PACKAGE_ROOT.fallback) {
+    const fallbackResult = await getPackageResultFromKey(
+      PACKAGE_ROOT.fallback,
+      {
+        name,
+        version,
+      }
+    )
     if (fallbackResult) {
       debug('cache hit: firebase (fallback to modules-v2)')
     }
@@ -61,7 +68,7 @@ async function getPackageResult({ name, version, readKey }) {
 }
 
 async function setPackageResult({ name, version, result }) {
-  const modules = firebase.database().ref().child(FIREBASE_WRITE_KEY)
+  const modules = firebase.database().ref().child(PACKAGE_ROOT.write)
   return modules
     .child(encodeFirebaseKey(name))
     .child(encodeFirebaseKey(version))
@@ -80,7 +87,8 @@ async function getPackageSizeMiddlware(req, res) {
 
   // Use memory cache only if no explicit readKey is provided
   if (!readKey) {
-    const lruCacheEntry = LRUCache.get(`${name}@${version}`)
+    const memoryKey = getMemoryKey(name, version)
+    const lruCacheEntry = LRUCache.get(memoryKey)
     if (lruCacheEntry) {
       debug('cache hit: memory')
       return res.code(200).send(lruCacheEntry)
@@ -91,7 +99,7 @@ async function getPackageSizeMiddlware(req, res) {
   if (result) {
     debug('cache hit: firebase')
     if (!readKey) {
-      LRUCache.set(`${name}@${version}`, result)
+      LRUCache.set(getMemoryKey(name, version), result)
     }
     return res.code(200).send(result)
   }
@@ -105,7 +113,7 @@ async function postPackageSizeMiddlware(req, res) {
   if (!name || !version || !result) return res.code(422).send()
 
   debug('set package %O to %O', { name, version }, result)
-  LRUCache.set(`${name}@${version}`, result)
+  LRUCache.set(getMemoryKey(name, version), result)
   try {
     await setPackageResult({ name, version, result })
     return res.code(201).send()
@@ -115,4 +123,9 @@ async function postPackageSizeMiddlware(req, res) {
   }
 }
 
-module.exports = { getPackageSizeMiddlware, postPackageSizeMiddlware }
+module.exports = {
+  getPackageSizeMiddlware,
+  postPackageSizeMiddlware,
+  storageNamespace: STORAGE,
+  getMemoryKey,
+}

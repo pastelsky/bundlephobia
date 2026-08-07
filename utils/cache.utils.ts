@@ -4,10 +4,13 @@ import axios, { AxiosError } from 'axios'
 import createDebug from 'debug'
 
 import logger from '../server/Logger'
+import type { LanguageId } from '../types/language-domain'
+import { getLanguageStorageNamespace } from '../storage/language-storage'
 
 const debug = createDebug('bp:cache')
 
 export interface CacheKey {
+  language?: LanguageId
   name: string
   version: string
 }
@@ -23,9 +26,11 @@ function getAxiosErrorData(error: unknown): unknown {
 
 export default class Cache {
   async getPackageSize<T>(key: CacheKey): Promise<T | undefined> {
+    const language = key.language ?? 'javascript'
+    if (!getLanguageStorageNamespace(language).enabled) return undefined
     try {
       const result = await API.get<T>('/package-cache', {
-        params: key,
+        params: { name: key.name, version: key.version },
       })
       return result.data
     } catch (error) {
@@ -36,9 +41,15 @@ export default class Cache {
   }
 
   async setPackageSize<T>(key: CacheKey, result: T): Promise<void> {
+    const language = key.language ?? 'javascript'
+    if (!getLanguageStorageNamespace(language).writesEnabled) return
     debug('set package %O to %O', key, result)
     try {
-      await API.post('/package-cache', { ...key, result })
+      await API.post('/package-cache', {
+        name: key.name,
+        version: key.version,
+        result,
+      })
     } catch (error) {
       const errorData = getAxiosErrorData(error)
       console.error(errorData)
@@ -54,10 +65,12 @@ export default class Cache {
   }
 
   async getExportsSize<T>(key: CacheKey): Promise<T | undefined> {
+    const language = key.language ?? 'javascript'
+    if (!getLanguageStorageNamespace(language).enabled) return undefined
     debug('get exports %s@%s', key.name, key.version)
     try {
       const result = await API.get<T>('/exports-cache', {
-        params: key,
+        params: { name: key.name, version: key.version },
       })
       debug('cache hit')
       return result.data
@@ -67,9 +80,15 @@ export default class Cache {
   }
 
   async setExportsSize<T>(key: CacheKey, result: T): Promise<void> {
+    const language = key.language ?? 'javascript'
+    if (!getLanguageStorageNamespace(language).writesEnabled) return
     debug('set exports %O to %O', key, result)
     try {
-      await API.post('/exports-cache', { ...key, result })
+      await API.post('/exports-cache', {
+        name: key.name,
+        version: key.version,
+        result,
+      })
     } catch (error) {
       const errorData = getAxiosErrorData(error)
       console.error(errorData)

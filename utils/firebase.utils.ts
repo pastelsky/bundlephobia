@@ -1,13 +1,12 @@
 import axios from 'axios'
 import createDebug from 'debug'
 import firebaseSDK from 'firebase'
-import semver from 'semver'
 
+import type { LanguageStorageAdapter } from '../server/storage/contracts'
+import { createJavaScriptStorageAdapter } from '../server/storage/javascript'
 import { decodeFirebaseKey, encodeFirebaseKey } from './index'
 
 const debug = createDebug('bp:firebase-util')
-
-const FIREBASE_READ_KEY = process.env.FIREBASE_READ_KEY || 'modules-v2'
 
 if (process.env.FIREBASE_DATABASE_URL && !firebaseSDK.apps.length) {
   firebaseSDK.initializeApp({
@@ -31,11 +30,17 @@ interface AlgoliaPackageResponse {
   versions: Record<string, string>
 }
 
-class FirebaseUtils {
+export class FirebaseUtils {
   private readonly firebase?: typeof firebaseSDK
+  private readonly storage: LanguageStorageAdapter
 
-  constructor(firebaseInstance: typeof firebaseSDK, enable = true) {
-    if (enable) {
+  constructor(
+    firebaseInstance: typeof firebaseSDK,
+    enable = true,
+    storage = createJavaScriptStorageAdapter()
+  ) {
+    this.storage = storage
+    if (enable && storage.namespace.enabled) {
       this.firebase = firebaseInstance
     }
   }
@@ -44,11 +49,14 @@ class FirebaseUtils {
     name: string,
     packageInfo: { name: string; version?: string }
   ): void {
-    if (!this.firebase) {
+    if (!this.firebase || !this.storage.namespace.writesEnabled) {
       return
     }
 
-    const searches = this.firebase.database().ref().child('searches-v2')
+    const searches = this.firebase
+      .database()
+      .ref()
+      .child(this.storage.namespace.roots.recentSearches)
     void searches
       .child(encodeFirebaseKey(name))
       .once('value')
@@ -94,19 +102,17 @@ class FirebaseUtils {
     }
 
     const firebasePromise = (async () => {
-      const result = await getHistoryFromKey(FIREBASE_READ_KEY)
+      const historyRoot = this.storage.namespace.roots.packageHistory
+      const result = await getHistoryFromKey(historyRoot.read)
       if (result) {
-        debug('package history from %s', FIREBASE_READ_KEY)
+        debug('package history from %s', historyRoot.read)
         return result
       }
 
-      if (
-        FIREBASE_READ_KEY === 'modules-v3' &&
-        !process.env.DISABLE_FIREBASE_V2_FALLBACK
-      ) {
-        const fallback = await getHistoryFromKey('modules-v2')
+      if (historyRoot.fallback) {
+        const fallback = await getHistoryFromKey(historyRoot.fallback)
         if (fallback) {
-          debug('package history from modules-v2 (fallback)')
+          debug('package history from %s (fallback)', historyRoot.fallback)
         }
         return fallback
       }
@@ -150,21 +156,18 @@ class FirebaseUtils {
       )
     }
 
-    const filteredVersions = versions
-      .filter(version => !version.includes('-'))
-      .sort((versionA, versionB) => semver.compare(versionA, versionB))
-
-    const limitedVersions = filteredVersions.slice(
-      Math.max(filteredVersions.length - limit, 0)
+    const versionOrdering = this.storage.versionOrdering
+    if (!versionOrdering) {
+      throw new Error(
+        `Package history is unavailable for ${this.storage.language}`
+      )
+    }
+    const limitedVersions = versionOrdering.selectHistoryVersions(
+      versions,
+      limit
     )
 
     debug('last npm %d %s versions %o', limit, name, limitedVersions)
-
-    const latestVersion = versions[versions.length - 1]
-    if (latestVersion?.includes('-')) {
-      limitedVersions.shift()
-      limitedVersions.push(latestVersion)
-    }
 
     limitedVersions.forEach(version => {
       packageHistory[version] = {}
@@ -189,7 +192,10 @@ class FirebaseUtils {
       return {}
     }
 
-    const searches = this.firebase.database().ref().child('searches-v2')
+    const searches = this.firebase
+      .database()
+      .ref()
+      .child(this.storage.namespace.roots.recentSearches)
     const recentSearches: Record<string, SearchRecord> = {}
 
     return searches
@@ -216,7 +222,10 @@ class FirebaseUtils {
     }
 
     const dailySearches: Record<string, SearchRecord> = {}
-    const searches = this.firebase.database().ref().child('searches-v2')
+    const searches = this.firebase
+      .database()
+      .ref()
+      .child(this.storage.namespace.roots.recentSearches)
 
     const snapshot = await searches
       .orderByChild('lastSearched')

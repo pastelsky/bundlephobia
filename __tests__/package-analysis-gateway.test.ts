@@ -5,10 +5,12 @@ import { PackageAnalysisGatewayError } from '../server/analysis/errors'
 import { createAnalysisKey } from '../server/analysis/keys'
 import { toLegacyJavaScriptError } from '../server/analysis/javascript/legacyErrorMapper'
 import CustomError from '../server/CustomError'
+import { createJavaScriptStorageAdapter } from '../server/storage/javascript'
 
 function createJavaScriptAdapter(): PackageAnalysisAdapter<'javascript'> {
   return {
     language: 'javascript',
+    storage: createJavaScriptStorageAdapter({}),
     resolvePackage: jest.fn(async reference => ({
       language: 'javascript',
       specifier: reference.specifier,
@@ -41,6 +43,7 @@ describe('PackageAnalysisGateway', () => {
       canonicalSpecifier: 'example@1.0.0',
     })
     expect(adapter.resolvePackage).toHaveBeenCalledWith(reference)
+    expect(gateway.storageFor('javascript')).toBe(adapter.storage)
   })
 
   it('routes each analysis capability without changing adapter results', async () => {

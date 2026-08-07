@@ -16,6 +16,7 @@ import type {
   PackageAnalysisAdapter,
   ResolvedAnalysisPackage,
 } from '../contracts'
+import { createJavaScriptStorageAdapter } from '../../storage/javascript'
 
 interface PacoteModule {
   manifest(
@@ -100,6 +101,7 @@ export class JavaScriptPackageAnalysisAdapter
   implements PackageAnalysisAdapter<'javascript'>
 {
   readonly language = 'javascript' as const
+  readonly storage = createJavaScriptStorageAdapter()
 
   constructor(private readonly buildService = new BuildService()) {}
 

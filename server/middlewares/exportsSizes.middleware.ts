@@ -65,7 +65,10 @@ const exportSizesMiddleware: Middleware = async ctx => {
   )
 
   if (force === 'true') {
-    void cache.setExportsSize({ name, version }, body)
+    void cache.setExportsSize(
+      { language: ctx.state.resolved.language, name, version },
+      body
+    )
   }
 }
 

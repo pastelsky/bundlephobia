@@ -21,10 +21,20 @@ export class PackageAnalysisGateway {
 
   register(adapter: PackageAnalysisAdapter): void {
     languageRegistry.get(adapter.language)
+    if (
+      adapter.storage.language !== adapter.language ||
+      adapter.storage.namespace.language !== adapter.language
+    ) {
+      throw new Error(`Storage adapter language mismatch: ${adapter.language}`)
+    }
     if (this.adapters.has(adapter.language)) {
       throw new Error(`Duplicate package analysis adapter: ${adapter.language}`)
     }
     this.adapters.set(adapter.language, adapter)
+  }
+
+  storageFor(language: LanguageId) {
+    return this.adapterFor(language, 'analysis').storage
   }
 
   private adapterFor(
