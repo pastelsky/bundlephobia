@@ -5,14 +5,14 @@
 
 .carbon-ad__dismiss {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  right: 0;
+  bottom: calc(100% + 6px);
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   border: 1px solid var(--color-border-primary);
   border-radius: 50%;
@@ -20,10 +20,11 @@
   color: var(--color-icon-secondary);
   box-shadow: var(--shadow-card);
   cursor: pointer;
-  font: inherit;
-  font-size: 20px;
-  line-height: 1;
   transition: color 0.2s, border-color 0.2s;
+
+  svg {
+    display: block;
+  }
 
   &:hover {
     color: var(--color-text-primary);
