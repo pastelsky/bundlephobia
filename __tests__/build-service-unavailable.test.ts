@@ -6,12 +6,17 @@ import CustomError from '../server/CustomError'
 import BuildService, {
   MAX_BUILD_SERVICE_RESPONSE_BYTES,
 } from '../server/api/BuildService'
+import { createAnalysisKey, createQueueType } from '../server/analysis/keys'
 import { failureCache, pool, requestQueue } from '../server/init'
 import errorMiddleware from '../server/middlewares/results/error.middleware'
 
 jest.mock('../server/init', () => ({
   failureCache: {
     set: jest.fn(),
+  },
+  logger: {
+    increment: jest.fn(),
+    timing: jest.fn(),
   },
   pool: {
     exec: jest.fn(),
@@ -81,6 +86,26 @@ describe('build service unavailability', () => {
         url,
       },
     })
+  })
+
+  it('uses language- and operation-aware queue identities', async () => {
+    mockedRequestQueue.process.mockResolvedValue({ size: 123 })
+    const service = new BuildService()
+
+    await service.getPackageBuildStats('@example/package@1.0.0', 20)
+
+    expect(mockedRequestQueue.process).toHaveBeenCalledWith(
+      createAnalysisKey({
+        language: 'javascript',
+        operation: 'package-analysis',
+        packageSpecifier: '@example/package@1.0.0',
+      }),
+      createQueueType('javascript', 'package-analysis'),
+      expect.objectContaining({
+        packageString: '@example/package@1.0.0',
+      }),
+      expect.objectContaining({ priority: 20 })
+    )
   })
 
   it('serializes native errors into the build-service error contract', () => {
@@ -335,7 +360,11 @@ describe('build service unavailability', () => {
       },
     })
     expect(mockedFailureCache.set).toHaveBeenCalledWith(
-      packageString,
+      createAnalysisKey({
+        language: 'javascript',
+        operation: 'package-analysis',
+        packageSpecifier: packageString,
+      }),
       expect.objectContaining({ status: 422 })
     )
   })

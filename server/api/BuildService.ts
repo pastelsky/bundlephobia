@@ -3,19 +3,33 @@ import createDebug from 'debug'
 
 import CustomError from '../CustomError'
 import { JobCancelledError } from '../Queue'
+import type { AnalysisOperation } from '../analysis/contracts'
+import { createAnalysisKey, createQueueType } from '../analysis/keys'
 import config from '../config'
-import { pool, requestQueue } from '../init'
+import { logger, pool, requestQueue } from '../init'
 
 const debug = createDebug('bp:build')
 export const MAX_BUILD_SERVICE_RESPONSE_BYTES = 8 * 1024 * 1024
 
 const OperationType = {
-  PACKAGE_BUILD_STATS: 'PACKAGE_BUILD_STATS',
-  PACKAGE_EXPORTS: 'PACKAGE_EXPORTS',
-  PACKAGE_EXPORTS_SIZES: 'PACKAGE_EXPORTS_SIZES',
+  PACKAGE_BUILD_STATS: {
+    legacyName: 'PACKAGE_BUILD_STATS',
+    operation: 'package-analysis',
+  },
+  PACKAGE_EXPORTS: {
+    legacyName: 'PACKAGE_EXPORTS',
+    operation: 'package-exports',
+  },
+  PACKAGE_EXPORTS_SIZES: {
+    legacyName: 'PACKAGE_EXPORTS_SIZES',
+    operation: 'package-export-sizes',
+  },
 } as const
 
-type OperationType = (typeof OperationType)[keyof typeof OperationType]
+interface OperationDefinition {
+  legacyName: string
+  operation: AnalysisOperation
+}
 
 interface BuildServiceJobParams {
   packageString: string
@@ -39,17 +53,17 @@ export default class BuildService {
   constructor() {
     const operations = [
       {
-        type: OperationType.PACKAGE_BUILD_STATS,
+        ...OperationType.PACKAGE_BUILD_STATS,
         endpoint: '/size',
         methodName: 'getPackageStats',
       },
       {
-        type: OperationType.PACKAGE_EXPORTS,
+        ...OperationType.PACKAGE_EXPORTS,
         endpoint: '/exports',
         methodName: 'getAllPackageExports',
       },
       {
-        type: OperationType.PACKAGE_EXPORTS_SIZES,
+        ...OperationType.PACKAGE_EXPORTS_SIZES,
         endpoint: '/exports-sizes',
         methodName: 'getPackageExportSizes',
       },
@@ -57,7 +71,7 @@ export default class BuildService {
 
     operations.forEach(operation => {
       requestQueue.addExecutor<BuildServiceJobParams, unknown>(
-        operation.type,
+        createQueueType('javascript', operation.operation),
         async ({ packageString, onComplete }, { signal }) => {
           const startedAt = performance.now()
           if (process.env.BUILD_SERVICE_ENDPOINT) {
@@ -76,10 +90,16 @@ export default class BuildService {
               if (axios.isCancel(error)) {
                 throw new JobCancelledError()
               }
-              this.handleError(error, operation.type)
+              this.handleError(error, operation)
             } finally {
-              onComplete?.(
-                Math.max(1, Math.ceil(performance.now() - startedAt))
+              const durationMs = Math.max(
+                1,
+                Math.ceil(performance.now() - startedAt)
+              )
+              onComplete?.(durationMs)
+              logger.timing(
+                `analysis.javascript.${operation.operation}.duration`,
+                durationMs
               )
             }
           }
@@ -92,7 +112,15 @@ export default class BuildService {
           try {
             return await execution
           } finally {
-            onComplete?.(Math.max(1, Math.ceil(performance.now() - startedAt)))
+            const durationMs = Math.max(
+              1,
+              Math.ceil(performance.now() - startedAt)
+            )
+            onComplete?.(durationMs)
+            logger.timing(
+              `analysis.javascript.${operation.operation}.duration`,
+              durationMs
+            )
             signal.removeEventListener('abort', cancelExecution)
           }
         }
@@ -100,7 +128,7 @@ export default class BuildService {
     })
   }
 
-  private handleError(error: unknown, operationType: OperationType): never {
+  private handleError(error: unknown, operation: OperationDefinition): never {
     if (axios.isAxiosError(error) && error.response) {
       const contents = error.response.data as BuildServerErrorPayload
       throw new CustomError(
@@ -115,7 +143,7 @@ export default class BuildService {
       throw new CustomError(
         'BuildServiceUnavailableError',
         {
-          operation: operationType,
+          operation: operation.legacyName,
           reason: 'BUILD_SERVICE_UNREACHABLE',
           url: (error.request as { _currentUrl?: string })._currentUrl,
         },
@@ -127,7 +155,7 @@ export default class BuildService {
       'BuildError',
       error instanceof Error ? error.message : String(error),
       {
-        operation: operationType,
+        operation: operation.legacyName,
       }
     )
   }
@@ -137,9 +165,17 @@ export default class BuildService {
     priority: number,
     options: BuildRequestOptions = {}
   ): Promise<T> {
+    logger.increment('analysis.javascript.package-analysis.requested')
     return requestQueue.process<T, BuildServiceJobParams>(
-      packageString,
-      OperationType.PACKAGE_BUILD_STATS,
+      createAnalysisKey({
+        language: 'javascript',
+        operation: OperationType.PACKAGE_BUILD_STATS.operation,
+        packageSpecifier: packageString,
+      }),
+      createQueueType(
+        'javascript',
+        OperationType.PACKAGE_BUILD_STATS.operation
+      ),
       {
         packageString,
         onComplete: options.onComplete,
@@ -153,14 +189,19 @@ export default class BuildService {
     priority: number,
     options: BuildRequestOptions = {}
   ): Promise<T> {
+    logger.increment('analysis.javascript.package-exports.requested')
     return requestQueue.process<T, BuildServiceJobParams>(
-      packageString,
-      OperationType.PACKAGE_EXPORTS,
+      createAnalysisKey({
+        language: 'javascript',
+        operation: OperationType.PACKAGE_EXPORTS.operation,
+        packageSpecifier: packageString,
+      }),
+      createQueueType('javascript', OperationType.PACKAGE_EXPORTS.operation),
       {
         packageString,
         onComplete: options.onComplete,
       },
-      { priority }
+      { priority, signal: options.signal }
     )
   }
 
@@ -169,14 +210,22 @@ export default class BuildService {
     priority: number,
     options: BuildRequestOptions = {}
   ): Promise<T> {
+    logger.increment('analysis.javascript.package-export-sizes.requested')
     return requestQueue.process<T, BuildServiceJobParams>(
-      packageString,
-      OperationType.PACKAGE_EXPORTS_SIZES,
+      createAnalysisKey({
+        language: 'javascript',
+        operation: OperationType.PACKAGE_EXPORTS_SIZES.operation,
+        packageSpecifier: packageString,
+      }),
+      createQueueType(
+        'javascript',
+        OperationType.PACKAGE_EXPORTS_SIZES.operation
+      ),
       {
         packageString,
         onComplete: options.onComplete,
       },
-      { priority }
+      { priority, signal: options.signal }
     )
   }
 }

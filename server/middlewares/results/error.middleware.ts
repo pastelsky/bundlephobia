@@ -4,6 +4,8 @@ import createDebug from 'debug'
 
 import { toErrorDetail } from '../../../utils'
 import config from '../../config'
+import { createAnalysisKey } from '../../analysis/keys'
+import { toLegacyJavaScriptError } from '../../analysis/javascript/legacyErrorMapper'
 import { failureCache } from '../../init'
 import logger from '../../Logger'
 import { isJobCancelledError } from '../../Queue'
@@ -77,7 +79,17 @@ const errorHandler: Middleware = async (ctx, next) => {
       return
     }
     debug('saved %s to failure cache', packageString)
-    failureCache.set(packageString, { status, body })
+    const analysis = ctx.state.analysis
+    const language = analysis?.language ?? 'javascript'
+    const operation = analysis?.operation ?? 'package-analysis'
+    failureCache.set(
+      createAnalysisKey({
+        language,
+        operation,
+        packageSpecifier: packageString,
+      }),
+      { status, body }
+    )
   }
 
   const respondWithError = (
@@ -104,6 +116,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         requestId: ctx.state.id,
         time: now() - start,
         ...ctx.state.resolved,
+        ...ctx.state.analysis,
         details,
       },
       packageString ? `${code} ${packageString}` : code
@@ -112,7 +125,8 @@ const errorHandler: Middleware = async (ctx, next) => {
 
   try {
     await next()
-  } catch (error) {
+  } catch (caughtError) {
+    const error = toLegacyJavaScriptError(caughtError)
     packageString = ctx.state.resolved?.packageString
     ctx.cacheControl = {
       maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR,
@@ -134,6 +148,7 @@ const errorHandler: Middleware = async (ctx, next) => {
           requestId: ctx.state.id,
           time: now() - start,
           ...ctx.state.resolved,
+          ...ctx.state.analysis,
         },
         packageString ? `BUILD_CANCELLED ${packageString}` : 'BUILD_CANCELLED'
       )

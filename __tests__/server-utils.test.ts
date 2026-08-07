@@ -3,8 +3,17 @@ const pacote = require('pacote')
 
 jest.mock('npm-registry-fetch', () => ({ json: jest.fn() }))
 jest.mock('pacote', () => ({ manifest: jest.fn() }))
+jest.mock('../server/api/BuildService', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}))
 
-import { resolvePackage } from '../utils/server.utils'
+import { createJavaScriptPackageReference } from '../languages/javascript'
+import { JavaScriptPackageAnalysisAdapter } from '../server/analysis/javascript/JavaScriptPackageAnalysisAdapter'
+
+const adapter = new JavaScriptPackageAnalysisAdapter({} as never)
+const resolvePackage = (specifier: string) =>
+  adapter.resolvePackage(createJavaScriptPackageReference(specifier))
 
 describe('resolvePackage', () => {
   beforeEach(() => {
@@ -21,7 +30,7 @@ describe('resolvePackage', () => {
   ])('fetches one manifest for %s', async (packageString, expectedPath) => {
     registryFetch.json.mockResolvedValue({ name: 'next', version: '15.0.0' })
 
-    await expect(resolvePackage(packageString)).resolves.toEqual({
+    await expect(resolvePackage(packageString)).resolves.toMatchObject({
       name: 'next',
       version: '15.0.0',
     })
@@ -60,7 +69,9 @@ describe('resolvePackage', () => {
   it('preserves Pacote resolution for non-registry specs', async () => {
     pacote.manifest.mockResolvedValue({ name: 'react', version: '18.2.0' })
 
-    await expect(resolvePackage('github:facebook/react')).resolves.toEqual({
+    await expect(
+      resolvePackage('github:facebook/react')
+    ).resolves.toMatchObject({
       name: 'react',
       version: '18.2.0',
     })

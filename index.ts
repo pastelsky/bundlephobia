@@ -30,7 +30,7 @@ import limit from './server/middlewares/rateLimit.middleware'
 import exportsMiddlware from './server/middlewares/exports.middleware'
 import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
 import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
-import resolvePackageMiddleware from './server/middlewares/results/resolvePackage.middleware'
+import { createResolvePackageMiddleware } from './server/middlewares/results/resolvePackage.middleware'
 import cachedResponseMiddleware from './server/middlewares/results/cachedResponse.middleware'
 import buildMiddleware from './server/middlewares/results/build.middleware'
 import errorMiddleware from './server/middlewares/results/error.middleware'
@@ -42,6 +42,7 @@ import buildMissRateLimit from './server/middlewares/buildMissRateLimit.middlewa
 import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
+import { createAnalysisContextMiddleware } from './server/analysis'
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
@@ -139,9 +140,10 @@ app.prepare().then(() => {
         version: ctx.state.resolved.version,
       }),
     }),
+    createAnalysisContextMiddleware('package-analysis'),
     errorMiddleware,
     blockBlacklistMiddleware,
-    resolvePackageMiddleware,
+    createResolvePackageMiddleware('package-analysis'),
     cachedResponseMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,
@@ -153,9 +155,10 @@ app.prepare().then(() => {
 
   router.get(
     '/api/exports',
+    createAnalysisContextMiddleware('package-exports'),
     errorMiddleware,
     blockBlacklistMiddleware,
-    resolvePackageMiddleware,
+    createResolvePackageMiddleware('package-exports'),
     exportsMiddlware
   )
 
@@ -169,9 +172,10 @@ app.prepare().then(() => {
         version: ctx.state.resolved.version,
       }),
     }),
+    createAnalysisContextMiddleware('package-export-sizes'),
     errorMiddleware,
     blockBlacklistMiddleware,
-    resolvePackageMiddleware,
+    createResolvePackageMiddleware('package-export-sizes'),
     cachedResponseMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,

@@ -1,11 +1,11 @@
 import type { Middleware } from 'koa'
 import send from 'koa-send'
 import queryString from 'query-string'
-import semver from 'semver'
 
+import { createJavaScriptPackageReference } from '../../languages/javascript'
 import Cache from '../../utils/cache.utils'
-import { resolvePackage } from '../../utils/server.utils'
 import { drawStatsImg } from '../../utils/draw.utils'
+import { packageAnalysisGateway } from '../analysis'
 
 interface StatsImageResult {
   name: string
@@ -38,8 +38,15 @@ const generateImgMiddleware: Middleware = async ctx => {
     const name = parsedName
 
     let resolvedVersion: string
-    if (!version || !semver.valid(version)) {
-      resolvedVersion = (await resolvePackage(name)).version
+    const reference = createJavaScriptPackageReference(
+      version ? `${name}@${version}` : name
+    )
+    if (
+      !version ||
+      !packageAnalysisGateway.isExactVersionSpecifier(reference)
+    ) {
+      resolvedVersion = (await packageAnalysisGateway.resolvePackage(reference))
+        .version
     } else {
       resolvedVersion = version
     }

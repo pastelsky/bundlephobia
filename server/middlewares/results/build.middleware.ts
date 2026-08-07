@@ -1,19 +1,17 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
-import semver from 'semver'
 
+import { createJavaScriptPackageReference } from '../../../languages/javascript'
 import Cache from '../../../utils/cache.utils'
 import firebaseUtils from '../../../utils/firebase.utils'
-import { parsePackageString } from '../../../utils/common.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
-import BuildService, { BUILD_DURATION_HEADER } from '../../api/BuildService'
+import { packageAnalysisGateway } from '../../analysis'
+import { BUILD_DURATION_HEADER } from '../../api/BuildService'
 import config from '../../config'
 import logger from '../../Logger'
 import type { PackageBuildResult } from '../../types'
 
 const cache = new Cache()
-const buildService = new BuildService()
-
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { scoped, name, version, description, repository, packageString } =
@@ -33,6 +31,8 @@ const buildMiddleware: Middleware = async ctx => {
       {
         requestId: ctx.state.id,
         packageString,
+        language: ctx.state.analysis.language,
+        operation: ctx.state.analysis.operation,
       },
       `BUILD_ABORTED: client closed connection for package ${packageString}`
     )
@@ -43,16 +43,13 @@ const buildMiddleware: Middleware = async ctx => {
 
   let result: PackageBuildResult
   try {
-    result = await buildService.getPackageBuildStats<PackageBuildResult>(
-      packageString,
+    result = await packageAnalysisGateway.analyzePackage(ctx.state.resolved, {
       priority,
-      {
-        signal: abortController.signal,
-        onComplete: durationMs => {
-          ctx.set(BUILD_DURATION_HEADER, String(durationMs))
-        },
-      }
-    )
+      signal: abortController.signal,
+      onComplete: durationMs => {
+        ctx.set(BUILD_DURATION_HEADER, String(durationMs))
+      },
+    })
   } finally {
     ctx.res.off('close', onAborted)
   }
@@ -64,7 +61,9 @@ const buildMiddleware: Middleware = async ctx => {
       force != null
         ? 0
         : requestedPackage &&
-          semver.valid(parsePackageString(requestedPackage).version)
+          packageAnalysisGateway.isExactVersionSpecifier(
+            createJavaScriptPackageReference(requestedPackage)
+          )
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }
@@ -88,6 +87,8 @@ const buildMiddleware: Middleware = async ctx => {
       result,
       requestId: ctx.state.id,
       packageString,
+      language: ctx.state.analysis.language,
+      operation: ctx.state.analysis.operation,
       time,
     },
     `BUILD: ${packageString} built in ${time.toFixed()}s and is ${
