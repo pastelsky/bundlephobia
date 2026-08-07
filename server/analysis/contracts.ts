@@ -8,7 +8,6 @@ import type {
   PackageExportSizesResult,
   PackageExportsResult,
 } from '../types'
-import type { LanguageStorageAdapter } from '../storage/contracts'
 
 export const ANALYSIS_OPERATIONS = [
   'package-analysis',
@@ -32,7 +31,6 @@ export interface ResolvedAnalysisPackage<L extends LanguageId = LanguageId>
 
 export interface PackageResolutionAdapter<L extends LanguageId = LanguageId> {
   readonly language: L
-  readonly storage: LanguageStorageAdapter
   resolvePackage(
     reference: PackageReference<L>
   ): Promise<ResolvedAnalysisPackage<L>>

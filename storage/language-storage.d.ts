@@ -12,12 +12,13 @@ export interface FirebaseVersionedRoot {
   fallback?: string
 }
 
-export interface LanguageStorageNamespace {
+export interface LanguageStorageConfig {
   language: LanguageId
   enabled: boolean
-  writesEnabled: boolean
-  analysisProfile: string
-  resultSchemas: Readonly<Record<StorageOperation, string>>
+  cacheVersion: {
+    schema: string
+    profile: string
+  }
   roots: {
     packageAnalysis: FirebaseVersionedRoot
     packageExports: FirebaseVersionedRoot
@@ -27,24 +28,15 @@ export interface LanguageStorageNamespace {
 }
 
 export const JAVASCRIPT_ANALYSIS_PROFILE: string
-export const RESULT_SCHEMAS: Readonly<Record<StorageOperation, string>>
-export const STORAGE_OPERATIONS: readonly StorageOperation[]
 
-export function getLanguageStorageNamespace(
+export function getLanguageStorageConfig(
   language: LanguageId,
   env?: NodeJS.ProcessEnv
-): LanguageStorageNamespace
+): LanguageStorageConfig
 
-export function createStorageKey(parts: {
-  language: LanguageId
-  operation: StorageOperation
-  resultSchema: string
-  analysisProfile: string
-  identifier: string
-}): string
-
-export function createNamespaceStorageKey(
-  namespace: LanguageStorageNamespace,
+export function createStorageKey(
+  storage: LanguageStorageConfig,
   operation: StorageOperation,
-  identifier: string
+  identifier: string,
+  version?: { schema?: string; profile?: string }
 ): string

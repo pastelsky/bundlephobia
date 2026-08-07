@@ -1,22 +1,6 @@
-const STORAGE_OPERATIONS = Object.freeze([
-  'package-analysis',
-  'package-exports',
-  'package-export-sizes',
-  'package-history',
-  'recent-searches',
-])
-
 const JAVASCRIPT_ANALYSIS_PROFILE = 'package-build-stats-v9'
 
-const RESULT_SCHEMAS = Object.freeze({
-  'package-analysis': 'javascript-package-analysis-v1',
-  'package-exports': 'javascript-package-exports-v1',
-  'package-export-sizes': 'javascript-package-export-sizes-v1',
-  'package-history': 'javascript-package-history-v1',
-  'recent-searches': 'javascript-recent-searches-v1',
-})
-
-function javascriptNamespace(env) {
+function javascriptConfig(env) {
   // These root names are existing production contracts. A future result schema
   // or analysis profile must use a new root rather than reinterpreting data in
   // one of these namespaces.
@@ -27,9 +11,10 @@ function javascriptNamespace(env) {
   return {
     language: 'javascript',
     enabled: true,
-    writesEnabled: true,
-    analysisProfile: JAVASCRIPT_ANALYSIS_PROFILE,
-    resultSchemas: RESULT_SCHEMAS,
+    cacheVersion: {
+      schema: 'v1',
+      profile: JAVASCRIPT_ANALYSIS_PROFILE,
+    },
     roots: {
       packageAnalysis: {
         read: moduleReadRoot,
@@ -59,19 +44,12 @@ function javascriptNamespace(env) {
   }
 }
 
-function disabledNamespace(language) {
+function disabledConfig(language) {
   const prefix = `${language}-v1`
   return {
     language,
     enabled: false,
-    writesEnabled: false,
-    analysisProfile: `${language}-disabled`,
-    resultSchemas: Object.fromEntries(
-      STORAGE_OPERATIONS.map(operation => [
-        operation,
-        `${language}-${operation}-v1`,
-      ])
-    ),
+    cacheVersion: { schema: 'v1', profile: 'disabled' },
     roots: {
       packageAnalysis: {
         read: `${prefix}-modules`,
@@ -87,55 +65,30 @@ function disabledNamespace(language) {
   }
 }
 
-function getLanguageStorageNamespace(language, env = process.env) {
+function getLanguageStorageConfig(language, env = process.env) {
   switch (language) {
     case 'javascript':
-      return javascriptNamespace(env)
+      return javascriptConfig(env)
     case 'java':
     case 'kotlin':
-      return disabledNamespace(language)
+      return disabledConfig(language)
     default:
       throw new Error(`Unknown storage language: ${language}`)
   }
 }
 
-function createStorageKey({
-  language,
-  operation,
-  resultSchema,
-  analysisProfile,
-  identifier,
-}) {
+function createStorageKey(storage, operation, identifier, version = {}) {
   return JSON.stringify([
-    language,
+    storage.language,
     operation,
-    resultSchema,
-    analysisProfile,
+    version.schema || storage.cacheVersion.schema,
+    version.profile || storage.cacheVersion.profile,
     identifier,
   ])
 }
 
-function createNamespaceStorageKey(namespace, operation, identifier) {
-  const resultSchema = namespace.resultSchemas[operation]
-  if (!resultSchema) {
-    throw new Error(
-      `Missing ${namespace.language} result schema for ${operation}`
-    )
-  }
-  return createStorageKey({
-    language: namespace.language,
-    operation,
-    resultSchema,
-    analysisProfile: namespace.analysisProfile,
-    identifier,
-  })
-}
-
 module.exports = {
   JAVASCRIPT_ANALYSIS_PROFILE,
-  RESULT_SCHEMAS,
-  STORAGE_OPERATIONS,
-  createNamespaceStorageKey,
   createStorageKey,
-  getLanguageStorageNamespace,
+  getLanguageStorageConfig,
 }

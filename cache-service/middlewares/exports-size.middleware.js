@@ -4,21 +4,17 @@ const firebase = require('firebase')
 const debug = require('debug')('bp:cache')
 const { encodeFirebaseKey } = require('../cache.utils')
 const {
-  createNamespaceStorageKey,
-  getLanguageStorageNamespace,
+  createStorageKey,
+  getLanguageStorageConfig,
 } = require('../../storage/language-storage')
 
 const LRUCache = new LRU({ max: 1500 })
 
-const STORAGE = getLanguageStorageNamespace('javascript')
+const STORAGE = getLanguageStorageConfig('javascript')
 const EXPORTS_ROOT = STORAGE.roots.packageExports
 
 function getMemoryKey(name, version) {
-  return createNamespaceStorageKey(
-    STORAGE,
-    'package-export-sizes',
-    `${name}@${version}`
-  )
+  return createStorageKey(STORAGE, 'package-export-sizes', `${name}@${version}`)
 }
 
 debug(
@@ -123,9 +119,4 @@ async function postExportsSizeMiddleware(req, res) {
   }
 }
 
-module.exports = {
-  getExportsSizeMiddlware,
-  postExportsSizeMiddleware,
-  storageNamespace: STORAGE,
-  getMemoryKey,
-}
+module.exports = { getExportsSizeMiddlware, postExportsSizeMiddleware }

@@ -52,7 +52,6 @@ const generateImgMiddleware: Middleware = async ctx => {
     }
 
     const result = await cache.getPackageSize<StatsImageResult>({
-      language: 'javascript',
       name,
       version: resolvedVersion,
     })

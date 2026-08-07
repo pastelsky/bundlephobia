@@ -2,8 +2,10 @@ import axios from 'axios'
 import createDebug from 'debug'
 import firebaseSDK from 'firebase'
 
-import type { LanguageStorageAdapter } from '../server/storage/contracts'
-import { createJavaScriptStorageAdapter } from '../server/storage/javascript'
+import {
+  getLanguageStorageAdapter,
+  type LanguageStorageAdapter,
+} from '../server/storage'
 import { decodeFirebaseKey, encodeFirebaseKey } from './index'
 
 const debug = createDebug('bp:firebase-util')
@@ -37,10 +39,10 @@ export class FirebaseUtils {
   constructor(
     firebaseInstance: typeof firebaseSDK,
     enable = true,
-    storage = createJavaScriptStorageAdapter()
+    storage = getLanguageStorageAdapter('javascript')
   ) {
     this.storage = storage
-    if (enable && storage.namespace.enabled) {
+    if (enable && storage.enabled) {
       this.firebase = firebaseInstance
     }
   }
@@ -49,14 +51,14 @@ export class FirebaseUtils {
     name: string,
     packageInfo: { name: string; version?: string }
   ): void {
-    if (!this.firebase || !this.storage.namespace.writesEnabled) {
+    if (!this.firebase || !this.storage.enabled) {
       return
     }
 
     const searches = this.firebase
       .database()
       .ref()
-      .child(this.storage.namespace.roots.recentSearches)
+      .child(this.storage.roots.recentSearches)
     void searches
       .child(encodeFirebaseKey(name))
       .once('value')
@@ -102,7 +104,7 @@ export class FirebaseUtils {
     }
 
     const firebasePromise = (async () => {
-      const historyRoot = this.storage.namespace.roots.packageHistory
+      const historyRoot = this.storage.roots.packageHistory
       const result = await getHistoryFromKey(historyRoot.read)
       if (result) {
         debug('package history from %s', historyRoot.read)
@@ -156,16 +158,13 @@ export class FirebaseUtils {
       )
     }
 
-    const versionOrdering = this.storage.versionOrdering
-    if (!versionOrdering) {
+    const selectHistoryVersions = this.storage.selectHistoryVersions
+    if (!selectHistoryVersions) {
       throw new Error(
         `Package history is unavailable for ${this.storage.language}`
       )
     }
-    const limitedVersions = versionOrdering.selectHistoryVersions(
-      versions,
-      limit
-    )
+    const limitedVersions = selectHistoryVersions(versions, limit)
 
     debug('last npm %d %s versions %o', limit, name, limitedVersions)
 
@@ -195,7 +194,7 @@ export class FirebaseUtils {
     const searches = this.firebase
       .database()
       .ref()
-      .child(this.storage.namespace.roots.recentSearches)
+      .child(this.storage.roots.recentSearches)
     const recentSearches: Record<string, SearchRecord> = {}
 
     return searches
@@ -225,7 +224,7 @@ export class FirebaseUtils {
     const searches = this.firebase
       .database()
       .ref()
-      .child(this.storage.namespace.roots.recentSearches)
+      .child(this.storage.roots.recentSearches)
 
     const snapshot = await searches
       .orderByChild('lastSearched')

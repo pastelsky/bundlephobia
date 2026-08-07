@@ -1,26 +1,20 @@
 import axios from 'axios'
 
 import {
-  createNamespaceStorageKey,
   createStorageKey,
-  getLanguageStorageNamespace,
+  getLanguageStorageConfig,
 } from '../storage/language-storage'
 import { createAnalysisKey } from '../server/analysis/keys'
-import { createJavaScriptStorageAdapter } from '../server/storage/javascript'
-import { createLanguageStorageAdapters } from '../server/storage/registry'
+import { getLanguageStorageAdapter } from '../server/storage'
 import { FirebaseUtils } from '../utils/firebase.utils'
-
-const packageCacheMiddleware = require('../cache-service/middlewares/package-size.middleware')
-const exportCacheMiddleware = require('../cache-service/middlewares/exports-size.middleware')
 
 describe('language storage namespaces', () => {
   it('keeps JavaScript on the existing Firebase roots and fallbacks', () => {
-    const namespace = getLanguageStorageNamespace('javascript', {})
+    const namespace = getLanguageStorageConfig('javascript', {})
 
     expect(namespace).toMatchObject({
       language: 'javascript',
       enabled: true,
-      writesEnabled: true,
       roots: {
         packageAnalysis: {
           read: 'modules-v3',
@@ -39,7 +33,7 @@ describe('language storage namespaces', () => {
   })
 
   it('preserves every existing JavaScript environment override', () => {
-    const namespace = getLanguageStorageNamespace('javascript', {
+    const namespace = getLanguageStorageConfig('javascript', {
       FIREBASE_READ_KEY: 'custom-modules',
       FIREBASE_WRITE_KEY: 'custom-module-writes',
       FIREBASE_READ_KEY_EXPORTS: 'custom-exports',
@@ -62,10 +56,11 @@ describe('language storage namespaces', () => {
   })
 
   it('reserves isolated roots for disabled Java and Kotlin adapters', () => {
-    const adapters = createLanguageStorageAdapters({})
-    const namespaces = [...adapters.values()].map(adapter => adapter.namespace)
-    const java = adapters.get('java')!.namespace
-    const kotlin = adapters.get('kotlin')!.namespace
+    const namespaces = (['javascript', 'java', 'kotlin'] as const).map(
+      language => getLanguageStorageConfig(language, {})
+    )
+    const java = getLanguageStorageConfig('java', {})
+    const kotlin = getLanguageStorageConfig('kotlin', {})
     const allRoots = namespaces.flatMap(namespace => [
       namespace.roots.packageAnalysis.read,
       namespace.roots.packageExports.read,
@@ -73,52 +68,27 @@ describe('language storage namespaces', () => {
       namespace.roots.recentSearches,
     ])
 
-    expect(java).toMatchObject({ enabled: false, writesEnabled: false })
-    expect(kotlin).toMatchObject({ enabled: false, writesEnabled: false })
+    expect(java.enabled).toBe(false)
+    expect(kotlin.enabled).toBe(false)
     expect(new Set(allRoots).size).toBe(allRoots.length)
-  })
-
-  it('rejects an environment override that collides with another language', () => {
-    expect(() =>
-      createLanguageStorageAdapters({
-        FIREBASE_READ_KEY: 'java-v1-modules',
-      })
-    ).toThrow('Storage root java-v1-modules is shared by javascript and java')
   })
 })
 
 describe('storage cache identities', () => {
-  it('binds cache-service reads and writes to the existing JavaScript roots', () => {
-    expect(
-      packageCacheMiddleware.storageNamespace.roots.packageAnalysis
-    ).toEqual({
-      read: 'modules-v3',
-      write: 'modules-v3',
-      fallback: 'modules-v2',
-    })
-    expect(exportCacheMiddleware.storageNamespace.roots.packageExports).toEqual(
-      {
-        read: 'exports-v3',
-        write: 'exports-v3',
-        fallback: 'exports',
-      }
-    )
-  })
-
   it('cannot collide across language, operation, schema, or profile', () => {
-    const base = {
-      language: 'javascript' as const,
-      operation: 'package-analysis' as const,
-      resultSchema: 'analysis-v1',
-      analysisProfile: 'default',
-      identifier: '@scope/example@1.0.0',
-    }
+    const storage = getLanguageStorageConfig('javascript', {})
+    const java = getLanguageStorageConfig('java', {})
+    const identifier = '@scope/example@1.0.0'
     const keys = [
-      createStorageKey(base),
-      createStorageKey({ ...base, language: 'java' }),
-      createStorageKey({ ...base, operation: 'package-exports' }),
-      createStorageKey({ ...base, resultSchema: 'analysis-v2' }),
-      createStorageKey({ ...base, analysisProfile: 'experimental' }),
+      createStorageKey(storage, 'package-analysis', identifier),
+      createStorageKey(java, 'package-analysis', identifier),
+      createStorageKey(storage, 'package-exports', identifier),
+      createStorageKey(storage, 'package-analysis', identifier, {
+        schema: 'v2',
+      }),
+      createStorageKey(storage, 'package-analysis', identifier, {
+        profile: 'experimental',
+      }),
     ]
 
     expect(new Set(keys).size).toBe(keys.length)
@@ -147,46 +117,31 @@ describe('storage cache identities', () => {
     expect(new Set([defaultKey, schemaKey, profileKey]).size).toBe(3)
   })
 
-  it('uses the same complete identity for cache-service memory keys', () => {
-    const namespace = getLanguageStorageNamespace('javascript', {})
+  it('keeps every cache identity component explicit', () => {
+    const storage = getLanguageStorageConfig('javascript', {})
     expect(
-      JSON.parse(
-        createNamespaceStorageKey(
-          namespace,
-          'package-export-sizes',
-          'example@1.0.0'
-        )
-      )
+      JSON.parse(createStorageKey(storage, 'package-analysis', 'example'))
     ).toEqual([
       'javascript',
-      'package-export-sizes',
-      namespace.resultSchemas['package-export-sizes'],
-      namespace.analysisProfile,
-      'example@1.0.0',
+      'package-analysis',
+      'v1',
+      'package-build-stats-v9',
+      'example',
     ])
-    expect(packageCacheMiddleware.getMemoryKey('example', '1.0.0')).toBe(
-      createNamespaceStorageKey(namespace, 'package-analysis', 'example@1.0.0')
-    )
-    expect(exportCacheMiddleware.getMemoryKey('example', '1.0.0')).toBe(
-      createNamespaceStorageKey(
-        namespace,
-        'package-export-sizes',
-        'example@1.0.0'
-      )
-    )
   })
 })
 
 describe('JavaScript history behavior', () => {
   it('retains semver ordering and latest prerelease behavior in the adapter', () => {
-    const ordering = createJavaScriptStorageAdapter({}).versionOrdering!
+    const storage = getLanguageStorageAdapter('javascript', {})
 
     expect(
-      ordering.selectHistoryVersions(
+      storage.selectHistoryVersions!(
         ['1.0.0', '2.0.0', '1.5.0', '3.0.0-beta.1'],
         3
       )
     ).toEqual(['1.5.0', '2.0.0', '3.0.0-beta.1'])
+    expect(storage.selectHistoryVersions!(['1.0.0'], 0)).toEqual([])
   })
 })
 
@@ -196,7 +151,7 @@ describe('disabled-language Firebase safety', () => {
     async language => {
       const database = jest.fn()
       const firebase = { database }
-      const storage = createLanguageStorageAdapters({}).get(language)!
+      const storage = getLanguageStorageAdapter(language, {})
       const utils = new FirebaseUtils(firebase as never, true, storage)
 
       utils.setRecentSearch('example', { name: 'example', version: '1.0.0' })
@@ -217,7 +172,7 @@ describe('disabled-language Firebase safety', () => {
     const utils = new FirebaseUtils(
       firebase as never,
       true,
-      createJavaScriptStorageAdapter({})
+      getLanguageStorageAdapter('javascript', {})
     )
 
     await expect(utils.getPackageHistory('example', 1)).resolves.toEqual({
@@ -233,7 +188,7 @@ describe('disabled-language Firebase safety', () => {
     const utils = new FirebaseUtils(
       firebase as never,
       true,
-      createJavaScriptStorageAdapter({})
+      getLanguageStorageAdapter('javascript', {})
     )
 
     utils.setRecentSearch('example', { name: 'example', version: '1.0.0' })

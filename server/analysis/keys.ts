@@ -1,7 +1,7 @@
 import type { LanguageId } from '../../types/language-domain'
 import {
   createStorageKey,
-  getLanguageStorageNamespace,
+  getLanguageStorageConfig,
 } from '../../storage/language-storage'
 import type { AnalysisOperation } from './contracts'
 
@@ -15,14 +15,10 @@ interface AnalysisKeyParts {
 
 /** A collision-safe identity for in-memory work and failure caches. */
 export function createAnalysisKey(parts: AnalysisKeyParts): string {
-  const namespace = getLanguageStorageNamespace(parts.language)
-  return createStorageKey({
-    language: parts.language,
-    operation: parts.operation,
-    resultSchema:
-      parts.resultSchema ?? namespace.resultSchemas[parts.operation],
-    analysisProfile: parts.analysisProfile ?? namespace.analysisProfile,
-    identifier: parts.packageSpecifier,
+  const storage = getLanguageStorageConfig(parts.language)
+  return createStorageKey(storage, parts.operation, parts.packageSpecifier, {
+    schema: parts.resultSchema,
+    profile: parts.analysisProfile,
   })
 }
 

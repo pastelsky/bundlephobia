@@ -4,20 +4,16 @@ const LRU = require('lru-cache')
 const debug = require('debug')('bp:cache')
 const { encodeFirebaseKey } = require('../cache.utils')
 const {
-  createNamespaceStorageKey,
-  getLanguageStorageNamespace,
+  createStorageKey,
+  getLanguageStorageConfig,
 } = require('../../storage/language-storage')
 const LRUCache = new LRU({ max: 3000 })
 
-const STORAGE = getLanguageStorageNamespace('javascript')
+const STORAGE = getLanguageStorageConfig('javascript')
 const PACKAGE_ROOT = STORAGE.roots.packageAnalysis
 
 function getMemoryKey(name, version) {
-  return createNamespaceStorageKey(
-    STORAGE,
-    'package-analysis',
-    `${name}@${version}`
-  )
+  return createStorageKey(STORAGE, 'package-analysis', `${name}@${version}`)
 }
 
 debug(
@@ -123,9 +119,4 @@ async function postPackageSizeMiddlware(req, res) {
   }
 }
 
-module.exports = {
-  getPackageSizeMiddlware,
-  postPackageSizeMiddlware,
-  storageNamespace: STORAGE,
-  getMemoryKey,
-}
+module.exports = { getPackageSizeMiddlware, postPackageSizeMiddlware }

@@ -101,10 +101,7 @@ const buildMiddleware: Middleware = async ctx => {
   }
 
   if (force === 'true') {
-    void cache.setPackageSize(
-      { language: ctx.state.resolved.language, name, version },
-      body
-    )
+    void cache.setPackageSize({ name, version }, body)
   }
 }
 

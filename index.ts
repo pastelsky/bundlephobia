@@ -43,7 +43,6 @@ import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
 import { createAnalysisContextMiddleware } from './server/analysis'
-import type { LanguageId } from './types/language-domain'
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
@@ -127,7 +126,6 @@ app.prepare().then(() => {
   )
 
   type Key = {
-    language?: LanguageId
     name: string
     version: string
   }
@@ -138,7 +136,6 @@ app.prepare().then(() => {
       get: (key: Key) => cache.getPackageSize(key),
       set: (key: Key, value: string) => cache.setPackageSize(key, value),
       hash: (ctx: Context) => ({
-        language: ctx.state.resolved.language,
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
       }),
@@ -171,7 +168,6 @@ app.prepare().then(() => {
       get: (key: Key) => cache.getExportsSize(key),
       set: (key: Key, value: string) => cache.setExportsSize(key, value),
       hash: (ctx: Context) => ({
-        language: ctx.state.resolved.language,
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
       }),
