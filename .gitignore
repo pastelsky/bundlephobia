@@ -22,6 +22,8 @@ logs
 # TypeScript
 tsconfig.tsbuildinfo
 next-env.d.ts
+playwright-report/
+test-results/
 
 # keys
 scripts/keys

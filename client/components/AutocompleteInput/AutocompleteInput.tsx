@@ -14,6 +14,7 @@ type AutocompleteInputProps = {
   className?: string
   containerClass?: string
   autoFocus?: boolean
+  ariaLabel?: string
   onSearchSubmit: (value: string) => void
 }
 
@@ -23,6 +24,7 @@ export const AutocompleteInput = ({
   className,
   containerClass,
   autoFocus,
+  ariaLabel = 'Package name',
   onSearchSubmit,
 }: AutocompleteInputProps) => {
   const {
@@ -81,6 +83,7 @@ export const AutocompleteInput = ({
           <input
             {...getInputProps({
               placeholder: 'find package',
+              'aria-label': ariaLabel,
               className: 'autocomplete-input',
               autoCorrect: 'off',
               autoFocus,

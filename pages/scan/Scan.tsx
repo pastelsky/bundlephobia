@@ -466,6 +466,7 @@ class Scan extends Component<ScanProps, ScanState> {
                   >
                     <input
                       type="text"
+                      aria-label="Package.json URL"
                       className="scan__url-input"
                       placeholder="e.g. github.com/facebook/react or raw package.json URL"
                       value={remoteUrlInput}
