@@ -5,6 +5,11 @@
   height: 100vh;
   height: calc(100vh - 4px);
   padding: 0 $global-spacing * 2;
+
+  @media screen and (max-width: 40em) {
+    height: auto;
+    min-height: calc(100vh - 4px);
+  }
 }
 
 .homepage__content {
@@ -22,8 +27,11 @@
   }
 
   @media screen and (max-width: 40em) {
+    height: auto;
+    min-height: calc(100vh - 90px);
+
     &::after {
-      flex-basis: calc(102px + 7vh);
+      display: none;
     }
   }
 }
@@ -139,6 +147,13 @@
   min-height: 280px;
   margin: 0;
   z-index: 1;
+
+  @media screen and (max-width: 40em) {
+    position: static;
+    width: min(100%, $global-spacing * 36);
+    min-height: 0;
+    margin: $global-spacing * 4 auto $global-spacing * 2;
+  }
 }
 
 // Adapt the silver pocket element in the logo for dark mode

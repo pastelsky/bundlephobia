@@ -17,7 +17,7 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
     script.async = true
     script.type = 'text/javascript'
     script.src =
-      '//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=cover'
+      '//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=responsive'
     script.id = '_carbonads_js'
     container.appendChild(script)
 
