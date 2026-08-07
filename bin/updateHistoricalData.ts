@@ -6,7 +6,7 @@ import GithubAPI from 'github'
 import fetch from 'node-fetch'
 import trending from 'trending-github'
 
-import firebaseUtils from '../utils/firebase.utils'
+import { javascriptStorage } from '../server/storage'
 
 import 'dotenv/config'
 
@@ -72,7 +72,7 @@ async function getGithubTrendingPackages() {
 async function getTrendingSearches() {
   const limit = 20
   let trendingSearches: string[] = []
-  const searches = (await firebaseUtils.getDailySearches()) as SearchCountMap | null
+  const searches = (await javascriptStorage.recentSearches.daily()) as SearchCountMap | null
 
   if (searches) {
     trendingSearches = Object.keys(searches)

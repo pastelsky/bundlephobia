@@ -1,19 +1,19 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
-import { createJavaScriptPackageReference } from '../../languages/javascript'
-import Cache from '../../utils/cache.utils'
 import { getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
 import { BUILD_DURATION_HEADER } from '../api/BuildService'
 import config from '../config'
 import logger from '../Logger'
+import { getLanguageStorageAdapter } from '../storage'
 
-const cache = new Cache()
 const exportSizesMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
   const { force, peek, package: packageQuery } = ctx.query
+  const language = ctx.state.analysis.language
+  const storage = getLanguageStorageAdapter(language)
 
   if (peek) {
     ctx.body = { name, version, peekSuccess: false }
@@ -40,9 +40,10 @@ const exportSizesMiddleware: Middleware = async ctx => {
       force != null
         ? 0
         : requestedPackage &&
-          packageAnalysisGateway.isExactVersionSpecifier(
-            createJavaScriptPackageReference(requestedPackage)
-          )
+          packageAnalysisGateway.isExactVersionSpecifier({
+            language,
+            specifier: requestedPackage,
+          })
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }
@@ -65,7 +66,7 @@ const exportSizesMiddleware: Middleware = async ctx => {
   )
 
   if (force === 'true') {
-    void cache.setExportsSize({ name, version }, body)
+    void storage.exportSizes?.set({ name, version }, body)
   }
 }
 

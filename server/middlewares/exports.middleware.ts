@@ -1,7 +1,6 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
-import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
 import { BUILD_DURATION_HEADER } from '../api/BuildService'
@@ -12,6 +11,7 @@ const exportsMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
   const { force, package: packageQuery } = ctx.query
+  const language = ctx.state.analysis.language
   const requestedPackage =
     typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
@@ -32,9 +32,10 @@ const exportsMiddleware: Middleware = async ctx => {
       force != null
         ? 0
         : requestedPackage &&
-          packageAnalysisGateway.isExactVersionSpecifier(
-            createJavaScriptPackageReference(requestedPackage)
-          )
+          packageAnalysisGateway.isExactVersionSpecifier({
+            language,
+            specifier: requestedPackage,
+          })
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }

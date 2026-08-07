@@ -2,10 +2,9 @@ import type { Middleware } from 'koa'
 import send from 'koa-send'
 import queryString from 'query-string'
 
-import { createJavaScriptPackageReference } from '../../languages/javascript'
-import Cache from '../../utils/cache.utils'
 import { drawStatsImg } from '../../utils/draw.utils'
 import { packageAnalysisGateway } from '../analysis'
+import { getLanguageStorageAdapter } from '../storage'
 
 interface StatsImageResult {
   name: string
@@ -17,8 +16,6 @@ interface StatsImageResult {
 function isThemeName(value: string | undefined): value is 'dark' | 'light' {
   return value === 'dark' || value === 'light'
 }
-
-const cache = new Cache()
 
 const generateImgMiddleware: Middleware = async ctx => {
   const url = ctx.url.replace(/&amp;/g, '&')
@@ -36,11 +33,14 @@ const generateImgMiddleware: Middleware = async ctx => {
     }
 
     const name = parsedName
+    const language = ctx.state.analysis.language
+    const storage = getLanguageStorageAdapter(language)
 
     let resolvedVersion: string
-    const reference = createJavaScriptPackageReference(
-      version ? `${name}@${version}` : name
-    )
+    const reference = {
+      language,
+      specifier: version ? `${name}@${version}` : name,
+    }
     if (
       !version ||
       !packageAnalysisGateway.isExactVersionSpecifier(reference)
@@ -51,7 +51,7 @@ const generateImgMiddleware: Middleware = async ctx => {
       resolvedVersion = version
     }
 
-    const result = await cache.getPackageSize<StatsImageResult>({
+    const result = await storage.packageAnalysis?.get<StatsImageResult>({
       name,
       version: resolvedVersion,
     })

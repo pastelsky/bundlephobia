@@ -15,9 +15,7 @@ import auth from 'koa-basic-auth'
 import bodyParser from 'koa-bodyparser'
 import invariant from 'ts-invariant'
 
-import Cache from './utils/cache.utils'
 import { parsePackageString } from './utils/common.utils'
-import firebaseUtils from './utils/firebase.utils'
 import logger from './server/Logger'
 import remoteMcpClient from './server/mcp/remoteClient'
 import {
@@ -43,6 +41,7 @@ import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
 import { createAnalysisContextMiddleware } from './server/analysis'
+import { javascriptStorage } from './server/storage'
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
@@ -60,7 +59,8 @@ function getEnv(env: Record<string, string | undefined | null>) {
 
 const env = getEnv(process.env)
 
-const cache = new Cache()
+const { packageAnalysis, exportSizes, packageHistory, recentSearches } =
+  javascriptStorage
 const port = env.port
 const dev = env.nodeEnv !== 'production'
 const app = next({ dev, ...(dev ? { webpack: true } : {}) })
@@ -133,8 +133,8 @@ app.prepare().then(() => {
   router.get(
     '/api/size',
     jsonCacheMiddleware({
-      get: (key: Key) => cache.getPackageSize(key),
-      set: (key: Key, value: string) => cache.setPackageSize(key, value),
+      get: (key: Key) => packageAnalysis.get(key),
+      set: (key: Key, value: string) => packageAnalysis.set(key, value),
       hash: (ctx: Context) => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
@@ -165,8 +165,8 @@ app.prepare().then(() => {
   router.get(
     '/api/exports-sizes',
     jsonCacheMiddleware({
-      get: (key: Key) => cache.getExportsSize(key),
-      set: (key: Key, value: string) => cache.setExportsSize(key, value),
+      get: (key: Key) => exportSizes.get(key),
+      set: (key: Key, value: string) => exportSizes.set(key, value),
       hash: (ctx: Context) => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
@@ -190,7 +190,7 @@ app.prepare().then(() => {
       ctx.cacheControl = {
         maxAge: config.CACHE.RECENTS_API,
       }
-      ctx.body = await firebaseUtils.getRecentSearches(Number(ctx.query.limit))
+      ctx.body = await recentSearches.recent(Number(ctx.query.limit))
     } catch (err) {
       console.error('in /api/recent', err)
       const message = err instanceof Error ? err.message : String(err)
@@ -212,10 +212,7 @@ app.prepare().then(() => {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
       }
-      ctx.body = await firebaseUtils.getPackageHistory(
-        name,
-        Number(ctx.query.limit)
-      )
+      ctx.body = await packageHistory.get(name, Number(ctx.query.limit))
     } catch (err) {
       console.error(err)
       const message = err instanceof Error ? err.message : String(err)
@@ -232,7 +229,11 @@ app.prepare().then(() => {
 
   router.get('/api/similar-packages', similarPackagesMiddleware)
 
-  router.get('/api/stats-image', generateImgMiddleware)
+  router.get(
+    '/api/stats-image',
+    createAnalysisContextMiddleware('package-analysis'),
+    generateImgMiddleware
+  )
 
   router.get('/api/mcp/tools', async ctx => {
     try {

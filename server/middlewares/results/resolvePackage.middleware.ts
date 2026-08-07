@@ -1,10 +1,7 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
-import {
-  createJavaScriptPackageReference,
-  parseJavaScriptPackageSpecifier,
-} from '../../../languages/javascript'
+import { parseJavaScriptPackageSpecifier } from '../../../languages/javascript'
 import { packageAnalysisGateway } from '../../analysis'
 import type { AnalysisOperation } from '../../analysis/contracts'
 import { debug, logger } from '../../init'
@@ -13,7 +10,8 @@ export function createResolvePackageMiddleware(
   operation: AnalysisOperation
 ): Middleware {
   return async (ctx, next) => {
-    ctx.state.analysis = { language: 'javascript', operation }
+    const language = ctx.state.analysis.language
+    ctx.state.analysis = { language, operation }
     const packageQuery = ctx.query.package
     const packageString =
       typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
@@ -27,7 +25,7 @@ export function createResolvePackageMiddleware(
     const parsedPackage = parseJavaScriptPackageSpecifier(resolvedPackageString)
 
     ctx.state.resolved = {
-      language: 'javascript',
+      language,
       specifier: resolvedPackageString,
       ...parsedPackage,
       version: parsedPackage.version ?? 'latest',
@@ -39,9 +37,10 @@ export function createResolvePackageMiddleware(
     }
 
     const resolveStart = now()
-    const resolvedPackage = await packageAnalysisGateway.resolvePackage(
-      createJavaScriptPackageReference(resolvedPackageString)
-    )
+    const resolvedPackage = await packageAnalysisGateway.resolvePackage({
+      language,
+      specifier: resolvedPackageString,
+    })
     const resolveEnd = now()
 
     const result = {

@@ -1,4 +1,5 @@
 import type { PackageReference } from '../types/language-domain'
+import { createAnalysisContextMiddleware } from '../server/analysis/context.middleware'
 import { PackageAnalysisGateway } from '../server/analysis/PackageAnalysisGateway'
 import type { PackageAnalysisAdapter } from '../server/analysis/contracts'
 import { PackageAnalysisGatewayError } from '../server/analysis/errors'
@@ -27,6 +28,21 @@ function createJavaScriptAdapter(): PackageAnalysisAdapter<'javascript'> {
 }
 
 describe('PackageAnalysisGateway', () => {
+  it('carries the route language into reusable analysis middleware', async () => {
+    const ctx = { state: {} }
+    const next = jest.fn()
+
+    await createAnalysisContextMiddleware('package-analysis', 'kotlin')(
+      ctx as never,
+      next
+    )
+
+    expect(ctx.state).toEqual({
+      analysis: { language: 'kotlin', operation: 'package-analysis' },
+    })
+    expect(next).toHaveBeenCalled()
+  })
+
   it('routes enabled JavaScript requests through its registered adapter', async () => {
     const gateway = new PackageAnalysisGateway()
     const adapter = createJavaScriptAdapter()
