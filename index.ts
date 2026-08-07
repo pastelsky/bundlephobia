@@ -229,7 +229,11 @@ app.prepare().then(() => {
 
   router.get('/api/similar-packages', similarPackagesMiddleware)
 
-  router.get('/api/stats-image', generateImgMiddleware)
+  router.get(
+    '/api/stats-image',
+    createAnalysisContextMiddleware('package-analysis'),
+    generateImgMiddleware
+  )
 
   router.get('/api/mcp/tools', async ctx => {
     try {

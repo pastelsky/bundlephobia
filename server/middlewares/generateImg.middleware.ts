@@ -2,10 +2,9 @@ import type { Middleware } from 'koa'
 import send from 'koa-send'
 import queryString from 'query-string'
 
-import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { drawStatsImg } from '../../utils/draw.utils'
 import { packageAnalysisGateway } from '../analysis'
-import { javascriptStorage } from '../storage'
+import { getLanguageStorageAdapter } from '../storage'
 
 interface StatsImageResult {
   name: string
@@ -34,11 +33,14 @@ const generateImgMiddleware: Middleware = async ctx => {
     }
 
     const name = parsedName
+    const language = ctx.state.analysis.language
+    const storage = getLanguageStorageAdapter(language)
 
     let resolvedVersion: string
-    const reference = createJavaScriptPackageReference(
-      version ? `${name}@${version}` : name
-    )
+    const reference = {
+      language,
+      specifier: version ? `${name}@${version}` : name,
+    }
     if (
       !version ||
       !packageAnalysisGateway.isExactVersionSpecifier(reference)
@@ -49,11 +51,10 @@ const generateImgMiddleware: Middleware = async ctx => {
       resolvedVersion = version
     }
 
-    const result =
-      await javascriptStorage.packageAnalysis.get<StatsImageResult>({
-        name,
-        version: resolvedVersion,
-      })
+    const result = await storage.packageAnalysis?.get<StatsImageResult>({
+      name,
+      version: resolvedVersion,
+    })
 
     if (!result) {
       throw new Error(

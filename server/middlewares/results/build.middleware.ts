@@ -1,14 +1,13 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
-import { createJavaScriptPackageReference } from '../../../languages/javascript'
 import { getRequestPriority } from '../../../utils/server.utils'
 import { packageAnalysisGateway } from '../../analysis'
 import { BUILD_DURATION_HEADER } from '../../api/BuildService'
 import config from '../../config'
 import logger from '../../Logger'
 import type { PackageBuildResult } from '../../types'
-import { javascriptStorage } from '../../storage'
+import { getLanguageStorageAdapter } from '../../storage'
 
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
@@ -17,6 +16,8 @@ const buildMiddleware: Middleware = async ctx => {
   const { force, record, package: packageQuery } = ctx.query
   const requestedPackage =
     typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+  const language = ctx.state.analysis.language
+  const storage = getLanguageStorageAdapter(language)
 
   const buildStart = now()
   const abortController = new AbortController()
@@ -59,9 +60,10 @@ const buildMiddleware: Middleware = async ctx => {
       force != null
         ? 0
         : requestedPackage &&
-          packageAnalysisGateway.isExactVersionSpecifier(
-            createJavaScriptPackageReference(requestedPackage)
-          )
+          packageAnalysisGateway.isExactVersionSpecifier({
+            language,
+            specifier: requestedPackage,
+          })
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }
@@ -95,11 +97,11 @@ const buildMiddleware: Middleware = async ctx => {
   )
 
   if (record === 'true') {
-    javascriptStorage.recentSearches.record(name, { name, version })
+    storage.recentSearches?.record(name, { name, version })
   }
 
   if (force === 'true') {
-    void javascriptStorage.packageAnalysis.set({ name, version }, body)
+    void storage.packageAnalysis?.set({ name, version }, body)
   }
 }
 

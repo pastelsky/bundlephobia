@@ -1,6 +1,5 @@
 import type { Middleware } from 'koa'
 
-import { createJavaScriptPackageReference } from '../../../languages/javascript'
 import { packageAnalysisGateway } from '../../analysis'
 import config from '../../config'
 import { createAnalysisKey } from '../../analysis/keys'
@@ -52,9 +51,10 @@ const cachedResponse: Middleware = async (ctx, next) => {
       maxAge:
         force != null
           ? 0
-          : packageAnalysisGateway.isExactVersionSpecifier(
-              createJavaScriptPackageReference(`${name}@${version}`)
-            )
+          : packageAnalysisGateway.isExactVersionSpecifier({
+              language,
+              specifier: `${name}@${version}`,
+            })
           ? config.CACHE.SIZE_API_HAS_VERSION
           : config.CACHE.SIZE_API_DEFAULT,
     }
