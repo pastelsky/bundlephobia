@@ -3,6 +3,7 @@ import cx from 'classnames'
 import { useCombobox } from 'downshift'
 
 import SearchIcon from '../Icons/SearchIcon'
+import { PotatoRain } from '../PotatoRain'
 import { parsePackageString } from '../../../utils/common.utils'
 import { useAutocompleteInput } from './hooks/useAutocompleteInput'
 import { SuggestionItem } from './components/SuggestionItem'
@@ -30,9 +31,12 @@ export const AutocompleteInput = ({
   const {
     value,
     suggestions,
+    potatoRainId,
     handleSubmit,
+    handleKeyDown,
     handleInputValueChange,
     setSuggestions,
+    stopPotatoRain,
   } = useAutocompleteInput({ initialValue, onSubmit: onSearchSubmit })
   const { searchFontSize } = useFontSize({ value })
 
@@ -90,6 +94,7 @@ export const AutocompleteInput = ({
               autoCapitalize: 'off',
               spellCheck: false,
               style: { fontSize: searchFontSize! },
+              onKeyDown: handleKeyDown,
             })}
           />
           <div
@@ -132,6 +137,9 @@ export const AutocompleteInput = ({
       >
         <SearchIcon className="" />
       </button>
+      {potatoRainId !== null && (
+        <PotatoRain key={potatoRainId} onComplete={stopPotatoRain} />
+      )}
     </form>
   )
 }
