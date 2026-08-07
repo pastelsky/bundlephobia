@@ -1,15 +1,12 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
-import semver from 'semver'
 
-import { parsePackageString } from '../../utils/common.utils'
+import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { getRequestPriority } from '../../utils/server.utils'
-import BuildService, { BUILD_DURATION_HEADER } from '../api/BuildService'
+import { packageAnalysisGateway } from '../analysis'
+import { BUILD_DURATION_HEADER } from '../api/BuildService'
 import config from '../config'
 import logger from '../Logger'
-import type { PackageExportsResult } from '../types'
-
-const buildService = new BuildService()
 
 const exportsMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
@@ -19,10 +16,10 @@ const exportsMiddleware: Middleware = async ctx => {
     typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
   const buildStart = now()
-  const result = await buildService.getPackageExports<PackageExportsResult>(
-    packageString,
-    priority,
+  const result = await packageAnalysisGateway.analyzePackageExports(
+    ctx.state.resolved,
     {
+      priority,
       onComplete: durationMs => {
         ctx.set(BUILD_DURATION_HEADER, String(durationMs))
       },
@@ -35,7 +32,9 @@ const exportsMiddleware: Middleware = async ctx => {
       force != null
         ? 0
         : requestedPackage &&
-          semver.valid(parsePackageString(requestedPackage).version)
+          packageAnalysisGateway.isExactVersionSpecifier(
+            createJavaScriptPackageReference(requestedPackage)
+          )
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }
@@ -49,6 +48,8 @@ const exportsMiddleware: Middleware = async ctx => {
       result,
       requestId: ctx.state.id,
       packageString,
+      language: ctx.state.analysis.language,
+      operation: ctx.state.analysis.operation,
       time,
     },
     `BUILD EXPORTS: ${packageString} built in ${time.toFixed()}s`

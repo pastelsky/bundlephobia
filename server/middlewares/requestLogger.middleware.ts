@@ -65,6 +65,8 @@ const requestLoggerMiddleware: Middleware = async (ctx, next) => {
           hostname: ctx.request.hostname,
           status: ctx.response.status,
           time,
+          language: ctx.state.analysis?.language,
+          operation: ctx.state.analysis?.operation,
         },
         `REQUEST: ${ctx.response.status} ${(time / 1000).toFixed(2)}s ${
           ctx.req.method

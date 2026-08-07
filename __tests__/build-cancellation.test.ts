@@ -52,11 +52,19 @@ function createContext() {
       }),
       state: {
         id: 'request-id',
+        analysis: {
+          language: 'javascript',
+          operation: 'package-analysis',
+        },
         resolved: {
           description: 'description',
+          canonicalSpecifier: 'example@1.0.0',
+          displayName: 'example',
+          language: 'javascript',
           name: 'example',
           packageString: 'example@1.0.0',
           repository: undefined,
+          specifier: 'example@1.0.0',
           scoped: false,
           version: '1.0.0',
         },

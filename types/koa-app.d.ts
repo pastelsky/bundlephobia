@@ -2,6 +2,7 @@ import 'koa'
 
 import type {
   FailureCacheEntry,
+  PackageAnalysisRequestState,
   PackageBuildResult,
   ResolvedPackageState,
 } from '../server/types'
@@ -9,6 +10,7 @@ import type {
 declare module 'koa' {
   interface DefaultState {
     id?: string
+    analysis: PackageAnalysisRequestState
     resolved: ResolvedPackageState
     buildResult?: PackageBuildResult
   }

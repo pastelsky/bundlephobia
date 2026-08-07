@@ -1,7 +1,9 @@
 import type { Middleware } from 'koa'
-import semver from 'semver'
 
+import { createJavaScriptPackageReference } from '../../../languages/javascript'
+import { packageAnalysisGateway } from '../../analysis'
 import config from '../../config'
+import { createAnalysisKey } from '../../analysis/keys'
 import { debug, failureCache } from '../../init'
 import logger from '../../Logger'
 
@@ -12,7 +14,13 @@ const cachedResponse: Middleware = async (ctx, next) => {
     return
   }
 
-  const { name, version, packageString } = ctx.state.resolved
+  const { name, version, packageString, language } = ctx.state.resolved
+  const { operation } = ctx.state.analysis
+  const failureCacheKey = createAnalysisKey({
+    language,
+    operation,
+    packageSpecifier: packageString,
+  })
 
   const logCache = ({
     hit,
@@ -31,6 +39,8 @@ const cachedResponse: Middleware = async (ctx, next) => {
         packageString,
         hit,
         type,
+        language,
+        operation,
         requestId: ctx.state.id,
       },
       message
@@ -42,7 +52,9 @@ const cachedResponse: Middleware = async (ctx, next) => {
       maxAge:
         force != null
           ? 0
-          : semver.valid(version)
+          : packageAnalysisGateway.isExactVersionSpecifier(
+              createJavaScriptPackageReference(`${name}@${version}`)
+            )
           ? config.CACHE.SIZE_API_HAS_VERSION
           : config.CACHE.SIZE_API_DEFAULT,
     }
@@ -51,7 +63,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
     return
   }
 
-  const failureCacheEntry = failureCache.get(packageString)
+  const failureCacheEntry = failureCache.get(failureCacheKey)
   if (failureCacheEntry) {
     debug('fetched %s from failure cache', packageString)
 

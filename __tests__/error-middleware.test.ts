@@ -8,6 +8,7 @@ jest.mock('../server/Logger', () => ({
 }))
 
 import { failureCache } from '../server/init'
+import { createAnalysisKey } from '../server/analysis/keys'
 import CustomError from '../server/CustomError'
 import errorHandler from '../server/middlewares/results/error.middleware'
 
@@ -54,6 +55,10 @@ describe('build API error middleware', () => {
       query: {},
       state: { id: 'request-id' } as {
         id: string
+        analysis?: {
+          language: 'javascript'
+          operation: 'package-exports'
+        }
         resolved?: { packageString: string }
       },
       status: undefined,
@@ -61,15 +66,26 @@ describe('build API error middleware', () => {
     const error = new CustomError('BuildError', 'compiler failed', undefined)
 
     await errorHandler(ctx as never, async () => {
+      ctx.state.analysis = {
+        language: 'javascript',
+        operation: 'package-exports',
+      }
       ctx.state.resolved = { packageString }
       throw error
     })
 
     const responseBody = ctx.body
-    expect(failureCache.set).toHaveBeenCalledWith(packageString, {
-      status: 422,
-      body: responseBody,
-    })
+    expect(failureCache.set).toHaveBeenCalledWith(
+      createAnalysisKey({
+        language: 'javascript',
+        operation: 'package-exports',
+        packageSpecifier: packageString,
+      }),
+      {
+        status: 422,
+        body: responseBody,
+      }
+    )
   })
 
   it('labels a single mismatch suggestion as the latest version', async () => {

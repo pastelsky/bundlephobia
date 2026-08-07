@@ -1,18 +1,15 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
-import semver from 'semver'
 
+import { createJavaScriptPackageReference } from '../../languages/javascript'
 import Cache from '../../utils/cache.utils'
-import { parsePackageString } from '../../utils/common.utils'
 import { getRequestPriority } from '../../utils/server.utils'
-import BuildService, { BUILD_DURATION_HEADER } from '../api/BuildService'
+import { packageAnalysisGateway } from '../analysis'
+import { BUILD_DURATION_HEADER } from '../api/BuildService'
 import config from '../config'
 import logger from '../Logger'
-import type { PackageExportSizesResult } from '../types'
 
 const cache = new Cache()
-const buildService = new BuildService()
-
 const exportSizesMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
@@ -27,16 +24,15 @@ const exportSizesMiddleware: Middleware = async ctx => {
     typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
   const buildStart = now()
-  const result =
-    await buildService.getPackageExportSizes<PackageExportSizesResult>(
-      packageString,
+  const result = await packageAnalysisGateway.analyzePackageExportSizes(
+    ctx.state.resolved,
+    {
       priority,
-      {
-        onComplete: durationMs => {
-          ctx.set(BUILD_DURATION_HEADER, String(durationMs))
-        },
-      }
-    )
+      onComplete: durationMs => {
+        ctx.set(BUILD_DURATION_HEADER, String(durationMs))
+      },
+    }
+  )
   const buildEnd = now()
 
   ctx.cacheControl = {
@@ -44,7 +40,9 @@ const exportSizesMiddleware: Middleware = async ctx => {
       force != null
         ? 0
         : requestedPackage &&
-          semver.valid(parsePackageString(requestedPackage).version)
+          packageAnalysisGateway.isExactVersionSpecifier(
+            createJavaScriptPackageReference(requestedPackage)
+          )
         ? config.CACHE.SIZE_API_HAS_VERSION
         : config.CACHE.SIZE_API_DEFAULT,
   }
@@ -59,6 +57,8 @@ const exportSizesMiddleware: Middleware = async ctx => {
       result,
       requestId: ctx.state.id,
       packageString,
+      language: ctx.state.analysis.language,
+      operation: ctx.state.analysis.operation,
       time,
     },
     `BUILD EXPORTS SIZES: ${packageString} built in ${time.toFixed()}s`
