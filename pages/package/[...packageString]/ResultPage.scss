@@ -143,9 +143,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: min($global-spacing * 36, calc(100% - #{$global-spacing * 4}));
-  min-height: 280px;
+  width: min($global-spacing * 40, calc(100% - #{$global-spacing * 4}));
+  min-height: 120px;
   margin: 4vh auto;
+
+  @media screen and (max-width: 40em) {
+    width: 125%;
+    min-height: 0;
+    margin: 4vh -12.5%;
+  }
 }
 
 .result-pending,
