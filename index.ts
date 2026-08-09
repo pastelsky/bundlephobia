@@ -33,6 +33,8 @@ import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklis
 import requestLoggerMiddleware from './server/middlewares/requestLogger.middleware'
 import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
 import generateImgMiddleware from './server/middlewares/generateImg.middleware'
+import generateTrendsImgMiddleware from './server/middlewares/generateTrendsImg.middleware'
+import trendsMiddleware from './server/middlewares/trends.middleware'
 import buildMissRateLimit from './server/middlewares/buildMissRateLimit.middleware'
 
 import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
@@ -215,7 +217,11 @@ app.prepare().then(() => {
 
   router.get('/api/similar-packages', similarPackagesMiddleware)
 
+  router.get('/api/trends', trendsMiddleware)
+
   router.get('/api/stats-image', generateImgMiddleware)
+
+  router.get('/api/trends-image', generateTrendsImgMiddleware)
 
   router.get('/api/mcp/tools', async ctx => {
     try {

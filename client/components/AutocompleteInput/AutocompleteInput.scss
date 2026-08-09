@@ -12,7 +12,9 @@
   width: 40vw;
   border: none;
   border-radius: 50px;
-  color: rgba(0, 0, 0, 0);
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  caret-color: var(--color-text-primary);
 }
 
 .autocomplete-input,
@@ -40,10 +42,27 @@
   top: 0;
   bottom: 0;
   pointer-events: none;
-  display: flex;
-  align-items: center;
+  display: block;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
+  z-index: 1;
+}
+
+.autocomplete-input__dummy-input--compact {
+  padding: 6px 36px 6px 12px;
+  @include font-size-sm;
+  letter-spacing: -0.2px;
+}
+
+.autocomplete-input--compact {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 6px 36px 6px 12px;
+  @include font-size-sm;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
 }
 
 .dummy-input__package-name {
@@ -86,6 +105,48 @@
   }
 }
 
+.autocomplete-input__form--compact {
+  align-items: center;
+
+  .autocomplete-input__container {
+    border: 1px solid var(--color-border-primary);
+    background: var(--color-bg-base);
+  }
+
+  .autocomplete-input__container--menu-visible {
+    border-color: var(--color-text-primary);
+  }
+
+  .autocomplete-input__suggestions-menu {
+    left: -1px;
+    width: calc(100% + 2px);
+    max-height: min(280px, 42vh);
+    margin-top: 0;
+    border-top: 1px solid var(--color-autocomplete-border);
+    border-radius: 0;
+    box-shadow: 0 8px 18px rgb(0 0 0 / 14%);
+  }
+
+  .autocomplete-input__suggestion {
+    padding: 8px 12px;
+    @include font-size-xs;
+    letter-spacing: -0.2px;
+  }
+
+  .autocomplete-input__suggestion-description {
+    min-width: 0;
+    padding-top: 3px;
+    @include font-size-xxs;
+    line-height: 1.35;
+  }
+
+  .autocomplete-input__search-icon {
+    right: 10px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
 @keyframes unroll {
   from {
     opacity: 0;
@@ -106,10 +167,6 @@
   font-family: 'Source Code Pro', monospace;
   font-weight: $font-weight-light;
   letter-spacing: -0.5px;
-
-  &:not(:last-of-type) {
-    border-bottom: 1px solid var(--color-suggestion-border);
-  }
 
   @media screen and (max-width: 40em) {
     padding: math.div($global-spacing, 1.5) $global-spacing * 1.5;

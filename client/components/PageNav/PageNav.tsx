@@ -46,6 +46,9 @@ const PageNav = ({ minimal }: PageNavProps) => (
         <li>
           <Link href="/compare">Compare</Link>
         </li>
+        <li>
+          <Link href="/trends">Trends</Link>
+        </li>
         {!minimal && (
           <li>
             <Link href="/scan">Scan package.json</Link>

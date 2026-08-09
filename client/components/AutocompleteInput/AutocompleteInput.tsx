@@ -14,6 +14,8 @@ type AutocompleteInputProps = {
   className?: string
   containerClass?: string
   autoFocus?: boolean
+  compact?: boolean
+  suggestionQueries?: string[]
   onSearchSubmit: (value: string) => void
 }
 
@@ -23,6 +25,8 @@ export const AutocompleteInput = ({
   className,
   containerClass,
   autoFocus,
+  compact = false,
+  suggestionQueries,
   onSearchSubmit,
 }: AutocompleteInputProps) => {
   const searchInput = React.useRef<AutoComplete | null>(null)
@@ -34,7 +38,11 @@ export const AutocompleteInput = ({
     handleInputChange,
     setIsMenuVisible,
     setSuggestions,
-  } = useAutocompleteInput({ initialValue, onSubmit: onSearchSubmit })
+  } = useAutocompleteInput({
+    initialValue,
+    onSubmit: onSearchSubmit,
+    suggestionQueries,
+  })
   const { searchFontSize } = useFontSize({ value })
 
   const { name, version } = React.useMemo(
@@ -44,7 +52,9 @@ export const AutocompleteInput = ({
 
   return (
     <form
-      className={cx(containerClass, 'autocomplete-input__form')}
+      className={cx(containerClass, 'autocomplete-input__form', {
+        'autocomplete-input__form--compact': compact,
+      })}
       onSubmit={handleSubmit}
     >
       <div
@@ -57,12 +67,14 @@ export const AutocompleteInput = ({
           getItemValue={item => item.package.name}
           inputProps={{
             placeholder: 'find package',
-            className: 'autocomplete-input',
+            className: cx('autocomplete-input', {
+              'autocomplete-input--compact': compact,
+            }),
             autoCorrect: 'off',
             autoFocus: autoFocus,
             autoCapitalize: 'off',
             spellCheck: false,
-            style: { fontSize: searchFontSize! },
+            style: compact ? undefined : { fontSize: searchFontSize! },
           }}
           onMenuVisibilityChange={isOpen => setIsMenuVisible(isOpen)}
           onChange={handleInputChange}
@@ -76,7 +88,9 @@ export const AutocompleteInput = ({
           renderMenu={(items, value, inbuiltStyles) => {
             return (
               <div
-                style={{ minWidth: inbuiltStyles.minWidth }}
+                style={
+                  compact ? undefined : { minWidth: inbuiltStyles.minWidth }
+                }
                 className="autocomplete-input__suggestions-menu"
               >
                 {items as any}
@@ -96,7 +110,9 @@ export const AutocompleteInput = ({
         />
         <div
           style={{ fontSize: searchFontSize! }}
-          className="autocomplete-input__dummy-input"
+          className={cx('autocomplete-input__dummy-input', {
+            'autocomplete-input__dummy-input--compact': compact,
+          })}
         >
           <PackageNameElement
             isHeading={renderAsH1}
