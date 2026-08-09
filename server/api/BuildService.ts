@@ -60,7 +60,7 @@ export default class BuildService {
       {
         ...OperationType.PACKAGE_EXPORTS,
         endpoint: '/exports',
-        methodName: 'getAllPackageExports',
+        methodName: 'getPackageExports',
       },
       {
         ...OperationType.PACKAGE_EXPORTS_SIZES,

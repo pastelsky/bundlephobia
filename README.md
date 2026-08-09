@@ -66,6 +66,15 @@ You can see a detailed stack trace in your devtools console, and [open an issue]
 
 See [Contributing](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/CONTRIBUTING.md)
 
+### Installation service
+
+Build workers use `INSTALLATION_SERVICE_ENDPOINT` when configured. The singleton
+installation service resolves registry tags and ranges immediately before install,
+then queues exact-version package-manager work and reuses each completed
+installation across requests and service restarts. Analyses write generated entries
+and bundles to separate temporary artifact directories. Without the service,
+package-build-stats installs packages locally as before.
+
 ## Sponsors
 
 <a href="https://www.digitalocean.com?utm_medium=opensource&utm_source=bundlephobia"><img width="100px" src="https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg"/></a>

@@ -41,6 +41,7 @@
     "esbuild-register": "^3.5.0",
     "execa": "^5.1.1",
     "fabric": "^6.0.0",
+    "fastify": "^4.25.2",
     "firebase": "^8.10.1",
     "firebase-admin": "^12.6.0",
     "flatten": "^1.0.3",

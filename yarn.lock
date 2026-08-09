@@ -8864,6 +8864,7 @@ __metadata:
     eslint-config-prettier: "npm:^10.1.8"
     execa: "npm:^5.1.1"
     fabric: "npm:^6.0.0"
+    fastify: "npm:^4.25.2"
     firebase: "npm:^8.10.1"
     firebase-admin: "npm:^12.6.0"
     flatten: "npm:^1.0.3"

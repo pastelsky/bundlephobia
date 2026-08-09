@@ -34,9 +34,25 @@ apps:
     env:
       NODE_ENV: production
       DEBUG: 'bp:*'
+      INSTALLATION_SERVICE_ENDPOINT: http://127.0.0.1:7003
       MEMORY_DIAGNOSTICS_SERVICE: build-service
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
       MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics
+
+  - script: ./installation-service/index.mjs
+    name: installation-service
+    instances: 1
+    max_memory_restart: 500M
+    exec_mode: fork
+    error_file: logs/installation-service.log
+    out_file: logs/installation-service.log
+    kill_timeout: 20000
+    env:
+      NODE_ENV: production
+      DEBUG: 'bp:*'
+      PORT: 7003
+      INSTALLATION_CONCURRENCY: 2
+      INSTALLATION_RETENTION_MS: 1200000
 
   - script: ./cache-service/index.js
     name: cache-service
