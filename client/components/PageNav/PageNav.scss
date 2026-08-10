@@ -143,16 +143,16 @@
     }
 
     nav {
-      background: var(--bp-color-surface);
-      border: 1px solid var(--bp-color-border);
-      border-radius: var(--bp-radius-control);
-      box-shadow: var(--bp-shadow-popover);
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: $control-border-radius;
+      box-shadow: var(--shadow-popover);
       padding: $global-spacing;
       position: absolute;
       right: 0;
       top: calc(100% + $global-spacing);
       width: max-content;
-      z-index: var(--bp-layer-popover);
+      z-index: $popover-z-index;
     }
 
     ul {
@@ -198,9 +198,9 @@
 // Popover's neutral trigger composition sets `font: inherit`; keep this text
 // trigger at the exact same type scale and weight as its sibling nav links.
 .mcp-nav__trigger.ui-popover__trigger {
+  @include font-size-xs;
   color: var(--color-nav-link);
-  font-size: var(--bp-font-size-label);
-  font-weight: var(--bp-font-weight-semibold);
+  font-weight: $font-weight-bold;
 }
 
 .mcp-nav__popup {

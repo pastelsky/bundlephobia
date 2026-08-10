@@ -156,16 +156,15 @@
   flex: 1;
   padding: $global-spacing $global-spacing * 1.5;
   border-radius: 6px;
-  border: 1px solid var(--bp-color-border-strong);
-  background: var(--bp-color-surface);
-  color: var(--bp-color-text);
-  transition: border-color var(--bp-motion-fast),
-    box-shadow var(--bp-motion-fast);
+  border: 1px solid var(--color-border-primary);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  transition: border-color $motion-fast, box-shadow $motion-fast;
 
   &:focus-visible {
-    border-color: var(--bp-color-focus);
-    outline: var(--bp-focus-ring);
-    outline-offset: var(--bp-focus-offset);
+    border-color: var(--color-link);
+    outline: $focus-ring-width solid var(--color-link);
+    outline-offset: $focus-ring-offset;
   }
 
   &:disabled {
