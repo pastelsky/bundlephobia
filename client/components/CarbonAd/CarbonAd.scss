@@ -1,5 +1,9 @@
 .carbon-ad:not(.carbon-ad--ready) {
-  display: none;
+  width: 1px;
+  height: 1px;
+  min-height: 1px;
+  margin: 0;
+  overflow: hidden;
 }
 
 .carbon-ad__content {

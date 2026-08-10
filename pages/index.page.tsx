@@ -144,7 +144,7 @@ const Home = () => {
               <sup>beta</sup>
             </Link>
           </div>
-          <CarbonAd className="homepage__carbon-ad" />
+          <CarbonAd className="homepage__carbon-ad" placement="homepage" />
         </div>
       </div>
     </Layout>
