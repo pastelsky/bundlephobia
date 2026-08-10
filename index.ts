@@ -63,7 +63,7 @@ const env = getEnv(process.env)
 const cache = new Cache()
 const port = env.port
 const dev = env.nodeEnv !== 'production'
-const app = next({ dev, ...(dev ? { webpack: true } : {}) })
+const app = next({ dev })
 const handle = app.getRequestHandler()
 
 app.prepare().then(() => {

@@ -113,7 +113,7 @@
   },
   "scripts": {
     "dev": "DEBUG='bp:*' NODE_ENV=development nodemon --watch ./server --watch ./utils --watch ./index.ts",
-    "build": "NODE_ENV=production next build --webpack",
+    "build": "NODE_ENV=production next build",
     "prebuild": "node -r ts-node/register bin/generate-sitemap.ts",
     "prestart": "yarn build",
     "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
