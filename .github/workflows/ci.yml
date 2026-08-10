@@ -10,28 +10,71 @@ on:
     branches: [bundlephobia]
 
 jobs:
-  build:
+  quality:
+    name: quality (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [24.x]
+        node-version: [26.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       - name: Enable Corepack
         run: corepack enable
       - name: Install project dependencies
-        run: yarn install
+        run: yarn install --immutable
       - name: Run lint
         run: yarn lint
       - name: Test package recommendation automation
         run: yarn test:recommendations
+
+  build:
+    name: build (${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [26.x]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install project dependencies
+        run: yarn install --immutable
       - run: yarn build
+        env:
+          CI: true
+
+  integration:
+    name: integration (${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [26.x]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install project dependencies
+        run: yarn install --immutable
+      - name: Build application for integration tests
+        run: yarn build
         env:
           CI: true
       - name: Install Playwright Chromium
