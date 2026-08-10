@@ -63,6 +63,21 @@ export const AutocompleteInput = ({
     [value]
   )
 
+  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (
+      event.key !== 'Enter' ||
+      event.nativeEvent.isComposing ||
+      highlightedIndex >= 0 ||
+      !value.trim()
+    ) {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+    onSearchSubmit(value)
+  }
+
   return (
     <form
       className={cx(containerClass, 'autocomplete-input__form')}
@@ -91,6 +106,7 @@ export const AutocompleteInput = ({
               autoCapitalize: 'off',
               spellCheck: false,
               style: { fontSize: searchFontSize! },
+              onKeyDown: handleInputKeyDown,
             })}
           />
           <div
