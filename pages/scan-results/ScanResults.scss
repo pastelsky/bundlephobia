@@ -36,13 +36,17 @@
 }
 
 .scan-results__sort-panel {
-  @include font-size-sm;
-  margin-bottom: 1.5rem;
+  align-items: center;
   color: var(--color-text-muted);
+  display: flex;
+  gap: $global-spacing;
+  margin-bottom: $global-spacing * 2;
 
-  label {
+  .scan-results__sort-label {
+    @include font-size-xs;
     text-transform: uppercase;
     font-weight: $font-weight-bold;
+    letter-spacing: 0.3px;
   }
 
   button:not(.ui-toggle-group__item) {

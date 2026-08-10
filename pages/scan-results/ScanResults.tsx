@@ -330,9 +330,10 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
       <ResultLayout className="scan-results">
         <h1> Results</h1>
         <div className="scan-results__sort-panel">
-          <label> Sort By: </label>
+          <span className="scan-results__sort-label">Sort by</span>
           <ToggleGroup
             aria-label="Sort scan results"
+            size="sm"
             value={sortMode}
             onValueChange={nextSortMode =>
               nextSortMode === 'size'

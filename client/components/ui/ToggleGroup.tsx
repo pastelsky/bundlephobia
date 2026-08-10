@@ -14,6 +14,7 @@ type ToggleGroupProps = {
   value: string
   onValueChange: (value: string) => void
   className?: string
+  size?: 'sm' | 'md'
   'aria-label': string
 }
 
@@ -22,12 +23,13 @@ export function ToggleGroup({
   value,
   onValueChange,
   className,
+  size = 'md',
   ...props
 }: ToggleGroupProps) {
   return (
     <BaseToggleGroup
       {...props}
-      className={cx('ui-toggle-group', className)}
+      className={cx('ui-toggle-group', `ui-toggle-group--${size}`, className)}
       value={[value]}
       onValueChange={values => values[0] && onValueChange(values[0])}
     >

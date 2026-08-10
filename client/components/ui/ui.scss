@@ -111,6 +111,11 @@
   min-height: var(--bp-control-height-sm);
   padding: 0 var(--bp-space-3);
 }
+.ui-toggle-group--sm .ui-toggle-group__item {
+  font-size: var(--bp-font-size-caption);
+  min-height: 26px;
+  padding: 0 var(--bp-space-2);
+}
 .ui-toggle-group__item + .ui-toggle-group__item {
   border-left: 0;
 }
