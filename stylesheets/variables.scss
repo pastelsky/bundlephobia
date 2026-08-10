@@ -121,6 +121,7 @@ $font-family-code: 'Source Code Pro', 'SF Mono', Consolas, 'Liberation Mono',
 // Padding / Spacing
 $global-spacing: 10px;
 $layout-max-width: 1200px;
+$layout-gutter: $global-spacing * 3;
 
 // Shared UI controls
 $control-border-radius: 6px;
