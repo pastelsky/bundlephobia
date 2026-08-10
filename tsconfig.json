@@ -8,19 +8,17 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "baseUrl": ".",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "ignoreDeprecations": "6.0",
-    "types": ["node", "jest"],
+    "types": ["node", "jest", "next/image-types/global"],
     "paths": {
-      "client/*": ["client/*"],
-      "pages/*": ["pages/*"],
-      "server/*": ["server/*"],
-      "utils": ["utils/index.ts"],
-      "utils/*": ["utils/*"],
-      "types": ["types/index.ts"],
-      "types/*": ["types/*"]
+      "client/*": ["./client/*"],
+      "pages/*": ["./pages/*"],
+      "server/*": ["./server/*"],
+      "utils": ["./utils/index.ts"],
+      "utils/*": ["./utils/*"],
+      "types": ["./types/index.ts"],
+      "types/*": ["./types/*"]
     },
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -28,5 +26,5 @@
     "incremental": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "__tests__", "e2e"]
 }

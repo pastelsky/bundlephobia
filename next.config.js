@@ -3,6 +3,9 @@ const path = require('path')
 module.exports = {
   reactStrictMode: true,
   pageExtensions: ['page.js', 'page.tsx'],
+  experimental: {
+    useTypeScriptCli: true,
+  },
   sassOptions: {
     includePaths: [path.join(__dirname, 'stylesheets')],
   },

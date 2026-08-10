@@ -130,12 +130,12 @@
     "test:recommendations": "node --test .github/scripts/*.test.mjs",
     "test:watch": "jest --watch",
     "prettier": "prettier --write '**/*.{html,js,json,css,scss,jsx,flow,md,yml,yaml}'",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
   },
   "husky": {
     "hooks": {
-      "pre-commit": "eslint --fix && pretty-quick --staged"
+      "pre-commit": "oxlint --fix . && pretty-quick --staged"
     }
   },
   "prettier": {
@@ -179,13 +179,11 @@
     "@types/semver": "^7.7.1",
     "@types/stream-json": "^1",
     "autoprefixer": "^9.8.8",
-    "eslint": "^9.39.5",
-    "eslint-config-next": "^16.2.12",
-    "eslint-config-prettier": "^10.1.8",
     "glob": "^7.2.3",
     "husky": "^4.3.8",
     "jest": "^30.4.2",
     "nodemon": "^2.0.22",
+    "oxlint": "^1.78.0",
     "postcss": "^8.4.33",
     "postcss-easy-import": "^3.0.0",
     "postcss-loader": "^7.3.4",
@@ -194,7 +192,7 @@
     "sass-loader": "^10.5.2",
     "sitemap": "^7.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "packageManager": "yarn@4.0.2"
 }

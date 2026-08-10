@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "jsx-a11y", "nextjs", "react", "jest"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "jest": true
+  },
+  "settings": {
+    "react": {
+      "version": "19.2.8"
+    },
+    "next": {
+      "rootDir": "."
+    },
+    "jest": {
+      "version": 30
+    }
+  },
+  "ignorePatterns": [
+    ".next/**",
+    "out/**",
+    "build/**",
+    "playwright-report/**",
+    "test-results/**",
+    "next-env.d.ts"
+  ]
+}
