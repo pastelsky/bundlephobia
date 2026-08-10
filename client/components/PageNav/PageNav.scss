@@ -130,6 +130,7 @@
 // Popover's neutral trigger composition sets `font: inherit`; keep this text
 // trigger at the exact same type scale and weight as its sibling nav links.
 .mcp-nav__trigger.ui-popover__trigger {
+  color: var(--color-nav-link);
   font-size: var(--bp-font-size-label);
   font-weight: var(--bp-font-weight-semibold);
 }
