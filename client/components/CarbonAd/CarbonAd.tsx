@@ -15,7 +15,9 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
     if (!container) return
 
     const revealWhenCreativeIsRendered = () => {
-      const carbonAd = container.querySelector('#carbonads')
+      const carbonAds = Array.from(container.querySelectorAll('#carbonads'))
+      const [carbonAd, ...duplicateCarbonAds] = carbonAds
+      duplicateCarbonAds.forEach(carbonAd => carbonAd.remove())
       const hasAdContent = Boolean(
         carbonAd?.querySelector('a, img, .carbon-text')
       )
@@ -41,7 +43,9 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
 
     return () => {
       observer.disconnect()
-      container.querySelector('#carbonads')?.remove()
+      container
+        .querySelectorAll('#carbonads')
+        .forEach(carbonAd => carbonAd.remove())
       script.remove()
     }
   }, [])
