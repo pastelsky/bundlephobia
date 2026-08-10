@@ -8871,7 +8871,7 @@ __metadata:
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^4.25.2"
     now-logs: "npm:^0.0.7"
-    package-build-stats: "npm:9.2.2"
+    package-build-stats: "npm:9.2.3"
     safe-stable-stringify: "npm:^2.5.0"
     truncate: "npm:^3.0.0"
   languageName: unknown
@@ -9006,7 +9006,7 @@ __metadata:
     oxfmt: "npm:^0.63.0"
     oxlint: "npm:^1.78.0"
     p-queue: "npm:^3.2.0"
-    package-build-stats: "npm:9.2.2"
+    package-build-stats: "npm:9.2.3"
     pacote: "npm:^11.3.5"
     performance-now: "npm:^2.1.0"
     postcss: "npm:^8.4.33"
@@ -18964,9 +18964,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-build-stats@npm:9.2.2":
-  version: 9.2.2
-  resolution: "package-build-stats@npm:9.2.2"
+"package-build-stats@npm:9.2.3":
+  version: 9.2.3
+  resolution: "package-build-stats@npm:9.2.3"
   dependencies:
     "@babel/core": "npm:^7.28.5"
     "@rspack/core": "npm:^2.1.4"
@@ -19003,7 +19003,7 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     package-stats: bin/cli.js
-  checksum: 976a5f27b970c1eb1d2b9b53263d9aefd264418f077a02d10c359c2e0f1eaf9f9dd48040c85a67f1fd65288775edcf203fd067963d13a20216c09de5b5ad861d
+  checksum: 17eb9f9b64d2af9b416ff003407c630a3a9af62a53ca4ef106ab8b0e6cbb345cedc5f65ca600db26bab632877bbc1f0aebab40b21c3565e7c139e320bfc93969
   languageName: node
   linkType: hard
 
