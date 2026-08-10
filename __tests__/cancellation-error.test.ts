@@ -46,7 +46,7 @@ describe('build cancellation errors', () => {
         packageString: 'example@1.0.0',
         requestId: 'request-id',
       }),
-      'BUILD_CANCELLED example@1.0.0'
+      'BUILD_CANCELLED example@1.0.0',
     )
   })
 })

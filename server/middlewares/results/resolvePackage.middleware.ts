@@ -10,7 +10,7 @@ import type { AnalysisOperation } from '../../analysis/contracts'
 import { debug, logger } from '../../init'
 
 export function createResolvePackageMiddleware(
-  operation: AnalysisOperation
+  operation: AnalysisOperation,
 ): Middleware {
   return async (ctx, next) => {
     ctx.state.analysis = { language: 'javascript', operation }
@@ -40,7 +40,7 @@ export function createResolvePackageMiddleware(
 
     const resolveStart = now()
     const resolvedPackage = await packageAnalysisGateway.resolvePackage(
-      createJavaScriptPackageReference(resolvedPackageString)
+      createJavaScriptPackageReference(resolvedPackageString),
     )
     const resolveEnd = now()
 
@@ -56,7 +56,7 @@ export function createResolvePackageMiddleware(
     logger.info(
       'RESOLVE_PACKAGE',
       { ...ctx.state.analysis, ...result, time, requestId: ctx.state.id },
-      `RESOLVED: ${result.packageString} in ${time.toFixed(0)}ms`
+      `RESOLVED: ${result.packageString} in ${time.toFixed(0)}ms`,
     )
 
     await next()

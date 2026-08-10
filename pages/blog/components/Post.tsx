@@ -81,7 +81,7 @@ const Post = ({ title, content, slug, preview, createdAt }: PostProps) => {
       <div className="blog-post__preview-content">
         {documentToReactComponents(
           preview ? makeContentPreview(content) : content,
-          options
+          options,
         )}
       </div>
       {preview && (

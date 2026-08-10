@@ -54,7 +54,7 @@ export default class ProgressHexAnimator {
       cy,
       this.width / 2,
       this.height / 2,
-      distance
+      distance,
     )
 
     return { x: x - cx, y: y - cy }
@@ -197,18 +197,18 @@ class Trailblaze {
     }
 
     const eligibleDestinationCircles = this.getCirclesInRing(
-      destinationRingNumber
+      destinationRingNumber,
     )
 
     const destinationCircleDistances = eligibleDestinationCircles.map(
       (circle, index) => ({
         index,
         distance: this.distanceBetweenCircles(sourceCircle, circle),
-      })
+      }),
     )
 
     const eligibleDistancesMin = Math.min(
-      ...destinationCircleDistances.map(a => a.distance)
+      ...destinationCircleDistances.map(a => a.distance),
     )
     const eligibleDestinationIndexes = destinationCircleDistances
       .filter(c => Math.abs(eligibleDistancesMin - c.distance) < 2)
@@ -261,7 +261,7 @@ class Trailblaze {
         source.cx,
         destination.cx,
         source.cy,
-        destination.cy
+        destination.cy,
       )
     })
 

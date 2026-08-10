@@ -32,7 +32,7 @@ describe('request memory metrics', () => {
     await expect(
       requestLoggerMiddleware(context as never, async () => {
         throw error
-      })
+      }),
     ).rejects.toBe(error)
 
     expect(mockRecordRequestStart).toHaveBeenCalledTimes(1)

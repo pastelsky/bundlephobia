@@ -39,7 +39,7 @@ type HasAdUnavailableReason = HasAdPlacement & {
 export default class Analytics {
   private static logEvent(
     eventName: string,
-    eventData?: Record<string, unknown>
+    eventData?: Record<string, unknown>,
   ) {
     trackAmplitudeEvent(eventName, eventData)
   }

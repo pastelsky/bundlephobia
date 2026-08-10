@@ -78,7 +78,7 @@ class Scan extends Component<ScanProps, ScanState> {
           selectedPackageValues: persistedScanState.selectedPackageValues,
           unsupportedPackageNames: persistedScanState.unsupportedPackageNames,
         },
-        this.setSelectedPackages
+        this.setSelectedPackages,
       )
     } else {
       const urlQuery = this.props.router?.query?.url
@@ -108,7 +108,7 @@ class Scan extends Component<ScanProps, ScanState> {
   readPersistedScanState = (): PersistedScanState | null => {
     try {
       const serializedState = window.sessionStorage.getItem(
-        persistedScanStateKey
+        persistedScanStateKey,
       )
       if (!serializedState) {
         return null
@@ -125,7 +125,7 @@ class Scan extends Component<ScanProps, ScanState> {
           ? parsedState.selectedPackageValues
           : [],
         unsupportedPackageNames: Array.isArray(
-          parsedState.unsupportedPackageNames
+          parsedState.unsupportedPackageNames,
         )
           ? parsedState.unsupportedPackageNames
           : [],
@@ -152,7 +152,7 @@ class Scan extends Component<ScanProps, ScanState> {
       }
       window.sessionStorage.setItem(
         persistedScanStateKey,
-        JSON.stringify(persistedState)
+        JSON.stringify(persistedState),
       )
     } catch (error) {
       console.error('Could not persist scan state:', error)
@@ -167,7 +167,7 @@ class Scan extends Component<ScanProps, ScanState> {
   setSelectedPackages = () => {
     const checkedInputs =
       this.packageSelectionContainerRef.current?.querySelectorAll<HTMLInputElement>(
-        'input:checked'
+        'input:checked',
       ) ?? []
 
     const selectedPackages = Array.from(checkedInputs).map(({ value }) => {
@@ -179,10 +179,10 @@ class Scan extends Component<ScanProps, ScanState> {
       {
         selectedPackages,
         selectedPackageValues: Array.from(checkedInputs).map(
-          ({ value }) => value
+          ({ value }) => value,
         ),
       },
-      this.persistScanState
+      this.persistScanState,
     )
   }
 
@@ -241,7 +241,7 @@ class Scan extends Component<ScanProps, ScanState> {
           err.message.includes('Failed to fetch')
         ) {
           throw new Error(
-            'Network or CORS restriction prevented fetching this URL. Make sure the URL points to a public GitHub repo or raw JSON file with CORS enabled, or upload package.json manually.'
+            'Network or CORS restriction prevented fetching this URL. Make sure the URL points to a public GitHub repo or raw JSON file with CORS enabled, or upload package.json manually.',
           )
         }
         throw err
@@ -250,11 +250,11 @@ class Scan extends Component<ScanProps, ScanState> {
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(
-            'Could not find package.json at this URL (HTTP 404). Please check the repository link or upload manually.'
+            'Could not find package.json at this URL (HTTP 404). Please check the repository link or upload manually.',
           )
         }
         throw new Error(
-          `Failed to fetch package.json (HTTP ${response.status} ${response.statusText}).`
+          `Failed to fetch package.json (HTTP ${response.status} ${response.statusText}).`,
         )
       }
 
@@ -263,7 +263,7 @@ class Scan extends Component<ScanProps, ScanState> {
         json = (await response.json()) as ParsedPackageJson
       } catch {
         throw new Error(
-          'The response from this URL is not valid JSON. Please check the link or upload package.json manually.'
+          'The response from this URL is not valid JSON. Please check the link or upload package.json manually.',
         )
       }
 
@@ -273,7 +273,7 @@ class Scan extends Component<ScanProps, ScanState> {
         (!json.dependencies && !json.devDependencies)
       ) {
         throw new Error(
-          'Fetched package.json does not contain a dependencies or devDependencies block.'
+          'Fetched package.json does not contain a dependencies or devDependencies block.',
         )
       }
 
@@ -282,7 +282,7 @@ class Scan extends Component<ScanProps, ScanState> {
 
       if (packages.length === 0) {
         throw new Error(
-          'No valid npm dependencies found in the fetched package.json file.'
+          'No valid npm dependencies found in the fetched package.json file.',
         )
       }
 
@@ -292,12 +292,12 @@ class Scan extends Component<ScanProps, ScanState> {
           unsupportedPackageNames,
           selectedPackageValues: packages
             .filter(
-              ({ name }) => !scanBlacklist.some(regex => regex.test(name))
+              ({ name }) => !scanBlacklist.some(regex => regex.test(name)),
             )
             .map(({ name, resolvedVersion }) => `${name}#${resolvedVersion}`),
           isLoadingRemoteUrl: false,
         },
-        this.setSelectedPackages
+        this.setSelectedPackages,
       )
       Analytics.scanPackageJsonDropped(packages.length)
     } catch (err: unknown) {
@@ -331,8 +331,8 @@ class Scan extends Component<ScanProps, ScanState> {
           typeof reader.result === 'string'
             ? reader.result
             : reader.result
-            ? new TextDecoder().decode(reader.result)
-            : ''
+              ? new TextDecoder().decode(reader.result)
+              : ''
         const json = JSON.parse(result) as ParsedPackageJson
         const packages = this.getParsedPackages(json)
         const unsupportedPackageNames = this.getUnsupportedPackageNames(json)
@@ -343,11 +343,11 @@ class Scan extends Component<ScanProps, ScanState> {
             unsupportedPackageNames,
             selectedPackageValues: packages
               .filter(
-                ({ name }) => !scanBlacklist.some(regex => regex.test(name))
+                ({ name }) => !scanBlacklist.some(regex => regex.test(name)),
               )
               .map(({ name, resolvedVersion }) => `${name}#${resolvedVersion}`),
           },
-          this.setSelectedPackages
+          this.setSelectedPackages,
         )
         Analytics.scanPackageJsonDropped(packages.length)
       } catch (err) {
@@ -392,7 +392,7 @@ class Scan extends Component<ScanProps, ScanState> {
         remoteUrlError: null,
         isUrlFormOpen: false,
       },
-      this.persistScanState
+      this.persistScanState,
     )
   }
 
@@ -566,7 +566,7 @@ class Scan extends Component<ScanProps, ScanState> {
                   <input
                     type="checkbox"
                     defaultChecked={selectedPackageValues.includes(
-                      `${name}#${resolvedVersion}`
+                      `${name}#${resolvedVersion}`,
                     )}
                     value={`${name}#${resolvedVersion}`}
                     onChange={this.handleSelectionChange}

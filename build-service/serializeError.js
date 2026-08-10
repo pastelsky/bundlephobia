@@ -42,7 +42,7 @@ export default function serializeError(error) {
     originalError: {
       message: truncate(
         error instanceof Error ? error.message : String(error),
-        MAX_ERROR_MESSAGE_LENGTH
+        MAX_ERROR_MESSAGE_LENGTH,
       ),
       ...(typeof error?.code === 'string' ? { code: error.code } : {}),
     },

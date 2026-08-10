@@ -23,8 +23,9 @@ export interface AnalysisRequestOptions {
   onComplete?: (durationMs: number) => void
 }
 
-export interface ResolvedAnalysisPackage<L extends LanguageId = LanguageId>
-  extends ResolvedPackageIdentity<L> {
+export interface ResolvedAnalysisPackage<
+  L extends LanguageId = LanguageId,
+> extends ResolvedPackageIdentity<L> {
   description: string
   repository: string
 }
@@ -32,7 +33,7 @@ export interface ResolvedAnalysisPackage<L extends LanguageId = LanguageId>
 export interface PackageResolutionAdapter<L extends LanguageId = LanguageId> {
   readonly language: L
   resolvePackage(
-    reference: PackageReference<L>
+    reference: PackageReference<L>,
   ): Promise<ResolvedAnalysisPackage<L>>
   isExactVersionSpecifier(specifier: string): boolean
 }
@@ -40,21 +41,21 @@ export interface PackageResolutionAdapter<L extends LanguageId = LanguageId> {
 export interface PackageBuildAnalysisAdapter {
   analyzePackage(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageBuildResult>
 }
 
 export interface PackageExportsAnalysisAdapter {
   analyzePackageExports(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageExportsResult>
 }
 
 export interface PackageExportSizesAnalysisAdapter {
   analyzePackageExportSizes(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageExportSizesResult>
 }
 

@@ -18,7 +18,7 @@ class TreeMap extends Component<TreeMapProps> {
 
     const squares = React.Children.toArray(children).filter(
       (child): child is React.ReactElement<TreemapChildProps> =>
-        React.isValidElement<TreemapChildProps>(child)
+        React.isValidElement<TreemapChildProps>(child),
     )
     const values = squares.map(square => square.props.value)
 

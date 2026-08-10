@@ -47,7 +47,7 @@ export default class ComparePage extends PureComponent<
           },
           () => {
             Router.replace(`/package/${newPackageString}`)
-          }
+          },
         )
       })
       .catch(err => {

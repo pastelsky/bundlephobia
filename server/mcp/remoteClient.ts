@@ -46,7 +46,7 @@ class RemoteMcpClient {
 
         const transport = new StreamableHTTPClientTransport(
           new URL(endpoint),
-          {}
+          {},
         )
 
         const client = new Client(
@@ -56,7 +56,7 @@ class RemoteMcpClient {
           },
           {
             capabilities: {},
-          }
+          },
         )
 
         await client.connect(transport, {
@@ -88,7 +88,7 @@ class RemoteMcpClient {
       undefined,
       {
         timeout: this.config.timeoutMs,
-      }
+      },
     )
   }
 

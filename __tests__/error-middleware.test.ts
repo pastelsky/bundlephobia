@@ -23,7 +23,7 @@ describe('build API error middleware', () => {
       {
         name: 'BadRequestError',
         status: 400,
-      }
+      },
     )
     const ctx = {
       body: undefined,
@@ -84,7 +84,7 @@ describe('build API error middleware', () => {
       {
         status: 422,
         body: responseBody,
-      }
+      },
     )
   })
 

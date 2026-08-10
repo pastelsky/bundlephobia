@@ -25,19 +25,19 @@ const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
     throw new CustomError(
       'BlocklistedPackageError',
       { ...parsedPackage },
-      undefined
+      undefined,
     )
   }
 
   const matchedUnsupportedRule = config.unsupported.find(rule =>
-    new RegExp(rule.test).test(parsedPackage.name)
+    new RegExp(rule.test).test(parsedPackage.name),
   )
 
   if (matchedUnsupportedRule) {
     throw new CustomError(
       'UnsupportedPackageError',
       { ...parsedPackage },
-      { reason: matchedUnsupportedRule.reason }
+      { reason: matchedUnsupportedRule.reason },
     )
   }
 

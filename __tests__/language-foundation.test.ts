@@ -81,12 +81,15 @@ describe('language registry', () => {
         visibility: 'hidden',
         capabilities: [],
       })
-    }
+    },
   )
 
   it('rejects duplicate descriptors', () => {
     expect(() =>
-      createLanguageRegistry([...LANGUAGE_DESCRIPTORS, LANGUAGE_DESCRIPTORS[0]])
+      createLanguageRegistry([
+        ...LANGUAGE_DESCRIPTORS,
+        LANGUAGE_DESCRIPTORS[0],
+      ]),
     ).toThrow('Duplicate language descriptor: javascript')
   })
 
@@ -96,7 +99,7 @@ describe('language registry', () => {
     ]
 
     expect(() => createLanguageRegistry(javascriptOnly)).toThrow(
-      'Missing language descriptors: java, kotlin'
+      'Missing language descriptors: java, kotlin',
     )
   })
 })
@@ -132,7 +135,7 @@ describe('package page routes', () => {
       getPackagePagePath({
         language: 'javascript',
         specifier: '@babel/core@9.8.0',
-      })
+      }),
     ).toBe('/package/@babel/core@9.8.0')
   })
 
@@ -141,10 +144,10 @@ describe('package page routes', () => {
       getPackagePagePath({
         language: 'java',
         specifier: 'com.google.code.gson:gson:2.14.0',
-      })
+      }),
     ).toBe('/package/java/com.google.code.gson:gson:2.14.0')
     expect(getExplicitPackagePagePath('javascript', 'react@19.2.0')).toBe(
-      '/package/javascript/react@19.2.0'
+      '/package/javascript/react@19.2.0',
     )
   })
 

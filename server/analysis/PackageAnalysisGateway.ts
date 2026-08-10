@@ -29,21 +29,21 @@ export class PackageAnalysisGateway {
 
   private adapterFor(
     language: LanguageId,
-    capability: LanguageCapability
+    capability: LanguageCapability,
   ): PackageAnalysisAdapter {
     const descriptor = languageRegistry.get(language)
     if (descriptor.state !== 'enabled') {
       throw new PackageAnalysisGatewayError(
         'LanguageNotEnabled',
         language,
-        capability
+        capability,
       )
     }
     if (!descriptor.capabilities.includes(capability)) {
       throw new PackageAnalysisGatewayError(
         'LanguageCapabilityNotSupported',
         language,
-        capability
+        capability,
       )
     }
     const adapter = this.adapters.get(language)
@@ -51,37 +51,37 @@ export class PackageAnalysisGateway {
       throw new PackageAnalysisGatewayError(
         'LanguageAdapterNotFound',
         language,
-        capability
+        capability,
       )
     }
     return adapter
   }
 
   async resolvePackage(
-    reference: PackageReference
+    reference: PackageReference,
   ): Promise<ResolvedAnalysisPackage> {
     return await this.adapterFor(reference.language, 'analysis').resolvePackage(
-      reference
+      reference,
     )
   }
 
   isExactVersionSpecifier(reference: PackageReference): boolean {
     return this.adapterFor(
       reference.language,
-      'analysis'
+      'analysis',
     ).isExactVersionSpecifier(reference.specifier)
   }
 
   analyzePackage(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageBuildResult> {
     const adapter = this.adapterFor(resolved.language, 'analysis')
     if (!adapter.analyzePackage) {
       throw new PackageAnalysisGatewayError(
         'LanguageAdapterNotFound',
         resolved.language,
-        'analysis'
+        'analysis',
       )
     }
     return adapter.analyzePackage(resolved, options)
@@ -89,14 +89,14 @@ export class PackageAnalysisGateway {
 
   analyzePackageExports(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageExportsResult> {
     const adapter = this.adapterFor(resolved.language, 'exports')
     if (!adapter.analyzePackageExports) {
       throw new PackageAnalysisGatewayError(
         'LanguageAdapterNotFound',
         resolved.language,
-        'exports'
+        'exports',
       )
     }
     return adapter.analyzePackageExports(resolved, options)
@@ -104,14 +104,14 @@ export class PackageAnalysisGateway {
 
   analyzePackageExportSizes(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageExportSizesResult> {
     const adapter = this.adapterFor(resolved.language, 'export-sizes')
     if (!adapter.analyzePackageExportSizes) {
       throw new PackageAnalysisGatewayError(
         'LanguageAdapterNotFound',
         resolved.language,
-        'export-sizes'
+        'export-sizes',
       )
     }
     return adapter.analyzePackageExportSizes(resolved, options)

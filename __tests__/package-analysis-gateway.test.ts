@@ -20,9 +20,9 @@ function createJavaScriptAdapter(): PackageAnalysisAdapter<'javascript'> {
       repository: '',
     })),
     isExactVersionSpecifier: jest.fn(() => true),
-    analyzePackage: jest.fn(async () => ({ size: 1, gzip: 1 } as never)),
+    analyzePackage: jest.fn(async () => ({ size: 1, gzip: 1 }) as never),
     analyzePackageExports: jest.fn(async () => [] as never),
-    analyzePackageExportSizes: jest.fn(async () => ({} as never)),
+    analyzePackageExportSizes: jest.fn(async () => ({}) as never),
   }
 }
 
@@ -66,11 +66,11 @@ describe('PackageAnalysisGateway', () => {
     expect(adapter.analyzePackage).toHaveBeenCalledWith(resolved, options)
     expect(adapter.analyzePackageExports).toHaveBeenCalledWith(
       resolved,
-      options
+      options,
     )
     expect(adapter.analyzePackageExportSizes).toHaveBeenCalledWith(
       resolved,
-      options
+      options,
     )
   })
 
@@ -80,19 +80,19 @@ describe('PackageAnalysisGateway', () => {
       const gateway = new PackageAnalysisGateway()
 
       await expect(
-        gateway.resolvePackage({ language, specifier: 'example' })
+        gateway.resolvePackage({ language, specifier: 'example' }),
       ).rejects.toMatchObject({
         code: 'LanguageNotEnabled',
         language,
       })
-    }
+    },
   )
 
   it('rejects duplicate adapters', () => {
     const gateway = new PackageAnalysisGateway()
     gateway.register(createJavaScriptAdapter())
     expect(() => gateway.register(createJavaScriptAdapter())).toThrow(
-      'Duplicate package analysis adapter: javascript'
+      'Duplicate package analysis adapter: javascript',
     )
   })
 
@@ -114,8 +114,8 @@ describe('PackageAnalysisGateway', () => {
           description: '',
           repository: '',
         },
-        { priority: 5 }
-      )
+        { priority: 5 },
+      ),
     ).toThrow(PackageAnalysisGatewayError)
   })
 })
@@ -155,7 +155,7 @@ describe('legacy JavaScript error mapping', () => {
     const error = new PackageAnalysisGatewayError(
       'LanguageCapabilityNotSupported',
       'javascript',
-      'exports'
+      'exports',
     )
 
     expect(toLegacyJavaScriptError(error)).toMatchObject({

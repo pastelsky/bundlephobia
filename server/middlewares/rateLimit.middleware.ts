@@ -36,7 +36,7 @@ const defaults = {
 } satisfies Required<Omit<RateLimitOptions, 'message_429' | 'message_403'>>
 
 export default function betterlimit(
-  options: RateLimitOptions = {}
+  options: RateLimitOptions = {},
 ): Middleware {
   const resolvedOptions = {
     ...defaults,

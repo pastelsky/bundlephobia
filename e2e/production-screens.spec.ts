@@ -13,7 +13,7 @@ test.describe('production screens', () => {
 
       expect(response?.status()).toBe(200)
       await expect(
-        page.getByText(landmark, { exact: false }).first()
+        page.getByText(landmark, { exact: false }).first(),
       ).toBeVisible()
       await expect(appPage.nextError).toHaveCount(0)
     })

@@ -5,7 +5,7 @@ class Container {
     private readonly xoffset: number,
     private readonly yoffset: number,
     private readonly width: number,
-    private readonly height: number
+    private readonly height: number,
   ) {}
 
   shortestEdge() {
@@ -54,7 +54,7 @@ class Container {
         this.xoffset + areawidth,
         this.yoffset,
         newwidth,
-        this.height
+        this.height,
       )
     }
 
@@ -65,7 +65,7 @@ class Container {
       this.xoffset,
       this.yoffset + areaheight,
       this.width,
-      newheight
+      newheight,
     )
   }
 }
@@ -82,13 +82,13 @@ export default function squarifyTreemap(
   width: number,
   height: number,
   xoffset = 0,
-  yoffset = 0
+  yoffset = 0,
 ): TreemapRectangle[] {
   const rawTreemap = squarify(
     normalize(data, width * height),
     [],
     new Container(xoffset, yoffset, width, height),
-    []
+    [],
   )
 
   return flattenTreemap(rawTreemap)
@@ -102,7 +102,7 @@ function squarify(
   data: number[],
   currentrow: number[],
   container: Container,
-  stack: TreemapRectangle[][]
+  stack: TreemapRectangle[][],
 ): TreemapRectangle[][] {
   if (data.length === 0) {
     if (currentrow.length > 0) {
@@ -147,7 +147,7 @@ function calculateRatio(row: number[], length: number) {
 
   return Math.max(
     (Math.pow(length, 2) * max) / Math.pow(sum, 2),
-    Math.pow(sum, 2) / (Math.pow(length, 2) * min)
+    Math.pow(sum, 2) / (Math.pow(length, 2) * min),
   )
 }
 

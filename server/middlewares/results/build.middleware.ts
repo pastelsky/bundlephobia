@@ -34,7 +34,7 @@ const buildMiddleware: Middleware = async ctx => {
         language: ctx.state.analysis.language,
         operation: ctx.state.analysis.operation,
       },
-      `BUILD_ABORTED: client closed connection for package ${packageString}`
+      `BUILD_ABORTED: client closed connection for package ${packageString}`,
     )
     abortController.abort()
   }
@@ -61,11 +61,11 @@ const buildMiddleware: Middleware = async ctx => {
       force != null
         ? 0
         : requestedPackage &&
-          packageAnalysisGateway.isExactVersionSpecifier(
-            createJavaScriptPackageReference(requestedPackage)
-          )
-        ? config.CACHE.SIZE_API_HAS_VERSION
-        : config.CACHE.SIZE_API_DEFAULT,
+            packageAnalysisGateway.isExactVersionSpecifier(
+              createJavaScriptPackageReference(requestedPackage),
+            )
+          ? config.CACHE.SIZE_API_HAS_VERSION
+          : config.CACHE.SIZE_API_DEFAULT,
   }
 
   const body: PackageBuildResult = {
@@ -93,7 +93,7 @@ const buildMiddleware: Middleware = async ctx => {
     },
     `BUILD: ${packageString} built in ${time.toFixed()}s and is ${
       result.size
-    } bytes`
+    } bytes`,
   )
 
   if (record === 'true') {

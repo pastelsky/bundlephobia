@@ -13,7 +13,7 @@ export class PackageAnalysisGatewayError extends Error {
     readonly code: PackageAnalysisGatewayErrorCode,
     readonly language: LanguageId,
     readonly capability: LanguageCapability,
-    options?: ErrorOptions
+    options?: ErrorOptions,
   ) {
     super(code, options)
     this.name = 'PackageAnalysisGatewayError'

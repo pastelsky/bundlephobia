@@ -73,8 +73,8 @@ class ExportPill extends React.Component<ExportPillProps> {
           className={cx(
             'export-analysis-section__pill-fill',
             `export-analysis-section__pill-fill--${getBGClass(
-              (size ?? 0) / totalSize
-            )}`
+              (size ?? 0) / totalSize,
+            )}`,
           )}
           style={{
             transform: `scaleX(${Math.min((size || 0) / totalSize, 1)})`,
@@ -211,7 +211,7 @@ export default class ExportAnalysisSection extends Component<
             timeTaken: Date.now() - startTime,
           })
           return Promise.reject(err)
-        }
+        },
       )
       .then(() => {
         sizeStartTime = Date.now()
@@ -240,7 +240,7 @@ export default class ExportAnalysisSection extends Component<
             timeTaken: Date.now() - sizeStartTime,
           })
           return Promise.reject(err)
-        }
+        },
       )
       .catch(err => {
         this.setState({ analysisState: State.REJECTED, resultError: err })
@@ -296,7 +296,7 @@ export default class ExportAnalysisSection extends Component<
             .map(exp => ({ name: exp }))
 
     const matchedExports = normalizedExports.filter(asset =>
-      filterText ? asset.name.toLowerCase().includes(filterText) : true
+      filterText ? asset.name.toLowerCase().includes(filterText) : true,
     )
 
     return (
@@ -321,7 +321,7 @@ export default class ExportAnalysisSection extends Component<
 
   renderFailure() {
     const { errorName, errorBody, errorDetails } = resolveBuildError(
-      this.state.resultError
+      this.state.resultError,
     ) as {
       errorName: string | null
       errorBody: string | null

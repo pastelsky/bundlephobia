@@ -16,7 +16,7 @@ debug(
   'Firebase config (exports): READ from %s (with fallback: %s), WRITE to %s',
   FIREBASE_READ_KEY_EXPORTS,
   FIREBASE_READ_KEY_EXPORTS === 'exports-v3' ? 'yes, to exports' : 'no',
-  FIREBASE_WRITE_KEY_EXPORTS
+  FIREBASE_WRITE_KEY_EXPORTS,
 )
 
 async function getPackageResultFromKey(key, { name, version }) {

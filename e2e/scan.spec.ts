@@ -18,11 +18,11 @@ test('uploads package.json and builds the selected dependency', async ({
   await expect(page).toHaveURL(/\/scan-results\?packages=/)
   await expect(scanResultsPage.heading).toBeVisible()
   await expect(
-    scanResultsPage.packageLink(cheapPackage.name, cheapPackage.version)
+    scanResultsPage.packageLink(cheapPackage.name, cheapPackage.version),
   ).toBeVisible()
   const packageResult = scanResultsPage.packageResult(
     cheapPackage.name,
-    cheapPackage.version
+    cheapPackage.version,
   )
   await expect(packageResult.getByText('Calculating')).toHaveCount(0)
   await expect(packageResult.getByText('Min', { exact: true })).toBeVisible()

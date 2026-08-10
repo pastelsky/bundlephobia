@@ -123,7 +123,7 @@ describe('Queue cancellation', () => {
       {},
       {
         signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
-      }
+      },
     )
     const secondResult = queue.process<string, object>(
       'shared-job',
@@ -131,7 +131,7 @@ describe('Queue cancellation', () => {
       {},
       {
         signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
-      }
+      },
     )
 
     firstSubscriber.abort()
@@ -165,7 +165,7 @@ describe('Queue cancellation', () => {
       {},
       {
         signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
-      }
+      },
     )
     const secondResult = queue.process(
       'shared-job',
@@ -173,7 +173,7 @@ describe('Queue cancellation', () => {
       {},
       {
         signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
-      }
+      },
     )
 
     firstSubscriber.abort()
@@ -210,7 +210,7 @@ describe('Queue cancellation', () => {
       {},
       {
         signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
-      }
+      },
     )
     const secondResult = queue.process(
       'shared-job',
@@ -218,7 +218,7 @@ describe('Queue cancellation', () => {
       {},
       {
         signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
-      }
+      },
     )
 
     firstSubscriber.abort()
@@ -254,7 +254,7 @@ describe('Queue cancellation', () => {
       {},
       {
         signal: subscriber.signal as unknown as globalThis.AbortSignal,
-      }
+      },
     )
 
     await expect(result).rejects.toMatchObject({
@@ -297,25 +297,25 @@ describe('Queue priority', () => {
     const blockerResult = queue.process<string, string>(
       'blocker',
       'TEST',
-      'blocker'
+      'blocker',
     )
     const firstSharedResult = queue.process<string, string>(
       'shared',
       'TEST',
       'shared',
-      { priority: Queue.priority.LOW }
+      { priority: Queue.priority.LOW },
     )
     const mediumResult = queue.process<string, string>(
       'medium',
       'TEST',
       'medium',
-      { priority: Queue.priority.MEDIUM }
+      { priority: Queue.priority.MEDIUM },
     )
     const secondSharedResult = queue.process<string, string>(
       'shared',
       'TEST',
       'shared',
-      { priority: Queue.priority.HIGH }
+      { priority: Queue.priority.HIGH },
     )
 
     releaseBlocker()

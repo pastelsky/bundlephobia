@@ -18,7 +18,7 @@ export const IconButton = React.forwardRef<HTMLElement, IconButtonProps>(
       aria-label={label}
       title={title ?? label}
     />
-  )
+  ),
 )
 
 IconButton.displayName = 'IconButton'

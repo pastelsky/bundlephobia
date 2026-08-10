@@ -69,11 +69,11 @@ test('normalizes common package-name inputs and rejects prose', () => {
   assert.equal(normalizePackageName('`@scope/package`'), '@scope/package')
   assert.equal(
     normalizePackageName('https://www.npmjs.com/package/@scope/package'),
-    '@scope/package'
+    '@scope/package',
   )
   assert.equal(
     normalizePackageName('[date-fns](https://npmjs.com/package/date-fns)'),
-    'date-fns'
+    'date-fns',
   )
   assert.equal(isPlausiblePackageName('@scope/package'), true)
   assert.equal(isPlausiblePackageName('date fns'), false)
@@ -82,11 +82,11 @@ test('normalizes common package-name inputs and rejects prose', () => {
 test('extracts GitHub repositories from npm metadata', () => {
   assert.equal(
     extractGitHubRepository('git+https://github.com/date-fns/date-fns.git'),
-    'date-fns/date-fns'
+    'date-fns/date-fns',
   )
   assert.equal(
     extractGitHubRepository({ url: 'git://github.com/user/project.git' }),
-    'user/project'
+    'user/project',
   )
 })
 
@@ -154,7 +154,7 @@ test('blocks authoritative failures but keeps incomplete signals advisory', () =
     },
     {
       advantage: 'Smaller',
-    }
+    },
   )
   assert.equal(incomplete.status, 'needs review')
   assert.equal(incomplete.errors.length, 0)
@@ -186,7 +186,7 @@ test('extracts package names only from curated similar arrays', () => {
 
   assert.deepEqual(
     [...extractCuratedRecommendations(source)],
-    ['one-package', '@scope/two-package']
+    ['one-package', '@scope/two-package'],
   )
 })
 
@@ -210,7 +210,7 @@ test('extracts categories and their curated package lists', () => {
 
   assert.deepEqual(
     [...categories.get('date-time').packages],
-    ['moment', 'date-fns']
+    ['moment', 'date-fns'],
   )
   assert.equal(categories.get('storage').name, 'Storage')
 })

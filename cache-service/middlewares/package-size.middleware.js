@@ -16,7 +16,7 @@ debug(
   'Firebase config: READ from %s (with fallback: %s), WRITE to %s',
   FIREBASE_READ_KEY,
   FIREBASE_READ_KEY === 'modules-v3' ? 'yes, to modules-v2' : 'no',
-  FIREBASE_WRITE_KEY
+  FIREBASE_WRITE_KEY,
 )
 
 async function getPackageResultFromKey(key, { name, version }) {

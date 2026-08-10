@@ -87,7 +87,7 @@ const PageNav = ({ minimal, variant }: PageNavProps) => {
             window.open(
               'https://github.com/pastelsky/bundlephobia',
               '_blank',
-              'noopener,noreferrer'
+              'noopener,noreferrer',
             )
           }
         >

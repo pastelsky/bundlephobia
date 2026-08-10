@@ -16,7 +16,7 @@ interface GotModule {
     url: string,
     options?: {
       json?: boolean
-    }
+    },
   ): Promise<GotResponse<TBody>>
 }
 
@@ -24,7 +24,7 @@ interface RemarkProcessor {
   use(plugin: unknown): RemarkProcessor
   process(
     input: string,
-    callback: (error: Error | null, file: unknown) => void
+    callback: (error: Error | null, file: unknown) => void,
   ): void
 }
 
@@ -78,7 +78,7 @@ const prefixURL = (
     project: string
     head: string
     path: string
-  }
+  },
 ) => {
   if (url.includes('//')) {
     return url
@@ -87,11 +87,11 @@ const prefixURL = (
   return new URL(
     `${options.path ? `${options.path.replace(/^\//, '')}/` : ''}${url.replace(
       /^(\.?\/?)/,
-      ''
+      '',
     )}`,
     `${options.base}/${options.user}/${options.project}/${
       options.path ? '' : `${options.head}/`
-    }`
+    }`,
   )
 }
 
@@ -108,15 +108,15 @@ async function stripMarkdown(readme: string): Promise<string> {
         resolve(
           String(file).replace(
             /\b(npm|code|library|Node|example|project|license|MIT)\b/gi,
-            ''
-          )
+            '',
+          ),
         )
       })
   })
 }
 
 async function getReadme(
-  repository: RepositoryInfo
+  repository: RepositoryInfo,
 ): Promise<string | undefined> {
   const { host, user, project, branch, path } = repository
 
@@ -130,8 +130,8 @@ async function getReadme(
             project,
             head: branch,
             path: path.replace(/\/tree\//, ''),
-          })
-        )
+          }),
+        ),
       )
     }
 
@@ -148,7 +148,7 @@ async function getReadme(
 
   if (host === 'gitlab.com') {
     const apiUrl = `https://gitlab.com/api/v4/projects/${user}%2F${project}/repository/files/${encodeURIComponent(
-      `${path}/README.md`
+      `${path}/README.md`,
     )}?ref=${branch}`
     const { body } = await got<{
       encoding?: string
@@ -164,7 +164,7 @@ async function getReadme(
     const { body } = await got(
       `https://bitbucket.org/${user}/${project}${
         path ? path.replace('src', 'raw') : `/raw/${branch}`
-      }/README.md`
+      }/README.md`,
     )
     return body
   }
@@ -176,9 +176,9 @@ async function getPackageDetails(packageName: string) {
   let readme = ''
   const { body } = await got<AlgoliaPackageBody>(
     `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(
-      packageName
+      packageName,
     )}?x-algolia-application-id=OFCNCOG2CU&x-algolia-api-key=f54e21fa3a2a0160595bb058179bfb1e`,
-    { json: true }
+    { json: true },
   )
 
   if (typeof body.readme === 'string' && body.readme.trim()) {
@@ -207,8 +207,8 @@ function getScore(categoryTokens: CategoryTag[], packageTokens: string[]) {
 function getInCategoryMap(packageName: string) {
   return (Object.keys(categories) as CategoryLabel[]).find(label =>
     categories[label].similar.some(
-      similarPackage => similarPackage === packageName
-    )
+      similarPackage => similarPackage === packageName,
+    ),
   )
 }
 
@@ -221,12 +221,11 @@ async function getCategory(packageName: string) {
     }
   }
 
-  const { description = '', keywords = [] } = await getPackageDetails(
-    packageName
-  )
+  const { description = '', keywords = [] } =
+    await getPackageDetails(packageName)
   const tokenizer = new natural.WordTokenizer()
   const tokenString = `${await stripMarkdown(description)} ${keywords.join(
-    ' '
+    ' ',
   )}`
   const packageTokens = tokenizer
     .tokenize(tokenString)
@@ -244,8 +243,8 @@ async function getCategory(packageName: string) {
         tokenizer.tokenize(tagObject.tag).map(tokenizedTag => ({
           tag: natural.PorterStemmer.stem(tokenizedTag).toLowerCase(),
           weight: tagObject.weight,
-        }))
-      )
+        })),
+      ),
     )
 
     const score = getScore(categoryTokens, packageTokens)
@@ -271,7 +270,7 @@ async function test() {
           'Package %s. Category expected: %s, got: %o',
           pack,
           label,
-          actualCategory
+          actualCategory,
         )
       }
     })
@@ -338,7 +337,7 @@ const similarPackagesMiddleware: Middleware = async ctx => {
         name,
         details: error,
       },
-      `SIMILAR PACKAGES FAILED: ${name}`
+      `SIMILAR PACKAGES FAILED: ${name}`,
     )
   }
 }

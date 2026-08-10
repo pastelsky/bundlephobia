@@ -70,7 +70,7 @@ const requestLoggerMiddleware: Middleware = async (ctx, next) => {
         },
         `REQUEST: ${ctx.response.status} ${(time / 1000).toFixed(2)}s ${
           ctx.req.method
-        } ${ctx.request.url}`
+        } ${ctx.request.url}`,
       )
     }
   }

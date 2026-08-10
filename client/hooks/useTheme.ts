@@ -18,7 +18,7 @@ export const useTheme = () => {
   useEffect(() => {
     // Read the value already applied by the FOUC script
     const applied = document.documentElement.getAttribute(
-      'data-theme'
+      'data-theme',
     ) as Theme | null
     if (applied === 'dark' || applied === 'light') {
       setTheme(applied)

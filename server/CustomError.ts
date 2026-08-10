@@ -1,6 +1,6 @@
 export default class CustomError<
   TOriginalError = unknown,
-  TExtra = unknown
+  TExtra = unknown,
 > extends Error {
   originalError: TOriginalError
   extra: TExtra

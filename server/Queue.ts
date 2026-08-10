@@ -29,7 +29,7 @@ export class JobCancelledError extends Error {
 }
 
 export function isJobCancelledError(
-  error: unknown
+  error: unknown,
 ): error is JobCancelledError {
   return (
     error instanceof Error && 'code' in error && error.code === 'JOB_CANCELLED'
@@ -38,7 +38,7 @@ export function isJobCancelledError(
 
 type QueueExecutor<TParams = unknown, TResult = unknown> = (
   params: TParams,
-  context: QueueExecutorContext
+  context: QueueExecutorContext,
 ) => TResult | Promise<TResult>
 
 interface QueueJob<TParams = unknown, TResult = unknown> {
@@ -118,7 +118,7 @@ class Queue {
 
   addExecutor<TParams, TResult>(
     jobType: JobType,
-    handler: QueueExecutor<TParams, TResult>
+    handler: QueueExecutor<TParams, TResult>,
   ): void {
     this.executorMap[jobType] = handler as QueueExecutor
   }
@@ -181,7 +181,7 @@ class Queue {
 
     log(
       'after aging, job queue is... %o',
-      this.jobs.map(({ id, type, priority }) => ({ id, type, priority }))
+      this.jobs.map(({ id, type, priority }) => ({ id, type, priority })),
     )
   }
 
@@ -306,12 +306,12 @@ class Queue {
     listeners: {
       resolve: (value: never) => void
       reject: (reason?: unknown) => void
-    }
+    },
   ): void {
     this.jobs.forEach(job => {
       if (job.id === id && job.type === type) {
         job.successListeners.push(
-          listeners.resolve as unknown as (result: unknown) => void
+          listeners.resolve as unknown as (result: unknown) => void,
         )
         job.failureListeners.push(listeners.reject)
       }
@@ -322,7 +322,7 @@ class Queue {
     id: string,
     type: JobType,
     jobParams: TParams,
-    options: ProcessOptions<TResult> = {}
+    options: ProcessOptions<TResult> = {},
   ): Promise<TResult> {
     log('added new job %s %o %o', type, jobParams, options)
     const {
@@ -355,15 +355,15 @@ class Queue {
       const failureListener = rejectSubscriber
       const cancelSubscriber = () => {
         const job = this.jobs.find(
-          queuedJob => queuedJob.id === id && queuedJob.type === type
+          queuedJob => queuedJob.id === id && queuedJob.type === type,
         )
         if (!job || settled) return
 
         job.successListeners = job.successListeners.filter(
-          listener => listener !== successListener
+          listener => listener !== successListener,
         )
         job.failureListeners = job.failureListeners.filter(
-          listener => listener !== failureListener
+          listener => listener !== failureListener,
         )
 
         const error = new JobCancelledError()
@@ -390,7 +390,7 @@ class Queue {
       if (this.hasJob(id, type)) {
         log('job id %s already present, adding callbacks', id)
         const existingJob = this.jobs.find(
-          queuedJob => queuedJob.id === id && queuedJob.type === type
+          queuedJob => queuedJob.id === id && queuedJob.type === type,
         )
         if (existingJob) {
           existingJob.priority = Math.max(existingJob.priority, priority)

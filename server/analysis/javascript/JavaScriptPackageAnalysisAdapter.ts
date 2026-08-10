@@ -20,7 +20,7 @@ import type {
 interface PacoteModule {
   manifest(
     spec: string,
-    options: { fullMetadata: boolean }
+    options: { fullMetadata: boolean },
   ): Promise<ResolvedPackageManifest>
 }
 
@@ -52,13 +52,13 @@ export interface ResolvedPackageManifest {
 }
 
 function isAliasPackageSpec(
-  spec: parsePackageSpec.Result
+  spec: parsePackageSpec.Result,
 ): spec is parsePackageSpec.AliasResult {
   return spec.type === 'alias'
 }
 
 function isRegistryPackageSpec(
-  spec: parsePackageSpec.Result
+  spec: parsePackageSpec.Result,
 ): spec is RegistryPackageSpec {
   return spec.registry && Boolean(spec.escapedName)
 }
@@ -77,7 +77,7 @@ async function fetchVersionManifest(name: string, version: string) {
 }
 
 function registryPackageSpec(
-  packageString: string
+  packageString: string,
 ): RegistryPackageSpec | null {
   const parsed = parsePackageSpec(packageString)
   const target = isAliasPackageSpec(parsed) ? parsed.subSpec : parsed
@@ -88,7 +88,7 @@ function toRepositoryUrl(repository: string | { url?: string } | undefined) {
   if (!repository) return ''
   try {
     const rawRepository =
-      typeof repository === 'string' ? repository : repository.url ?? ''
+      typeof repository === 'string' ? repository : (repository.url ?? '')
     return gitURLParse(rawRepository).toString('https')
   } catch {
     console.error('failed to parse repository url', repository)
@@ -96,15 +96,13 @@ function toRepositoryUrl(repository: string | { url?: string } | undefined) {
   }
 }
 
-export class JavaScriptPackageAnalysisAdapter
-  implements PackageAnalysisAdapter<'javascript'>
-{
+export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<'javascript'> {
   readonly language = 'javascript' as const
 
   constructor(private readonly buildService = new BuildService()) {}
 
   private async resolveManifest(
-    packageString: string
+    packageString: string,
   ): Promise<ResolvedPackageManifest> {
     let requestedVersion = 'latest'
     let packageName: string | undefined
@@ -154,7 +152,7 @@ export class JavaScriptPackageAnalysisAdapter
             throw new CustomError(
               'PackageNotFoundError',
               latestError,
-              undefined
+              undefined,
             )
           }
         }
@@ -165,7 +163,7 @@ export class JavaScriptPackageAnalysisAdapter
   }
 
   async resolvePackage(
-    reference: PackageReference<'javascript'>
+    reference: PackageReference<'javascript'>,
   ): Promise<ResolvedAnalysisPackage<'javascript'>> {
     const manifest = await this.resolveManifest(reference.specifier)
     const description = manifest.description
@@ -188,40 +186,40 @@ export class JavaScriptPackageAnalysisAdapter
 
   isExactVersionSpecifier(specifier: string): boolean {
     return Boolean(
-      semver.valid(parseJavaScriptPackageSpecifier(specifier).version)
+      semver.valid(parseJavaScriptPackageSpecifier(specifier).version),
     )
   }
 
   analyzePackage(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageBuildResult> {
     return this.buildService.getPackageBuildStats(
       resolved.canonicalSpecifier,
       options.priority,
-      options
+      options,
     )
   }
 
   analyzePackageExports(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageExportsResult> {
     return this.buildService.getPackageExports(
       resolved.canonicalSpecifier,
       options.priority,
-      options
+      options,
     )
   }
 
   analyzePackageExportSizes(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageExportSizesResult> {
     return this.buildService.getPackageExportSizes(
       resolved.canonicalSpecifier,
       options.priority,
-      options
+      options,
     )
   }
 }

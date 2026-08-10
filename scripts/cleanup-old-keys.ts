@@ -14,8 +14,8 @@ admin.initializeApp({
   credential: admin.credential.cert(
     path.join(
       __dirname,
-      './keys/module-cost-firebase-adminsdk-xcnum-ca64ae80ff.json'
-    )
+      './keys/module-cost-firebase-adminsdk-xcnum-ca64ae80ff.json',
+    ),
   ),
   databaseURL: 'https://module-cost.firebaseio.com',
 })
@@ -41,7 +41,7 @@ function formatETA(seconds: number): string {
 
 async function processBackupFile(
   backupFilePath: string,
-  dryRun: boolean
+  dryRun: boolean,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const fileSize = fs.statSync(backupFilePath).size
@@ -54,7 +54,7 @@ async function processBackupFile(
       const percentage = progressData.percentage.toFixed(2)
       const eta = formatETA(progressData.eta)
       process.stdout.write(
-        `Processing backup file: ${percentage}% | ETA: ${eta}   \r`
+        `Processing backup file: ${percentage}% | ETA: ${eta}   \r`,
       )
     })
 
@@ -110,14 +110,14 @@ async function processBackupFile(
       console.log(`Packages removed: ${packagesRemoved}`)
       console.log(`Versions removed: ${versionsRemoved}`)
       console.log(
-        `Original size: ${(originalSize / (1024 * 1024)).toFixed(2)} MB`
+        `Original size: ${(originalSize / (1024 * 1024)).toFixed(2)} MB`,
       )
       console.log(`Pruned size: ${(prunedSize / (1024 * 1024)).toFixed(2)} MB`)
       console.log(
         `Size reduction: ${(
           ((originalSize - prunedSize) / originalSize) *
           100
-        ).toFixed(2)}%`
+        ).toFixed(2)}%`,
       )
 
       if (!dryRun) {
@@ -125,7 +125,7 @@ async function processBackupFile(
         uploadPrunedDataToFirebase('pruned-module-cost-v2.json')
           .then(() => {
             console.log(
-              'Pruned data has been pushed to module-cost-pruned table'
+              'Pruned data has been pushed to module-cost-pruned table',
             )
             resolve()
           })
@@ -153,7 +153,7 @@ async function processBackupFile(
           console.log(
             `\nFinished processing searches-v2, total ${
               Object.keys(searchesV2).length
-            } searches`
+            } searches`,
           )
           resolve()
         })
@@ -192,14 +192,14 @@ async function processBackupFile(
           }
 
           console.log(
-            `Package: ${packageName} | Action: ${action} | Reason: ${reason}`
+            `Package: ${packageName} | Action: ${action} | Reason: ${reason}`,
           )
           return
         }
 
         // Sort versions and keep only the last 20
         const sortedVersions = Object.keys(versionsObj).sort((a, b) =>
-          semver.compare(b, a)
+          semver.compare(b, a),
         )
         const versionsToKeep = sortedVersions.slice(0, 20)
 
@@ -224,7 +224,7 @@ async function processBackupFile(
         ;(stringifyStream as any).write([packageName, prunedVersions])
 
         console.log(
-          `Package: ${packageName} | Action: ${action} | Reason: ${reason}`
+          `Package: ${packageName} | Action: ${action} | Reason: ${reason}`,
         )
       })
 

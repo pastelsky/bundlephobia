@@ -76,8 +76,8 @@ describe('build service unavailability', () => {
         { packageString: '@example/unavailable@1.0.0' },
         {
           signal: controller.signal as unknown as globalThis.AbortSignal,
-        }
-      )
+        },
+      ),
     ).rejects.toMatchObject({
       name: 'BuildServiceUnavailableError',
       originalError: {
@@ -104,7 +104,7 @@ describe('build service unavailability', () => {
       expect.objectContaining({
         packageString: '@example/package@1.0.0',
       }),
-      expect.objectContaining({ priority: 20 })
+      expect.objectContaining({ priority: 20 }),
     )
   })
 
@@ -144,7 +144,7 @@ describe('build service unavailability', () => {
           originalError,
           extra: undefined,
         }),
-      })
+      }),
     ).toEqual({
       name: 'BuildError',
       originalError: {
@@ -157,7 +157,7 @@ describe('build service unavailability', () => {
   it('identifies a structured internal build-service error', async () => {
     const onComplete = jest.fn()
     const responseBody = serializeError(
-      Object.assign(new Error('disk full'), { code: 'ENOSPC' })
+      Object.assign(new Error('disk full'), { code: 'ENOSPC' }),
     )
     const responseError = Object.assign(new Error('Request failed'), {
       isAxiosError: true,
@@ -177,8 +177,8 @@ describe('build service unavailability', () => {
         },
         {
           signal: controller.signal as unknown as globalThis.AbortSignal,
-        }
-      )
+        },
+      ),
     ).rejects.toMatchObject(responseBody)
     expect(onComplete).toHaveBeenCalledWith(expect.any(Number))
   })
@@ -201,8 +201,8 @@ describe('build service unavailability', () => {
         },
         {
           signal: controller.signal as unknown as globalThis.AbortSignal,
-        }
-      )
+        },
+      ),
     ).resolves.toEqual({ size: 123 })
     expect(onComplete).toHaveBeenCalledWith(expect.any(Number))
   })
@@ -214,7 +214,7 @@ describe('build service unavailability', () => {
         options?.signal?.addEventListener?.(
           'abort',
           () => reject(new axios.CanceledError()),
-          { once: true }
+          { once: true },
         )
       })
     })
@@ -225,7 +225,7 @@ describe('build service unavailability', () => {
       { packageString: '@example/cancelled@1.0.0' },
       {
         signal: controller.signal as unknown as globalThis.AbortSignal,
-      }
+      },
     )
 
     controller.abort()
@@ -239,7 +239,7 @@ describe('build service unavailability', () => {
       expect.objectContaining({
         maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES,
         signal: controller.signal,
-      })
+      }),
     )
   })
 
@@ -257,7 +257,7 @@ describe('build service unavailability', () => {
       { packageString: '@example/cancelled@1.0.0' },
       {
         signal: controller.signal as unknown as globalThis.AbortSignal,
-      }
+      },
     )
 
     controller.abort()
@@ -280,7 +280,7 @@ describe('build service unavailability', () => {
     const error = new CustomError(
       'BuildServiceUnavailableError',
       { reason: 'BUILD_SERVICE_UNREACHABLE' },
-      undefined
+      undefined,
     )
 
     await errorMiddleware(ctx as never, async () => {
@@ -312,7 +312,7 @@ describe('build service unavailability', () => {
     const error = new CustomError(
       'BuildServiceError',
       { message: 'disk full', code: 'ENOSPC' },
-      { retryable: true }
+      { retryable: true },
     )
 
     await errorMiddleware(ctx as never, async () => {
@@ -363,7 +363,7 @@ describe('build service unavailability', () => {
         operation: 'package-analysis',
         packageSpecifier: packageString,
       }),
-      expect.objectContaining({ status: 422 })
+      expect.objectContaining({ status: 422 }),
     )
   })
 })

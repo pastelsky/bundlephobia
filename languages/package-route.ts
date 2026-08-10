@@ -17,7 +17,7 @@ function routeSegments(value: PackageRouteValue): string[] {
 }
 
 export function parsePackagePageRoute(
-  value: PackageRouteValue
+  value: PackageRouteValue,
 ): ParsedPackagePageRoute | null {
   const segments = routeSegments(value)
   if (segments.length === 0) return null
@@ -52,7 +52,7 @@ export function getPackagePagePath(reference: PackageReference): string {
 
 export function getExplicitPackagePagePath(
   language: LanguageId,
-  specifier: string
+  specifier: string,
 ): string {
   return `/package/${language}/${specifier}`
 }
