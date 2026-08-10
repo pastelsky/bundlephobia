@@ -1,13 +1,8 @@
 import semver from 'semver'
 
+import { fetchPackagePackument } from '../../clients/npmRegistry'
 import { getOrLoadTrendsData } from '../cache'
-import { npmRegistryClient } from '../clients/http'
 import type { TrendsRelease } from '../types'
-
-type NpmPackument = {
-  time?: Record<string, string>
-  versions?: Record<string, unknown>
-}
 
 export async function fetchPackageReleases(packageName: string): Promise<{
   releases: TrendsRelease[]
@@ -19,11 +14,9 @@ export async function fetchPackageReleases(packageName: string): Promise<{
     cacheKey,
     12 * 60 * 60 * 1000,
     async () => {
-      const { data } = await npmRegistryClient.get<NpmPackument>(
-        `/${encodeURIComponent(packageName)}`
-      )
+      const packument = await fetchPackagePackument(packageName)
 
-      const time = data.time || {}
+      const time = packument.time || {}
       const publishDates: Record<string, string> = {}
       const releases: TrendsRelease[] = []
 

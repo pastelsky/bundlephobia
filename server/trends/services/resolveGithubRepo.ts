@@ -1,7 +1,7 @@
 import gitURLParse from 'git-url-parse'
 
+import { fetchPackagePackument } from '../../clients/npmRegistry'
 import { getOrLoadTrendsData } from '../cache'
-import { npmRegistryClient } from '../clients/http'
 
 // Known org/repo renames where GitHub Archive / ClickHouse dataset uses historical names
 const KNOWN_REPO_ALIASES: Record<string, string> = {
@@ -66,27 +66,28 @@ export async function resolveGithubRepo(
     24 * 60 * 60 * 1000,
     async () => {
       try {
-        const { data } = await npmRegistryClient.get(
-          `/${encodeURIComponent(packageName)}`
-        )
+        const packument = await fetchPackagePackument(packageName)
 
-        const latest =
-          data?.['dist-tags']?.latest &&
-          data?.versions?.[data['dist-tags'].latest]
+        const latestVersion = packument['dist-tags']?.latest
+        const latest = latestVersion
+          ? packument.versions?.[latestVersion]
+          : undefined
         const candidates: Array<string | null> = [
           normalizeGithubUrl(latest?.repository),
-          normalizeGithubUrl(data?.repository),
-          normalizeGithubUrl(latest?.bugs?.url),
-          normalizeGithubUrl(data?.bugs?.url),
+          normalizeGithubUrl(packument.repository),
+          normalizeGithubUrl(latest?.bugs),
+          normalizeGithubUrl(packument.bugs),
           normalizeGithubUrl(latest?.homepage),
-          normalizeGithubUrl(data?.homepage),
+          normalizeGithubUrl(packument.homepage),
         ]
 
-        if (data?.versions && typeof data.versions === 'object') {
-          const versionKeys = Object.keys(data.versions).slice(-10).reverse()
+        if (packument.versions) {
+          const versionKeys = Object.keys(packument.versions)
+            .slice(-10)
+            .reverse()
           for (const vKey of versionKeys) {
             const repository = normalizeGithubUrl(
-              data.versions[vKey]?.repository
+              packument.versions[vKey]?.repository
             )
             if (repository) {
               candidates.push(repository)
