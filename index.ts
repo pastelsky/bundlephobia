@@ -58,6 +58,24 @@ function getEnv(env: Record<string, string | undefined | null>) {
   }
 }
 
+import { monitorEventLoopDelay } from 'node:perf_hooks'
+
+const eventLoopDelay = monitorEventLoopDelay({ resolution: 10 })
+eventLoopDelay.enable()
+
+setInterval(() => {
+  const p99Ms = eventLoopDelay.percentile(99) / 1e6
+  const maxMs = eventLoopDelay.max / 1e6
+  if (p99Ms > 50) {
+    logger.info(
+      'EVENT_LOOP_LAG',
+      { p99Ms, maxMs },
+      `High event loop latency detected: p99=${p99Ms.toFixed(1)}ms max=${maxMs.toFixed(1)}ms`
+    )
+  }
+  eventLoopDelay.reset()
+}, 10000)
+
 const env = getEnv(process.env)
 
 const cache = new Cache()
