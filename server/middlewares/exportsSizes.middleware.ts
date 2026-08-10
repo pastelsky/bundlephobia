@@ -2,14 +2,14 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 
 import { createJavaScriptPackageReference } from '../../languages/javascript'
-import Cache from '../../utils/cache.utils'
+import CacheServiceClient from '../clients/cacheService'
 import { getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
 import { BUILD_DURATION_HEADER } from '../api/BuildService'
 import config from '../config'
 import logger from '../Logger'
 
-const cache = new Cache()
+const cache = new CacheServiceClient()
 const exportSizesMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved

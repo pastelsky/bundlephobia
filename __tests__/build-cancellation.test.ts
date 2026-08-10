@@ -12,7 +12,7 @@ jest.mock('../server/api/BuildService', () => ({
   })),
 }))
 
-jest.mock('../utils/cache.utils', () => ({
+jest.mock('../server/clients/cacheService', () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     setPackageSize: jest.fn(),

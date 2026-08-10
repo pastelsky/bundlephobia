@@ -15,7 +15,7 @@ import auth from 'koa-basic-auth'
 import bodyParser from 'koa-bodyparser'
 import invariant from 'ts-invariant'
 
-import Cache from './utils/cache.utils'
+import CacheServiceClient from './server/clients/cacheService'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
 import logger from './server/Logger'
@@ -78,7 +78,7 @@ setInterval(() => {
 
 const env = getEnv(process.env)
 
-const cache = new Cache()
+const cache = new CacheServiceClient()
 const port = env.port
 const dev = env.nodeEnv !== 'production'
 const app = next({ dev })

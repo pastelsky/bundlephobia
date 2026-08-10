@@ -3,7 +3,7 @@ import send from 'koa-send'
 import queryString from 'query-string'
 
 import { createJavaScriptPackageReference } from '../../languages/javascript'
-import Cache from '../../utils/cache.utils'
+import CacheServiceClient from '../clients/cacheService'
 import { drawStatsImg } from '../../utils/draw.utils'
 import { packageAnalysisGateway } from '../analysis'
 
@@ -18,7 +18,7 @@ function isThemeName(value: string | undefined): value is 'dark' | 'light' {
   return value === 'dark' || value === 'light'
 }
 
-const cache = new Cache()
+const cache = new CacheServiceClient()
 
 const generateImgMiddleware: Middleware = async ctx => {
   const url = ctx.url.replace(/&amp;/g, '&')
