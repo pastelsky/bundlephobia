@@ -1,3 +1,7 @@
+.carbon-ad:not(.carbon-ad--ready) {
+  display: none;
+}
+
 .carbon-ad__content {
   position: relative;
   width: 100%;
