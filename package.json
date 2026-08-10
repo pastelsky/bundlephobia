@@ -78,7 +78,7 @@
     "npm-package-arg": "^8.1.5",
     "npm-registry-fetch": "^11.0.0",
     "p-queue": "^3.2.0",
-    "package-build-stats": "9.2.1",
+    "package-build-stats": "9.2.2",
     "pacote": "^11.3.5",
     "performance-now": "^2.1.0",
     "progress-stream": "^2.0.0",
