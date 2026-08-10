@@ -1,9 +1,9 @@
 import 'dotenv-defaults/config'
 
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
 import createDebug from 'debug'
 
-import logger from '../server/Logger'
+import logger from '../Logger'
 
 const debug = createDebug('bp:cache')
 
@@ -21,16 +21,15 @@ function getAxiosErrorData(error: unknown): unknown {
   return axios.isAxiosError(error) ? error.response?.data : undefined
 }
 
-export default class Cache {
+export default class CacheServiceClient {
   async getPackageSize<T>(key: CacheKey): Promise<T | undefined> {
     try {
-      const result = await API.get<T>('/package-cache', {
-        params: key,
-      })
+      const result = await API.get<T>('/package-cache', { params: key })
       return result.data
     } catch (error) {
-      const axiosError = error as AxiosError
-      console.error(axiosError.response?.statusText)
+      console.error(
+        axios.isAxiosError(error) ? error.response?.statusText : undefined,
+      )
       return undefined
     }
   }
@@ -40,14 +39,9 @@ export default class Cache {
     try {
       await API.post('/package-cache', { ...key, result })
     } catch (error) {
-      const errorData = getAxiosErrorData(error)
-      console.error(errorData)
-      logger.error(
-        'CACHE_SET_ERROR',
-        {
-          ...key,
-          error: errorData,
-        },
+      this.logSetError(
+        key,
+        error,
         `CACHE ERROR for package ${key.name}@${key.version}`,
       )
     }
@@ -56,9 +50,7 @@ export default class Cache {
   async getExportsSize<T>(key: CacheKey): Promise<T | undefined> {
     debug('get exports %s@%s', key.name, key.version)
     try {
-      const result = await API.get<T>('/exports-cache', {
-        params: key,
-      })
+      const result = await API.get<T>('/exports-cache', { params: key })
       debug('cache hit')
       return result.data
     } catch {
@@ -71,16 +63,17 @@ export default class Cache {
     try {
       await API.post('/exports-cache', { ...key, result })
     } catch (error) {
-      const errorData = getAxiosErrorData(error)
-      console.error(errorData)
-      logger.error(
-        'CACHE_SET_ERROR',
-        {
-          ...key,
-          error: errorData,
-        },
+      this.logSetError(
+        key,
+        error,
         `CACHE ERROR for package exports ${key.name}@${key.version}`,
       )
     }
+  }
+
+  private logSetError(key: CacheKey, error: unknown, message: string): void {
+    const errorData = getAxiosErrorData(error)
+    console.error(errorData)
+    logger.error('CACHE_SET_ERROR', { ...key, error: errorData }, message)
   }
 }

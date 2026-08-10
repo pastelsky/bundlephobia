@@ -2,7 +2,7 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 
 import { createJavaScriptPackageReference } from '../../../languages/javascript'
-import Cache from '../../../utils/cache.utils'
+import CacheServiceClient from '../../clients/cacheService'
 import firebaseUtils from '../../../utils/firebase.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
 import { packageAnalysisGateway } from '../../analysis'
@@ -11,7 +11,7 @@ import config from '../../config'
 import logger from '../../Logger'
 import type { PackageBuildResult } from '../../types'
 
-const cache = new Cache()
+const cache = new CacheServiceClient()
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { scoped, name, version, description, repository, packageString } =
