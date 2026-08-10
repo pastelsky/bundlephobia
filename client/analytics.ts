@@ -29,36 +29,33 @@ type HasAction = {
 }
 
 export default class Analytics {
-  private static logEvent(
-    eventName: string,
-    eventProperties?: Record<string, unknown>
-  ) {
-    if (typeof amplitude !== 'undefined') {
-      amplitude.getInstance().logEvent(eventName, eventProperties)
+  private static logEvent(eventName: string, eventData?: UmamiEventData) {
+    if (typeof window !== 'undefined') {
+      window.umami?.track(eventName, eventData)
     }
   }
 
   static pageView(pageType: string) {
-    Analytics.logEvent(`Viewed ${pageType}`, {
-      path: window.location.pathname,
+    Analytics.logEvent('page_context_viewed', {
+      page_type: pageType,
     })
   }
 
   static performedSearch(packageName: string) {
-    Analytics.logEvent('Search Performed', {
+    Analytics.logEvent('search_performed', {
       package: packageName,
     })
   }
 
   static searchSuccess({ packageName, timeTaken }: HasPackageNameAndTimeTaken) {
-    Analytics.logEvent('Search Successful', {
+    Analytics.logEvent('search_succeeded', {
       package: packageName,
       timeTaken,
     })
   }
 
   static searchFailure({ packageName, timeTaken }: HasPackageNameAndTimeTaken) {
-    Analytics.logEvent('Search Failed', {
+    Analytics.logEvent('search_failed', {
       package: packageName,
       timeTaken,
     })
@@ -68,38 +65,38 @@ export default class Analytics {
     packageName,
     isDisabled,
   }: HasPackageName & HasIsDisabled) {
-    Analytics.logEvent('Bar Graph Clicked', {
+    Analytics.logEvent('bar_graph_clicked', {
       package: packageName,
       isDisabled,
     })
   }
 
   static scanPackageJsonDropped(itemCount: number) {
-    Analytics.logEvent('Scan packageJSON dropped', {
+    Analytics.logEvent('scan_package_json_dropped', {
       itemCount,
     })
   }
 
   static performedScan() {
-    Analytics.logEvent('Scan Performed')
+    Analytics.logEvent('scan_performed')
   }
 
   static scanParseError() {
-    Analytics.logEvent('Scan Parse Error')
+    Analytics.logEvent('scan_parse_failed')
   }
 
   static scanCompleted({
     timeTaken,
     successRatio,
   }: HasTimeTaken & HasSuccessRatio) {
-    Analytics.logEvent('Scan Parse Completed', {
+    Analytics.logEvent('scan_parse_completed', {
       successRatio,
       timeTaken,
     })
   }
 
   static performedExportsAnalysis(packageName: string) {
-    Analytics.logEvent('Exports Analysis Performed', {
+    Analytics.logEvent('exports_analysis_performed', {
       package: packageName,
     })
   }
@@ -108,7 +105,7 @@ export default class Analytics {
     packageName,
     timeTaken,
   }: HasPackageNameAndTimeTaken) {
-    Analytics.logEvent('Exports Analysis Successful', {
+    Analytics.logEvent('exports_analysis_succeeded', {
       package: packageName,
       timeTaken,
     })
@@ -118,7 +115,7 @@ export default class Analytics {
     packageName,
     timeTaken,
   }: HasPackageNameAndTimeTaken) {
-    Analytics.logEvent('Exports Analysis Failed', {
+    Analytics.logEvent('exports_analysis_failed', {
       package: packageName,
       timeTaken,
     })
@@ -128,7 +125,7 @@ export default class Analytics {
     packageName,
     timeTaken,
   }: HasPackageNameAndTimeTaken) {
-    Analytics.logEvent('Exports Size Calculated', {
+    Analytics.logEvent('exports_size_calculated', {
       package: packageName,
       timeTaken,
     })
@@ -138,41 +135,41 @@ export default class Analytics {
     packageName,
     timeTaken,
   }: HasPackageNameAndTimeTaken) {
-    Analytics.logEvent('Exports Size Failed', {
+    Analytics.logEvent('exports_size_failed', {
       package: packageName,
       timeTaken,
     })
   }
 
   static mcpHeaderClicked({ open }: HasOpen) {
-    Analytics.logEvent('MCP Header Clicked', {
+    Analytics.logEvent('mcp_header_clicked', {
       open,
     })
   }
 
   static mcpToolsListed({ toolCount }: HasToolCount) {
-    Analytics.logEvent('MCP Tools Listed', {
+    Analytics.logEvent('mcp_tools_listed', {
       toolCount,
     })
   }
 
   static mcpToolCalled({ toolName }: HasToolName) {
-    Analytics.logEvent('MCP Tool Called', {
+    Analytics.logEvent('mcp_tool_called', {
       toolName,
     })
   }
 
   static mcpActionFailed({ action }: HasAction) {
-    Analytics.logEvent('MCP Action Failed', {
+    Analytics.logEvent('mcp_action_failed', {
       action,
     })
   }
 
   static mcpSetupSnippetCopied() {
-    Analytics.logEvent('MCP Setup Snippet Copied')
+    Analytics.logEvent('mcp_setup_snippet_copied')
   }
 
   static mcpDocsOpened() {
-    Analytics.logEvent('MCP Docs Opened')
+    Analytics.logEvent('mcp_docs_opened')
   }
 }
