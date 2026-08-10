@@ -267,7 +267,10 @@ describe('build service unavailability', () => {
 
     controller.abort()
 
-    await expect(result).rejects.toThrow('worker execution cancelled')
+    await expect(result).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+      name: 'JobCancelledError',
+    })
     expect(execution.cancel).toHaveBeenCalledTimes(1)
   })
 

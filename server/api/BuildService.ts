@@ -111,6 +111,11 @@ export default class BuildService {
           signal.addEventListener('abort', cancelExecution, { once: true })
           try {
             return await execution
+          } catch (error) {
+            if (signal.aborted) {
+              throw new JobCancelledError()
+            }
+            throw error
           } finally {
             const durationMs = Math.max(
               1,
