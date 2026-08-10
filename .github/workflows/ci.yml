@@ -37,6 +37,13 @@ jobs:
           key: yarn-${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
       - name: Install project dependencies
         run: yarn install --immutable
+      - name: Cache Next.js build
+        uses: actions/cache@v6
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
       - name: Run lint
         run: yarn lint
       - name: Test package recommendation automation
@@ -72,6 +79,13 @@ jobs:
           key: yarn-${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
       - name: Install project dependencies
         run: yarn install --immutable
+      - name: Cache Next.js build
+        uses: actions/cache@v6
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
       - name: Build application for integration tests
         run: yarn build
         env:
