@@ -14,6 +14,8 @@ apps:
       NODE_ENV: production
       DEBUG: 'bp:*'
       PORT: 5400
+      PM2_APM: 'false'
+      PM2_DISABLE_METRICS: 'true'
       CACHE_SERVICE_ENDPOINT: http://localhost:7001
       BUILD_SERVICE_ENDPOINT: http://localhost:7002
       MEMORY_DIAGNOSTICS_SERVICE: main
@@ -34,6 +36,8 @@ apps:
     env:
       NODE_ENV: production
       DEBUG: 'bp:*'
+      PM2_APM: 'false'
+      PM2_DISABLE_METRICS: 'true'
       MEMORY_DIAGNOSTICS_SERVICE: build-service
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
       MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics
@@ -51,6 +55,8 @@ apps:
     env:
       NODE_ENV: production
       DEBUG: 'bp:*'
+      PM2_APM: 'false'
+      PM2_DISABLE_METRICS: 'true'
       MEMORY_DIAGNOSTICS_SERVICE: cache-service
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 170M
       MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics
