@@ -322,65 +322,65 @@ export default function TrendsLoader() {
       >
         <line
           x1="0"
-          y1="10"
+          y1="12"
           x2="1140"
-          y2="10"
+          y2="12"
           className="trends-loader__grid"
         />
         <line
           x1="0"
-          y1="92.5"
+          y1="95.5"
           x2="1140"
-          y2="92.5"
+          y2="95.5"
           className="trends-loader__grid"
         />
         <line
           x1="0"
-          y1="175"
+          y1="179"
           x2="1140"
-          y2="175"
+          y2="179"
           className="trends-loader__grid"
         />
         <line
           x1="0"
-          y1="257.5"
+          y1="262.5"
           x2="1140"
-          y2="257.5"
+          y2="262.5"
           className="trends-loader__grid"
         />
         <line
           x1="0"
-          y1="340"
+          y1="346"
           x2="1140"
-          y2="340"
+          y2="346"
           className="trends-loader__axis"
         />
         <line
           x1="285"
-          y1="10"
+          y1="12"
           x2="285"
-          y2="340"
+          y2="346"
           className="trends-loader__grid"
         />
         <line
           x1="570"
-          y1="10"
+          y1="12"
           x2="570"
-          y2="340"
+          y2="346"
           className="trends-loader__grid"
         />
         <line
           x1="855"
-          y1="10"
+          y1="12"
           x2="855"
-          y2="340"
+          y2="346"
           className="trends-loader__grid"
         />
         <line
           x1="1140"
-          y1="10"
+          y1="12"
           x2="1140"
-          y2="340"
+          y2="346"
           className="trends-loader__grid"
         />
 

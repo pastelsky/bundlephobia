@@ -17,11 +17,34 @@ import MetaTags from '../../client/components/MetaTags'
 import PageNav from '../../client/components/PageNav'
 import { AutocompleteInput } from '../../client/components/AutocompleteInput'
 import { formatSize as formatBundleSize } from '../../utils'
+import GithubIcon from '../../client/assets/github-logo.svg'
+import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 const MAX_PACKAGES = 5
+const PACKAGE_URL_SEPARATOR = '~vs~'
+
+function decodePackageParam(value: string) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+function parsePackageParam(value: string | string[]) {
+  const values = Array.isArray(value) ? value : [value]
+  return values.flatMap(part =>
+    part
+      .split(PACKAGE_URL_SEPARATOR)
+      .flatMap(value => value.split(','))
+      .map(decodePackageParam)
+      .map(packageName => packageName.trim().toLowerCase())
+      .filter(Boolean)
+  )
+}
 
 const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
   [
@@ -42,6 +65,25 @@ const GROUP_BY: Array<{ id: TrendsGroupBy; label: string }> = [
   { id: 'week', label: 'Week' },
   { id: 'month', label: 'Month' },
 ]
+
+function exportFileBase(
+  packages: string[],
+  metric: TrendsMetric,
+  range: TrendsRange
+) {
+  const packagePart =
+    packages
+      .map(packageName =>
+        packageName
+          .replace(/^@/, '')
+          .replace(/[^a-z0-9]+/gi, '-')
+          .replace(/^-|-$/g, '')
+      )
+      .filter(Boolean)
+      .join('-vs-') || 'packages'
+  const rangePart = range.replace(/^last-/, '').replace(/-/g, '-')
+  return `bundlephobia-trends-${packagePart}-${metric}-${rangePart}`
+}
 
 function formatCompactNumber(value: number | null) {
   if (value === null || value === undefined) return { value: '—', unit: '' }
@@ -95,6 +137,14 @@ export default function TrendsPage() {
   const [suggestionQueries, setSuggestionQueries] = useState<string[]>([])
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
   const trendsCache = useRef(new Map<string, TrendsResponse>())
+  const packageTrendsCache = useRef(
+    new Map<string, TrendsResponse['packages'][number]>()
+  )
+  const trendsDataRef = useRef<TrendsResponse | null>(null)
+
+  useEffect(() => {
+    trendsDataRef.current = trendsData
+  }, [trendsData])
 
   // Sync state with URL params on mount / router change
   useEffect(() => {
@@ -107,14 +157,7 @@ export default function TrendsPage() {
     } = router.query
 
     if (queryPackages) {
-      const raw = Array.isArray(queryPackages)
-        ? queryPackages.join(',')
-        : queryPackages
-      const parsed = raw
-        .split(',')
-        .map(p => p.trim().toLowerCase())
-        .filter(Boolean)
-        .slice(0, MAX_PACKAGES)
+      const parsed = parsePackageParam(queryPackages).slice(0, MAX_PACKAGES)
       if (parsed.length > 0) {
         setPackages(current =>
           current.join(',') === parsed.join(',') ? current : parsed
@@ -175,13 +218,16 @@ export default function TrendsPage() {
       newRange: TrendsRange,
       newGroupBy: TrendsGroupBy
     ) => {
-      const query: Record<string, string> = {
-        packages: newPackages.join(','),
-        metric: newMetric,
-        range: newRange,
-        groupBy: newGroupBy,
-      }
-      router.push({ pathname: '/trends', query }, undefined, { shallow: true })
+      const packagesParam = newPackages
+        .map(packageName => encodeURIComponent(packageName))
+        .join(PACKAGE_URL_SEPARATOR)
+      const query = [
+        `packages=${packagesParam}`,
+        `metric=${encodeURIComponent(newMetric)}`,
+        `range=${encodeURIComponent(newRange)}`,
+        `groupBy=${encodeURIComponent(newGroupBy)}`,
+      ].join('&')
+      router.push(`/trends?${query}`, undefined, { shallow: true })
     },
     [router]
   )
@@ -203,6 +249,44 @@ export default function TrendsPage() {
       return
     }
 
+    const packageCacheKey = (packageName: string) =>
+      `${packageName}|${range}|${groupBy}`
+    const missingPackages = packages.filter(
+      packageName =>
+        !packageTrendsCache.current.has(packageCacheKey(packageName))
+    )
+    const composeCachedResponse = (
+      metadata: Pick<TrendsResponse, 'range' | 'groupBy' | 'generatedAt'>
+    ) => {
+      const composed: TrendsResponse = {
+        ...metadata,
+        packages: packages
+          .map(packageName =>
+            packageTrendsCache.current.get(packageCacheKey(packageName))
+          )
+          .filter(
+            (
+              packageSeries
+            ): packageSeries is TrendsResponse['packages'][number] =>
+              Boolean(packageSeries)
+          ),
+      }
+      trendsCache.current.set(cacheKey, composed)
+      return composed
+    }
+
+    if (missingPackages.length === 0) {
+      const cachedResponse = composeCachedResponse({
+        range,
+        groupBy,
+        generatedAt: new Date().toISOString(),
+      })
+      setTrendsData(cachedResponse)
+      setError(null)
+      setLoading(false)
+      return
+    }
+
     let isMounted = true
     let completed = false
     // An indicator that flashes for a quick cache or network response is more
@@ -214,13 +298,32 @@ export default function TrendsPage() {
       if (isMounted && !completed) setLoading(true)
     }, 400)
 
-    API.getTrends(packages, range, groupBy)
+    // Fetch only package series that are not already cached. This keeps an
+    // existing chart stable while a newly added comparison package resolves.
+    API.getTrends(
+      missingPackages.length > 0 ? missingPackages : packages,
+      range,
+      groupBy
+    )
       .then(res => {
         completed = true
         window.clearTimeout(loadingTimer)
         if (isMounted) {
-          trendsCache.current.set(cacheKey, res)
-          setTrendsData(res)
+          res.packages.forEach(packageSeries => {
+            packageTrendsCache.current.set(
+              packageCacheKey(packageSeries.name),
+              packageSeries
+            )
+          })
+          const previous = trendsDataRef.current
+          const merged = composeCachedResponse({
+            range: res.range,
+            groupBy: res.groupBy,
+            generatedAt: res.generatedAt,
+          })
+          // Keep the previously rendered response in place if the request did
+          // not return a usable series for a newly requested package.
+          setTrendsData(merged.packages.length > 0 ? merged : previous || res)
           setLoading(false)
         }
       })
@@ -307,7 +410,7 @@ export default function TrendsPage() {
         image={ogImageUrl}
       />
       <div className="trends-page__container">
-        <PageNav minimal={true} />
+        <PageNav />
 
         <header className="trends-page__header">
           <h1>Package trends</h1>
@@ -470,11 +573,11 @@ export default function TrendsPage() {
                     className="trends-toggle__indicator"
                   />
                 </Checkbox.Root>
+                <span className="trends-toggle__label">Major version</span>
                 <span
                   className="trends-overlay-key trends-overlay-key--major"
                   aria-hidden="true"
                 />
-                <span className="trends-toggle__label">Major</span>
               </label>
               <label className="trends-toggle">
                 <Checkbox.Root
@@ -487,11 +590,11 @@ export default function TrendsPage() {
                     className="trends-toggle__indicator"
                   />
                 </Checkbox.Root>
+                <span className="trends-toggle__label">Minor version</span>
                 <span
                   className="trends-overlay-key trends-overlay-key--minor"
                   aria-hidden="true"
                 />
-                <span className="trends-toggle__label">Minor</span>
               </label>
             </div>
           </div>
@@ -505,7 +608,10 @@ export default function TrendsPage() {
             </div>
           ) : loading || trendsData ? (
             <TrendsChart
-              packages={loading ? [] : trendsData?.packages || []}
+              // Keep the last resolved series mounted while an incremental
+              // request is in flight; the chart can then draw the new series
+              // into the existing frame instead of blanking the plot.
+              packages={trendsData?.packages || []}
               metric={metric}
               range={range}
               groupBy={groupBy}
@@ -518,17 +624,39 @@ export default function TrendsPage() {
                     className="trends-action"
                     onClick={handleCopyLink}
                   >
-                    {copied ? 'Copied' : 'Share'}
+                    {copied ? 'Link copied' : 'Copy link'}
                   </Button>
-                  <a
-                    href={ogImageUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    download={`bundlephobia-trends-${packages.join('-')}.jpg`}
-                    className="trends-action"
-                  >
-                    Export
-                  </a>
+                  <details className="trends-export">
+                    <summary className="trends-action">Export image</summary>
+                    <div className="trends-export__menu" role="menu">
+                      <a
+                        href={`${ogImageUrl}&format=svg`}
+                        target="_blank"
+                        rel="noreferrer"
+                        download={`${exportFileBase(
+                          packages,
+                          metric,
+                          range
+                        )}.svg`}
+                        role="menuitem"
+                      >
+                        SVG vector
+                      </a>
+                      <a
+                        href={`${ogImageUrl}&format=png`}
+                        target="_blank"
+                        rel="noreferrer"
+                        download={`${exportFileBase(
+                          packages,
+                          metric,
+                          range
+                        )}.png`}
+                        role="menuitem"
+                      >
+                        PNG image
+                      </a>
+                    </div>
+                  </details>
                 </>
               }
               loading={loading}
@@ -551,6 +679,7 @@ export default function TrendsPage() {
                 <span>Issues</span>
                 <span>Gzip</span>
                 <span>Minified</span>
+                <span aria-hidden="true" />
               </div>
               {trendsData.packages.map((pack, index) => (
                 <div key={pack.name} className="trends-card">
@@ -570,6 +699,32 @@ export default function TrendsPage() {
                     >
                       {pack.name}
                     </Link>
+                    <span className="trends-card__external-links">
+                      <a
+                        className="trends-card__external-link trends-card__external-link--npm"
+                        href={`https://npmjs.com/package/${pack.name}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`${pack.name} on npm`}
+                      >
+                        <NPMIcon />
+                      </a>
+                      {pack.repository && (
+                        <a
+                          className="trends-card__external-link trends-card__external-link--github"
+                          href={
+                            pack.repository.startsWith('http')
+                              ? pack.repository
+                              : `https://github.com/${pack.repository}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`${pack.name} on GitHub`}
+                        >
+                          <GithubIcon />
+                        </a>
+                      )}
+                    </span>
                   </div>
                   <div className="trends-card__stats">
                     <div className="trends-stat">
@@ -607,6 +762,15 @@ export default function TrendsPage() {
                       </span>
                     </div>
                   </div>
+                  <Button
+                    type="button"
+                    className="trends-card__remove"
+                    onClick={() => handleRemovePackage(pack.name)}
+                    title={`Remove ${pack.name}`}
+                    aria-label={`Remove ${pack.name}`}
+                  >
+                    ×
+                  </Button>
                 </div>
               ))}
             </div>

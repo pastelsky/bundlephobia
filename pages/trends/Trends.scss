@@ -3,12 +3,19 @@
 // ─── Page Shell (Wider Layout, Sharp Corners, No Shadows) ─
 .trends-page {
   --trends-control-radius: 8px;
+  --trends-series-1: #3b82f6;
+  --trends-series-2: #10b981;
+  --trends-series-3: #ec4899;
+  --trends-series-4: #06b6d4;
+  --trends-series-5: #8b5cf6;
 }
 
 .trends-page__container {
-  max-width: 1200px;
+  width: 100%;
+  max-width: $layout-max-width;
+  box-sizing: border-box;
   margin: 0 auto;
-  padding: ($global-spacing * 2) ($global-spacing * 3) ($global-spacing * 6);
+  padding: ($global-spacing * 2) $layout-gutter ($global-spacing * 6);
 
   @media screen and (max-width: 48em) {
     padding: $global-spacing ($global-spacing * 2) ($global-spacing * 4);
@@ -150,6 +157,7 @@
   &:hover {
     background: var(--color-surface-raised);
     border-color: var(--color-border-subtle);
+    box-shadow: 0 1px 0 var(--color-border-subtle);
   }
 
   &__color {
@@ -165,6 +173,24 @@
     font-weight: $font-weight-light;
     color: var(--color-text-primary);
     margin-left: 0;
+  }
+
+  &__external-link {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    color: var(--color-text-muted);
+    opacity: 0.55;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
   }
 
   &__remove {
@@ -198,7 +224,8 @@
   &:hover {
     color: var(--color-text-primary);
     background: var(--color-surface-raised);
-    border-color: var(--color-border-subtle);
+    border-color: var(--color-text-secondary);
+    box-shadow: 0 1px 0 var(--color-border-primary);
   }
 }
 
@@ -392,6 +419,64 @@
   }
 }
 
+.trends-export {
+  position: relative;
+
+  summary {
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::after {
+      content: '';
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      margin: 0 0 3px $global-spacing * 0.5;
+      border-right: 1px solid currentColor;
+      border-bottom: 1px solid currentColor;
+      transform: rotate(45deg);
+    }
+  }
+
+  &[open] summary {
+    background: var(--color-text-primary);
+    color: var(--color-bg-base);
+    border-color: var(--color-text-primary);
+  }
+
+  &__menu {
+    position: absolute;
+    z-index: 10;
+    right: 0;
+    top: calc(100% + #{$global-spacing * 0.5});
+    min-width: 150px;
+    padding: $global-spacing * 0.5;
+    background: var(--color-bg-base);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--trends-control-radius);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+
+    a {
+      display: block;
+      padding: $global-spacing * 0.65 $global-spacing;
+      color: var(--color-text-secondary);
+      @include font-size-xxs;
+      font-weight: $font-weight-bold;
+      text-decoration: none;
+      white-space: nowrap;
+
+      &:hover,
+      &:focus-visible {
+        background: var(--color-background-primary);
+        color: var(--color-text-primary);
+      }
+    }
+  }
+}
+
 // ─── Chart Area (Sharp Corners, Flat Borderless) ───────────
 .trends-chart-area {
   background: transparent;
@@ -432,6 +517,23 @@
     min-height: 380px;
   }
 
+  &__no-data {
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $global-spacing * 0.4;
+    color: var(--color-text-muted);
+    text-align: center;
+    @include font-size-sm;
+
+    strong {
+      color: var(--color-text-secondary);
+      font-weight: $font-weight-light;
+    }
+  }
+
   &__actions {
     display: flex;
     align-self: flex-end;
@@ -469,6 +571,11 @@
     @include font-size-xs;
     fill: var(--color-text-muted);
     font-family: $font-family-code;
+
+    &--x {
+      @include font-size-xxs;
+      letter-spacing: normal;
+    }
   }
 
   &__axis-unit {
@@ -480,6 +587,15 @@
     stroke-width: 1.75;
     stroke-linecap: round;
     stroke-linejoin: round;
+    transition: opacity 0.18s ease, stroke-width 0.18s ease;
+
+    &--active {
+      stroke-width: 2.7;
+    }
+
+    &--dimmed {
+      opacity: 0.24;
+    }
 
     &--partial {
       stroke-dasharray: 2 3;
@@ -490,6 +606,22 @@
   &__series-dot {
     stroke: var(--color-bg-base);
     stroke-width: 0.75;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+
+    &--active {
+      transform: scale(1.28);
+    }
+
+    &--dimmed {
+      opacity: 0.24 !important;
+    }
+
+    &--placeholder {
+      stroke: var(--color-bg-base);
+      stroke-dasharray: 2 2;
+    }
   }
 
   &__series-dot--partial {
@@ -501,17 +633,30 @@
     stroke-width: 1.25;
     pointer-events: none;
     transform-origin: center;
-    animation: trends-dot-magnet 0.7s ease-in-out infinite alternate;
+    animation: trends-dot-magnet 0.9s ease-in-out infinite alternate;
   }
 
   &__series-annotation {
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.24s ease, transform 0.24s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+
+    &--visible {
+      opacity: 1;
+    }
+
+    &--active {
+      transform: translate(2px, -3px) rotate(-2deg);
+    }
 
     path {
       fill: none;
       stroke-width: 1.1;
       stroke-linecap: round;
-      opacity: 1;
+      opacity: 0.62;
+      transition: opacity 0.18s ease, stroke-width 0.18s ease;
     }
 
     text {
@@ -522,6 +667,19 @@
       stroke: var(--color-bg-base);
       stroke-width: 3px;
       stroke-linejoin: round;
+    }
+
+    &-link {
+      cursor: pointer;
+
+      &:hover path {
+        opacity: 0.9;
+        stroke-width: 1.4;
+      }
+
+      &:hover text {
+        text-decoration: underline;
+      }
     }
   }
 
@@ -554,31 +712,35 @@
     background: transparent;
   }
 
-  // Tooltip (Sharp Corners, No Shadow)
+  // Tooltip follows the compact dark balloon used by the package history view.
   &__tooltip {
     position: fixed;
     z-index: 3;
     pointer-events: none;
-    background: var(--color-bg-surface);
-    border: 1px solid var(--color-border-primary);
-    border-radius: 0 !important;
-    padding: ($global-spacing * 1.2) ($global-spacing * 1.5);
-    min-width: 160px;
+    background: var(--color-tooltip-bg);
+    color: var(--color-tooltip-text);
+    border: none;
+    border-radius: 4px !important;
+    box-shadow: var(--shadow-tooltip);
+    padding: $global-spacing ($global-spacing * 1.25);
+    min-width: 180px;
+    font-family: $font-family-body;
+    line-height: 1.35;
   }
 
   &__tooltip-date {
     @include font-size-xxs;
     font-family: $font-family-code;
-    color: var(--color-text-muted);
-    padding-bottom: $global-spacing * 0.5;
-    margin-bottom: $global-spacing * 0.6;
-    border-bottom: 1px solid var(--color-border-subtle);
+    color: var(--color-tooltip-text-muted);
+    padding-bottom: $global-spacing * 0.6;
+    margin-bottom: $global-spacing * 0.7;
+    border-bottom: 1px solid var(--color-tooltip-border);
   }
 
   &__tooltip-items {
     display: flex;
     flex-direction: column;
-    gap: $global-spacing * 0.4;
+    gap: $global-spacing * 0.7;
   }
 
   &__tooltip-row {
@@ -595,53 +757,53 @@
   }
 
   &__tooltip-name {
-    @include font-size-xs;
+    @include font-size-xxs;
     font-family: $font-family-code;
     font-weight: $font-weight-light;
-    color: var(--color-text-secondary);
+    color: var(--color-tooltip-text);
     flex: 1;
   }
 
   &__tooltip-value {
-    @include font-size-xs;
+    @include font-size-xxs;
     font-family: $font-family-code;
-    color: var(--color-text-secondary);
+    color: var(--color-tooltip-text);
     text-align: right;
   }
 
   &__tooltip-unit {
-    color: var(--color-text-muted);
+    color: var(--color-tooltip-text-muted);
   }
 
   &__tooltip-markers {
-    margin-top: $global-spacing * 0.6;
-    padding-top: $global-spacing * 0.5;
-    border-top: 1px solid var(--color-border-subtle);
+    margin-top: $global-spacing * 0.8;
+    padding-top: $global-spacing * 0.6;
+    border-top: 1px solid var(--color-tooltip-border);
   }
 
   &__tooltip-marker {
     @include font-size-xxs;
-    color: var(--color-text-muted);
+    color: var(--color-tooltip-text-muted);
     margin-top: 2px;
     display: flex;
     gap: $global-spacing * 0.5;
   }
 
   &__tooltip-marker-kind {
-    color: var(--color-text-secondary);
+    color: var(--color-tooltip-text);
     font-family: $font-family-code;
   }
 }
 
 @keyframes trends-dot-magnet {
   from {
-    opacity: 0.35;
-    r: 4px;
+    opacity: 0.22;
+    r: 4.5px;
   }
 
   to {
-    opacity: 1;
-    r: 8px;
+    opacity: 0.72;
+    r: 6.5px;
   }
 }
 
@@ -666,9 +828,9 @@
 
   &__columns {
     display: grid;
-    grid-template-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr)) auto;
     gap: $global-spacing * 1.5;
-    padding: 0 $global-spacing ($global-spacing * 0.65);
+    padding: $global-spacing * 1.1 $global-spacing * 2 ($global-spacing * 0.75);
     color: var(--color-text-muted);
     font-family: $font-family-body;
     @include font-size-xs;
@@ -688,10 +850,10 @@
   border: none;
   border-radius: 0 !important;
   display: grid;
-  grid-template-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr)) auto;
   gap: $global-spacing * 1.5;
   align-items: center;
-  padding: ($global-spacing * 1.15) $global-spacing;
+  padding: ($global-spacing * 1.5) ($global-spacing * 2);
   border-bottom: 1px solid var(--color-border-subtle);
   transition: background 0.15s ease;
 
@@ -711,6 +873,13 @@
     margin-bottom: 0;
   }
 
+  &__external-links {
+    display: inline-flex;
+    align-items: center;
+    gap: $global-spacing;
+    margin-left: $global-spacing * 0.35;
+  }
+
   &__swatch {
     width: 8px;
     height: 8px;
@@ -719,7 +888,7 @@
   }
 
   &__name {
-    font-family: $font-family-code;
+    font-family: $font-family-body;
     @include font-size-sm;
     font-weight: $font-weight-light;
     color: var(--color-text-primary);
@@ -731,6 +900,47 @@
     }
   }
 
+  &__external-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    color: var(--color-icon-secondary);
+    line-height: 0;
+    flex: 0 0 auto;
+    transition: opacity 0.15s ease;
+
+    svg {
+      display: block;
+      color: currentColor;
+    }
+
+    &--npm {
+      width: 24px;
+
+      svg {
+        width: 24px;
+        height: 10px;
+      }
+    }
+
+    &--github svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    & + & {
+      margin-left: $global-spacing * 0.5;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--color-icon-secondary);
+      opacity: 0.62;
+    }
+  }
+
   &__stats {
     display: contents;
 
@@ -739,6 +949,31 @@
       grid-column: 1 / -1;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: $global-spacing;
+    }
+  }
+
+  &__remove {
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: end;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--trends-control-radius) !important;
+    background: transparent;
+    color: var(--color-text-muted);
+    @include font-size-sm;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--color-text-primary);
+      background: var(--color-surface-raised);
+      border-color: var(--color-border-subtle);
     }
   }
 }

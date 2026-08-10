@@ -6,7 +6,11 @@ import { buildTrendsResponse, parsePackagesQuery } from '../trends/buildTrends'
 import { isTrendsGroupBy, isTrendsRange } from '../trends/range'
 import type { TrendsGroupBy, TrendsMetric, TrendsRange } from '../trends/types'
 import { TRENDS_METRICS } from '../trends/types'
-import { drawTrendsImg } from '../../utils/drawTrends.utils'
+import {
+  drawTrendsImg,
+  drawTrendsPng,
+  drawTrendsSvg,
+} from '../../utils/drawTrends.utils'
 
 function isThemeName(value: string | undefined): value is 'dark' | 'light' {
   return value === 'dark' || value === 'light'
@@ -33,6 +37,8 @@ const generateTrendsImgMiddleware: Middleware = async ctx => {
     : 'day'
   const rawTheme = typeof query.theme === 'string' ? query.theme : undefined
   const theme = isThemeName(rawTheme) ? rawTheme : 'dark'
+  const format =
+    query.format === 'svg' || query.format === 'png' ? query.format : 'jpg'
 
   try {
     if (packages.length === 0) {
@@ -41,15 +47,26 @@ const generateTrendsImgMiddleware: Middleware = async ctx => {
     }
 
     const trends = await buildTrendsResponse(packages, range, groupBy)
-    ctx.type = 'jpg'
+    ctx.type =
+      format === 'svg'
+        ? 'image/svg+xml'
+        : format === 'png'
+        ? 'image/png'
+        : 'jpg'
     ctx.cacheControl = {
       maxAge: 60 * 60,
     }
-    ctx.body = drawTrendsImg({
-      packages: trends.packages,
-      metric,
-      theme,
-    })
+    ctx.body =
+      format === 'svg'
+        ? drawTrendsSvg({ packages: trends.packages, metric, range, theme })
+        : format === 'png'
+        ? await drawTrendsPng({
+            packages: trends.packages,
+            metric,
+            range,
+            theme,
+          })
+        : drawTrendsImg({ packages: trends.packages, metric, theme })
   } catch (error) {
     console.error(error)
     ctx.cacheControl = {

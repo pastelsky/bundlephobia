@@ -1,7 +1,8 @@
 import axios from 'axios'
 
 import { getCached, setCached } from './memoryCache'
-import type { TrendsPoint } from './types'
+import { getTrendsRangeStart } from './range'
+import type { TrendsPoint, TrendsRange } from './types'
 
 type ClickHouseJson = {
   data?: Array<{
@@ -15,6 +16,15 @@ type GithubRepoMetadata = {
   full_name?: string
   stargazers_count?: number
   open_issues_count?: number
+}
+
+type OssInsightJson = {
+  data?: {
+    rows?: Array<{
+      date: string
+      stargazers: string | number
+    }>
+  }
 }
 
 function isSafeRepoName(repo: string) {
@@ -110,6 +120,45 @@ async function fetchClickHouseHistory(repo: string): Promise<{
   }
 }
 
+async function fetchOssInsightStars(
+  repo: string,
+  range: TrendsRange
+): Promise<TrendsPoint[]> {
+  if (!isSafeRepoName(repo)) return []
+
+  const from = getTrendsRangeStart(range)
+  const cacheKey = `ossinsight-stars:${repo}:${from}`
+  const cached = getCached<TrendsPoint[]>(cacheKey)
+  if (cached) return cached
+
+  try {
+    const { data } = await axios.get<OssInsightJson>(
+      `https://api.ossinsight.io/v1/repos/${repo}/stargazers/history/`,
+      {
+        params: {
+          per: 'day',
+          from,
+          to: new Date().toISOString().slice(0, 10),
+        },
+        timeout: 20_000,
+        headers: { Accept: 'application/json' },
+      }
+    )
+    const points = (data.data?.rows || [])
+      .map(row => ({
+        date: row.date.slice(0, 10),
+        value: Number(row.stargazers),
+      }))
+      .filter(point => Number.isFinite(point.value))
+
+    if (points.length === 0) return []
+    setCached(cacheKey, points, 12 * 60 * 60 * 1000)
+    return points
+  } catch {
+    return []
+  }
+}
+
 async function fetchLiveGithubStats(repo: string): Promise<{
   stars: number | null
   openIssues: number | null
@@ -130,6 +179,7 @@ async function fetchLiveGithubStats(repo: string): Promise<{
   }
 
   try {
+    const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN
     const { data } = await axios.get<GithubRepoMetadata>(
       `https://api.github.com/repos/${repo}`,
       {
@@ -137,6 +187,7 @@ async function fetchLiveGithubStats(repo: string): Promise<{
         headers: {
           Accept: 'application/vnd.github+json',
           'User-Agent': 'bundlephobia-trends',
+          ...(githubToken ? { Authorization: `Bearer ${githubToken}` } : {}),
         },
         maxRedirects: 5,
       }
@@ -186,25 +237,47 @@ function pinLivePoint(
   return [...series, { date: today, value: liveValue, partial: true }]
 }
 
-export async function fetchGithubTrendSeries(repo: string): Promise<{
+export async function fetchGithubTrendSeries(
+  repo: string,
+  range: TrendsRange = 'last-year'
+): Promise<{
   stars: TrendsPoint[]
   issues: TrendsPoint[]
   currentStars: number | null
   currentIssues: number | null
   warning?: string
 }> {
-  const [history, live] = await Promise.all([
+  const [clickHouseHistory, ossInsightStars, live] = await Promise.all([
     fetchClickHouseHistory(repo),
+    fetchOssInsightStars(repo, range),
     fetchLiveGithubStats(repo),
   ])
 
-  const stars = pinLivePoint(history.stars, live.stars)
-  const issues = pinLivePoint(history.issues, live.openIssues)
+  const historicalStars =
+    ossInsightStars.length > 0 ? ossInsightStars : clickHouseHistory.stars
+  const stars = pinLivePoint(historicalStars, live.stars)
+  const issues = pinLivePoint(clickHouseHistory.issues, live.openIssues)
 
+  const today = new Date()
+  const currentMonth = `${today.getUTCFullYear()}-${String(
+    today.getUTCMonth() + 1
+  ).padStart(2, '0')}-01`
+  const latestHistoricalDate = [
+    historicalStars.at(-1)?.date,
+    clickHouseHistory.issues.at(-1)?.date,
+  ]
+    .filter((date): date is string => Boolean(date))
+    .sort()[0]
   const warning =
-    history.stars.length === 0 && live.stars != null
+    historicalStars.length === 0 && live.stars == null
+      ? 'No GitHub history or current snapshot is available for this repository.'
+      : historicalStars.length === 0
       ? 'Only the current GitHub snapshot is available for this repository.'
-      : undefined
+      : latestHistoricalDate && latestHistoricalDate < currentMonth
+      ? `GitHub history last updated on ${latestHistoricalDate}; recent months may be unavailable.`
+      : ossInsightStars.length > 0
+      ? undefined
+      : 'OSSInsight history unavailable; using the secondary ClickHouse history.'
 
   return {
     stars,

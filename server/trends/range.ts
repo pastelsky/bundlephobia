@@ -70,7 +70,8 @@ function bucketDate(date: string, groupBy: TrendsGroupBy) {
 export function rollupPoints(
   points: TrendsPoint[],
   groupBy: TrendsGroupBy,
-  mode: 'sum' | 'last'
+  mode: 'sum' | 'last',
+  fillMissing = false
 ) {
   if (groupBy === 'day' && mode === 'last') return points
 
@@ -82,7 +83,7 @@ export function rollupPoints(
     buckets.set(key, bucket)
   })
 
-  return Array.from(buckets.entries())
+  const rolled = Array.from(buckets.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, bucket]) => {
       const last = bucket[bucket.length - 1]
@@ -98,6 +99,27 @@ export function rollupPoints(
         partial: bucket.some(point => point.partial) || isCurrentBucket,
       }
     })
+
+  if (!fillMissing || groupBy === 'day' || rolled.length < 2) return rolled
+
+  const valuesByBucket = new Map(rolled.map(point => [point.date, point]))
+  const filled: TrendsPoint[] = []
+  const cursor = new Date(`${rolled[0].date}T00:00:00Z`)
+  const end = new Date(`${rolled[rolled.length - 1].date}T00:00:00Z`)
+  let previous: TrendsPoint | undefined
+
+  while (cursor <= end) {
+    const date = bucketDate(isoDate(cursor), groupBy)
+    const observed = valuesByBucket.get(date)
+    if (observed) previous = observed
+    if (previous) {
+      filled.push(observed || { ...previous, date })
+    }
+    if (groupBy === 'month') cursor.setUTCMonth(cursor.getUTCMonth() + 1)
+    else cursor.setUTCDate(cursor.getUTCDate() + 7)
+  }
+
+  return filled
 }
 
 export function filterPointsByRange(
