@@ -24,6 +24,34 @@ test('searches for and builds a real package', async ({
   await expect(packagePage.nextError).toHaveCount(0)
 })
 
+test('submits a typed package with one Enter while suggestions are open', async ({
+  homePage,
+  page,
+}) => {
+  await page.route('**/v2/search/suggestions?q=react', route =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          package: {
+            name: 'react',
+            description: 'A JavaScript library for building user interfaces.',
+          },
+          score: { detail: { popularity: 1 } },
+          searchScore: 1,
+        },
+      ]),
+    })
+  )
+
+  await homePage.goto()
+  await homePage.searchInput.fill('react')
+  await expect(page.getByRole('option').first()).toBeVisible()
+  await homePage.searchInput.press('Enter')
+
+  await expect(page).toHaveURL(/\/package\/react$/)
+})
+
 test('renders a real package-not-found response in the result shell', async ({
   packagePage,
   page,
