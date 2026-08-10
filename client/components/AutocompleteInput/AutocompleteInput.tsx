@@ -16,6 +16,8 @@ type AutocompleteInputProps = {
   containerClass?: string
   autoFocus?: boolean
   ariaLabel?: string
+  compact?: boolean
+  suggestionQueries?: string[]
   onSearchSubmit: (value: string) => void
 }
 
@@ -26,6 +28,8 @@ export const AutocompleteInput = ({
   containerClass,
   autoFocus,
   ariaLabel = 'Package name',
+  compact = false,
+  suggestionQueries,
   onSearchSubmit,
 }: AutocompleteInputProps) => {
   const {
@@ -34,7 +38,11 @@ export const AutocompleteInput = ({
     handleSubmit,
     handleInputValueChange,
     setSuggestions,
-  } = useAutocompleteInput({ initialValue, onSubmit: onSearchSubmit })
+  } = useAutocompleteInput({
+    initialValue,
+    onSubmit: onSearchSubmit,
+    suggestionQueries,
+  })
   const { searchFontSize } = useFontSize({ value })
 
   const {
@@ -80,7 +88,9 @@ export const AutocompleteInput = ({
 
   return (
     <form
-      className={cx(containerClass, 'autocomplete-input__form')}
+      className={cx(containerClass, 'autocomplete-input__form', {
+        'autocomplete-input__form--compact': compact,
+      })}
       onSubmit={handleSubmit}
     >
       <div
@@ -100,12 +110,14 @@ export const AutocompleteInput = ({
             {...getInputProps({
               placeholder: 'find package',
               'aria-label': ariaLabel,
-              className: 'autocomplete-input',
+              className: cx('autocomplete-input', {
+                'autocomplete-input--compact': compact,
+              }),
               autoCorrect: 'off',
               autoFocus,
               autoCapitalize: 'off',
               spellCheck: false,
-              style: { fontSize: searchFontSize! },
+              style: compact ? undefined : { fontSize: searchFontSize! },
               onKeyDown: handleInputKeyDown,
             })}
           />
@@ -125,8 +137,10 @@ export const AutocompleteInput = ({
           </div>
         </div>
         <div
-          style={{ fontSize: searchFontSize! }}
-          className="autocomplete-input__dummy-input"
+          style={compact ? undefined : { fontSize: searchFontSize! }}
+          className={cx('autocomplete-input__dummy-input', {
+            'autocomplete-input__dummy-input--compact': compact,
+          })}
         >
           <PackageNameElement
             isHeading={renderAsH1}
