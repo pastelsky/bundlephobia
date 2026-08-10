@@ -13,18 +13,12 @@ jobs:
   build:
     name: build (${{ matrix.node-version }})
     runs-on: ubuntu-latest
-    env:
-      GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
 
     strategy:
       matrix:
         node-version: [26.x]
 
     steps:
-      - name: Configure Git defaults
-        run: |
-          git config --global init.defaultBranch bundlephobia
-          git config --global advice.defaultBranchName false
       - uses: actions/checkout@v7
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v7
@@ -54,18 +48,12 @@ jobs:
   integration:
     name: integration (${{ matrix.node-version }})
     runs-on: ubuntu-latest
-    env:
-      GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
 
     strategy:
       matrix:
         node-version: [26.x]
 
     steps:
-      - name: Configure Git defaults
-        run: |
-          git config --global init.defaultBranch bundlephobia
-          git config --global advice.defaultBranchName false
       - uses: actions/checkout@v7
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v7
@@ -111,14 +99,8 @@ jobs:
 
   jvm-build:
     runs-on: ubuntu-latest
-    env:
-      GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
 
     steps:
-      - name: Configure Git defaults
-        run: |
-          git config --global init.defaultBranch bundlephobia
-          git config --global advice.defaultBranchName false
       - uses: actions/checkout@v7
       - name: Use JDK 21
         uses: actions/setup-java@v5
