@@ -1,38 +1,52 @@
+jest.mock('@amplitude/analytics-browser', () => ({
+  init: jest.fn(),
+  track: jest.fn(),
+}))
+
 import Analytics from '../analytics'
+import { initializeAmplitude } from '../amplitude'
+import * as amplitude from '@amplitude/analytics-browser'
 
 describe('Analytics', () => {
-  const track = jest.fn()
+  const init = amplitude.init as jest.Mock
+  const track = amplitude.track as jest.Mock
 
   beforeEach(() => {
+    init.mockReset()
     track.mockReset()
-    globalThis.amplitude = {
-      getInstance: () => ({ logEvent: track }),
-    }
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
-      value: {
-        amplitude: {
-          getInstance: () => ({ logEvent: track }),
-        },
-      },
+      value: {},
     })
   })
 
   afterEach(() => {
     Reflect.deleteProperty(globalThis, 'window')
-    Reflect.deleteProperty(globalThis, 'amplitude')
   })
 
-  it('sends page context through Amplitude', () => {
+  it('initializes Amplitude only once in the browser', async () => {
+    initializeAmplitude()
+    initializeAmplitude()
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(init).toHaveBeenCalledTimes(1)
+    expect(init).toHaveBeenCalledWith('93638c7d7bac8785dca060653e104732', {
+      autocapture: true,
+    })
+  })
+
+  it('sends page context through Amplitude', async () => {
     Analytics.pageView('scan')
+    await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(track).toHaveBeenCalledWith('page_context_viewed', {
       page_type: 'scan',
     })
   })
 
-  it('preserves typed event data for package searches', () => {
+  it('preserves typed event data for package searches', async () => {
     Analytics.searchSuccess({ packageName: 'react', timeTaken: 123 })
+    await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(track).toHaveBeenCalledWith('search_succeeded', {
       package: 'react',
@@ -40,12 +54,13 @@ describe('Analytics', () => {
     })
   })
 
-  it('tracks ad impressions and viewed slots without a creative separately', () => {
+  it('tracks ad impressions and viewed slots without a creative separately', async () => {
     Analytics.advertisementImpression({ placement: 'homepage' })
     Analytics.advertisementUnavailable({
       placement: 'package_result',
       reason: 'creative_timeout',
     })
+    await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(track).toHaveBeenNthCalledWith(1, 'advertisement_impression', {
       placement: 'homepage',
@@ -61,7 +76,6 @@ describe('Analytics', () => {
       configurable: true,
       value: {},
     })
-    Reflect.deleteProperty(globalThis, 'amplitude')
 
     expect(() => Analytics.performedScan()).not.toThrow()
   })

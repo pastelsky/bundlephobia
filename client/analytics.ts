@@ -1,3 +1,5 @@
+import { trackAmplitudeEvent } from './amplitude'
+
 type HasPackageName = {
   packageName: string
 }
@@ -39,9 +41,7 @@ export default class Analytics {
     eventName: string,
     eventData?: Record<string, unknown>
   ) {
-    if (typeof window !== 'undefined' && typeof amplitude !== 'undefined') {
-      amplitude.getInstance().logEvent(eventName, eventData)
-    }
+    trackAmplitudeEvent(eventName, eventData)
   }
 
   static pageView(pageType: string) {
