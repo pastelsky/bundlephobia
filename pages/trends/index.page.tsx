@@ -21,6 +21,7 @@ import GithubIcon from '../../client/assets/github-logo.svg'
 import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
+import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 const MAX_PACKAGES = 5
@@ -134,7 +135,7 @@ export default function TrendsPage() {
   const [error, setError] = useState<string | null>(null)
   const [trendsData, setTrendsData] = useState<TrendsResponse | null>(null)
   const [copied, setCopied] = useState(false)
-  const [suggestionQueries, setSuggestionQueries] = useState<string[]>([])
+  const [relatedPackageNames, setRelatedPackageNames] = useState<string[]>([])
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
   const trendsCache = useRef(new Map<string, TrendsResponse>())
   const packageTrendsCache = useRef(
@@ -201,7 +202,7 @@ export default function TrendsPage() {
           similarResults: results,
         }
       )
-      setSuggestionQueries(autocompleteQueries)
+      setRelatedPackageNames(autocompleteQueries)
       setSuggestedPackages(recommendations)
     })
 
@@ -209,6 +210,12 @@ export default function TrendsPage() {
       isMounted = false
     }
   }, [packages])
+
+  const loadSuggestions = useCallback(
+    (query: string) =>
+      loadRelatedPackageSuggestions(query, relatedPackageNames),
+    [relatedPackageNames]
+  )
 
   // Update URL parameters without full page reload
   const updateUrl = useCallback(
@@ -456,8 +463,7 @@ export default function TrendsPage() {
                   key={inputKey}
                   containerClass="trends-autocomplete"
                   compact
-                  suggestionQueries={suggestionQueries}
-                  rankSuggestions
+                  loadSuggestions={loadSuggestions}
                   onSearchSubmit={handleAddPackage}
                 />
               </div>
