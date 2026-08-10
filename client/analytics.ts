@@ -1,3 +1,5 @@
+import { trackAmplitudeEvent } from './amplitude'
+
 type HasPackageName = {
   packageName: string
 }
@@ -35,10 +37,11 @@ type HasAdUnavailableReason = HasAdPlacement & {
 }
 
 export default class Analytics {
-  private static logEvent(eventName: string, eventData?: UmamiEventData) {
-    if (typeof window !== 'undefined') {
-      window.umami?.track(eventName, eventData)
-    }
+  private static logEvent(
+    eventName: string,
+    eventData?: Record<string, unknown>
+  ) {
+    trackAmplitudeEvent(eventName, eventData)
   }
 
   static pageView(pageType: string) {
