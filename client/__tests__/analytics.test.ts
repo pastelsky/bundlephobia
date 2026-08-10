@@ -5,17 +5,25 @@ describe('Analytics', () => {
 
   beforeEach(() => {
     track.mockReset()
+    globalThis.amplitude = {
+      getInstance: () => ({ logEvent: track }),
+    }
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
-      value: { umami: { track } },
+      value: {
+        amplitude: {
+          getInstance: () => ({ logEvent: track }),
+        },
+      },
     })
   })
 
   afterEach(() => {
     Reflect.deleteProperty(globalThis, 'window')
+    Reflect.deleteProperty(globalThis, 'amplitude')
   })
 
-  it('sends page context through Umami without duplicating pageviews', () => {
+  it('sends page context through Amplitude', () => {
     Analytics.pageView('scan')
 
     expect(track).toHaveBeenCalledWith('page_context_viewed', {
@@ -48,11 +56,12 @@ describe('Analytics', () => {
     })
   })
 
-  it('does not throw when the tracker is unavailable', () => {
+  it('does not throw when the browser tracker is unavailable', () => {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
       value: {},
     })
+    Reflect.deleteProperty(globalThis, 'amplitude')
 
     expect(() => Analytics.performedScan()).not.toThrow()
   })

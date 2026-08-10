@@ -35,9 +35,12 @@ type HasAdUnavailableReason = HasAdPlacement & {
 }
 
 export default class Analytics {
-  private static logEvent(eventName: string, eventData?: UmamiEventData) {
-    if (typeof window !== 'undefined') {
-      window.umami?.track(eventName, eventData)
+  private static logEvent(
+    eventName: string,
+    eventData?: Record<string, unknown>
+  ) {
+    if (typeof window !== 'undefined' && typeof amplitude !== 'undefined') {
+      amplitude.getInstance().logEvent(eventName, eventData)
     }
   }
 
