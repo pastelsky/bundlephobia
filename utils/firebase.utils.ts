@@ -6,6 +6,38 @@ import semver from 'semver'
 import { decodeFirebaseKey, encodeFirebaseKey } from './index'
 
 const debug = createDebug('bp:firebase-util')
+const firebaseMetrics = new Map<
+  string,
+  { calls: number; payloadBytes: number }
+>()
+
+function recordFirebaseOperation(
+  direction: 'read' | 'write',
+  path: string,
+  value: unknown
+): void {
+  const key = `${direction}:${path}`
+  const current = firebaseMetrics.get(key) || { calls: 0, payloadBytes: 0 }
+  const payloadBytes =
+    value === undefined || value === null
+      ? 0
+      : Buffer.byteLength(JSON.stringify(value) ?? '', 'utf8')
+
+  current.calls += 1
+  current.payloadBytes += payloadBytes
+  firebaseMetrics.set(key, current)
+}
+
+function flushFirebaseMetrics(): void {
+  if (firebaseMetrics.size === 0) return
+
+  const summary = Object.fromEntries(firebaseMetrics.entries())
+  firebaseMetrics.clear()
+  debug('Firebase usage summary: %O', summary)
+}
+
+const firebaseMetricsTimer = setInterval(flushFirebaseMetrics, 60_000)
+firebaseMetricsTimer.unref()
 
 const FIREBASE_READ_KEY = process.env.FIREBASE_READ_KEY || 'modules-v2'
 
@@ -52,22 +84,36 @@ class FirebaseUtils {
     void searches
       .child(encodeFirebaseKey(name))
       .once('value')
-      .then(snapshot => snapshot.val() as SearchRecord | null)
+      .then(snapshot => {
+        const result = snapshot.val() as SearchRecord | null
+        recordFirebaseOperation('read', 'searches-v2', result)
+        return result
+      })
       .then(result => {
         if (result) {
-          return searches.child(encodeFirebaseKey(name)).update({
+          const value = {
             lastSearched: Date.now(),
             name: packageInfo.name,
             count: result.count + 1,
+          }
+          const update = searches.child(encodeFirebaseKey(name)).update(value)
+          return update.then(() => {
+            recordFirebaseOperation('write', 'searches-v2', value)
           })
         }
 
-        return searches.child(encodeFirebaseKey(name)).set({
+        const value = {
           lastSearched: Date.now(),
           name: packageInfo.name,
           version: packageInfo.version,
           count: 1,
-        })
+        }
+        return searches
+          .child(encodeFirebaseKey(name))
+          .set(value)
+          .then(() => {
+            recordFirebaseOperation('write', 'searches-v2', value)
+          })
       })
       .catch(error => console.log(error))
   }
@@ -89,7 +135,12 @@ class FirebaseUtils {
         .child(encodeFirebaseKey(name))
 
       return ref.once('value').then(snapshot => {
-        return snapshot.val() as Record<string, Record<string, unknown>> | null
+        const result = snapshot.val() as Record<
+          string,
+          Record<string, unknown>
+        > | null
+        recordFirebaseOperation('read', key, result)
+        return result
       })
     }
 
@@ -198,6 +249,10 @@ class FirebaseUtils {
       .once('value')
       .then(snapshot => snapshot.val() as Record<string, SearchRecord> | null)
       .then(result => {
+        recordFirebaseOperation('read', 'searches-v2', result)
+        return result
+      })
+      .then(result => {
         if (!result) {
           return recentSearches
         }
@@ -224,6 +279,7 @@ class FirebaseUtils {
       .once('value')
 
     const packages = snapshot.val() as Record<string, SearchRecord> | null
+    recordFirebaseOperation('read', 'searches-v2', packages)
 
     if (packages) {
       Object.keys(packages).forEach(packageName => {

@@ -3,6 +3,7 @@ const LRU = require('lru-cache')
 const firebase = require('firebase')
 const debug = require('debug')('bp:cache')
 const { encodeFirebaseKey } = require('../cache.utils')
+const { recordFirebaseOperation } = require('../firebase-metrics')
 
 const LRUCache = new LRU({ max: 1500 })
 
@@ -28,7 +29,9 @@ async function getPackageResultFromKey(key, { name, version }) {
     .child(encodeFirebaseKey(version))
 
   const snapshot = await ref.once('value')
-  return snapshot.val()
+  const result = snapshot.val()
+  recordFirebaseOperation({ direction: 'read', path: key, value: result })
+  return result
 }
 
 async function getPackageResult({ name, version, readKey }) {
@@ -62,10 +65,16 @@ async function getPackageResult({ name, version, readKey }) {
 
 async function setPackageResult({ name, version, result }) {
   const modules = firebase.database().ref().child(FIREBASE_WRITE_KEY_EXPORTS)
-  return modules
+  const write = modules
     .child(encodeFirebaseKey(name))
     .child(encodeFirebaseKey(version))
     .set(result)
+  await write
+  recordFirebaseOperation({
+    direction: 'write',
+    path: FIREBASE_WRITE_KEY_EXPORTS,
+    value: result,
+  })
 }
 
 async function getExportsSizeMiddlware(req, res) {
