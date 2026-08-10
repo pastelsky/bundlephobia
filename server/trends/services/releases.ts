@@ -2,6 +2,7 @@ import semver from 'semver'
 
 import { fetchPackagePackument } from '../../clients/npmRegistry'
 import { getOrLoadTrendsData } from '../cache'
+import { trendsConfig } from '../config'
 import type { TrendsRelease } from '../types'
 
 export async function fetchPackageReleases(packageName: string): Promise<{
@@ -12,7 +13,7 @@ export async function fetchPackageReleases(packageName: string): Promise<{
   return getOrLoadTrendsData(
     'releases',
     cacheKey,
-    12 * 60 * 60 * 1000,
+    trendsConfig.cacheTtlMs.releases,
     async () => {
       const packument = await fetchPackagePackument(packageName)
 
@@ -21,14 +22,11 @@ export async function fetchPackageReleases(packageName: string): Promise<{
       const releases: TrendsRelease[] = []
 
       for (const [version, rawDate] of Object.entries(time)) {
-        if (version === 'created' || version === 'modified') continue
-        if (!semver.valid(version) || semver.prerelease(version)) continue
+        const parsed = semver.parse(version)
+        if (!parsed || parsed.prerelease.length > 0) continue
 
         const date = rawDate.slice(0, 10)
         publishDates[version] = date
-
-        const parsed = semver.parse(version)
-        if (!parsed || parsed.prerelease.length > 0) continue
 
         const isMajor = parsed.minor === 0 && parsed.patch === 0
         const isMinor = parsed.patch === 0 && parsed.minor > 0
