@@ -26,7 +26,7 @@ describe('Analytics', () => {
 
   it('initializes Amplitude only once in the browser', async () => {
     initializeAmplitude()
-    initializeAmplitude()
+    Analytics.pageView('scan')
     await new Promise(resolve => setTimeout(resolve, 0))
 
     expect(init).toHaveBeenCalledTimes(1)
