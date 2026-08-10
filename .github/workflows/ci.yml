@@ -10,8 +10,8 @@ on:
     branches: [bundlephobia]
 
 jobs:
-  quality:
-    name: quality (Node ${{ matrix.node-version }})
+  build:
+    name: build (${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
     strategy:
@@ -34,27 +34,6 @@ jobs:
         run: yarn lint
       - name: Test package recommendation automation
         run: yarn test:recommendations
-
-  build:
-    name: build (${{ matrix.node-version }})
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [26.x]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: yarn
-          cache-dependency-path: yarn.lock
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Install project dependencies
-        run: yarn install --immutable
       - run: yarn build
         env:
           CI: true
