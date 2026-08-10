@@ -120,6 +120,19 @@ $font-family-code: 'Source Code Pro', 'SF Mono', Consolas, 'Liberation Mono',
 
 // Padding / Spacing
 $global-spacing: 10px;
+$layout-max-width: 1200px;
+
+// Shared UI controls
+$control-border-radius: 6px;
+$control-border-radius-lg: 10px;
+$control-height: 36px;
+$control-height-sm: 30px;
+$icon-size: 18px;
+$icon-button-size: 32px;
+$motion-fast: 150ms ease;
+$focus-ring-width: 2px;
+$focus-ring-offset: 2px;
+$popover-z-index: 100;
 
 // Content width
 $max-content-width: $global-spacing * 85;

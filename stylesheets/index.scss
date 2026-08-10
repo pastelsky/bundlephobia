@@ -13,6 +13,7 @@
 @import '../pages/scan/Scan.scss';
 @import '../pages/scan-results/ScanResults.scss';
 @import '../pages/index.scss';
+@import '../pages/__ui.scss';
 
 // components
 @import '../client/components/AnnouncementBanner/AnnouncementBanner.scss';
@@ -34,3 +35,4 @@
 @import '../client/components/SimilarPackageCard/SimilarPackageCard.scss';
 @import '../client/components/Icons/TreeShakeIcon.scss';
 @import '../client/components/Warning/Warning.scss';
+@import '../client/components/ui/ui.scss';

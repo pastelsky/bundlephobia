@@ -1,7 +1,6 @@
 import React from 'react'
 import { useTheme } from '../../hooks/useTheme'
-
-import styles from './ThemeToggle.module.scss'
+import { IconButton } from '../ui'
 
 const SunIcon = () => (
   <svg
@@ -50,14 +49,13 @@ const ThemeToggle = () => {
   const isDark = theme === 'dark'
 
   return (
-    <button
-      className={styles.toggle}
+    <IconButton
+      variant="quiet"
       onClick={toggleTheme}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {isDark ? <SunIcon /> : <MoonIcon />}
-    </button>
+    </IconButton>
   )
 }
 
