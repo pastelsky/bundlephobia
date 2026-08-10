@@ -9,6 +9,7 @@
 
   @media screen and (max-width: 40em) {
     padding: $global-spacing * 2;
+    align-items: flex-start;
   }
 }
 
@@ -17,6 +18,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
+
+  @media screen and (max-width: 40em) {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: $global-spacing;
+    justify-content: flex-end;
+  }
 }
 
 .github-logo {
@@ -99,10 +107,17 @@
   }
 
   @media screen and (max-width: 40em) {
-    max-width: 40vw;
-    overflow: scroll;
-    align-items: center;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    gap: $global-spacing $global-spacing * 2;
     justify-content: flex-start;
+    margin: $global-spacing 0 0;
+    order: 2;
+    width: 100%;
+
+    li + li {
+      margin-left: 0;
+    }
   }
 }
 
@@ -124,6 +139,23 @@
 
   &:hover {
     opacity: 1;
+  }
+}
+
+.mcp-nav__trigger.ui-button {
+  @include font-size-xs;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--color-nav-link);
+  letter-spacing: 0.3px;
+  min-height: 0;
+  padding: 0;
+
+  &:hover:not(:disabled) {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-nav-link);
   }
 }
 

@@ -251,3 +251,44 @@
     color: var(--color-text-base);
   }
 }
+
+@media screen and (max-width: 40em) {
+  .scan-page {
+    .page-content {
+      align-items: stretch;
+      padding: 0;
+
+      > div {
+        width: 100%;
+      }
+    }
+  }
+
+  .scan__selection-header {
+    flex-wrap: wrap;
+    gap: $global-spacing;
+    padding: 0 $global-spacing * 2;
+
+    .scan__page-title {
+      flex-basis: 100%;
+      margin: 0;
+    }
+
+    .scan__btn {
+      margin-top: 0;
+    }
+
+    .scan__btn ~ .scan__btn {
+      margin-left: 0;
+    }
+  }
+
+  .scan__package-container {
+    margin: 0;
+    padding: 0 $global-spacing * 2;
+  }
+
+  .scan__package-item {
+    padding: $global-spacing * 0.75 0;
+  }
+}

@@ -45,7 +45,7 @@
     font-weight: $font-weight-bold;
   }
 
-  button {
+  button:not(.ui-toggle-group__item) {
     cursor: pointer;
     border: none;
     border-bottom: 1px dashed var(--color-border-primary);

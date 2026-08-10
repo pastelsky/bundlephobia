@@ -13,8 +13,7 @@
 
   @media screen and (max-width: 40em) {
     padding: $global-spacing * 2;
-    flex-wrap: wrap;
-    row-gap: $global-spacing;
+    align-items: flex-start;
   }
 }
 
@@ -25,9 +24,19 @@
   gap: 12px;
 
   @media screen and (max-width: 40em) {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: $global-spacing;
     justify-content: flex-end;
-    margin-left: 0;
+  }
+}
+
+@media screen and (max-width: 40em) {
+  // The landing header does not render a brand section, so its action/nav
+  // container must claim the complete row instead of shrinking to its icons.
+  .page-header--right-section:only-child {
+    flex-basis: 100%;
+    width: 100%;
   }
 }
 
@@ -82,10 +91,34 @@
   }
 
   @media screen and (max-width: 40em) {
-    max-width: 40vw;
-    overflow: scroll;
-    align-items: center;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    gap: $global-spacing $global-spacing * 2;
     justify-content: flex-start;
+    margin: $global-spacing 0 0;
+    order: 2;
+    width: 100%;
+
+    li + li {
+      margin-left: 0;
+    }
+  }
+}
+
+.mcp-nav__trigger.ui-button {
+  @include font-size-xs;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--color-nav-link);
+  letter-spacing: 0.3px;
+  min-height: 0;
+  padding: 0;
+
+  &:hover:not(:disabled) {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-nav-link);
   }
 }
 
