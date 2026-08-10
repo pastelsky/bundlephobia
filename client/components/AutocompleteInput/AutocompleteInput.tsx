@@ -4,6 +4,7 @@ import { useCombobox } from 'downshift'
 
 import SearchIcon from '../Icons/SearchIcon'
 import { parsePackageString } from '../../../utils/common.utils'
+import type { PackageSuggestion } from '../../api'
 import { useAutocompleteInput } from './hooks/useAutocompleteInput'
 import { SuggestionItem } from './components/SuggestionItem'
 import { useFontSize } from './hooks/useFontSize'
@@ -17,7 +18,7 @@ type AutocompleteInputProps = {
   autoFocus?: boolean
   ariaLabel?: string
   compact?: boolean
-  suggestionQueries?: string[]
+  loadSuggestions?: (query: string) => Promise<PackageSuggestion[]>
   onSearchSubmit: (value: string) => void
 }
 
@@ -29,7 +30,7 @@ export const AutocompleteInput = ({
   autoFocus,
   ariaLabel = 'Package name',
   compact = false,
-  suggestionQueries,
+  loadSuggestions,
   onSearchSubmit,
 }: AutocompleteInputProps) => {
   const {
@@ -41,7 +42,7 @@ export const AutocompleteInput = ({
   } = useAutocompleteInput({
     initialValue,
     onSubmit: onSearchSubmit,
-    suggestionQueries,
+    loadSuggestions,
   })
   const { searchFontSize } = useFontSize({ value })
 
