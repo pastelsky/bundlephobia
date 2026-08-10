@@ -25,6 +25,20 @@ export type PackageSuggestion = {
   highlight?: string
 }
 
+export function sortSuggestionsBySearchScore(
+  packageA: PackageSuggestion,
+  packageB: PackageSuggestion
+) {
+  if (
+    Math.abs(Math.log(packageB.searchScore) - Math.log(packageA.searchScore)) >
+    1
+  ) {
+    return packageB.searchScore - packageA.searchScore
+  }
+
+  return packageB.score.detail.popularity - packageA.score.detail.popularity
+}
+
 export type RecentSearch = {
   [key: string]: {
     name: string
@@ -160,27 +174,9 @@ export default class API {
   }
 
   static getSuggestions(query: string) {
-    const suggestionSort = (
-      packageA: PackageSuggestion,
-      packageB: PackageSuggestion
-    ) => {
-      // Rank closely matching packages followed by most popular ones.
-      if (
-        Math.abs(
-          Math.log(packageB.searchScore) - Math.log(packageA.searchScore)
-        ) > 1
-      ) {
-        return packageB.searchScore - packageA.searchScore
-      } else {
-        return (
-          packageB.score.detail.popularity - packageA.score.detail.popularity
-        )
-      }
-    }
-
     return API.get<PackageSuggestion[]>(
       `https://api.npms.io/v2/search/suggestions?q=${query}`,
       false
-    ).then(result => result.sort(suggestionSort))
+    ).then(result => result.sort(sortSuggestionsBySearchScore))
   }
 }
