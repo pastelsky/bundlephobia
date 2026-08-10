@@ -24,6 +24,7 @@
   --color-accent: #7cd690; // = $pastel-green
   --color-link: #65a1f8; // = $cornflower-blue
   --color-link-hover: #4d8ee0;
+  --color-danger: #b42318;
 
   // ── Logo & icons ─────────────────────────────────────────────────────────
   --color-logo-primary: #212121;
@@ -81,6 +82,7 @@
   // ── Cards & shadows ──────────────────────────────────────────────────────
   --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
   --shadow-search-box: 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-popover: 0 10px 30px rgba(0, 0, 0, 0.16);
 
   // ── Primary button (dark pill / filled) ──────────────────────────────────
   --color-btn-bg: #212121;
@@ -96,6 +98,8 @@
   --color-stat-text: #212121;
   --color-stat-border: rgba(40, 40, 40, 0.5);
   --color-stat-tooltip-bg: rgba(40, 40, 40, 0.6);
+  --color-tooltip-bg: #212121;
+  --color-tooltip-text: #ffffff;
 
   // ── JumpingDots ──────────────────────────────────────────────────────────
   --color-jumping-dots: #303131;
@@ -151,6 +155,7 @@
   // Borders
   --color-border-primary: #30363d;
   --color-border-subtle: #21262d;
+  --color-danger: #ff7b72;
 
   // Logo & icons
   --color-logo-primary: #f0f6fc;
@@ -209,6 +214,7 @@
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.3);
   // Subtle: slightly lifted surface + gentle glow, not a solid box
   --shadow-search-box: 0 2px 12px rgba(0, 0, 0, 0.35);
+  --shadow-popover: 0 10px 30px rgba(0, 0, 0, 0.45);
 
   // Primary button (inverted in dark)
   --color-btn-bg: #e6edf3;
@@ -224,6 +230,8 @@
   --color-stat-text: #f0f6fc;
   --color-stat-border: rgba(240, 246, 252, 0.15);
   --color-stat-tooltip-bg: rgba(240, 246, 252, 0.08);
+  --color-tooltip-bg: #f0f6fc;
+  --color-tooltip-text: #0d1117;
 
   // JumpingDots
   --color-jumping-dots: #8b949e;

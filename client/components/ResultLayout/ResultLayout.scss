@@ -9,6 +9,7 @@
 
   @media screen and (max-width: 40em) {
     padding: $global-spacing * 2;
+    align-items: flex-start;
   }
 }
 
@@ -16,7 +17,14 @@
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $global-spacing * 2;
+
+  @media screen and (max-width: 40em) {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: $global-spacing;
+    justify-content: flex-end;
+  }
 }
 
 .github-logo {
@@ -76,7 +84,8 @@
 
 .page-header__quicklinks {
   list-style: none;
-  margin: 0 2rem 0 0;
+  gap: $global-spacing * 2;
+  margin: 0;
   font-weight: $font-weight-light;
   display: flex;
 
@@ -95,14 +104,31 @@
   }
 
   li + li {
-    margin-left: $global-spacing * 2;
+    margin-left: 0;
   }
 
   @media screen and (max-width: 40em) {
-    max-width: 40vw;
-    overflow: scroll;
+    display: none;
+  }
+}
+
+@media screen and (max-width: 40em) {
+  .page-header {
     align-items: center;
-    justify-content: flex-start;
+    flex-wrap: nowrap;
+    min-height: 56px;
+  }
+
+  .page-header--right-section,
+  .page-header--right-section:only-child {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    margin-left: auto;
+    width: auto;
+  }
+
+  .page-header--right-section > .mcp-nav {
+    display: none;
   }
 }
 

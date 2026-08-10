@@ -7,6 +7,7 @@ import { parsePackageString } from '../../../utils/common.utils'
 import { useAutocompleteInput } from './hooks/useAutocompleteInput'
 import { SuggestionItem } from './components/SuggestionItem'
 import { useFontSize } from './hooks/useFontSize'
+import { IconButton } from '../ui'
 
 type AutocompleteInputProps = {
   initialValue?: string
@@ -125,13 +126,14 @@ export const AutocompleteInput = ({
           )}
         </div>
       </div>
-      <button
+      <IconButton
         type="submit"
         className="autocomplete-input__search-icon"
-        aria-label="Search package"
+        label="Search package"
+        variant="quiet"
       >
         <SearchIcon className="" />
-      </button>
+      </IconButton>
     </form>
   )
 }

@@ -1,9 +1,13 @@
+.carbon-ad:not(.carbon-ad--ready) {
+  display: none;
+}
+
 .carbon-ad__content {
   position: relative;
   width: 100%;
 }
 
-.carbon-ad__dismiss {
+.carbon-ad__dismiss.ui-icon-button {
   position: absolute;
   right: 0;
   bottom: calc(100% + 6px);
@@ -29,10 +33,5 @@
   &:hover {
     color: var(--color-text-primary);
     border-color: var(--color-text-muted);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--color-link);
-    outline-offset: 2px;
   }
 }
