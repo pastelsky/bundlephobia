@@ -37,6 +37,7 @@ const config = {
     PUBLIC_ASSETS: dev ? 0 : 24 * 60 * 60,
     RECENTS_API: dev ? 0 : 20 * 60,
     PACKAGE_HISTORY_API: dev ? 0 : 60 * 60,
+    TRENDS_API: dev ? 0 : 30 * 60,
     SIMILAR_API: dev ? 0 : 60 * 60 * 2,
     SIZE_API_DEFAULT: dev ? 0 : 30,
     SIZE_API_ERROR: dev ? 0 : 60,
