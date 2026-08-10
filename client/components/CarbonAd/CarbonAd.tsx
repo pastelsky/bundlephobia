@@ -65,6 +65,7 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
           <IconButton
             className="carbon-ad__dismiss"
             label="Dismiss advertisement"
+            size="sm"
             onClick={() => setIsVisible(false)}
           >
             <svg

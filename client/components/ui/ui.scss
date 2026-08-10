@@ -56,14 +56,27 @@
 }
 
 .ui-icon-button {
-  flex: 0 0 $icon-button-size;
-  height: $icon-button-size;
+  flex: 0 0 auto;
   padding: 0;
+}
+.ui-icon-button--md {
+  flex-basis: $icon-button-size;
+  height: $icon-button-size;
   width: $icon-button-size;
 }
-.ui-icon-button svg {
+.ui-icon-button--md svg {
   height: $icon-size;
   width: $icon-size;
+}
+.ui-icon-button--sm {
+  flex-basis: $icon-button-size-sm;
+  height: $icon-button-size-sm;
+  min-height: $icon-button-size-sm;
+  width: $icon-button-size-sm;
+}
+.ui-icon-button--sm svg {
+  height: $icon-size-sm;
+  width: $icon-size-sm;
 }
 
 .ui-checkbox {

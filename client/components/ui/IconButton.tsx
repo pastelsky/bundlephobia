@@ -9,11 +9,12 @@ type IconButtonProps = Omit<ButtonProps, 'children'> & {
 }
 
 export const IconButton = React.forwardRef<HTMLElement, IconButtonProps>(
-  ({ className, label, title, ...props }, ref) => (
+  ({ className, label, size = 'md', title, ...props }, ref) => (
     <Button
       {...props}
       ref={ref}
-      className={cx('ui-icon-button', className)}
+      size={size}
+      className={cx('ui-icon-button', `ui-icon-button--${size}`, className)}
       aria-label={label}
       title={title ?? label}
     />
