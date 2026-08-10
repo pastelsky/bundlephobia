@@ -105,23 +105,6 @@
   }
 }
 
-.mcp-nav__trigger.ui-button {
-  @include font-size-xs;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  color: var(--color-nav-link);
-  letter-spacing: 0.3px;
-  min-height: 0;
-  padding: 0;
-
-  &:hover:not(:disabled) {
-    background: transparent;
-    border-color: transparent;
-    color: var(--color-nav-link);
-  }
-}
-
 .mcp-nav {
   position: relative;
 }
@@ -141,6 +124,13 @@
   &:hover {
     opacity: 1;
   }
+}
+
+// Popover's neutral trigger composition sets `font: inherit`; keep this text
+// trigger at the exact same type scale and weight as its sibling nav links.
+.mcp-nav__trigger.ui-popover__trigger {
+  font-size: var(--bp-font-size-label);
+  font-weight: var(--bp-font-weight-semibold);
 }
 
 .mcp-nav__popup {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Analytics from '../../analytics'
-import { Button, IconButton, Popover } from '../ui'
+import { IconButton, Popover } from '../ui'
 
 const McpNavPopup = () => {
   const [copied, setCopied] = useState(false)
@@ -24,13 +24,12 @@ const McpNavPopup = () => {
       <Popover
         label="Open MCP setup instructions"
         trigger={
-          <Button
+          <button
             className="mcp-nav__trigger"
-            variant="quiet"
             onClick={() => Analytics.mcpHeaderClicked({ open: true })}
           >
             MCP
-          </Button>
+          </button>
         }
       >
         <div className="mcp-nav__code-wrap">

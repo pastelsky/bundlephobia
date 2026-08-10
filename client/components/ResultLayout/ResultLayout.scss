@@ -142,23 +142,6 @@
   }
 }
 
-.mcp-nav__trigger.ui-button {
-  @include font-size-xs;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  color: var(--color-nav-link);
-  letter-spacing: 0.3px;
-  min-height: 0;
-  padding: 0;
-
-  &:hover:not(:disabled) {
-    background: transparent;
-    border-color: transparent;
-    color: var(--color-nav-link);
-  }
-}
-
 .mcp-nav__popup {
   position: absolute;
   right: 0;
