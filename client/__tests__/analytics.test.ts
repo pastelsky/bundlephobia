@@ -32,6 +32,22 @@ describe('Analytics', () => {
     })
   })
 
+  it('tracks ad impressions and viewed slots without a creative separately', () => {
+    Analytics.advertisementImpression({ placement: 'homepage' })
+    Analytics.advertisementUnavailable({
+      placement: 'package_result',
+      reason: 'creative_timeout',
+    })
+
+    expect(track).toHaveBeenNthCalledWith(1, 'advertisement_impression', {
+      placement: 'homepage',
+    })
+    expect(track).toHaveBeenNthCalledWith(2, 'advertisement_unavailable', {
+      placement: 'package_result',
+      reason: 'creative_timeout',
+    })
+  })
+
   it('does not throw when the tracker is unavailable', () => {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,

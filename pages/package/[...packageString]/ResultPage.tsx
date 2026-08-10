@@ -575,7 +575,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
           )}
 
           {resultsPromiseState === 'fulfilled' && results && (
-            <CarbonAd className="result-page__carbon-ad" />
+            <CarbonAd
+              className="result-page__carbon-ad"
+              placement="package_result"
+            />
           )}
 
           {resultsPromiseState === 'fulfilled' &&

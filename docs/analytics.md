@@ -22,8 +22,15 @@ addresses, IP addresses, or other personal information to event data.
 - package export analysis and export-size outcomes;
 - package.json scan upload, parsing, and completion outcomes;
 - dependency graph interaction; and
-- MCP navigation, tool, copy, and failure interactions.
+- MCP navigation, tool, copy, and failure interactions; and
+- ad impressions (a loaded creative is at least 50% visible for one second) and
+  viewed ad slots where no creative arrived.
 
 Event names are lowercase snake_case. Event properties are limited to the
 context required to analyze the action, such as a public package identifier,
 duration, result ratio, count, or tool name.
+
+An unavailable ad is recorded only after its otherwise invisible slot reaches
+the viewport. Its reason is either `script_error` or `creative_timeout`; these
+signals cover ad blockers and no-fill/network failures, but do not attempt to
+identify which one caused the missing creative.
