@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "types": ["node", "jest", "next/image-types/global"],
     "paths": {
       "client/*": ["./client/*"],
