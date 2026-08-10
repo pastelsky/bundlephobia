@@ -10,7 +10,11 @@ function loadAmplitude() {
   if (!amplitudeModule) {
     amplitudeModule = import('@amplitude/analytics-browser')
       .then(amplitude => {
-        amplitude.init(AMPLITUDE_API_KEY, { autocapture: true })
+        amplitude.init(AMPLITUDE_API_KEY, {
+          autocapture: true,
+          serverUrl: '/_events',
+          enableRequestBodyCompression: true,
+        })
         return amplitude
       })
       .catch(error => {

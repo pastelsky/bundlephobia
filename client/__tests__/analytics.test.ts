@@ -32,6 +32,8 @@ describe('Analytics', () => {
     expect(init).toHaveBeenCalledTimes(1)
     expect(init).toHaveBeenCalledWith('93638c7d7bac8785dca060653e104732', {
       autocapture: true,
+      serverUrl: '/_events',
+      enableRequestBodyCompression: true,
     })
   })
 
