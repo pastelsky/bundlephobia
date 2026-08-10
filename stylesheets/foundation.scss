@@ -3,6 +3,8 @@
 :root {
   // Shared controls use aliases of Bundlephobia's existing typography and
   // spacing scale rather than introducing a competing token system.
+
+  // Typography
   --bp-font-family-sans: #{$font-family-body};
   --bp-font-family-mono: #{$font-family-code};
   --bp-font-size-caption: 0.7rem;
@@ -12,12 +14,16 @@
   --bp-font-weight-regular: #{$font-weight-light};
   --bp-font-weight-semibold: #{$font-weight-bold};
   --bp-font-weight-bold: #{$font-weight-very-bold};
+
+  // Spacing
   --bp-space-1: #{$global-spacing * 0.5};
   --bp-space-2: #{$global-spacing};
   --bp-space-3: #{$global-spacing * 1.5};
   --bp-space-4: #{$global-spacing * 2};
   --bp-space-5: #{$global-spacing * 3};
   --bp-space-6: #{$global-spacing * 4};
+
+  // Shape and dimensions
   --bp-radius-sm: 0.3em;
   --bp-radius-control: 6px;
   --bp-radius-lg: 10px;
@@ -25,10 +31,14 @@
   --bp-control-height: 36px;
   --bp-icon-size: 18px;
   --bp-icon-button-size: 32px;
+
+  // Interaction and layering
   --bp-motion-fast: 150ms ease;
   --bp-focus-ring: 2px solid var(--bp-color-focus);
   --bp-focus-offset: 2px;
   --bp-layer-popover: 100;
+
+  // Semantic colors
   --bp-color-page: var(--color-bg-base);
   --bp-color-surface: var(--color-bg-surface);
   --bp-color-surface-hover: var(--color-surface-raised);
@@ -43,5 +53,7 @@
   --bp-color-focus: var(--color-link);
   --bp-color-tooltip: var(--color-tooltip-bg);
   --bp-color-tooltip-text: var(--color-tooltip-text);
+
+  // Effects
   --bp-shadow-popover: 0 10px 30px rgba(0, 0, 0, 0.16);
 }
