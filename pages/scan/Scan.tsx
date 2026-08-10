@@ -433,12 +433,13 @@ class Scan extends Component<ScanProps, ScanState> {
                   className="scan__dropzone-actions"
                   onClick={e => e.stopPropagation()}
                 >
-                  <Button className="scan__btn" type="button">
+                  <Button className="scan__btn" type="button" variant="primary">
                     Upload <code> package.json </code>
                   </Button>
                   <Button
                     className="scan__btn"
                     type="button"
+                    variant="primary"
                     onClick={e => {
                       e.stopPropagation()
                       this.setState({
@@ -480,6 +481,7 @@ class Scan extends Component<ScanProps, ScanState> {
                     <Button
                       type="submit"
                       className="scan__btn scan__url-btn"
+                      variant="primary"
                       disabled={isLoadingRemoteUrl || !remoteUrlInput.trim()}
                     >
                       {isLoadingRemoteUrl ? 'Fetching...' : 'Fetch'}
@@ -525,10 +527,15 @@ class Scan extends Component<ScanProps, ScanState> {
               className="scan__btn"
               disabled={selectedPackages.length === 0}
               onClick={this.handleScanClick}
+              variant="primary"
             >
               Scan {selectedPackages.length} packages
             </Button>
-            <Button className="scan__btn" onClick={this.handleResetClick}>
+            <Button
+              className="scan__btn"
+              onClick={this.handleResetClick}
+              variant="primary"
+            >
               Reset
             </Button>
           </header>
