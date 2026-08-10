@@ -12,6 +12,52 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@amplitude/analytics-browser@npm:^2.45.5":
+  version: 2.45.5
+  resolution: "@amplitude/analytics-browser@npm:2.45.5"
+  dependencies:
+    "@amplitude/analytics-core": "npm:2.54.1"
+    "@amplitude/plugin-autocapture-browser": "npm:1.28.10"
+    "@amplitude/plugin-custom-enrichment-browser": "npm:0.1.20"
+    "@amplitude/plugin-event-property-attribution-browser": "npm:0.2.12"
+    "@amplitude/plugin-network-capture-browser": "npm:1.10.12"
+    "@amplitude/plugin-page-url-enrichment-browser": "npm:0.7.22"
+    "@amplitude/plugin-page-view-tracking-browser": "npm:2.11.12"
+    "@amplitude/plugin-web-vitals-browser": "npm:1.1.44"
+    tslib: "npm:^2.4.1"
+  checksum: f2eb11df6df6ed587cfa42ca699a8aa2ea28339537ec3d2e5ddf8497d40b07af328e31a2666c13780be36f45b928d0dc892437461b65e91b9db49d5fa9d7e273
+  languageName: node
+  linkType: hard
+
+"@amplitude/analytics-connector@npm:^1.6.4":
+  version: 1.6.6
+  resolution: "@amplitude/analytics-connector@npm:1.6.6"
+  checksum: b9f91226d6eef8e7c8eb7a6cb906bac4f2a664cee517293c00d45d44a809cc80adf3b880c30efcc516309c94f24a51fe8457c948c7a5bf84df566205c34b2421
+  languageName: node
+  linkType: hard
+
+"@amplitude/analytics-core@npm:2.54.1":
+  version: 2.54.1
+  resolution: "@amplitude/analytics-core@npm:2.54.1"
+  dependencies:
+    "@amplitude/analytics-connector": "npm:^1.6.4"
+    "@types/zen-observable": "npm:0.8.3"
+    safe-json-stringify: "npm:1.2.0"
+    tslib: "npm:^2.4.1"
+    zen-observable: "npm:0.10.0"
+  checksum: 8323855b2a84c42ae069d924f4accca97d02ac0d699f6edcfd767abe095bb72ced24c13c7e0dfcb4b6606484d08c3b998ff39a93f20d095f8d7dcf1ae7a97438
+  languageName: node
+  linkType: hard
+
+"@amplitude/element-selector@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@amplitude/element-selector@npm:0.2.1"
+  dependencies:
+    tslib: "npm:^2.4.1"
+  checksum: 5e11ead78d99f5041224e9e10335e3a712735c9bb01181376b8b73a0e72af7ed93c7d54919bd67d2cdd0855e6b5232eab46bdc3c291957fef89fb2818e566d17
+  languageName: node
+  linkType: hard
+
 "@amplitude/identify@npm:^1.10.2":
   version: 1.10.2
   resolution: "@amplitude/identify@npm:1.10.2"
@@ -32,6 +78,78 @@ __metadata:
     "@amplitude/utils": "npm:^1.10.2"
     tslib: "npm:^2.0.0"
   checksum: dbe4e6b9d42d276fd46b0db46cc7cc482318281fd1c41777585bf67e80f62bcecd6fa6b8692df84b0155664973387990e35687184c1d9902ab90cc67f91a23c6
+  languageName: node
+  linkType: hard
+
+"@amplitude/plugin-autocapture-browser@npm:1.28.10":
+  version: 1.28.10
+  resolution: "@amplitude/plugin-autocapture-browser@npm:1.28.10"
+  dependencies:
+    "@amplitude/analytics-core": "npm:2.54.1"
+    "@amplitude/element-selector": "npm:0.2.1"
+    tslib: "npm:^2.4.1"
+  checksum: e0a2a4468f5145f3c4ade21a35fe32a3e32a80df9f82f72aca471cf642ab1ce3f6a2c626671f86e83527ddf5f7026261ee6cad832947240c1150700175db23ca
+  languageName: node
+  linkType: hard
+
+"@amplitude/plugin-custom-enrichment-browser@npm:0.1.20":
+  version: 0.1.20
+  resolution: "@amplitude/plugin-custom-enrichment-browser@npm:0.1.20"
+  dependencies:
+    "@amplitude/analytics-core": "npm:2.54.1"
+    tslib: "npm:^2.4.1"
+  checksum: 8757c768a29729fbf7a84ad28123300a480b11235e10c019ade676f39eebbc6599c1905cdb21446159f7616a749abd589dbc213a569fe85404a07244ef1ece00
+  languageName: node
+  linkType: hard
+
+"@amplitude/plugin-event-property-attribution-browser@npm:0.2.12":
+  version: 0.2.12
+  resolution: "@amplitude/plugin-event-property-attribution-browser@npm:0.2.12"
+  dependencies:
+    "@amplitude/analytics-core": "npm:2.54.1"
+    tslib: "npm:^2.4.1"
+  checksum: 3aa7476b00241bf7e42454d5c2a341f689e114371676ab8dbbfb013e9a1a0b16ef3360e0f924d87ba6f16f8fca4753e72e6f5148a9c2c2519bcd505a60cf86eb
+  languageName: node
+  linkType: hard
+
+"@amplitude/plugin-network-capture-browser@npm:1.10.12":
+  version: 1.10.12
+  resolution: "@amplitude/plugin-network-capture-browser@npm:1.10.12"
+  dependencies:
+    "@amplitude/analytics-core": "npm:2.54.1"
+    tslib: "npm:^2.4.1"
+  checksum: af7b6f594e347274b1f5bb147770f5da511aaa3fa0f58cedfdb2333fdebd39c23a6062ee4aa89b964a7d1de4b3f57ec0d6e3c57ab11402d5d514699c47b76837
+  languageName: node
+  linkType: hard
+
+"@amplitude/plugin-page-url-enrichment-browser@npm:0.7.22":
+  version: 0.7.22
+  resolution: "@amplitude/plugin-page-url-enrichment-browser@npm:0.7.22"
+  dependencies:
+    "@amplitude/analytics-core": "npm:2.54.1"
+    tslib: "npm:^2.4.1"
+  checksum: 678f211c4169369967b3af08def6d88cb19cc1913dd8019a5972f202244b464bdbc80adbdfaf8d060155b772e3a8db60ec6fd80020014701b0faf6824c784ef4
+  languageName: node
+  linkType: hard
+
+"@amplitude/plugin-page-view-tracking-browser@npm:2.11.12":
+  version: 2.11.12
+  resolution: "@amplitude/plugin-page-view-tracking-browser@npm:2.11.12"
+  dependencies:
+    "@amplitude/analytics-core": "npm:2.54.1"
+    tslib: "npm:^2.4.1"
+  checksum: 1dd5c941915f6181a72e01b484a2466380228c1d334ffac856a80c38701ec461ecd21f8e298f5ff96bb03e3a3825c10fbb50ccf78853765e101ca9e004d7e2bd
+  languageName: node
+  linkType: hard
+
+"@amplitude/plugin-web-vitals-browser@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@amplitude/plugin-web-vitals-browser@npm:1.1.44"
+  dependencies:
+    "@amplitude/analytics-core": "npm:2.54.1"
+    tslib: "npm:^2.4.1"
+    web-vitals: "npm:5.1.0"
+  checksum: 896d74e2f3d064cc72d45459a89735266e9aeb0d24e72ba4fc6b0be32959bebcc6033f93795bed915f87ab3df44a086e00827cf4ed7e4111cb04ad0d134fc2ad
   languageName: node
   linkType: hard
 
@@ -6701,6 +6819,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/zen-observable@npm:0.8.3":
+  version: 0.8.3
+  resolution: "@types/zen-observable@npm:0.8.3"
+  checksum: c0605d109e58a32c9b47ab9becb4ee4bcd8ed54f452ccdcfbb025a60eb8abb1341f00fb045caaa6f1a72f1299f2cdf7b7918023aef34bd9bfdfdbae0e21e66eb
+  languageName: node
+  linkType: hard
+
 "@typescript-eslint/eslint-plugin@npm:8.65.0":
   version: 8.65.0
   resolution: "@typescript-eslint/eslint-plugin@npm:8.65.0"
@@ -8931,6 +9056,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bundlephobia@workspace:."
   dependencies:
+    "@amplitude/analytics-browser": "npm:^2.45.5"
     "@base-ui/react": "npm:^1.7.0"
     "@contentful/rich-text-react-renderer": "npm:^16.2.2"
     "@contentful/rich-text-types": "npm:^17.2.7"
@@ -23110,6 +23236,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"safe-json-stringify@npm:1.2.0":
+  version: 1.2.0
+  resolution: "safe-json-stringify@npm:1.2.0"
+  checksum: 9c21c7b63a35a9e52d248eea2ad7bc9e790dde5aa418f0d4eed3c0b4c866e15337425b0d973173d30dd70a9e422271619f17e13574e0c8371d0c240cf72b871f
+  languageName: node
+  linkType: hard
+
 "safe-push-apply@npm:^1.0.0":
   version: 1.0.0
   resolution: "safe-push-apply@npm:1.0.0"
@@ -25596,17 +25729,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tslib@npm:^2.4.1, tslib@npm:^2.8.0, tslib@npm:^2.8.1":
+  version: 2.8.1
+  resolution: "tslib@npm:2.8.1"
+  checksum: 9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
+  languageName: node
+  linkType: hard
+
 "tslib@npm:^2.6.2":
   version: 2.6.2
   resolution: "tslib@npm:2.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftslib%2F-%2Ftslib-2.6.2.tgz"
   checksum: e03a8a4271152c8b26604ed45535954c0a45296e32445b4b87f8a5abdb2421f40b59b4ca437c4346af0f28179780d604094eb64546bee2019d903d01c6c19bdb
-  languageName: node
-  linkType: hard
-
-"tslib@npm:^2.8.0, tslib@npm:^2.8.1":
-  version: 2.8.1
-  resolution: "tslib@npm:2.8.1"
-  checksum: 9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
   languageName: node
   linkType: hard
 
@@ -26682,6 +26815,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"web-vitals@npm:5.1.0":
+  version: 5.1.0
+  resolution: "web-vitals@npm:5.1.0"
+  checksum: 1af22ddbe2836ba880fcb492cfba24c3349f4760ebb5e92f38324ea67bca3c4dbb9c86f1a32af4795b6115cdaf98b90000cf3a7402bffef6e8c503f0d1b2e706
+  languageName: node
+  linkType: hard
+
 "webidl-conversions@npm:^3.0.0":
   version: 3.0.1
   resolution: "webidl-conversions@npm:3.0.1"
@@ -27437,6 +27577,13 @@ __metadata:
   version: 2.1.2
   resolution: "yoctocolors@npm:2.1.2"
   checksum: b220f30f53ebc2167330c3adc86a3c7f158bcba0236f6c67e25644c3188e2571a6014ffc1321943bb619460259d3d27eb4c9cc58c2d884c1b195805883ec7066
+  languageName: node
+  linkType: hard
+
+"zen-observable@npm:0.10.0":
+  version: 0.10.0
+  resolution: "zen-observable@npm:0.10.0"
+  checksum: f97e97bfaa1dbe0033761d4860368120c1b69ee12dd1fa649c902f3f740c6cac3470a07e3dd00e2d41598dd9f17a97c80f69652b851ba1a73802f30748eb4260
   languageName: node
   linkType: hard
 

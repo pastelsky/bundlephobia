@@ -2,8 +2,13 @@ import React from 'react'
 import Head from 'next/head'
 import { AppProps } from 'next/app'
 import '../stylesheets/index.scss'
+import { initializeAmplitude } from '../client/amplitude'
 
 function App({ Component, pageProps }: AppProps) {
+  React.useEffect(() => {
+    initializeAmplitude()
+  }, [])
+
   return (
     <>
       <Head>
