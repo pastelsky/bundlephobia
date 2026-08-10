@@ -1,5 +1,6 @@
 import React from 'react'
 import cx from 'classnames'
+import { IconButton } from '../ui'
 
 type CarbonAdProps = {
   className?: string
@@ -61,11 +62,9 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
     >
       <div ref={containerRef} className="carbon-ad__content">
         {hasCreative && (
-          <button
-            type="button"
+          <IconButton
             className="carbon-ad__dismiss"
-            aria-label="Dismiss advertisement"
-            title="Dismiss advertisement"
+            label="Dismiss advertisement"
             onClick={() => setIsVisible(false)}
           >
             <svg
@@ -82,7 +81,7 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
                 strokeLinecap="round"
               />
             </svg>
-          </button>
+          </IconButton>
         )}
       </div>
     </aside>

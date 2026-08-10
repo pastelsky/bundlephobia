@@ -44,24 +44,6 @@
   & ~ & {
     margin-left: $global-spacing * 1.5;
   }
-
-  // Base UI supplies the behavior and accessibility contract. These dimensions
-  // intentionally preserve the established scan-page primary action treatment.
-  &.ui-button {
-    background: var(--color-btn-bg);
-    border: none;
-    border-radius: 6px;
-    color: var(--color-btn-text);
-    display: block;
-    letter-spacing: 1px;
-    min-height: 0;
-    padding: $global-spacing $global-spacing * 2;
-
-    &:hover:not(:disabled) {
-      background: var(--color-btn-bg-hover);
-      border-color: transparent;
-    }
-  }
 }
 
 .scan__package-container {

@@ -1,24 +1,25 @@
+@import './variables';
+
 :root {
-  --bp-font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  --bp-font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,
-    Courier, monospace;
-  --bp-font-size-caption: 0.75rem;
+  // Shared controls use aliases of Bundlephobia's existing typography and
+  // spacing scale rather than introducing a competing token system.
+  --bp-font-family-sans: #{$font-family-body};
+  --bp-font-family-mono: #{$font-family-code};
+  --bp-font-size-caption: 0.7rem;
   --bp-font-size-label: 0.8rem;
   --bp-font-size-body: 1rem;
   --bp-font-size-title: 1.35rem;
-  --bp-font-weight-regular: 400;
-  --bp-font-weight-semibold: 600;
-  --bp-font-weight-bold: 700;
-  --bp-space-1: 4px;
-  --bp-space-2: 8px;
-  --bp-space-3: 12px;
-  --bp-space-4: 16px;
-  --bp-space-5: 24px;
-  --bp-space-6: 32px;
-  --bp-radius-sm: 4px;
-  --bp-radius-control: 8px;
+  --bp-font-weight-regular: #{$font-weight-light};
+  --bp-font-weight-semibold: #{$font-weight-bold};
+  --bp-font-weight-bold: #{$font-weight-very-bold};
+  --bp-space-1: #{$global-spacing * 0.5};
+  --bp-space-2: #{$global-spacing};
+  --bp-space-3: #{$global-spacing * 1.5};
+  --bp-space-4: #{$global-spacing * 2};
+  --bp-space-5: #{$global-spacing * 3};
+  --bp-space-6: #{$global-spacing * 4};
+  --bp-radius-sm: 0.3em;
+  --bp-radius-control: 6px;
   --bp-radius-lg: 10px;
   --bp-control-height-sm: 30px;
   --bp-control-height: 36px;
