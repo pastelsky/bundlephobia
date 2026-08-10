@@ -3,6 +3,7 @@ import 'dotenv-defaults/config.js'
 import createFastify from 'fastify'
 import firebase from 'firebase'
 
+import type { TrendsCacheName } from '../types/cache-domain.ts'
 import {
   getExportsSizeMiddlware,
   postExportsSizeMiddleware,
@@ -11,6 +12,7 @@ import {
   getPackageSizeMiddlware,
   postPackageSizeMiddlware,
 } from './middlewares/package-size.middleware.ts'
+import { createTrendsCacheMiddleware } from './middlewares/trends-cache.middleware.ts'
 
 const fastify = createFastify()
 
@@ -27,6 +29,19 @@ fastify.post('/package-cache', postPackageSizeMiddlware)
 
 fastify.get('/exports-cache', getExportsSizeMiddlware)
 fastify.post('/exports-cache', postExportsSizeMiddleware)
+
+const trendsCacheNames: TrendsCacheName[] = [
+  'downloads',
+  'github-history',
+  'releases',
+  'size-history',
+]
+
+for (const cacheName of trendsCacheNames) {
+  const middleware = createTrendsCacheMiddleware()
+  fastify.get(`/trends-cache/${cacheName}`, middleware.get)
+  fastify.post(`/trends-cache/${cacheName}`, middleware.post)
+}
 
 fastify
   .listen({ port: 7001 })

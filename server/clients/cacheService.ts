@@ -3,6 +3,7 @@ import 'dotenv-defaults/config'
 import axios from 'axios'
 import createDebug from 'debug'
 
+import type { TrendsCacheKey, TrendsCacheName } from '../../types/cache-domain'
 import logger from '../Logger'
 
 const debug = createDebug('bp:cache')
@@ -68,6 +69,37 @@ export default class CacheServiceClient {
         error,
         `CACHE ERROR for package exports ${key.name}@${key.version}`,
       )
+    }
+  }
+
+  async getTrendsData<T>(
+    cacheName: TrendsCacheName,
+    key: TrendsCacheKey,
+  ): Promise<T | undefined> {
+    try {
+      const result = await API.get<T>(`/trends-cache/${cacheName}`, {
+        params: key,
+      })
+      return result.data
+    } catch {
+      return undefined
+    }
+  }
+
+  async setTrendsData<T>(
+    cacheName: TrendsCacheName,
+    key: TrendsCacheKey,
+    result: T,
+    ttlMs: number,
+  ): Promise<void> {
+    try {
+      await API.post(`/trends-cache/${cacheName}`, {
+        ...key,
+        result,
+        ttlMs,
+      })
+    } catch (error) {
+      debug('failed to set trends cache %s: %O', key.key, error)
     }
   }
 
