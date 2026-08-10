@@ -27,13 +27,13 @@ type TopPackage = {
 
 const serviceAccountPath = path.join(
   __dirname,
-  './keys/module-cost-firebase-adminsdk-xcnum-ca64ae80ff.json'
+  './keys/module-cost-firebase-adminsdk-xcnum-ca64ae80ff.json',
 )
 
 if (!fs.existsSync(serviceAccountPath)) {
   console.error(
     'Firebase service account key not found at:',
-    serviceAccountPath
+    serviceAccountPath,
   )
   process.exit(1)
 }
@@ -69,7 +69,7 @@ function loadProgress() {
         results: TopPackage[]
       }
       console.log(
-        `Resuming from progress file: ${data.results.length} packages already processed`
+        `Resuming from progress file: ${data.results.length} packages already processed`,
       )
       return data
     } catch {
@@ -92,7 +92,7 @@ function saveProgress(processedNames: Set<string>, results: TopPackage[]) {
 async function processBatch(
   packages: EligiblePackage[],
   processedNames: Set<string>,
-  topPackages: EligiblePackage[]
+  topPackages: EligiblePackage[],
 ) {
   const promises = packages.map(async pkg => {
     if (processedNames.has(pkg.name)) {
@@ -141,7 +141,7 @@ async function processBatch(
     } catch (err) {
       console.error(
         `Error processing package ${pkg.name}:`,
-        (err as Error).message
+        (err as Error).message,
       )
       return null
     }
@@ -167,7 +167,7 @@ async function main() {
   }
 
   console.log(
-    `Found ${Object.keys(searchesData).length} total packages in searches-v2`
+    `Found ${Object.keys(searchesData).length} total packages in searches-v2`,
   )
 
   const eligiblePackages: EligiblePackage[] = []
@@ -187,7 +187,7 @@ async function main() {
   eligiblePackages.sort((a, b) => b.count - a.count)
   const topPackages = eligiblePackages.slice(0, TOP_PACKAGES_LIMIT)
   console.log(
-    `Processing top ${topPackages.length} packages with concurrency ${CONCURRENCY}...`
+    `Processing top ${topPackages.length} packages with concurrency ${CONCURRENCY}...`,
   )
 
   const progress = loadProgress()
@@ -205,7 +205,7 @@ async function main() {
     const batchResults = await processBatch(
       unprocessedBatch,
       processedNames,
-      topPackages
+      topPackages,
     )
 
     for (const result of batchResults) {
@@ -218,7 +218,7 @@ async function main() {
     }
 
     console.log(
-      `Processed ${processedNames.size}/${topPackages.length} packages (${results.length} with valid versions)`
+      `Processed ${processedNames.size}/${topPackages.length} packages (${results.length} with valid versions)`,
     )
     saveProgress(processedNames, results)
   }

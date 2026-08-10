@@ -18,5 +18,5 @@ export const recordRequestComplete = (request: RequestMetric) =>
   diagnostics.recordRequestComplete(request)
 export const registerMetricsProvider = (
   name: string,
-  provider: () => unknown
+  provider: () => unknown,
 ) => diagnostics.registerMetricsProvider(name, provider)

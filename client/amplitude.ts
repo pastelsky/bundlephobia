@@ -32,7 +32,7 @@ export function initializeAmplitude() {
 
 export function trackAmplitudeEvent(
   eventName: string,
-  eventData?: Record<string, unknown>
+  eventData?: Record<string, unknown>,
 ) {
   loadAmplitude()
     ?.then(amplitude => amplitude.track(eventName, eventData))

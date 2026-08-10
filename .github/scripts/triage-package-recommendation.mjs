@@ -49,7 +49,7 @@ function icon(value) {
 
 async function findOpenDuplicates(packageName) {
   const query = encodeURIComponent(
-    `repo:${owner}/${repository} is:issue is:open label:"similar suggestion" in:title "${packageName}"`
+    `repo:${owner}/${repository} is:issue is:open label:"similar suggestion" in:title "${packageName}"`,
   )
   const result = await github(`/search/issues?q=${query}&per_page=10`)
 
@@ -58,10 +58,10 @@ async function findOpenDuplicates(packageName) {
 
 async function upsertReport(body) {
   const comments = await github(
-    `/repos/${owner}/${repository}/issues/${issue.number}/comments?per_page=100`
+    `/repos/${owner}/${repository}/issues/${issue.number}/comments?per_page=100`,
   )
   const previous = comments.find(comment =>
-    comment.body?.includes(REPORT_MARKER)
+    comment.body?.includes(REPORT_MARKER),
   )
 
   if (previous) {
@@ -70,7 +70,7 @@ async function upsertReport(body) {
       {
         method: 'PATCH',
         body: JSON.stringify({ body }),
-      }
+      },
     )
     return
   }
@@ -80,7 +80,7 @@ async function upsertReport(body) {
     {
       method: 'POST',
       body: JSON.stringify({ body }),
-    }
+    },
   )
 }
 
@@ -111,9 +111,9 @@ const [signals, duplicates, fixtureSource, comparisonSizes] = await Promise.all(
         .map(async comparisonName => ({
           packageName: comparisonName,
           bundleSize: await collectBundleSize(comparisonName),
-        }))
+        })),
     ),
-  ]
+  ],
 )
 const alreadyCurated =
   extractCuratedRecommendations(fixtureSource).has(packageName)
@@ -123,7 +123,7 @@ const sizeEvaluation = evaluateSizeAdvantage(signals, comparisonSizes)
 for (const comparisonName of comparisonNames) {
   if (!isPlausiblePackageName(comparisonName)) {
     evaluation.notes.push(
-      `\`${comparisonName}\` is not a valid exact npm package name.`
+      `\`${comparisonName}\` is not a valid exact npm package name.`,
     )
   }
 }
@@ -131,26 +131,26 @@ if (!sizeEvaluation.available) {
   evaluation.notes.push('Bundle size comparison was unavailable.')
 } else if (!sizeEvaluation.smallerThan.length) {
   evaluation.notes.push(
-    'The default entry point is not smaller than the measured alternatives.'
+    'The default entry point is not smaller than the measured alternatives.',
   )
 }
 
 if (alreadyCurated) {
   evaluation.notes.push(
-    'This package is already in the curated recommendations.'
+    'This package is already in the curated recommendations.',
   )
 }
 if (duplicates.length) {
   evaluation.notes.push(
-    `Found ${duplicates.length} other open recommendation issue(s) for this package.`
+    `Found ${duplicates.length} other open recommendation issue(s) for this package.`,
   )
 }
 
 evaluation.status = evaluation.errors.length
   ? 'invalid'
   : evaluation.notes.length
-  ? 'needs review'
-  : 'ready for maintainer review'
+    ? 'needs review'
+    : 'ready for maintainer review'
 const findings = [...evaluation.errors, ...evaluation.notes]
 const duplicateLinks = duplicates
   .map(candidate => `[#${candidate.number}](${candidate.html_url})`)
@@ -168,7 +168,7 @@ const sizeRows = [
             const percentage = Math.round(
               (Math.abs(signals.bundleSize.gzip - bundleSize.gzip) /
                 bundleSize.gzip) *
-                100
+                100,
             )
             return `candidate is ${percentage}% ${
               signals.bundleSize.gzip < bundleSize.gzip ? 'smaller' : 'larger'
@@ -191,8 +191,8 @@ const report = `${REPORT_MARKER}
   signals.exists === true
     ? `[${packageName}](https://www.npmjs.com/package/${packageName})`
     : signals.exists === false
-    ? 'Not found'
-    : 'Check unavailable'
+      ? 'Not found'
+      : 'Check unavailable'
 } |
 | Latest version | ${display(signals.latestVersion)}${
   signals.deprecated ? ' — deprecated' : ''

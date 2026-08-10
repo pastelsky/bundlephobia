@@ -25,7 +25,9 @@
   color: var(--color-icon-secondary);
   box-shadow: var(--shadow-card);
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
 
   svg {
     display: block;

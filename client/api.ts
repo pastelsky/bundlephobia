@@ -27,7 +27,7 @@ export type PackageSuggestion = {
 
 export function sortSuggestionsBySearchScore(
   packageA: PackageSuggestion,
-  packageB: PackageSuggestion
+  packageB: PackageSuggestion,
 ) {
   if (
     Math.abs(Math.log(packageB.searchScore) - Math.log(packageA.searchScore)) >
@@ -118,7 +118,7 @@ export default class API {
 
   static post<T = unknown>(
     url: string,
-    body: Record<string, unknown>
+    body: Record<string, unknown>,
   ): Promise<T> {
     const headers: Record<string, string> = {
       Accept: 'application/json',
@@ -135,31 +135,31 @@ export default class API {
 
   static getInfo(packageString: string) {
     return API.get<PackageBuildInfo>(
-      `/api/size?package=${packageString}&record=true`
+      `/api/size?package=${packageString}&record=true`,
     )
   }
 
   static getExports(packageString: string) {
     return API.get<PackageExportsResponse>(
-      `/api/exports?package=${packageString}`
+      `/api/exports?package=${packageString}`,
     )
   }
 
   static getExportsSizes(packageString: string) {
     return API.get<PackageExportSizesResponse>(
-      `/api/exports-sizes?package=${packageString}`
+      `/api/exports-sizes?package=${packageString}`,
     )
   }
 
   static getDependencies(packageString: string) {
     return API.get<PackageDependencyInfo[]>(
-      `/api/dependencies?package=${packageString}`
+      `/api/dependencies?package=${packageString}`,
     )
   }
 
   static getHistory(packageString: string, limit: number) {
     return API.get<PackageHistoryResponse>(
-      `/api/package-history?package=${packageString}&limit=${limit}`
+      `/api/package-history?package=${packageString}&limit=${limit}`,
     )
   }
 
@@ -169,14 +169,14 @@ export default class API {
 
   static getSimilar(packageName: string) {
     return API.get<SimilarPackagesResponse>(
-      `/api/similar-packages?package=${packageName}`
+      `/api/similar-packages?package=${packageName}`,
     )
   }
 
   static getSuggestions(query: string) {
     return API.get<PackageSuggestion[]>(
       `https://api.npms.io/v2/search/suggestions?q=${query}`,
-      false
+      false,
     ).then(result => result.sort(sortSuggestionsBySearchScore))
   }
 }

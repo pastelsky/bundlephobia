@@ -18,7 +18,10 @@
     }
   ],
   "tags": [
-    { "name": "size", "description": "Bundle size of a package and its exports" },
+    {
+      "name": "size",
+      "description": "Bundle size of a package and its exports"
+    },
     { "name": "discovery", "description": "Finding and comparing packages" }
   ],
   "paths": {
@@ -121,7 +124,9 @@
         "responses": {
           "200": {
             "description": "Suggested alternatives to the given package.",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": {
+              "application/json": { "schema": { "type": "object" } }
+            }
           },
           "422": { "$ref": "#/components/responses/BuildError" }
         }
@@ -144,7 +149,11 @@
         "responses": {
           "200": {
             "description": "Recently requested packages.",
-            "content": { "application/json": { "schema": { "type": "array", "items": { "type": "object" } } } }
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "type": "object" } }
+              }
+            }
           },
           "422": { "$ref": "#/components/responses/BuildError" }
         }

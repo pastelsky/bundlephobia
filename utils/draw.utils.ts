@@ -68,7 +68,7 @@ function createStatGroup(
     originX: 'center'
     top: number
     left: number
-  }
+  },
 ) {
   const numberText = new fabric.Text(number.toString(), {
     fontFamily: 'SF Compact Text',
@@ -133,7 +133,7 @@ export function drawStatsImg({
       width: (canvas.width ?? width) * 1.5,
       height: (canvas.height ?? height) * 1.5,
     },
-    { cssOnly: true }
+    { cssOnly: true },
   )
 
   const x0 = wide ? wideBy / 2 : 0
@@ -146,15 +146,15 @@ export function drawStatsImg({
 
   const lineTopHorizontal = new fabric.Line(
     [x0, 91, width, 91],
-    separatorOptions
+    separatorOptions,
   )
   const lineCenterVertical = new fabric.Line(
     [width / 2, 91, width / 2, height],
-    separatorOptions
+    separatorOptions,
   )
   const lineCenterHorizontal = new fabric.Line(
     [x0, 91 + (height - 91) / 2, width, 91 + (height - 91) / 2],
-    separatorOptions
+    separatorOptions,
   )
 
   const packageNameText = new fabric.Text(name, {
@@ -184,7 +184,7 @@ export function drawStatsImg({
 
   const packageNameGroup = new fabric.Group(
     [packageNameText, packageAtText, packageVersionText],
-    { selectable: false }
+    { selectable: false },
   )
 
   const minSize = formatSize(min)
@@ -199,7 +199,7 @@ export function drawStatsImg({
     'minified',
     selectedTheme,
     pad,
-    { originX: 'center', top: 106, left: width / 4 }
+    { originX: 'center', top: 106, left: width / 4 },
   )
 
   const gzipGroup = createStatGroup(
@@ -208,7 +208,7 @@ export function drawStatsImg({
     'gzipped',
     selectedTheme,
     pad,
-    { originX: 'center', top: 106, left: width * (3 / 4) }
+    { originX: 'center', top: 106, left: width * (3 / 4) },
   )
 
   const threeGGroup = createStatGroup(
@@ -217,7 +217,7 @@ export function drawStatsImg({
     'slow 3G',
     selectedTheme,
     pad,
-    { originX: 'center', top: 235, left: width / 4 }
+    { originX: 'center', top: 235, left: width / 4 },
   )
 
   const fourGGroup = createStatGroup(
@@ -226,7 +226,7 @@ export function drawStatsImg({
     'emerging 4G',
     selectedTheme,
     pad,
-    { originX: 'center', top: 235, left: width * (3 / 4) }
+    { originX: 'center', top: 235, left: width * (3 / 4) },
   )
 
   canvas.add(lineTopHorizontal)

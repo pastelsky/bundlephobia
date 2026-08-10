@@ -17,7 +17,7 @@ interface QueueModule {
       retry: number
       retryIsJump: boolean
       timeout: number
-    }
+    },
   ): {
     push<T>(task: () => Promise<T>): void
     start(): void
@@ -36,7 +36,7 @@ interface GotModule {
     url: string,
     options?: {
       json?: boolean
-    }
+    },
   ): Promise<GotResponse<TBody>>
 }
 
@@ -170,13 +170,13 @@ async function run() {
 
   packages.slice(startIndex, endIndex).forEach((pack, index) => {
     const packString = `${decodeFirebaseKey(pack.packName)}@${decodeFirebaseKey(
-      pack.version
+      pack.version,
     )}`
 
     queue.push(() =>
       got<{ gzip: number; size: number }>(
         `http://127.0.0.1:5000/api/size?package=${packString}&force=true`,
-        { json: true }
+        { json: true },
       )
         .then(async response => {
           const result = response.body
@@ -188,7 +188,7 @@ async function run() {
             '%d fetched %s, diff: %d KB',
             startIndex + index,
             packString,
-            Math.round(gzipDiff / 1024)
+            Math.round(gzipDiff / 1024),
           )
 
           if (gzipDiff / previous.gzip > 0.05 && gzipDiff > 4000) {
@@ -197,7 +197,7 @@ async function run() {
               packString,
               gzipDiff,
               Math.round(previous.gzip / 1024),
-              Math.round(result.gzip / 1024)
+              Math.round(result.gzip / 1024),
             )
           }
 
@@ -207,7 +207,7 @@ async function run() {
               packString,
               minDiff,
               Math.round(previous.size / 1024),
-              Math.round(result.size / 1024)
+              Math.round(result.size / 1024),
             )
           }
         })
@@ -215,7 +215,7 @@ async function run() {
           failIndexes.push(startIndex + index)
           console.log(`fetch for ${packString} failed`, error)
           throw error
-        })
+        }),
     )
   })
 
@@ -279,20 +279,18 @@ async function getExports(name: string, version: string) {
 
   fs.writeFileSync(
     path.join(temporaryPath, 'package.json'),
-    JSON.stringify({ dependencies: {} })
+    JSON.stringify({ dependencies: {} }),
   )
 
   fs.writeFileSync(
     path.join(temporaryPath, 'index.js'),
-    JSON.stringify({ dependencies: {} })
+    JSON.stringify({ dependencies: {} }),
   )
 
   await installPackage(packageName, temporaryPath)
-  const exportsObject = require(path.join(
-    temporaryPath,
-    'node_modules',
-    name
-  )) as Record<string, unknown>
+  const exportsObject = require(
+    path.join(temporaryPath, 'node_modules', name),
+  ) as Record<string, unknown>
   return Object.keys(exportsObject)
 }
 
@@ -310,7 +308,7 @@ async function rebuildTopLevelExports() {
     queue.push(() =>
       getExports(
         decodeFirebaseKey(pack.name),
-        decodeFirebaseKey(pack.version)
+        decodeFirebaseKey(pack.version),
       ).then(exportsList => {
         debug('got exports for %s %s %o', pack.name, pack.version, exportsList)
         return axios.post('localhost:7001/cache', {
@@ -321,7 +319,7 @@ async function rebuildTopLevelExports() {
             topLevelExports: exportsList,
           },
         })
-      })
+      }),
     )
   })
 

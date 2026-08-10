@@ -68,7 +68,7 @@ class TreePage extends PureComponent<TreePageProps, TreePageState> {
   buildDependencyTree = (packageString: string) => {
     const processDependency = (dep: PackageDependencyInfo) => {
       const nodeHasDep = this.state.nodes.find(
-        node => node.name === dep.name && node.version === dep.version
+        node => node.name === dep.name && node.version === dep.version,
       )
       const depString = `${dep.name}@${dep.version}`
 
@@ -93,7 +93,7 @@ class TreePage extends PureComponent<TreePageProps, TreePageState> {
           }),
           () => {
             this.buildDependencyTree(depString)
-          }
+          },
         )
       }
     }

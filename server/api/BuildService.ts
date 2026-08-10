@@ -83,7 +83,7 @@ export default class BuildService {
                 {
                   signal,
                   maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES,
-                }
+                },
               )
               return response.data
             } catch (error) {
@@ -94,12 +94,12 @@ export default class BuildService {
             } finally {
               const durationMs = Math.max(
                 1,
-                Math.ceil(performance.now() - startedAt)
+                Math.ceil(performance.now() - startedAt),
               )
               onComplete?.(durationMs)
               logger.timing(
                 `analysis.javascript.${operation.operation}.duration`,
-                durationMs
+                durationMs,
               )
             }
           }
@@ -129,16 +129,16 @@ export default class BuildService {
           } finally {
             const durationMs = Math.max(
               1,
-              Math.ceil(performance.now() - startedAt)
+              Math.ceil(performance.now() - startedAt),
             )
             onComplete?.(durationMs)
             logger.timing(
               `analysis.javascript.${operation.operation}.duration`,
-              durationMs
+              durationMs,
             )
             signal.removeEventListener('abort', cancelExecution)
           }
-        }
+        },
       )
     })
   }
@@ -149,7 +149,7 @@ export default class BuildService {
       throw new CustomError(
         contents.name || 'BuildError',
         contents.originalError,
-        contents.extra
+        contents.extra,
       )
     }
 
@@ -162,7 +162,7 @@ export default class BuildService {
           reason: 'BUILD_SERVICE_UNREACHABLE',
           url: (error.request as { _currentUrl?: string })._currentUrl,
         },
-        undefined
+        undefined,
       )
     }
 
@@ -171,14 +171,14 @@ export default class BuildService {
       error instanceof Error ? error.message : String(error),
       {
         operation: operation.legacyName,
-      }
+      },
     )
   }
 
   async getPackageBuildStats<T>(
     packageString: string,
     priority: number,
-    options: BuildRequestOptions = {}
+    options: BuildRequestOptions = {},
   ): Promise<T> {
     logger.increment('analysis.javascript.package-analysis.requested')
     return requestQueue.process<T, BuildServiceJobParams>(
@@ -189,20 +189,20 @@ export default class BuildService {
       }),
       createQueueType(
         'javascript',
-        OperationType.PACKAGE_BUILD_STATS.operation
+        OperationType.PACKAGE_BUILD_STATS.operation,
       ),
       {
         packageString,
         onComplete: options.onComplete,
       },
-      { priority, signal: options.signal }
+      { priority, signal: options.signal },
     )
   }
 
   async getPackageExports<T>(
     packageString: string,
     priority: number,
-    options: BuildRequestOptions = {}
+    options: BuildRequestOptions = {},
   ): Promise<T> {
     logger.increment('analysis.javascript.package-exports.requested')
     return requestQueue.process<T, BuildServiceJobParams>(
@@ -216,14 +216,14 @@ export default class BuildService {
         packageString,
         onComplete: options.onComplete,
       },
-      { priority, signal: options.signal }
+      { priority, signal: options.signal },
     )
   }
 
   async getPackageExportSizes<T>(
     packageString: string,
     priority: number,
-    options: BuildRequestOptions = {}
+    options: BuildRequestOptions = {},
   ): Promise<T> {
     logger.increment('analysis.javascript.package-export-sizes.requested')
     return requestQueue.process<T, BuildServiceJobParams>(
@@ -234,13 +234,13 @@ export default class BuildService {
       }),
       createQueueType(
         'javascript',
-        OperationType.PACKAGE_EXPORTS_SIZES.operation
+        OperationType.PACKAGE_EXPORTS_SIZES.operation,
       ),
       {
         packageString,
         onComplete: options.onComplete,
       },
-      { priority, signal: options.signal }
+      { priority, signal: options.signal },
     )
   }
 }

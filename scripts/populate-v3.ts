@@ -51,11 +51,11 @@ const STATS_PATH = path.join(__dirname, '../populate-v3-stats.json')
 const COMPARISON_PATH = path.join(__dirname, '../populate-v3-comparison.json')
 const EXPORTS_STATS_PATH = path.join(
   __dirname,
-  '../populate-v3-exports-stats.json'
+  '../populate-v3-exports-stats.json',
 )
 const EXPORTS_COMPARISON_PATH = path.join(
   __dirname,
-  '../populate-v3-exports-comparison.json'
+  '../populate-v3-exports-comparison.json',
 )
 const CACHE_SERVICE_BASE =
   process.env.CACHE_SERVICE_BASE || 'http://localhost:7001'
@@ -63,7 +63,7 @@ const CACHE_SERVICE_BASE =
 const args = process.argv.slice(2)
 const shouldReset = args.includes('--reset')
 const concurrencyArg = args.find(argument =>
-  argument.startsWith('--concurrency=')
+  argument.startsWith('--concurrency='),
 )
 const concurrency = concurrencyArg
   ? parseInt(concurrencyArg.split('=')[1], 10)
@@ -73,7 +73,7 @@ const limitArg = args.find(argument => argument.startsWith('--limit-packages='))
 const packageLimit = limitArg ? parseInt(limitArg.split('=')[1], 10) : Infinity
 
 const packageFilterArg = args.find(argument =>
-  argument.startsWith('--package=')
+  argument.startsWith('--package='),
 )
 const packageFilter = packageFilterArg ? packageFilterArg.split('=')[1] : null
 
@@ -82,7 +82,7 @@ const exportsOnly = args.includes('--exports-only')
 
 if (sizesOnly && exportsOnly) {
   console.error(
-    'Error: Cannot use both --sizes-only and --exports-only flags together'
+    'Error: Cannot use both --sizes-only and --exports-only flags together',
   )
   process.exit(1)
 }
@@ -98,8 +98,8 @@ Mode: ${
   sizesOnly
     ? 'Sizes Only'
     : exportsOnly
-    ? 'Exports Only'
-    : 'Both (Sizes + Exports)'
+      ? 'Exports Only'
+      : 'Both (Sizes + Exports)'
 }
 `)
 
@@ -131,7 +131,7 @@ function loadProgress(): ProgressState {
       console.log(
         `Resuming: ${data.completed.length} sizes completed, ${
           data.completed_exports?.length || 0
-        } exports completed, ${data.failed.length} failed`
+        } exports completed, ${data.failed.length} failed`,
       )
 
       const stats = data.stats || {}
@@ -192,14 +192,14 @@ function saveExportsStats(stats: unknown[]) {
 function saveExportsComparisons(comparisons: unknown[]) {
   fs.writeFileSync(
     EXPORTS_COMPARISON_PATH,
-    JSON.stringify(comparisons, null, 2)
+    JSON.stringify(comparisons, null, 2),
   )
 }
 
 function withAbortableTimeout<T>(
   promiseFactory: (signal: AbortSignal) => Promise<T>,
   timeoutMs: number,
-  timeoutValue: T
+  timeoutValue: T,
 ) {
   const controller = new AbortController()
   let timeoutId: NodeJS.Timeout
@@ -234,7 +234,7 @@ function withAbortableTimeout<T>(
 async function buildPackage(
   packageName: string,
   version: string,
-  signal: AbortSignal | null = null
+  signal: AbortSignal | null = null,
 ): Promise<SizeBuildResult> {
   const key = `${packageName}@${version}`
   let v2Result: SizeBuildResult['v2'] = null
@@ -250,7 +250,7 @@ async function buildPackage(
   } catch {}
 
   const url = `${API_BASE}/api/size?package=${encodeURIComponent(
-    key
+    key,
   )}&record=true&force=true`
 
   try {
@@ -302,7 +302,7 @@ async function buildPackage(
 async function buildExports(
   packageName: string,
   version: string,
-  signal: AbortSignal | null = null
+  signal: AbortSignal | null = null,
 ): Promise<ExportsBuildResult> {
   const key = `${packageName}@${version}`
   let v2Result: unknown = null
@@ -318,7 +318,7 @@ async function buildExports(
   } catch {}
 
   const url = `${API_BASE}/api/exports-sizes?package=${encodeURIComponent(
-    key
+    key,
   )}&force=true`
 
   try {
@@ -372,7 +372,7 @@ async function processBatch(
   detailedStats: unknown[],
   comparisons: unknown[],
   exportsStats: unknown[],
-  exportsComparisons: unknown[]
+  exportsComparisons: unknown[],
 ) {
   const promises = batch.map(async ({ packageName, version }) => {
     const key = `${packageName}@${version}`
@@ -397,10 +397,10 @@ async function processBatch(
         withAbortableTimeout(
           signal => buildPackage(packageName, version, signal),
           TIMEOUT_MS + 5000,
-          { success: false, error: 'Operation timeout (aborted)' }
+          { success: false, error: 'Operation timeout (aborted)' },
         ).then(result => {
           sizeResult = result
-        })
+        }),
       )
     }
 
@@ -410,10 +410,10 @@ async function processBatch(
         withAbortableTimeout(
           signal => buildExports(packageName, version, signal),
           TIMEOUT_MS + 5000,
-          { success: false, error: 'Operation timeout (aborted)' }
+          { success: false, error: 'Operation timeout (aborted)' },
         ).then(result => {
           exportsResult = result
-        })
+        }),
       )
     }
 
@@ -423,8 +423,8 @@ async function processBatch(
 
     console.log(
       `[DEBUG] Completed ${key} in ${((Date.now() - startTime) / 1000).toFixed(
-        1
-      )}s`
+        1,
+      )}s`,
     )
     const duration = ((Date.now() - startTime) / 1000).toFixed(1)
 
@@ -523,13 +523,13 @@ function formatTime(seconds: number) {
 async function main() {
   if (!fs.existsSync(TOP_PACKAGES_PATH)) {
     console.error(
-      'top-packages.json not found. Run generate-top-packages.js first.'
+      'top-packages.json not found. Run generate-top-packages.js first.',
     )
     process.exit(1)
   }
 
   const packages = JSON.parse(
-    fs.readFileSync(TOP_PACKAGES_PATH, 'utf8')
+    fs.readFileSync(TOP_PACKAGES_PATH, 'utf8'),
   ) as TopPackage[]
   console.log(`Loaded ${packages.length} packages from top-packages.json`)
 
@@ -537,7 +537,7 @@ async function main() {
   if (packageFilter) {
     targetPackages = packages.filter(pkg => pkg.name === packageFilter)
     console.log(
-      `Filtering to package: ${packageFilter} (found ${targetPackages.length} matches)`
+      `Filtering to package: ${packageFilter} (found ${targetPackages.length} matches)`,
     )
   }
 
@@ -575,28 +575,28 @@ async function main() {
     if (fs.existsSync(STATS_PATH)) {
       try {
         detailedStats = JSON.parse(
-          fs.readFileSync(STATS_PATH, 'utf8')
+          fs.readFileSync(STATS_PATH, 'utf8'),
         ) as unknown[]
       } catch {}
     }
     if (fs.existsSync(COMPARISON_PATH)) {
       try {
         comparisons = JSON.parse(
-          fs.readFileSync(COMPARISON_PATH, 'utf8')
+          fs.readFileSync(COMPARISON_PATH, 'utf8'),
         ) as unknown[]
       } catch {}
     }
     if (fs.existsSync(EXPORTS_STATS_PATH)) {
       try {
         exportsStats = JSON.parse(
-          fs.readFileSync(EXPORTS_STATS_PATH, 'utf8')
+          fs.readFileSync(EXPORTS_STATS_PATH, 'utf8'),
         ) as unknown[]
       } catch {}
     }
     if (fs.existsSync(EXPORTS_COMPARISON_PATH)) {
       try {
         exportsComparisons = JSON.parse(
-          fs.readFileSync(EXPORTS_COMPARISON_PATH, 'utf8')
+          fs.readFileSync(EXPORTS_COMPARISON_PATH, 'utf8'),
         ) as unknown[]
       } catch {}
     }
@@ -624,19 +624,27 @@ async function main() {
 
     detailedStats = detailedStats.filter(
       item =>
-        !(item as { package?: string }).package?.startsWith(`${packageFilter}@`)
+        !(item as { package?: string }).package?.startsWith(
+          `${packageFilter}@`,
+        ),
     )
     comparisons = comparisons.filter(
       item =>
-        !(item as { package?: string }).package?.startsWith(`${packageFilter}@`)
+        !(item as { package?: string }).package?.startsWith(
+          `${packageFilter}@`,
+        ),
     )
     exportsStats = exportsStats.filter(
       item =>
-        !(item as { package?: string }).package?.startsWith(`${packageFilter}@`)
+        !(item as { package?: string }).package?.startsWith(
+          `${packageFilter}@`,
+        ),
     )
     exportsComparisons = exportsComparisons.filter(
       item =>
-        !(item as { package?: string }).package?.startsWith(`${packageFilter}@`)
+        !(item as { package?: string }).package?.startsWith(
+          `${packageFilter}@`,
+        ),
     )
   }
 
@@ -663,7 +671,7 @@ async function main() {
         Math.floor(index / concurrency) + 1
       }, packages: ${batch
         .map(item => `${item.packageName}@${item.version}`)
-        .join(', ')}`
+        .join(', ')}`,
     )
 
     const results = await processBatch(
@@ -672,7 +680,7 @@ async function main() {
       detailedStats,
       comparisons,
       exportsStats,
-      exportsComparisons
+      exportsComparisons,
     )
     console.log(`[DEBUG] Batch completed, got ${results.length} results`)
 
@@ -703,7 +711,7 @@ async function main() {
       }
 
       console.log(
-        `${symbol} ${result.key} (${result.duration}s) - ${parts.join(', ')}`
+        `${symbol} ${result.key} (${result.duration}s) - ${parts.join(', ')}`,
       )
     }
 
@@ -713,10 +721,10 @@ async function main() {
     const remaining = (allVersions.length - processed) / (rate || 1)
 
     console.log(
-      `\n[${processed}/${allVersions.length}] Sizes (S: ${progress.stats.success}, F: ${progress.stats.failed}), Exports (S: ${progress.stats.exports_success}, F: ${progress.stats.exports_failed}), Skipped: ${progress.stats.skipped}`
+      `\n[${processed}/${allVersions.length}] Sizes (S: ${progress.stats.success}, F: ${progress.stats.failed}), Exports (S: ${progress.stats.exports_success}, F: ${progress.stats.exports_failed}), Skipped: ${progress.stats.skipped}`,
     )
     console.log(
-      `Elapsed: ${formatTime(elapsed)}, ETA: ${formatTime(remaining)}\n`
+      `Elapsed: ${formatTime(elapsed)}, ETA: ${formatTime(remaining)}\n`,
     )
 
     saveProgress(progress)

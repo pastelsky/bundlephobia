@@ -39,7 +39,7 @@ const CarbonAd = ({ className, placement }: CarbonAdProps) => {
           observer.disconnect()
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     )
 
     observer.observe(slot)
@@ -55,7 +55,7 @@ const CarbonAd = ({ className, placement }: CarbonAdProps) => {
       const [carbonAd, ...duplicateCarbonAds] = carbonAds
       duplicateCarbonAds.forEach(carbonAd => carbonAd.remove())
       const hasAdContent = Boolean(
-        carbonAd?.querySelector('a, img, .carbon-text')
+        carbonAd?.querySelector('a, img, .carbon-text'),
       )
 
       if (hasAdContent) {
@@ -84,7 +84,7 @@ const CarbonAd = ({ className, placement }: CarbonAdProps) => {
     const loadTimeout = window.setTimeout(() => {
       setUnavailableReason('creative_timeout')
       setAdLoadState(currentState =>
-        currentState === 'pending' ? 'unavailable' : currentState
+        currentState === 'pending' ? 'unavailable' : currentState,
       )
     }, AD_LOAD_TIMEOUT_MS)
 
@@ -135,7 +135,7 @@ const CarbonAd = ({ className, placement }: CarbonAdProps) => {
           viewTimeout = undefined
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     )
 
     observer.observe(carbonAd)

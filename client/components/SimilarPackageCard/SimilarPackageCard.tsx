@@ -49,7 +49,7 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
     const { pack, comparisonSizePercent } = this.props
     const { size, unit } = formatSize(pack.gzip)
     const sizeDiff = Math.abs(
-      (comparisonSizePercent / 100) * pack.gzip - pack.gzip
+      (comparisonSizePercent / 100) * pack.gzip - pack.gzip,
     )
 
     const getComparisonNumber = (comparisonSizePercent: number) => {

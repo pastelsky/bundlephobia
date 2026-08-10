@@ -129,7 +129,7 @@ function createMemoryDiagnostics(options) {
 
   const serviceDirectory = path.join(
     outputRoot,
-    service.replace(/[^a-z0-9_-]/gi, '_')
+    service.replace(/[^a-z0-9_-]/gi, '_'),
   )
   const latestSnapshot = path.join(serviceDirectory, 'latest.heapsnapshot')
   const latestMetadata = path.join(serviceDirectory, 'latest.metadata.json')
@@ -159,7 +159,7 @@ function createMemoryDiagnostics(options) {
 
   function collectSample(memory = memoryUsage()) {
     const currentEventLoopUtilization = performance.eventLoopUtilization(
-      previousEventLoopUtilization
+      previousEventLoopUtilization,
     )
     previousEventLoopUtilization = performance.eventLoopUtilization()
     const currentCpuUsage = cpuUsage(previousCpuUsage)
@@ -265,19 +265,19 @@ function createMemoryDiagnostics(options) {
     const suffix = `${now()}-${pid}`
     const temporarySnapshot = path.join(
       serviceDirectory,
-      `.latest-${suffix}.heapsnapshot`
+      `.latest-${suffix}.heapsnapshot`,
     )
     const temporaryReport = path.join(
       serviceDirectory,
-      `.latest-${suffix}.report.json`
+      `.latest-${suffix}.report.json`,
     )
     const temporaryMetadata = path.join(
       serviceDirectory,
-      `.latest-${suffix}.metadata.json`
+      `.latest-${suffix}.metadata.json`,
     )
     const temporaryTimeline = path.join(
       serviceDirectory,
-      `.latest-${suffix}.timeline.json`
+      `.latest-${suffix}.timeline.json`,
     )
 
     try {
@@ -297,13 +297,13 @@ function createMemoryDiagnostics(options) {
         getAvailableBytes(serviceDirectory, fsImpl) < requiredFreeBytes
       ) {
         logger.error(
-          `[memory-diagnostics] Skipping ${service} capture: insufficient free disk space`
+          `[memory-diagnostics] Skipping ${service} capture: insufficient free disk space`,
         )
         return false
       }
 
       logger.error(
-        `[memory-diagnostics] Capturing ${service} at ${memory.rss} bytes RSS`
+        `[memory-diagnostics] Capturing ${service} at ${memory.rss} bytes RSS`,
       )
       handled = true
 
@@ -330,15 +330,15 @@ function createMemoryDiagnostics(options) {
             heapSnapshotCaptured: captureHeapSnapshot,
           },
           null,
-          2
+          2,
         ),
-        { mode: 0o600 }
+        { mode: 0o600 },
       )
 
       fsImpl.writeFileSync(
         temporaryTimeline,
         JSON.stringify({ service, pid, samples: timeline }, null, 2),
-        { mode: 0o600 }
+        { mode: 0o600 },
       )
 
       if (captureHeapSnapshot) {
@@ -348,7 +348,7 @@ function createMemoryDiagnostics(options) {
       if (report) {
         fsImpl.renameSync(
           temporaryReport,
-          path.join(serviceDirectory, 'latest.report.json')
+          path.join(serviceDirectory, 'latest.report.json'),
         )
       }
       fsImpl.renameSync(temporaryMetadata, latestMetadata)
@@ -357,7 +357,7 @@ function createMemoryDiagnostics(options) {
       return true
     } catch (error) {
       logger.error(
-        `[memory-diagnostics] Failed to capture ${service}: ${error.message}`
+        `[memory-diagnostics] Failed to capture ${service}: ${error.message}`,
       )
       return false
     } finally {

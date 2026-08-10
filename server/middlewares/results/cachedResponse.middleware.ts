@@ -43,7 +43,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
         operation,
         requestId: ctx.state.id,
       },
-      message
+      message,
     )
 
   const cached = await ctx.cashed()
@@ -53,10 +53,10 @@ const cachedResponse: Middleware = async (ctx, next) => {
         force != null
           ? 0
           : packageAnalysisGateway.isExactVersionSpecifier(
-              createJavaScriptPackageReference(`${name}@${version}`)
-            )
-          ? config.CACHE.SIZE_API_HAS_VERSION
-          : config.CACHE.SIZE_API_DEFAULT,
+                createJavaScriptPackageReference(`${name}@${version}`),
+              )
+            ? config.CACHE.SIZE_API_HAS_VERSION
+            : config.CACHE.SIZE_API_DEFAULT,
     }
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })

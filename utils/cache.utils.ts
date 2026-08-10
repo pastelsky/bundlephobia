@@ -48,7 +48,7 @@ export default class Cache {
           ...key,
           error: errorData,
         },
-        `CACHE ERROR for package ${key.name}@${key.version}`
+        `CACHE ERROR for package ${key.name}@${key.version}`,
       )
     }
   }
@@ -79,7 +79,7 @@ export default class Cache {
           ...key,
           error: errorData,
         },
-        `CACHE ERROR for package exports ${key.name}@${key.version}`
+        `CACHE ERROR for package exports ${key.name}@${key.version}`,
       )
     }
   }

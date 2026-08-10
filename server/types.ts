@@ -20,8 +20,7 @@ export type {
  * fields with server-only routing information.
  */
 export interface ResolvedPackageState
-  extends PackageMetadata,
-    ResolvedAnalysisPackage {
+  extends PackageMetadata, ResolvedAnalysisPackage {
   scoped: boolean
   packageString: string
 }

@@ -19,7 +19,7 @@ export const Button = React.forwardRef<HTMLElement, ButtonProps>(
       type = 'button',
       ...props
     },
-    ref
+    ref,
   ) => (
     <BaseButton
       ref={ref}
@@ -28,11 +28,11 @@ export const Button = React.forwardRef<HTMLElement, ButtonProps>(
         'ui-button',
         `ui-button--${variant}`,
         `ui-button--${size}`,
-        className
+        className,
       )}
       {...props}
     />
-  )
+  ),
 )
 
 Button.displayName = 'Button'

@@ -23,7 +23,7 @@ const exportsMiddleware: Middleware = async ctx => {
       onComplete: durationMs => {
         ctx.set(BUILD_DURATION_HEADER, String(durationMs))
       },
-    }
+    },
   )
   const buildEnd = now()
 
@@ -32,11 +32,11 @@ const exportsMiddleware: Middleware = async ctx => {
       force != null
         ? 0
         : requestedPackage &&
-          packageAnalysisGateway.isExactVersionSpecifier(
-            createJavaScriptPackageReference(requestedPackage)
-          )
-        ? config.CACHE.SIZE_API_HAS_VERSION
-        : config.CACHE.SIZE_API_DEFAULT,
+            packageAnalysisGateway.isExactVersionSpecifier(
+              createJavaScriptPackageReference(requestedPackage),
+            )
+          ? config.CACHE.SIZE_API_HAS_VERSION
+          : config.CACHE.SIZE_API_DEFAULT,
   }
 
   ctx.body = { name, version, exports: result }
@@ -52,7 +52,7 @@ const exportsMiddleware: Middleware = async ctx => {
       operation: ctx.state.analysis.operation,
       time,
     },
-    `BUILD EXPORTS: ${packageString} built in ${time.toFixed()}s`
+    `BUILD EXPORTS: ${packageString} built in ${time.toFixed()}s`,
   )
 }
 

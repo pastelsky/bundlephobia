@@ -100,10 +100,10 @@ describe('build request cancellation', () => {
           options.signal.addEventListener(
             'abort',
             () => reject(new JobCancelledError()),
-            { once: true }
+            { once: true },
           )
         })
-      }
+      },
     )
     const { context, request, response } = createContext()
 
@@ -122,7 +122,7 @@ describe('build request cancellation', () => {
         packageString: 'example@1.0.0',
         requestId: 'request-id',
       }),
-      'BUILD_ABORTED: client closed connection for package example@1.0.0'
+      'BUILD_ABORTED: client closed connection for package example@1.0.0',
     )
   })
 
@@ -135,7 +135,7 @@ describe('build request cancellation', () => {
         return new Promise(resolve => {
           resolveBuild = resolve
         })
-      }
+      },
     )
     const { context, response } = createContext()
 
@@ -153,12 +153,12 @@ describe('build request cancellation', () => {
         name: 'example',
         size: 123,
         version: '1.0.0',
-      })
+      }),
     )
     expect(logger.info).not.toHaveBeenCalledWith(
       'BUILD_ABORTED',
       expect.anything(),
-      expect.anything()
+      expect.anything(),
     )
   })
 
@@ -167,11 +167,11 @@ describe('build request cancellation', () => {
       (
         _packageString,
         _priority,
-        options: { onComplete: (durationMs: number) => void }
+        options: { onComplete: (durationMs: number) => void },
       ) => {
         options.onComplete(321)
         return Promise.resolve({ size: 123 })
-      }
+      },
     )
     const { context } = createContext()
 

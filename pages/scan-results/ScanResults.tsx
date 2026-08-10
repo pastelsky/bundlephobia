@@ -219,7 +219,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
               packageName: pack.packageString,
               timeTaken: Date.now() - packageStartTime,
             })
-          })
+          }),
       )
     })
 
@@ -228,7 +228,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
         const successfulBuildCount = currentState.packages.reduce(
           (curSum, nextPack) =>
             nextPack.promiseState === 'fulfilled' ? curSum + 1 : curSum,
-          0
+          0,
         )
 
         Analytics.scanCompleted({
@@ -247,7 +247,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
   updatePackageState(packageString: string, state: Partial<ScanPackage>) {
     this.setState(currentState => ({
       packages: currentState.packages.map(pack =>
-        pack.packageString === packageString ? { ...pack, ...state } : pack
+        pack.packageString === packageString ? { ...pack, ...state } : pack,
       ),
     }))
   }
@@ -255,7 +255,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
   setParamsAndState = (sortMode: SortMode) => {
     const updatedQuery = { ...this.props.router.query, sortMode }
     Router.replace(
-      `/scan-results?${stringify(updatedQuery, { encode: false })}`
+      `/scan-results?${stringify(updatedQuery, { encode: false })}`,
     )
 
     const documentWithViewTransitions = document as Document & {
@@ -264,7 +264,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
       }
     }
     const prefersReducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
+      '(prefers-reduced-motion: reduce)',
     ).matches
 
     if (
@@ -281,7 +281,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
           React.startTransition(() => {
             this.setState({ sortMode }, () => resolve())
           })
-        })
+        }),
     )
     transition.finished.catch(() => {})
   }
@@ -308,7 +308,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
     }
 
     return packagesCopy.sort((packA, packB) =>
-      packA.name.localeCompare(packB.name)
+      packA.name.localeCompare(packB.name),
     )
   }
 
@@ -318,12 +318,12 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
 
     const totalMinSize = packages.reduce(
       (curTotal, pack) => curTotal + (pack.result ? pack.result.size : 0),
-      0
+      0,
     )
 
     const totalGZIPSize = packages.reduce(
       (curTotal, pack) => curTotal + (pack.result ? pack.result.gzip : 0),
-      0
+      0,
     )
 
     return (
@@ -353,7 +353,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
               index={index}
               key={pack.packageString}
               viewTransitionName={`scan-result-${this.state.packages.indexOf(
-                pack
+                pack,
               )}`}
             />
           ))}

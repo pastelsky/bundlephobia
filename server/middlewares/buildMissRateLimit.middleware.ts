@@ -25,7 +25,7 @@ function getClientIp(ctx: Context): string {
 }
 
 export default function buildMissRateLimit(
-  options: BuildMissRateLimitOptions = {}
+  options: BuildMissRateLimitOptions = {},
 ): Middleware {
   const durationMs = options.durationMs ?? DEFAULT_DURATION_MS
   const maxRequests = options.maxRequests ?? DEFAULT_MAX_REQUESTS
@@ -61,7 +61,7 @@ export default function buildMissRateLimit(
     const remaining = Math.max(maxRequests - entry.count, 0)
     const retryAfterSeconds = Math.max(
       Math.trunc((entry.resetAt - now) / 1000),
-      0
+      0,
     )
 
     ctx.set('X-BuildRateLimit-Limit', String(maxRequests))

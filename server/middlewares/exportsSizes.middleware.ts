@@ -31,7 +31,7 @@ const exportSizesMiddleware: Middleware = async ctx => {
       onComplete: durationMs => {
         ctx.set(BUILD_DURATION_HEADER, String(durationMs))
       },
-    }
+    },
   )
   const buildEnd = now()
 
@@ -40,11 +40,11 @@ const exportSizesMiddleware: Middleware = async ctx => {
       force != null
         ? 0
         : requestedPackage &&
-          packageAnalysisGateway.isExactVersionSpecifier(
-            createJavaScriptPackageReference(requestedPackage)
-          )
-        ? config.CACHE.SIZE_API_HAS_VERSION
-        : config.CACHE.SIZE_API_DEFAULT,
+            packageAnalysisGateway.isExactVersionSpecifier(
+              createJavaScriptPackageReference(requestedPackage),
+            )
+          ? config.CACHE.SIZE_API_HAS_VERSION
+          : config.CACHE.SIZE_API_DEFAULT,
   }
 
   const body = { name, version, ...result }
@@ -61,7 +61,7 @@ const exportSizesMiddleware: Middleware = async ctx => {
       operation: ctx.state.analysis.operation,
       time,
     },
-    `BUILD EXPORTS SIZES: ${packageString} built in ${time.toFixed()}s`
+    `BUILD EXPORTS SIZES: ${packageString} built in ${time.toFixed()}s`,
   )
 
   if (force === 'true') {

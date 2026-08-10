@@ -39,7 +39,7 @@ const generateImgMiddleware: Middleware = async ctx => {
 
     let resolvedVersion: string
     const reference = createJavaScriptPackageReference(
-      version ? `${name}@${version}` : name
+      version ? `${name}@${version}` : name,
     )
     if (
       !version ||
@@ -58,7 +58,7 @@ const generateImgMiddleware: Middleware = async ctx => {
 
     if (!result) {
       throw new Error(
-        `Missing cached package size for ${name}@${resolvedVersion}`
+        `Missing cached package size for ${name}@${resolvedVersion}`,
       )
     }
 
@@ -81,7 +81,7 @@ const generateImgMiddleware: Middleware = async ctx => {
     }
     await send(
       ctx as unknown as Parameters<typeof send>[0],
-      'client/assets/public/android-chrome-192x192.png'
+      'client/assets/public/android-chrome-192x192.png',
     )
   }
 }

@@ -88,7 +88,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         operation,
         packageSpecifier: packageString,
       }),
-      { status, body }
+      { status, body },
     )
   }
 
@@ -102,7 +102,7 @@ const errorHandler: Middleware = async (ctx, next) => {
       code: string
       message?: string
       details?: unknown
-    }
+    },
   ) => {
     ctx.status = status
     ctx.body = {
@@ -119,7 +119,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         ...ctx.state.analysis,
         details,
       },
-      packageString ? `${code} ${packageString}` : code
+      packageString ? `${code} ${packageString}` : code,
     )
   }
 
@@ -150,7 +150,7 @@ const errorHandler: Middleware = async (ctx, next) => {
           ...ctx.state.resolved,
           ...ctx.state.analysis,
         },
-        packageString ? `BUILD_CANCELLED ${packageString}` : 'BUILD_CANCELLED'
+        packageString ? `BUILD_CANCELLED ${packageString}` : 'BUILD_CANCELLED',
       )
       return
     }
@@ -253,8 +253,8 @@ const errorHandler: Middleware = async (ctx, next) => {
 
         const validVersions = formatSentence(
           (err.extra?.validVersions ?? []).map(
-            version => `\`<code>${version}</code>\``
-          )
+            version => `\`<code>${version}</code>\``,
+          ),
         )
 
         respondWithError(404, {
@@ -298,7 +298,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         const status = 422
         const missingModulesList = err.extra?.missingModules ?? []
         const missingModules = formatSentence(
-          missingModulesList.map(module => `\`<code>${module}</code>\``)
+          missingModulesList.map(module => `\`<code>${module}</code>\``),
         )
         const body = {
           error: {

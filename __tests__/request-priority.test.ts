@@ -12,20 +12,20 @@ function contextFor(client?: string): Context {
 describe('request priority', () => {
   it('prioritizes website requests over MCP and public API requests', () => {
     expect(getRequestPriority(contextFor('bundlephobia website'))).toBe(
-      Queue.priority.HIGH
+      Queue.priority.HIGH,
     )
     expect(getRequestPriority(contextFor('bundlephobia mcp tool'))).toBe(
-      Queue.priority.MEDIUM
+      Queue.priority.MEDIUM,
     )
     expect(getRequestPriority(contextFor())).toBe(Queue.priority.LOW)
     expect(getRequestPriority(contextFor('unknown api client'))).toBe(
-      Queue.priority.LOW
+      Queue.priority.LOW,
     )
   })
 
   it('keeps Yarn requests at low priority', () => {
     expect(getRequestPriority(contextFor('yarn website'))).toBe(
-      Queue.priority.LOW
+      Queue.priority.LOW,
     )
   })
 })

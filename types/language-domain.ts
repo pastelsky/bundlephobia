@@ -36,8 +36,9 @@ export interface PackageReference<L extends LanguageId = LanguageId> {
 }
 
 /** Stable identity shared by package reports after language-specific resolution. */
-export interface ResolvedPackageIdentity<L extends LanguageId = LanguageId>
-  extends PackageReference<L> {
+export interface ResolvedPackageIdentity<
+  L extends LanguageId = LanguageId,
+> extends PackageReference<L> {
   name: string
   version: string
   displayName: string
@@ -81,8 +82,7 @@ export interface JavaScriptPackageAnalysis {
   dependencySizes?: readonly JavaScriptDependencySize[]
 }
 
-export interface JavaScriptPackageReport
-  extends PackageReportBase<'javascript'> {
+export interface JavaScriptPackageReport extends PackageReportBase<'javascript'> {
   analysis: JavaScriptPackageAnalysis
 }
 

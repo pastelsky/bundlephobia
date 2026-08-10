@@ -15,8 +15,11 @@
   line-height: 1;
   min-height: $control-height;
   padding: 0 $global-spacing * 1.5;
-  transition: background-color $motion-fast, border-color $motion-fast,
-    color $motion-fast, transform $motion-fast;
+  transition:
+    background-color $motion-fast,
+    border-color $motion-fast,
+    color $motion-fast,
+    transform $motion-fast;
 
   &:hover:not(:disabled) {
     background: var(--color-surface-raised);

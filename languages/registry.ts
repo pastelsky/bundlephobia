@@ -38,7 +38,7 @@ export interface LanguageRegistry {
 }
 
 export function createLanguageRegistry(
-  descriptors: readonly LanguageDescriptor[]
+  descriptors: readonly LanguageDescriptor[],
 ): LanguageRegistry {
   const byId = new Map<LanguageId, LanguageDescriptor>()
 

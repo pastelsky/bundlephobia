@@ -70,7 +70,7 @@ describe('resolvePackage', () => {
     pacote.manifest.mockResolvedValue({ name: 'react', version: '18.2.0' })
 
     await expect(
-      resolvePackage('github:facebook/react')
+      resolvePackage('github:facebook/react'),
     ).resolves.toMatchObject({
       name: 'react',
       version: '18.2.0',
@@ -96,7 +96,7 @@ describe('resolvePackage', () => {
     registryFetch.json.mockRejectedValue({ code: 'E404' })
 
     await expect(
-      resolvePackage('definitely-not-a-real-package')
+      resolvePackage('definitely-not-a-real-package'),
     ).rejects.toMatchObject({
       name: 'PackageNotFoundError',
     })

@@ -18,7 +18,7 @@ export function createAnalysisKey(parts: AnalysisKeyParts): string {
 
 export function createQueueType(
   language: LanguageId,
-  operation: AnalysisOperation
+  operation: AnalysisOperation,
 ): string {
   return `${language}:${operation}`
 }

@@ -47,7 +47,7 @@ import { createAnalysisContextMiddleware } from './server/analysis'
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
     env.BASIC_AUTH_PASSWORD,
-    'Environment variable BASIC_AUTH_PASSWORD is required'
+    'Environment variable BASIC_AUTH_PASSWORD is required',
   )
   invariant(env.NODE_ENV, 'Environment variable NODE_ENV is required')
 
@@ -63,7 +63,7 @@ const env = getEnv(process.env)
 const cache = new Cache()
 const port = env.port
 const dev = env.nodeEnv !== 'production'
-const app = next({ dev, ...(dev ? { webpack: true } : {}) })
+const app = next({ dev })
 const handle = app.getRequestHandler()
 
 app.prepare().then(() => {
@@ -82,7 +82,7 @@ app.prepare().then(() => {
         duration: 1000 * 60 * 5, //  5 mins
         max: 120,
         whiteList: ['127.0.0.1', '::1'],
-      })
+      }),
     )
   }
 
@@ -109,20 +109,20 @@ app.prepare().then(() => {
       gzip: {
         flush: require('zlib').Z_SYNC_FLUSH,
       },
-    })
+    }),
   )
 
   server.use(
     serve('./client/assets/public', {
       maxage: config.CACHE.PUBLIC_ASSETS * 1000,
-    })
+    }),
   )
 
   server.use(
     proxy({
       match: /^\/-\/search/,
       host: 'https://www.npmjs.com',
-    })
+    }),
   )
 
   type Key = {
@@ -150,7 +150,7 @@ app.prepare().then(() => {
       maxRequests: 10,
       whiteList: ['127.0.0.1', '::1'],
     }),
-    buildMiddleware
+    buildMiddleware,
   )
 
   router.get(
@@ -159,7 +159,7 @@ app.prepare().then(() => {
     errorMiddleware,
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-exports'),
-    exportsMiddlware
+    exportsMiddlware,
   )
 
   router.get(
@@ -182,7 +182,7 @@ app.prepare().then(() => {
       maxRequests: 10,
       whiteList: ['127.0.0.1', '::1'],
     }),
-    exportsSizesMiddlware
+    exportsSizesMiddlware,
   )
 
   router.get('/api/recent', async ctx => {
@@ -214,7 +214,7 @@ app.prepare().then(() => {
       }
       ctx.body = await firebaseUtils.getPackageHistory(
         name,
-        Number(ctx.query.limit)
+        Number(ctx.query.limit),
       )
     } catch (err) {
       console.error(err)
@@ -223,7 +223,7 @@ app.prepare().then(() => {
       logger.error(
         'HISTORY',
         err,
-        'HISTORY FAILED: for package' + ctx.query.package
+        'HISTORY FAILED: for package' + ctx.query.package,
       )
       ctx.status = 422
       ctx.body = { type: name, message }
@@ -373,7 +373,7 @@ app.prepare().then(() => {
             return
           }
           ctx.body = await callLocalApi(
-            `/api/exports-sizes?package=${packageName}`
+            `/api/exports-sizes?package=${packageName}`,
           )
           return
         }
@@ -385,7 +385,7 @@ app.prepare().then(() => {
           }
           const limit = Number(args.limit ?? 10)
           ctx.body = await callLocalApi(
-            `/api/package-history?package=${packageName}&limit=${limit}`
+            `/api/package-history?package=${packageName}&limit=${limit}`,
           )
           return
         }
@@ -396,7 +396,7 @@ app.prepare().then(() => {
             return
           }
           ctx.body = await callLocalApi(
-            `/api/similar-packages?package=${packageName}`
+            `/api/similar-packages?package=${packageName}`,
           )
           return
         }
@@ -434,7 +434,7 @@ app.prepare().then(() => {
         ctx.status = 500
         ctx.body = err
       }
-    }
+    },
   )
 
   router.post('/admin/restart', async ctx => {
@@ -456,7 +456,7 @@ app.prepare().then(() => {
     async (ctx, next) => {
       try {
         const { stdout } = await exec.command(
-          'rm -rf /tmp/tmp-build/cache/_cacache /tmp/tmp-build/packages/'
+          'rm -rf /tmp/tmp-build/cache/_cacache /tmp/tmp-build/packages/',
         )
         ctx.body = 'Cache cleared' + stdout
       } catch (err) {
@@ -464,7 +464,7 @@ app.prepare().then(() => {
         ctx.status = 500
         ctx.body = err
       }
-    }
+    },
   )
 
   router.get('/.well-known/api-catalog', async ctx => {

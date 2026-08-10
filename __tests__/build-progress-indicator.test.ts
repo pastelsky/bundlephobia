@@ -9,7 +9,10 @@ describe('BuildProgressIndicator', () => {
     })
 
     expect(
-      indicator.shouldComponentUpdate({ isDone: true, onDone }, indicator.state)
+      indicator.shouldComponentUpdate(
+        { isDone: true, onDone },
+        indicator.state,
+      ),
     ).toBe(true)
   })
 })

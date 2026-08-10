@@ -69,7 +69,7 @@ export const AutocompleteInput = ({
 
   const { name, version } = React.useMemo(
     () => parsePackageString(value),
-    [value]
+    [value],
   )
 
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

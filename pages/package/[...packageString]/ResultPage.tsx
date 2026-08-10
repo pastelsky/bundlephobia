@@ -165,7 +165,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
             ) {
               Router.replace(`/package/${newPackageString}`)
             }
-          }
+          },
         )
 
         Analytics.searchSuccess({
@@ -219,7 +219,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         }
 
         const promises = result.category.similar.map(packageName =>
-          API.getInfo(packageName)
+          API.getInfo(packageName),
         )
 
         Promise.allSettled(promises).then(results => {
@@ -230,9 +230,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
             similarPackages: results
               .filter(
                 (
-                  settledResult
+                  settledResult,
                 ): settledResult is PromiseFulfilledResult<PackageBuildInfo> =>
-                  settledResult.status === 'fulfilled'
+                  settledResult.status === 'fulfilled',
               )
               .map(settledResult => settledResult.value),
           })
@@ -278,7 +278,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
           this.fetchResults(normalizedQuery, requestId)
           this.fetchHistory(normalizedQuery, requestId)
         })
-      }
+      },
     )
   }
 
@@ -329,7 +329,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     })
 
     const sorted = formattedResults.sort((packageA, packageB) =>
-      semver.compare(packageA.version, packageB.version)
+      semver.compare(packageA.version, packageB.version),
     )
 
     return typeof window !== 'undefined' && window.innerWidth < 640
@@ -375,7 +375,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       }`
     } else {
       const parsedPackage = parsePackageString(
-        getPackageStringFromRouter(router)
+        getPackageStringFromRouter(router),
       )
       name = parsedPackage.name
       version = parsedPackage.version
@@ -510,7 +510,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
                         label="Slow 3G"
                         infoText={referenceSpeedInfoText(
                           DownloadSpeed.THREE_G,
-                          'kB/s'
+                          'kB/s',
                         )}
                       />
                       <Stat
@@ -519,7 +519,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
                         label="Emerging 4G"
                         infoText={referenceSpeedInfoText(
                           DownloadSpeed.FOUR_G,
-                          'kB/s'
+                          'kB/s',
                         )}
                       />
                     </div>

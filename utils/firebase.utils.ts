@@ -42,7 +42,7 @@ class FirebaseUtils {
 
   setRecentSearch(
     name: string,
-    packageInfo: { name: string; version?: string }
+    packageInfo: { name: string; version?: string },
   ): void {
     if (!this.firebase) {
       return
@@ -124,7 +124,7 @@ class FirebaseUtils {
           'x-algolia-application-id': process.env.ALGOLIA_APP_ID,
           'x-algolia-api-key': process.env.ALGOLIA_API_KEY,
         },
-      }
+      },
     )
 
     let firebaseHistory: Record<string, Record<string, unknown>> | null
@@ -146,7 +146,7 @@ class FirebaseUtils {
       console.error(error)
       firebaseHistory = await firebasePromise
       versions = Object.keys(firebaseHistory || {}).map(version =>
-        decodeFirebaseKey(version)
+        decodeFirebaseKey(version),
       )
     }
 
@@ -155,7 +155,7 @@ class FirebaseUtils {
       .sort((versionA, versionB) => semver.compare(versionA, versionB))
 
     const limitedVersions = filteredVersions.slice(
-      Math.max(filteredVersions.length - limit, 0)
+      Math.max(filteredVersions.length - limit, 0),
     )
 
     debug('last npm %d %s versions %o', limit, name, limitedVersions)
@@ -237,7 +237,7 @@ class FirebaseUtils {
 
 const firebaseUtils = new FirebaseUtils(
   firebaseSDK,
-  Boolean(process.env.FIREBASE_DATABASE_URL)
+  Boolean(process.env.FIREBASE_DATABASE_URL),
 )
 
 export default firebaseUtils

@@ -14,7 +14,7 @@ describe('memory diagnostics', () => {
 
   beforeEach(() => {
     outputRoot = fs.mkdtempSync(
-      path.join(os.tmpdir(), 'bundlephobia-memory-diagnostics-')
+      path.join(os.tmpdir(), 'bundlephobia-memory-diagnostics-'),
     )
   })
 
@@ -34,9 +34,9 @@ describe('memory diagnostics', () => {
       path.join(
         outputRoot,
         'build-service',
-        '.latest-interrupted.heapsnapshot'
+        '.latest-interrupted.heapsnapshot',
       ),
-      'partial'
+      'partial',
     )
     const report = {
       excludeEnv: false,
@@ -64,21 +64,21 @@ describe('memory diagnostics', () => {
         path.join(
           outputRoot,
           'build-service',
-          '.latest-interrupted.heapsnapshot'
-        )
-      )
+          '.latest-interrupted.heapsnapshot',
+        ),
+      ),
     ).toBe(false)
     expect(
       fs.readFileSync(
         path.join(outputRoot, 'build-service', 'latest.heapsnapshot'),
-        'utf8'
-      )
+        'utf8',
+      ),
     ).toBe('snapshot')
     expect(diagnostics.check()).toBe(false)
     expect(
       fs
         .readdirSync(path.join(outputRoot, 'build-service'))
-        .filter(filename => filename.endsWith('.heapsnapshot'))
+        .filter(filename => filename.endsWith('.heapsnapshot')),
     ).toEqual(['latest.heapsnapshot'])
     diagnostics.stop()
   })
@@ -141,22 +141,22 @@ describe('memory diagnostics', () => {
     expect(diagnostics.check()).toBe(true)
     expect(writeHeapSnapshot).not.toHaveBeenCalled()
     expect(
-      fs.existsSync(path.join(outputRoot, 'main', 'latest.heapsnapshot'))
+      fs.existsSync(path.join(outputRoot, 'main', 'latest.heapsnapshot')),
     ).toBe(false)
 
     const metadata = JSON.parse(
       fs.readFileSync(
         path.join(outputRoot, 'main', 'latest.metadata.json'),
-        'utf8'
-      )
+        'utf8',
+      ),
     )
     expect(metadata.heapSnapshotCaptured).toBe(false)
 
     const capturedTimeline = JSON.parse(
       fs.readFileSync(
         path.join(outputRoot, 'main', 'latest.timeline.json'),
-        'utf8'
-      )
+        'utf8',
+      ),
     )
     expect(capturedTimeline.samples).toHaveLength(1)
     expect(capturedTimeline.samples[0]).toMatchObject({
@@ -188,7 +188,7 @@ describe('memory diagnostics', () => {
           MEMORY_DIAGNOSTICS_SERVICE: 'build-service',
           MEMORY_DIAGNOSTICS_RSS_THRESHOLD: '850M',
         }),
-      })
+      }),
     ).toMatchObject({
       MEMORY_DIAGNOSTICS_SERVICE: 'build-service',
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: '850M',
