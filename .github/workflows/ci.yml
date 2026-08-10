@@ -50,6 +50,8 @@ jobs:
         run: yarn test:recommendations
       - name: Type check
         run: yarn typecheck
+      - name: Check production service syntax
+        run: yarn check:services
       - run: yarn build
         env:
           CI: true
