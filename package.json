@@ -115,7 +115,6 @@
     "prod": "yarn run build && yarn start",
     "test": "jest",
     "typecheck": "tsc --project tsconfig.typecheck.json --noEmit",
-    "check:services": "find build-service cache-service -name '*.js' -print0 | xargs -0 -n1 node --check",
     "test:e2e": "yarn build && playwright test",
     "test:e2e:run": "playwright test",
     "test:e2e:ui": "yarn build && playwright test --ui",
