@@ -457,6 +457,7 @@ export default function TrendsPage() {
                   containerClass="trends-autocomplete"
                   compact
                   suggestionQueries={suggestionQueries}
+                  rankSuggestions
                   onSearchSubmit={handleAddPackage}
                 />
               </div>
