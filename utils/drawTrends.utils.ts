@@ -1,10 +1,14 @@
 import * as fabric from 'fabric/node'
+import { createCanvas, loadImage } from 'canvas'
+import { scaleLinear } from 'd3-scale'
+import { curveMonotoneX, line } from 'd3-shape'
 
 import type {
   TrendsMetric,
   TrendsPackageSeries,
   TrendsPoint,
 } from '../server/trends/types'
+import { getTrendsRangeStart } from '../server/trends/range'
 
 type ThemeName = 'dark' | 'light'
 
@@ -14,7 +18,18 @@ type DrawTrendsImgOptions = {
   theme?: ThemeName
 }
 
+type DrawTrendsSvgOptions = DrawTrendsImgOptions & {
+  range: 'last-2-months' | 'last-year' | 'last-3-years'
+}
+
 const SERIES_COLORS = ['#7cd690', '#65a1f8', '#eb841f', '#82b5b3', '#c084fc']
+const SVG_SERIES_COLORS = [
+  '#3b82f6',
+  '#10b981',
+  '#ec4899',
+  '#06b6d4',
+  '#8b5cf6',
+]
 
 const lightTheme = {
   backgroundColor: '#ffffff',
@@ -90,6 +105,159 @@ function downsample(points: TrendsPoint[], maxPoints: number) {
     sampled.push(last)
   }
   return sampled
+}
+
+const escapeXml = (value: string) =>
+  value.replace(/[&<>"']/g, character => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&apos;',
+    }
+    return entities[character] || character
+  })
+
+/** Render the export from the same vector primitives as the interactive chart. */
+export function drawTrendsSvg({
+  packages,
+  metric,
+  range,
+  theme = 'dark',
+}: DrawTrendsSvgOptions) {
+  const dark = theme === 'dark'
+  const colors = dark
+    ? {
+        background: '#182330',
+        text: '#f0f6fc',
+        muted: '#9aa7b5',
+        grid: 'rgba(255,255,255,0.1)',
+        axis: 'rgba(255,255,255,0.45)',
+      }
+    : {
+        background: '#fff',
+        text: '#212121',
+        muted: '#66707a',
+        grid: '#e8edf2',
+        axis: '#8b949e',
+      }
+  const width = 1200
+  const height = 630
+  const left = 64
+  const right = 36
+  const top = 116
+  const bottom = 74
+  const plotWidth = width - left - right
+  const plotHeight = height - top - bottom
+  const points = packages.flatMap(pack => seriesForMetric(pack, metric))
+  const minTime = Date.parse(getTrendsRangeStart(range))
+  const maxTime = Date.parse(new Date().toISOString().slice(0, 10))
+  const values = points.map(point => point.value)
+  const minValue = values.length ? Math.min(...values) : 0
+  const maxValue = values.length ? Math.max(...values) : 1
+  const padding = Math.max((maxValue - minValue) * 0.08, maxValue * 0.02, 1)
+  const yScale = scaleLinear()
+    .domain([Math.max(0, minValue - padding), maxValue + padding])
+    .nice(4)
+    .range([top + plotHeight, top])
+  const xFor = (date: string) =>
+    left +
+    ((Date.parse(date) - minTime) / Math.max(maxTime - minTime, 1)) * plotWidth
+  const curve = line<{ x: number; y: number }>()
+    .x(point => point.x)
+    .y(point => point.y)
+    .curve(curveMonotoneX)
+  const title =
+    packages.map(pack => pack.name).join(' vs ') || 'Compare packages'
+  const output: string[] = [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeXml(
+      title
+    )} trends">`,
+    `<rect width="100%" height="100%" fill="${colors.background}"/>`,
+    `<text x="36" y="40" fill="${colors.muted}" font-family="Arial,sans-serif" font-size="18" font-weight="600" letter-spacing="1.2">BUNDLEPHOBIA TRENDS</text>`,
+    `<text x="36" y="82" fill="${
+      colors.text
+    }" font-family="Arial,sans-serif" font-size="30" font-weight="700">${escapeXml(
+      title.slice(0, 72)
+    )}</text>`,
+    `<text x="${width - 36}" y="40" text-anchor="end" fill="${
+      colors.muted
+    }" font-family="Arial,sans-serif" font-size="16">${escapeXml(
+      metricLabel(metric)
+    )}</text>`,
+  ]
+
+  for (let index = 0; index <= 4; index += 1) {
+    const y = top + (plotHeight * index) / 4
+    output.push(
+      `<line x1="${left}" y1="${y}" x2="${
+        left + plotWidth
+      }" y2="${y}" stroke="${colors.grid}"/>`,
+      `<text x="${left - 12}" y="${y + 5}" text-anchor="end" fill="${
+        colors.axis
+      }" font-family="Arial,sans-serif" font-size="14">${escapeXml(
+        formatCompact(yScale.invert(y), metric)
+      )}</text>`
+    )
+  }
+
+  packages.forEach((pack, index) => {
+    const color = SVG_SERIES_COLORS[index % SVG_SERIES_COLORS.length]
+    const seriesPoints = seriesForMetric(pack, metric).map(point => ({
+      x: xFor(point.date),
+      y: yScale(point.value),
+      partial: point.partial,
+    }))
+    const completePath = curve(seriesPoints.filter(point => !point.partial))
+    const partialPath = curve(seriesPoints.filter(point => point.partial))
+    if (completePath)
+      output.push(
+        `<path d="${completePath}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`
+      )
+    if (partialPath)
+      output.push(
+        `<path d="${partialPath}" fill="none" stroke="${color}" stroke-width="2.2" stroke-dasharray="3 4" stroke-linecap="round" opacity="0.8"/>`
+      )
+    seriesPoints.forEach(point =>
+      output.push(
+        `<circle cx="${point.x}" cy="${point.y}" r="3" fill="${color}" stroke="${colors.background}" stroke-width="1"/>`
+      )
+    )
+    const legendX = 36 + index * 210
+    output.push(
+      `<circle cx="${legendX}" cy="${height - 30}" r="4" fill="${color}"/>`,
+      `<text x="${legendX + 12}" y="${height - 25}" fill="${
+        colors.text
+      }" font-family="monospace" font-size="15">${escapeXml(pack.name)}</text>`
+    )
+  })
+
+  output.push(
+    `<line x1="${left}" y1="${top + plotHeight}" x2="${left + plotWidth}" y2="${
+      top + plotHeight
+    }" stroke="${colors.axis}"/>`,
+    `<text x="${left}" y="${height - 8}" fill="${
+      colors.axis
+    }" font-family="Arial,sans-serif" font-size="13">${new Date(minTime)
+      .toISOString()
+      .slice(0, 10)}</text>`,
+    `<text x="${left + plotWidth}" y="${height - 8}" text-anchor="end" fill="${
+      colors.axis
+    }" font-family="Arial,sans-serif" font-size="13">${new Date(maxTime)
+      .toISOString()
+      .slice(0, 10)}</text>`,
+    '</svg>'
+  )
+  return output.join('')
+}
+
+export async function drawTrendsPng(options: DrawTrendsSvgOptions) {
+  const svg = drawTrendsSvg(options)
+  const canvas = createCanvas(1200, 630)
+  const image = await loadImage(Buffer.from(svg))
+  canvas.getContext('2d').drawImage(image, 0, 0)
+  return canvas.createPNGStream()
 }
 
 export function drawTrendsImg({

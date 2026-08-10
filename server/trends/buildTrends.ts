@@ -68,7 +68,7 @@ async function buildPackageSeries(
 
   const [githubResult, sizeResult] = await Promise.all([
     repository
-      ? fetchGithubTrendSeries(repository).catch(() => ({
+      ? fetchGithubTrendSeries(repository, range).catch(() => ({
           stars: [],
           issues: [],
           currentStars: null as number | null,
@@ -99,12 +99,14 @@ async function buildPackageSeries(
   const stars = rollupPoints(
     filterPointsByRange(githubResult.stars, range),
     groupBy,
-    'last'
+    'last',
+    true
   )
   const issues = rollupPoints(
     filterPointsByRange(githubResult.issues, range),
     groupBy,
-    'last'
+    'last',
+    true
   )
   const size = rollupPoints(
     filterPointsByRange(sizeResult.points, range),

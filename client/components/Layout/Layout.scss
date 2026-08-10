@@ -138,6 +138,19 @@ footer {
   }
 }
 
+.footer__links {
+  display: flex;
+  gap: $global-spacing * 1.5;
+  margin-top: $global-spacing * 1.5;
+
+  a {
+    @include font-size-xxs;
+    color: var(--color-footer-text);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+}
+
 .footer__zeit-logo {
   width: $global-spacing;
   height: $global-spacing;

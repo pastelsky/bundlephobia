@@ -21,45 +21,88 @@ const PageNav = ({ minimal }: PageNavProps) => (
       </section>
     )}
     <section className="page-header--right-section">
-      <ul className="page-header__quicklinks">
-        <li>
-          <a
-            target="_blank"
-            rel="noreferrer noopener"
-            href="https://badgen.net/#bundlephobia"
-          >
-            Badges
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            rel="noreferrer noopener"
-            href="https://github.com/sponsors/pastelsky"
-          >
-            Sponsor
-          </a>
-        </li>
-        <li>
-          <Link href="/blog">Blog</Link>
-        </li>
-        <li>
-          <Link href="/compare">Compare</Link>
-        </li>
-        <li>
-          <Link href="/trends">Trends</Link>
-        </li>
-        {!minimal && (
+      <nav className="page-header__navigation" aria-label="Primary navigation">
+        <ul className="page-header__quicklinks">
           <li>
-            <Link href="/scan">Scan package.json</Link>
+            <a
+              target="_blank"
+              rel="noreferrer noopener"
+              href="https://badgen.net/#bundlephobia"
+            >
+              Badges
+            </a>
           </li>
-        )}
-      </ul>
-      <McpNavPopup />
-      <a target="_blank" href="https://github.com/pastelsky/bundlephobia">
-        <GithubLogo />
-      </a>
-      <ThemeToggle />
+          <li>
+            <a
+              target="_blank"
+              rel="noreferrer noopener"
+              href="https://github.com/sponsors/pastelsky"
+            >
+              Sponsor
+            </a>
+          </li>
+          <li>
+            <Link href="/compare">Compare</Link>
+          </li>
+          <li>
+            <Link href="/trends">Trends</Link>
+          </li>
+          {!minimal && (
+            <li>
+              <Link href="/scan">Scan package.json</Link>
+            </li>
+          )}
+        </ul>
+      </nav>
+      <div className="page-header__utilities">
+        <details className="page-header__mobile-menu">
+          <summary aria-label="Open navigation menu">Menu</summary>
+          <nav aria-label="Mobile navigation">
+            <ul>
+              <li>
+                <a
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  href="https://badgen.net/#bundlephobia"
+                >
+                  Badges
+                </a>
+              </li>
+              <li>
+                <a
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  href="https://github.com/sponsors/pastelsky"
+                >
+                  Sponsor
+                </a>
+              </li>
+              <li>
+                <Link href="/compare">Compare</Link>
+              </li>
+              <li>
+                <Link href="/trends">Trends</Link>
+              </li>
+              {!minimal && (
+                <li>
+                  <Link href="/scan">Scan package.json</Link>
+                </li>
+              )}
+            </ul>
+          </nav>
+        </details>
+        <McpNavPopup />
+        <a
+          className="page-header__github-link"
+          target="_blank"
+          rel="noreferrer noopener"
+          href="https://github.com/pastelsky/bundlephobia"
+          aria-label="Bundlephobia on GitHub"
+        >
+          <GithubLogo />
+        </a>
+        <ThemeToggle />
+      </div>
     </section>
   </header>
 )

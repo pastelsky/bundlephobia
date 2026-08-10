@@ -62,6 +62,9 @@ export default class Layout extends Component<LayoutProps> {
                   <DigitalOceanLogo className="footer__sponsor-logo" />
                 </a>
               </div>
+              <nav className="footer__links" aria-label="Footer navigation">
+                <Link href="/blog">Blog</Link>
+              </nav>
             </div>
             <div className="footer__credits">
               <Heart className="footer__credits__heart" />️

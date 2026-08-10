@@ -5,6 +5,8 @@ type ComparisonGroup = {
 }
 
 export const TRUSTED_SIMILARITY_SCORE = 12
+export const RECOMMENDATION_SCORE_FLOOR = 44
+export const DEFAULT_RECOMMENDATION_LIMIT = 10
 
 // Broad, foundational packages need a purpose-level peer set. A token classifier
 // cannot reliably distinguish a framework from the plugins built for it.
@@ -36,7 +38,7 @@ type RecommendationInput = {
 export function getTrendsRecommendations({
   packages,
   similarResults,
-  limit = 5,
+  limit = DEFAULT_RECOMMENDATION_LIMIT,
 }: RecommendationInput) {
   const selected = new Set(
     packages.map(packageName => packageName.toLowerCase())
@@ -67,9 +69,18 @@ export function getTrendsRecommendations({
 
   similarResults.forEach(result => {
     if (!result || result.category.score < TRUSTED_SIMILARITY_SCORE) return
-    result.category.similar.forEach((packageName, index) =>
-      add(packageName, 60 - index / 100)
-    )
+    // Keep walking down the ranked similar-package list, but stop when the
+    // confidence-adjusted rank falls below the relevance floor. This gives
+    // the UI a deeper pool without allowing the tail of a weak classifier
+    // match to become a recommendation.
+    const categoryScore = Math.min(result.category.score, 300)
+    const categoryBaseScore = Math.min(80, 50 + categoryScore / 10)
+    result.category.similar.forEach((packageName, index) => {
+      const candidateScore = categoryBaseScore - index
+      if (candidateScore >= RECOMMENDATION_SCORE_FLOOR) {
+        add(packageName, candidateScore)
+      }
+    })
   })
 
   const recommendations = Array.from(scores.values())
@@ -83,7 +94,7 @@ export function getTrendsRecommendations({
 
   return {
     recommendations,
-    // These exact, high-confidence names improve autocomplete recall without
+    // These confidence-filtered names improve autocomplete recall without
     // leaking classifier tags such as “animation” into framework suggestions.
     autocompleteQueries: recommendations,
   }

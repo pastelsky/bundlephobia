@@ -2,7 +2,11 @@
 @import '../../../stylesheets/colors';
 
 .page-header {
-  padding: $global-spacing * 3;
+  width: 100%;
+  max-width: $layout-max-width;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: $layout-gutter;
   padding-bottom: $global-spacing * 2;
   display: flex;
   align-items: center;
@@ -16,7 +20,36 @@
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $global-spacing * 2;
+  min-width: 0;
+}
+
+.page-header__utilities {
+  display: flex;
+  align-items: center;
+  gap: $global-spacing * 0.75;
+}
+
+.page-header__github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--color-icon-secondary);
+  border-radius: 6px;
+  transition: color 0.2s, background-color 0.2s;
+
+  &:hover {
+    color: var(--color-icon-hover);
+    background: var(--color-background-primary);
+  }
+
+  svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .logo-small {
@@ -35,9 +68,11 @@
 
 .page-header__quicklinks {
   list-style: none;
-  margin: 0 2rem 0 0;
-  font-weight: $font-weight-light;
+  margin: 0;
+  padding: 0;
   display: flex;
+  align-items: center;
+  gap: $global-spacing * 1.5;
 
   a {
     @include font-size-xs;
@@ -53,22 +88,106 @@
     }
   }
 
-  li + li {
-    margin-left: $global-spacing * 2;
+  @media screen and (max-width: 40em) {
+    display: none;
+  }
+}
+
+.page-header__navigation {
+  display: flex;
+  align-items: center;
+}
+
+.page-header__mobile-menu {
+  display: none;
+}
+
+@media screen and (max-width: 40em) {
+  .page-header {
+    justify-content: space-between;
+    gap: $global-spacing;
   }
 
-  @media screen and (max-width: 40em) {
-    max-width: none;
-    margin-right: 0;
-    align-items: center;
-    justify-content: flex-end;
+  .page-header--right-section {
+    gap: $global-spacing * 0.75;
+  }
 
-    li {
-      display: none;
+  .page-header__navigation {
+    display: none;
+  }
+
+  .page-header__utilities {
+    gap: $global-spacing * 0.5;
+  }
+
+  .page-header__mobile-menu {
+    display: block;
+    position: relative;
+
+    summary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 32px;
+      padding: 0 $global-spacing * 0.75;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--color-nav-link);
+      @include font-size-xxs;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      cursor: pointer;
+      list-style: none;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &:hover,
+      &:focus-visible {
+        color: var(--color-text-primary);
+        border-color: var(--color-border-subtle);
+      }
     }
 
-    li:nth-child(4) {
+    &[open] summary {
+      color: var(--color-text-primary);
+      background: var(--color-background-primary);
+      border-color: var(--color-border-subtle);
+    }
+
+    nav {
+      position: absolute;
+      z-index: 20;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 190px;
+      padding: $global-spacing * 0.5;
+      background: var(--color-bg-base);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    a {
       display: block;
+      padding: $global-spacing * 0.75 $global-spacing;
+      color: var(--color-text-secondary);
+      @include font-size-xs;
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--color-text-primary);
+        background: var(--color-background-primary);
+      }
     }
   }
 }
@@ -91,6 +210,8 @@
   border: none;
   background: transparent;
   cursor: pointer;
+  min-height: 32px;
+  padding: 0 $global-spacing * 0.5;
   transition: opacity 0.2s;
 
   &:hover {

@@ -13,7 +13,7 @@ describe('trends recommendations', () => {
           similar(5, ['react-spring', 'framer-motion', 'react-motion']),
         ],
       }).recommendations
-    ).toEqual(['preact', 'vue', 'svelte', 'solid-js', '@angular/core'])
+    ).toEqual(['preact', 'vue', 'svelte', 'solid-js', '@angular/core', 'lit'])
   })
 
   it('uses the curated similar-package list when classification is confident', () => {
@@ -41,5 +41,15 @@ describe('trends recommendations', () => {
         similarResults: [similar(11, ['unrelated-plugin'])],
       }).recommendations
     ).toEqual([])
+  })
+
+  it('keeps lower-ranked candidates above the relevance floor', () => {
+    const candidates = Array.from({ length: 12 }, (_, index) => `peer-${index}`)
+    expect(
+      getTrendsRecommendations({
+        packages: ['source-package'],
+        similarResults: [similar(120, candidates)],
+      }).recommendations
+    ).toEqual(candidates.slice(0, 10))
   })
 })

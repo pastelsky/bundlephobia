@@ -1,14 +1,6 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import anime from 'animejs'
 import { bisector } from 'd3-array'
-import {
-  autoUpdate,
-  computePosition,
-  flip,
-  offset,
-  shift,
-  type VirtualElement,
-} from '@floating-ui/dom'
 
 import type {
   TrendsGroupBy,
@@ -38,6 +30,7 @@ const useIsomorphicLayoutEffect =
 
 const DRAW_DURATION = 760
 const CHART_EASING = 'easeOutCubic'
+const DOT_MAGNET_RADIUS = 9
 
 type TrendsChartProps = {
   packages: TrendsPackageSeries[]
@@ -60,6 +53,23 @@ function nearestPoint(points: TrendsPoint[], timestamp: number) {
   ]
 }
 
+function lineYAtX(points: Array<{ x: number; y: number }>, x: number) {
+  if (points.length === 0) return null
+  if (x <= points[0].x) return points[0].y
+  const last = points[points.length - 1]
+  if (x >= last.x) return last.y
+
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1]
+    const current = points[index]
+    if (x > current.x) continue
+    const span = current.x - previous.x || 1
+    const progress = (x - previous.x) / span
+    return previous.y + (current.y - previous.y) * progress
+  }
+  return last.y
+}
+
 export default function TrendsChart({
   packages,
   metric,
@@ -71,18 +81,32 @@ export default function TrendsChart({
   loading = false,
 }: TrendsChartProps) {
   const [mounted, setMounted] = useState(false)
-  const [showLoader, setShowLoader] = useState(loading)
+  const [showLoader, setShowLoader] = useState(loading && packages.length === 0)
   const [hover, setHover] = useState<{
     x: number
     y: number
+    cursorX: number
+    cursorY: number
     timestamp: number
-    pointKey?: string
+    pointDate?: string
+    seriesName?: string
   } | null>(null)
   const chartSeriesRef = useRef<HTMLDivElement>(null)
   const loaderRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [chartWidth, setChartWidth] = useState(INITIAL_CHART_WIDTH)
+  const animatedSeriesRef = useRef<Set<string>>(new Set())
+  const animationContextRef = useRef<{
+    metric: TrendsMetric
+    range: TrendsRange
+    groupBy: TrendsGroupBy
+  } | null>(null)
+  const [visibleAnnotations, setVisibleAnnotations] = useState<Set<string>>(
+    new Set()
+  )
+
+  const incrementalLoading = loading && packages.length > 0
 
   useIsomorphicLayoutEffect(() => {
     const chart = chartSeriesRef.current
@@ -97,11 +121,15 @@ export default function TrendsChart({
     const observer = new ResizeObserver(updateChartWidth)
     observer.observe(chart)
     return () => observer.disconnect()
-  }, [])
+  }, [mounted])
 
   useIsomorphicLayoutEffect(() => {
-    if (loading) {
+    if (loading && !incrementalLoading) {
       setShowLoader(true)
+      return
+    }
+    if (incrementalLoading) {
+      setShowLoader(false)
       return
     }
     if (!showLoader || !chartSeriesRef.current || !loaderRef.current) return
@@ -125,7 +153,7 @@ export default function TrendsChart({
       chartAnimation.pause()
       loaderAnimation.pause()
     }
-  }, [loading])
+  }, [incrementalLoading, loading, showLoader])
 
   React.useEffect(() => setMounted(true), [])
 
@@ -134,6 +162,7 @@ export default function TrendsChart({
       buildChartModel({
         packages,
         metric,
+        range,
         groupBy,
         showMajorReleases,
         showMinorReleases,
@@ -157,19 +186,50 @@ export default function TrendsChart({
   useIsomorphicLayoutEffect(() => {
     if (!plotWidth || loading || !chartSeriesRef.current) return
     const root = chartSeriesRef.current
+    const context = { metric, range, groupBy }
+    const previousContext = animationContextRef.current
+    const contextChanged =
+      !previousContext ||
+      previousContext.metric !== context.metric ||
+      previousContext.range !== context.range ||
+      previousContext.groupBy !== context.groupBy
+    const currentNames = new Set(model?.series.map(series => series.name) || [])
+    const namesToAnimate = contextChanged
+      ? currentNames
+      : new Set(
+          [...currentNames].filter(name => !animatedSeriesRef.current.has(name))
+        )
+    animationContextRef.current = context
+    if (namesToAnimate.size === 0) return
+
+    setVisibleAnnotations(previous => {
+      const next = contextChanged ? new Set<string>() : new Set(previous)
+      namesToAnimate.forEach(name => next.delete(name))
+      return next
+    })
+
     const clips = Array.from(
       root.querySelectorAll<SVGRectElement>('[data-series-clip]')
-    )
+    ).filter(clip => namesToAnimate.has(clip.dataset.seriesName || ''))
     const dots = Array.from(
       root.querySelectorAll<SVGCircleElement>('[data-series-dot]')
-    )
+    ).filter(dot => namesToAnimate.has(dot.dataset.seriesName || ''))
+    const lineAnimation = anime({
+      targets: clips,
+      width: [0, plotWidth],
+      duration: DRAW_DURATION,
+      easing: CHART_EASING,
+      complete: () => {
+        namesToAnimate.forEach(name => animatedSeriesRef.current.add(name))
+        setVisibleAnnotations(previous => {
+          const next = new Set(previous)
+          namesToAnimate.forEach(name => next.add(name))
+          return next
+        })
+      },
+    })
     const animations = [
-      anime({
-        targets: clips,
-        width: [0, plotWidth],
-        duration: DRAW_DURATION,
-        easing: CHART_EASING,
-      }),
+      lineAnimation,
       anime({
         targets: dots,
         r: [0, 4.15, 2.65],
@@ -181,37 +241,35 @@ export default function TrendsChart({
       }),
     ]
     return () => animations.forEach(animation => animation.pause())
-  }, [animationKey, loading, plotWidth])
+  }, [animationKey, groupBy, loading, metric, plotWidth, range])
 
   useIsomorphicLayoutEffect(() => {
     const tooltip = tooltipRef.current
     const svg = svgRef.current
     if (!hover || !tooltip || !svg) return
 
-    const reference: VirtualElement = {
-      getBoundingClientRect: () => {
-        const rect = svg.getBoundingClientRect()
-        const x = rect.left + (hover.x / chartWidth) * rect.width
-        const y = rect.top + (hover.y / CHART_HEIGHT) * rect.height
-        return new DOMRect(x, y, 0, 0)
-      },
-    }
     const update = () => {
-      computePosition(reference, tooltip, {
-        strategy: 'fixed',
-        placement: hover.x / chartWidth > 0.7 ? 'left-start' : 'right-start',
-        middleware: [offset(12), flip(), shift({ padding: 8 })],
-      }).then(({ x, y, strategy }) => {
-        Object.assign(tooltip.style, {
-          position: strategy,
-          left: `${x}px`,
-          top: `${y}px`,
-        })
+      const rect = svg.getBoundingClientRect()
+      const cursorX = rect.left + (hover.cursorX / chartWidth) * rect.width
+      const cursorY = rect.top + (hover.cursorY / CHART_HEIGHT) * rect.height
+      const gap = 14
+      const maxLeft = window.innerWidth - tooltip.offsetWidth - 8
+      const left = Math.max(8, Math.min(cursorX + gap, maxLeft))
+      const below = cursorY + gap
+      const top =
+        below + tooltip.offsetHeight <= window.innerHeight - 8
+          ? below
+          : Math.max(8, cursorY - tooltip.offsetHeight - gap)
+      Object.assign(tooltip.style, {
+        position: 'fixed',
+        left: `${left}px`,
+        top: `${top}px`,
       })
     }
 
     update()
-    return autoUpdate(svg, tooltip, update)
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
   }, [hover, chartWidth])
 
   if (!mounted) {
@@ -225,7 +283,13 @@ export default function TrendsChart({
       ? packages.map((pack, index) => ({
           name: pack.name,
           color: TRENDS_SERIES_COLORS[index % TRENDS_SERIES_COLORS.length],
-          point: nearestPoint(seriesForMetric(pack, metric), hover.timestamp),
+          point: nearestPoint(
+            [
+              ...seriesForMetric(pack, metric),
+              ...(model.series[index]?.releaseMarkers || []),
+            ],
+            hover.timestamp
+          ),
         }))
       : []
   const tooltipAnnotations =
@@ -243,6 +307,12 @@ export default function TrendsChart({
         {actions && <div className="trends-chart__actions">{actions}</div>}
         <div className="trends-chart__plot">
           <div className="trends-chart__series" ref={chartSeriesRef}>
+            {!model && !showLoader && (
+              <div className="trends-chart__no-data" role="status">
+                <strong>No {metric} data points are available.</strong>
+                <span>Try another metric or time range.</span>
+              </div>
+            )}
             {model && (
               <svg
                 ref={svgRef}
@@ -279,9 +349,11 @@ export default function TrendsChart({
                       : null
                   const nearestPoint = model.series
                     .flatMap(series =>
-                      [...series.markers, ...series.partialMarkers].map(
-                        point => ({ point, seriesName: series.name })
-                      )
+                      [
+                        ...series.markers,
+                        ...series.partialMarkers,
+                        ...series.releaseMarkers,
+                      ].map(point => ({ point, seriesName: series.name }))
                     )
                     .reduce<
                       | {
@@ -290,15 +362,11 @@ export default function TrendsChart({
                         }
                       | undefined
                     >((nearest, candidate) => {
-                      const candidateDistance = Math.hypot(
-                        candidate.point.x - clampedX,
-                        candidate.point.y - relativeY
+                      const candidateDistance = Math.abs(
+                        candidate.point.x - clampedX
                       )
                       const nearestDistance = nearest
-                        ? Math.hypot(
-                            nearest.point.x - clampedX,
-                            nearest.point.y - relativeY
-                          )
+                        ? Math.abs(nearest.point.x - clampedX)
                         : Number.POSITIVE_INFINITY
                       return candidateDistance < nearestDistance
                         ? candidate
@@ -306,12 +374,30 @@ export default function TrendsChart({
                     }, undefined)
                   const magneticPoint =
                     nearestPoint &&
-                    Math.hypot(
-                      nearestPoint.point.x - clampedX,
-                      nearestPoint.point.y - relativeY
-                    ) <= 28
+                    Math.abs(nearestPoint.point.x - clampedX) <=
+                      DOT_MAGNET_RADIUS
                       ? nearestPoint
                       : null
+                  const nearestLine = model.series
+                    .map(series => {
+                      const linePoints = [
+                        ...series.points,
+                        ...series.partialPoints,
+                      ].sort((pointA, pointB) => pointA.x - pointB.x)
+                      const lineY = lineYAtX(linePoints, clampedX)
+                      return {
+                        name: series.name,
+                        distance:
+                          lineY === null
+                            ? Number.POSITIVE_INFINITY
+                            : Math.abs(lineY - relativeY),
+                      }
+                    })
+                    .sort((lineA, lineB) => lineA.distance - lineB.distance)[0]
+                  const hoveredSeries =
+                    nearestLine && nearestLine.distance <= 18
+                      ? nearestLine.name
+                      : undefined
                   const hoverX =
                     magneticPoint?.point.x ?? snappedAnnotation?.x ?? clampedX
                   const timestamp = magneticPoint
@@ -329,10 +415,13 @@ export default function TrendsChart({
                         PLOT.top + 36,
                         Math.min(CHART_HEIGHT - 42, relativeY)
                       ),
+                    cursorX: clampedX,
+                    cursorY: relativeY,
                     timestamp,
-                    pointKey: magneticPoint
-                      ? `${magneticPoint.seriesName}-${magneticPoint.point.date}`
+                    pointDate: magneticPoint
+                      ? magneticPoint.point.date
                       : undefined,
+                    seriesName: hoveredSeries,
                   })
                 }}
               >
@@ -344,6 +433,7 @@ export default function TrendsChart({
                     >
                       <rect
                         data-series-clip
+                        data-series-name={series.name}
                         x={PLOT.left}
                         y={PLOT.top}
                         width="0"
@@ -386,10 +476,10 @@ export default function TrendsChart({
                       x1={model.xFor(tick.toISOString().slice(0, 10))}
                       x2={model.xFor(tick.toISOString().slice(0, 10))}
                       y1={PLOT.top + model.plotHeight}
-                      y2={PLOT.top + model.plotHeight + 4}
+                      y2={PLOT.top + model.plotHeight + 6}
                     />
                     <text
-                      className="trends-chart__axis-label"
+                      className="trends-chart__axis-label trends-chart__axis-label--x"
                       x={model.xFor(tick.toISOString().slice(0, 10))}
                       y={CHART_HEIGHT - 10}
                       textAnchor={
@@ -432,13 +522,32 @@ export default function TrendsChart({
                     clipPath={`url(#trends-series-clip-${index})`}
                   >
                     <path
-                      className="trends-chart__line"
+                      className={[
+                        'trends-chart__line',
+                        hover?.seriesName === series.name
+                          ? 'trends-chart__line--active'
+                          : hover?.seriesName
+                          ? 'trends-chart__line--dimmed'
+                          : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                       d={pathFor(series.points)}
                       stroke={series.color}
                     />
                     {series.partialPoints.length > 1 && (
                       <path
-                        className="trends-chart__line trends-chart__line--partial"
+                        className={[
+                          'trends-chart__line',
+                          'trends-chart__line--partial',
+                          hover?.seriesName === series.name
+                            ? 'trends-chart__line--active'
+                            : hover?.seriesName
+                            ? 'trends-chart__line--dimmed'
+                            : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
                         d={pathFor(series.partialPoints)}
                         stroke={series.color}
                       />
@@ -447,11 +556,21 @@ export default function TrendsChart({
                       <circle
                         key={`${series.name}-${point.date}`}
                         data-series-dot
+                        data-series-name={series.name}
                         data-delay={Math.round(
                           ((point.x - PLOT.left) / model.plotWidth) *
                             DRAW_DURATION
                         )}
-                        className="trends-chart__series-dot"
+                        className={[
+                          'trends-chart__series-dot',
+                          hover?.seriesName === series.name
+                            ? 'trends-chart__series-dot--active'
+                            : hover?.seriesName
+                            ? 'trends-chart__series-dot--dimmed'
+                            : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
                         cx={point.x}
                         cy={point.y}
                         r="0"
@@ -463,8 +582,19 @@ export default function TrendsChart({
                       <circle
                         key={`${series.name}-${point.date}-partial`}
                         data-series-dot
+                        data-series-name={series.name}
                         data-delay={DRAW_DURATION}
-                        className="trends-chart__series-dot trends-chart__series-dot--partial"
+                        className={[
+                          'trends-chart__series-dot',
+                          'trends-chart__series-dot--partial',
+                          hover?.seriesName === series.name
+                            ? 'trends-chart__series-dot--active'
+                            : hover?.seriesName
+                            ? 'trends-chart__series-dot--dimmed'
+                            : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
                         cx={point.x}
                         cy={point.y}
                         r="0"
@@ -472,11 +602,12 @@ export default function TrendsChart({
                         opacity="0"
                       />
                     ))}
-                    {[...series.markers, ...series.partialMarkers]
-                      .filter(
-                        point =>
-                          hover?.pointKey === `${series.name}-${point.date}`
-                      )
+                    {[
+                      ...series.markers,
+                      ...series.partialMarkers,
+                      ...series.releaseMarkers,
+                    ]
+                      .filter(point => hover?.pointDate === point.date)
                       .map(point => (
                         <circle
                           key={`${series.name}-${point.date}-magnet`}
@@ -485,27 +616,60 @@ export default function TrendsChart({
                           cy={point.y}
                           r="6"
                           stroke={series.color}
+                          fill={
+                            point.placeholder
+                              ? 'var(--color-text-muted)'
+                              : 'none'
+                          }
                         />
                       ))}
+                    {series.releaseMarkers.map(point => (
+                      <circle
+                        key={`${series.name}-${point.date}-${point.version}-release`}
+                        data-series-dot
+                        data-series-name={series.name}
+                        className="trends-chart__series-dot trends-chart__series-dot--placeholder"
+                        cx={point.x}
+                        cy={point.y}
+                        r="3"
+                        fill="var(--color-text-muted)"
+                        opacity="0.85"
+                      />
+                    ))}
                   </g>
                 ))}
                 {model.seriesAnnotations.map(annotation => (
                   <g
                     key={`${annotation.name}-annotation`}
-                    className="trends-chart__series-annotation"
+                    className={[
+                      'trends-chart__series-annotation',
+                      visibleAnnotations.has(annotation.name)
+                        ? 'trends-chart__series-annotation--visible'
+                        : '',
+                      hover?.seriesName === annotation.name
+                        ? 'trends-chart__series-annotation--active'
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                   >
-                    <path
-                      d={annotationPath(annotation)}
-                      stroke={annotation.color}
-                    />
-                    <text
-                      x={annotation.labelX}
-                      y={annotation.labelY}
-                      textAnchor="start"
-                      fill={annotation.color}
+                    <a
+                      href={`/package/${annotation.name}`}
+                      className="trends-chart__series-annotation-link"
                     >
-                      {annotation.name}
-                    </text>
+                      <path
+                        d={annotationPath(annotation)}
+                        stroke={annotation.color}
+                      />
+                      <text
+                        x={annotation.labelX}
+                        y={annotation.labelY}
+                        textAnchor="start"
+                        fill={annotation.color}
+                      >
+                        {annotation.name}
+                      </text>
+                    </a>
                   </g>
                 ))}
                 {hover && (
@@ -536,19 +700,35 @@ export default function TrendsChart({
                         />
                         <span className="trends-chart__tooltip-name">
                           {row.name}
-                          {row.point.partial ? ' (in progress)' : ''}
+                          {row.point.version ? ` v${row.point.version}` : ''}
+                          {(
+                            row.point as TrendsPoint & { placeholder?: boolean }
+                          ).placeholder
+                            ? ' (size unavailable)'
+                            : row.point.partial
+                            ? ' (in progress)'
+                            : ''}
                         </span>
-                        <span className="trends-chart__tooltip-value">
-                          <span>
-                            {formatMetricValue(row.point.value, metric).value}
-                          </span>
-                          {formatMetricValue(row.point.value, metric).unit && (
-                            <span className="trends-chart__tooltip-unit">
-                              {' '}
-                              {formatMetricValue(row.point.value, metric).unit}
+                        {(row.point as TrendsPoint & { placeholder?: boolean })
+                          .placeholder ? (
+                          <span className="trends-chart__tooltip-unit">—</span>
+                        ) : (
+                          <span className="trends-chart__tooltip-value">
+                            <span>
+                              {formatMetricValue(row.point.value, metric).value}
                             </span>
-                          )}
-                        </span>
+                            {formatMetricValue(row.point.value, metric)
+                              .unit && (
+                              <span className="trends-chart__tooltip-unit">
+                                {' '}
+                                {
+                                  formatMetricValue(row.point.value, metric)
+                                    .unit
+                                }
+                              </span>
+                            )}
+                          </span>
+                        )}
                       </div>
                     )
                 )}

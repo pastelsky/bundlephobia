@@ -2,7 +2,11 @@
 @import '../../../stylesheets/colors';
 
 .page-header {
-  padding: $global-spacing * 3;
+  width: 100%;
+  max-width: $layout-max-width;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: $layout-gutter;
   padding-bottom: $global-spacing * 2;
   display: flex;
   align-items: center;

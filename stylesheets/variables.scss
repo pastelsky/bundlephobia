@@ -120,6 +120,8 @@ $font-family-code: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier
 
 // Padding / Spacing
 $global-spacing: 10px;
+$layout-max-width: 1200px;
+$layout-gutter: $global-spacing * 3;
 
 // Content width
 $max-content-width: $global-spacing * 85;

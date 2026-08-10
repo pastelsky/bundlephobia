@@ -1,11 +1,12 @@
 import { scaleLinear } from 'd3-scale'
-import { curveMonotoneX, line, linkHorizontal } from 'd3-shape'
+import { curveMonotoneX, line } from 'd3-shape'
 
 import type {
   TrendsGroupBy,
   TrendsMetric,
   TrendsPackageSeries,
   TrendsPoint,
+  TrendsRange,
 } from '../../client/api'
 import { formatSize } from '../../utils'
 
@@ -14,14 +15,18 @@ export const INITIAL_CHART_WIDTH = 1000
 export const PLOT = { top: 12, right: 0, bottom: 34, left: 0 }
 
 export const TRENDS_SERIES_COLORS = [
-  '#3b82f6',
-  '#10b981',
-  '#ec4899',
-  '#06b6d4',
-  '#8b5cf6',
+  'var(--trends-series-1)',
+  'var(--trends-series-2)',
+  'var(--trends-series-3)',
+  'var(--trends-series-4)',
+  'var(--trends-series-5)',
 ]
 
-export type ChartPoint = TrendsPoint & { x: number; y: number }
+export type ChartPoint = TrendsPoint & {
+  x: number
+  y: number
+  placeholder?: boolean
+}
 export type ChartSeries = {
   name: string
   color: string
@@ -29,6 +34,7 @@ export type ChartSeries = {
   partialPoints: ChartPoint[]
   partialMarkers: ChartPoint[]
   markers: ChartPoint[]
+  releaseMarkers: ChartPoint[]
 }
 
 export type SeriesAnnotation = {
@@ -96,17 +102,10 @@ export function pathFor(points: ChartPoint[]) {
 }
 
 export function annotationPath(annotation: SeriesAnnotation) {
-  return (
-    linkHorizontal<
-      { source: { x: number; y: number }; target: { x: number; y: number } },
-      { x: number; y: number }
-    >()
-      .x(point => point.x)
-      .y(point => point.y)({
-      source: annotation.point,
-      target: { x: annotation.labelX - 5, y: annotation.labelY + 4 },
-    }) || ''
-  )
+  const targetX = annotation.labelX - 5
+  const targetY = annotation.labelY + 4
+  const controlX = annotation.point.x + (targetX - annotation.point.x) * 0.72
+  return `M ${annotation.point.x} ${annotation.point.y} Q ${controlX} ${targetY} ${targetX} ${targetY}`
 }
 
 export function partialLinkThreshold(groupBy: TrendsGroupBy) {
@@ -115,9 +114,60 @@ export function partialLinkThreshold(groupBy: TrendsGroupBy) {
   return 45 * 24 * 60 * 60 * 1000
 }
 
+function getRangeStartTimestamp(range: TrendsRange) {
+  const start = new Date()
+  if (range === 'last-2-months') {
+    start.setUTCMonth(start.getUTCMonth() - 2)
+  } else if (range === 'last-year') {
+    start.setUTCFullYear(start.getUTCFullYear() - 1)
+  } else {
+    start.setUTCFullYear(start.getUTCFullYear() - 3)
+  }
+  return Date.parse(start.toISOString().slice(0, 10))
+}
+
+function buildXAxisTicks(
+  minTime: number,
+  maxTime: number,
+  groupBy: TrendsGroupBy,
+  plotWidth: number
+) {
+  const maxTickCount = Math.max(
+    3,
+    Math.min(10, Math.floor(plotWidth / 120) + 1)
+  )
+
+  if (groupBy === 'month') {
+    const candidates = [new Date(minTime)]
+    const cursor = new Date(minTime)
+    cursor.setUTCDate(1)
+    cursor.setUTCMonth(cursor.getUTCMonth() + 1)
+    while (cursor.getTime() <= maxTime) {
+      candidates.push(new Date(cursor))
+      cursor.setUTCMonth(cursor.getUTCMonth() + 1)
+    }
+
+    if (candidates.length <= maxTickCount) return candidates
+
+    return Array.from({ length: maxTickCount }, (_, index) => {
+      const candidateIndex = Math.round(
+        (index * (candidates.length - 1)) / (maxTickCount - 1)
+      )
+      return candidates[candidateIndex]
+    })
+  }
+
+  return Array.from(
+    { length: maxTickCount },
+    (_, index) =>
+      new Date(minTime + ((maxTime - minTime) * index) / (maxTickCount - 1))
+  )
+}
+
 export function buildChartModel({
   packages,
   metric,
+  range,
   groupBy,
   showMajorReleases,
   showMinorReleases,
@@ -125,6 +175,7 @@ export function buildChartModel({
 }: {
   packages: TrendsPackageSeries[]
   metric: TrendsMetric
+  range: TrendsRange
   groupBy: TrendsGroupBy
   showMajorReleases: boolean
   showMinorReleases: boolean
@@ -137,11 +188,20 @@ export function buildChartModel({
     releases: pack.releases,
   }))
   const allPoints = rawSeries.flatMap(series => series.points)
-  if (allPoints.length === 0) return null
+  const releaseCandidates = rawSeries.flatMap(raw =>
+    metric === 'size'
+      ? raw.releases.filter(release =>
+          release.major ? showMajorReleases : showMinorReleases
+        )
+      : []
+  )
+  if (allPoints.length === 0 && releaseCandidates.length === 0) return null
 
-  const timestamps = allPoints.map(point => Date.parse(point.date))
-  const minTime = Math.min(...timestamps)
-  const maxTime = Math.max(...timestamps)
+  // Keep the coordinate system tied to the requested range, not to whichever
+  // series happens to have data. Otherwise a sparse metric collapses the whole
+  // x-axis to one date and every generated month label overlaps.
+  const minTime = getRangeStartTimestamp(range)
+  const maxTime = Date.parse(new Date().toISOString().slice(0, 10))
   const values = allPoints.map(point => point.value)
   const minValue = Math.min(...values)
   const maxValue = Math.max(...values)
@@ -164,7 +224,9 @@ export function buildChartModel({
     )
   }
   const yFor = (value: number) => yScale(value)
-  const toChartPoint = (point: TrendsPoint): ChartPoint => ({
+  const toChartPoint = (
+    point: TrendsPoint & { placeholder?: boolean }
+  ): ChartPoint => ({
     ...point,
     x: xFor(point.date),
     y: yFor(point.value),
@@ -178,6 +240,29 @@ export function buildChartModel({
       : undefined
     const plotted = complete.map(toChartPoint)
     const partialMarkers = partial.map(toChartPoint)
+    const releaseMarkers =
+      metric === 'size'
+        ? raw.releases
+            .filter(release =>
+              release.major ? showMajorReleases : showMinorReleases
+            )
+            .filter(release => {
+              const time = Date.parse(release.date)
+              return (
+                time >= minTime &&
+                time <= maxTime &&
+                !raw.points.some(point => point.version === release.version)
+              )
+            })
+            .map(release =>
+              toChartPoint({
+                date: release.date,
+                value: minValue,
+                version: release.version,
+                placeholder: true,
+              })
+            )
+        : []
     const canJoinPartial =
       partialStart &&
       partial[0] &&
@@ -193,6 +278,7 @@ export function buildChartModel({
           : [],
       partialMarkers,
       markers: plotted,
+      releaseMarkers,
     }
   })
 
@@ -253,24 +339,13 @@ export function buildChartModel({
   const overflow = Math.max(0, previousLabelY - labelBottom)
   if (overflow)
     seriesAnnotations.forEach(annotation => (annotation.labelY -= overflow))
-  const xTickCount = Math.max(3, Math.min(10, Math.floor(plotWidth / 120) + 1))
-
   return {
     series,
     seriesAnnotations,
     minTime,
     maxTime,
     yTicks: yScale.ticks(4),
-    xTicks: Array.from(
-      {
-        // Date labels need roughly 120px at the current type scale. This makes
-        // a three-year monthly view informative on desktop without allowing
-        // labels to collide on a narrow screen.
-        length: xTickCount,
-      },
-      (_, index) =>
-        new Date(minTime + ((maxTime - minTime) * index) / (xTickCount - 1))
-    ),
+    xTicks: buildXAxisTicks(minTime, maxTime, groupBy, plotWidth),
     releaseLines,
     xFor,
     yFor,

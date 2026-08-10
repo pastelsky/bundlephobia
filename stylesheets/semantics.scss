@@ -96,6 +96,11 @@
   --color-stat-text: #212121;
   --color-stat-border: rgba(40, 40, 40, 0.5);
   --color-stat-tooltip-bg: rgba(40, 40, 40, 0.6);
+  --color-tooltip-bg: rgba(17, 17, 17, 0.9);
+  --color-tooltip-text: #ffffff;
+  --color-tooltip-text-muted: rgba(255, 255, 255, 0.72);
+  --color-tooltip-border: rgba(255, 255, 255, 0.18);
+  --shadow-tooltip: 0 2px 8px rgba(0, 0, 0, 0.18);
 
   // ── JumpingDots ──────────────────────────────────────────────────────────
   --color-jumping-dots: #303131;
@@ -224,6 +229,11 @@
   --color-stat-text: #f0f6fc;
   --color-stat-border: rgba(240, 246, 252, 0.15);
   --color-stat-tooltip-bg: rgba(240, 246, 252, 0.08);
+  --color-tooltip-bg: rgba(17, 17, 17, 0.94);
+  --color-tooltip-text: #ffffff;
+  --color-tooltip-text-muted: rgba(255, 255, 255, 0.72);
+  --color-tooltip-border: rgba(255, 255, 255, 0.18);
+  --shadow-tooltip: 0 4px 14px rgba(0, 0, 0, 0.35);
 
   // JumpingDots
   --color-jumping-dots: #8b949e;

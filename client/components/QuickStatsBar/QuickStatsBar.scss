@@ -75,7 +75,9 @@
 }
 
 .quick-stats-bar__logo-icon {
-  vertical-align: middle;
+  display: block;
+  height: auto;
+  color: var(--color-icon-secondary);
 
   &.quick-stats-bar__logo-icon--npm {
     width: 36px;
@@ -88,23 +90,20 @@
 
   path {
     transition: fill 0.2s;
-    fill: var(--color-stats-bar-text);
+    fill: currentColor;
   }
 }
 
 .quick-stats-bar__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
   margin: auto $global-spacing * 0.5;
 
   &:hover {
-    .quick-stats-bar__logo-icon--github {
-      path {
-        fill: var(--color-icon-hover);
-      }
-    }
-    .quick-stats-bar__logo-icon--npm {
-      path {
-        fill: #cb3837;
-      }
+    .quick-stats-bar__logo-icon {
+      color: var(--color-icon-hover);
     }
   }
 }
