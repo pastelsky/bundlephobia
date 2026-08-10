@@ -1,6 +1,7 @@
-import Cache, { type TrendsCacheName } from '../../utils/cache.utils'
+import type { TrendsCacheName } from '../../types/cache-domain'
+import CacheServiceClient from '../clients/cacheService'
 
-const cache = new Cache()
+const cache = new CacheServiceClient()
 
 export async function getOrLoadTrendsData<T>(
   cacheName: TrendsCacheName,

@@ -9,6 +9,17 @@ const config = {
   MAX_FAILURE_CACHE_ENTRIES: 600,
   WORKER_TIMEOUT: 600 * 1000,
   DEFAULT_DEV_PORT: 5000,
+  EXTERNAL_SERVICES: {
+    CLICKHOUSE_TRENDS_URL:
+      process.env.CLICKHOUSE_TRENDS_URL ||
+      'https://play.clickhouse.com/?user=play&default_format=JSON',
+    TIMEOUT_MS: {
+      CLICKHOUSE: 20_000,
+      GITHUB: 10_000,
+      NPM_DOWNLOADS: 15_000,
+      OSS_INSIGHT: 20_000,
+    },
+  },
   blackList: [
     /hack-cheats/,
     /hacks?-cheats?/,

@@ -1,5 +1,3 @@
-import gitURLParse from 'git-url-parse'
-import parsePackageSpec from 'npm-package-arg'
 import semver from 'semver'
 
 import { parseJavaScriptPackageSpecifier } from '../../../languages/javascript'
@@ -11,6 +9,8 @@ import {
 } from '../../clients/npmRegistry'
 import CustomError from '../../CustomError'
 import BuildService from '../../api/BuildService'
+import { parseNpmRegistryPackageSpec } from '../../packages/npmPackage'
+import { normalizeRepositoryUrl } from '../../packages/repository'
 import type {
   PackageBuildResult,
   PackageExportSizesResult,
@@ -22,10 +22,6 @@ import type {
   ResolvedAnalysisPackage,
 } from '../contracts'
 
-type RegistryPackageSpec = parsePackageSpec.RegistryResult & {
-  escapedName: string
-}
-
 interface PacoteManifestError {
   code?: string
   distTags?: Record<string, string>
@@ -33,44 +29,14 @@ interface PacoteManifestError {
   versions?: string[]
 }
 
-function isAliasPackageSpec(
-  spec: parsePackageSpec.Result,
-): spec is parsePackageSpec.AliasResult {
-  return spec.type === 'alias'
-}
-
-function isRegistryPackageSpec(
-  spec: parsePackageSpec.Result,
-): spec is RegistryPackageSpec {
-  return spec.registry && Boolean(spec.escapedName)
-}
-
 function isNotFound(error: unknown): boolean {
   const registryError = error as PacoteManifestError
   return registryError.code === 'E404' || registryError.statusCode === 404
 }
 
-function registryPackageSpec(
-  packageString: string,
-): RegistryPackageSpec | null {
-  const parsed = parsePackageSpec(packageString)
-  const target = isAliasPackageSpec(parsed) ? parsed.subSpec : parsed
-  return isRegistryPackageSpec(target) ? target : null
-}
-
-function toRepositoryUrl(repository: string | { url?: string } | undefined) {
-  if (!repository) return ''
-  try {
-    const rawRepository =
-      typeof repository === 'string' ? repository : (repository.url ?? '')
-    return gitURLParse(rawRepository).toString('https')
-  } catch {
-    console.error('failed to parse repository url', repository)
-    return ''
-  }
-}
-
-export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<'javascript'> {
+export class JavaScriptPackageAnalysisAdapter
+  implements PackageAnalysisAdapter<'javascript'>
+{
   readonly language = 'javascript' as const
 
   constructor(private readonly buildService = new BuildService()) {}
@@ -82,14 +48,14 @@ export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<
     let packageName: string | undefined
 
     try {
-      const packageSpec = registryPackageSpec(packageString)
+      const packageSpec = parseNpmRegistryPackageSpec(packageString)
       if (!packageSpec) {
         return await fetchPackageManifest(packageString, {
           fullMetadata: true,
         })
       }
 
-      const targetName = packageSpec.escapedName
+      const targetName = packageSpec.name
       packageName = targetName
       requestedVersion = packageSpec.fetchSpec || 'latest'
 
@@ -159,7 +125,7 @@ export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<
       displayName: manifest.name,
       canonicalSpecifier: `${manifest.name}@${manifest.version}`,
       description,
-      repository: toRepositoryUrl(manifest.repository),
+      repository: normalizeRepositoryUrl(manifest.repository),
     }
   }
 

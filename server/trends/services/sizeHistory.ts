@@ -2,6 +2,7 @@ import semver from 'semver'
 
 import firebaseUtils from '../../../utils/firebase.utils'
 import { getOrLoadTrendsData } from '../cache'
+import { trendsConfig } from '../config'
 import type { TrendsPoint } from '../types'
 
 type HistorySnapshot = {
@@ -11,21 +12,11 @@ type HistorySnapshot = {
 }
 
 async function fetchHistory(packageName: string) {
-  const firebaseHistory = (await firebaseUtils.getPackageHistory(
+  const history = (await firebaseUtils.getPackageHistory(
     packageName,
     40
-  )) as Record<string, HistorySnapshot>
-
-  if (
-    Object.values(firebaseHistory).some(
-      snapshot => typeof snapshot?.gzip === 'number'
-    ) ||
-    process.env.FIREBASE_DATABASE_URL
-  ) {
-    return firebaseHistory
-  }
-
-  return {}
+  )) as Record<string, HistorySnapshot> | null
+  return history || {}
 }
 
 export async function fetchSizeSeries(
@@ -39,7 +30,7 @@ export async function fetchSizeSeries(
   return getOrLoadTrendsData(
     'size-history',
     `size-series:${packageName}`,
-    6 * 60 * 60 * 1000,
+    trendsConfig.cacheTtlMs.sizeHistory,
     async () => {
       const history = await fetchHistory(packageName)
       const points: TrendsPoint[] = []

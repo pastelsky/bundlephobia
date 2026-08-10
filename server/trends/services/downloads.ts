@@ -1,9 +1,11 @@
+import {
+  fetchNpmDownloadRange,
+  type NpmDownloadPoint,
+} from '../../clients/npmDownloads'
 import { getOrLoadTrendsData } from '../cache'
-import { fetchNpmDownloadRange } from '../clients/npmDownloads'
+import { trendsConfig } from '../config'
 import { getTrendsRangeStart, resolveNpmDownloadRange } from '../range'
 import type { TrendsPoint, TrendsRange } from '../types'
-
-const DAYS_PER_WEEK = 7
 
 type DownloadResult = {
   points: TrendsPoint[]
@@ -12,6 +14,15 @@ type DownloadResult = {
 
 function isoDate(date: Date) {
   return date.toISOString().slice(0, 10)
+}
+
+function toTrendsPoints(downloads: NpmDownloadPoint[]): TrendsPoint[] {
+  const today = isoDate(new Date())
+  return downloads.map(point => ({
+    date: point.day,
+    value: point.downloads,
+    partial: point.day === today,
+  }))
 }
 
 function getHistoricalBuckets(range: TrendsRange) {
@@ -25,33 +36,22 @@ function getHistoricalBuckets(range: TrendsRange) {
   while (cursor <= end) {
     const bucketStart = new Date(cursor)
     const bucketEnd = new Date(
-      Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 6, 0)
+      Date.UTC(
+        cursor.getUTCFullYear(),
+        cursor.getUTCMonth() + trendsConfig.downloads.historicalWindowMonths,
+        0
+      )
     )
     buckets.push({
       start: isoDate(bucketStart < start ? start : bucketStart),
       end: isoDate(bucketEnd > end ? end : bucketEnd),
     })
-    cursor.setUTCMonth(cursor.getUTCMonth() + 6)
+    cursor.setUTCMonth(
+      cursor.getUTCMonth() + trendsConfig.downloads.historicalWindowMonths
+    )
   }
 
   return buckets
-}
-
-async function fetchWeeklyDownloads(packageName: string) {
-  const cacheKey = `downloads-week:${packageName}`
-  return getOrLoadTrendsData(
-    'downloads',
-    cacheKey,
-    6 * 60 * 60 * 1000,
-    async () => {
-      try {
-        const points = await fetchNpmDownloadRange(packageName, 'last-month')
-        return sumLatestWeek(points)
-      } catch {
-        return null
-      }
-    }
-  )
 }
 
 /** Retrieves one bounded historical window for the three-year series. */
@@ -63,19 +63,14 @@ async function fetchHistoricalRange(
   return getOrLoadTrendsData(
     'downloads',
     cacheKey,
-    24 * 60 * 60 * 1000,
+    trendsConfig.cacheTtlMs.downloadWindow,
     async () => {
       try {
         const downloads = await fetchNpmDownloadRange(
           packageName,
           `${bucket.start}:${bucket.end}`
         )
-        const today = isoDate(new Date())
-        return downloads.map(point => ({
-          date: point.day,
-          value: point.downloads,
-          partial: point.day === today,
-        }))
+        return toTrendsPoints(downloads)
       } catch {
         return []
       }
@@ -84,28 +79,23 @@ async function fetchHistoricalRange(
 }
 
 /**
- * Loads daily package downloads and derives the latest complete seven-day sum.
+ * Loads daily package downloads and sums the latest seven reported days.
  * The three-year API limit is handled by composing bounded source windows.
  */
 export async function fetchDownloadSeries(
   packageName: string,
   range: TrendsRange
 ): Promise<DownloadResult> {
-  const cacheKey = `downloads:v3:${packageName}:${range}`
+  const cacheKey = `series:${packageName}:${range}`
   return getOrLoadTrendsData(
     'downloads',
     cacheKey,
-    6 * 60 * 60 * 1000,
+    trendsConfig.cacheTtlMs.downloads,
     async () => {
       if (range !== 'last-3-years') {
         const npmRange = resolveNpmDownloadRange(range)
         const downloads = await fetchNpmDownloadRange(packageName, npmRange)
-        const today = isoDate(new Date())
-        const points = downloads.map(point => ({
-          date: point.day,
-          value: point.downloads,
-          partial: point.day === today,
-        }))
+        const points = toTrendsPoints(downloads)
         return {
           points,
           weeklyDownloads: sumLatestWeek(points),
@@ -119,21 +109,15 @@ export async function fetchDownloadSeries(
       const points = historicalRanges.flat()
       return {
         points,
-        weeklyDownloads: await fetchWeeklyDownloads(packageName),
+        weeklyDownloads: sumLatestWeek(points),
       }
     }
   )
 }
 
-function sumLatestWeek(
-  points: Array<{ downloads: number }> | TrendsPoint[]
-): number | null {
-  const latestWeek = points.slice(-DAYS_PER_WEEK)
+function sumLatestWeek(points: TrendsPoint[]): number | null {
+  const latestWeek = points.slice(-trendsConfig.downloads.daysPerWeek)
   return latestWeek.length
-    ? latestWeek.reduce(
-        (sum, point) =>
-          sum + ('downloads' in point ? point.downloads : point.value),
-        0
-      )
+    ? latestWeek.reduce((sum, point) => sum + point.value, 0)
     : null
 }

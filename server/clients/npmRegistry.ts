@@ -1,9 +1,12 @@
+import type { RepositoryField } from '../packages/repository'
+import { getEscapedNpmPackageName } from '../packages/npmPackage'
+
 export interface NpmPackageManifest {
   name: string
   version: string
   description?: string
-  repository?: string | { url?: string }
-  bugs?: string | { url?: string }
+  repository?: RepositoryField
+  bugs?: RepositoryField
   homepage?: string
   [key: string]: unknown
 }
@@ -12,8 +15,8 @@ export interface NpmPackagePackument {
   'dist-tags'?: Record<string, string>
   time?: Record<string, string>
   versions?: Record<string, NpmPackageManifest>
-  repository?: string | { url?: string }
-  bugs?: string | { url?: string }
+  repository?: RepositoryField
+  bugs?: RepositoryField
   homepage?: string
 }
 
@@ -36,7 +39,7 @@ const pacote = require('pacote') as PacoteModule
 const registryFetch = require('npm-registry-fetch') as NpmRegistryFetchModule
 
 function registryManifestPath(name: string, version: string): string {
-  return `/${name.replace('/', '%2f')}/${encodeURIComponent(version)}`
+  return `/${getEscapedNpmPackageName(name)}/${encodeURIComponent(version)}`
 }
 
 export function fetchPackageManifest(
