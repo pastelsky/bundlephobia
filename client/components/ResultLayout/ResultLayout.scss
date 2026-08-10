@@ -17,7 +17,7 @@
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $global-spacing * 2;
 
   @media screen and (max-width: 40em) {
     flex: 1 1 auto;
@@ -84,7 +84,8 @@
 
 .page-header__quicklinks {
   list-style: none;
-  margin: 0 2rem 0 0;
+  gap: $global-spacing * 2;
+  margin: 0;
   font-weight: $font-weight-light;
   display: flex;
 
@@ -103,7 +104,7 @@
   }
 
   li + li {
-    margin-left: $global-spacing * 2;
+    margin-left: 0;
   }
 
   @media screen and (max-width: 40em) {
