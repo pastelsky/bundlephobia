@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { IconButton } from '../ui'
 
 const STORAGE_KEY = 'bundlephobia_rspack_banner_dismissed'
 const EXPIRY_DATE = new Date('2026-07-18T00:00:00Z') // 6 months from January 18, 2026
@@ -56,13 +57,14 @@ export const AnnouncementBanner: React.FC = () => {
           </a>{' '}
           — much faster results, better tree-shaking, accuracy and reliability !
         </p>
-        <button
+        <IconButton
           className="announcement-banner__close"
           onClick={handleDismiss}
-          aria-label="Dismiss announcement"
+          label="Dismiss announcement"
+          variant="quiet"
         >
           ×
-        </button>
+        </IconButton>
       </div>
     </div>
   )

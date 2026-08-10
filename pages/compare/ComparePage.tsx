@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import Router from 'next/router'
 import React, { PureComponent } from 'react'
 
@@ -7,13 +6,13 @@ import API, {
   type PackageHistoryResponse,
 } from '../../client/api'
 import EmptyBox from '../../client/assets/empty-box.svg'
-import GithubLogo from '../../client/assets/github-logo.svg'
 import BuildProgressIndicator from '../../client/components/BuildProgressIndicator'
 import BarGraph, {
   type Reading,
 } from '../../client/components/BarGraph/BarGraph'
 import Layout from '../../client/components/Layout'
 import { AutocompleteInput } from '../../client/components/AutocompleteInput'
+import PageNav from '../../client/components/PageNav'
 import { parsePackageString } from '../../utils/common.utils'
 
 type ComparePageState = {
@@ -158,25 +157,7 @@ export default class ComparePage extends PureComponent<
     return (
       <Layout className="compare-page">
         <div className="page-container">
-          <header className="result-header">
-            <section className="result-header--left-section">
-              <Link href="/">
-                <div className="logo-small">
-                  <span>Bundle</span>
-                  <span className="logo-small__alt">Phobia</span>
-                </div>
-              </Link>
-            </section>
-            <section className="result-header--right-section">
-              <a
-                target="_blank"
-                href="https://github.com/pastelsky/bundlephobia"
-                rel="noreferrer"
-              >
-                <GithubLogo />
-              </a>
-            </section>
-          </header>
+          <PageNav variant="focused" />
           <div className="compare__search-container">
             <div className="compare__search-inputs">
               <AutocompleteInput

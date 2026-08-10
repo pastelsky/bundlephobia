@@ -1,0 +1,46 @@
+:root {
+  --bp-font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  --bp-font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,
+    Courier, monospace;
+  --bp-font-size-caption: 0.75rem;
+  --bp-font-size-label: 0.8rem;
+  --bp-font-size-body: 1rem;
+  --bp-font-size-title: 1.35rem;
+  --bp-font-weight-regular: 400;
+  --bp-font-weight-semibold: 600;
+  --bp-font-weight-bold: 700;
+  --bp-space-1: 4px;
+  --bp-space-2: 8px;
+  --bp-space-3: 12px;
+  --bp-space-4: 16px;
+  --bp-space-5: 24px;
+  --bp-space-6: 32px;
+  --bp-radius-sm: 4px;
+  --bp-radius-control: 8px;
+  --bp-radius-lg: 10px;
+  --bp-control-height-sm: 30px;
+  --bp-control-height: 36px;
+  --bp-icon-size: 18px;
+  --bp-icon-button-size: 32px;
+  --bp-motion-fast: 150ms ease;
+  --bp-focus-ring: 2px solid var(--bp-color-focus);
+  --bp-focus-offset: 2px;
+  --bp-layer-popover: 100;
+  --bp-color-page: var(--color-bg-base);
+  --bp-color-surface: var(--color-bg-surface);
+  --bp-color-surface-hover: var(--color-surface-raised);
+  --bp-color-text: var(--color-text-primary);
+  --bp-color-text-muted: var(--color-text-muted);
+  --bp-color-border: var(--color-border-subtle);
+  --bp-color-border-strong: var(--color-border-primary);
+  --bp-color-action: var(--color-btn-bg);
+  --bp-color-action-hover: var(--color-btn-bg-hover);
+  --bp-color-action-text: var(--color-btn-text);
+  --bp-color-danger: #b42318;
+  --bp-color-focus: var(--color-link);
+  --bp-color-tooltip: var(--color-tooltip-bg);
+  --bp-color-tooltip-text: var(--color-tooltip-text);
+  --bp-shadow-popover: 0 10px 30px rgba(0, 0, 0, 0.16);
+}

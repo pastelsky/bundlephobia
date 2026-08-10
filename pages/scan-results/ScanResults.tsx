@@ -9,6 +9,7 @@ import Analytics from '../../client/analytics'
 import API, { type PackageBuildInfo } from '../../client/api'
 import Stat from '../../client/components/Stat'
 import ResultLayout from '../../client/components/ResultLayout'
+import { ToggleGroup } from '../../client/components/ui'
 import { parsePackageString, sanitizeErrorHTML } from '../../utils/common.utils'
 import { getTimeFromSize } from '../../utils'
 
@@ -330,22 +331,19 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
         <h1> Results</h1>
         <div className="scan-results__sort-panel">
           <label> Sort By: </label>
-          <button
-            className={cx({
-              'scan-results__sort--selected': sortMode === 'alphabetic',
-            })}
-            onClick={this.handleSortAlphabetic}
-          >
-            Name: A &rarr; Z
-          </button>
-          <button
-            className={cx({
-              'scan-results__sort--selected': sortMode === 'size',
-            })}
-            onClick={this.handleSortSize}
-          >
-            Size: High &rarr; Low
-          </button>
+          <ToggleGroup
+            aria-label="Sort scan results"
+            value={sortMode}
+            onValueChange={nextSortMode =>
+              nextSortMode === 'size'
+                ? this.handleSortSize()
+                : this.handleSortAlphabetic()
+            }
+            options={[
+              { value: 'alphabetic', label: 'Name: A → Z' },
+              { value: 'size', label: 'Size: High → Low' },
+            ]}
+          />
         </div>
         <ul className="scan-results__container">
           {packages.map((pack, index) => (

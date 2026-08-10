@@ -13,7 +13,7 @@ export default class ResultLayout extends Component<
     return (
       <Layout>
         <div className={cx('page-container', className)}>
-          <PageNav />
+          <PageNav variant="full" />
           <div className="page-content">{children}</div>
         </div>
       </Layout>

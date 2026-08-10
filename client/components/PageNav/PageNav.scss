@@ -2,6 +2,10 @@
 @import '../../../stylesheets/colors';
 
 .page-header {
+  width: 100%;
+  max-width: $layout-max-width;
+  box-sizing: border-box;
+  margin: 0 auto;
   padding: $global-spacing * 3;
   padding-bottom: $global-spacing * 2;
   display: flex;
@@ -39,6 +43,18 @@
 
 .logo-small__alt {
   color: var(--color-logo-alt);
+}
+
+.page-header .ui-brand-logo {
+  @include font-size-reg;
+}
+
+.page-header .ui-icon-button {
+  color: var(--color-icon-secondary);
+}
+
+.page-header .ui-icon-button:hover {
+  color: var(--color-icon-hover);
 }
 
 .page-header__quicklinks {

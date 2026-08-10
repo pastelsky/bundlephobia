@@ -7,6 +7,7 @@ import Analytics from '../../client/analytics'
 import MetaTags from '../../client/components/MetaTags'
 import ResultLayout from '../../client/components/ResultLayout'
 import Separator from '../../client/components/Separator'
+import { Button, IconButton } from '../../client/components/ui'
 import scanBlacklist from '../../client/config/scanBlacklist'
 import { normalizePackageJsonUrl } from '../../utils/common.utils'
 
@@ -432,10 +433,10 @@ class Scan extends Component<ScanProps, ScanState> {
                   className="scan__dropzone-actions"
                   onClick={e => e.stopPropagation()}
                 >
-                  <button className="scan__btn" type="button">
+                  <Button className="scan__btn" type="button">
                     Upload <code> package.json </code>
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     className="scan__btn"
                     type="button"
                     onClick={e => {
@@ -447,7 +448,7 @@ class Scan extends Component<ScanProps, ScanState> {
                     }}
                   >
                     Scan from URL / GitHub
-                  </button>
+                  </Button>
                 </div>
               </>
             ) : (
@@ -476,14 +477,14 @@ class Scan extends Component<ScanProps, ScanState> {
                       disabled={isLoadingRemoteUrl}
                       autoFocus
                     />
-                    <button
+                    <Button
                       type="submit"
                       className="scan__btn scan__url-btn"
                       disabled={isLoadingRemoteUrl || !remoteUrlInput.trim()}
                     >
                       {isLoadingRemoteUrl ? 'Fetching...' : 'Fetch'}
-                    </button>
-                    <button
+                    </Button>
+                    <IconButton
                       type="button"
                       className="scan__url-cancel-btn"
                       onClick={e => {
@@ -494,11 +495,11 @@ class Scan extends Component<ScanProps, ScanState> {
                           isLoadingRemoteUrl: false,
                         })
                       }}
-                      title="Cancel and return to upload view"
-                      aria-label="Cancel"
+                      label="Cancel and return to upload view"
+                      variant="quiet"
                     >
                       ✕
-                    </button>
+                    </IconButton>
                   </form>
 
                   {remoteUrlError && (
@@ -520,16 +521,16 @@ class Scan extends Component<ScanProps, ScanState> {
         <div>
           <header className="scan__selection-header">
             <h1 className="scan__page-title"> Select packages to scan </h1>
-            <button
+            <Button
               className="scan__btn"
               disabled={selectedPackages.length === 0}
               onClick={this.handleScanClick}
             >
               Scan {selectedPackages.length} packages
-            </button>
-            <button className="scan__btn" onClick={this.handleResetClick}>
+            </Button>
+            <Button className="scan__btn" onClick={this.handleResetClick}>
               Reset
-            </button>
+            </Button>
           </header>
           {unsupportedPackageNames.length > 0 && (
             <p className="scan__unsupported-packages">
