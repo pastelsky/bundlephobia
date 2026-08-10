@@ -246,15 +246,9 @@ describe('build service unavailability', () => {
   it('cancels an in-process worker execution when its job aborts', async () => {
     delete process.env.BUILD_SERVICE_ENDPOINT
     const controller = new AbortController()
-    let rejectExecution: (error: Error) => void = () => {}
-    const execution = new Promise((_resolve, reject) => {
-      rejectExecution = reject
-    }) as ReturnType<typeof pool.exec>
+    const execution = new Promise(() => {}) as ReturnType<typeof pool.exec>
     execution.timeout = jest.fn().mockReturnValue(execution)
-    execution.cancel = jest.fn(() => {
-      rejectExecution(new Error('worker execution cancelled'))
-      throw new Error('worker cancellation threw')
-    })
+    execution.cancel = jest.fn()
     mockedPool.exec.mockReturnValue(execution)
 
     new BuildService()
@@ -272,7 +266,7 @@ describe('build service unavailability', () => {
       code: 'JOB_CANCELLED',
       name: 'JobCancelledError',
     })
-    expect(execution.cancel).toHaveBeenCalledTimes(1)
+    expect(execution.cancel).not.toHaveBeenCalled()
   })
 
   it('returns a retryable response without caching the failure', async () => {

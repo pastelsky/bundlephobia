@@ -107,17 +107,20 @@ export default class BuildService {
           const execution = pool
             .exec(operation.methodName, [packageString])
             .timeout(config.WORKER_TIMEOUT)
+          let rejectCancellation: (error: JobCancelledError) => void = () => {}
+          const cancellation = new Promise<never>((_, reject) => {
+            rejectCancellation = reject
+          })
           const cancelExecution = () => {
-            try {
-              execution.cancel?.()
-            } catch {
-              // workerpool throws its cancellation error synchronously
-            }
+            // workerpool cancellation terminates its worker and can leave a
+            // subsequent job waiting indefinitely. Let this non-interruptible
+            // worker finish while promptly detaching the aborted HTTP request.
+            rejectCancellation(new JobCancelledError())
           }
           signal.addEventListener('abort', cancelExecution, { once: true })
           if (signal.aborted) cancelExecution()
           try {
-            return await execution
+            return await Promise.race([execution, cancellation])
           } catch (error) {
             if (signal.aborted) {
               throw new JobCancelledError()
