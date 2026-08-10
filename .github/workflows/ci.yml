@@ -24,6 +24,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: yarn
+          cache-dependency-path: yarn.lock
       - name: Enable Corepack
         run: corepack enable
       - name: Install project dependencies
@@ -47,6 +49,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: yarn
+          cache-dependency-path: yarn.lock
       - name: Enable Corepack
         run: corepack enable
       - name: Install project dependencies
@@ -69,6 +73,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: yarn
+          cache-dependency-path: yarn.lock
       - name: Enable Corepack
         run: corepack enable
       - name: Install project dependencies
@@ -77,6 +83,13 @@ jobs:
         run: yarn build
         env:
           CI: true
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - name: Install Playwright Chromium
         run: yarn playwright install --with-deps chromium
       - name: Run end-to-end tests
