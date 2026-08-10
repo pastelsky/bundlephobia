@@ -107,10 +107,22 @@ export default class BuildService {
           const execution = pool
             .exec(operation.methodName, [packageString])
             .timeout(config.WORKER_TIMEOUT)
-          const cancelExecution = () => execution.cancel?.()
+          let rejectCancellation: (error?: unknown) => void = () => {}
+          const cancellation = new Promise<never>((_, reject) => {
+            rejectCancellation = reject
+          })
+          const cancelExecution = () => {
+            try {
+              execution.cancel?.()
+            } catch {
+              // workerpool throws its cancellation error synchronously
+            }
+            rejectCancellation(new JobCancelledError())
+          }
           signal.addEventListener('abort', cancelExecution, { once: true })
+          if (signal.aborted) cancelExecution()
           try {
-            return await execution
+            return await Promise.race([execution, cancellation])
           } catch (error) {
             if (signal.aborted) {
               throw new JobCancelledError()

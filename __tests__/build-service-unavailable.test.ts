@@ -253,6 +253,7 @@ describe('build service unavailability', () => {
     execution.timeout = jest.fn().mockReturnValue(execution)
     execution.cancel = jest.fn(() => {
       rejectExecution(new Error('worker execution cancelled'))
+      throw new Error('worker cancellation threw')
     })
     mockedPool.exec.mockReturnValue(execution)
 
