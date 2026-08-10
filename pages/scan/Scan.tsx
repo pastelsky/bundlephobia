@@ -65,6 +65,7 @@ class Scan extends Component<ScanProps, ScanState> {
   }
 
   private packageSelectionContainerRef = createRef<HTMLUListElement>()
+  private dropzoneRef = createRef<Dropzone>()
 
   componentDidMount() {
     Analytics.pageView('scan')
@@ -417,6 +418,7 @@ class Scan extends Component<ScanProps, ScanState> {
       content = (
         <div>
           <Dropzone
+            ref={this.dropzoneRef}
             className="scan__dropzone"
             onDropAccepted={this.handleDropAccepted}
             onDropRejected={this.handleDropRejected}
@@ -433,7 +435,12 @@ class Scan extends Component<ScanProps, ScanState> {
                   className="scan__dropzone-actions"
                   onClick={e => e.stopPropagation()}
                 >
-                  <Button className="scan__btn" type="button" variant="primary">
+                  <Button
+                    className="scan__btn"
+                    type="button"
+                    variant="primary"
+                    onClick={() => this.dropzoneRef.current?.open()}
+                  >
                     Upload <code> package.json </code>
                   </Button>
                   <Button
