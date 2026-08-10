@@ -8,7 +8,6 @@ import Koa, { Context } from 'koa'
 import proxy from 'koa-proxy'
 import serve from 'koa-static'
 import Router from '@koa/router'
-import compress from 'koa-compress'
 import cacheControl from 'koa-cache-control'
 import requestId from 'koa-requestid'
 import auth from 'koa-basic-auth'
@@ -117,18 +116,6 @@ app.prepare().then(() => {
       }
     }
   })
-
-  server.use(
-    compress({
-      filter: function (contentType) {
-        return /(text|json|javascript|svg)/.test(contentType)
-      },
-      threshold: 2048,
-      gzip: {
-        flush: require('zlib').Z_SYNC_FLUSH,
-      },
-    }),
-  )
 
   server.use(
     serve('./client/assets/public', {
