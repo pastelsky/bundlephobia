@@ -70,7 +70,7 @@ setInterval(() => {
     logger.info(
       'EVENT_LOOP_LAG',
       { p99Ms, maxMs },
-      `High event loop latency detected: p99=${p99Ms.toFixed(1)}ms max=${maxMs.toFixed(1)}ms`
+      `High event loop latency detected: p99=${p99Ms.toFixed(1)}ms max=${maxMs.toFixed(1)}ms`,
     )
   }
   eventLoopDelay.reset()
