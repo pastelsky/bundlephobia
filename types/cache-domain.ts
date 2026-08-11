@@ -3,3 +3,5 @@ export type TrendsCacheName =
   | 'github-history'
   | 'releases'
   | 'size-history'
+
+export type GithubHistoryCacheSource = 'history' | 'snapshot' | 'stars'

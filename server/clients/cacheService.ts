@@ -3,7 +3,10 @@ import 'dotenv-defaults/config'
 import axios from 'axios'
 import createDebug from 'debug'
 
-import type { TrendsCacheName } from '../../types/cache-domain'
+import type {
+  GithubHistoryCacheSource,
+  TrendsCacheName,
+} from '../../types/cache-domain'
 import logger from '../Logger'
 
 const debug = createDebug('bp:cache')
@@ -72,45 +75,62 @@ export default class CacheServiceClient {
     }
   }
 
-  getDownloads<T>(key: string): Promise<T | undefined> {
-    return this.getTrendsData('downloads', key)
+  getDownloads<T>(packageName: string, range: string): Promise<T | undefined> {
+    return this.getTrendsData('downloads', { packageName, range })
   }
 
-  getGithubHistory<T>(key: string): Promise<T | undefined> {
-    return this.getTrendsData('github-history', key)
+  getGithubHistory<T>(
+    repository: string,
+    source: GithubHistoryCacheSource,
+    range?: string,
+  ): Promise<T | undefined> {
+    return this.getTrendsData('github-history', { repository, source, range })
   }
 
-  getReleases<T>(key: string): Promise<T | undefined> {
-    return this.getTrendsData('releases', key)
+  getReleases<T>(packageName: string): Promise<T | undefined> {
+    return this.getTrendsData('releases', { packageName })
   }
 
-  getSizeHistory<T>(key: string): Promise<T | undefined> {
-    return this.getTrendsData('size-history', key)
+  getSizeHistory<T>(packageName: string): Promise<T | undefined> {
+    return this.getTrendsData('size-history', { packageName })
   }
 
-  setDownloads<T>(key: string, result: T): Promise<void> {
-    return this.setTrendsData('downloads', key, result)
+  setDownloads<T>(
+    packageName: string,
+    range: string,
+    result: T,
+  ): Promise<void> {
+    return this.setTrendsData('downloads', { packageName, range }, result)
   }
 
-  setGithubHistory<T>(key: string, result: T): Promise<void> {
-    return this.setTrendsData('github-history', key, result)
+  setGithubHistory<T>(
+    repository: string,
+    source: GithubHistoryCacheSource,
+    result: T,
+    range?: string,
+  ): Promise<void> {
+    return this.setTrendsData(
+      'github-history',
+      { repository, source, range },
+      result,
+    )
   }
 
-  setReleases<T>(key: string, result: T): Promise<void> {
-    return this.setTrendsData('releases', key, result)
+  setReleases<T>(packageName: string, result: T): Promise<void> {
+    return this.setTrendsData('releases', { packageName }, result)
   }
 
-  setSizeHistory<T>(key: string, result: T): Promise<void> {
-    return this.setTrendsData('size-history', key, result)
+  setSizeHistory<T>(packageName: string, result: T): Promise<void> {
+    return this.setTrendsData('size-history', { packageName }, result)
   }
 
   private async getTrendsData<T>(
     cacheName: TrendsCacheName,
-    key: string,
+    params: Record<string, string | undefined>,
   ): Promise<T | undefined> {
     try {
       const result = await API.get<T>(`/trends-cache/${cacheName}`, {
-        params: key,
+        params,
       })
       return result.data
     } catch {
@@ -120,16 +140,16 @@ export default class CacheServiceClient {
 
   private async setTrendsData<T>(
     cacheName: TrendsCacheName,
-    key: string,
+    params: Record<string, string | undefined>,
     result: T,
   ): Promise<void> {
     try {
       await API.post(`/trends-cache/${cacheName}`, {
-        key,
+        ...params,
         result,
       })
     } catch (error) {
-      debug('failed to set trends cache %s: %O', key, error)
+      debug('failed to set trends cache %s: %O', cacheName, error)
     }
   }
 
