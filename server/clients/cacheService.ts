@@ -91,10 +91,6 @@ export default class CacheServiceClient {
     return this.getTrendsData('releases', { packageName })
   }
 
-  getSizeHistory<T>(packageName: string): Promise<T | undefined> {
-    return this.getTrendsData('size-history', { packageName })
-  }
-
   setDownloads<T>(
     packageName: string,
     range: string,
@@ -118,10 +114,6 @@ export default class CacheServiceClient {
 
   setReleases<T>(packageName: string, result: T): Promise<void> {
     return this.setTrendsData('releases', { packageName }, result)
-  }
-
-  setSizeHistory<T>(packageName: string, result: T): Promise<void> {
-    return this.setTrendsData('size-history', { packageName }, result)
   }
 
   private async getTrendsData<T>(

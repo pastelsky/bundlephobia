@@ -16,7 +16,6 @@ import {
   createDownloadsCache,
   createGithubHistoryCache,
   createReleasesCache,
-  createSizeHistoryCache,
   type DownloadsPayload,
   type GithubHistoryPayload,
   type PackagePayload,
@@ -42,7 +41,6 @@ const trendsCacheConfig: Record<TrendsCacheName, number> = {
   downloads: 24 * 60 * 60 * 1000,
   'github-history': 24 * 60 * 60 * 1000,
   releases: 24 * 60 * 60 * 1000,
-  'size-history': 24 * 60 * 60 * 1000,
 }
 
 const downloadsCache = createDownloadsCache(trendsCacheConfig.downloads)
@@ -75,18 +73,6 @@ fastify.get<{ Querystring: PackagePayload; Body: PackagePayload }>(
 fastify.post<{ Querystring: PackagePayload; Body: PackagePayload }>(
   '/trends-cache/releases',
   releasesCache.post,
-)
-
-const sizeHistoryCache = createSizeHistoryCache(
-  trendsCacheConfig['size-history'],
-)
-fastify.get<{ Querystring: PackagePayload; Body: PackagePayload }>(
-  '/trends-cache/size-history',
-  sizeHistoryCache.get,
-)
-fastify.post<{ Querystring: PackagePayload; Body: PackagePayload }>(
-  '/trends-cache/size-history',
-  sizeHistoryCache.post,
 )
 
 fastify

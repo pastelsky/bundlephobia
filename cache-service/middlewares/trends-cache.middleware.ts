@@ -91,10 +91,3 @@ export function createReleasesCache(ttlMs: number) {
     ({ query, body }) => query.packageName || body.packageName,
   )
 }
-
-export function createSizeHistoryCache(ttlMs: number) {
-  return createCache<PackagePayload, PackagePayload>(
-    ttlMs,
-    ({ query, body }) => query.packageName || body.packageName,
-  )
-}
