@@ -3,7 +3,3 @@ export type TrendsCacheName =
   | 'github-history'
   | 'releases'
   | 'size-history'
-
-export interface TrendsCacheKey {
-  key: string
-}

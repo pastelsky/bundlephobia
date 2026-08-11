@@ -30,15 +30,15 @@ fastify.post('/package-cache', postPackageSizeMiddlware)
 fastify.get('/exports-cache', getExportsSizeMiddlware)
 fastify.post('/exports-cache', postExportsSizeMiddleware)
 
-const trendsCacheNames: TrendsCacheName[] = [
-  'downloads',
-  'github-history',
-  'releases',
-  'size-history',
-]
+const trendsCacheConfig: Record<TrendsCacheName, number> = {
+  downloads: 24 * 60 * 60 * 1000,
+  'github-history': 24 * 60 * 60 * 1000,
+  releases: 24 * 60 * 60 * 1000,
+  'size-history': 24 * 60 * 60 * 1000,
+}
 
-for (const cacheName of trendsCacheNames) {
-  const middleware = createTrendsCacheMiddleware()
+for (const [cacheName, ttlMs] of Object.entries(trendsCacheConfig)) {
+  const middleware = createTrendsCacheMiddleware(ttlMs)
   fastify.get(`/trends-cache/${cacheName}`, middleware.get)
   fastify.post(`/trends-cache/${cacheName}`, middleware.post)
 }

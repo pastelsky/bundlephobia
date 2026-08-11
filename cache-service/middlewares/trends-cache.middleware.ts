@@ -10,10 +10,10 @@ const MAX_TTL_MS = 24 * 60 * 60 * 1000
 
 type TrendsCacheRequest = FastifyRequest<{
   Querystring: { key?: string }
-  Body: { key?: string; result?: CacheEntry; ttlMs?: number }
+  Body: { key?: string; result?: CacheEntry }
 }>
 
-export function createTrendsCacheMiddleware() {
+export function createTrendsCacheMiddleware(ttlMs: number) {
   const cache = new LRUCache<string, CacheEntry>({ max: MAX_ENTRIES })
 
   return {
@@ -28,14 +28,8 @@ export function createTrendsCacheMiddleware() {
     },
 
     async post(request: TrendsCacheRequest, reply: FastifyReply) {
-      const { key, result, ttlMs } = request.body
-      if (
-        !key ||
-        result === undefined ||
-        typeof ttlMs !== 'number' ||
-        !Number.isFinite(ttlMs) ||
-        ttlMs <= 0
-      ) {
+      const { key, result } = request.body
+      if (!key || result === undefined) {
         return reply.code(422).send()
       }
 

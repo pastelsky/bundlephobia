@@ -3,7 +3,7 @@ import 'dotenv-defaults/config'
 import axios from 'axios'
 import createDebug from 'debug'
 
-import type { TrendsCacheKey, TrendsCacheName } from '../../types/cache-domain'
+import type { TrendsCacheName } from '../../types/cache-domain'
 import logger from '../Logger'
 
 const debug = createDebug('bp:cache')
@@ -72,9 +72,41 @@ export default class CacheServiceClient {
     }
   }
 
-  async getTrendsData<T>(
+  getDownloads<T>(key: string): Promise<T | undefined> {
+    return this.getTrendsData('downloads', key)
+  }
+
+  getGithubHistory<T>(key: string): Promise<T | undefined> {
+    return this.getTrendsData('github-history', key)
+  }
+
+  getReleases<T>(key: string): Promise<T | undefined> {
+    return this.getTrendsData('releases', key)
+  }
+
+  getSizeHistory<T>(key: string): Promise<T | undefined> {
+    return this.getTrendsData('size-history', key)
+  }
+
+  setDownloads<T>(key: string, result: T): Promise<void> {
+    return this.setTrendsData('downloads', key, result)
+  }
+
+  setGithubHistory<T>(key: string, result: T): Promise<void> {
+    return this.setTrendsData('github-history', key, result)
+  }
+
+  setReleases<T>(key: string, result: T): Promise<void> {
+    return this.setTrendsData('releases', key, result)
+  }
+
+  setSizeHistory<T>(key: string, result: T): Promise<void> {
+    return this.setTrendsData('size-history', key, result)
+  }
+
+  private async getTrendsData<T>(
     cacheName: TrendsCacheName,
-    key: TrendsCacheKey,
+    key: string,
   ): Promise<T | undefined> {
     try {
       const result = await API.get<T>(`/trends-cache/${cacheName}`, {
@@ -86,20 +118,18 @@ export default class CacheServiceClient {
     }
   }
 
-  async setTrendsData<T>(
+  private async setTrendsData<T>(
     cacheName: TrendsCacheName,
-    key: TrendsCacheKey,
+    key: string,
     result: T,
-    ttlMs: number,
   ): Promise<void> {
     try {
       await API.post(`/trends-cache/${cacheName}`, {
-        ...key,
+        key,
         result,
-        ttlMs,
       })
     } catch (error) {
-      debug('failed to set trends cache %s: %O', key.key, error)
+      debug('failed to set trends cache %s: %O', key, error)
     }
   }
 
