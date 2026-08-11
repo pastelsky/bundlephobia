@@ -21,10 +21,13 @@ export interface DownloadsPayload extends CachePayload {
   range?: string
 }
 
-export interface GithubHistoryPayload extends CachePayload {
+export interface GithubRepositoryPayload extends CachePayload {
+  repository?: string
+}
+
+export interface GithubStarsPayload extends CachePayload {
   repository?: string
   range?: string
-  source?: 'history' | 'snapshot' | 'stars'
 }
 
 export interface PackagePayload extends CachePayload {
@@ -72,16 +75,27 @@ export function createDownloadsCache(ttlMs: number) {
 }
 
 export function createGithubHistoryCache(ttlMs: number) {
-  return createCache<GithubHistoryPayload, GithubHistoryPayload>(
+  return createCache<GithubRepositoryPayload, GithubRepositoryPayload>(
+    ttlMs,
+    ({ query, body }) => query.repository || body.repository,
+  )
+}
+
+export function createGithubStarsCache(ttlMs: number) {
+  return createCache<GithubStarsPayload, GithubStarsPayload>(
     ttlMs,
     ({ query, body }) => {
       const repository = query.repository || body.repository
-      const source = query.source || body.source
-      const range = query.range || body.range || ''
-      return repository && source
-        ? `${source}:${repository}:${range}`
-        : undefined
+      const range = query.range || body.range
+      return repository && range ? `${repository}:${range}` : undefined
     },
+  )
+}
+
+export function createGithubSnapshotCache(ttlMs: number) {
+  return createCache<GithubRepositoryPayload, GithubRepositoryPayload>(
+    ttlMs,
+    ({ query, body }) => query.repository || body.repository,
   )
 }
 

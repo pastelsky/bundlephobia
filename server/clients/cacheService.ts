@@ -3,10 +3,7 @@ import 'dotenv-defaults/config'
 import axios from 'axios'
 import createDebug from 'debug'
 
-import type {
-  GithubHistoryCacheSource,
-  TrendsCacheName,
-} from '../../types/cache-domain'
+import type { TrendsCacheName } from '../../types/cache-domain'
 import logger from '../Logger'
 
 const debug = createDebug('bp:cache')
@@ -79,12 +76,16 @@ export default class CacheServiceClient {
     return this.getTrendsData('downloads', { packageName, range })
   }
 
-  getGithubHistory<T>(
-    repository: string,
-    source: GithubHistoryCacheSource,
-    range?: string,
-  ): Promise<T | undefined> {
-    return this.getTrendsData('github-history', { repository, source, range })
+  getGithubHistory<T>(repository: string): Promise<T | undefined> {
+    return this.getTrendsData('github-history', { repository })
+  }
+
+  getGithubStars<T>(repository: string, range: string): Promise<T | undefined> {
+    return this.getTrendsData('github-stars', { repository, range })
+  }
+
+  getGithubSnapshot<T>(repository: string): Promise<T | undefined> {
+    return this.getTrendsData('github-snapshot', { repository })
   }
 
   getReleases<T>(packageName: string): Promise<T | undefined> {
@@ -99,17 +100,20 @@ export default class CacheServiceClient {
     return this.setTrendsData('downloads', { packageName, range }, result)
   }
 
-  setGithubHistory<T>(
+  setGithubHistory<T>(repository: string, result: T): Promise<void> {
+    return this.setTrendsData('github-history', { repository }, result)
+  }
+
+  setGithubStars<T>(
     repository: string,
-    source: GithubHistoryCacheSource,
+    range: string,
     result: T,
-    range?: string,
   ): Promise<void> {
-    return this.setTrendsData(
-      'github-history',
-      { repository, source, range },
-      result,
-    )
+    return this.setTrendsData('github-stars', { repository, range }, result)
+  }
+
+  setGithubSnapshot<T>(repository: string, result: T): Promise<void> {
+    return this.setTrendsData('github-snapshot', { repository }, result)
   }
 
   setReleases<T>(packageName: string, result: T): Promise<void> {

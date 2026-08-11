@@ -15,9 +15,12 @@ import {
 import {
   createDownloadsCache,
   createGithubHistoryCache,
+  createGithubSnapshotCache,
+  createGithubStarsCache,
   createReleasesCache,
   type DownloadsPayload,
-  type GithubHistoryPayload,
+  type GithubRepositoryPayload,
+  type GithubStarsPayload,
   type PackagePayload,
 } from './middlewares/trends-cache.middleware.ts'
 
@@ -37,10 +40,13 @@ fastify.post('/package-cache', postPackageSizeMiddlware)
 fastify.get('/exports-cache', getExportsSizeMiddlware)
 fastify.post('/exports-cache', postExportsSizeMiddleware)
 
+const HOUR_MS = 60 * 60 * 1000
 const trendsCacheConfig: Record<TrendsCacheName, number> = {
-  downloads: 24 * 60 * 60 * 1000,
-  'github-history': 24 * 60 * 60 * 1000,
-  releases: 24 * 60 * 60 * 1000,
+  downloads: 6 * HOUR_MS,
+  'github-history': 12 * HOUR_MS,
+  'github-stars': 12 * HOUR_MS,
+  'github-snapshot': HOUR_MS,
+  releases: 6 * HOUR_MS,
 }
 
 const downloadsCache = createDownloadsCache(trendsCacheConfig.downloads)
@@ -57,13 +63,37 @@ const githubHistoryCache = createGithubHistoryCache(
   trendsCacheConfig['github-history'],
 )
 fastify.get<{
-  Querystring: GithubHistoryPayload
-  Body: GithubHistoryPayload
+  Querystring: GithubRepositoryPayload
+  Body: GithubRepositoryPayload
 }>('/trends-cache/github-history', githubHistoryCache.get)
 fastify.post<{
-  Querystring: GithubHistoryPayload
-  Body: GithubHistoryPayload
+  Querystring: GithubRepositoryPayload
+  Body: GithubRepositoryPayload
 }>('/trends-cache/github-history', githubHistoryCache.post)
+
+const githubStarsCache = createGithubStarsCache(
+  trendsCacheConfig['github-stars'],
+)
+fastify.get<{
+  Querystring: GithubStarsPayload
+  Body: GithubStarsPayload
+}>('/trends-cache/github-stars', githubStarsCache.get)
+fastify.post<{
+  Querystring: GithubStarsPayload
+  Body: GithubStarsPayload
+}>('/trends-cache/github-stars', githubStarsCache.post)
+
+const githubSnapshotCache = createGithubSnapshotCache(
+  trendsCacheConfig['github-snapshot'],
+)
+fastify.get<{
+  Querystring: GithubRepositoryPayload
+  Body: GithubRepositoryPayload
+}>('/trends-cache/github-snapshot', githubSnapshotCache.get)
+fastify.post<{
+  Querystring: GithubRepositoryPayload
+  Body: GithubRepositoryPayload
+}>('/trends-cache/github-snapshot', githubSnapshotCache.post)
 
 const releasesCache = createReleasesCache(trendsCacheConfig.releases)
 fastify.get<{ Querystring: PackagePayload; Body: PackagePayload }>(
