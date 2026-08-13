@@ -150,9 +150,9 @@
 
   @media screen and (max-width: 40em) {
     position: static;
-    width: min(100%, $global-spacing * 36);
+    width: min(calc(100vw - #{$global-spacing * 4}), $global-spacing * 36);
     min-height: 0;
-    margin: $global-spacing * 4 auto $global-spacing * 2;
+    margin: clamp(12px, 3vh, 24px) auto 0;
   }
 }
 
