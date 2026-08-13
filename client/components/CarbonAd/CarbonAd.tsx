@@ -70,7 +70,7 @@ const CarbonAd = ({ className, placement }: CarbonAdProps) => {
     script.async = true
     script.type = 'text/javascript'
     script.src =
-      '//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=responsive'
+      '//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=cover'
     script.id = '_carbonads_js'
     script.onload = () => {
       window.requestAnimationFrame(revealWhenCreativeIsRendered)
