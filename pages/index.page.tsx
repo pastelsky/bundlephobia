@@ -134,6 +134,7 @@ const Home = () => {
               autoFocus={true}
             />
           </AutocompleteInputBox>
+          <CarbonAd className="homepage__carbon-ad" placement="homepage" />
           <div className="homepage__or-divider">or</div>
           <div className="homepage__scan-link">
             <Link href="/scan">
@@ -144,7 +145,6 @@ const Home = () => {
               <sup>beta</sup>
             </Link>
           </div>
-          <CarbonAd className="homepage__carbon-ad" placement="homepage" />
         </div>
       </div>
     </Layout>
