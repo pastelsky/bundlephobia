@@ -51,9 +51,7 @@ const CarbonAd = ({ className, placement }: CarbonAdProps) => {
     if (!container) return
 
     const revealWhenCreativeIsRendered = () => {
-      const carbonAds = Array.from(container.querySelectorAll('#carbonads'))
-      const [carbonAd, ...duplicateCarbonAds] = carbonAds
-      duplicateCarbonAds.forEach(carbonAd => carbonAd.remove())
+      const carbonAd = container.querySelector('#carbonads')
       const hasAdContent = Boolean(
         carbonAd?.querySelector('a, img, .carbon-text'),
       )
@@ -63,12 +61,15 @@ const CarbonAd = ({ className, placement }: CarbonAdProps) => {
       }
     }
 
+    if (container.querySelector('script[data-carbon-slot-script]')) return
+
     const observer = new MutationObserver(revealWhenCreativeIsRendered)
     observer.observe(container, { childList: true, subtree: true })
 
     const script = document.createElement('script')
     script.async = true
     script.type = 'text/javascript'
+    script.dataset.carbonSlotScript = 'true'
     script.src =
       '//cdn.carbonads.com/carbon.js?serve=CW7D6K77&placement=bundlephobiacom&format=cover'
     script.id = '_carbonads_js'
@@ -91,9 +92,7 @@ const CarbonAd = ({ className, placement }: CarbonAdProps) => {
     return () => {
       observer.disconnect()
       window.clearTimeout(loadTimeout)
-      container
-        .querySelectorAll('#carbonads')
-        .forEach(carbonAd => carbonAd.remove())
+      container.querySelector('#carbonads')?.remove()
       script.remove()
     }
   }, [])
@@ -150,9 +149,7 @@ const CarbonAd = ({ className, placement }: CarbonAdProps) => {
   return (
     <aside
       ref={slotRef}
-      className={cx('carbon-ad', className, {
-        'carbon-ad--ready': hasCreative,
-      })}
+      className={cx('carbon-ad', className, `carbon-ad--${adLoadState}`)}
       aria-label={hasCreative ? 'Advertisement' : undefined}
     >
       <div ref={containerRef} className="carbon-ad__content">

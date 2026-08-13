@@ -1,9 +1,13 @@
-.carbon-ad:not(.carbon-ad--ready) {
-  width: 1px;
-  height: 1px;
-  min-height: 1px;
-  margin: 0;
-  overflow: hidden;
+.carbon-ad--pending {
+  visibility: hidden;
+
+  .carbon-ad__content {
+    min-height: clamp(160px, 60vw, 280px);
+  }
+}
+
+.carbon-ad--unavailable {
+  display: none;
 }
 
 .carbon-ad__content {
