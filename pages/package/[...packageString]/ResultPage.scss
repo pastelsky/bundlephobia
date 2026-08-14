@@ -144,12 +144,12 @@
   align-items: center;
   justify-content: center;
   width: min($global-spacing * 40, calc(100% - #{$global-spacing * 4}));
-  min-height: 120px;
+  min-height: 280px;
   margin: 4vh auto;
 
   @media screen and (max-width: 40em) {
     width: 125%;
-    min-height: 0;
+    min-height: 280px;
     margin: 4vh -12.5%;
   }
 }
