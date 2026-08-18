@@ -29,12 +29,6 @@ type HasToolName = {
 type HasAction = {
   action: string
 }
-type HasAdPlacement = {
-  placement: 'homepage' | 'package_result'
-}
-type HasAdUnavailableReason = HasAdPlacement & {
-  reason: 'script_error' | 'creative_timeout'
-}
 
 export default class Analytics {
   private static logEvent(
@@ -180,16 +174,5 @@ export default class Analytics {
 
   static mcpDocsOpened() {
     Analytics.logEvent('mcp_docs_opened')
-  }
-
-  static advertisementImpression({ placement }: HasAdPlacement) {
-    Analytics.logEvent('advertisement_impression', { placement })
-  }
-
-  static advertisementUnavailable({
-    placement,
-    reason,
-  }: HasAdUnavailableReason) {
-    Analytics.logEvent('advertisement_unavailable', { placement, reason })
   }
 }
