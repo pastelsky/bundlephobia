@@ -1,15 +1,3 @@
-.carbon-ad--pending {
-  visibility: hidden;
-
-  .carbon-ad__content {
-    min-height: clamp(160px, 60vw, 280px);
-  }
-}
-
-.carbon-ad--unavailable {
-  display: none;
-}
-
 .carbon-ad__content {
   position: relative;
   width: 100%;
