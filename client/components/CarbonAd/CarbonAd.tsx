@@ -1,14 +1,11 @@
 import React from 'react'
-import cx from 'classnames'
-import { IconButton } from '../ui'
 
 type CarbonAdProps = {
   className?: string
 }
 
 const CarbonAd = ({ className }: CarbonAdProps) => {
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const [isVisible, setIsVisible] = React.useState(true)
+  const containerRef = React.useRef<HTMLElement>(null)
 
   React.useEffect(() => {
     const container = containerRef.current
@@ -28,34 +25,12 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
     }
   }, [])
 
-  if (!isVisible) return null
-
   return (
-    <aside className={cx('carbon-ad', className)} aria-label="Advertisement">
-      <div ref={containerRef} className="carbon-ad__content">
-        <IconButton
-          className="carbon-ad__dismiss"
-          label="Dismiss advertisement"
-          size="sm"
-          onClick={() => setIsVisible(false)}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M2 2l8 8M10 2l-8 8"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-        </IconButton>
-      </div>
-    </aside>
+    <aside
+      ref={containerRef}
+      className={className}
+      aria-label="Advertisement"
+    />
   )
 }
 
