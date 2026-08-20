@@ -4,6 +4,7 @@ apps:
     name: main
     node_args:
       - --require=./scripts/memory-diagnostics.cjs
+      - --max-old-space-size=400
     instances: 1
     max_memory_restart: 500M
     error_file: logs/index.log
@@ -27,6 +28,7 @@ apps:
     name: build-service
     node_args:
       - --require=./scripts/memory-diagnostics.cjs
+      - --max-old-space-size=900
     instances: 3
     max_memory_restart: 1000M
     exec_mode: cluster
@@ -46,6 +48,7 @@ apps:
     name: cache-service
     node_args:
       - --require=./scripts/memory-diagnostics.cjs
+      - --max-old-space-size=150
     instances: 1
     max_memory_restart: 200M
     exec_mode: cluster
