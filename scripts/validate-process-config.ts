@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 
 const repositoryRoot = path.resolve(
@@ -8,11 +8,18 @@ const repositoryRoot = path.resolve(
   '..',
 )
 
-export function parseProcessApps(contents) {
+export type ProcessApp = {
+  script: string
+  block: string
+  name?: string
+  nodeArgs: string[]
+}
+
+export function parseProcessApps(contents: string): ProcessApp[] {
   const matches = [...contents.matchAll(/^  - script: (.+)$/gm)]
 
   return matches.map((match, index) => {
-    const blockStart = match.index
+    const blockStart = match.index!
     const blockEnd = matches[index + 1]?.index ?? contents.length
     const block = contents.slice(blockStart, blockEnd)
 
@@ -27,9 +34,12 @@ export function parseProcessApps(contents) {
   })
 }
 
-export function validateProcessContents(contents, root = repositoryRoot) {
+export function validateProcessContents(
+  contents: string,
+  root = repositoryRoot,
+) {
   const apps = parseProcessApps(contents)
-  const errors = []
+  const errors: string[] = []
 
   if (apps.length === 0)
     errors.push('process.yml does not define any applications')
@@ -71,16 +81,9 @@ export function validateProcessContents(contents, root = repositoryRoot) {
 export function validateProcessConfig({
   configPath = path.join(repositoryRoot, 'process.yml'),
   root = repositoryRoot,
+}: {
+  configPath?: string
+  root?: string
 } = {}) {
   return validateProcessContents(fs.readFileSync(configPath, 'utf8'), root)
-}
-
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const result = validateProcessConfig()
-  if (result.errors.length > 0) {
-    console.error(result.errors.join('\n'))
-    process.exitCode = 1
-  } else {
-    console.log(`Validated ${result.apps.length} PM2 process entrypoints.`)
-  }
 }

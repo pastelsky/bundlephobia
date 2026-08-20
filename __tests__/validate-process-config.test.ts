@@ -1,36 +1,35 @@
-import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import test from 'node:test'
 
 import {
   parseProcessApps,
   validateProcessConfig,
   validateProcessContents,
-} from './validate-process-config.mjs'
+} from '../scripts/validate-process-config'
 
 test('all PM2 process entrypoints exist and TypeScript services are runnable by Node', () => {
   const result = validateProcessConfig()
 
-  assert.deepEqual(result.errors, [])
-  assert.deepEqual(
-    result.apps.map(app => app.name),
-    ['main', 'build-service', 'cache-service'],
-  )
+  expect(result.errors).toEqual([])
+  expect(result.apps.map(app => app.name)).toEqual([
+    'main',
+    'build-service',
+    'cache-service',
+  ])
 })
 
 test('cache-service PM2 command starts the configured listener', async () => {
   const result = validateProcessConfig()
   const app = result.apps.find(candidate => candidate.name === 'cache-service')
-  assert.ok(app)
+  expect(app).toBeDefined()
 
-  const child = spawn(process.execPath, [...app.nodeArgs, app.script], {
+  const child = spawn(process.execPath, [...app!.nodeArgs, app!.script], {
     cwd: process.cwd(),
     env: { ...process.env, NODE_ENV: 'test' },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
 
   try {
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(
         () => reject(new Error('cache-service did not start')),
         5000,
@@ -71,11 +70,11 @@ test('process parser keeps each app block attached to its script', () => {
     name: other
 `)
 
-  assert.equal(apps[0].script, './service.ts')
-  assert.deepEqual(apps[0].nodeArgs, ['--experimental-strip-types'])
-  assert.match(apps[0].block, /name: service/)
-  assert.doesNotMatch(apps[0].block, /name: other/)
-  assert.equal(apps[1].script, './other.js')
+  expect(apps[0].script).toBe('./service.ts')
+  expect(apps[0].nodeArgs).toEqual(['--experimental-strip-types'])
+  expect(apps[0].block).toMatch(/name: service/)
+  expect(apps[0].block).not.toMatch(/name: other/)
+  expect(apps[1].script).toBe('./other.js')
 })
 
 test('validator rejects missing scripts and TypeScript without a runtime loader', () => {
@@ -89,6 +88,6 @@ test('validator rejects missing scripts and TypeScript without a runtime loader'
     process.cwd(),
   )
 
-  assert.match(result.errors[0], /missing script/)
-  assert.match(result.errors[1], /without --experimental-strip-types/)
+  expect(result.errors[0]).toMatch(/missing script/)
+  expect(result.errors[1]).toMatch(/without --experimental-strip-types/)
 })
