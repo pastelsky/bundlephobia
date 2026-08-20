@@ -42,10 +42,11 @@ apps:
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
       MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics
 
-  - script: ./cache-service/index.js
+  - script: ./cache-service/index.ts
     name: cache-service
     node_args:
       - --require=./scripts/memory-diagnostics.cjs
+      - --experimental-strip-types
     instances: 1
     max_memory_restart: 200M
     exec_mode: cluster

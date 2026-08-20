@@ -119,6 +119,7 @@
     "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
     "prod": "yarn run build && yarn start",
     "test": "jest",
+    "test:process-config": "jest --runInBand __tests__/validate-process-config.test.ts",
     "typecheck": "tsc --project tsconfig.typecheck.json --noEmit",
     "test:e2e": "yarn build && playwright test",
     "test:e2e:run": "playwright test",
