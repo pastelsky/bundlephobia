@@ -3,6 +3,7 @@ import 'dotenv-defaults/config'
 import axios from 'axios'
 import createDebug from 'debug'
 
+import type { TrendsCacheName } from '../../types/cache-domain'
 import logger from '../Logger'
 
 const debug = createDebug('bp:cache')
@@ -68,6 +69,83 @@ export default class CacheServiceClient {
         error,
         `CACHE ERROR for package exports ${key.name}@${key.version}`,
       )
+    }
+  }
+
+  getDownloads<T>(packageName: string, range: string): Promise<T | undefined> {
+    return this.getTrendsData('downloads', { packageName, range })
+  }
+
+  getGithubHistory<T>(repository: string): Promise<T | undefined> {
+    return this.getTrendsData('github-history', { repository })
+  }
+
+  getGithubStars<T>(repository: string, range: string): Promise<T | undefined> {
+    return this.getTrendsData('github-stars', { repository, range })
+  }
+
+  getGithubSnapshot<T>(repository: string): Promise<T | undefined> {
+    return this.getTrendsData('github-snapshot', { repository })
+  }
+
+  getReleases<T>(packageName: string): Promise<T | undefined> {
+    return this.getTrendsData('releases', { packageName })
+  }
+
+  setDownloads<T>(
+    packageName: string,
+    range: string,
+    result: T,
+  ): Promise<void> {
+    return this.setTrendsData('downloads', { packageName, range }, result)
+  }
+
+  setGithubHistory<T>(repository: string, result: T): Promise<void> {
+    return this.setTrendsData('github-history', { repository }, result)
+  }
+
+  setGithubStars<T>(
+    repository: string,
+    range: string,
+    result: T,
+  ): Promise<void> {
+    return this.setTrendsData('github-stars', { repository, range }, result)
+  }
+
+  setGithubSnapshot<T>(repository: string, result: T): Promise<void> {
+    return this.setTrendsData('github-snapshot', { repository }, result)
+  }
+
+  setReleases<T>(packageName: string, result: T): Promise<void> {
+    return this.setTrendsData('releases', { packageName }, result)
+  }
+
+  private async getTrendsData<T>(
+    cacheName: TrendsCacheName,
+    params: Record<string, string | undefined>,
+  ): Promise<T | undefined> {
+    try {
+      const result = await API.get<T>(`/trends-cache/${cacheName}`, {
+        params,
+      })
+      return result.data
+    } catch {
+      return undefined
+    }
+  }
+
+  private async setTrendsData<T>(
+    cacheName: TrendsCacheName,
+    params: Record<string, string | undefined>,
+    result: T,
+  ): Promise<void> {
+    try {
+      await API.post(`/trends-cache/${cacheName}`, {
+        ...params,
+        result,
+      })
+    } catch (error) {
+      debug('failed to set trends cache %s: %O', cacheName, error)
     }
   }
 
