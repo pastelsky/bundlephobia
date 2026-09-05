@@ -4,7 +4,6 @@ import config from '../config'
 import { isGithubRepository } from '../packages/repository'
 
 export interface GithubRepositoryMetadata {
-  full_name?: string
   stargazers_count?: number
 }
 

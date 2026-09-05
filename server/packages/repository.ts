@@ -35,15 +35,7 @@ export function parseGithubRepository(
       return `${parsed.owner}/${parsed.name}`
     }
   } catch {
-    const cleaned = value
-      .replace(/^git\+/, '')
-      .replace(/^ssh:\/\//, 'https://')
-      .replace(/^git@github\.com:/, 'https://github.com/')
-      .replace(/\.git$/, '')
-    const match = cleaned.match(
-      /github\.com[/:]([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)/i,
-    )
-    if (match?.[1] && match[2]) return `${match[1]}/${match[2]}`
+    return null
   }
 
   return null

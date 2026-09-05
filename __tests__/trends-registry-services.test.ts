@@ -71,4 +71,20 @@ describe('trends npm registry services', () => {
     await expect(resolveGithubRepo('example')).resolves.toBe('example/project')
     expect(mockFetchPackagePackument).toHaveBeenCalledWith('example')
   })
+
+  it('does not infer a source repository from an older version', async () => {
+    mockFetchPackagePackument.mockResolvedValue({
+      'dist-tags': { latest: '2.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'example',
+          version: '1.0.0',
+          repository: 'git+https://github.com/example/project.git',
+        },
+        '2.0.0': { name: 'example', version: '2.0.0' },
+      },
+    })
+
+    await expect(resolveGithubRepo('example')).resolves.toBeNull()
+  })
 })

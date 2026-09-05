@@ -17,10 +17,7 @@ type GithubStarHistory = {
   complete: boolean
 }
 
-export type GithubTrendSource =
-  | 'github-star-history'
-  | 'github-snapshot'
-  | 'unavailable'
+export type GithubTrendSource = 'github-star-history' | 'unavailable'
 
 function isoDate(date: Date) {
   return date.toISOString().slice(0, 10)
@@ -142,10 +139,7 @@ async function fetchLiveGithubStats(repository: string): Promise<{
   )
 }
 
-/**
- * Returns exact historical star actions and separate current repository
- * snapshots. Issue history is deliberately not part of the trends contract.
- */
+/** Returns exact historical star actions and the current star snapshot. */
 export async function fetchGithubTrendSeries(
   repository: string,
   range: TrendsRange = 'last-year',
