@@ -91,20 +91,20 @@
       "get": {
         "operationId": "getPackageHistory",
         "tags": ["size"],
-        "summary": "Size across published versions of a package",
-        "description": "Any version parameter in `package` is ignored; the whole known history for the package name is returned. Entries are partial, since a version is only present once it has been built.",
-        "parameters": [{ "$ref": "#/components/parameters/package" }],
+        "summary": "Package versions, publish dates, and bundle sizes",
+        "description": "Returns NPM publication dates and the cached Bundlephobia size snapshot for known versions. `built` distinguishes a size snapshot from a placeholder. `releases` contains major and minor releases.",
+        "parameters": [
+          { "$ref": "#/components/parameters/package" },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 500, "default": 40 } }
+        ],
         "responses": {
           "200": {
-            "description": "Map of version string to a partial build result.",
+            "description": "Package metadata, release markers, and version snapshots.",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "$ref": "#/components/schemas/PackageBuild"
-                  }
-                }
+                "schema": { "$ref": "#/components/schemas/PackageHistory" }
               }
             }
           },
@@ -226,6 +226,51 @@
             "description": "Minified and gzipped size in bytes."
           },
           "type": { "type": "string" }
+        }
+      },
+      "PackageHistory": {
+        "type": "object",
+        "required": ["name", "repository", "versions", "releases", "range"],
+        "properties": {
+          "name": { "type": "string" },
+          "repository": { "type": ["string", "null"] },
+          "versions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PackageHistoryVersion" }
+          },
+          "releases": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PackageHistoryRelease" }
+          },
+          "range": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+              "from": { "type": ["string", "null"], "format": "date" },
+              "to": { "type": ["string", "null"], "format": "date" }
+            }
+          }
+        }
+      },
+      "PackageHistoryVersion": {
+        "type": "object",
+        "required": ["version", "publishedAt", "size", "gzip", "built"],
+        "properties": {
+          "version": { "type": "string" },
+          "publishedAt": { "type": ["string", "null"], "format": "date" },
+          "size": { "type": ["integer", "null"] },
+          "gzip": { "type": ["integer", "null"] },
+          "built": { "type": "boolean" }
+        }
+      },
+      "PackageHistoryRelease": {
+        "type": "object",
+        "required": ["version", "publishedAt", "major", "minor"],
+        "properties": {
+          "version": { "type": "string" },
+          "publishedAt": { "type": "string", "format": "date" },
+          "major": { "type": "boolean" },
+          "minor": { "type": "boolean" }
         }
       },
       "Error": {

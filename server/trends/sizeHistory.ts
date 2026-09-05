@@ -3,6 +3,7 @@ import semver from 'semver'
 
 import firebaseUtils from '../../utils/firebase.utils'
 import { getCached, setCached } from './memoryCache'
+import type { PackageHistoryResponse } from '../../../types/package-history'
 import type { TrendsPoint } from './types'
 
 type HistorySnapshot = {
@@ -33,7 +34,7 @@ async function fetchHistory(packageName: string) {
   const cached = getCached<Record<string, HistorySnapshot>>(cacheKey)
   if (cached) return cached
 
-  const { data } = await axios.get<Record<string, HistorySnapshot>>(
+  const { data } = await axios.get<PackageHistoryResponse>(
     'https://bundlephobia.com/api/package-history',
     {
       params: { package: packageName, limit: 40 },
@@ -41,8 +42,15 @@ async function fetchHistory(packageName: string) {
       headers: { Accept: 'application/json' },
     }
   )
-  setCached(cacheKey, data, 30 * 60 * 1000)
-  return data
+  const history = Object.fromEntries(
+    data.versions.map(version => [version.version, {
+      size: version.size ?? undefined,
+      gzip: version.gzip ?? undefined,
+      version: version.version,
+    }]),
+  )
+  setCached(cacheKey, history, 30 * 60 * 1000)
+  return history
 }
 
 export async function fetchSizeSeries(

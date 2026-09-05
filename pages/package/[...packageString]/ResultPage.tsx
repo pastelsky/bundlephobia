@@ -6,7 +6,6 @@ import Analytics from '../../../client/analytics'
 import API, {
   type PackageBuildInfo,
   type PackageHistoryResponse,
-  type PackageBuildInfoSnapshot,
 } from '../../../client/api'
 import EmptyBox from '../../../client/assets/empty-box.svg'
 import { AutocompleteInput } from '../../../client/components/AutocompleteInput'
@@ -49,7 +48,7 @@ type ResultPageState = {
   resultsError: unknown
   historicalResultsPromiseState: PromiseState
   inputInitialValue: string
-  historicalResults: PackageHistoryResponse
+  historicalResults: PackageHistoryResponse | null
   similarPackages: PackageBuildInfo[]
   similarPackagesCategory: string
 }
@@ -58,10 +57,6 @@ type ResolvedBuildError = {
   errorName: string | null
   errorBody: string | null
   errorDetails: string | null
-}
-
-function isEmptySnapshot(reading: PackageBuildInfoSnapshot) {
-  return Object.keys(reading).length === 0
 }
 
 function formatSentence(values: string[]) {
@@ -101,7 +96,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     resultsError: null,
     historicalResultsPromiseState: null,
     inputInitialValue: getPackageStringFromRouter(this.props.router),
-    historicalResults: {},
+    historicalResults: null,
     similarPackages: [],
     similarPackagesCategory: '',
   }
@@ -190,7 +185,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   fetchHistory = (packageString: string, requestId: number) => {
-    API.getHistory(packageString, 15)
+    API.getHistory(packageString, { limit: 15 })
       .then(results => {
         if (!this.isActiveSearch(requestId)) return
 
@@ -259,7 +254,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         resultsPromiseState: 'pending',
         inputInitialValue: normalizedQuery,
         similarPackages: [],
-        historicalResults: {},
+        historicalResults: null,
         similarPackagesCategory: '',
       },
       () => {
@@ -295,38 +290,33 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       return []
     }
 
-    const totalVersions: PackageHistoryResponse = {
-      ...historicalResults,
-      [results.version]: results,
-    }
-
-    const formattedResults = Object.keys(totalVersions).map(version => {
-      const reading = totalVersions[version]
-
-      if (isEmptySnapshot(reading)) {
-        return {
-          version,
-          disabled: true,
-          size: 0,
-          gzip: 0,
+    const formattedByVersion = new Map(
+      (historicalResults?.versions ?? []).map(reading => [
+        reading.version,
+        {
+          version: reading.version,
+          disabled: !reading.built,
+          size: reading.size ?? 0,
+          gzip: reading.gzip ?? 0,
           hasSideEffects: false,
           hasJSModule: false,
           hasJSNext: false,
           isModuleType: false,
-        }
-      }
-
-      return {
-        version,
-        disabled: false,
-        size: reading.size ?? 0,
-        gzip: reading.gzip ?? 0,
-        hasSideEffects: Boolean(reading.hasSideEffects),
-        hasJSModule: Boolean(reading.hasJSModule),
-        hasJSNext: Boolean(reading.hasJSNext),
-        isModuleType: Boolean(reading.isModuleType),
-      }
+        },
+      ]),
+    )
+    formattedByVersion.set(results.version, {
+      version: results.version,
+      disabled: false,
+      size: results.size,
+      gzip: results.gzip,
+      hasSideEffects: Boolean(results.hasSideEffects),
+      hasJSModule: Boolean(results.hasJSModule),
+      hasJSNext: Boolean(results.hasJSNext),
+      isModuleType: Boolean(results.isModuleType),
     })
+
+    const formattedResults = Array.from(formattedByVersion.values())
 
     const sorted = formattedResults.sort((packageA, packageB) =>
       semver.compare(packageA.version, packageB.version)

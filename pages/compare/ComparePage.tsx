@@ -20,7 +20,7 @@ type ComparePageState = {
   resultsError: unknown
   resultsPromiseState: 'pending' | 'fulfilled' | 'rejected' | null
   historicalResultsPromiseState: 'pending' | 'fulfilled' | 'rejected' | null
-  historicalResults: PackageHistoryResponse
+  historicalResults: PackageHistoryResponse | null
   inputInitialValue?: string
 }
 
@@ -33,7 +33,7 @@ export default class ComparePage extends PureComponent<
     resultsError: null,
     resultsPromiseState: null,
     historicalResultsPromiseState: null,
-    historicalResults: {},
+    historicalResults: null,
   }
 
   fetchResults = (packageString: string) => {
@@ -60,7 +60,7 @@ export default class ComparePage extends PureComponent<
   }
 
   fetchHistory = (packageString: string) => {
-    API.getHistory(packageString, 15)
+    API.getHistory(packageString, { limit: 15 })
       .then(results => {
         this.setState({
           historicalResultsPromiseState: 'fulfilled',
@@ -99,37 +99,33 @@ export default class ComparePage extends PureComponent<
       return []
     }
 
-    const totalVersions: PackageHistoryResponse = {
-      ...historicalResults,
-      [results.version]: results,
-    }
-
-    const formattedResults = Object.keys(totalVersions).map(version => {
-      const reading = totalVersions[version]
-      if (!reading || Object.keys(reading).length === 0) {
-        return {
-          version,
-          disabled: true,
-          size: 0,
-          gzip: 0,
+    const formattedByVersion = new Map(
+      (historicalResults?.versions ?? []).map(reading => [
+        reading.version,
+        {
+          version: reading.version,
+          disabled: !reading.built,
+          size: reading.size ?? 0,
+          gzip: reading.gzip ?? 0,
           hasSideEffects: false,
           hasJSModule: false,
           hasJSNext: false,
           isModuleType: false,
-        }
-      }
-
-      return {
-        version,
-        disabled: false,
-        size: reading.size ?? 0,
-        gzip: reading.gzip ?? 0,
-        hasSideEffects: Boolean(reading.hasSideEffects),
-        hasJSModule: Boolean(reading.hasJSModule),
-        hasJSNext: Boolean(reading.hasJSNext),
-        isModuleType: Boolean(reading.isModuleType),
-      }
+        },
+      ]),
+    )
+    formattedByVersion.set(results.version, {
+      version: results.version,
+      disabled: false,
+      size: results.size,
+      gzip: results.gzip,
+      hasSideEffects: Boolean(results.hasSideEffects),
+      hasJSModule: Boolean(results.hasJSModule),
+      hasJSNext: Boolean(results.hasJSNext),
+      isModuleType: Boolean(results.isModuleType),
     })
+
+    const formattedResults = Array.from(formattedByVersion.values())
 
     const sorted = formattedResults.sort((packageA, packageB) => {
       const versionA = Number(packageA.version.replace(/\D/g, ''))
