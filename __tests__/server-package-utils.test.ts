@@ -29,6 +29,7 @@ describe('server package utilities', () => {
     ['git@github.com:vuejs/core.git', 'vuejs/core'],
     [{ url: 'https://github.com/expressjs/express' }, 'expressjs/express'],
     ['https://gitlab.com/example/project', null],
+    ['https://notgithub.com/example/project', null],
   ])('extracts a GitHub repository from %p', (repository, expected) => {
     expect(parseGithubRepository(repository)).toBe(expected)
   })
