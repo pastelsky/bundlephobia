@@ -47,7 +47,7 @@ export function isTrendsRange(value: string | undefined): value is TrendsRange {
 }
 
 export function isTrendsGroupBy(
-  value: string | undefined
+  value: string | undefined,
 ): value is TrendsGroupBy {
   return value === 'day' || value === 'week' || value === 'month'
 }
@@ -56,7 +56,7 @@ function bucketDate(date: string, groupBy: TrendsGroupBy) {
   const value = new Date(`${date}T00:00:00Z`)
   if (groupBy === 'month') {
     return `${value.getUTCFullYear()}-${String(
-      value.getUTCMonth() + 1
+      value.getUTCMonth() + 1,
     ).padStart(2, '0')}-01`
   }
   if (groupBy === 'week') {
@@ -71,7 +71,7 @@ export function rollupPoints(
   points: TrendsPoint[],
   groupBy: TrendsGroupBy,
   mode: 'sum' | 'last',
-  fillMissing = false
+  fillMissing = false,
 ) {
   if (groupBy === 'day' && mode === 'last') return points
 
@@ -124,7 +124,7 @@ export function rollupPoints(
 
 export function filterPointsByRange(
   points: TrendsPoint[],
-  range: TrendsRange
+  range: TrendsRange,
 ): TrendsPoint[] {
   if (!points || points.length === 0) return []
 

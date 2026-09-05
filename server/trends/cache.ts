@@ -7,7 +7,7 @@ export async function getOrLoadTrendsData<T>(
   cacheName: TrendsCacheName,
   key: string,
   ttlMs: number,
-  load: () => Promise<T>
+  load: () => Promise<T>,
 ): Promise<T> {
   // The cache service is queried before reaching an upstream data source.
   const cached = await cache.getTrendsData<T>(cacheName, { key })

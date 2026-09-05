@@ -23,11 +23,11 @@ export interface NpmPackagePackument {
 interface PacoteModule {
   manifest(
     spec: string,
-    options: { fullMetadata: boolean }
+    options: { fullMetadata: boolean },
   ): Promise<NpmPackageManifest>
   packument(
     spec: string,
-    options: { fullMetadata: boolean }
+    options: { fullMetadata: boolean },
   ): Promise<NpmPackagePackument>
 }
 
@@ -44,21 +44,21 @@ function registryManifestPath(name: string, version: string): string {
 
 export function fetchPackageManifest(
   spec: string,
-  options: { fullMetadata: boolean }
+  options: { fullMetadata: boolean },
 ): Promise<NpmPackageManifest> {
   return pacote.manifest(spec, options)
 }
 
 export function fetchPackageVersionManifest(
   name: string,
-  version: string
+  version: string,
 ): Promise<NpmPackageManifest> {
   return registryFetch.json(registryManifestPath(name, version))
 }
 
 /** Fetches full registry metadata, including release dates and manifests. */
 export function fetchPackagePackument(
-  packageName: string
+  packageName: string,
 ): Promise<NpmPackagePackument> {
   return pacote.packument(packageName, { fullMetadata: true })
 }

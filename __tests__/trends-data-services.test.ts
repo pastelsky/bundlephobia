@@ -6,7 +6,7 @@ jest.mock('../server/trends/cache', () => ({
     _cacheName: string,
     _cacheKey: string,
     _ttl: number,
-    load: () => Promise<unknown>
+    load: () => Promise<unknown>,
   ) => load(),
 }))
 
@@ -38,7 +38,7 @@ describe('trends data services', () => {
     ])
 
     await expect(
-      fetchDownloadSeries('@babel/core', 'last-year')
+      fetchDownloadSeries('@babel/core', 'last-year'),
     ).resolves.toEqual({
       points: [
         { date: '2026-08-09', value: 4, partial: false },
@@ -49,7 +49,7 @@ describe('trends data services', () => {
     expect(mockFetchNpmDownloadRange).toHaveBeenCalledTimes(1)
     expect(mockFetchNpmDownloadRange).toHaveBeenCalledWith(
       '@babel/core',
-      'last-year'
+      'last-year',
     )
   })
 
@@ -58,12 +58,12 @@ describe('trends data services', () => {
       async (_packageName, range) => {
         const end = range.split(':')[1]
         return [{ day: end, downloads: 1 }]
-      }
+      },
     )
 
     const result = await fetchDownloadSeries('react', 'last-3-years')
     const requestedRanges = mockFetchNpmDownloadRange.mock.calls.map(
-      ([, range]) => range
+      ([, range]) => range,
     )
 
     expect(requestedRanges.length).toBeGreaterThan(1)
@@ -93,8 +93,8 @@ describe('trends data services', () => {
           { date: '2026-08-10', value: 3, partial: true },
         ],
         'week',
-        'sum'
-      )
+        'sum',
+      ),
     ).toEqual([
       { date: '2026-08-03', value: 2, partial: false },
       { date: '2026-08-10', value: 3, partial: true },

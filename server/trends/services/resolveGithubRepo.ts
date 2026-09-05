@@ -5,7 +5,7 @@ import { trendsConfig } from '../config'
 import { canonicalGithubRepository } from '../repositories'
 
 export async function resolveGithubRepo(
-  packageName: string
+  packageName: string,
 ): Promise<string | null> {
   const cacheKey = `gh-repo:${packageName}`
   return getOrLoadTrendsData(
@@ -35,7 +35,7 @@ export async function resolveGithubRepo(
             .reverse()
           for (const vKey of versionKeys) {
             const repository = parseGithubRepository(
-              packument.versions[vKey]?.repository
+              packument.versions[vKey]?.repository,
             )
             if (repository) {
               candidates.push(repository)
@@ -49,6 +49,6 @@ export async function resolveGithubRepo(
       } catch {
         return null
       }
-    }
+    },
   )
 }

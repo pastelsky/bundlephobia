@@ -1,94 +1,120 @@
 import {
-  fetchGithubRepositoryHistory,
-  type GithubRepositoryHistoryRow,
-} from '../../clients/clickHouse'
-import { fetchGithubRepository } from '../../clients/github'
-import { fetchOssInsightStarHistory } from '../../clients/ossInsight'
+  fetchGithubRepository,
+  fetchGithubStarHistoryPage,
+  type GithubStarHistoryRow,
+} from '../../clients/github'
 import { isGithubRepository } from '../../packages/repository'
 import { getOrLoadTrendsData } from '../cache'
 import { trendsConfig } from '../config'
 import { getTrendsRangeStart } from '../range'
-import { githubHistoryFallbacks } from '../repositories'
 import type { TrendsPoint, TrendsRange } from '../types'
 
-type GithubHistory = {
-  stars: TrendsPoint[]
-  issues: TrendsPoint[]
+const MAX_GITHUB_HISTORY_PAGES = 100
+
+type GithubStarHistory = {
+  points: TrendsPoint[]
+  historyThrough: string | null
+  complete: boolean
 }
 
 export type GithubTrendSource =
-  | 'clickhouse'
+  | 'github-star-history'
   | 'github-snapshot'
-  | 'ossinsight'
   | 'unavailable'
 
-function mapHistoryRows(rows: GithubRepositoryHistoryRow[]): GithubHistory {
-  const stars: TrendsPoint[] = []
-  const issues: TrendsPoint[] = []
-
-  for (const row of rows) {
-    const date = row.time.slice(0, 10)
-    stars.push({ date, value: Number(row.stargazers_count) || 0 })
-    issues.push({ date, value: Number(row.open_issues_count) || 0 })
-  }
-
-  return { stars, issues }
+function isoDate(date: Date) {
+  return date.toISOString().slice(0, 10)
 }
 
-async function fetchClickHouseHistory(
-  repository: string
-): Promise<GithubHistory> {
-  const cacheKey = `clickhouse:${repository}`
-  return getOrLoadTrendsData(
-    'github-history',
-    cacheKey,
-    trendsConfig.cacheTtlMs.githubHistory,
-    async () => {
-      for (const candidate of [
-        repository,
-        ...githubHistoryFallbacks(repository),
-      ]) {
-        try {
-          const result = mapHistoryRows(
-            await fetchGithubRepositoryHistory(candidate)
-          )
-          if (result.stars.length > 0) return result
-        } catch {
-          // Try the next known repository name before treating history as absent.
-        }
-      }
-      return { stars: [], issues: [] }
-    }
+function dateForGithubDay(week: number, day: number) {
+  const date = new Date(week * 1000)
+  if (!Number.isFinite(date.getTime())) return null
+  date.setUTCDate(date.getUTCDate() + day)
+  return isoDate(date)
+}
+
+function isValidHistoryRow(row: GithubStarHistoryRow) {
+  if (!row || typeof row !== 'object') return false
+
+  return (
+    Number.isSafeInteger(row.week) &&
+    row.week > 0 &&
+    Number.isSafeInteger(row.total) &&
+    row.total >= 0 &&
+    dateForGithubDay(row.week, 0) !== null &&
+    Array.isArray(row.days) &&
+    row.days.length === 7 &&
+    row.days.every(day => Number.isSafeInteger(day) && day >= 0) &&
+    row.days.reduce((sum, day) => sum + day, 0) === row.total
   )
 }
 
-async function fetchOssInsightStars(
+function mapGithubStarHistory(rows: GithubStarHistoryRow[]): TrendsPoint[] {
+  const today = isoDate(new Date())
+  const points = rows.flatMap(row => {
+    if (!isValidHistoryRow(row)) return []
+
+    return row.days.flatMap((value, day) => {
+      const date = dateForGithubDay(row.week, day)
+      if (!date || date > today) return []
+      return [{ date, value, partial: date === today }]
+    })
+  })
+
+  points.sort((a, b) => a.date.localeCompare(b.date))
+  return points
+}
+
+async function fetchGithubStarHistory(
   repository: string,
-  range: TrendsRange
-): Promise<TrendsPoint[]> {
+  range: TrendsRange,
+): Promise<GithubStarHistory> {
   const from = getTrendsRangeStart(range)
-  const cacheKey = `ossinsight:${repository}:${from}`
+  const cacheKey = `github-stars:${repository}:${from}`
+
   return getOrLoadTrendsData(
     'github-history',
     cacheKey,
     trendsConfig.cacheTtlMs.githubHistory,
     async () => {
-      try {
-        const rows = await fetchOssInsightStarHistory(
-          repository,
-          from,
-          new Date().toISOString().slice(0, 10)
-        )
-        return rows
-          .map(row => ({
-            date: row.date.slice(0, 10),
-            value: Number(row.stargazers),
-          }))
-          .filter(point => Number.isFinite(point.value))
-      } catch {
-        return []
+      const rows: GithubStarHistoryRow[] = []
+      let page = 1
+      let lastPage: number | null = null
+      let complete = true
+
+      while (page <= MAX_GITHUB_HISTORY_PAGES) {
+        try {
+          const result = await fetchGithubStarHistoryPage(repository, page)
+          rows.push(...result.rows)
+          lastPage = result.lastPage
+
+          const oldestRow = result.rows.at(-1)
+          const oldestDate = oldestRow
+            ? dateForGithubDay(oldestRow.week, 0)
+            : null
+          if (oldestDate && oldestDate <= from) {
+            break
+          }
+          if (result.rows.length === 0) break
+          if (lastPage !== null && page >= lastPage) break
+          if (lastPage === null && result.rows.length < 30) break
+
+          page += 1
+        } catch {
+          complete = false
+          break
+        }
       }
-    }
+
+      const points = mapGithubStarHistory(rows).filter(
+        point => point.date >= from,
+      )
+      return {
+        points,
+        historyThrough: points.at(-1)?.date || null,
+        complete,
+      }
+    },
   )
 }
 
@@ -117,30 +143,19 @@ async function fetchLiveGithubStats(repository: string): Promise<{
       } catch {
         return { stars: null, openIssues: null }
       }
-    }
+    },
   )
 }
 
-function pinLivePoint(
-  series: TrendsPoint[],
-  liveValue: number | null
-): TrendsPoint[] {
-  if (liveValue == null) return series
-
-  const today = new Date().toISOString().slice(0, 10)
-  const livePoint = { date: today, value: liveValue, partial: true }
-  return series.at(-1)?.date === today
-    ? [...series.slice(0, -1), livePoint]
-    : [...series, livePoint]
-}
-
 /**
- * Combines substantiated history with a separately marked current snapshot.
- * Source metadata stays structured so presentation layers can explain gaps.
+ * Returns exact historical star actions and separate current repository
+ * snapshots. GitHub's history endpoint does not provide historical issue
+ * counts, so issue history stays empty instead of mixing a current count into
+ * a historical series.
  */
 export async function fetchGithubTrendSeries(
   repository: string,
-  range: TrendsRange = 'last-year'
+  range: TrendsRange = 'last-year',
 ): Promise<{
   stars: TrendsPoint[]
   issues: TrendsPoint[]
@@ -150,6 +165,7 @@ export async function fetchGithubTrendSeries(
     stars: GithubTrendSource
     issues: GithubTrendSource
     historyThrough: string | null
+    historyComplete: boolean
   }
 }> {
   if (!isGithubRepository(repository)) {
@@ -162,44 +178,26 @@ export async function fetchGithubTrendSeries(
         stars: 'unavailable',
         issues: 'unavailable',
         historyThrough: null,
+        historyComplete: false,
       },
     }
   }
 
-  const [clickHouseHistory, ossInsightStars, live] = await Promise.all([
-    fetchClickHouseHistory(repository),
-    fetchOssInsightStars(repository, range),
+  const [history, live] = await Promise.all([
+    fetchGithubStarHistory(repository, range),
     fetchLiveGithubStats(repository),
   ])
 
-  const historicalStars =
-    ossInsightStars.length > 0 ? ossInsightStars : clickHouseHistory.stars
-  const historicalDates = [
-    historicalStars.at(-1)?.date,
-    clickHouseHistory.issues.at(-1)?.date,
-  ].filter((date): date is string => Boolean(date))
-
   return {
-    stars: pinLivePoint(historicalStars, live.stars),
-    issues: pinLivePoint(clickHouseHistory.issues, live.openIssues),
+    stars: history.points,
+    issues: [],
     currentStars: live.stars,
     currentIssues: live.openIssues,
     sources: {
-      stars:
-        ossInsightStars.length > 0
-          ? 'ossinsight'
-          : clickHouseHistory.stars.length > 0
-          ? 'clickhouse'
-          : live.stars != null
-          ? 'github-snapshot'
-          : 'unavailable',
-      issues:
-        clickHouseHistory.issues.length > 0
-          ? 'clickhouse'
-          : live.openIssues != null
-          ? 'github-snapshot'
-          : 'unavailable',
-      historyThrough: historicalDates.sort()[0] || null,
+      stars: history.points.length > 0 ? 'github-star-history' : 'unavailable',
+      issues: live.openIssues !== null ? 'github-snapshot' : 'unavailable',
+      historyThrough: history.historyThrough,
+      historyComplete: history.complete,
     },
   }
 }

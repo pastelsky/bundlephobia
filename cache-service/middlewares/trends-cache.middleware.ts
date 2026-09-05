@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import LRU from 'lru-cache'
+import { LRUCache } from 'lru-cache'
 
-type CacheEntry = unknown
+type CacheEntry = object | string | number | boolean
 type CacheRequest = FastifyRequest<{
   Querystring: { key?: string }
   Body: { key?: string; result?: CacheEntry; ttlMs?: number }
@@ -23,7 +23,7 @@ function getTtlMs(request: CacheRequest) {
 
 export function createTrendsCacheMiddleware() {
   // Each data source has an independent LRU budget and expiry policy.
-  const cache = new LRU<string, CacheEntry>({ max: MAX_ENTRIES })
+  const cache = new LRUCache<string, CacheEntry>({ max: MAX_ENTRIES })
 
   return {
     async get(request: CacheRequest, reply: FastifyReply) {
@@ -39,9 +39,12 @@ export function createTrendsCacheMiddleware() {
     async post(request: CacheRequest, reply: FastifyReply) {
       const key = getKey(request)
       const ttlMs = getTtlMs(request)
-      if (!key || ttlMs === null) return reply.code(422).send()
+      const result = request.body?.result
+      if (!key || ttlMs === null || result === undefined) {
+        return reply.code(422).send()
+      }
 
-      cache.set(key, request.body.result, ttlMs)
+      cache.set(key, result as CacheEntry, { ttl: ttlMs })
       return reply.code(201).send()
     },
   }

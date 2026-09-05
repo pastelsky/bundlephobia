@@ -38,6 +38,6 @@ export async function fetchPackageReleases(packageName: string): Promise<{
 
       releases.sort((a, b) => a.date.localeCompare(b.date))
       return { releases, publishDates }
-    }
+    },
   )
 }
