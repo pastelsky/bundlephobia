@@ -113,8 +113,15 @@ const localMcpPathBuilders = new Map([
   ],
   [
     'bundlephobia.packageHistory',
-    ({ packageName, args }: { packageName: string; args: McpArguments }) =>
-      `/api/package-history?package=${packageName}&limit=${Number(args.limit ?? 10)}`,
+    ({ packageName, args }: { packageName: string; args: McpArguments }) => {
+      const params = new URLSearchParams({
+        package: packageName,
+        limit: String(Number(args.limit ?? 40)),
+      })
+      if (typeof args.from === 'string') params.set('from', args.from)
+      if (typeof args.to === 'string') params.set('to', args.to)
+      return `/api/package-history?${params}`
+    },
   ],
   [
     'bundlephobia.similarPackages',
@@ -291,15 +298,27 @@ app.prepare().then(() => {
 
     invariant(packageString, 'package parameter is required')
     const { name } = parsePackageString(packageString)
+    const from = typeof ctx.query.from === 'string' ? ctx.query.from : undefined
+    const to = typeof ctx.query.to === 'string' ? ctx.query.to : undefined
+    const requestedLimit = Number(ctx.query.limit)
+    const limit = Number.isInteger(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 500)
+      : 40
+
+    for (const date of [from, to]) {
+      if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        ctx.throw(400, 'from and to must be YYYY-MM-DD dates')
+      }
+    }
+    if (from && to && from > to) {
+      ctx.throw(400, 'from must not be after to')
+    }
 
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
       }
-      ctx.body = await firebaseUtils.getPackageHistory(
-        name,
-        Number(ctx.query.limit),
-      )
+      ctx.body = await fetchPackageHistory(name, { from, to, limit })
     } catch (err) {
       console.error(err)
       const message = err instanceof Error ? err.message : String(err)

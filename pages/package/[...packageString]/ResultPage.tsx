@@ -6,7 +6,6 @@ import Analytics from '../../../client/analytics'
 import API, {
   type PackageBuildInfo,
   type PackageHistoryResponse,
-  type PackageBuildInfoSnapshot,
 } from '../../../client/api'
 import EmptyBox from '../../../client/assets/empty-box.svg'
 import { AutocompleteInput } from '../../../client/components/AutocompleteInput'
@@ -49,13 +48,9 @@ type ResultPageState = {
   resultsError: unknown
   historicalResultsPromiseState: PromiseState
   inputInitialValue: string
-  historicalResults: PackageHistoryResponse
+  historicalResults: PackageHistoryResponse | null
   similarPackages: PackageBuildInfo[]
   similarPackagesCategory: string
-}
-
-function isEmptySnapshot(reading: PackageBuildInfoSnapshot) {
-  return Object.keys(reading).length === 0
 }
 
 function formatSentence(values: string[]) {
@@ -288,40 +283,33 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       return []
     }
 
-    const totalVersions: PackageHistoryResponse = {
-      ...historicalResults,
-      [results.version]: results,
-    }
-
-    const formattedResults = Object.keys(totalVersions).map(version => {
-      const reading = totalVersions[version]
-
-      if (isEmptySnapshot(reading)) {
-        return {
-          version,
-          disabled: true,
-          size: 0,
-          gzip: 0,
+    const formattedByVersion = new Map(
+      (historicalResults?.versions ?? []).map(reading => [
+        reading.version,
+        {
+          version: reading.version,
+          disabled: !reading.built,
+          size: reading.size ?? 0,
+          gzip: reading.gzip ?? 0,
           hasSideEffects: false,
           hasJSModule: false,
           hasJSNext: false,
           isModuleType: false,
-        }
-      }
-
-      return {
-        version,
-        disabled: false,
-        size: reading.size ?? 0,
-        gzip: reading.gzip ?? 0,
-        hasSideEffects: Boolean(reading.hasSideEffects),
-        hasJSModule: Boolean(reading.hasJSModule),
-        hasJSNext: Boolean(reading.hasJSNext),
-        isModuleType: Boolean(reading.isModuleType),
-      }
+        },
+      ]),
+    )
+    formattedByVersion.set(results.version, {
+      version: results.version,
+      disabled: false,
+      size: results.size,
+      gzip: results.gzip,
+      hasSideEffects: Boolean(results.hasSideEffects),
+      hasJSModule: Boolean(results.hasJSModule),
+      hasJSNext: Boolean(results.hasJSNext),
+      isModuleType: Boolean(results.isModuleType),
     })
 
-    const sorted = formattedResults.sort((packageA, packageB) =>
+    const sorted = Array.from(formattedByVersion.values()).sort((packageA, packageB) =>
       semver.compare(packageA.version, packageB.version),
     )
 
