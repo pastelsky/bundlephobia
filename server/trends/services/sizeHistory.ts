@@ -35,7 +35,7 @@ export async function fetchSizeSeries(
       const history = await fetchHistory(packageName)
       const points: TrendsPoint[] = []
 
-      for (const [version, snapshot] of Object.entries(history || {})) {
+      for (const [version, snapshot] of Object.entries(history)) {
         const gzip = snapshot?.gzip
         if (typeof gzip !== 'number') continue
 

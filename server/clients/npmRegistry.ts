@@ -6,8 +6,6 @@ export interface NpmPackageManifest {
   version: string
   description?: string
   repository?: RepositoryField
-  bugs?: RepositoryField
-  homepage?: string
   [key: string]: unknown
 }
 
@@ -16,8 +14,6 @@ export interface NpmPackagePackument {
   time?: Record<string, string>
   versions?: Record<string, NpmPackageManifest>
   repository?: RepositoryField
-  bugs?: RepositoryField
-  homepage?: string
 }
 
 interface PacoteModule {

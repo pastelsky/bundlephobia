@@ -25,7 +25,6 @@ describe('GitHub trends service', () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-08-20T12:00:00Z'))
     jest.clearAllMocks()
     mockFetchGithubRepository.mockResolvedValue({
-      full_name: 'example/project',
       stargazers_count: 100,
     })
   })
