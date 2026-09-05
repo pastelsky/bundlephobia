@@ -14,10 +14,10 @@ const client = axios.create({
 
 export async function fetchNpmDownloadRange(
   packageName: string,
-  range: string
+  range: string,
 ): Promise<NpmDownloadPoint[]> {
   const { data } = await client.get<NpmRangeResponse>(
-    `/downloads/range/${range}/${getEscapedNpmPackageName(packageName)}`
+    `/downloads/range/${range}/${getEscapedNpmPackageName(packageName)}`,
   )
   return data.downloads || []
 }

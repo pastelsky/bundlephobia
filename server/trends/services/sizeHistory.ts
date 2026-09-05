@@ -14,14 +14,14 @@ type HistorySnapshot = {
 async function fetchHistory(packageName: string) {
   const history = (await firebaseUtils.getPackageHistory(
     packageName,
-    40
+    40,
   )) as Record<string, HistorySnapshot> | null
   return history || {}
 }
 
 export async function fetchSizeSeries(
   packageName: string,
-  publishDates: Record<string, string>
+  publishDates: Record<string, string>,
 ): Promise<{
   points: TrendsPoint[]
   latestGzip: number | null
@@ -51,7 +51,7 @@ export async function fetchSizeSeries(
         return semver.compare(a.version || '0.0.0', b.version || '0.0.0')
       })
       const dailyPoints = Array.from(
-        new Map(points.map(point => [point.date, point])).values()
+        new Map(points.map(point => [point.date, point])).values(),
       )
 
       const latest = dailyPoints[dailyPoints.length - 1]
@@ -63,6 +63,6 @@ export async function fetchSizeSeries(
         latestSize:
           typeof latestMeta?.size === 'number' ? latestMeta.size : null,
       }
-    }
+    },
   )
 }

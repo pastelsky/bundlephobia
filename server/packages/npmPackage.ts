@@ -6,20 +6,20 @@ export type NpmRegistryPackageSpec = parsePackageSpec.RegistryResult & {
 }
 
 function isAliasPackageSpec(
-  spec: parsePackageSpec.Result
+  spec: parsePackageSpec.Result,
 ): spec is parsePackageSpec.AliasResult {
   return spec.type === 'alias'
 }
 
 function isRegistryPackageSpec(
-  spec: parsePackageSpec.Result
+  spec: parsePackageSpec.Result,
 ): spec is NpmRegistryPackageSpec {
   return spec.registry && Boolean(spec.name) && Boolean(spec.escapedName)
 }
 
 /** Resolves npm aliases to the registry package they target. */
 export function parseNpmRegistryPackageSpec(
-  packageSpecifier: string
+  packageSpecifier: string,
 ): NpmRegistryPackageSpec | null {
   const parsed = parsePackageSpec(packageSpecifier)
   const target = isAliasPackageSpec(parsed) ? parsed.subSpec : parsed

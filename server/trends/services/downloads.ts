@@ -30,7 +30,7 @@ function getHistoricalBuckets(range: TrendsRange) {
   const end = new Date()
   const buckets: Array<{ start: string; end: string }> = []
   const cursor = new Date(
-    Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1)
+    Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1),
   )
 
   while (cursor <= end) {
@@ -39,15 +39,15 @@ function getHistoricalBuckets(range: TrendsRange) {
       Date.UTC(
         cursor.getUTCFullYear(),
         cursor.getUTCMonth() + trendsConfig.downloads.historicalWindowMonths,
-        0
-      )
+        0,
+      ),
     )
     buckets.push({
       start: isoDate(bucketStart < start ? start : bucketStart),
       end: isoDate(bucketEnd > end ? end : bucketEnd),
     })
     cursor.setUTCMonth(
-      cursor.getUTCMonth() + trendsConfig.downloads.historicalWindowMonths
+      cursor.getUTCMonth() + trendsConfig.downloads.historicalWindowMonths,
     )
   }
 
@@ -57,7 +57,7 @@ function getHistoricalBuckets(range: TrendsRange) {
 /** Retrieves one bounded historical window for the three-year series. */
 async function fetchHistoricalRange(
   packageName: string,
-  bucket: { start: string; end: string }
+  bucket: { start: string; end: string },
 ) {
   const cacheKey = `downloads-range:${packageName}:${bucket.start}:${bucket.end}`
   return getOrLoadTrendsData(
@@ -68,13 +68,13 @@ async function fetchHistoricalRange(
       try {
         const downloads = await fetchNpmDownloadRange(
           packageName,
-          `${bucket.start}:${bucket.end}`
+          `${bucket.start}:${bucket.end}`,
         )
         return toTrendsPoints(downloads)
       } catch {
         return []
       }
-    }
+    },
   )
 }
 
@@ -84,7 +84,7 @@ async function fetchHistoricalRange(
  */
 export async function fetchDownloadSeries(
   packageName: string,
-  range: TrendsRange
+  range: TrendsRange,
 ): Promise<DownloadResult> {
   const cacheKey = `series:${packageName}:${range}`
   return getOrLoadTrendsData(
@@ -104,14 +104,14 @@ export async function fetchDownloadSeries(
 
       const buckets = getHistoricalBuckets(range)
       const historicalRanges = await Promise.all(
-        buckets.map(bucket => fetchHistoricalRange(packageName, bucket))
+        buckets.map(bucket => fetchHistoricalRange(packageName, bucket)),
       )
       const points = historicalRanges.flat()
       return {
         points,
         weeklyDownloads: sumLatestWeek(points),
       }
-    }
+    },
   )
 }
 

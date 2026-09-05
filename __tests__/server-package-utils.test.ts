@@ -20,7 +20,7 @@ describe('server package utilities', () => {
   it('rejects non-registry package specs at registry boundaries', () => {
     expect(parseNpmRegistryPackageSpec('github:facebook/react')).toBeNull()
     expect(() => getEscapedNpmPackageName('github:facebook/react')).toThrow(
-      'Expected an npm registry package'
+      'Expected an npm registry package',
     )
   })
 
@@ -35,7 +35,7 @@ describe('server package utilities', () => {
 
   it('normalizes repository URLs for package analysis', () => {
     expect(normalizeRepositoryUrl('git@github.com:vuejs/core.git')).toBe(
-      'https://github.com/vuejs/core.git'
+      'https://github.com/vuejs/core.git',
     )
   })
 

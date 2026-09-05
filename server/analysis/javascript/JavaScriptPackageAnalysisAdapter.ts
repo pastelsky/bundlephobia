@@ -34,9 +34,7 @@ function isNotFound(error: unknown): boolean {
   return registryError.code === 'E404' || registryError.statusCode === 404
 }
 
-export class JavaScriptPackageAnalysisAdapter
-  implements PackageAnalysisAdapter<'javascript'>
-{
+export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<'javascript'> {
   readonly language = 'javascript' as const
 
   constructor(private readonly buildService = new BuildService()) {}
@@ -86,7 +84,7 @@ export class JavaScriptPackageAnalysisAdapter
         try {
           const latest = await fetchPackageVersionManifest(
             packageName,
-            'latest'
+            'latest',
           )
           throw new CustomError('PackageVersionMismatchError', null, {
             suggestedVersion: latest.version,

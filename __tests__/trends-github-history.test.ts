@@ -1,79 +1,115 @@
-jest.mock('../server/clients/clickHouse', () => ({
-  fetchGithubRepositoryHistory: jest.fn(),
-}))
 jest.mock('../server/clients/github', () => ({
   fetchGithubRepository: jest.fn(),
-}))
-jest.mock('../server/clients/ossInsight', () => ({
-  fetchOssInsightStarHistory: jest.fn(),
+  fetchGithubStarHistoryPage: jest.fn(),
 }))
 jest.mock('../server/trends/cache', () => ({
   getOrLoadTrendsData: (
     _cacheName: string,
     _cacheKey: string,
     _ttl: number,
-    load: () => Promise<unknown>
+    load: () => Promise<unknown>,
   ) => load(),
 }))
 
-import { fetchGithubRepositoryHistory } from '../server/clients/clickHouse'
-import { fetchGithubRepository } from '../server/clients/github'
-import { fetchOssInsightStarHistory } from '../server/clients/ossInsight'
+import {
+  fetchGithubRepository,
+  fetchGithubStarHistoryPage,
+} from '../server/clients/github'
 import { fetchGithubTrendSeries } from '../server/trends/services/githubHistory'
 
-const mockFetchGithubRepositoryHistory = jest.mocked(
-  fetchGithubRepositoryHistory
-)
 const mockFetchGithubRepository = jest.mocked(fetchGithubRepository)
-const mockFetchOssInsightStarHistory = jest.mocked(fetchOssInsightStarHistory)
+const mockFetchGithubStarHistoryPage = jest.mocked(fetchGithubStarHistoryPage)
 
 describe('GitHub trends service', () => {
   beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-08-20T12:00:00Z'))
     jest.clearAllMocks()
-  })
-
-  it('keeps historical sources distinct from the current snapshot', async () => {
-    mockFetchGithubRepositoryHistory.mockResolvedValue([
-      {
-        time: '2024-01-01T00:00:00Z',
-        stargazers_count: 90,
-        open_issues_count: 8,
-      },
-    ])
-    mockFetchOssInsightStarHistory.mockResolvedValue([
-      { date: '2024-02-01', stargazers: 95 },
-    ])
     mockFetchGithubRepository.mockResolvedValue({
       full_name: 'example/project',
       stargazers_count: 100,
       open_issues_count: 10,
     })
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('maps official weekly star actions into daily points', async () => {
+    mockFetchGithubStarHistoryPage.mockResolvedValue({
+      lastPage: 1,
+      rows: [
+        {
+          week: 1786233600,
+          total: 7,
+          days: [1, 0, 2, 0, 3, 1, 0],
+        },
+      ],
+    })
 
     const result = await fetchGithubTrendSeries('example/project')
 
-    expect(result.stars[0]).toEqual({ date: '2024-02-01', value: 95 })
-    expect(result.issues[0]).toEqual({ date: '2024-01-01', value: 8 })
-    expect(result.stars.at(-1)).toMatchObject({ value: 100, partial: true })
-    expect(result.issues.at(-1)).toMatchObject({ value: 10, partial: true })
-    expect(result.sources).toEqual({
-      stars: 'ossinsight',
-      issues: 'clickhouse',
-      historyThrough: '2024-01-01',
+    expect(result.stars).toHaveLength(7)
+    expect(result.stars.reduce((sum, point) => sum + point.value, 0)).toBe(7)
+    expect(result.stars.every(point => point.partial === false)).toBe(true)
+    expect(result.issues).toEqual([])
+    expect(result.currentStars).toBe(100)
+    expect(result.currentIssues).toBe(10)
+    expect(result.sources).toMatchObject({
+      stars: 'github-star-history',
+      issues: 'github-snapshot',
+      historyComplete: true,
     })
-    expect(result).not.toHaveProperty('warning')
+  })
+
+  it('paginates backward until the requested range is covered', async () => {
+    mockFetchGithubStarHistoryPage
+      .mockResolvedValueOnce({
+        lastPage: 2,
+        rows: [{ week: 1786406400, total: 1, days: [1, 0, 0, 0, 0, 0, 0] }],
+      })
+      .mockResolvedValueOnce({
+        lastPage: 2,
+        rows: [{ week: 1754265600, total: 2, days: [0, 0, 0, 0, 0, 2, 0] }],
+      })
+
+    await fetchGithubTrendSeries('example/project', 'last-year')
+
+    expect(mockFetchGithubStarHistoryPage).toHaveBeenCalledTimes(2)
+    expect(mockFetchGithubStarHistoryPage).toHaveBeenNthCalledWith(
+      1,
+      'example/project',
+      1,
+    )
+    expect(mockFetchGithubStarHistoryPage).toHaveBeenNthCalledWith(
+      2,
+      'example/project',
+      2,
+    )
+  })
+
+  it('drops malformed rows instead of presenting unverified values', async () => {
+    mockFetchGithubStarHistoryPage.mockResolvedValue({
+      lastPage: 1,
+      rows: [{ week: 1786406400, total: 99, days: [1, 0, 0, 0, 0, 0, 0] }],
+    })
+
+    const result = await fetchGithubTrendSeries('example/project')
+
+    expect(result.stars).toEqual([])
+    expect(result.sources.stars).toBe('unavailable')
   })
 
   it('rejects invalid repositories before calling upstream clients', async () => {
     await expect(
-      fetchGithubTrendSeries("example/project' OR 1=1")
+      fetchGithubTrendSeries("example/project' OR 1=1"),
     ).resolves.toMatchObject({
       stars: [],
       issues: [],
       sources: { stars: 'unavailable', issues: 'unavailable' },
     })
 
-    expect(mockFetchGithubRepositoryHistory).not.toHaveBeenCalled()
-    expect(mockFetchOssInsightStarHistory).not.toHaveBeenCalled()
     expect(mockFetchGithubRepository).not.toHaveBeenCalled()
+    expect(mockFetchGithubStarHistoryPage).not.toHaveBeenCalled()
   })
 })

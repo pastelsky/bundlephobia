@@ -6,7 +6,7 @@ jest.mock('../server/trends/cache', () => ({
     _cacheName: string,
     _cacheKey: string,
     _ttl: number,
-    load: () => Promise<unknown>
+    load: () => Promise<unknown>,
   ) => load(),
 }))
 
