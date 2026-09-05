@@ -52,7 +52,6 @@ const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
     { id: 'downloads', label: 'Downloads', description: 'Daily npm downloads' },
     { id: 'stars', label: 'Stars', description: 'Total repository stargazers' },
     { id: 'size', label: 'Size', description: 'Cached gzip size history' },
-    { id: 'issues', label: 'Issues', description: 'Open issue count' },
   ]
 
 const RANGES: Array<{ id: TrendsRange; label: string }> = [
@@ -683,7 +682,6 @@ export default function TrendsPage() {
               <div className="trends-snapshot__columns" aria-hidden="true">
                 <span>Package</span>
                 <span>Stars</span>
-                <span>Issues</span>
                 <span>Gzip</span>
                 <span>Minified</span>
                 <span aria-hidden="true" />
@@ -739,16 +737,6 @@ export default function TrendsPage() {
                       <span className="trends-stat__value">
                         <MetricValue
                           formatted={formatCompactNumber(pack.current.stars)}
-                        />
-                      </span>
-                    </div>
-                    <div className="trends-stat">
-                      <span className="trends-stat__label">Issues</span>
-                      <span className="trends-stat__value">
-                        <MetricValue
-                          formatted={formatCompactNumber(
-                            pack.current.openIssues
-                          )}
                         />
                       </span>
                     </div>

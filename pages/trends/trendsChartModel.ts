@@ -56,8 +56,6 @@ export function seriesForMetric(
       return pack.downloads
     case 'stars':
       return pack.stars
-    case 'issues':
-      return pack.issues
     case 'size':
       return pack.size
   }

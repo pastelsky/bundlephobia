@@ -70,16 +70,12 @@ async function buildPackageSeries(
     repository
       ? fetchGithubTrendSeries(repository, range).catch(() => ({
           stars: [],
-          issues: [],
           currentStars: null as number | null,
-          currentIssues: null as number | null,
           warning: 'GitHub history unavailable.',
         }))
       : Promise.resolve({
           stars: [],
-          issues: [],
           currentStars: null,
-          currentIssues: null,
           warning: 'No GitHub repository found for this package.',
         }),
     fetchSizeSeries(packageName, releasesResult.publishDates).catch(() => ({
@@ -98,12 +94,6 @@ async function buildPackageSeries(
 
   const stars = rollupPoints(
     filterPointsByRange(githubResult.stars, range),
-    groupBy,
-    'last',
-    true
-  )
-  const issues = rollupPoints(
-    filterPointsByRange(githubResult.issues, range),
     groupBy,
     'last',
     true
@@ -132,13 +122,11 @@ async function buildPackageSeries(
     repository,
     downloads,
     stars,
-    issues,
     size,
     releases: releasesResult.releases,
     current: {
       weeklyDownloads: downloadsResult.weeklyDownloads,
       stars: githubResult.currentStars,
-      openIssues: githubResult.currentIssues,
       gzip: sizeResult.latestGzip,
       size: sizeResult.latestSize,
     },

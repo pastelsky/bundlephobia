@@ -8,14 +8,12 @@ type ClickHouseJson = {
   data?: Array<{
     time: string
     stargazers_count: number
-    open_issues_count: number
   }>
 }
 
 type GithubRepoMetadata = {
   full_name?: string
   stargazers_count?: number
-  open_issues_count?: number
 }
 
 type OssInsightJson = {
@@ -48,7 +46,6 @@ const REPO_FALLBACKS: Record<string, string[]> = {
 
 async function queryClickHouse(repoName: string): Promise<{
   stars: TrendsPoint[]
-  issues: TrendsPoint[]
 }> {
   const endpoint =
     process.env.CLICKHOUSE_TRENDS_URL ||
@@ -57,8 +54,7 @@ async function queryClickHouse(repoName: string): Promise<{
   const sql = `
 SELECT
   time,
-  stargazers_count,
-  open_issues_count
+  stargazers_count
 FROM github_repos_history
 WHERE full_name = '${repoName}'
 ORDER BY time
@@ -71,29 +67,24 @@ ORDER BY time
 
   const rows = data.data || []
   const stars: TrendsPoint[] = []
-  const issues: TrendsPoint[] = []
 
   for (const row of rows) {
     const date = toDate(row.time)
     stars.push({ date, value: Number(row.stargazers_count) || 0 })
-    issues.push({ date, value: Number(row.open_issues_count) || 0 })
   }
 
-  return { stars, issues }
+  return { stars }
 }
 
 async function fetchClickHouseHistory(repo: string): Promise<{
   stars: TrendsPoint[]
-  issues: TrendsPoint[]
 }> {
   if (!isSafeRepoName(repo)) {
-    return { stars: [], issues: [] }
+    return { stars: [] }
   }
 
   const cacheKey = `ch-history:${repo}`
-  const cached = getCached<{ stars: TrendsPoint[]; issues: TrendsPoint[] }>(
-    cacheKey
-  )
+  const cached = getCached<{ stars: TrendsPoint[] }>(cacheKey)
   if (cached) {
     return cached
   }
@@ -116,7 +107,7 @@ async function fetchClickHouseHistory(repo: string): Promise<{
     setCached(cacheKey, result, 12 * 60 * 60 * 1000)
     return result
   } catch {
-    return { stars: [], issues: [] }
+    return { stars: [] }
   }
 }
 
@@ -161,17 +152,15 @@ async function fetchOssInsightStars(
 
 async function fetchLiveGithubStats(repo: string): Promise<{
   stars: number | null
-  openIssues: number | null
   fullName: string | null
 }> {
   if (!isSafeRepoName(repo)) {
-    return { stars: null, openIssues: null, fullName: null }
+    return { stars: null, fullName: null }
   }
 
   const cacheKey = `gh-live:${repo}`
   const cached = getCached<{
     stars: number | null
-    openIssues: number | null
     fullName: string | null
   }>(cacheKey)
   if (cached) {
@@ -198,16 +187,12 @@ async function fetchLiveGithubStats(repo: string): Promise<{
         typeof data.stargazers_count === 'number'
           ? data.stargazers_count
           : null,
-      openIssues:
-        typeof data.open_issues_count === 'number'
-          ? data.open_issues_count
-          : null,
       fullName: data.full_name || repo,
     }
     setCached(cacheKey, result, 60 * 60 * 1000)
     return result
   } catch {
-    const result = { stars: null, openIssues: null, fullName: null }
+    const result = { stars: null, fullName: null }
     setCached(cacheKey, result, 15 * 60 * 1000)
     return result
   }
@@ -242,9 +227,7 @@ export async function fetchGithubTrendSeries(
   range: TrendsRange = 'last-year'
 ): Promise<{
   stars: TrendsPoint[]
-  issues: TrendsPoint[]
   currentStars: number | null
-  currentIssues: number | null
   warning?: string
 }> {
   const [clickHouseHistory, ossInsightStars, live] = await Promise.all([
@@ -256,18 +239,12 @@ export async function fetchGithubTrendSeries(
   const historicalStars =
     ossInsightStars.length > 0 ? ossInsightStars : clickHouseHistory.stars
   const stars = pinLivePoint(historicalStars, live.stars)
-  const issues = pinLivePoint(clickHouseHistory.issues, live.openIssues)
 
   const today = new Date()
   const currentMonth = `${today.getUTCFullYear()}-${String(
     today.getUTCMonth() + 1
   ).padStart(2, '0')}-01`
-  const latestHistoricalDate = [
-    historicalStars.at(-1)?.date,
-    clickHouseHistory.issues.at(-1)?.date,
-  ]
-    .filter((date): date is string => Boolean(date))
-    .sort()[0]
+  const latestHistoricalDate = historicalStars.at(-1)?.date
   const warning =
     historicalStars.length === 0 && live.stars == null
       ? 'No GitHub history or current snapshot is available for this repository.'
@@ -281,9 +258,7 @@ export async function fetchGithubTrendSeries(
 
   return {
     stars,
-    issues,
     currentStars: live.stars,
-    currentIssues: live.openIssues,
     warning,
   }
 }

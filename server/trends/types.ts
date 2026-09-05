@@ -1,4 +1,4 @@
-export type TrendsMetric = 'downloads' | 'stars' | 'size' | 'issues'
+export type TrendsMetric = 'downloads' | 'stars' | 'size'
 
 export type TrendsRange = 'last-2-months' | 'last-year' | 'last-3-years'
 
@@ -23,13 +23,11 @@ export type TrendsPackageSeries = {
   repository: string | null
   downloads: TrendsPoint[]
   stars: TrendsPoint[]
-  issues: TrendsPoint[]
   size: TrendsPoint[]
   releases: TrendsRelease[]
   current: {
     weeklyDownloads: number | null
     stars: number | null
-    openIssues: number | null
     gzip: number | null
     size: number | null
   }
@@ -47,7 +45,6 @@ export const TRENDS_METRICS: TrendsMetric[] = [
   'downloads',
   'stars',
   'size',
-  'issues',
 ]
 
 export const TRENDS_RANGES: TrendsRange[] = [
