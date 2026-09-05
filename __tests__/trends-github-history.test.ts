@@ -27,7 +27,6 @@ describe('GitHub trends service', () => {
     mockFetchGithubRepository.mockResolvedValue({
       full_name: 'example/project',
       stargazers_count: 100,
-      open_issues_count: 10,
     })
   })
 
@@ -52,12 +51,9 @@ describe('GitHub trends service', () => {
     expect(result.stars).toHaveLength(7)
     expect(result.stars.reduce((sum, point) => sum + point.value, 0)).toBe(7)
     expect(result.stars.every(point => point.partial === false)).toBe(true)
-    expect(result.issues).toEqual([])
     expect(result.currentStars).toBe(100)
-    expect(result.currentIssues).toBe(10)
     expect(result.sources).toMatchObject({
       stars: 'github-star-history',
-      issues: 'github-snapshot',
       historyComplete: true,
     })
   })
@@ -105,8 +101,7 @@ describe('GitHub trends service', () => {
       fetchGithubTrendSeries("example/project' OR 1=1"),
     ).resolves.toMatchObject({
       stars: [],
-      issues: [],
-      sources: { stars: 'unavailable', issues: 'unavailable' },
+      sources: { stars: 'unavailable' },
     })
 
     expect(mockFetchGithubRepository).not.toHaveBeenCalled()

@@ -120,7 +120,6 @@ async function fetchGithubStarHistory(
 
 async function fetchLiveGithubStats(repository: string): Promise<{
   stars: number | null
-  openIssues: number | null
 }> {
   const cacheKey = `github-snapshot:${repository}`
   return getOrLoadTrendsData(
@@ -135,13 +134,9 @@ async function fetchLiveGithubStats(repository: string): Promise<{
             typeof metadata.stargazers_count === 'number'
               ? metadata.stargazers_count
               : null,
-          openIssues:
-            typeof metadata.open_issues_count === 'number'
-              ? metadata.open_issues_count
-              : null,
         }
       } catch {
-        return { stars: null, openIssues: null }
+        return { stars: null }
       }
     },
   )
@@ -149,21 +144,16 @@ async function fetchLiveGithubStats(repository: string): Promise<{
 
 /**
  * Returns exact historical star actions and separate current repository
- * snapshots. GitHub's history endpoint does not provide historical issue
- * counts, so issue history stays empty instead of mixing a current count into
- * a historical series.
+ * snapshots. Issue history is deliberately not part of the trends contract.
  */
 export async function fetchGithubTrendSeries(
   repository: string,
   range: TrendsRange = 'last-year',
 ): Promise<{
   stars: TrendsPoint[]
-  issues: TrendsPoint[]
   currentStars: number | null
-  currentIssues: number | null
   sources: {
     stars: GithubTrendSource
-    issues: GithubTrendSource
     historyThrough: string | null
     historyComplete: boolean
   }
@@ -171,12 +161,9 @@ export async function fetchGithubTrendSeries(
   if (!isGithubRepository(repository)) {
     return {
       stars: [],
-      issues: [],
       currentStars: null,
-      currentIssues: null,
       sources: {
         stars: 'unavailable',
-        issues: 'unavailable',
         historyThrough: null,
         historyComplete: false,
       },
@@ -190,12 +177,9 @@ export async function fetchGithubTrendSeries(
 
   return {
     stars: history.points,
-    issues: [],
     currentStars: live.stars,
-    currentIssues: live.openIssues,
     sources: {
       stars: history.points.length > 0 ? 'github-star-history' : 'unavailable',
-      issues: live.openIssues !== null ? 'github-snapshot' : 'unavailable',
       historyThrough: history.historyThrough,
       historyComplete: history.complete,
     },

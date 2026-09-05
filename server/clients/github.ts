@@ -6,7 +6,6 @@ import { isGithubRepository } from '../packages/repository'
 export interface GithubRepositoryMetadata {
   full_name?: string
   stargazers_count?: number
-  open_issues_count?: number
 }
 
 export interface GithubStarHistoryRow {
