@@ -9,6 +9,12 @@ const config = {
   MAX_FAILURE_CACHE_ENTRIES: 600,
   WORKER_TIMEOUT: 600 * 1000,
   DEFAULT_DEV_PORT: 5000,
+  EXTERNAL_SERVICES: {
+    TIMEOUT_MS: {
+      GITHUB: 10_000,
+      NPM_DOWNLOADS: 15_000,
+    },
+  },
   blackList: [
     /hack-cheats/,
     /hacks?-cheats?/,
