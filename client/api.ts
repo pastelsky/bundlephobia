@@ -221,19 +221,6 @@ export default class API {
     )
   }
 
-  static getTrends(
-    packages: string[],
-    range: TrendsRange,
-    groupBy: TrendsGroupBy
-  ) {
-    const packageQuery = packages.map(encodeURIComponent).join(',')
-    return API.get<TrendsResponse>(
-      `/api/trends?packages=${packageQuery}&range=${encodeURIComponent(
-        range
-      )}&groupBy=${encodeURIComponent(groupBy)}`
-    )
-  }
-
   static getSuggestions(query: string) {
     return API.get<PackageSuggestion[]>(
       `https://api.npms.io/v2/search/suggestions?q=${query}`,

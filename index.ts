@@ -38,18 +38,18 @@ import requestLoggerMiddleware from './server/middlewares/requestLogger.middlewa
 import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
 import generateImgMiddleware from './server/middlewares/generateImg.middleware'
 import generateTrendsImgMiddleware from './server/middlewares/generateTrendsImg.middleware'
-import trendsMiddleware from './server/middlewares/trends.middleware'
 import buildMissRateLimit from './server/middlewares/buildMissRateLimit.middleware'
 
 import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
 import { createAnalysisContextMiddleware } from './server/analysis'
+import { fetchPackageHistory } from './server/packageHistory'
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
     env.BASIC_AUTH_PASSWORD,
-    'Environment variable BASIC_AUTH_PASSWORD is required'
+    'Environment variable BASIC_AUTH_PASSWORD is required',
   )
   invariant(env.NODE_ENV, 'Environment variable NODE_ENV is required')
 
@@ -84,7 +84,7 @@ app.prepare().then(() => {
         duration: 1000 * 60 * 5, //  5 mins
         max: 120,
         whiteList: ['127.0.0.1', '::1'],
-      })
+      }),
     )
   }
 
@@ -111,20 +111,20 @@ app.prepare().then(() => {
       gzip: {
         flush: require('zlib').Z_SYNC_FLUSH,
       },
-    })
+    }),
   )
 
   server.use(
     serve('./client/assets/public', {
       maxage: config.CACHE.PUBLIC_ASSETS * 1000,
-    })
+    }),
   )
 
   server.use(
     proxy({
       match: /^\/-\/search/,
       host: 'https://www.npmjs.com',
-    })
+    }),
   )
 
   type Key = {
@@ -152,7 +152,7 @@ app.prepare().then(() => {
       maxRequests: 10,
       whiteList: ['127.0.0.1', '::1'],
     }),
-    buildMiddleware
+    buildMiddleware,
   )
 
   router.get(
@@ -161,7 +161,7 @@ app.prepare().then(() => {
     errorMiddleware,
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-exports'),
-    exportsMiddlware
+    exportsMiddlware,
   )
 
   router.get(
@@ -184,7 +184,7 @@ app.prepare().then(() => {
       maxRequests: 10,
       whiteList: ['127.0.0.1', '::1'],
     }),
-    exportsSizesMiddlware
+    exportsSizesMiddlware,
   )
 
   router.get('/api/recent', async ctx => {
@@ -209,15 +209,28 @@ app.prepare().then(() => {
       typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
     invariant(packageString, 'package parameter is required')
+    const from = typeof ctx.query.from === 'string' ? ctx.query.from : undefined
+    const to = typeof ctx.query.to === 'string' ? ctx.query.to : undefined
+    const requestedLimit = Number(ctx.query.limit)
+    const limit = Number.isInteger(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 500)
+      : 40
+
+    for (const date of [from, to]) {
+      if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        ctx.throw(400, 'from and to must be YYYY-MM-DD dates')
+      }
+    }
+    if (from && to && from > to) {
+      ctx.throw(400, 'from must not be after to')
+    }
+
     const { name } = parsePackageString(packageString)
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
       }
-      ctx.body = await firebaseUtils.getPackageHistory(
-        name,
-        Number(ctx.query.limit)
-      )
+      ctx.body = await fetchPackageHistory(name, { from, to, limit })
     } catch (err) {
       console.error(err)
       const message = err instanceof Error ? err.message : String(err)
@@ -225,7 +238,7 @@ app.prepare().then(() => {
       logger.error(
         'HISTORY',
         err,
-        'HISTORY FAILED: for package' + ctx.query.package
+        'HISTORY FAILED: for package' + ctx.query.package,
       )
       ctx.status = 422
       ctx.body = { type: name, message }
@@ -233,8 +246,6 @@ app.prepare().then(() => {
   })
 
   router.get('/api/similar-packages', similarPackagesMiddleware)
-
-  router.get('/api/trends', trendsMiddleware)
 
   router.get('/api/stats-image', generateImgMiddleware)
 
@@ -278,13 +289,16 @@ app.prepare().then(() => {
         },
         {
           name: 'bundlephobia.packageHistory',
-          description: 'Get package history via /api/package-history',
+          description:
+            'Get package versions, publish dates, and cached bundle sizes via /api/package-history',
           inputSchema: {
             type: 'object',
             required: ['package'],
             properties: {
               package: { type: 'string' },
               limit: { type: 'number' },
+              from: { type: 'string', description: 'Start date, YYYY-MM-DD' },
+              to: { type: 'string', description: 'End date, YYYY-MM-DD' },
             },
           },
         },
@@ -379,7 +393,7 @@ app.prepare().then(() => {
             return
           }
           ctx.body = await callLocalApi(
-            `/api/exports-sizes?package=${packageName}`
+            `/api/exports-sizes?package=${packageName}`,
           )
           return
         }
@@ -389,9 +403,17 @@ app.prepare().then(() => {
             ctx.body = { error: { code: 'InvalidMcpPayload' } }
             return
           }
-          const limit = Number(args.limit ?? 10)
+          const limit = Number(args.limit ?? 40)
+          const from = typeof args.from === 'string' ? args.from : undefined
+          const to = typeof args.to === 'string' ? args.to : undefined
+          const params = new URLSearchParams({
+            package: packageName,
+            limit: String(limit),
+          })
+          if (from) params.set('from', from)
+          if (to) params.set('to', to)
           ctx.body = await callLocalApi(
-            `/api/package-history?package=${packageName}&limit=${limit}`
+            `/api/package-history?${params.toString()}`,
           )
           return
         }
@@ -402,7 +424,7 @@ app.prepare().then(() => {
             return
           }
           ctx.body = await callLocalApi(
-            `/api/similar-packages?package=${packageName}`
+            `/api/similar-packages?package=${packageName}`,
           )
           return
         }
@@ -440,7 +462,7 @@ app.prepare().then(() => {
         ctx.status = 500
         ctx.body = err
       }
-    }
+    },
   )
 
   router.post('/admin/restart', async ctx => {
@@ -462,7 +484,7 @@ app.prepare().then(() => {
     async (ctx, next) => {
       try {
         const { stdout } = await exec.command(
-          'rm -rf /tmp/tmp-build/cache/_cacache /tmp/tmp-build/packages/'
+          'rm -rf /tmp/tmp-build/cache/_cacache /tmp/tmp-build/packages/',
         )
         ctx.body = 'Cache cleared' + stdout
       } catch (err) {
@@ -470,7 +492,7 @@ app.prepare().then(() => {
         ctx.status = 500
         ctx.body = err
       }
-    }
+    },
   )
 
   router.get('/.well-known/api-catalog', async ctx => {

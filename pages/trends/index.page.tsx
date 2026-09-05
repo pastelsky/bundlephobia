@@ -22,6 +22,7 @@ import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
+import { fetchClientTrends } from './trendsData'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 const MAX_PACKAGES = 5
@@ -43,14 +44,18 @@ function parsePackageParam(value: string | string[]) {
       .flatMap(value => value.split(','))
       .map(decodePackageParam)
       .map(packageName => packageName.trim().toLowerCase())
-      .filter(Boolean)
+      .filter(Boolean),
   )
 }
 
 const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
   [
     { id: 'downloads', label: 'Downloads', description: 'Daily npm downloads' },
-    { id: 'stars', label: 'Stars', description: 'Daily repository star actions' },
+    {
+      id: 'stars',
+      label: 'Stars',
+      description: 'Daily repository star actions',
+    },
     { id: 'size', label: 'Size', description: 'Cached gzip size history' },
   ]
 
@@ -69,7 +74,7 @@ const GROUP_BY: Array<{ id: TrendsGroupBy; label: string }> = [
 function exportFileBase(
   packages: string[],
   metric: TrendsMetric,
-  range: TrendsRange
+  range: TrendsRange,
 ) {
   const packagePart =
     packages
@@ -77,7 +82,7 @@ function exportFileBase(
         packageName
           .replace(/^@/, '')
           .replace(/[^a-z0-9]+/gi, '-')
-          .replace(/^-|-$/g, '')
+          .replace(/^-|-$/g, ''),
       )
       .filter(Boolean)
       .join('-vs-') || 'packages'
@@ -100,7 +105,7 @@ function formatSize(value: number | null) {
   const formatted = formatBundleSize(value)
   return {
     value: parseFloat(
-      formatted.size.toFixed(formatted.unit === 'B' ? 0 : 1)
+      formatted.size.toFixed(formatted.unit === 'B' ? 0 : 1),
     ).toString(),
     unit: formatted.unit,
   }
@@ -138,7 +143,7 @@ export default function TrendsPage() {
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
   const trendsCache = useRef(new Map<string, TrendsResponse>())
   const packageTrendsCache = useRef(
-    new Map<string, TrendsResponse['packages'][number]>()
+    new Map<string, TrendsResponse['packages'][number]>(),
   )
   const trendsDataRef = useRef<TrendsResponse | null>(null)
 
@@ -160,7 +165,7 @@ export default function TrendsPage() {
       const parsed = parsePackageParam(queryPackages).slice(0, MAX_PACKAGES)
       if (parsed.length > 0) {
         setPackages(current =>
-          current.join(',') === parsed.join(',') ? current : parsed
+          current.join(',') === parsed.join(',') ? current : parsed,
         )
       }
     }
@@ -192,14 +197,16 @@ export default function TrendsPage() {
   useEffect(() => {
     let isMounted = true
     Promise.all(
-      packages.map(packageName => API.getSimilar(packageName).catch(() => null))
+      packages.map(packageName =>
+        API.getSimilar(packageName).catch(() => null),
+      ),
     ).then(results => {
       if (!isMounted) return
       const { recommendations, autocompleteQueries } = getTrendsRecommendations(
         {
           packages,
           similarResults: results,
-        }
+        },
       )
       setRelatedPackageNames(autocompleteQueries)
       setSuggestedPackages(recommendations)
@@ -213,7 +220,7 @@ export default function TrendsPage() {
   const loadSuggestions = useCallback(
     (query: string) =>
       loadRelatedPackageSuggestions(query, relatedPackageNames),
-    [relatedPackageNames]
+    [relatedPackageNames],
   )
 
   // Update URL parameters without full page reload
@@ -222,7 +229,7 @@ export default function TrendsPage() {
       newPackages: string[],
       newMetric: TrendsMetric,
       newRange: TrendsRange,
-      newGroupBy: TrendsGroupBy
+      newGroupBy: TrendsGroupBy,
     ) => {
       const packagesParam = newPackages
         .map(packageName => encodeURIComponent(packageName))
@@ -235,7 +242,7 @@ export default function TrendsPage() {
       ].join('&')
       router.push(`/trends?${query}`, undefined, { shallow: true })
     },
-    [router]
+    [router],
   )
 
   // Fetch trends data
@@ -259,22 +266,22 @@ export default function TrendsPage() {
       `${packageName}|${range}|${groupBy}`
     const missingPackages = packages.filter(
       packageName =>
-        !packageTrendsCache.current.has(packageCacheKey(packageName))
+        !packageTrendsCache.current.has(packageCacheKey(packageName)),
     )
     const composeCachedResponse = (
-      metadata: Pick<TrendsResponse, 'range' | 'groupBy' | 'generatedAt'>
+      metadata: Pick<TrendsResponse, 'range' | 'groupBy' | 'generatedAt'>,
     ) => {
       const composed: TrendsResponse = {
         ...metadata,
         packages: packages
           .map(packageName =>
-            packageTrendsCache.current.get(packageCacheKey(packageName))
+            packageTrendsCache.current.get(packageCacheKey(packageName)),
           )
           .filter(
             (
-              packageSeries
+              packageSeries,
             ): packageSeries is TrendsResponse['packages'][number] =>
-              Boolean(packageSeries)
+              Boolean(packageSeries),
           ),
       }
       trendsCache.current.set(cacheKey, composed)
@@ -306,10 +313,10 @@ export default function TrendsPage() {
 
     // Fetch only package series that are not already cached. This keeps an
     // existing chart stable while a newly added comparison package resolves.
-    API.getTrends(
+    fetchClientTrends(
       missingPackages.length > 0 ? missingPackages : packages,
       range,
-      groupBy
+      groupBy,
     )
       .then(res => {
         completed = true
@@ -318,7 +325,7 @@ export default function TrendsPage() {
           res.packages.forEach(packageSeries => {
             packageTrendsCache.current.set(
               packageCacheKey(packageSeries.name),
-              packageSeries
+              packageSeries,
             )
           })
           const previous = trendsDataRef.current
@@ -358,7 +365,7 @@ export default function TrendsPage() {
     const updated = [...packages, clean]
     setPackages(updated)
     setSuggestedPackages(current =>
-      current.filter(packageName => packageName.toLowerCase() !== clean)
+      current.filter(packageName => packageName.toLowerCase() !== clean),
     )
     setInputKey(k => k + 1)
     updateUrl(updated, metric, range, groupBy)
@@ -397,11 +404,11 @@ export default function TrendsPage() {
   const visibleSuggestedPackages = suggestedPackages.filter(
     packageName =>
       !packages.some(
-        selected => selected.toLowerCase() === packageName.toLowerCase()
-      )
+        selected => selected.toLowerCase() === packageName.toLowerCase(),
+      ),
   )
   const ogImageUrl = `/api/trends-image?packages=${encodeURIComponent(
-    packageQuery
+    packageQuery,
   )}&metric=${metric}&range=${range}&groupBy=${groupBy}`
   const pageTitle =
     packages.length > 0
@@ -639,11 +646,7 @@ export default function TrendsPage() {
                         href={`${ogImageUrl}&format=svg`}
                         target="_blank"
                         rel="noreferrer"
-                        download={`${exportFileBase(
-                          packages,
-                          metric,
-                          range
-                        )}.svg`}
+                        download={`${exportFileBase(packages, metric, range)}.svg`}
                         role="menuitem"
                       >
                         SVG vector
@@ -652,11 +655,7 @@ export default function TrendsPage() {
                         href={`${ogImageUrl}&format=png`}
                         target="_blank"
                         rel="noreferrer"
-                        download={`${exportFileBase(
-                          packages,
-                          metric,
-                          range
-                        )}.png`}
+                        download={`${exportFileBase(packages, metric, range)}.png`}
                         role="menuitem"
                       >
                         PNG image

@@ -12,10 +12,6 @@ import 'dotenv/config'
 
 type SearchCountMap = Record<string, { count: number }>
 
-function isEmptyRecord(value: Record<string, unknown>) {
-  return Object.keys(value).length === 0
-}
-
 async function runSerial<T>(tasks: Array<() => Promise<T>>) {
   const results: T[] = []
 
@@ -91,18 +87,12 @@ async function getVersionsToBuild(name: string) {
   const res = await fetch(
     `http://localhost:${port}/api/package-history?package=${name}`
   )
-  const versionInfo = (await res.json()) as Record<string, unknown>
+  const versionInfo = (await res.json()) as {
+    versions: Array<{ version: string; built: boolean }>
+  }
 
-  Object.keys(versionInfo).forEach(version => {
-    const snapshot = versionInfo[version]
-
-    if (
-      snapshot &&
-      typeof snapshot === 'object' &&
-      isEmptyRecord(snapshot as Record<string, unknown>)
-    ) {
-      versionsToBuild.push(version)
-    }
+  versionInfo.versions.forEach(version => {
+    if (!version.built) versionsToBuild.push(version.version)
   })
 
   return versionsToBuild
