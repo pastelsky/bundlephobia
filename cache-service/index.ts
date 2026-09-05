@@ -3,7 +3,7 @@ import 'dotenv-defaults/config.js'
 import createFastify from 'fastify'
 import firebase from 'firebase'
 
-import { TRENDS_CACHE_NAMES } from '../types/cache-domain'
+import { TRENDS_CACHE_NAMES } from '../types/cache-domain.ts'
 import {
   getExportsSizeMiddlware,
   postExportsSizeMiddleware,
@@ -12,7 +12,7 @@ import {
   getPackageSizeMiddlware,
   postPackageSizeMiddlware,
 } from './middlewares/package-size.middleware.ts'
-import { createTrendsCacheMiddleware } from './middlewares/trends-cache.middleware'
+import { createTrendsCacheMiddleware } from './middlewares/trends-cache.middleware.ts'
 
 const fastify = createFastify()
 
