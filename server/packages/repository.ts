@@ -27,11 +27,7 @@ export function parseGithubRepository(
 
   try {
     const parsed = gitURLParse(value)
-    if (
-      parsed.owner &&
-      parsed.name &&
-      (!parsed.source || parsed.source.includes('github'))
-    ) {
+    if (parsed.owner && parsed.name && parsed.source === 'github.com') {
       return `${parsed.owner}/${parsed.name}`
     }
   } catch {
