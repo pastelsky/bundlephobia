@@ -9,8 +9,10 @@ import {
 } from '../../clients/npmRegistry'
 import CustomError from '../../CustomError'
 import BuildService from '../../api/BuildService'
-import { parseNpmRegistryPackageSpec } from '../../packages/npmPackage'
-import { normalizeRepositoryUrl } from '../../packages/repository'
+import {
+  normalizeRepositoryUrl,
+  parseNpmRegistryPackageSpec,
+} from '../../packages/npmPackage'
 import type {
   PackageBuildResult,
   PackageExportSizesResult,

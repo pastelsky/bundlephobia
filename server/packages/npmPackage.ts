@@ -1,4 +1,7 @@
+import gitURLParse from 'git-url-parse'
 import parsePackageSpec from 'npm-package-arg'
+
+export type RepositoryField = string | { url?: string }
 
 export type NpmRegistryPackageSpec = parsePackageSpec.RegistryResult & {
   name: string
@@ -33,4 +36,39 @@ export function getEscapedNpmPackageName(packageSpecifier: string): string {
     throw new TypeError(`Expected an npm registry package: ${packageSpecifier}`)
   }
   return packageSpec.escapedName
+}
+
+function repositoryString(repository: RepositoryField | undefined): string {
+  return typeof repository === 'string' ? repository : (repository?.url ?? '')
+}
+
+export function normalizeRepositoryUrl(
+  repository: RepositoryField | undefined,
+): string {
+  const value = repositoryString(repository)
+  if (!value) return ''
+
+  try {
+    return gitURLParse(value).toString('https')
+  } catch {
+    return ''
+  }
+}
+
+export function parseGithubRepository(
+  repository: RepositoryField | undefined,
+): string | null {
+  const value = repositoryString(repository)
+  if (!value) return null
+
+  try {
+    const parsed = gitURLParse(value)
+    if (parsed.owner && parsed.name && parsed.source === 'github.com') {
+      return `${parsed.owner}/${parsed.name}`
+    }
+  } catch {
+    return null
+  }
+
+  return null
 }

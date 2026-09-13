@@ -1,11 +1,9 @@
 import {
   getEscapedNpmPackageName,
-  parseNpmRegistryPackageSpec,
-} from '../server/packages/npmPackage'
-import {
   normalizeRepositoryUrl,
+  parseNpmRegistryPackageSpec,
   parseGithubRepository,
-} from '../server/packages/repository'
+} from '../server/packages/npmPackage'
 
 describe('server package utilities', () => {
   it.each([
