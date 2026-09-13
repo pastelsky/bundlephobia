@@ -1,10 +1,9 @@
 import semver from 'semver'
 
 import firebaseUtils from '../utils/firebase.utils'
+import type { PackageHistoryResponse } from '../types/package-history'
 import { fetchPackagePackument } from './clients/npmRegistry'
 import { parseGithubRepository } from './packages/repository'
-import { canonicalGithubRepository } from './trends/repositories'
-import type { PackageHistoryResponse } from '../types/package-history'
 
 type HistorySnapshot = {
   size?: number
@@ -111,7 +110,7 @@ export async function fetchPackageHistory(
 
   return {
     name: packageName,
-    repository: repository ? canonicalGithubRepository(repository) : null,
+    repository,
     versions,
     ...releaseMetadata(packument.time, options),
     range: {

@@ -5,7 +5,6 @@ import type { AddressInfo } from 'node:net'
 import createFastify from 'fastify'
 import firebase from 'firebase'
 
-import { TRENDS_CACHE_NAMES } from '../types/cache-domain.ts'
 import {
   getExportsSizeMiddlware,
   postExportsSizeMiddleware,
@@ -14,7 +13,6 @@ import {
   getPackageSizeMiddlware,
   postPackageSizeMiddlware,
 } from './middlewares/package-size.middleware.ts'
-import { createTrendsCacheMiddleware } from './middlewares/trends-cache.middleware.ts'
 
 const fastify = createFastify()
 
@@ -33,12 +31,6 @@ fastify.post('/package-cache', postPackageSizeMiddlware)
 fastify.get('/exports-cache', getExportsSizeMiddlware)
 
 fastify.post('/exports-cache', postExportsSizeMiddleware)
-
-TRENDS_CACHE_NAMES.forEach(name => {
-  const middleware = createTrendsCacheMiddleware()
-  fastify.get(`/trends-cache/${name}`, middleware.get)
-  fastify.post(`/trends-cache/${name}`, middleware.post)
-})
 
 fastify
   .listen({ port: 7001 })

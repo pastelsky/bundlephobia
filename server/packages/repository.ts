@@ -36,7 +36,3 @@ export function parseGithubRepository(
 
   return null
 }
-
-export function isGithubRepository(repository: string): boolean {
-  return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)
-}
