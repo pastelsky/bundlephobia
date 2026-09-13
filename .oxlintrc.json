@@ -25,7 +25,15 @@
     "no-self-assign": "error",
     "no-self-compare": "error",
     "no-sparse-arrays": "error",
-    "no-unsafe-negation": "error"
+    "no-unsafe-negation": "error",
+    "no-array-constructor": "error",
+    "no-async-promise-executor": "error",
+    "no-compare-neg-zero": "error",
+    "no-cond-assign": "error",
+    "no-constant-condition": "error",
+    "no-new-wrappers": "error",
+    "no-promise-executor-return": "error",
+    "no-extend-native": "error"
   },
   "env": {
     "browser": true,
