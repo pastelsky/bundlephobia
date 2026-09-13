@@ -185,7 +185,7 @@ class Trailblaze {
   getRandomConnection() {
     const rings = zeroToN(this.ringsCount)
     const sourceRingNumber = randomFromArray(rings.slice(0, -1))
-    if (sourceRingNumber == null) {
+    if (sourceRingNumber === null || sourceRingNumber === undefined) {
       throw new Error('Missing source ring')
     }
     const destinationRingNumber = sourceRingNumber + 1
@@ -215,7 +215,7 @@ class Trailblaze {
       .map(d => d.index)
 
     const destinationIndex = randomFromArray(eligibleDestinationIndexes)
-    if (destinationIndex == null) {
+    if (destinationIndex === null || destinationIndex === undefined) {
       throw new Error('Missing destination circle')
     }
 

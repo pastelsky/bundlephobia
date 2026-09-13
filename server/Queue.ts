@@ -195,7 +195,9 @@ class Queue {
   }
 
   cancel(id: string, type: JobType): void {
-    const job = this.jobs.find(job => job.id === id && job.type === type)
+    const job = this.jobs.find(
+      candidate => candidate.id === id && candidate.type === type,
+    )
     if (job) {
       log('cancelling job %s (%s)', id, job.status.toString())
       if (job.status === JobStatus.PROCESSING) {

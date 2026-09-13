@@ -249,9 +249,9 @@ async function installPackage(packageName: string, installPath: string) {
     console.log(error)
     const message = error instanceof Error ? error.message : String(error)
     if (message.includes('code E404')) {
-      throw new Error('PackageNotFoundError')
+      throw new Error('PackageNotFoundError', { cause: error })
     }
-    throw new Error('InstallError')
+    throw new Error('InstallError', { cause: error })
   }
 }
 

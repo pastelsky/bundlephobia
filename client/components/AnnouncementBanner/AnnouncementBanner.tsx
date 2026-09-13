@@ -22,7 +22,7 @@ export const AnnouncementBanner: React.FC = () => {
       if (dismissed === 'true') {
         return
       }
-    } catch (e) {
+    } catch {
       // localStorage not available
     }
 
@@ -33,7 +33,7 @@ export const AnnouncementBanner: React.FC = () => {
     setIsVisible(false)
     try {
       localStorage.setItem(STORAGE_KEY, 'true')
-    } catch (e) {
+    } catch {
       // localStorage not available
     }
   }

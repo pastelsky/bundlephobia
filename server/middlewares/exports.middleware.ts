@@ -29,14 +29,14 @@ const exportsMiddleware: Middleware = async ctx => {
 
   ctx.cacheControl = {
     maxAge:
-      force != null
-        ? 0
-        : requestedPackage &&
-            packageAnalysisGateway.isExactVersionSpecifier(
-              createJavaScriptPackageReference(requestedPackage),
-            )
+      force === null || force === undefined
+        ? requestedPackage &&
+          packageAnalysisGateway.isExactVersionSpecifier(
+            createJavaScriptPackageReference(requestedPackage),
+          )
           ? config.CACHE.SIZE_API_HAS_VERSION
-          : config.CACHE.SIZE_API_DEFAULT,
+          : config.CACHE.SIZE_API_DEFAULT
+        : 0,
   }
 
   ctx.body = { name, version, exports: result }

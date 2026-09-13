@@ -443,8 +443,10 @@ async function processBatch(
 
         if (
           sizeResult.v2 &&
-          sizeResult.size != null &&
-          sizeResult.gzip != null
+          sizeResult.size !== null &&
+          sizeResult.size !== undefined &&
+          sizeResult.gzip !== null &&
+          sizeResult.gzip !== undefined
         ) {
           comparisons.push({
             package: key,
@@ -693,7 +695,11 @@ async function main() {
       }
 
       if (result.size) {
-        if (result.size.success && result.size.size != null) {
+        if (
+          result.size.success &&
+          result.size.size !== null &&
+          result.size.size !== undefined
+        ) {
           parts.push(`Size: ${(result.size.size / 1024).toFixed(1)}kB`)
         } else {
           symbol = '✗'

@@ -111,11 +111,11 @@ if (additions.length) {
       } | ${signals.weeklyDownloads ?? 'unknown'} | ${
         signals.githubStars ?? 'unknown'
       } | ${
-        !sizeEvaluation.available
-          ? 'new category or unavailable'
-          : sizeEvaluation.smallerThan.length
+        sizeEvaluation.available
+          ? sizeEvaluation.smallerThan.length
             ? `smaller than ${sizeEvaluation.smallerThan.length}`
             : 'not smaller by default'
+          : 'new category or unavailable'
       } | ${
         errors.length
           ? 'blocked'

@@ -50,13 +50,13 @@ const cachedResponse: Middleware = async (ctx, next) => {
   if (cached) {
     ctx.cacheControl = {
       maxAge:
-        force != null
-          ? 0
-          : packageAnalysisGateway.isExactVersionSpecifier(
-                createJavaScriptPackageReference(`${name}@${version}`),
-              )
+        force === null || force === undefined
+          ? packageAnalysisGateway.isExactVersionSpecifier(
+              createJavaScriptPackageReference(`${name}@${version}`),
+            )
             ? config.CACHE.SIZE_API_HAS_VERSION
-            : config.CACHE.SIZE_API_DEFAULT,
+            : config.CACHE.SIZE_API_DEFAULT
+          : 0,
     }
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })

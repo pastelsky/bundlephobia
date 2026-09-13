@@ -3,6 +3,11 @@
   "plugins": ["import", "jsx-a11y", "nextjs", "react", "jest"],
   "rules": {
     "no-constant-binary-expression": "error",
+    "no-unused-vars": "error",
+    "no-shadow": "error",
+    "eqeqeq": "error",
+    "no-negated-condition": "error",
+    "preserve-caught-error": "error",
     "no-unreachable": "error",
     "no-useless-catch": "error",
     "no-useless-assignment": "error",
@@ -34,6 +39,7 @@
     "build/**",
     "playwright-report/**",
     "test-results/**",
+    "test-packages/**",
     "next-env.d.ts"
   ]
 }

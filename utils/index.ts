@@ -84,7 +84,7 @@ const MAX_ERROR_DETAIL_LENGTH = 12_000
 const stringifyError = configure({ maximumBreadth: 20, maximumDepth: 4 })
 
 export function toErrorDetail(originalError: unknown): string | null {
-  if (originalError == null) {
+  if (originalError === null || originalError === undefined) {
     return null
   }
 

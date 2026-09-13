@@ -414,7 +414,70 @@ class Scan extends Component<ScanProps, ScanState> {
     } = this.state
     let content: React.ReactNode
 
-    if (!packages) {
+    if (packages) {
+      content = (
+        <div>
+          <header className="scan__selection-header">
+            <h1 className="scan__page-title"> Select packages to scan </h1>
+            <Button
+              className="scan__btn"
+              disabled={selectedPackages.length === 0}
+              onClick={this.handleScanClick}
+              variant="primary"
+            >
+              Scan {selectedPackages.length} packages
+            </Button>
+            <Button
+              className="scan__btn"
+              onClick={this.handleResetClick}
+              variant="primary"
+            >
+              Reset
+            </Button>
+          </header>
+          {unsupportedPackageNames.length > 0 && (
+            <p className="scan__unsupported-packages">
+              Skipped {unsupportedPackageNames.length}{' '}
+              {unsupportedPackageNames.length === 1
+                ? 'dependency'
+                : 'dependencies'}{' '}
+              with unsupported version specifications:{' '}
+              {unsupportedPackageNames.join(', ')}
+            </p>
+          )}
+          <ul
+            className="scan__package-container"
+            ref={this.packageSelectionContainerRef}
+          >
+            {packages.map(({ name, versionRange, resolvedVersion }) => (
+              <li className="scan__package-item" key={name}>
+                <label>
+                  <input
+                    type="checkbox"
+                    defaultChecked={selectedPackageValues.includes(
+                      `${name}#${resolvedVersion}`,
+                    )}
+                    value={`${name}#${resolvedVersion}`}
+                    onChange={this.handleSelectionChange}
+                  />
+                  <span className="scan__package-item-title">
+                    <span>{name}</span>
+                    <span className="scan__package-item-version">
+                      {versionRange} &rarr; {resolvedVersion}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          {selectedPackages.length === 0 && (
+            <p className="scan__empty-selection">
+              Select at least one package to start a scan.
+            </p>
+          )}
+        </div>
+      )
+    } else {
       content = (
         <div>
           <Dropzone
@@ -425,7 +488,7 @@ class Scan extends Component<ScanProps, ScanState> {
             multiple={false}
             accept="application/json"
           >
-            {!isUrlFormOpen ? (
+            {isUrlFormOpen === false ? (
               <>
                 <p>
                   Drop a <code> package.json </code> file here
@@ -523,69 +586,6 @@ class Scan extends Component<ScanProps, ScanState> {
               </>
             )}
           </Dropzone>
-        </div>
-      )
-    } else {
-      content = (
-        <div>
-          <header className="scan__selection-header">
-            <h1 className="scan__page-title"> Select packages to scan </h1>
-            <Button
-              className="scan__btn"
-              disabled={selectedPackages.length === 0}
-              onClick={this.handleScanClick}
-              variant="primary"
-            >
-              Scan {selectedPackages.length} packages
-            </Button>
-            <Button
-              className="scan__btn"
-              onClick={this.handleResetClick}
-              variant="primary"
-            >
-              Reset
-            </Button>
-          </header>
-          {unsupportedPackageNames.length > 0 && (
-            <p className="scan__unsupported-packages">
-              Skipped {unsupportedPackageNames.length}{' '}
-              {unsupportedPackageNames.length === 1
-                ? 'dependency'
-                : 'dependencies'}{' '}
-              with unsupported version specifications:{' '}
-              {unsupportedPackageNames.join(', ')}
-            </p>
-          )}
-          <ul
-            className="scan__package-container"
-            ref={this.packageSelectionContainerRef}
-          >
-            {packages.map(({ name, versionRange, resolvedVersion }) => (
-              <li className="scan__package-item" key={name}>
-                <label>
-                  <input
-                    type="checkbox"
-                    defaultChecked={selectedPackageValues.includes(
-                      `${name}#${resolvedVersion}`,
-                    )}
-                    value={`${name}#${resolvedVersion}`}
-                    onChange={this.handleSelectionChange}
-                  />
-                  <span className="scan__package-item-title">
-                    <span>{name}</span>
-                    <span className="scan__package-item-version">
-                      {versionRange} &rarr; {resolvedVersion}
-                    </span>
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-          {selectedPackages.length === 0 && (
-            <p className="scan__empty-selection">
-              Select at least one package to start a scan.
-            </p>
-          )}
         </div>
       )
     }
