@@ -18,7 +18,7 @@ function getFirebaseStoreFromDisk() {
     return JSON.parse(
       fs.readFileSync(firebaseModulesPath, 'utf8')
     ) as Record<string, Record<string, unknown>>
-  } catch (err) {
+  } catch {
     console.log('not found on disk')
     return null
   }
@@ -55,7 +55,7 @@ async function getFirebaseStoreFromNetwork() {
       .startAt(currentLastEntry)
       .limitToFirst(20000)
       .once('value')
-      .then(snapshot => snapshot.val())) as Record<
+      .then(snapshotData => snapshotData.val())) as Record<
       string,
       Record<string, unknown>
     >

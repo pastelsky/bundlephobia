@@ -9,7 +9,6 @@ import CarbonAd from '../client/components/CarbonAd'
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
-import cx from 'classnames'
 
 const Logo = () => (
   <svg

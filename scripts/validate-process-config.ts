@@ -27,8 +27,8 @@ export function parseProcessApps(contents: string): ProcessApp[] {
       script: match[1].trim().replace(/^['"]|['"]$/g, ''),
       block,
       name: block.match(/^    name: (.+)$/m)?.[1]?.trim(),
-      nodeArgs: [...block.matchAll(/^      - (.+)$/gm)].map(match =>
-        match[1].trim().replace(/^['"]|['"]$/g, ''),
+      nodeArgs: [...block.matchAll(/^      - (.+)$/gm)].map(nodeMatch =>
+        nodeMatch[1].trim().replace(/^['"]|['"]$/g, ''),
       ),
     }
   })

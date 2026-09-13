@@ -83,9 +83,9 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
     scale: number,
     options: { isFirstTreeshakeable: boolean; isFirstSideEffectFree: boolean },
   ) => {
-    const getTooltipMessage = (reading: Reading) => {
-      const formattedSize = formatSize(reading.size)
-      const formattedGzip = formatSize(reading.gzip)
+    const getTooltipMessage = (tooltipReading: Reading) => {
+      const formattedSize = formatSize(tooltipReading.size)
+      const formattedGzip = formatSize(tooltipReading.gzip)
       return `Minified: ${formattedSize.size.toFixed(1)}${
         formattedSize.unit
       } | Gzipped: ${formattedGzip.size.toFixed(1)}${formattedGzip.unit}`

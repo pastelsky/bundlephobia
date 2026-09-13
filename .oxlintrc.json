@@ -1,6 +1,13 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["import", "jsx-a11y", "nextjs", "react", "jest"],
+  "rules": {
+    "no-unused-vars": "error",
+    "no-shadow": "error",
+    "eqeqeq": "error",
+    "no-negated-condition": "error",
+    "preserve-caught-error": "error"
+  },
   "env": {
     "browser": true,
     "node": true,

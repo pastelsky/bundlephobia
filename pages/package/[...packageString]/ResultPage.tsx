@@ -267,9 +267,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
         this.activeQuery = normalizedQuery
         const navigation =
-          getPackageStringFromRouter(this.props.router) !== normalizedQuery
-            ? Router.push(`/package/${normalizedQuery}`)
-            : Promise.resolve(true)
+          getPackageStringFromRouter(this.props.router) === normalizedQuery
+            ? Promise.resolve(true)
+            : Router.push(`/package/${normalizedQuery}`)
 
         navigation.then(() => {
           if (!this.isActiveSearch(requestId)) return

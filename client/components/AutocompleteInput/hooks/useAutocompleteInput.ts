@@ -20,10 +20,10 @@ export function useAutocompleteInput({
   const [, startTransition] = React.useTransition()
 
   const getSuggestions = React.useMemo(() => {
-    return debounce((value: string) => {
-      loadSuggestions(value).then(suggestions => {
+    return debounce((query: string) => {
+      loadSuggestions(query).then(nextSuggestions => {
         startTransition(() => {
-          setSuggestions(suggestions)
+          setSuggestions(nextSuggestions)
         })
       })
     }, 150)

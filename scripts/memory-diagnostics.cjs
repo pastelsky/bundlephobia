@@ -219,7 +219,7 @@ function createMemoryDiagnostics(options) {
       try {
         const ownerPid = Number(fsImpl.readFileSync(lockOwner, 'utf8'))
         if (!Number.isInteger(ownerPid) || ownerPid < 1) {
-          throw new Error('Invalid lock owner')
+          throw new Error('Invalid lock owner', { cause: error })
         }
         process.kill(ownerPid, 0)
         return false

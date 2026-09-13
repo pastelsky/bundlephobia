@@ -103,9 +103,9 @@ app.prepare().then(() => {
     )
   }
 
-  server.use(async (ctx, next) => {
+  server.use(async (ctx, nextMiddleware) => {
     try {
-      await next()
+      await nextMiddleware()
     } catch (err) {
       if (err instanceof Error && 'status' in err && err.status === 401) {
         ctx.status = 401
@@ -199,10 +199,10 @@ app.prepare().then(() => {
     } catch (err) {
       console.error('in /api/recent', err)
       const message = err instanceof Error ? err.message : String(err)
-      const name = err instanceof Error ? err.name : 'Error'
+      const errorName = err instanceof Error ? err.name : 'Error'
       logger.error('RECENT', err, 'RECENT FAILED: failed')
       ctx.status = 422
-      ctx.body = { type: name, message }
+      ctx.body = { type: errorName, message }
     }
   })
 
@@ -224,14 +224,14 @@ app.prepare().then(() => {
     } catch (err) {
       console.error(err)
       const message = err instanceof Error ? err.message : String(err)
-      const name = err instanceof Error ? err.name : 'Error'
+      const errorName = err instanceof Error ? err.name : 'Error'
       logger.error(
         'HISTORY',
         err,
         'HISTORY FAILED: for package' + ctx.query.package,
       )
       ctx.status = 422
-      ctx.body = { type: name, message }
+      ctx.body = { type: errorName, message }
     }
   })
 
@@ -388,9 +388,9 @@ app.prepare().then(() => {
             ctx.body = { error: { code: 'InvalidMcpPayload' } }
             return
           }
-          const limit = Number(args.limit ?? 10)
+          const historyLimit = Number(args.limit ?? 10)
           ctx.body = await callLocalApi(
-            `/api/package-history?package=${packageName}&limit=${limit}`,
+            `/api/package-history?package=${packageName}&limit=${historyLimit}`,
           )
           return
         }
@@ -430,9 +430,9 @@ app.prepare().then(() => {
   router.get(
     '/admin/restart',
     auth({ name: 'bundlephobia', pass: env.basicAuthPassword }),
-    async (ctx, next) => {
+    async ctx => {
       try {
-        const { stdout, stderr } = await exec.command('pm2 reload all')
+        const { stdout } = await exec.command('pm2 reload all')
         ctx.body = 'Server restarted' + stdout
       } catch (err) {
         console.error('Failed to restart', err)
@@ -458,7 +458,7 @@ app.prepare().then(() => {
   router.get(
     '/admin/clear-cache',
     auth({ name: 'bundlephobia', pass: env.basicAuthPassword }),
-    async (ctx, next) => {
+    async ctx => {
       try {
         const { stdout } = await exec.command(
           'rm -rf /tmp/tmp-build/cache/_cacache /tmp/tmp-build/packages/',
@@ -498,9 +498,9 @@ app.prepare().then(() => {
     ctx.respond = false
   })
 
-  server.use(async (ctx, next) => {
+  server.use(async (ctx, nextMiddleware) => {
     ctx.res.statusCode = 200
-    await next()
+    await nextMiddleware()
   })
 
   server.use(router.routes())

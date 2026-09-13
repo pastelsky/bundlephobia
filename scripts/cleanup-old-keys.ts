@@ -4,7 +4,6 @@ import * as admin from 'firebase-admin'
 import * as semver from 'semver'
 import { chain } from 'stream-chain'
 import { parser } from 'stream-json'
-import { streamArray } from 'stream-json/streamers/StreamArray'
 import { streamObject } from 'stream-json/streamers/StreamObject'
 import * as JSONStream from 'jsonstream'
 import progress from 'progress-stream'
@@ -76,7 +75,6 @@ async function processBackupFile(
     ] as any)
 
     let isProcessingSearchesV2 = false
-    let isProcessingModuleCostV2 = false
 
     pipeline.on('data', ({ key, value }) => {
       if (key === 'searches-v2') {
@@ -120,7 +118,10 @@ async function processBackupFile(
         ).toFixed(2)}%`,
       )
 
-      if (!dryRun) {
+      if (dryRun) {
+        console.log('Dry run complete. No data has been modified.')
+        resolve()
+      } else {
         console.log('Pushing pruned data to Firebase...')
         uploadPrunedDataToFirebase('pruned-module-cost-v2.json')
           .then(() => {
@@ -130,9 +131,6 @@ async function processBackupFile(
             resolve()
           })
           .catch(reject)
-      } else {
-        console.log('Dry run complete. No data has been modified.')
-        resolve()
       }
     })
 
@@ -142,7 +140,7 @@ async function processBackupFile(
     })
 
     async function processSearchesV2(searchesData: any): Promise<void> {
-      return new Promise(resolve => {
+      return new Promise(resolveProcessing => {
         const searchesPipeline = chain([streamObject()])
 
         searchesPipeline.on('data', ({ key, value }) => {
@@ -155,7 +153,7 @@ async function processBackupFile(
               Object.keys(searchesV2).length
             } searches`,
           )
-          resolve()
+          resolveProcessing()
         })
 
         searchesPipeline.write({ key: null, value: searchesData })
