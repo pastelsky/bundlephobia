@@ -30,6 +30,7 @@
     "build/**",
     "playwright-report/**",
     "test-results/**",
+    "test-packages/**",
     "next-env.d.ts"
   ]
 }
