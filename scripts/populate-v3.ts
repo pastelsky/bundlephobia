@@ -662,7 +662,7 @@ async function main() {
   }
 
   const startTime = Date.now()
-  let processed = 0
+  let processed: number
 
   console.log('\nStarting builds...\n')
 

@@ -357,7 +357,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   getMetaTags = () => {
     const { router } = this.props
     const { resultsPromiseState, results } = this.state
-    let name = ''
+    let name: string
     let version: string | null | undefined
     let formattedSizeText = ''
     let formattedGZIPSizeText = ''

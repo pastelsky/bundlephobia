@@ -2,11 +2,20 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["import", "jsx-a11y", "nextjs", "react", "jest"],
   "rules": {
+    "no-constant-binary-expression": "error",
     "no-unused-vars": "error",
     "no-shadow": "error",
     "eqeqeq": "error",
     "no-negated-condition": "error",
-    "preserve-caught-error": "error"
+    "preserve-caught-error": "error",
+    "no-unreachable": "error",
+    "no-useless-catch": "error",
+    "no-useless-assignment": "error",
+    "no-useless-escape": "error",
+    "no-unused-expressions": "error",
+    "no-unused-labels": "error",
+    "no-unsafe-finally": "error",
+    "no-unsafe-optional-chaining": "error"
   },
   "env": {
     "browser": true,
