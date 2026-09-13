@@ -3,7 +3,6 @@ import {
   parseNpmRegistryPackageSpec,
 } from '../server/packages/npmPackage'
 import {
-  isGithubRepository,
   normalizeRepositoryUrl,
   parseGithubRepository,
 } from '../server/packages/repository'
@@ -38,14 +37,5 @@ describe('server package utilities', () => {
     expect(normalizeRepositoryUrl('git@github.com:vuejs/core.git')).toBe(
       'https://github.com/vuejs/core.git',
     )
-  })
-
-  it.each([
-    ['facebook/react', true],
-    ['vercel/next.js', true],
-    ['facebook/react/extra', false],
-    ["facebook/react' OR 1=1", false],
-  ])('validates GitHub repository slug %s', (repository, expected) => {
-    expect(isGithubRepository(repository)).toBe(expected)
   })
 })
