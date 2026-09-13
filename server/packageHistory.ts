@@ -3,7 +3,7 @@ import semver from 'semver'
 import firebaseUtils from '../utils/firebase.utils'
 import type { PackageHistoryResponse } from '../types/package-history'
 import { fetchPackagePackument } from './clients/npmRegistry'
-import { parseGithubRepository } from './packages/repository'
+import { parseGithubRepository } from './packages/npmPackage'
 
 type HistorySnapshot = {
   size?: number
