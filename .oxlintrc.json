@@ -15,7 +15,17 @@
     "no-unused-expressions": "error",
     "no-unused-labels": "error",
     "no-unsafe-finally": "error",
-    "no-unsafe-optional-chaining": "error"
+    "no-unsafe-optional-chaining": "error",
+    "no-case-declarations": "error",
+    "no-duplicate-case": "error",
+    "no-ex-assign": "error",
+    "no-fallthrough": "error",
+    "no-new-native-nonconstructor": "error",
+    "no-prototype-builtins": "error",
+    "no-self-assign": "error",
+    "no-self-compare": "error",
+    "no-sparse-arrays": "error",
+    "no-unsafe-negation": "error"
   },
   "env": {
     "browser": true,
