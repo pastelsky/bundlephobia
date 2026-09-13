@@ -42,6 +42,7 @@ import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
 import { createAnalysisContextMiddleware } from './server/analysis'
+import { fetchPackageHistory } from './server/packageHistory'
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
@@ -212,15 +213,28 @@ app.prepare().then(() => {
       typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
     invariant(packageString, 'package parameter is required')
-    const { name } = parsePackageString(packageString)
+    const from = typeof ctx.query.from === 'string' ? ctx.query.from : undefined
+    const to = typeof ctx.query.to === 'string' ? ctx.query.to : undefined
+    const requestedLimit = Number(ctx.query.limit)
+    const limit = Number.isInteger(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 500)
+      : 40
+
+    for (const date of [from, to]) {
+      if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        ctx.throw(400, 'from and to must be YYYY-MM-DD dates')
+      }
+    }
+    if (from && to && from > to) {
+      ctx.throw(400, 'from must not be after to')
+    }
+
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
       }
-      ctx.body = await firebaseUtils.getPackageHistory(
-        name,
-        Number(ctx.query.limit),
-      )
+      const { name } = parsePackageString(packageString)
+      ctx.body = await fetchPackageHistory(name, { from, to, limit })
     } catch (err) {
       console.error(err)
       const message = err instanceof Error ? err.message : String(err)
@@ -228,7 +242,7 @@ app.prepare().then(() => {
       logger.error(
         'HISTORY',
         err,
-        'HISTORY FAILED: for package' + ctx.query.package,
+        'HISTORY FAILED: for package' + packageString,
       )
       ctx.status = 422
       ctx.body = { type: name, message }
@@ -277,13 +291,16 @@ app.prepare().then(() => {
         },
         {
           name: 'bundlephobia.packageHistory',
-          description: 'Get package history via /api/package-history',
+          description:
+            'Get package versions, publish dates, and cached bundle sizes via /api/package-history',
           inputSchema: {
             type: 'object',
             required: ['package'],
             properties: {
               package: { type: 'string' },
               limit: { type: 'number' },
+              from: { type: 'string', description: 'Start date, YYYY-MM-DD' },
+              to: { type: 'string', description: 'End date, YYYY-MM-DD' },
             },
           },
         },
@@ -388,9 +405,17 @@ app.prepare().then(() => {
             ctx.body = { error: { code: 'InvalidMcpPayload' } }
             return
           }
-          const limit = Number(args.limit ?? 10)
+          const limit = Number(args.limit ?? 40)
+          const from = typeof args.from === 'string' ? args.from : undefined
+          const to = typeof args.to === 'string' ? args.to : undefined
+          const params = new URLSearchParams({
+            package: packageName,
+            limit: String(limit),
+          })
+          if (from) params.set('from', from)
+          if (to) params.set('to', to)
           ctx.body = await callLocalApi(
-            `/api/package-history?package=${packageName}&limit=${limit}`,
+            `/api/package-history?${params.toString()}`,
           )
           return
         }

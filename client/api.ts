@@ -6,11 +6,12 @@ import type {
   PackageExportAsset,
   PackageIdentity,
 } from '../types/package-domain'
+import type { PackageHistoryResponse } from '../types/package-history'
 
 // Re-export domain types that client code imports from this module.
 export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
 
-export type PackageHistoryResponse = Record<string, PackageBuildInfoSnapshot>
+export type { PackageHistoryResponse }
 
 /** A single npm-search suggestion returned by the npms.io API. */
 export type PackageSuggestion = {
@@ -157,10 +158,15 @@ export default class API {
     )
   }
 
-  static getHistory(packageString: string, limit: number) {
-    return API.get<PackageHistoryResponse>(
-      `/api/package-history?package=${packageString}&limit=${limit}`,
-    )
+  static getHistory(
+    packageName: string,
+    options: { from?: string; to?: string; limit?: number } = {},
+  ) {
+    const params = new URLSearchParams({ package: packageName })
+    if (options.from) params.set('from', options.from)
+    if (options.to) params.set('to', options.to)
+    if (options.limit) params.set('limit', String(options.limit))
+    return API.get<PackageHistoryResponse>(`/api/package-history?${params}`)
   }
 
   static getRecentSearches(limit: number) {

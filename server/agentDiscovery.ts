@@ -38,7 +38,7 @@ const PUBLIC_APIS = [
   { path: '/api/exports-sizes', title: 'Size of each named export' },
   {
     path: '/api/package-history',
-    title: 'Size across published versions of a package',
+    title: 'Package versions, publish dates, and bundle sizes',
   },
   {
     path: '/api/similar-packages',
