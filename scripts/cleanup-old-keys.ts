@@ -172,9 +172,6 @@ async function processBackupFile(
 
         const searchInfo = searchesV2[packageName]
 
-        let action = ''
-        let reason = ''
-
         // Check if package should be removed based on search criteria
         if (
           !searchInfo ||
@@ -182,17 +179,17 @@ async function processBackupFile(
           searchInfo.lastSearched < sixMonthsAgo
         ) {
           packagesRemoved++
-          action = 'Pruned'
+          let reason: string
           if (!searchInfo) {
             reason = 'Not found in searches-v2'
           } else if (searchInfo.count <= 1) {
             reason = `Search count (${searchInfo.count}) <= 1`
-          } else if (searchInfo.lastSearched < sixMonthsAgo) {
+          } else {
             reason = 'Last searched more than 6 months ago'
           }
 
           console.log(
-            `Package: ${packageName} | Action: ${action} | Reason: ${reason}`,
+            `Package: ${packageName} | Action: Pruned | Reason: ${reason}`,
           )
           return
         }
@@ -203,13 +200,16 @@ async function processBackupFile(
         )
         const versionsToKeep = sortedVersions.slice(0, 20)
 
+        let action: string
+        let reason: string
+
         if (sortedVersions.length > 20) {
-          versionsRemoved += sortedVersions.length - 20
           action = 'Pruned versions'
-          reason = `Keeping only the latest 20 versions`
+          reason = 'Keeping only the latest 20 versions'
+          versionsRemoved += sortedVersions.length - 20
         } else {
           action = 'Kept'
-          reason = `All versions are within limit`
+          reason = 'All versions are within limit'
         }
 
         const prunedVersions: { [version: string]: any } = {}
