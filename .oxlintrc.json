@@ -20,7 +20,11 @@
     "typescript/no-unsafe-type-assertion": "error",
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
-    "typescript/no-unsafe-return": "error"
+    "typescript/no-unsafe-return": "error",
+    "complexity": ["warn", { "max": 15 }],
+    "max-depth": ["warn", { "max": 4 }],
+    "max-params": ["warn", { "max": 5 }],
+    "max-statements": ["warn", { "max": 80 }]
   },
   "env": {
     "browser": true,
