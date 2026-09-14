@@ -132,12 +132,12 @@
     "test:watch": "jest --watch",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "lint": "oxlint .",
+    "lint": "oxlint --type-aware .",
     "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
   },
   "husky": {
     "hooks": {
-      "pre-commit": "oxlint --fix . && oxfmt"
+      "pre-commit": "oxlint --type-aware --fix . && oxfmt"
     }
   },
   "resolutions": {
@@ -182,6 +182,7 @@
     "nodemon": "^2.0.22",
     "oxfmt": "^0.63.0",
     "oxlint": "^1.78.0",
+    "oxlint-tsgolint": "7.0.2001",
     "postcss": "^8.4.33",
     "postcss-easy-import": "^3.0.0",
     "postcss-loader": "^7.3.4",

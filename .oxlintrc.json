@@ -33,7 +33,26 @@
     "no-constant-condition": "error",
     "no-new-wrappers": "error",
     "no-promise-executor-return": "error",
-    "no-extend-native": "error"
+    "no-extend-native": "error",
+    "typescript/no-duplicate-enum-values": "error",
+    "typescript/no-empty-interface": "error",
+    "typescript/no-inferrable-types": "error",
+    "typescript/no-misused-new": "error",
+    "typescript/no-redundant-type-constituents": "error",
+    "typescript/no-unsafe-declaration-merging": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/no-unnecessary-type-constraint": "error",
+    "typescript/no-wrapper-object-types": "error",
+    "typescript/prefer-as-const": "error",
+    "typescript/prefer-function-type": "error",
+    "typescript/prefer-ts-expect-error": "error",
+    "typescript/require-array-sort-compare": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/no-unsafe-type-assertion": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/no-unsafe-return": "error"
   },
   "env": {
     "browser": true,
@@ -59,5 +78,8 @@
     "test-results/**",
     "test-packages/**",
     "next-env.d.ts"
-  ]
+  ],
+  "options": {
+    "typeAware": true
+  }
 }
