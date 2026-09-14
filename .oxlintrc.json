@@ -21,10 +21,10 @@
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
     "typescript/no-unsafe-return": "error",
-    "complexity": ["warn", { "max": 15 }],
-    "max-depth": ["warn", { "max": 4 }],
-    "max-params": ["warn", { "max": 5 }],
-    "max-statements": ["warn", { "max": 80 }]
+    "complexity": ["warn", { "max": 8 }],
+    "max-depth": ["warn", { "max": 3 }],
+    "max-params": ["warn", { "max": 3 }],
+    "max-statements": ["warn", { "max": 50 }]
   },
   "env": {
     "browser": true,
