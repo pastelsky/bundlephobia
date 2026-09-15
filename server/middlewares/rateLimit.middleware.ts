@@ -65,7 +65,9 @@ function requestIp(ctx: Parameters<Middleware>[0]): string | undefined {
 function applyRateLimit({ ctx, ip, options, db }: RateLimitContext): boolean {
   const now = Date.now()
   const reset = now + options.duration
-  const entry = db[ip] ?? { ip, reset, limit: options.max }
+  const entry = Object.prototype.hasOwnProperty.call(db, ip)
+    ? db[ip]
+    : { ip, reset, limit: options.max }
   db[ip] = entry
   const retryAfter = Math.trunc((entry.reset - now) / 1000)
 

@@ -160,9 +160,13 @@ function toManifestError(error: unknown): never {
 async function resolveManifest(
   packageString: string,
 ): Promise<ResolvedPackageManifest> {
-  const context = manifestRequestContext(packageString)
+  let context: ManifestRequestContext = {
+    packageSpec: null,
+    requestedVersion: 'latest',
+  }
 
   try {
+    context = manifestRequestContext(packageString)
     return await resolveRegistryManifest(packageString, context)
   } catch (error) {
     if (

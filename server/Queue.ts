@@ -76,6 +76,23 @@ interface ProcessRequest<TResult, TParams> {
   options?: ProcessOptions<TResult>
 }
 
+type ProcessArguments<TResult, TParams> =
+  | [request: ProcessRequest<TResult, TParams>]
+  | [
+      id: string,
+      type: JobType,
+      jobParams: TParams,
+      options?: ProcessOptions<TResult>,
+    ]
+
+function toProcessRequest<TResult, TParams>(
+  args: ProcessArguments<TResult, TParams>,
+): ProcessRequest<TResult, TParams> {
+  if (args.length === 1) return args[0]
+  const [id, type, jobParams, options] = args
+  return { id, type, jobParams, options }
+}
+
 class Queue {
   static priority = JobPriority
 
@@ -327,12 +344,10 @@ class Queue {
     })
   }
 
-  process<TResult, TParams>({
-    id,
-    type,
-    jobParams,
-    options = {},
-  }: ProcessRequest<TResult, TParams>): Promise<TResult> {
+  process<TResult, TParams>(
+    ...args: ProcessArguments<TResult, TParams>
+  ): Promise<TResult> {
+    const { id, type, jobParams, options = {} } = toProcessRequest(args)
     log('added new job %s %o %o', type, jobParams, options)
     const {
       priority = JobPriority.LOW,
