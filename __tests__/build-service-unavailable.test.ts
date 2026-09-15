@@ -95,16 +95,18 @@ describe('build service unavailability', () => {
     await service.getPackageBuildStats('@example/package@1.0.0', 20)
 
     expect(mockedRequestQueue.process).toHaveBeenCalledWith(
-      createAnalysisKey({
-        language: 'javascript',
-        operation: 'package-analysis',
-        packageSpecifier: '@example/package@1.0.0',
-      }),
-      createQueueType('javascript', 'package-analysis'),
       expect.objectContaining({
-        packageString: '@example/package@1.0.0',
+        id: createAnalysisKey({
+          language: 'javascript',
+          operation: 'package-analysis',
+          packageSpecifier: '@example/package@1.0.0',
+        }),
+        type: createQueueType('javascript', 'package-analysis'),
+        jobParams: expect.objectContaining({
+          packageString: '@example/package@1.0.0',
+        }),
+        options: expect.objectContaining({ priority: 20 }),
       }),
-      expect.objectContaining({ priority: 20 }),
     )
   })
 

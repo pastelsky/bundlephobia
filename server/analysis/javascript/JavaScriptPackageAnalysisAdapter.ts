@@ -43,6 +43,12 @@ interface PacoteManifestError {
   versions?: string[]
 }
 
+interface ManifestRequestContext {
+  packageName?: string
+  requestedVersion: string
+  packageSpec: RegistryPackageSpec | null
+}
+
 export interface ResolvedPackageManifest {
   name: string
   version: string
@@ -84,6 +90,94 @@ function registryPackageSpec(
   return isRegistryPackageSpec(target) ? target : null
 }
 
+function manifestRequestContext(packageString: string): ManifestRequestContext {
+  const packageSpec = registryPackageSpec(packageString)
+  return {
+    packageSpec,
+    packageName: packageSpec?.escapedName,
+    requestedVersion: packageSpec?.fetchSpec || 'latest',
+  }
+}
+
+async function resolveRegistryManifest(
+  packageString: string,
+  context: ManifestRequestContext,
+): Promise<ResolvedPackageManifest> {
+  const { packageSpec } = context
+  if (!packageSpec) {
+    return pacote.manifest(packageString, { fullMetadata: true })
+  }
+
+  if (packageSpec.type === 'version') {
+    const version =
+      semver.clean(context.requestedVersion) ?? context.requestedVersion
+    return fetchVersionManifest(packageSpec.escapedName, version)
+  }
+  if (packageSpec.type === 'tag') {
+    return fetchVersionManifest(
+      packageSpec.escapedName,
+      context.requestedVersion,
+    )
+  }
+
+  const manifest = await pacote.manifest(packageString, { fullMetadata: false })
+  return fetchVersionManifest(manifest.name, manifest.version)
+}
+
+async function findVersionMismatchError(
+  context: ManifestRequestContext,
+): Promise<CustomError | null> {
+  const packageName = context.packageName
+  if (!packageName) return null
+
+  try {
+    const latest = await fetchVersionManifest(packageName, 'latest')
+    return new CustomError('PackageVersionMismatchError', null, {
+      suggestedVersion: latest.version,
+    })
+  } catch (latestError) {
+    if (latestError instanceof CustomError) return latestError
+    if (!isNotFound(latestError)) {
+      return new CustomError('PackageNotFoundError', latestError, undefined)
+    }
+    return null
+  }
+}
+
+function toManifestError(error: unknown): never {
+  const pacoteError = error as PacoteManifestError
+  if (pacoteError.code === 'ETARGET') {
+    throw new CustomError('PackageVersionMismatchError', null, {
+      validVersions: [
+        ...Object.keys(pacoteError.distTags ?? {}),
+        ...(pacoteError.versions ?? []),
+      ],
+    })
+  }
+  throw new CustomError('PackageNotFoundError', error, undefined)
+}
+
+async function resolveManifest(
+  packageString: string,
+): Promise<ResolvedPackageManifest> {
+  const context = manifestRequestContext(packageString)
+
+  try {
+    return await resolveRegistryManifest(packageString, context)
+  } catch (error) {
+    if (
+      context.packageName &&
+      context.requestedVersion !== 'latest' &&
+      isNotFound(error)
+    ) {
+      const mismatchError = await findVersionMismatchError(context)
+      if (mismatchError) throw mismatchError
+    }
+
+    return toManifestError(error)
+  }
+}
+
 function toRepositoryUrl(repository: string | { url?: string } | undefined) {
   if (!repository) return ''
   try {
@@ -101,65 +195,8 @@ export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<
 
   constructor(private readonly buildService = new BuildService()) {}
 
-  private async resolveManifest(
-    packageString: string,
-  ): Promise<ResolvedPackageManifest> {
-    let requestedVersion = 'latest'
-    let packageName: string | undefined
-
-    try {
-      const packageSpec = registryPackageSpec(packageString)
-      if (!packageSpec) {
-        return await pacote.manifest(packageString, { fullMetadata: true })
-      }
-
-      const targetName = packageSpec.escapedName
-      packageName = targetName
-      requestedVersion = packageSpec.fetchSpec || 'latest'
-
-      if (packageSpec.type === 'version') {
-        requestedVersion = semver.clean(requestedVersion) ?? requestedVersion
-        return await fetchVersionManifest(targetName, requestedVersion)
-      }
-      if (packageSpec.type === 'tag') {
-        return await fetchVersionManifest(targetName, requestedVersion)
-      }
-
-      const manifest = await pacote.manifest(packageString, {
-        fullMetadata: false,
-      })
-      return await fetchVersionManifest(manifest.name, manifest.version)
-    } catch (error) {
-      const pacoteError = error as PacoteManifestError
-      if (pacoteError.code === 'ETARGET') {
-        throw new CustomError('PackageVersionMismatchError', null, {
-          validVersions: [
-            ...Object.keys(pacoteError.distTags ?? {}),
-            ...(pacoteError.versions ?? []),
-          ],
-        })
-      }
-
-      if (packageName && requestedVersion !== 'latest' && isNotFound(error)) {
-        try {
-          const latest = await fetchVersionManifest(packageName, 'latest')
-          throw new CustomError('PackageVersionMismatchError', null, {
-            suggestedVersion: latest.version,
-          })
-        } catch (latestError) {
-          if (latestError instanceof CustomError) throw latestError
-          if (!isNotFound(latestError)) {
-            throw new CustomError(
-              'PackageNotFoundError',
-              latestError,
-              undefined,
-            )
-          }
-        }
-      }
-
-      throw new CustomError('PackageNotFoundError', error, undefined)
-    }
+  private resolveManifest(packageString: string) {
+    return resolveManifest(packageString)
   }
 
   async resolvePackage(

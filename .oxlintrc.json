@@ -21,10 +21,10 @@
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",
     "typescript/no-unsafe-return": "error",
-    "complexity": ["warn", { "max": 8 }],
-    "max-depth": ["warn", { "max": 3 }],
-    "max-params": ["warn", { "max": 3 }],
-    "max-statements": ["warn", { "max": 50 }]
+    "complexity": ["error", { "max": 8 }],
+    "max-depth": ["error", { "max": 3 }],
+    "max-params": ["error", { "max": 3 }],
+    "max-statements": ["error", { "max": 50 }]
   },
   "env": {
     "browser": true,
@@ -50,6 +50,17 @@
     "test-results/**",
     "test-packages/**",
     "next-env.d.ts"
+  ],
+  "overrides": [
+    {
+      "files": ["scripts/**", ".github/scripts/**"],
+      "rules": {
+        "complexity": "off",
+        "max-depth": "off",
+        "max-params": "off",
+        "max-statements": "off"
+      }
+    }
   ],
   "options": {
     "typeAware": true

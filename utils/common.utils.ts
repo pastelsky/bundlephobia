@@ -40,31 +40,35 @@ export function normalizePackageJsonUrl(inputUrl: string): string {
   if (!trimmed) return ''
 
   try {
-    const urlToParse =
-      trimmed.startsWith('http://') || trimmed.startsWith('https://')
-        ? trimmed
-        : `https://${trimmed}`
-    const parsed = new URL(urlToParse)
-
-    if (parsed.hostname === 'github.com') {
-      const parts = parsed.pathname.split('/').filter(Boolean)
-      if (parts.length >= 2) {
-        const owner = parts[0]
-        const repo = parts[1].replace(/\.git$/, '')
-
-        if (parts.length === 2) {
-          return `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/package.json`
-        }
-
-        if ((parts[2] === 'blob' || parts[2] === 'raw') && parts.length >= 4) {
-          const branch = parts[3]
-          const filePath = parts.slice(4).join('/') || 'package.json'
-          return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`
-        }
-      }
-    }
-    return urlToParse
+    const url = withHttpScheme(trimmed)
+    return normalizeParsedPackageUrl(new URL(url), url)
   } catch {
     return trimmed
   }
+}
+
+function withHttpScheme(url: string): string {
+  return url.startsWith('http://') || url.startsWith('https://')
+    ? url
+    : `https://${url}`
+}
+
+function normalizeParsedPackageUrl(url: URL, original: string): string {
+  if (url.hostname !== 'github.com') return original
+
+  const parts = url.pathname.split('/').filter(Boolean)
+  if (parts.length < 2) return original
+
+  const owner = parts[0]
+  const repo = parts[1].replace(/\.git$/, '')
+  if (parts.length === 2) {
+    return `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/package.json`
+  }
+
+  if (parts[2] !== 'blob' && parts[2] !== 'raw') return original
+  if (parts.length < 4) return original
+
+  const branch = parts[3]
+  const filePath = parts.slice(4).join('/') || 'package.json'
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`
 }

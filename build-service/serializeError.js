@@ -25,7 +25,7 @@ function serializeValue(value) {
   return serialized === undefined ? undefined : JSON.parse(serialized)
 }
 
-export default function serializeError(error) {
+function serializeJsonError(error) {
   if (
     error &&
     typeof error === 'object' &&
@@ -36,7 +36,10 @@ export default function serializeError(error) {
       return serialized
     }
   }
+  return undefined
+}
 
+function serializeFallbackError(error) {
   return {
     name: 'BuildServiceError',
     originalError: {
@@ -48,4 +51,8 @@ export default function serializeError(error) {
     },
     extra: { retryable: true },
   }
+}
+
+export default function serializeError(error) {
+  return serializeJsonError(error) || serializeFallbackError(error)
 }

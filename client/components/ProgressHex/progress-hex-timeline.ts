@@ -13,6 +13,21 @@ type ProgressHexAnimatorProps = {
   svg: SVGSVGElement
 }
 
+type PointAtDistanceOptions = {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  distance: number
+}
+
+type LineCoordsOptions = {
+  x1?: number
+  x2?: number
+  y1?: number
+  y2?: number
+}
+
 export default class ProgressHexAnimator {
   circlesMap: CirclesMap
   circles: NodeListOf<SVGCircleElement>
@@ -49,22 +64,22 @@ export default class ProgressHexAnimator {
 
   getTranslation(circle: SVGCircleElement, distance: number) {
     const { cx, cy } = this.circlesMap.get(circle)!
-    const { x, y } = this.pointAtDistance(
-      cx,
-      cy,
-      this.width / 2,
-      this.height / 2,
+    const { x, y } = this.pointAtDistance({
+      x1: cx,
+      y1: cy,
+      x2: this.width / 2,
+      y2: this.height / 2,
       distance,
-    )
+    })
 
     return { x: x - cx, y: y - cy }
   }
 
-  pointAtDistance(x1: number, y1: number, x2: number, y2: number, d: number) {
+  pointAtDistance({ x1, y1, x2, y2, distance }: PointAtDistanceOptions) {
     const curDistanceBetweenPoints = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
     if (curDistanceBetweenPoints === 0) return { x: x1, y: y1 }
 
-    const t = d / curDistanceBetweenPoints
+    const t = distance / curDistanceBetweenPoints
     const x = (x1 - t * x2) / (1 - t)
     const y = (y1 - t * y2) / (1 - t)
     return { x, y }
@@ -161,7 +176,10 @@ class Trailblaze {
     return line
   }
 
-  setLineCoords(line: SVGLineElement, x1 = 0, x2 = 0, y1 = 0, y2 = 0) {
+  setLineCoords(
+    line: SVGLineElement,
+    { x1 = 0, x2 = 0, y1 = 0, y2 = 0 }: LineCoordsOptions = {},
+  ) {
     line.setAttribute('x1', `${x1}`)
     line.setAttribute('x2', `${x2}`)
     line.setAttribute('y1', `${y1}`)
@@ -256,13 +274,12 @@ class Trailblaze {
       }
 
       line.setAttribute('stroke', strokeColor)
-      this.setLineCoords(
-        line,
-        source.cx,
-        destination.cx,
-        source.cy,
-        destination.cy,
-      )
+      this.setLineCoords(line, {
+        x1: source.cx,
+        x2: destination.cx,
+        y1: source.cy,
+        y2: destination.cy,
+      })
     })
 
     anime({

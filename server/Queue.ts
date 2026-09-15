@@ -69,6 +69,13 @@ interface ProcessOptions<TResult> {
   signal?: AbortSignal
 }
 
+interface ProcessRequest<TResult, TParams> {
+  id: string
+  type: JobType
+  jobParams: TParams
+  options?: ProcessOptions<TResult>
+}
+
 class Queue {
   static priority = JobPriority
 
@@ -320,12 +327,12 @@ class Queue {
     })
   }
 
-  process<TResult, TParams>(
-    id: string,
-    type: JobType,
-    jobParams: TParams,
-    options: ProcessOptions<TResult> = {},
-  ): Promise<TResult> {
+  process<TResult, TParams>({
+    id,
+    type,
+    jobParams,
+    options = {},
+  }: ProcessRequest<TResult, TParams>): Promise<TResult> {
     log('added new job %s %o %o', type, jobParams, options)
     const {
       priority = JobPriority.LOW,
