@@ -614,6 +614,13 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     return <InterLinksSection packageName={results.name} />
   }
 
+  renderCarbonAd() {
+    if (this.state.resultsPromiseState !== 'fulfilled' || !this.state.results) {
+      return null
+    }
+    return <CarbonAd className="result-page__carbon-ad" />
+  }
+
   render() {
     return (
       <ResultLayout>
@@ -636,9 +643,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
           {this.renderErrorResult()}
           {this.renderTreemap()}
           {this.renderExports()}
-          {this.state.resultsPromiseState === 'fulfilled' && (
-            <CarbonAd className="result-page__carbon-ad" />
-          )}
+          {this.renderCarbonAd()}
           {this.renderSimilarPackages()}
           {this.renderInterLinks()}
         </section>

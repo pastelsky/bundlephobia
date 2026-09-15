@@ -67,6 +67,7 @@ function applyRateLimit({ ctx, ip, options, db }: RateLimitContext): boolean {
   const reset = now + options.duration
   const entry = db[ip] ?? { ip, reset, limit: options.max }
   db[ip] = entry
+  const retryAfter = Math.trunc((entry.reset - now) / 1000)
 
   entry.limit -= 1
   ctx.response.set('X-RateLimit-Limit', String(options.max))
@@ -85,10 +86,7 @@ function applyRateLimit({ ctx, ip, options, db }: RateLimitContext): boolean {
 
   ctx.response.set('X-RateLimit-Reset', String(db[ip].reset))
   if (db[ip].limit < 0) {
-    ctx.response.set(
-      'Retry-After',
-      String(Math.trunc((db[ip].reset - now) / 1000)),
-    )
+    ctx.response.set('Retry-After', String(retryAfter))
     ctx.response.status = 429
     ctx.response.body = options.accessLimited
     return true

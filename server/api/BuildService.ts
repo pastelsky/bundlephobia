@@ -48,6 +48,7 @@ interface BuildExecutionOptions {
   packageString: string
   signal: AbortSignal
   onComplete?: (durationMs: number) => void
+  startedAt: number
 }
 
 export const BUILD_DURATION_HEADER = 'x-bundlephobia-build-duration-ms'
@@ -82,12 +83,14 @@ export default class BuildService {
       requestQueue.addExecutor<BuildServiceJobParams, unknown>(
         createQueueType('javascript', operation.operation),
         async ({ packageString, onComplete }, { signal }) => {
+          const startedAt = performance.now()
           if (process.env.BUILD_SERVICE_ENDPOINT) {
             return this.executeRemoteBuild({
               operation,
               packageString,
               signal,
               onComplete,
+              startedAt,
             })
           }
 
@@ -96,14 +99,18 @@ export default class BuildService {
             packageString,
             signal,
             onComplete,
+            startedAt,
           })
         },
       )
     })
   }
 
-  private completeBuild(options: BuildExecutionOptions, startedAt: number) {
-    const durationMs = Math.max(1, Math.ceil(performance.now() - startedAt))
+  private completeBuild(options: BuildExecutionOptions) {
+    const durationMs = Math.max(
+      1,
+      Math.ceil(performance.now() - options.startedAt),
+    )
     options.onComplete?.(durationMs)
     logger.timing(
       `analysis.javascript.${options.operation.operation}.duration`,
@@ -116,8 +123,8 @@ export default class BuildService {
     packageString,
     signal,
     onComplete,
+    startedAt,
   }: BuildExecutionOptions) {
-    const startedAt = performance.now()
     try {
       const response = await axios.get(
         `${process.env.BUILD_SERVICE_ENDPOINT}${operation.endpoint}?p=${encodeURIComponent(packageString)}`,
@@ -128,10 +135,13 @@ export default class BuildService {
       if (axios.isCancel(error)) throw new JobCancelledError()
       this.handleError(error, operation)
     } finally {
-      this.completeBuild(
-        { operation, packageString, signal, onComplete },
+      this.completeBuild({
+        operation,
+        packageString,
+        signal,
+        onComplete,
         startedAt,
-      )
+      })
     }
   }
 
@@ -140,8 +150,8 @@ export default class BuildService {
     packageString,
     signal,
     onComplete,
+    startedAt,
   }: BuildExecutionOptions) {
-    const startedAt = performance.now()
     const execution = pool
       .exec(operation.methodName, [packageString])
       .timeout(config.WORKER_TIMEOUT)
@@ -163,10 +173,13 @@ export default class BuildService {
       if (signal.aborted) throw new JobCancelledError()
       throw error
     } finally {
-      this.completeBuild(
-        { operation, packageString, signal, onComplete },
+      this.completeBuild({
+        operation,
+        packageString,
+        signal,
+        onComplete,
         startedAt,
-      )
+      })
       signal.removeEventListener('abort', cancelExecution)
     }
   }

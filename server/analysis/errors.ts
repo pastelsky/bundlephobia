@@ -13,16 +13,18 @@ export class PackageAnalysisGatewayError extends Error {
   readonly language: LanguageId
   readonly capability: LanguageCapability
 
-  constructor(options: {
-    code: PackageAnalysisGatewayErrorCode
-    language: LanguageId
-    capability: LanguageCapability
-    cause?: ErrorOptions['cause']
-  }) {
-    super(options.code, { cause: options.cause })
-    this.code = options.code
-    this.language = options.language
-    this.capability = options.capability
+  constructor(
+    ...args: [
+      code: PackageAnalysisGatewayErrorCode,
+      language: LanguageId,
+      capability: LanguageCapability,
+      options?: ErrorOptions,
+    ]
+  ) {
+    super(args[0], args[3])
+    this.code = args[0]
+    this.language = args[1]
+    this.capability = args[2]
     this.name = 'PackageAnalysisGatewayError'
   }
 }

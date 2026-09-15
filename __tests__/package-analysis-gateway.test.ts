@@ -152,11 +152,11 @@ describe('legacy JavaScript error mapping', () => {
   })
 
   it('maps gateway-native errors to the existing legacy error vocabulary', () => {
-    const error = new PackageAnalysisGatewayError({
-      code: 'LanguageCapabilityNotSupported',
-      language: 'javascript',
-      capability: 'exports',
-    })
+    const error = new PackageAnalysisGatewayError(
+      'LanguageCapabilityNotSupported',
+      'javascript',
+      'exports',
+    )
 
     expect(toLegacyJavaScriptError(error)).toMatchObject({
       name: 'UnsupportedPackageError',
