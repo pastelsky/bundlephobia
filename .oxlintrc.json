@@ -2,30 +2,29 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["import", "jsx-a11y", "nextjs", "react", "jest"],
   "rules": {
-    "no-constant-binary-expression": "error",
-    "no-unused-vars": "error",
-    "no-shadow": "error",
-    "eqeqeq": "error",
-    "no-negated-condition": "error",
-    "preserve-caught-error": "error",
-    "no-unreachable": "error",
-    "no-useless-catch": "error",
-    "no-useless-assignment": "error",
-    "no-useless-escape": "error",
-    "no-unused-expressions": "error",
-    "no-unused-labels": "error",
-    "no-unsafe-finally": "error",
-    "no-unsafe-optional-chaining": "error",
-    "no-case-declarations": "error",
-    "no-duplicate-case": "error",
-    "no-ex-assign": "error",
-    "no-fallthrough": "error",
-    "no-new-native-nonconstructor": "error",
-    "no-prototype-builtins": "error",
-    "no-self-assign": "error",
-    "no-self-compare": "error",
-    "no-sparse-arrays": "error",
-    "no-unsafe-negation": "error"
+    "typescript/no-duplicate-enum-values": "error",
+    "typescript/no-empty-interface": "error",
+    "typescript/no-inferrable-types": "error",
+    "typescript/no-misused-new": "error",
+    "typescript/no-redundant-type-constituents": "error",
+    "typescript/no-unsafe-declaration-merging": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/no-unnecessary-type-constraint": "error",
+    "typescript/no-wrapper-object-types": "error",
+    "typescript/prefer-as-const": "error",
+    "typescript/prefer-function-type": "error",
+    "typescript/prefer-ts-expect-error": "error",
+    "typescript/require-array-sort-compare": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/no-unsafe-type-assertion": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/no-unsafe-return": "error",
+    "complexity": ["error", { "max": 8 }],
+    "max-depth": ["error", { "max": 3 }],
+    "max-params": ["error", { "max": 3 }],
+    "max-statements": ["error", { "max": 50 }]
   },
   "env": {
     "browser": true,
@@ -51,5 +50,19 @@
     "test-results/**",
     "test-packages/**",
     "next-env.d.ts"
-  ]
+  ],
+  "overrides": [
+    {
+      "files": ["scripts/**", ".github/scripts/**"],
+      "rules": {
+        "complexity": "off",
+        "max-depth": "off",
+        "max-params": "off",
+        "max-statements": "off"
+      }
+    }
+  ],
+  "options": {
+    "typeAware": true
+  }
 }

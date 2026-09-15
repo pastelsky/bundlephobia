@@ -18,7 +18,9 @@ describe('Layout recent searches', () => {
     const setState = jest.spyOn(layout, 'setState')
     layout.componentDidMount()
 
-    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => {
+      setImmediate(resolve)
+    })
 
     expect(setState).not.toHaveBeenCalled()
   })

@@ -52,6 +52,80 @@ type PersistedScanState = {
 
 const persistedScanStateKey = 'bundlephobia.scan-state'
 
+function remoteFetchError(error: Error): Error {
+  return error.name === 'TypeError' || error.message.includes('Failed to fetch')
+    ? new Error(
+        'Network or CORS restriction prevented fetching this URL. Make sure the URL points to a public GitHub repo or raw JSON file with CORS enabled, or upload package.json manually.',
+      )
+    : error
+}
+
+function responseError(response: Response): Error {
+  return response.status === 404
+    ? new Error(
+        'Could not find package.json at this URL (HTTP 404). Please check the repository link or upload manually.',
+      )
+    : new Error(
+        `Failed to fetch package.json (HTTP ${response.status} ${response.statusText}).`,
+      )
+}
+
+async function fetchPackageJson(url: string): Promise<ParsedPackageJson> {
+  const response = await fetch(url).catch((error: Error) => {
+    throw remoteFetchError(error)
+  })
+  if (!response.ok) throw responseError(response)
+
+  let json: ParsedPackageJson
+  try {
+    json = (await response.json()) as ParsedPackageJson
+  } catch {
+    throw new Error(
+      'The response from this URL is not valid JSON. Please check the link or upload package.json manually.',
+    )
+  }
+  if (
+    !json ||
+    typeof json !== 'object' ||
+    (!json.dependencies && !json.devDependencies)
+  ) {
+    throw new Error(
+      'Fetched package.json does not contain a dependencies or devDependencies block.',
+    )
+  }
+  return json
+}
+
+function shouldFetchRouterUrl({
+  currentUrl,
+  previousUrl,
+  hasPackages,
+  isLoading,
+}: {
+  currentUrl: unknown
+  previousUrl: unknown
+  hasPackages: boolean
+  isLoading: boolean
+}) {
+  return Boolean(
+    currentUrl &&
+    typeof currentUrl === 'string' &&
+    currentUrl !== previousUrl &&
+    !hasPackages &&
+    !isLoading,
+  )
+}
+
+function fetchableRouterUrl(options: {
+  currentUrl: unknown
+  previousUrl: unknown
+  hasPackages: boolean
+  isLoading: boolean
+}): string | undefined {
+  if (!shouldFetchRouterUrl(options)) return undefined
+  return typeof options.currentUrl === 'string' ? options.currentUrl : undefined
+}
+
 class Scan extends Component<ScanProps, ScanState> {
   state: ScanState = {
     packages: null,
@@ -93,15 +167,15 @@ class Scan extends Component<ScanProps, ScanState> {
     const currentUrl = this.props.router?.query?.url
     const prevUrl = prevProps.router?.query?.url
 
-    if (
-      currentUrl &&
-      typeof currentUrl === 'string' &&
-      currentUrl !== prevUrl &&
-      !this.state.packages &&
-      !this.state.isLoadingRemoteUrl
-    ) {
-      this.setState({ remoteUrlInput: currentUrl, isUrlFormOpen: true })
-      this.fetchRemotePackageJson(currentUrl)
+    const urlToFetch = fetchableRouterUrl({
+      currentUrl,
+      previousUrl: prevUrl,
+      hasPackages: Boolean(this.state.packages),
+      isLoading: this.state.isLoadingRemoteUrl,
+    })
+    if (urlToFetch) {
+      this.setState({ remoteUrlInput: urlToFetch, isUrlFormOpen: true })
+      this.fetchRemotePackageJson(urlToFetch)
     }
   }
 
@@ -235,47 +309,7 @@ class Scan extends Component<ScanProps, ScanState> {
     })
 
     try {
-      const response = await fetch(normalizedUrl).catch((err: Error) => {
-        if (
-          err.name === 'TypeError' ||
-          err.message.includes('Failed to fetch')
-        ) {
-          throw new Error(
-            'Network or CORS restriction prevented fetching this URL. Make sure the URL points to a public GitHub repo or raw JSON file with CORS enabled, or upload package.json manually.',
-          )
-        }
-        throw err
-      })
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(
-            'Could not find package.json at this URL (HTTP 404). Please check the repository link or upload manually.',
-          )
-        }
-        throw new Error(
-          `Failed to fetch package.json (HTTP ${response.status} ${response.statusText}).`,
-        )
-      }
-
-      let json: ParsedPackageJson
-      try {
-        json = (await response.json()) as ParsedPackageJson
-      } catch {
-        throw new Error(
-          'The response from this URL is not valid JSON. Please check the link or upload package.json manually.',
-        )
-      }
-
-      if (
-        !json ||
-        typeof json !== 'object' ||
-        (!json.dependencies && !json.devDependencies)
-      ) {
-        throw new Error(
-          'Fetched package.json does not contain a dependencies or devDependencies block.',
-        )
-      }
+      const json = await fetchPackageJson(normalizedUrl)
 
       const packages = this.getParsedPackages(json)
       const unsupportedPackageNames = this.getUnsupportedPackageNames(json)
@@ -401,6 +435,17 @@ class Scan extends Component<ScanProps, ScanState> {
     Analytics.scanParseError()
   }
 
+  renderUnsupportedPackages(packageNames: string[]) {
+    if (packageNames.length === 0) return null
+    return (
+      <p className="scan__unsupported-packages">
+        Skipped {packageNames.length}{' '}
+        {packageNames.length === 1 ? 'dependency' : 'dependencies'} with
+        unsupported version specifications: {packageNames.join(', ')}
+      </p>
+    )
+  }
+
   render() {
     const {
       packages,
@@ -435,16 +480,7 @@ class Scan extends Component<ScanProps, ScanState> {
               Reset
             </Button>
           </header>
-          {unsupportedPackageNames.length > 0 && (
-            <p className="scan__unsupported-packages">
-              Skipped {unsupportedPackageNames.length}{' '}
-              {unsupportedPackageNames.length === 1
-                ? 'dependency'
-                : 'dependencies'}{' '}
-              with unsupported version specifications:{' '}
-              {unsupportedPackageNames.join(', ')}
-            </p>
-          )}
+          {this.renderUnsupportedPackages(unsupportedPackageNames)}
           <ul
             className="scan__package-container"
             ref={this.packageSelectionContainerRef}

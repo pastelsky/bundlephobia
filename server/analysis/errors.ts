@@ -9,13 +9,22 @@ export type PackageAnalysisGatewayErrorCode =
   | 'LanguageCapabilityNotSupported'
 
 export class PackageAnalysisGatewayError extends Error {
+  readonly code: PackageAnalysisGatewayErrorCode
+  readonly language: LanguageId
+  readonly capability: LanguageCapability
+
   constructor(
-    readonly code: PackageAnalysisGatewayErrorCode,
-    readonly language: LanguageId,
-    readonly capability: LanguageCapability,
-    options?: ErrorOptions,
+    ...args: [
+      code: PackageAnalysisGatewayErrorCode,
+      language: LanguageId,
+      capability: LanguageCapability,
+      options?: ErrorOptions,
+    ]
   ) {
-    super(code, options)
+    super(args[0], args[3])
+    this.code = args[0]
+    this.language = args[1]
+    this.capability = args[2]
     this.name = 'PackageAnalysisGatewayError'
   }
 }

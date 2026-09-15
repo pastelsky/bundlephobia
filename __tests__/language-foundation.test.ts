@@ -50,17 +50,50 @@ describe('package report model', () => {
 
 describe('JavaScript package specifier adapter', () => {
   it.each([
-    ['react', 'react', null, undefined, false],
-    ['react@19.2.0', 'react', '19.2.0', undefined, false],
-    ['@babel/core', '@babel/core', null, 'babel', true],
-    ['@babel/core@9.8.0', '@babel/core', '9.8.0', 'babel', true],
-    ['chart.js@0.7.0-beta', 'chart.js', '0.7.0-beta', undefined, false],
-  ])('parses and formats %s', (specifier, name, version, scope, scoped) => {
-    const parsed = parseJavaScriptPackageSpecifier(specifier)
+    {
+      specifier: 'react',
+      name: 'react',
+      version: null,
+      scope: undefined,
+      scoped: false,
+    },
+    {
+      specifier: 'react@19.2.0',
+      name: 'react',
+      version: '19.2.0',
+      scope: undefined,
+      scoped: false,
+    },
+    {
+      specifier: '@babel/core',
+      name: '@babel/core',
+      version: null,
+      scope: 'babel',
+      scoped: true,
+    },
+    {
+      specifier: '@babel/core@9.8.0',
+      name: '@babel/core',
+      version: '9.8.0',
+      scope: 'babel',
+      scoped: true,
+    },
+    {
+      specifier: 'chart.js@0.7.0-beta',
+      name: 'chart.js',
+      version: '0.7.0-beta',
+      scope: undefined,
+      scoped: false,
+    },
+  ])(
+    'parses and formats $specifier',
+    ({ specifier, name, version, scope, scoped }) => {
+      const parsed = parseJavaScriptPackageSpecifier(specifier)
 
-    expect(parsed).toEqual({ name, version, scope, scoped })
-    expect(formatJavaScriptPackageSpecifier(parsed)).toBe(specifier)
-  })
+      expect(parsed).toEqual({ name, version, scope, scoped })
+      expect(formatJavaScriptPackageSpecifier(parsed)).toBe(specifier)
+    },
+  )
 })
 
 describe('language registry', () => {

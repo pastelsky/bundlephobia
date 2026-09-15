@@ -69,6 +69,271 @@ function getErrorDetails(originalError: unknown) {
   return detail ? { originalError: detail } : undefined
 }
 
+type KoaContext = Parameters<Middleware>[0]
+type ErrorResponse = {
+  code: string
+  message?: string
+  details?: unknown
+}
+
+interface ErrorHandlerContext {
+  ctx: KoaContext
+  force: unknown
+  start: number
+  packageString?: string
+  cacheFailure: (status: number, body: unknown) => void
+  respondWithError: (status: number, response: ErrorResponse) => void
+}
+
+type BuildErrorHandler = (
+  context: ErrorHandlerContext,
+  error: BuildErrorShape,
+) => void
+
+function setFatalCache(context: ErrorHandlerContext) {
+  context.ctx.cacheControl = {
+    maxAge: context.force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
+  }
+}
+
+function respondTemporaryError(
+  context: ErrorHandlerContext,
+  code: string,
+  message: string,
+) {
+  context.ctx.cacheControl = { maxAge: 0 }
+  context.respondWithError(503, { code, message })
+}
+
+const handleBuildServiceError: BuildErrorHandler = context => {
+  respondTemporaryError(
+    context,
+    'BuildServiceError',
+    'The build service encountered a temporary error. Please try again in a few minutes.',
+  )
+}
+
+const handleBuildServiceUnavailableError: BuildErrorHandler = context => {
+  respondTemporaryError(
+    context,
+    'BuildServiceUnavailableError',
+    'The build service is temporarily unavailable. Please try again in a few minutes.',
+  )
+}
+
+const handleBlocklistedPackageError: BuildErrorHandler = context => {
+  context.respondWithError(403, {
+    code: 'BlocklistedPackageError',
+    message:
+      'The package you were looking for is blocklisted ' +
+      "because it failed to build multiple times in the past and further tries aren't likely to succeed. This can " +
+      "happen if this package wasn't meant to be bundled in a client side application.",
+  })
+}
+
+const handleUnsupportedPackageError: BuildErrorHandler = (context, error) => {
+  context.ctx.cacheControl = {
+    maxAge: context.force ? 0 : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
+  }
+  context.respondWithError(403, {
+    code: 'UnsupportedPackageError',
+    message: `The package you were looking for is unsupported and cannot be built by bundlephobia — ${
+      error.extra?.reason ?? 'unknown reason'
+    }`,
+  })
+}
+
+const handlePackageNotFoundError: BuildErrorHandler = context => {
+  context.respondWithError(404, {
+    code: 'PackageNotFoundError',
+    message: "The package you were looking for doesn't exist.",
+  })
+}
+
+const handlePackageVersionMismatchError: BuildErrorHandler = (
+  context,
+  error,
+) => {
+  const suggestedVersion = error.extra?.suggestedVersion
+  if (suggestedVersion) {
+    context.respondWithError(404, {
+      code: 'PackageVersionMismatchError',
+      message: `This package has not been published with this particular version. The latest version is \`<code>${suggestedVersion}</code>\`.`,
+    })
+    return
+  }
+
+  const validVersions = formatSentence(
+    (error.extra?.validVersions ?? []).map(
+      version => `\`<code>${version}</code>\``,
+    ),
+  )
+  context.respondWithError(404, {
+    code: 'PackageVersionMismatchError',
+    message: `This package has not been published with this particular version. Valid versions - ${validVersions}`,
+  })
+}
+
+const handleInstallError: BuildErrorHandler = context => {
+  context.respondWithError(500, {
+    code: 'InstallError',
+    message: 'Installing the package failed.',
+  })
+  context.ctx.cacheControl = { maxAge: 0 }
+}
+
+const handleEntryPointError: BuildErrorHandler = context => {
+  const status = 422
+  const body = {
+    error: {
+      code: 'EntryPointError',
+      message:
+        'We could not guess a valid entry point for this package. ' +
+        "Perhaps the author hasn't specified one in its package.json ?",
+    },
+  }
+  setFatalCache(context)
+  context.respondWithError(status, body.error)
+  context.cacheFailure(status, body)
+}
+
+const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
+  const status = 422
+  const missingModulesList = error.extra?.missingModules ?? []
+  const missingModules = formatSentence(
+    missingModulesList.map(module => `\`<code>${module}</code>\``),
+  )
+  const body = {
+    error: {
+      code: 'MissingDependencyError',
+      message:
+        `This package (or this version) uses ${missingModules}, ` +
+        `but does not specify ${
+          missingModulesList.length > 1 ? 'them' : 'it'
+        } either as a dependency or a peer dependency`,
+      details: getErrorDetails(error.originalError) ?? {},
+    },
+  }
+  setFatalCache(context)
+  context.respondWithError(status, body.error)
+  context.cacheFailure(status, body)
+}
+
+const handleMinifyError: BuildErrorHandler = (context, error) => {
+  const status = 422
+  const body = {
+    error: {
+      code: 'MinifyError',
+      message:
+        'We could not minify one of the source files in this package or its dependencies. ' +
+        `Please verify if the contents of <code>${
+          error.extra?.filePath ?? 'unknown file'
+        }</code> can be minified using <a href="https://try.terser.org/" target="_blank">terser</a>.`,
+      details: { ...getErrorDetails(error.originalError) },
+    },
+  }
+  setFatalCache(context)
+  context.respondWithError(status, body.error)
+  context.cacheFailure(status, body)
+}
+
+const handleBuildError: BuildErrorHandler = (context, error) => {
+  const status = 422
+  const details = getErrorDetails(error.originalError) ?? {}
+  const errorJSON = {
+    code: 'BuildError',
+    message: 'Failed to build this package.',
+    details,
+  }
+  context.respondWithError(status, errorJSON)
+  context.cacheFailure(status, { error: errorJSON })
+}
+
+const buildErrorHandlers: Record<string, BuildErrorHandler> = {
+  BuildServiceError: handleBuildServiceError,
+  BuildServiceUnavailableError: handleBuildServiceUnavailableError,
+  BlocklistedPackageError: handleBlocklistedPackageError,
+  UnsupportedPackageError: handleUnsupportedPackageError,
+  PackageNotFoundError: handlePackageNotFoundError,
+  PackageVersionMismatchError: handlePackageVersionMismatchError,
+  InstallError: handleInstallError,
+  EntryPointError: handleEntryPointError,
+  MissingDependencyError: handleMissingDependencyError,
+  MinifyError: handleMinifyError,
+  BuildError: handleBuildError,
+}
+
+function handleCancelledError(context: ErrorHandlerContext) {
+  const { ctx, packageString, start } = context
+  ctx.cacheControl = { maxAge: 0 }
+  ctx.status = 408
+  ctx.body = {
+    error: {
+      code: 'BuildCancelledError',
+      message:
+        'The package build was cancelled because the client disconnected.',
+    },
+  } satisfies ErrorResponseBody
+  logger.info(
+    'BUILD_CANCELLED',
+    {
+      requestId: ctx.state.id,
+      time: now() - start,
+      ...ctx.state.resolved,
+      ...ctx.state.analysis,
+    },
+    packageString ? `BUILD_CANCELLED ${packageString}` : 'BUILD_CANCELLED',
+  )
+}
+
+function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
+  const errorObject = error as Record<string, unknown> | null
+  if (errorObject?.code === 'JOB_EXPIRED') {
+    context.ctx.cacheControl = { maxAge: 0 }
+    context.respondWithError(503, {
+      code: 'QueueTimeoutError',
+      message:
+        'The build queue is currently full and this request timed out. ' +
+        'Please try again in a few minutes.',
+    })
+    return
+  }
+  if (errorObject?.code === 'QUEUE_CLEARED') {
+    context.ctx.cacheControl = { maxAge: 0 }
+    context.respondWithError(503, {
+      code: 'QueueClearedError',
+      message:
+        'The build queue was cleared. Please try building the package again.',
+    })
+    return
+  }
+  context.respondWithError(500, {
+    code: 'UnknownError',
+    details: getErrorDetails(error),
+  })
+}
+
+function handleCaughtError(context: ErrorHandlerContext, error: unknown) {
+  if (isJobCancelledError(error)) {
+    handleCancelledError(context)
+    return
+  }
+  if (!(error instanceof Error)) {
+    handleUnknownError(context, error)
+    return
+  }
+  if (isClientHttpError(error)) {
+    context.respondWithError(error.status, {
+      code: error.name,
+      message: error.message,
+    })
+    return
+  }
+  const buildError = error as BuildErrorShape
+  const handler = buildErrorHandlers[buildError.name] ?? handleBuildError
+  handler(context, buildError)
+}
+
 const errorHandler: Middleware = async (ctx, next) => {
   const { force } = ctx.query
   const start = now()
@@ -131,237 +396,17 @@ const errorHandler: Middleware = async (ctx, next) => {
     ctx.cacheControl = {
       maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR,
     }
-
-    if (isJobCancelledError(error)) {
-      ctx.cacheControl = { maxAge: 0 }
-      ctx.status = 408
-      ctx.body = {
-        error: {
-          code: 'BuildCancelledError',
-          message:
-            'The package build was cancelled because the client disconnected.',
-        },
-      } satisfies ErrorResponseBody
-      logger.info(
-        'BUILD_CANCELLED',
-        {
-          requestId: ctx.state.id,
-          time: now() - start,
-          ...ctx.state.resolved,
-          ...ctx.state.analysis,
-        },
-        packageString ? `BUILD_CANCELLED ${packageString}` : 'BUILD_CANCELLED',
-      )
-      return
-    }
-
-    if (!(error instanceof Error)) {
-      const errObj = error as Record<string, unknown> | null
-      if (errObj && errObj.code === 'JOB_EXPIRED') {
-        ctx.cacheControl = { maxAge: 0 }
-        respondWithError(503, {
-          code: 'QueueTimeoutError',
-          message:
-            'The build queue is currently full and this request timed out. ' +
-            'Please try again in a few minutes.',
-        })
-        return
-      }
-      if (errObj && errObj.code === 'QUEUE_CLEARED') {
-        ctx.cacheControl = { maxAge: 0 }
-        respondWithError(503, {
-          code: 'QueueClearedError',
-          message:
-            'The build queue was cleared. Please try building the package again.',
-        })
-        return
-      }
-
-      respondWithError(500, {
-        code: 'UnknownError',
-        details: getErrorDetails(error),
-      })
-      return
-    }
-
-    if (isClientHttpError(error)) {
-      respondWithError(error.status, {
-        code: error.name,
-        message: error.message,
-      })
-      return
-    }
-
-    const err = error as BuildErrorShape
-
-    switch (err.name) {
-      case 'BuildServiceError':
-        ctx.cacheControl = { maxAge: 0 }
-        respondWithError(503, {
-          code: 'BuildServiceError',
-          message:
-            'The build service encountered a temporary error. Please try again in a few minutes.',
-        })
-        break
-
-      case 'BuildServiceUnavailableError':
-        ctx.cacheControl = { maxAge: 0 }
-        respondWithError(503, {
-          code: 'BuildServiceUnavailableError',
-          message:
-            'The build service is temporarily unavailable. Please try again in a few minutes.',
-        })
-        break
-
-      case 'BlocklistedPackageError':
-        respondWithError(403, {
-          code: 'BlocklistedPackageError',
-          message:
-            'The package you were looking for is blocklisted ' +
-            "because it failed to build multiple times in the past and further tries aren't likely to succeed. This can " +
-            "happen if this package wasn't meant to be bundled in a client side application.",
-        })
-        break
-
-      case 'UnsupportedPackageError':
-        ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
-        }
-        respondWithError(403, {
-          code: 'UnsupportedPackageError',
-          message: `The package you were looking for is unsupported and cannot be built by bundlephobia — ${
-            err.extra?.reason ?? 'unknown reason'
-          }`,
-        })
-        break
-
-      case 'PackageNotFoundError':
-        respondWithError(404, {
-          code: 'PackageNotFoundError',
-          message: "The package you were looking for doesn't exist.",
-        })
-        break
-
-      case 'PackageVersionMismatchError': {
-        if (err.extra?.suggestedVersion) {
-          respondWithError(404, {
-            code: 'PackageVersionMismatchError',
-            message: `This package has not been published with this particular version. The latest version is \`<code>${err.extra.suggestedVersion}</code>\`.`,
-          })
-          break
-        }
-
-        const validVersions = formatSentence(
-          (err.extra?.validVersions ?? []).map(
-            version => `\`<code>${version}</code>\``,
-          ),
-        )
-
-        respondWithError(404, {
-          code: 'PackageVersionMismatchError',
-          message: `This package has not been published with this particular version. Valid versions - ${validVersions}`,
-        })
-        break
-      }
-
-      case 'InstallError':
-        respondWithError(500, {
-          code: 'InstallError',
-          message: 'Installing the package failed.',
-        })
-        ctx.cacheControl = {
-          maxAge: 0,
-        }
-        break
-
-      case 'EntryPointError': {
-        const status = 422
-        const body = {
-          error: {
-            code: 'EntryPointError',
-            message:
-              'We could not guess a valid entry point for this package. ' +
-              "Perhaps the author hasn't specified one in its package.json ?",
-          },
-        }
-
-        ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
-        }
-
-        respondWithError(status, body.error)
-        cacheFailure(status, body)
-        break
-      }
-
-      case 'MissingDependencyError': {
-        const status = 422
-        const missingModulesList = err.extra?.missingModules ?? []
-        const missingModules = formatSentence(
-          missingModulesList.map(module => `\`<code>${module}</code>\``),
-        )
-        const body = {
-          error: {
-            code: 'MissingDependencyError',
-            message:
-              `This package (or this version) uses ${missingModules}, ` +
-              `but does not specify ${
-                missingModulesList.length > 1 ? 'them' : 'it'
-              } either as a dependency or a peer dependency`,
-            details: getErrorDetails(err.originalError) ?? {},
-          },
-        }
-
-        ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
-        }
-
-        respondWithError(status, body.error)
-        cacheFailure(status, body)
-        break
-      }
-
-      case 'MinifyError': {
-        const status = 422
-        const body = {
-          error: {
-            code: 'MinifyError',
-            message:
-              'We could not minify one of the source files in this package or its dependencies. ' +
-              `Please verify if the contents of <code>${
-                err.extra?.filePath ?? 'unknown file'
-              }</code> can be minified using <a href="https://try.terser.org/" target="_blank">terser</a>.`,
-            details: {
-              ...getErrorDetails(err.originalError),
-            },
-          },
-        }
-
-        ctx.cacheControl = {
-          maxAge: force ? 0 : config.CACHE.SIZE_API_ERROR_FATAL,
-        }
-
-        respondWithError(status, body.error)
-        cacheFailure(status, body)
-        break
-      }
-
-      case 'BuildError':
-      default: {
-        const status = 422
-        const details = getErrorDetails(err.originalError) ?? {}
-        const errorJSON = {
-          code: 'BuildError',
-          message: 'Failed to build this package.',
-          details,
-        }
-        respondWithError(status, errorJSON)
-        cacheFailure(status, {
-          error: errorJSON,
-        })
-        break
-      }
-    }
+    handleCaughtError(
+      {
+        ctx,
+        force,
+        start,
+        packageString,
+        cacheFailure,
+        respondWithError,
+      },
+      error,
+    )
   }
 }
 

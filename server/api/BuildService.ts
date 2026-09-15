@@ -29,6 +29,8 @@ const OperationType = {
 interface OperationDefinition {
   legacyName: string
   operation: AnalysisOperation
+  endpoint: string
+  methodName: string
 }
 
 interface BuildServiceJobParams {
@@ -39,6 +41,14 @@ interface BuildServiceJobParams {
 interface BuildRequestOptions {
   signal?: AbortSignal
   onComplete?: (durationMs: number) => void
+}
+
+interface BuildExecutionOptions {
+  operation: OperationDefinition
+  packageString: string
+  signal: AbortSignal
+  onComplete?: (durationMs: number) => void
+  startedAt: number
 }
 
 export const BUILD_DURATION_HEADER = 'x-bundlephobia-build-duration-ms'
@@ -75,72 +85,103 @@ export default class BuildService {
         async ({ packageString, onComplete }, { signal }) => {
           const startedAt = performance.now()
           if (process.env.BUILD_SERVICE_ENDPOINT) {
-            try {
-              const response = await axios.get(
-                `${process.env.BUILD_SERVICE_ENDPOINT}${
-                  operation.endpoint
-                }?p=${encodeURIComponent(packageString)}`,
-                {
-                  signal,
-                  maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES,
-                },
-              )
-              return response.data
-            } catch (error) {
-              if (axios.isCancel(error)) {
-                throw new JobCancelledError()
-              }
-              this.handleError(error, operation)
-            } finally {
-              const durationMs = Math.max(
-                1,
-                Math.ceil(performance.now() - startedAt),
-              )
-              onComplete?.(durationMs)
-              logger.timing(
-                `analysis.javascript.${operation.operation}.duration`,
-                durationMs,
-              )
-            }
+            return this.executeRemoteBuild({
+              operation,
+              packageString,
+              signal,
+              onComplete,
+              startedAt,
+            })
           }
 
-          const execution = pool
-            .exec(operation.methodName, [packageString])
-            .timeout(config.WORKER_TIMEOUT)
-          let rejectCancellation: (error: JobCancelledError) => void = () => {}
-          const cancellation = new Promise<never>((_, reject) => {
-            rejectCancellation = reject
+          return this.executeLocalBuild({
+            operation,
+            packageString,
+            signal,
+            onComplete,
+            startedAt,
           })
-          const cancelExecution = () => {
-            // workerpool cancellation terminates its worker and can leave a
-            // subsequent job waiting indefinitely. Let this non-interruptible
-            // worker finish while promptly detaching the aborted HTTP request.
-            rejectCancellation(new JobCancelledError())
-          }
-          signal.addEventListener('abort', cancelExecution, { once: true })
-          if (signal.aborted) cancelExecution()
-          try {
-            return await Promise.race([execution, cancellation])
-          } catch (error) {
-            if (signal.aborted) {
-              throw new JobCancelledError()
-            }
-            throw error
-          } finally {
-            const durationMs = Math.max(
-              1,
-              Math.ceil(performance.now() - startedAt),
-            )
-            onComplete?.(durationMs)
-            logger.timing(
-              `analysis.javascript.${operation.operation}.duration`,
-              durationMs,
-            )
-            signal.removeEventListener('abort', cancelExecution)
-          }
         },
       )
     })
+  }
+
+  private completeBuild(options: BuildExecutionOptions) {
+    const durationMs = Math.max(
+      1,
+      Math.ceil(performance.now() - options.startedAt),
+    )
+    options.onComplete?.(durationMs)
+    logger.timing(
+      `analysis.javascript.${options.operation.operation}.duration`,
+      durationMs,
+    )
+  }
+
+  private async executeRemoteBuild({
+    operation,
+    packageString,
+    signal,
+    onComplete,
+    startedAt,
+  }: BuildExecutionOptions) {
+    try {
+      const response = await axios.get(
+        `${process.env.BUILD_SERVICE_ENDPOINT}${operation.endpoint}?p=${encodeURIComponent(packageString)}`,
+        { signal, maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES },
+      )
+      return response.data
+    } catch (error) {
+      if (axios.isCancel(error)) throw new JobCancelledError()
+      this.handleError(error, operation)
+    } finally {
+      this.completeBuild({
+        operation,
+        packageString,
+        signal,
+        onComplete,
+        startedAt,
+      })
+    }
+  }
+
+  private async executeLocalBuild({
+    operation,
+    packageString,
+    signal,
+    onComplete,
+    startedAt,
+  }: BuildExecutionOptions) {
+    const execution = pool
+      .exec(operation.methodName, [packageString])
+      .timeout(config.WORKER_TIMEOUT)
+    let rejectCancellation: (error: JobCancelledError) => void = () => {}
+    const cancellation = new Promise<never>((_, reject) => {
+      rejectCancellation = reject
+    })
+    const cancelExecution = () => {
+      // workerpool cancellation terminates its worker and can leave a
+      // subsequent job waiting indefinitely. Let this non-interruptible
+      // worker finish while promptly detaching the aborted HTTP request.
+      rejectCancellation(new JobCancelledError())
+    }
+    signal.addEventListener('abort', cancelExecution, { once: true })
+    if (signal.aborted) cancelExecution()
+    try {
+      return await Promise.race([execution, cancellation])
+    } catch (error) {
+      if (signal.aborted) throw new JobCancelledError()
+      throw error
+    } finally {
+      this.completeBuild({
+        operation,
+        packageString,
+        signal,
+        onComplete,
+        startedAt,
+      })
+      signal.removeEventListener('abort', cancelExecution)
+    }
   }
 
   private handleError(error: unknown, operation: OperationDefinition): never {
@@ -181,22 +222,22 @@ export default class BuildService {
     options: BuildRequestOptions = {},
   ): Promise<T> {
     logger.increment('analysis.javascript.package-analysis.requested')
-    return requestQueue.process<T, BuildServiceJobParams>(
-      createAnalysisKey({
+    return requestQueue.process<T, BuildServiceJobParams>({
+      id: createAnalysisKey({
         language: 'javascript',
         operation: OperationType.PACKAGE_BUILD_STATS.operation,
         packageSpecifier: packageString,
       }),
-      createQueueType(
+      type: createQueueType(
         'javascript',
         OperationType.PACKAGE_BUILD_STATS.operation,
       ),
-      {
+      jobParams: {
         packageString,
         onComplete: options.onComplete,
       },
-      { priority, signal: options.signal },
-    )
+      options: { priority, signal: options.signal },
+    })
   }
 
   async getPackageExports<T>(
@@ -205,19 +246,22 @@ export default class BuildService {
     options: BuildRequestOptions = {},
   ): Promise<T> {
     logger.increment('analysis.javascript.package-exports.requested')
-    return requestQueue.process<T, BuildServiceJobParams>(
-      createAnalysisKey({
+    return requestQueue.process<T, BuildServiceJobParams>({
+      id: createAnalysisKey({
         language: 'javascript',
         operation: OperationType.PACKAGE_EXPORTS.operation,
         packageSpecifier: packageString,
       }),
-      createQueueType('javascript', OperationType.PACKAGE_EXPORTS.operation),
-      {
+      type: createQueueType(
+        'javascript',
+        OperationType.PACKAGE_EXPORTS.operation,
+      ),
+      jobParams: {
         packageString,
         onComplete: options.onComplete,
       },
-      { priority, signal: options.signal },
-    )
+      options: { priority, signal: options.signal },
+    })
   }
 
   async getPackageExportSizes<T>(
@@ -226,21 +270,21 @@ export default class BuildService {
     options: BuildRequestOptions = {},
   ): Promise<T> {
     logger.increment('analysis.javascript.package-export-sizes.requested')
-    return requestQueue.process<T, BuildServiceJobParams>(
-      createAnalysisKey({
+    return requestQueue.process<T, BuildServiceJobParams>({
+      id: createAnalysisKey({
         language: 'javascript',
         operation: OperationType.PACKAGE_EXPORTS_SIZES.operation,
         packageSpecifier: packageString,
       }),
-      createQueueType(
+      type: createQueueType(
         'javascript',
         OperationType.PACKAGE_EXPORTS_SIZES.operation,
       ),
-      {
+      jobParams: {
         packageString,
         onComplete: options.onComplete,
       },
-      { priority, signal: options.signal },
-    )
+      options: { priority, signal: options.signal },
+    })
   }
 }

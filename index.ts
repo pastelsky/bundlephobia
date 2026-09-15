@@ -83,6 +83,47 @@ const dev = env.nodeEnv !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
+type McpArguments = Record<string, unknown>
+type McpPayload = { name: string; arguments?: McpArguments }
+
+const localMcpPathBuilders: Record<
+  string,
+  (options: { packageName: string; args: McpArguments }) => string
+> = {
+  'bundlephobia.size': ({ packageName }) => `/api/size?package=${packageName}`,
+  'bundlephobia.exports': ({ packageName }) =>
+    `/api/exports?package=${packageName}`,
+  'bundlephobia.exportsSizes': ({ packageName }) =>
+    `/api/exports-sizes?package=${packageName}`,
+  'bundlephobia.packageHistory': ({ packageName, args }) =>
+    `/api/package-history?package=${packageName}&limit=${Number(args.limit ?? 10)}`,
+  'bundlephobia.similarPackages': ({ packageName }) =>
+    `/api/similar-packages?package=${packageName}`,
+}
+
+function getLocalMcpRequest(name: string, args: McpArguments) {
+  const buildPath = localMcpPathBuilders[name]
+  if (!buildPath) return null
+
+  const packageName =
+    typeof args.package === 'string'
+      ? encodeURIComponent(args.package)
+      : undefined
+  return packageName
+    ? { path: buildPath({ packageName, args }) }
+    : { invalid: true as const }
+}
+
+function isMcpPayload(value: unknown): value is McpPayload {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'name' in value &&
+    typeof value.name === 'string' &&
+    value.name.length > 0
+  )
+}
+
 app.prepare().then(() => {
   const server = new Koa()
   const router = new Router()
@@ -320,11 +361,9 @@ app.prepare().then(() => {
   })
 
   router.post('/api/mcp/call-tool', async ctx => {
-    const payload = ctx.request.body as
-      | { name?: string; arguments?: Record<string, unknown> }
-      | undefined
+    const payload = ctx.request.body
 
-    if (!payload?.name || typeof payload.name !== 'string') {
+    if (!isMcpPayload(payload)) {
       ctx.status = 400
       ctx.body = {
         error: { code: 'InvalidMcpPayload', message: '`name` is required' },
@@ -334,10 +373,6 @@ app.prepare().then(() => {
 
     try {
       const args = payload.arguments ?? {}
-      const packageName =
-        typeof args.package === 'string'
-          ? encodeURIComponent(args.package)
-          : undefined
 
       const callLocalApi = async (path: string) => {
         const response = await fetch(`http://127.0.0.1:${port}${path}`, {
@@ -352,61 +387,15 @@ app.prepare().then(() => {
         }
       }
 
-      switch (payload.name) {
-        case 'bundlephobia.size': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          ctx.body = await callLocalApi(`/api/size?package=${packageName}`)
-          return
-        }
-        case 'bundlephobia.exports': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          ctx.body = await callLocalApi(`/api/exports?package=${packageName}`)
-          return
-        }
-        case 'bundlephobia.exportsSizes': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          ctx.body = await callLocalApi(
-            `/api/exports-sizes?package=${packageName}`,
-          )
-          return
-        }
-        case 'bundlephobia.packageHistory': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          const historyLimit = Number(args.limit ?? 10)
-          ctx.body = await callLocalApi(
-            `/api/package-history?package=${packageName}&limit=${historyLimit}`,
-          )
-          return
-        }
-        case 'bundlephobia.similarPackages': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          ctx.body = await callLocalApi(
-            `/api/similar-packages?package=${packageName}`,
-          )
-          return
-        }
-        default:
-          break
+      const localRequest = getLocalMcpRequest(payload.name, args)
+      if (localRequest?.invalid) {
+        ctx.status = 400
+        ctx.body = { error: { code: 'InvalidMcpPayload' } }
+        return
+      }
+      if (localRequest) {
+        ctx.body = await callLocalApi(localRequest.path)
+        return
       }
 
       if (!remoteMcpClient.isEnabled()) {
