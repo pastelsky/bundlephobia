@@ -5332,6 +5332,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oxlint/plugins@npm:1.78.0":
+  version: 1.78.0
+  resolution: "@oxlint/plugins@npm:1.78.0"
+  checksum: cd3bdb50efc92ff7137858a7be3e6e1f60118b502f7246eab0c822b96d2103926aba91eb3e9566d985807bc9480aea292fe5e3abdb9345989b11a1610a2fb834
+  languageName: node
+  linkType: hard
+
 "@paralleldrive/cuid2@npm:^2.2.2":
   version: 2.3.1
   resolution: "@paralleldrive/cuid2@npm:2.3.1"
@@ -8953,6 +8960,7 @@ __metadata:
     "@floating-ui/dom": "npm:^1.8.0"
     "@koa/router": "npm:^12.0.1"
     "@modelcontextprotocol/sdk": "npm:^1.29.0"
+    "@oxlint/plugins": "npm:1.78.0"
     "@playwright/test": "npm:1.61.1"
     "@svgr/webpack": "npm:^6.5.1"
     "@swc/core": "npm:^1.15.47"
