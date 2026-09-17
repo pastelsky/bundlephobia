@@ -24,7 +24,10 @@ interface QueueModule {
   }
 }
 
-type DeepEqual = (left: unknown, right: unknown) => boolean
+type DeepEqual = (
+  left: PackageBuildResult | undefined,
+  right: PackageBuildResult | undefined,
+) => boolean
 
 type Mkdir = (directory: string) => Promise<void>
 
@@ -61,7 +64,7 @@ const debug = createDebug('rebuild:script')
 
 const debugWarning = createDebug('rebuild:warning')
 
-const patchedDB: Record<string, Record<string, unknown>> = {}
+const patchedDB: PackageStore = {}
 
 function commit() {
   try {
@@ -100,6 +103,7 @@ async function getFirebaseStore() {
   try {
     const snapshot = await firebase.database().ref('modules-v2').once('value')
 
+    // SAFETY: Firebase modules-v2 stores package versions under this exact shape.
     return (snapshot.val() as PackageStore | null) ?? {}
   } catch (error) {
     console.log(error)
@@ -154,6 +158,7 @@ function trim(packages: PackageStore) {
 async function run() {
   let packages: Array<{ packName: string; version: string }> = []
 
+  // SAFETY: These repository fixtures are generated PackageStore snapshots.
   const packs = require('../modules-v2.json') as PackageStore
   const packsNew = require('../modules-v2-new.json') as PackageStore
   const failIndexes: number[] = []
@@ -301,14 +306,13 @@ async function getExports(name: string, version: string) {
 
   await installPackage(packageName, temporaryPath)
 
-  const exportsObject = require(
-    path.join(temporaryPath, 'node_modules', name),
-  ) as Record<string, unknown>
+  const exportsObject = require(path.join(temporaryPath, 'node_modules', name))
 
   return Object.keys(exportsObject)
 }
 
 async function rebuildTopLevelExports() {
+  // SAFETY: This repository fixture is a generated PackageStore snapshot.
   const packs = require('../modules-v2.json') as PackageStore
   const packages: Array<{ name: string; version: string }> = []
 

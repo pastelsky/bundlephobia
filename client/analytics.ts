@@ -1,5 +1,9 @@
 import { trackAmplitudeEvent } from './amplitude'
 
+type AnalyticsValue = string | number | boolean | null | undefined
+
+type AnalyticsEventData = Record<string, AnalyticsValue>
+
 type HasPackageName = {
   packageName: string
 }
@@ -35,10 +39,7 @@ type HasAction = {
 }
 
 export default class Analytics {
-  private static logEvent(
-    eventName: string,
-    eventData?: Record<string, unknown>,
-  ) {
+  private static logEvent(eventName: string, eventData?: AnalyticsEventData) {
     trackAmplitudeEvent(eventName, eventData)
   }
 

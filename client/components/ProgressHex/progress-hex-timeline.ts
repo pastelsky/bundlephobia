@@ -28,6 +28,10 @@ type LineCoordsOptions = {
   y2?: number
 }
 
+function isCircleElement(element: Element): element is SVGCircleElement {
+  return element.tagName.toLowerCase() === 'circle'
+}
+
 export default class ProgressHexAnimator {
   circlesMap: CirclesMap
   circles: NodeListOf<SVGCircleElement>
@@ -117,11 +121,17 @@ export default class ProgressHexAnimator {
         this.getTranslation(circle, 4).y,
       translateX: (circle: SVGCircleElement) =>
         this.getTranslation(circle, 4).x,
-      delay: ((el: SVGCircleElement) =>
-        (Math.pow(this.circlesMap.get(el)!.ringNumber, 0.6) * DURATION) / 4 +
-        (this.circlesMap.get(el)!.ringNumber > 0
-          ? DURATION / 2.5
-          : 0)) as unknown as AnimeAnimParams['delay'],
+      delay: (el: Element) => {
+        if (!isCircleElement(el)) return 0
+
+        const circle = el
+        const ringNumber = this.circlesMap.get(circle)!.ringNumber
+
+        return (
+          (Math.pow(ringNumber, 0.6) * DURATION) / 4 +
+          (ringNumber > 0 ? DURATION / 2.5 : 0)
+        )
+      },
       duration: DURATION,
       easing: () => (t: number) => Math.sin(t * Math.PI),
       changeBegin: () => this.trailBlaze.start(),

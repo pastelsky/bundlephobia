@@ -2,6 +2,10 @@ const AMPLITUDE_API_KEY = '93638c7d7bac8785dca060653e104732'
 
 type AmplitudeBrowser = typeof import('@amplitude/analytics-browser')
 
+type AnalyticsValue = string | number | boolean | null | undefined
+
+type AnalyticsEventData = Record<string, AnalyticsValue>
+
 let amplitudeModule: Promise<AmplitudeBrowser> | undefined
 
 function loadAmplitude() {
@@ -33,7 +37,7 @@ export function initializeAmplitude() {
 
 export function trackAmplitudeEvent(
   eventName: string,
-  eventData?: Record<string, unknown>,
+  eventData?: AnalyticsEventData,
 ) {
   loadAmplitude()
     ?.then(amplitude => amplitude.track(eventName, eventData))

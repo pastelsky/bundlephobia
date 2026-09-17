@@ -54,12 +54,6 @@ type ResultPageState = {
   similarPackagesCategory: string
 }
 
-type ResolvedBuildError = {
-  errorName: string | null
-  errorBody: string | null
-  errorDetails: string | null
-}
-
 function isEmptySnapshot(reading: PackageBuildInfoSnapshot) {
   return Object.keys(reading).length === 0
 }
@@ -78,10 +72,6 @@ function formatSentence(values: string[]) {
   }
 
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
-}
-
-function getResolvedBuildError(resultsError: unknown): ResolvedBuildError {
-  return resolveBuildError(resultsError)
 }
 
 function getPackageStringFromRouter(router: NextRouter) {
@@ -538,7 +528,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   renderErrorResult() {
     if (this.state.resultsPromiseState !== 'rejected') return null
 
-    const { errorName, errorBody, errorDetails } = getResolvedBuildError(
+    const { errorName, errorBody, errorDetails } = resolveBuildError(
       this.state.resultsError,
     )
 

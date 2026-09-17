@@ -337,11 +337,7 @@ export default class ExportAnalysisSection extends Component<
   renderFailure() {
     const { errorName, errorBody, errorDetails } = resolveBuildError(
       this.state.resultError,
-    ) as {
-      errorName: string | null
-      errorBody: string | null
-      errorDetails: string | null
-    }
+    )
 
     return (
       <div className="export-analysis-section__error">

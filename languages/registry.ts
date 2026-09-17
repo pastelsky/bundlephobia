@@ -70,7 +70,7 @@ export function createLanguageRegistry(
       return descriptor
     },
     isLanguageId(value: string): value is LanguageId {
-      return byId.has(value as LanguageId)
+      return descriptors.some(descriptor => descriptor.id === value)
     },
     enabled: () => all.filter(descriptor => descriptor.state === 'enabled'),
     visible: () => all.filter(descriptor => descriptor.visibility === 'public'),
