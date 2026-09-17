@@ -17,15 +17,19 @@ type HasSuccessRatio = {
 }
 
 type HasPackageNameAndTimeTaken = HasPackageName & HasTimeTaken
+
 type HasOpen = {
   open: boolean
 }
+
 type HasToolCount = {
   toolCount: number
 }
+
 type HasToolName = {
   toolName: string
 }
+
 type HasAction = {
   action: string
 }

@@ -18,6 +18,7 @@ describe('Queue cancellation', () => {
     const queue = new Queue({ concurrency: 1 })
 
     let resolveFirstJob: any
+
     const firstJobPromise = new Promise(resolve => {
       resolveFirstJob = resolve
     })
@@ -76,13 +77,16 @@ describe('Queue cancellation', () => {
     const queue = new Queue({ concurrency: 1 })
 
     let resolveFirstJob: any
+
     const firstJobPromise = new Promise(resolve => {
       resolveFirstJob = resolve
     })
+
     const executor = jest
       .fn()
       .mockReturnValueOnce(firstJobPromise)
       .mockResolvedValueOnce(undefined)
+
     queue.addExecutor('TEST', executor)
 
     const p1 = queue.process({ id: 'job-1', type: 'TEST', jobParams: {} })
@@ -110,9 +114,11 @@ describe('Queue cancellation', () => {
     const secondSubscriber = new AbortController()
     const cancelExecutor = jest.fn()
     let resolveJob: (value: string) => void = () => {}
+
     const jobPromise = new Promise<string>(resolve => {
       resolveJob = resolve
     }) as Promise<string> & { cancel?: () => void }
+
     jobPromise.cancel = cancelExecutor
 
     queue.addExecutor('TEST', () => jobPromise)
@@ -125,6 +131,7 @@ describe('Queue cancellation', () => {
         signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
       },
     })
+
     const secondResult = queue.process<string, object>({
       id: 'shared-job',
       type: 'TEST',
@@ -152,9 +159,11 @@ describe('Queue cancellation', () => {
     const firstSubscriber = new AbortController()
     const secondSubscriber = new AbortController()
     const cancelExecutor = jest.fn()
+
     const jobPromise = new Promise(() => {}) as Promise<never> & {
       cancel?: () => void
     }
+
     jobPromise.cancel = cancelExecutor
 
     queue.addExecutor('TEST', () => jobPromise)
@@ -167,6 +176,7 @@ describe('Queue cancellation', () => {
         signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
       },
     })
+
     const secondResult = queue.process({
       id: 'shared-job',
       type: 'TEST',
@@ -195,12 +205,14 @@ describe('Queue cancellation', () => {
     const secondSubscriber = new AbortController()
     let executorSignal: globalThis.AbortSignal | undefined
     let rejectExecution: (error: Error) => void = () => {}
+
     const execution = new Promise((_resolve, reject) => {
       rejectExecution = reject
     })
 
     queue.addExecutor('TEST', (_params, { signal }) => {
       executorSignal = signal
+
       return execution
     })
 
@@ -212,6 +224,7 @@ describe('Queue cancellation', () => {
         signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
       },
     })
+
     const secondResult = queue.process({
       id: 'shared-job',
       type: 'TEST',
@@ -282,15 +295,18 @@ describe('Queue priority', () => {
     const queue = new Queue({ concurrency: 1, aging: false })
     const executionOrder: string[] = []
     let releaseBlocker: () => void = () => {}
+
     const blocker = new Promise<void>(resolve => {
       releaseBlocker = resolve
     })
 
     queue.addExecutor<string, string>('TEST', async id => {
       executionOrder.push(id)
+
       if (id === 'blocker') {
         await blocker
       }
+
       return id
     })
 
@@ -299,18 +315,21 @@ describe('Queue priority', () => {
       type: 'TEST',
       jobParams: 'blocker',
     })
+
     const firstSharedResult = queue.process<string, string>({
       id: 'shared',
       type: 'TEST',
       jobParams: 'shared',
       options: { priority: Queue.priority.LOW },
     })
+
     const mediumResult = queue.process<string, string>({
       id: 'medium',
       type: 'TEST',
       jobParams: 'medium',
       options: { priority: Queue.priority.MEDIUM },
     })
+
     const secondSharedResult = queue.process<string, string>({
       id: 'shared',
       type: 'TEST',

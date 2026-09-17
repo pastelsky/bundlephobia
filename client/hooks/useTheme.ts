@@ -20,12 +20,16 @@ export const useTheme = () => {
     const applied = document.documentElement.getAttribute(
       'data-theme',
     ) as Theme | null
+
     if (applied === 'dark' || applied === 'light') {
       setTheme(applied)
+
       return
     }
+
     // Fallback: no FOUC script result
     const stored = localStorage.getItem('theme') as Theme | null
+
     if (stored === 'dark' || stored === 'light') {
       apply(stored)
     } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {

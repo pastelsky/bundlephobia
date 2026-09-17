@@ -6,8 +6,10 @@ import CustomError from '../../CustomError'
 
 const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
   const { package: packageQuery, force } = ctx.query
+
   if (force) {
     await next()
+
     return
   }
 
@@ -16,6 +18,7 @@ const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
 
   if (!packageString) {
     ctx.throw(400, 'package query parameter is required')
+
     return
   }
 

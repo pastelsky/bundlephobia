@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { IconButton } from '../ui'
 
 const STORAGE_KEY = 'bundlephobia_rspack_banner_dismissed'
+
 const EXPIRY_DATE = new Date('2026-07-18T00:00:00Z') // 6 months from January 18, 2026
 
 export const AnnouncementBanner: React.FC = () => {
@@ -19,6 +20,7 @@ export const AnnouncementBanner: React.FC = () => {
     // Check if already dismissed
     try {
       const dismissed = localStorage.getItem(STORAGE_KEY)
+
       if (dismissed === 'true') {
         return
       }
@@ -31,6 +33,7 @@ export const AnnouncementBanner: React.FC = () => {
 
   const handleDismiss = () => {
     setIsVisible(false)
+
     try {
       localStorage.setItem(STORAGE_KEY, 'true')
     } catch {

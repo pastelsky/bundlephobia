@@ -104,6 +104,7 @@ const Home = () => {
 
   const handleSearchSubmit = (value: string) => {
     Analytics.performedSearch(value.trim())
+
     if (value ?? '') {
       router.push(`/package/${value.trim()}`)
     }

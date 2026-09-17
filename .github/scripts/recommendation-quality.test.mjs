@@ -121,6 +121,7 @@ test('collects objective npm and GitHub quality signals', async () => {
       { version: '2.0.0', size: 5_000, gzip: 2_000 },
     ],
   ])
+
   const fetchImpl = async url => ({
     ok: responses.has(url),
     status: responses.has(url) ? 200 : 404,
@@ -156,6 +157,7 @@ test('blocks authoritative failures but keeps incomplete signals advisory', () =
       advantage: 'Smaller',
     },
   )
+
   assert.equal(incomplete.status, 'needs review')
   assert.equal(incomplete.errors.length, 0)
 
@@ -206,6 +208,7 @@ test('extracts categories and their curated package lists', () => {
     ],
   },
 }`
+
   const categories = extractCuratedCategories(source)
 
   assert.deepEqual(
@@ -220,6 +223,7 @@ test('summarizes size evidence without turning it into a gate', () => {
     packageName: 'small',
     bundleSize: { available: true, gzip: 1_000 },
   }
+
   const alternatives = [
     {
       packageName: 'large',

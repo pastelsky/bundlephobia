@@ -21,9 +21,11 @@ export class PackageAnalysisGateway {
 
   register(adapter: PackageAnalysisAdapter): void {
     languageRegistry.get(adapter.language)
+
     if (this.adapters.has(adapter.language)) {
       throw new Error(`Duplicate package analysis adapter: ${adapter.language}`)
     }
+
     this.adapters.set(adapter.language, adapter)
   }
 
@@ -32,6 +34,7 @@ export class PackageAnalysisGateway {
     capability: LanguageCapability,
   ): PackageAnalysisAdapter {
     const descriptor = languageRegistry.get(language)
+
     if (descriptor.state !== 'enabled') {
       throw new PackageAnalysisGatewayError(
         'LanguageNotEnabled',
@@ -39,6 +42,7 @@ export class PackageAnalysisGateway {
         capability,
       )
     }
+
     if (!descriptor.capabilities.includes(capability)) {
       throw new PackageAnalysisGatewayError(
         'LanguageCapabilityNotSupported',
@@ -46,7 +50,9 @@ export class PackageAnalysisGateway {
         capability,
       )
     }
+
     const adapter = this.adapters.get(language)
+
     if (!adapter) {
       throw new PackageAnalysisGatewayError(
         'LanguageAdapterNotFound',
@@ -54,6 +60,7 @@ export class PackageAnalysisGateway {
         capability,
       )
     }
+
     return adapter
   }
 
@@ -77,6 +84,7 @@ export class PackageAnalysisGateway {
     options: AnalysisRequestOptions,
   ): Promise<PackageBuildResult> {
     const adapter = this.adapterFor(resolved.language, 'analysis')
+
     if (!adapter.analyzePackage) {
       throw new PackageAnalysisGatewayError(
         'LanguageAdapterNotFound',
@@ -84,6 +92,7 @@ export class PackageAnalysisGateway {
         'analysis',
       )
     }
+
     return adapter.analyzePackage(resolved, options)
   }
 
@@ -92,6 +101,7 @@ export class PackageAnalysisGateway {
     options: AnalysisRequestOptions,
   ): Promise<PackageExportsResult> {
     const adapter = this.adapterFor(resolved.language, 'exports')
+
     if (!adapter.analyzePackageExports) {
       throw new PackageAnalysisGatewayError(
         'LanguageAdapterNotFound',
@@ -99,6 +109,7 @@ export class PackageAnalysisGateway {
         'exports',
       )
     }
+
     return adapter.analyzePackageExports(resolved, options)
   }
 
@@ -107,6 +118,7 @@ export class PackageAnalysisGateway {
     options: AnalysisRequestOptions,
   ): Promise<PackageExportSizesResult> {
     const adapter = this.adapterFor(resolved.language, 'export-sizes')
+
     if (!adapter.analyzePackageExportSizes) {
       throw new PackageAnalysisGatewayError(
         'LanguageAdapterNotFound',
@@ -114,6 +126,7 @@ export class PackageAnalysisGateway {
         'export-sizes',
       )
     }
+
     return adapter.analyzePackageExportSizes(resolved, options)
   }
 }

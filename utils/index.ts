@@ -81,12 +81,14 @@ export function zeroToN(n: number): number[] {
 }
 
 const MAX_ERROR_DETAIL_LENGTH = 12_000
+
 const stringifyError = configure({ maximumBreadth: 20, maximumDepth: 4 })
 
 function formatArrayError(originalError: unknown[]): string | null {
   const details = originalError
     .map(toErrorDetail)
     .filter((detail): detail is string => detail !== null)
+
   return details.length
     ? truncate(details.join('\n\n'), MAX_ERROR_DETAIL_LENGTH)
     : null
@@ -94,6 +96,7 @@ function formatArrayError(originalError: unknown[]): string | null {
 
 function formatObjectError(originalError: object): string | null {
   const serialized = stringifyError(originalError, null, 2)
+
   return serialized ? truncate(serialized, MAX_ERROR_DETAIL_LENGTH) : null
 }
 
@@ -111,10 +114,15 @@ function formatNativeError(originalError: Error): string | null {
 
 export function toErrorDetail(originalError: unknown): string | null {
   if (originalError === null || originalError === undefined) return null
+
   if (typeof originalError === 'string') return formatStringError(originalError)
+
   if (originalError instanceof Error) return formatNativeError(originalError)
+
   if (Array.isArray(originalError)) return formatArrayError(originalError)
+
   if (typeof originalError === 'object') return formatObjectError(originalError)
+
   return truncate(String(originalError), MAX_ERROR_DETAIL_LENGTH)
 }
 
@@ -132,6 +140,7 @@ export function resolveBuildError(resultsError?: unknown) {
   }
 
   const error = resultsError.error
+
   return {
     errorName: error?.code ?? 'InternalServerError',
     errorBody: error?.message ?? 'Something went wrong!',

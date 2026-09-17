@@ -36,7 +36,9 @@ jest.mock('../server/Logger', () => ({
 }))
 
 const mockedFailureCache = failureCache as jest.Mocked<typeof failureCache>
+
 const mockedPool = pool as jest.Mocked<typeof pool>
+
 const mockedRequestQueue = requestQueue as jest.Mocked<typeof requestQueue>
 
 describe('build service unavailability', () => {
@@ -61,10 +63,12 @@ describe('build service unavailability', () => {
 
   it('identifies a build service request that receives no response', async () => {
     const url = 'http://127.0.0.1:7002/size?p=%40example%2Funavailable%401.0.0'
+
     const networkError = Object.assign(new Error('connect ECONNREFUSED'), {
       isAxiosError: true,
       request: { _currentUrl: url },
     })
+
     jest.spyOn(axios, 'get').mockRejectedValue(networkError)
 
     new BuildService()
@@ -137,6 +141,7 @@ describe('build service unavailability', () => {
     const originalError: { message: string; self?: unknown } = {
       message: 'the useful build error',
     }
+
     originalError.self = originalError
 
     expect(
@@ -158,13 +163,16 @@ describe('build service unavailability', () => {
 
   it('identifies a structured internal build-service error', async () => {
     const onComplete = jest.fn()
+
     const responseBody = serializeError(
       Object.assign(new Error('disk full'), { code: 'ENOSPC' }),
     )
+
     const responseError = Object.assign(new Error('Request failed'), {
       isAxiosError: true,
       response: { data: responseBody },
     })
+
     jest.spyOn(axios, 'get').mockRejectedValue(responseError)
 
     new BuildService()
@@ -223,6 +231,7 @@ describe('build service unavailability', () => {
 
     new BuildService()
     const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
+
     const result = executor(
       { packageString: '@example/cancelled@1.0.0' },
       {
@@ -255,6 +264,7 @@ describe('build service unavailability', () => {
 
     new BuildService()
     const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
+
     const result = executor(
       { packageString: '@example/cancelled@1.0.0' },
       {
@@ -279,6 +289,7 @@ describe('build service unavailability', () => {
         resolved: { packageString: '@example/unavailable@1.0.0' },
       },
     }
+
     const error = new CustomError(
       'BuildServiceUnavailableError',
       { reason: 'BUILD_SERVICE_UNREACHABLE' },
@@ -311,6 +322,7 @@ describe('build service unavailability', () => {
         resolved: { packageString: '@example/internal-error@1.0.0' },
       },
     }
+
     const error = new CustomError(
       'BuildServiceError',
       { message: 'disk full', code: 'ENOSPC' },
@@ -337,6 +349,7 @@ describe('build service unavailability', () => {
 
   it('continues caching genuine package build failures', async () => {
     const packageString = '@example/build-error@1.0.0'
+
     const ctx = {
       query: {},
       state: {
@@ -344,6 +357,7 @@ describe('build service unavailability', () => {
         resolved: { packageString },
       },
     }
+
     const error = new CustomError('BuildError', 'parse failed', undefined)
 
     await errorMiddleware(ctx as never, async () => {

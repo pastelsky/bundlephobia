@@ -1,8 +1,11 @@
 const registryFetch = require('npm-registry-fetch')
+
 const pacote = require('pacote')
 
 jest.mock('npm-registry-fetch', () => ({ json: jest.fn() }))
+
 jest.mock('pacote', () => ({ manifest: jest.fn() }))
+
 jest.mock('../server/api/BuildService', () => ({
   __esModule: true,
   default: jest.fn(),
@@ -12,6 +15,7 @@ import { createJavaScriptPackageReference } from '../languages/javascript'
 import { JavaScriptPackageAnalysisAdapter } from '../server/analysis/javascript/JavaScriptPackageAnalysisAdapter'
 
 const adapter = new JavaScriptPackageAnalysisAdapter({} as never)
+
 const resolvePackage = (specifier: string) =>
   adapter.resolvePackage(createJavaScriptPackageReference(specifier))
 

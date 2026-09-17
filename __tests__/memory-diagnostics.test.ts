@@ -1,5 +1,7 @@
 const fs = require('fs')
+
 const os = require('os')
+
 const path = require('path')
 
 const {
@@ -38,11 +40,14 @@ describe('memory diagnostics', () => {
       ),
       'partial',
     )
+
     const report = {
       excludeEnv: false,
       writeReport: (filename: string) => fs.writeFileSync(filename, '{}'),
     }
+
     const writeHeapSnapshot = filename => fs.writeFileSync(filename, 'snapshot')
+
     const diagnostics = createMemoryDiagnostics({
       service: 'build-service',
       thresholdBytes: 100,
@@ -85,6 +90,7 @@ describe('memory diagnostics', () => {
 
   test('does not capture below the configured RSS threshold', () => {
     const writeHeapSnapshot = jest.fn()
+
     const diagnostics = createMemoryDiagnostics({
       service: 'main',
       thresholdBytes: 100,
@@ -111,10 +117,12 @@ describe('memory diagnostics', () => {
       queue: { ready: 2, running: 4 },
     }))
     const writeHeapSnapshot = jest.fn()
+
     const report = {
       excludeEnv: false,
       writeReport: (filename: string) => fs.writeFileSync(filename, '{}'),
     }
+
     const diagnostics = createMemoryDiagnostics({
       service: 'main',
       thresholdBytes: 100,
@@ -150,6 +158,7 @@ describe('memory diagnostics', () => {
         'utf8',
       ),
     )
+
     expect(metadata.heapSnapshotCaptured).toBe(false)
 
     const capturedTimeline = JSON.parse(
@@ -158,6 +167,7 @@ describe('memory diagnostics', () => {
         'utf8',
       ),
     )
+
     expect(capturedTimeline.samples).toHaveLength(1)
     expect(capturedTimeline.samples[0]).toMatchObject({
       memory: { rss: 101, external: 5, arrayBuffers: 3 },

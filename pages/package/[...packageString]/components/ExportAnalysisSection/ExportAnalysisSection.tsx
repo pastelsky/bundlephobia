@@ -56,17 +56,24 @@ type ExportListProps = {
 
 function getBGClass(ratio: number) {
   if (ratio < 0.05) return 'low-1'
+
   if (ratio < 0.15) return 'low-2'
+
   if (ratio < 0.25) return 'med-1'
+
   if (ratio < 0.4) return 'med-2'
+
   if (ratio < 0.5) return 'med-3'
+
   if (ratio < 0.7) return 'high-1'
+
   return 'high-2'
 }
 
 class ExportPill extends React.Component<ExportPillProps> {
   render() {
     const { name, size, totalSize, isLoading } = this.props
+
     return (
       <li className="export-analysis-section__pill export-analysis-section__dont-break">
         <div
@@ -102,6 +109,7 @@ function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
 
   exports.forEach(exp => {
     const firstLetter = exp.name[0].toLowerCase()
+
     if (exportDictionary[firstLetter]) {
       exportDictionary[firstLetter].push(exp)
     } else {
@@ -210,11 +218,13 @@ export default class ExportAnalysisSection extends Component<
             packageName: packageString,
             timeTaken: Date.now() - startTime,
           })
+
           return Promise.reject(err)
         },
       )
       .then(() => {
         sizeStartTime = Date.now()
+
         return API.getExportsSizes(packageString)
       })
       .then(
@@ -239,6 +249,7 @@ export default class ExportAnalysisSection extends Component<
             packageName: packageString,
             timeTaken: Date.now() - sizeStartTime,
           })
+
           return Promise.reject(err)
         },
       )
@@ -254,6 +265,7 @@ export default class ExportAnalysisSection extends Component<
 
   renderProgress() {
     const { result } = this.props
+
     return (
       <div className="export-analysis-section__progress-container">
         Fetching all named exports in&nbsp;<code>{result.name}</code>{' '}
@@ -264,12 +276,15 @@ export default class ExportAnalysisSection extends Component<
 
   getIncompatibleMessage() {
     const { result } = this.props
+
     if (!(result.hasJSModule || result.hasJSNext || result.isModuleType)) {
       return 'This package does not export ES6 modules.'
     }
+
     if (result.hasSideEffects === true) {
       return "This package exports ES6 modules, but isn't marked side-effect free."
     }
+
     return ''
   }
 

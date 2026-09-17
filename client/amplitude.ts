@@ -15,6 +15,7 @@ function loadAmplitude() {
           serverUrl: '/_events',
           enableRequestBodyCompression: true,
         })
+
         return amplitude
       })
       .catch(error => {

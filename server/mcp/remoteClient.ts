@@ -40,6 +40,7 @@ class RemoteMcpClient {
     if (!this.connectPromise) {
       this.connectPromise = (async () => {
         const endpoint = this.config.endpoint
+
         if (!endpoint) {
           throw new Error('MCP endpoint is not configured')
         }
@@ -64,6 +65,7 @@ class RemoteMcpClient {
         })
 
         this.client = client
+
         return client
       })()
     }
@@ -73,6 +75,7 @@ class RemoteMcpClient {
 
   async listTools(): Promise<unknown> {
     const client = await this.connect()
+
     return client.listTools(undefined, {
       timeout: this.config.timeoutMs,
     })
@@ -80,6 +83,7 @@ class RemoteMcpClient {
 
   async callTool(request: MpcCallToolRequest): Promise<unknown> {
     const client = await this.connect()
+
     return client.callTool(
       {
         name: request.name,
@@ -96,6 +100,7 @@ class RemoteMcpClient {
     if (error) {
       logger.error('MCP_CLIENT', error, 'Resetting MCP client connection')
     }
+
     this.client = null
     this.connectPromise = null
   }

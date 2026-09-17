@@ -20,10 +20,12 @@ test('uploads package.json and builds the selected dependency', async ({
   await expect(
     scanResultsPage.packageLink(cheapPackage.name, cheapPackage.version),
   ).toBeVisible()
+
   const packageResult = scanResultsPage.packageResult(
     cheapPackage.name,
     cheapPackage.version,
   )
+
   await expect(packageResult.getByText('Calculating')).toHaveCount(0)
   await expect(packageResult.getByText('Min', { exact: true })).toBeVisible()
   await expect(packageResult.getByText('Min + GZIP')).toBeVisible()

@@ -23,18 +23,22 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig)
 
 fastify.get('/package-cache', getPackageSizeMiddlware)
+
 fastify.post('/package-cache', postPackageSizeMiddlware)
 
 fastify.get('/exports-cache', getExportsSizeMiddlware)
+
 fastify.post('/exports-cache', postExportsSizeMiddleware)
 
 fastify
   .listen({ port: 7001 })
   .then(() => {
     const address = fastify.server.address()
+
     if (!address || typeof address === 'string') {
       throw new Error('cache service did not expose a TCP address')
     }
+
     console.log(`server listening on ${address.port}`)
   })
   .catch(error => {

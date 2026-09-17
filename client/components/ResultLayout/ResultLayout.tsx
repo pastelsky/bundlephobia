@@ -10,6 +10,7 @@ export default class ResultLayout extends Component<
 > {
   render() {
     const { children, className } = this.props
+
     return (
       <Layout>
         <div className={cx('page-container', className)}>

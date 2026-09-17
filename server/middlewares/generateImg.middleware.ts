@@ -24,14 +24,17 @@ async function resolveImageVersion(name: string, version?: string) {
   const reference = createJavaScriptPackageReference(
     version ? `${name}@${version}` : name,
   )
+
   if (version && packageAnalysisGateway.isExactVersionSpecifier(reference)) {
     return version
   }
+
   return (await packageAnalysisGateway.resolvePackage(reference)).version
 }
 
 async function getStatsImage(query: Record<string, unknown>) {
   const parsedName = typeof query.name === 'string' ? query.name : undefined
+
   if (!parsedName) throw new Error('name query parameter is required')
 
   const rawTheme = typeof query.theme === 'string' ? query.theme : undefined
@@ -39,15 +42,18 @@ async function getStatsImage(query: Record<string, unknown>) {
   const wide = query.wide === 'true'
   const version = typeof query.version === 'string' ? query.version : undefined
   const resolvedVersion = await resolveImageVersion(parsedName, version)
+
   const result = await cache.getPackageSize<StatsImageResult>({
     name: parsedName,
     version: resolvedVersion,
   })
+
   if (!result) {
     throw new Error(
       `Missing cached package size for ${parsedName}@${resolvedVersion}`,
     )
   }
+
   return { result, theme, wide }
 }
 

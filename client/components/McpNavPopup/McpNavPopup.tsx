@@ -4,6 +4,7 @@ import { IconButton, Popover } from '../ui'
 
 const McpNavPopup = () => {
   const [copied, setCopied] = useState(false)
+
   const setupSnippet = `{
   "mcpServers": {
     "bundlephobia": {

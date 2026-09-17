@@ -27,6 +27,7 @@ async function runSerial<T>(tasks: Array<() => Promise<T>>) {
 }
 
 const debug = debugFactory('bp:trending-fetch')
+
 const github = new GithubAPI({ debug: false })
 
 github.authenticate({
@@ -54,6 +55,7 @@ async function getPackageFromRepo(author: string, name: string) {
     const decodedContent = Buffer.from(response.data.content, 'base64').toString(
       'utf8'
     )
+
     return JSON.parse(decodedContent).name as string
   }
 }
@@ -63,9 +65,11 @@ async function getGithubTrendingPackages() {
     author: string
     name: string
   }>
+
   const packages = await Promise.all(
     repos.map(repo => getPackageFromRepo(repo.author, repo.name))
   )
+
   return packages.filter(Boolean) as string[]
 }
 
@@ -88,9 +92,11 @@ async function getTrendingSearches() {
 
 async function getVersionsToBuild(name: string) {
   const versionsToBuild: string[] = []
+
   const res = await fetch(
     `http://localhost:${port}/api/package-history?package=${name}`
   )
+
   const versionInfo = (await res.json()) as Record<string, unknown>
 
   Object.keys(versionInfo).forEach(version => {
@@ -110,9 +116,11 @@ async function getVersionsToBuild(name: string) {
 
 async function buildPackage(name: string, version: string) {
   debug('building package %s %s', name, version)
+
   const res = await fetch(
     `http://localhost:${port}/api/size?package=${name + '@' + version}`
   )
+
   debug('result %s %s %O', name, version, await res.json())
 }
 
@@ -148,6 +156,7 @@ async function mostPopuplarGithubRepos() {
     const promises = repos.data.items.map(({ name, owner }) => () =>
       buildPackageFromGithub(name, owner.login)
     )
+
     await runSerial(promises)
   } catch (err) {
     console.log(err)
@@ -164,6 +173,7 @@ async function updateHistoricalData() {
     const popularPackages = Array.from(
       new Set(githubTrendingPackages.concat(searchTrendingPackages))
     )
+
     console.log('popular', popularPackages)
   } catch (err) {
     console.log(err)

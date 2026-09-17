@@ -15,11 +15,13 @@ export function createResolvePackageMiddleware(
   return async (ctx, next) => {
     ctx.state.analysis = { language: 'javascript', operation }
     const packageQuery = ctx.query.package
+
     const packageString =
       typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
     if (!packageString) {
       ctx.throw(400, 'package query parameter is required')
+
       return
     }
 
@@ -39,9 +41,11 @@ export function createResolvePackageMiddleware(
     }
 
     const resolveStart = now()
+
     const resolvedPackage = await packageAnalysisGateway.resolvePackage(
       createJavaScriptPackageReference(resolvedPackageString),
     )
+
     const resolveEnd = now()
 
     const result = {
@@ -49,6 +53,7 @@ export function createResolvePackageMiddleware(
       scoped: parsedPackage.scoped,
       packageString: resolvedPackage.canonicalSpecifier,
     }
+
     ctx.state.resolved = result
 
     debug('resolved to %s@%s', result.name, result.version)

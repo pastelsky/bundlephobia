@@ -6,14 +6,17 @@ function toPayload(value: unknown): LogPayload {
   if (value instanceof Error) {
     return { message: value.message, name: value.name, stack: value.stack }
   }
+
   if (typeof value === 'object' && value !== null) {
     return value as LogPayload
   }
+
   return { error: String(value) }
 }
 
 const logFormat = winston.format.printf(info => {
   const date = new Date().toISOString()
+
   return `${date} ${info.level}: ${info.message}`
 })
 

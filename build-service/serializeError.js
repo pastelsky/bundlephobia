@@ -2,6 +2,7 @@ import { configure } from 'safe-stable-stringify'
 import truncate from 'truncate'
 
 const MAX_ERROR_MESSAGE_LENGTH = 16_000
+
 const stringifyError = configure({
   deterministic: false,
   maximumBreadth: 20,
@@ -17,6 +18,7 @@ function serializeValue(value) {
         ...(typeof item.code === 'string' ? { code: item.code } : {}),
       }
     }
+
     return typeof item === 'string'
       ? truncate(item, MAX_ERROR_MESSAGE_LENGTH)
       : item
@@ -32,10 +34,12 @@ function serializeJsonError(error) {
     typeof error.toJSON === 'function'
   ) {
     const serialized = serializeValue(error)
+
     if (serialized && typeof serialized.name === 'string') {
       return serialized
     }
   }
+
   return undefined
 }
 

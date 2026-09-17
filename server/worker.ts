@@ -9,6 +9,7 @@ interface PackageBuildStatsModule {
 }
 
 const workerpool = require('workerpool') as WorkerpoolModule
+
 const { getPackageStats, getAllPackageExports, getPackageExportSizes } =
   require('package-build-stats') as PackageBuildStatsModule
 

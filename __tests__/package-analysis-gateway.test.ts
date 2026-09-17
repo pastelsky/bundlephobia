@@ -31,6 +31,7 @@ describe('PackageAnalysisGateway', () => {
     const gateway = new PackageAnalysisGateway()
     const adapter = createJavaScriptAdapter()
     gateway.register(adapter)
+
     const reference: PackageReference<'javascript'> = {
       language: 'javascript',
       specifier: 'example@latest',
@@ -47,6 +48,7 @@ describe('PackageAnalysisGateway', () => {
     const gateway = new PackageAnalysisGateway()
     const adapter = createJavaScriptAdapter()
     gateway.register(adapter)
+
     const resolved = {
       language: 'javascript' as const,
       specifier: 'example@1.0.0',
@@ -57,6 +59,7 @@ describe('PackageAnalysisGateway', () => {
       description: '',
       repository: '',
     }
+
     const options = { priority: 20 }
 
     await gateway.analyzePackage(resolved, options)
@@ -123,6 +126,7 @@ describe('PackageAnalysisGateway', () => {
 describe('analysis identities', () => {
   it('cannot collide across languages or operations', () => {
     const packageSpecifier = '@scope/example@1.0.0'
+
     const keys = [
       createAnalysisKey({
         language: 'javascript',

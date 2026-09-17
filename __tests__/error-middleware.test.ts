@@ -25,6 +25,7 @@ describe('build API error middleware', () => {
         status: 400,
       },
     )
+
     const ctx = {
       body: undefined,
       cacheControl: undefined,
@@ -49,6 +50,7 @@ describe('build API error middleware', () => {
 
   it('caches build errors under the package resolved downstream', async () => {
     const packageString = '@example/build-error@1.0.0'
+
     const ctx = {
       body: undefined,
       cacheControl: undefined,
@@ -63,6 +65,7 @@ describe('build API error middleware', () => {
       },
       status: undefined,
     }
+
     const error = new CustomError('BuildError', 'compiler failed', undefined)
 
     await errorHandler(ctx as never, async () => {

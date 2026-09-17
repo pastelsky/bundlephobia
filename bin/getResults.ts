@@ -15,21 +15,25 @@ firebase.initializeApp(firebaseConfig)
 function getFirebaseStoreFromDisk() {
   try {
     const firebaseModulesPath = path.join(__dirname, 'data/firebase-modules.json')
+
     return JSON.parse(
       fs.readFileSync(firebaseModulesPath, 'utf8')
     ) as Record<string, Record<string, unknown>>
   } catch {
     console.log('not found on disk')
+
     return null
   }
 }
 
 async function getFirebaseStoreFromNetwork() {
   const modulesRef = firebase.database().ref('modules-v2')
+
   const lastSnapshot =
     ((await modulesRef.limitToLast(1).once('value').then(snapshot => snapshot.val())) as
       | Record<string, unknown>
       | null) ?? {}
+
   const firstSnapshot =
     ((await modulesRef
       .limitToFirst(1)
@@ -48,6 +52,7 @@ async function getFirebaseStoreFromNetwork() {
 
   while (currentLastEntry !== lastEntry) {
     counter += 20000
+
     const snapshot = (await firebase
       .database()
       .ref('modules-v2')
@@ -86,6 +91,7 @@ async function getFirebaseStoreFromNetwork() {
 export async function getResults() {
   const firebaseStore = getFirebaseStoreFromDisk() ?? {}
   console.log('loaded firebase store')
+
   return Object.keys(firebaseStore ?? {}).flatMap(packageName =>
     Object.keys((firebaseStore ?? {})[packageName]).map(
       version => (firebaseStore as Record<string, Record<string, unknown>>)[packageName][version]
@@ -96,10 +102,13 @@ export async function getResults() {
 export async function getPackages() {
   const firebaseStore =
     getFirebaseStoreFromDisk() || (await getFirebaseStoreFromNetwork())
+
   const packages = Object.keys(firebaseStore).map(
     packageName => firebaseStore[packageName]
   )
+
   console.log('fetched ', Object.keys(firebaseStore), ' packages ')
+
   return packages
 }
 

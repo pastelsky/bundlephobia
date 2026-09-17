@@ -43,41 +43,56 @@ interface ExportsBuildResult {
 }
 
 const API_BASE = process.env.API_BASE || 'http://localhost:5000'
+
 const CONCURRENCY = parseInt(process.env.CONCURRENCY || '3', 10)
+
 const TIMEOUT_MS = 120000
+
 const TOP_PACKAGES_PATH = path.join(__dirname, '../top-packages.json')
+
 const PROGRESS_PATH = path.join(__dirname, '../populate-v3-progress.json')
+
 const STATS_PATH = path.join(__dirname, '../populate-v3-stats.json')
+
 const COMPARISON_PATH = path.join(__dirname, '../populate-v3-comparison.json')
+
 const EXPORTS_STATS_PATH = path.join(
   __dirname,
   '../populate-v3-exports-stats.json',
 )
+
 const EXPORTS_COMPARISON_PATH = path.join(
   __dirname,
   '../populate-v3-exports-comparison.json',
 )
+
 const CACHE_SERVICE_BASE =
   process.env.CACHE_SERVICE_BASE || 'http://localhost:7001'
 
 const args = process.argv.slice(2)
+
 const shouldReset = args.includes('--reset')
+
 const concurrencyArg = args.find(argument =>
   argument.startsWith('--concurrency='),
 )
+
 const concurrency = concurrencyArg
   ? parseInt(concurrencyArg.split('=')[1], 10)
   : CONCURRENCY
 
 const limitArg = args.find(argument => argument.startsWith('--limit-packages='))
+
 const packageLimit = limitArg ? parseInt(limitArg.split('=')[1], 10) : Infinity
 
 const packageFilterArg = args.find(argument =>
   argument.startsWith('--package='),
 )
+
 const packageFilter = packageFilterArg ? packageFilterArg.split('=')[1] : null
 
 const sizesOnly = args.includes('--sizes-only')
+
 const exportsOnly = args.includes('--exports-only')
 
 if (sizesOnly && exportsOnly) {
@@ -106,6 +121,7 @@ Mode: ${
 function loadProgress(): ProgressState {
   if (shouldReset && !packageFilter) {
     console.log('Resetting ALL progress...')
+
     return {
       completed: new Set(),
       completed_exports: new Set(),
@@ -128,6 +144,7 @@ function loadProgress(): ProgressState {
         failed: string[]
         stats?: Partial<ProgressState['stats']>
       }
+
       console.log(
         `Resuming: ${data.completed.length} sizes completed, ${
           data.completed_exports?.length || 0
@@ -135,6 +152,7 @@ function loadProgress(): ProgressState {
       )
 
       const stats = data.stats || {}
+
       return {
         completed: new Set(data.completed),
         completed_exports: new Set(data.completed_exports || []),
@@ -174,6 +192,7 @@ function saveProgress(progress: ProgressState) {
     stats: progress.stats,
     lastSaved: new Date().toISOString(),
   }
+
   fs.writeFileSync(PROGRESS_PATH, JSON.stringify(data, null, 2))
 }
 
@@ -215,16 +234,19 @@ function withAbortableTimeout<T>(
   const workPromise = promiseFactory(controller.signal)
     .then(result => {
       clearTimeout(timeoutId)
+
       return result
     })
     .catch(error => {
       clearTimeout(timeoutId)
+
       if (
         error instanceof Error &&
         (error.name === 'CanceledError' || error.name === 'AbortError')
       ) {
         return timeoutValue
       }
+
       throw error
     })
 
@@ -244,6 +266,7 @@ async function buildPackage(
       params: { name: packageName, version, readKey: 'modules-v2' },
       timeout: 10000,
     })
+
     if (v2Response.data && v2Response.data.size) {
       v2Result = { size: v2Response.data.size, gzip: v2Response.data.gzip }
     }
@@ -263,6 +286,7 @@ async function buildPackage(
       timeout: TIMEOUT_MS,
       cancelToken: cancelSource.token,
     })
+
     if (response.data && response.data.size) {
       return {
         success: true,
@@ -271,6 +295,7 @@ async function buildPackage(
         v2: v2Result,
       }
     }
+
     return { success: false, error: 'No size in response', v2: v2Result }
   } catch (error) {
     if (axios.isCancel(error)) {
@@ -312,6 +337,7 @@ async function buildExports(
       params: { name: packageName, version, readKey: 'exports' },
       timeout: 10000,
     })
+
     if (v2Response.data) {
       v2Result = v2Response.data
     }
@@ -331,6 +357,7 @@ async function buildExports(
       timeout: TIMEOUT_MS,
       cancelToken: cancelSource.token,
     })
+
     if (response.data) {
       return {
         success: true,
@@ -338,6 +365,7 @@ async function buildExports(
         v2: v2Result,
       }
     }
+
     return { success: false, error: 'No data in response', v2: v2Result }
   } catch (error) {
     if (axios.isCancel(error)) {
@@ -377,11 +405,13 @@ async function processBatch(
   const promises = batch.map(async ({ packageName, version }) => {
     const key = `${packageName}@${version}`
     const shouldBuildSize = !exportsOnly && !progress.completed.has(key)
+
     const shouldBuildExports =
       !sizesOnly && !progress.completed_exports.has(key)
 
     if (!shouldBuildSize && !shouldBuildExports) {
       progress.stats.skipped++
+
       return { key, skipped: true }
     }
 
@@ -519,6 +549,7 @@ function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
   const s = Math.floor(seconds % 60)
+
   return `${h}h ${m}m ${s}s`
 }
 
@@ -533,9 +564,11 @@ async function main() {
   const packages = JSON.parse(
     fs.readFileSync(TOP_PACKAGES_PATH, 'utf8'),
   ) as TopPackage[]
+
   console.log(`Loaded ${packages.length} packages from top-packages.json`)
 
   let targetPackages = packages
+
   if (packageFilter) {
     targetPackages = packages.filter(pkg => pkg.name === packageFilter)
     console.log(
@@ -544,6 +577,7 @@ async function main() {
   }
 
   targetPackages = targetPackages.slice(0, packageLimit)
+
   if (packageLimit !== Infinity) {
     console.log(`Limiting to top ${packageLimit} packages`)
   }
@@ -581,6 +615,7 @@ async function main() {
         ) as unknown[]
       } catch {}
     }
+
     if (fs.existsSync(COMPARISON_PATH)) {
       try {
         comparisons = JSON.parse(
@@ -588,6 +623,7 @@ async function main() {
         ) as unknown[]
       } catch {}
     }
+
     if (fs.existsSync(EXPORTS_STATS_PATH)) {
       try {
         exportsStats = JSON.parse(
@@ -595,6 +631,7 @@ async function main() {
         ) as unknown[]
       } catch {}
     }
+
     if (fs.existsSync(EXPORTS_COMPARISON_PATH)) {
       try {
         exportsComparisons = JSON.parse(
@@ -651,6 +688,7 @@ async function main() {
   }
 
   console.log('Checking API reachability...')
+
   try {
     await axios.get(`${API_BASE}/api/recent?limit=1`, { timeout: 10000 })
     console.log('API is reachable')
@@ -684,6 +722,7 @@ async function main() {
       exportsStats,
       exportsComparisons,
     )
+
     console.log(`[DEBUG] Batch completed, got ${results.length} results`)
 
     for (const result of results) {

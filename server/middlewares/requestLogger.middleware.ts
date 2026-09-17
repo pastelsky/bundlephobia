@@ -20,15 +20,19 @@ function normalizeRoute(path: string): string {
   if (path.startsWith('/api/')) {
     return API_ROUTES.has(path) ? path : '/api/*'
   }
+
   if (path.startsWith('/package/')) {
     return '/package/*'
   }
+
   if (path.startsWith('/_next/')) {
     return '/_next/*'
   }
+
   if (path.startsWith('/-/search')) {
     return '/-/search'
   }
+
   return path === '/' ? '/' : 'other'
 }
 

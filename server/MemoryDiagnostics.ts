@@ -14,8 +14,10 @@ const diagnostics =
   require('../scripts/memory-diagnostics.cjs') as MemoryDiagnosticsModule
 
 export const recordRequestStart = () => diagnostics.recordRequestStart()
+
 export const recordRequestComplete = (request: RequestMetric) =>
   diagnostics.recordRequestComplete(request)
+
 export const registerMetricsProvider = (
   name: string,
   provider: () => unknown,

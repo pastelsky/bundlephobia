@@ -90,6 +90,7 @@ function toProcessRequest<TResult, TParams>(
 ): ProcessRequest<TResult, TParams> {
   if (args.length === 1) return args[0]
   const [id, type, jobParams, options] = args
+
   return { id, type, jobParams, options }
 }
 
@@ -127,6 +128,7 @@ class Queue {
       } else if (job.status === JobStatus.PROCESSING) {
         running += 1
       }
+
       successListeners += job.successListeners.length
       failureListeners += job.failureListeners.length
     }
@@ -188,9 +190,11 @@ class Queue {
       .filter(job => job.status === JobStatus.READY)
       .sort((jobA, jobB) => {
         const priorityDiff = jobB.priority - jobA.priority
+
         if (priorityDiff) {
           return priorityDiff
         }
+
         return jobA.addedTime.getTime() - jobB.addedTime.getTime()
       })
       .shift()
@@ -222,14 +226,18 @@ class Queue {
     const job = this.jobs.find(
       candidate => candidate.id === id && candidate.type === type,
     )
+
     if (job) {
       log('cancelling job %s (%s)', id, job.status.toString())
+
       if (job.status === JobStatus.PROCESSING) {
         this.cancelJob(job)
       }
+
       job.failureListeners.forEach(listener => {
         listener(new JobCancelledError())
       })
+
       if (job.status === JobStatus.READY) {
         this.removeJob(id, type)
         this.executeNextJobIfPossible()
@@ -264,6 +272,7 @@ class Queue {
   executeNextJobIfPossible(): void {
     if (!this.getReadyJobs().length) {
       log('all done. job queue is empty')
+
       return
     }
 
@@ -271,6 +280,7 @@ class Queue {
       if (this.options.aging) {
         this.ageJobs()
       }
+
       this.pruneQueue()
       void this.executeNextJob()
     } else {
@@ -280,6 +290,7 @@ class Queue {
 
   async executeNextJob(): Promise<void> {
     const nextJob = this.getNextJobToRun()
+
     if (!nextJob) {
       return
     }
@@ -294,6 +305,7 @@ class Queue {
 
     try {
       const handler = this.executorMap[nextJob.type]
+
       const promiseOrValue = handler.call(this, nextJob.params, {
         signal: nextJob.abortController.signal,
       })
@@ -302,6 +314,7 @@ class Queue {
         const cancelablePromise = promiseOrValue as Promise<unknown> & {
           cancel?: () => void
         }
+
         if (typeof cancelablePromise.cancel === 'function') {
           nextJob.cancel = () => {
             log('terminating running task for job %s', nextJob.id)
@@ -349,6 +362,7 @@ class Queue {
   ): Promise<TResult> {
     const { id, type, jobParams, options = {} } = toProcessRequest(args)
     log('added new job %s %o %o', type, jobParams, options)
+
     const {
       priority = JobPriority.LOW,
       maxAge = this.options.maxAge,
@@ -361,6 +375,7 @@ class Queue {
 
     return new Promise<TResult>((resolve, reject) => {
       let settled = false
+
       const resolveSubscriber = (result: TResult) => {
         if (settled) return
         settled = true
@@ -368,6 +383,7 @@ class Queue {
         resolve(result)
         onSuccess(result)
       }
+
       const rejectSubscriber = (error: unknown) => {
         if (settled) return
         settled = true
@@ -375,12 +391,15 @@ class Queue {
         reject(error)
         onFailure(error)
       }
+
       const successListener = resolveSubscriber as (result: unknown) => void
       const failureListener = rejectSubscriber
+
       const cancelSubscriber = () => {
         const job = this.jobs.find(
           queuedJob => queuedJob.id === id && queuedJob.type === type,
         )
+
         if (!job || settled) return
 
         job.successListeners = job.successListeners.filter(
@@ -395,6 +414,7 @@ class Queue {
 
         if (job.failureListeners.length === 0) {
           log('cancelling orphaned job %s (%s)', id, job.status.toString())
+
           if (job.status === JobStatus.PROCESSING) {
             this.cancelJob(job)
           } else {
@@ -406,6 +426,7 @@ class Queue {
 
       if (signal?.aborted) {
         rejectSubscriber(new JobCancelledError())
+
         return
       }
 
@@ -413,16 +434,20 @@ class Queue {
 
       if (this.hasJob(id, type)) {
         log('job id %s already present, adding callbacks', id)
+
         const existingJob = this.jobs.find(
           queuedJob => queuedJob.id === id && queuedJob.type === type,
         )
+
         if (existingJob) {
           existingJob.priority = Math.max(existingJob.priority, priority)
         }
+
         this.addListenersToJob(id, type, {
           resolve: successListener as (value: never) => void,
           reject: failureListener,
         })
+
         return
       }
 

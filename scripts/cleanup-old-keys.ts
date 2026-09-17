@@ -18,6 +18,7 @@ admin.initializeApp({
   ),
   databaseURL: 'https://module-cost.firebaseio.com',
 })
+
 const db = admin.database()
 
 interface SearchesV2 {
@@ -28,6 +29,7 @@ interface SearchesV2 {
 }
 
 const searchesV2: SearchesV2 = {}
+
 const sixMonthsAgo = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000 // Approximate 6 months in milliseconds
 
 function formatETA(seconds: number): string {
@@ -44,6 +46,7 @@ async function processBackupFile(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const fileSize = fs.statSync(backupFilePath).size
+
     const progressStream = progress({
       length: fileSize,
       time: 1000, // Update every second
@@ -178,6 +181,7 @@ async function processBackupFile(
         ) {
           packagesRemoved++
           let reason: string
+
           if (!searchInfo) {
             reason = 'Not found in searches-v2'
           } else if (searchInfo.count <= 1) {
@@ -189,6 +193,7 @@ async function processBackupFile(
           console.log(
             `Package: ${packageName} | Action: Pruned | Reason: ${reason}`,
           )
+
           return
         }
 
@@ -196,6 +201,7 @@ async function processBackupFile(
         const sortedVersions = Object.keys(versionsObj).sort((a, b) =>
           semver.compare(b, a),
         )
+
         const versionsToKeep = sortedVersions.slice(0, 20)
 
         let action: string
@@ -211,6 +217,7 @@ async function processBackupFile(
         }
 
         const prunedVersions: { [version: string]: any } = {}
+
         for (const version of versionsToKeep) {
           prunedVersions[version] = versionsObj[version]
         }
@@ -262,6 +269,7 @@ async function uploadPrunedDataToFirebase(filePath: string) {
         prunedRef.update(buffer)
         console.log(`Uploaded remaining packages to Firebase`)
       }
+
       resolve()
     })
 
@@ -274,6 +282,7 @@ async function uploadPrunedDataToFirebase(filePath: string) {
 
 // Run the script
 const backupFilePath = process.argv[2]
+
 const dryRun = process.argv.includes('--dry-run')
 
 if (!backupFilePath) {
@@ -281,7 +290,9 @@ if (!backupFilePath) {
   process.exit(1)
 }
 
-;(async () => {
+;
+
+(async () => {
   try {
     console.log('Starting processing of backup file...')
     await processBackupFile(backupFilePath, dryRun)

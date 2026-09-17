@@ -11,6 +11,7 @@ import logger from '../../Logger'
 import { isJobCancelledError } from '../../Queue'
 
 const debug = createDebug('bp:error')
+
 const MAX_ERROR_LIST_ITEMS = 20
 
 interface ErrorResponseBody {
@@ -40,6 +41,7 @@ function isClientHttpError(error: Error): error is ClientHttpError {
   if (!('status' in error) || typeof error.status !== 'number') {
     return false
   }
+
   return (
     Number.isInteger(error.status) && error.status >= 400 && error.status < 500
   )
@@ -48,6 +50,7 @@ function isClientHttpError(error: Error): error is ClientHttpError {
 function formatSentence(values: string[]): string {
   const omittedCount = values.length - MAX_ERROR_LIST_ITEMS
   values = values.slice(0, MAX_ERROR_LIST_ITEMS)
+
   if (omittedCount > 0) {
     values.push(`${omittedCount} more`)
   }
@@ -55,21 +58,26 @@ function formatSentence(values: string[]): string {
   if (values.length === 0) {
     return ''
   }
+
   if (values.length === 1) {
     return values[0]
   }
+
   if (values.length === 2) {
     return `${values[0]} and ${values[1]}`
   }
+
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
 function getErrorDetails(originalError: unknown) {
   const detail = toErrorDetail(originalError)
+
   return detail ? { originalError: detail } : undefined
 }
 
 type KoaContext = Parameters<Middleware>[0]
+
 type ErrorResponse = {
   code: string
   message?: string
@@ -155,11 +163,13 @@ const handlePackageVersionMismatchError: BuildErrorHandler = (
   error,
 ) => {
   const suggestedVersion = error.extra?.suggestedVersion
+
   if (suggestedVersion) {
     context.respondWithError(404, {
       code: 'PackageVersionMismatchError',
       message: `This package has not been published with this particular version. The latest version is \`<code>${suggestedVersion}</code>\`.`,
     })
+
     return
   }
 
@@ -168,6 +178,7 @@ const handlePackageVersionMismatchError: BuildErrorHandler = (
       version => `\`<code>${version}</code>\``,
     ),
   )
+
   context.respondWithError(404, {
     code: 'PackageVersionMismatchError',
     message: `This package has not been published with this particular version. Valid versions - ${validVersions}`,
@@ -184,6 +195,7 @@ const handleInstallError: BuildErrorHandler = context => {
 
 const handleEntryPointError: BuildErrorHandler = context => {
   const status = 422
+
   const body = {
     error: {
       code: 'EntryPointError',
@@ -192,6 +204,7 @@ const handleEntryPointError: BuildErrorHandler = context => {
         "Perhaps the author hasn't specified one in its package.json ?",
     },
   }
+
   setFatalCache(context)
   context.respondWithError(status, body.error)
   context.cacheFailure(status, body)
@@ -200,9 +213,11 @@ const handleEntryPointError: BuildErrorHandler = context => {
 const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
   const status = 422
   const missingModulesList = error.extra?.missingModules ?? []
+
   const missingModules = formatSentence(
     missingModulesList.map(module => `\`<code>${module}</code>\``),
   )
+
   const body = {
     error: {
       code: 'MissingDependencyError',
@@ -214,6 +229,7 @@ const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
       details: getErrorDetails(error.originalError) ?? {},
     },
   }
+
   setFatalCache(context)
   context.respondWithError(status, body.error)
   context.cacheFailure(status, body)
@@ -221,6 +237,7 @@ const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
 
 const handleMinifyError: BuildErrorHandler = (context, error) => {
   const status = 422
+
   const body = {
     error: {
       code: 'MinifyError',
@@ -232,6 +249,7 @@ const handleMinifyError: BuildErrorHandler = (context, error) => {
       details: { ...getErrorDetails(error.originalError) },
     },
   }
+
   setFatalCache(context)
   context.respondWithError(status, body.error)
   context.cacheFailure(status, body)
@@ -240,11 +258,13 @@ const handleMinifyError: BuildErrorHandler = (context, error) => {
 const handleBuildError: BuildErrorHandler = (context, error) => {
   const status = 422
   const details = getErrorDetails(error.originalError) ?? {}
+
   const errorJSON = {
     code: 'BuildError',
     message: 'Failed to build this package.',
     details,
   }
+
   context.respondWithError(status, errorJSON)
   context.cacheFailure(status, { error: errorJSON })
 }
@@ -288,6 +308,7 @@ function handleCancelledError(context: ErrorHandlerContext) {
 
 function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
   const errorObject = error as Record<string, unknown> | null
+
   if (errorObject?.code === 'JOB_EXPIRED') {
     context.ctx.cacheControl = { maxAge: 0 }
     context.respondWithError(503, {
@@ -296,8 +317,10 @@ function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
         'The build queue is currently full and this request timed out. ' +
         'Please try again in a few minutes.',
     })
+
     return
   }
+
   if (errorObject?.code === 'QUEUE_CLEARED') {
     context.ctx.cacheControl = { maxAge: 0 }
     context.respondWithError(503, {
@@ -305,8 +328,10 @@ function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
       message:
         'The build queue was cleared. Please try building the package again.',
     })
+
     return
   }
+
   context.respondWithError(500, {
     code: 'UnknownError',
     details: getErrorDetails(error),
@@ -316,19 +341,25 @@ function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
 function handleCaughtError(context: ErrorHandlerContext, error: unknown) {
   if (isJobCancelledError(error)) {
     handleCancelledError(context)
+
     return
   }
+
   if (!(error instanceof Error)) {
     handleUnknownError(context, error)
+
     return
   }
+
   if (isClientHttpError(error)) {
     context.respondWithError(error.status, {
       code: error.name,
       message: error.message,
     })
+
     return
   }
+
   const buildError = error as BuildErrorShape
   const handler = buildErrorHandlers[buildError.name] ?? handleBuildError
   handler(context, buildError)
@@ -343,6 +374,7 @@ const errorHandler: Middleware = async (ctx, next) => {
     if (!packageString) {
       return
     }
+
     debug('saved %s to failure cache', packageString)
     const analysis = ctx.state.analysis
     const language = analysis?.language ?? 'javascript'

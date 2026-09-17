@@ -25,17 +25,20 @@ export default class CacheServiceClient {
   async getPackageSize<T>(key: CacheKey): Promise<T | undefined> {
     try {
       const result = await API.get<T>('/package-cache', { params: key })
+
       return result.data
     } catch (error) {
       console.error(
         axios.isAxiosError(error) ? error.response?.statusText : undefined,
       )
+
       return undefined
     }
   }
 
   async setPackageSize<T>(key: CacheKey, result: T): Promise<void> {
     debug('set package %O to %O', key, result)
+
     try {
       await API.post('/package-cache', { ...key, result })
     } catch (error) {
@@ -49,9 +52,11 @@ export default class CacheServiceClient {
 
   async getExportsSize<T>(key: CacheKey): Promise<T | undefined> {
     debug('get exports %s@%s', key.name, key.version)
+
     try {
       const result = await API.get<T>('/exports-cache', { params: key })
       debug('cache hit')
+
       return result.data
     } catch {
       return undefined
@@ -60,6 +65,7 @@ export default class CacheServiceClient {
 
   async setExportsSize<T>(key: CacheKey, result: T): Promise<void> {
     debug('set exports %O to %O', key, result)
+
     try {
       await API.post('/exports-cache', { ...key, result })
     } catch (error) {

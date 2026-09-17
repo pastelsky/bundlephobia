@@ -35,10 +35,13 @@ import buildMiddleware from '../server/middlewares/results/build.middleware'
 
 function createContext() {
   const request = new EventEmitter()
+
   const response = Object.assign(new EventEmitter(), {
     writableEnded: false,
   })
+
   const headers: Record<string, string> = {}
+
   return {
     context: {
       body: undefined,
@@ -96,6 +99,7 @@ describe('build request cancellation', () => {
     mockGetPackageBuildStats.mockImplementation(
       (_packageString, _priority, options: { signal: AbortSignal }) => {
         buildSignal = options.signal
+
         return new Promise((_resolve, reject) => {
           options.signal.addEventListener(
             'abort',
@@ -129,9 +133,11 @@ describe('build request cancellation', () => {
   it('does not abort after the response has ended normally', async () => {
     let buildSignal: AbortSignal | undefined
     let resolveBuild: (result: { size: number }) => void = () => {}
+
     mockGetPackageBuildStats.mockImplementation(
       (_packageString, _priority, options: { signal: AbortSignal }) => {
         buildSignal = options.signal
+
         return new Promise(resolve => {
           resolveBuild = resolve
         })
@@ -170,6 +176,7 @@ describe('build request cancellation', () => {
         options: { onComplete: (durationMs: number) => void },
       ) => {
         options.onComplete(321)
+
         return Promise.resolve({ size: 123 })
       },
     )

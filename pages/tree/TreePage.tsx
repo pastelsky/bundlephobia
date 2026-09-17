@@ -33,6 +33,7 @@ type TreePageState = {
 
 function getQueryValue(query: NextRouter['query'], key: string) {
   const value = query[key]
+
   return Array.isArray(value) ? value[0] : value
 }
 
@@ -44,6 +45,7 @@ class TreePage extends PureComponent<TreePageProps, TreePageState> {
 
   componentDidMount() {
     const queryValue = getQueryValue(this.props.router.query, 'p')
+
     if (queryValue?.trim()) {
       this.handleSearchSubmit(queryValue)
     }
@@ -70,6 +72,7 @@ class TreePage extends PureComponent<TreePageProps, TreePageState> {
       const nodeHasDep = this.state.nodes.find(
         node => node.name === dep.name && node.version === dep.version,
       )
+
       const depString = `${dep.name}@${dep.version}`
 
       if (nodeHasDep) {

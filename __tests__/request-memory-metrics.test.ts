@@ -12,6 +12,7 @@ jest.mock('../server/MemoryDiagnostics', () => ({
 const mockRecordRequestStart = recordRequestStart as jest.MockedFunction<
   typeof recordRequestStart
 >
+
 const mockRecordRequestComplete = recordRequestComplete as jest.MockedFunction<
   typeof recordRequestComplete
 >
@@ -23,6 +24,7 @@ describe('request memory metrics', () => {
 
   it('records normalized request metrics without swallowing errors', async () => {
     const error = new Error('request failed')
+
     const context = {
       path: '/package/example',
       request: { url: '/package/example' },

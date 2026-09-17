@@ -19,6 +19,7 @@ export const LANGUAGE_CAPABILITIES = [
 export type LanguageCapability = (typeof LANGUAGE_CAPABILITIES)[number]
 
 export type LanguageState = 'enabled' | 'disabled'
+
 export type LanguageVisibility = 'public' | 'hidden'
 
 export interface LanguageDescriptor {
@@ -46,6 +47,7 @@ export interface ResolvedPackageIdentity<
 }
 
 export type PackageReportStatus = 'complete' | 'partial' | 'failed'
+
 export type PackageDiagnosticSeverity = 'info' | 'warning' | 'error'
 
 export interface PackageDiagnostic {

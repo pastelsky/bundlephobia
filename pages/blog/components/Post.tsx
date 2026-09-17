@@ -8,6 +8,7 @@ import Link from 'next/link'
 
 const getWordCount = (node: TopLevelBlock) => {
   let count = 0
+
   if (node.nodeType === 'paragraph') {
     node.content.forEach(content => {
       switch (content.nodeType) {

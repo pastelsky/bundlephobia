@@ -32,6 +32,7 @@ interface LruCacheConstructor {
 }
 
 const LRU = require('lru-cache') as LruCacheConstructor
+
 const workerpool = require('workerpool') as WorkerpoolModule
 
 const failureCache = new LRU<string, FailureCacheEntry>({

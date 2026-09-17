@@ -5,6 +5,7 @@ import API from '../client/api'
 jest.mock('unfetch')
 
 const mockedFetch = fetch as jest.MockedFunction<typeof fetch>
+
 type APIResponse = Awaited<ReturnType<typeof fetch>>
 
 function mockResponse(
@@ -37,6 +38,7 @@ describe('API error responses', () => {
           message: "The package you were looking for doesn't exist.",
         },
       }
+
       mockedFetch.mockResolvedValue(
         mockResponse(404, () => Promise.resolve(responseBody)),
       )

@@ -31,11 +31,13 @@ function submitOnEnter(
   },
 ) {
   const { highlightedIndex, value, onSearchSubmit } = options
+
   const shouldSubmit =
     event.key === 'Enter' &&
     !event.nativeEvent.isComposing &&
     highlightedIndex < 0 &&
     Boolean(value.trim())
+
   if (!shouldSubmit) return
 
   event.preventDefault()
@@ -158,6 +160,7 @@ export const AutocompleteInput = ({
     onSubmit: onSearchSubmit,
     loadSuggestions,
   })
+
   const { searchFontSize } = useFontSize({ value })
 
   const {

@@ -15,6 +15,7 @@ import type {
 } from '../types.ts'
 
 const debug = createDebug('bp:cache')
+
 const memoryCache = new LRUCache<string, CacheEntry>({ max: 3000 })
 
 // Configurable Firebase keys for read/write operations
@@ -22,6 +23,7 @@ const memoryCache = new LRUCache<string, CacheEntry>({ max: 3000 })
 // When FIREBASE_READ_KEY is 'modules-v3', it will try v3 first, then fall back to v2
 // When FIREBASE_READ_KEY is 'modules-v2', it will only read from v2
 const FIREBASE_READ_KEY = process.env.FIREBASE_READ_KEY || 'modules-v3'
+
 const FIREBASE_WRITE_KEY = process.env.FIREBASE_WRITE_KEY || 'modules-v3'
 
 debug(
@@ -43,6 +45,7 @@ async function getPackageResultFromKey(
     .child(encodeFirebaseKey(version))
 
   const snapshot = await ref.once('value')
+
   return readCacheSnapshot<CacheEntry>(snapshot)
 }
 
@@ -57,6 +60,7 @@ async function getPackageResult({
 
   if (result) {
     debug('cache hit: firebase (%s)', targetReadKey)
+
     return result
   }
 
@@ -70,9 +74,11 @@ async function getPackageResult({
       name,
       version,
     })
+
     if (fallbackResult) {
       debug('cache hit: firebase (fallback to modules-v2)')
     }
+
     return fallbackResult
   }
 
@@ -81,6 +87,7 @@ async function getPackageResult({
 
 async function setPackageResult({ name, version, result }: CacheRequestBody) {
   const modules = firebase.database().ref().child(FIREBASE_WRITE_KEY)
+
   return modules
     .child(encodeFirebaseKey(name))
     .child(encodeFirebaseKey(version))
@@ -98,23 +105,29 @@ export async function getPackageSizeMiddlware(
   if (!name || !version) {
     return res.code(422).send()
   }
+
   debug('get package %s@%s (readKey: %s)', name, version, readKey)
 
   // Use memory cache only if no explicit readKey is provided
   if (!readKey) {
     const lruCacheEntry = memoryCache.get(`${name}@${version}`)
+
     if (lruCacheEntry) {
       debug('cache hit: memory')
+
       return res.code(200).send(lruCacheEntry)
     }
   }
 
   const result = await getPackageResult({ name, version, readKey })
+
   if (result) {
     debug('cache hit: firebase')
+
     if (!readKey) {
       memoryCache.set(`${name}@${version}`, result)
     }
+
     return res.code(200).send(result)
   }
 
@@ -131,11 +144,14 @@ export async function postPackageSizeMiddlware(
 
   debug('set package %O to %O', { name, version }, result)
   memoryCache.set(`${name}@${version}`, result)
+
   try {
     await setPackageResult({ name, version, result })
+
     return res.code(201).send()
   } catch (error) {
     console.log(error)
+
     return res.code(500).send({ error })
   }
 }

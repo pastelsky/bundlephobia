@@ -95,8 +95,10 @@ class FirebaseUtils {
 
     const firebasePromise = (async () => {
       const result = await getHistoryFromKey(FIREBASE_READ_KEY)
+
       if (result) {
         debug('package history from %s', FIREBASE_READ_KEY)
+
         return result
       }
 
@@ -105,9 +107,11 @@ class FirebaseUtils {
         !process.env.DISABLE_FIREBASE_V2_FALLBACK
       ) {
         const fallback = await getHistoryFromKey('modules-v2')
+
         if (fallback) {
           debug('package history from modules-v2 (fallback)')
         }
+
         return fallback
       }
 
@@ -161,6 +165,7 @@ class FirebaseUtils {
     debug('last npm %d %s versions %o', limit, name, limitedVersions)
 
     const latestVersion = versions[versions.length - 1]
+
     if (latestVersion?.includes('-')) {
       limitedVersions.shift()
       limitedVersions.push(latestVersion)
@@ -176,6 +181,7 @@ class FirebaseUtils {
 
     Object.keys(firebaseHistory).forEach(version => {
       const decodedVersion = decodeFirebaseKey(version)
+
       if (limitedVersions.includes(decodedVersion)) {
         packageHistory[decodedVersion] = firebaseHistory?.[version] ?? {}
       }

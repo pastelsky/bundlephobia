@@ -17,6 +17,7 @@ class ProgressHex extends Component<ProgressHexProps> {
 
   componentDidMount() {
     const svg = this.svgRef.current
+
     if (!svg) return
 
     this.animator = new ProgressHexAnimator({ svg })
@@ -30,6 +31,7 @@ class ProgressHex extends Component<ProgressHexProps> {
 
   render() {
     const { compact } = this.props
+
     return (
       <svg
         className="progress-hex"

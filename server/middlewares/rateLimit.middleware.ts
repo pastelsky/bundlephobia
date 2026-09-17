@@ -59,15 +59,18 @@ function requestIp(ctx: Parameters<Middleware>[0]): string | undefined {
     ctx.request.header['x-koaip'] ||
     ctx.request.header['cf-connecting-ip'] ||
     ctx.ip
+
   return Array.isArray(rawIp) ? rawIp[0] : rawIp
 }
 
 function applyRateLimit({ ctx, ip, options, db }: RateLimitContext): boolean {
   const now = Date.now()
   const reset = now + options.duration
+
   const entry = Object.prototype.hasOwnProperty.call(db, ip)
     ? db[ip]
     : { ip, reset, limit: options.max }
+
   db[ip] = entry
   const retryAfter = Math.trunc((entry.reset - now) / 1000)
 
@@ -87,12 +90,15 @@ function applyRateLimit({ ctx, ip, options, db }: RateLimitContext): boolean {
   }
 
   ctx.response.set('X-RateLimit-Reset', String(db[ip].reset))
+
   if (db[ip].limit < 0) {
     ctx.response.set('Retry-After', String(retryAfter))
     ctx.response.status = 429
     ctx.response.body = options.accessLimited
+
     return true
   }
+
   return false
 }
 
@@ -121,17 +127,20 @@ export default function betterlimit(
 
     if (!ip) {
       await next()
+
       return
     }
 
     if (ipchecker.check(ip, blackListMap)) {
       ctx.response.status = 403
       ctx.response.body = resolvedOptions.accessForbidden
+
       return
     }
 
     if (ipchecker.check(ip, whiteListMap)) {
       await next()
+
       return
     }
 

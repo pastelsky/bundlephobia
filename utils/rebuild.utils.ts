@@ -25,6 +25,7 @@ interface QueueModule {
 }
 
 type DeepEqual = (left: unknown, right: unknown) => boolean
+
 type Mkdir = (directory: string) => Promise<void>
 
 interface GotResponse<TBody> {
@@ -49,11 +50,15 @@ interface PackageBuildResult {
 type PackageStore = Record<string, Record<string, PackageBuildResult>>
 
 const Queue = require('promise-queue-plus') as QueueModule
+
 const deepEqual = require('lodash.isequal') as DeepEqual
+
 const mkdir = require('mkdir-promise') as Mkdir
+
 const got = require('got') as GotModule
 
 const debug = createDebug('rebuild:script')
+
 const debugWarning = createDebug('rebuild:warning')
 
 const patchedDB: Record<string, Record<string, unknown>> = {}
@@ -94,9 +99,11 @@ function decodeFirebaseKey(key: string) {
 async function getFirebaseStore() {
   try {
     const snapshot = await firebase.database().ref('modules-v2').once('value')
+
     return (snapshot.val() as PackageStore | null) ?? {}
   } catch (error) {
     console.log(error)
+
     return {}
   }
 }
@@ -116,6 +123,7 @@ async function getPackageResult({
     .child(encodeFirebaseKey(version))
 
   const snapshot = await ref.once('value')
+
   return snapshot.val()
 }
 
@@ -236,6 +244,7 @@ async function installPackage(packageName: string, installPath: string) {
     'save-exact',
     'json',
   ]
+
   const command = `npm install ${packageName} --${flags.join(' --')}`
 
   debug('install start %s', packageName)
@@ -248,9 +257,11 @@ async function installPackage(packageName: string, installPath: string) {
   } catch (error) {
     console.log(error)
     const message = error instanceof Error ? error.message : String(error)
+
     if (message.includes('code E404')) {
       throw new Error('PackageNotFoundError', { cause: error })
     }
+
     throw new Error('InstallError', { cause: error })
   }
 }
@@ -269,6 +280,7 @@ function exec(command: string, options: childProcess.ExecOptions) {
 
 async function getExports(name: string, version: string) {
   const packageName = `${name}@${version}`
+
   const temporaryPath = `/tmp/build/${packageName
     .replace(/@/g, '-')
     .replace(/\//g, '-')
@@ -288,9 +300,11 @@ async function getExports(name: string, version: string) {
   )
 
   await installPackage(packageName, temporaryPath)
+
   const exportsObject = require(
     path.join(temporaryPath, 'node_modules', name),
   ) as Record<string, unknown>
+
   return Object.keys(exportsObject)
 }
 
@@ -311,6 +325,7 @@ async function rebuildTopLevelExports() {
         decodeFirebaseKey(pack.version),
       ).then(exportsList => {
         debug('got exports for %s %s %o', pack.name, pack.version, exportsList)
+
         return axios.post('localhost:7001/cache', {
           name: pack.name,
           version: pack.version,
@@ -327,10 +342,15 @@ async function rebuildTopLevelExports() {
 }
 
 void config.blackList
+
 void commit
+
 void getFirebaseStore
+
 void getPackageResult
+
 void trim
+
 void rebuildTopLevelExports
 
 void run()

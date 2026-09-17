@@ -95,6 +95,7 @@ async function parseResponse<T>(response: APIResponse): Promise<T> {
   }
 
   let error: unknown
+
   try {
     error = await response.json()
   } catch {
@@ -113,6 +114,7 @@ export default class API {
     if (isInternal) {
       headers['X-Bundlephobia-User'] = 'bundlephobia website'
     }
+
     return fetch(url, { headers }).then(parseResponse<T>)
   }
 

@@ -12,10 +12,12 @@ const exportsMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
   const { force, package: packageQuery } = ctx.query
+
   const requestedPackage =
     typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
 
   const buildStart = now()
+
   const result = await packageAnalysisGateway.analyzePackageExports(
     ctx.state.resolved,
     {
@@ -25,6 +27,7 @@ const exportsMiddleware: Middleware = async ctx => {
       },
     },
   )
+
   const buildEnd = now()
 
   ctx.cacheControl = {

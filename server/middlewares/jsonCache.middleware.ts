@@ -20,6 +20,7 @@ export default function jsonCacheMiddleware<TKey, TValue>({
     async get(key: string) {
       const parsedKey = JSON.parse(key) as TKey
       const value = await get(parsedKey)
+
       return {
         body: value,
         type: 'application/json',

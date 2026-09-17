@@ -23,7 +23,9 @@ import { Context, Next } from 'koa'
 const ORIGIN = 'https://bundlephobia.com'
 
 const CATALOG_PATH = '/.well-known/api-catalog'
+
 const OPENAPI_PATH = '/openapi.json'
+
 const DOCS_URL = 'https://github.com/pastelsky/bundlephobia#readme'
 
 const OPENAPI_TYPE = 'application/openapi+json'

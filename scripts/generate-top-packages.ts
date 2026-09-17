@@ -44,12 +44,19 @@ admin.initializeApp({
 })
 
 const db = admin.database()
+
 const SIX_MONTHS_MS = 6 * 30 * 24 * 60 * 60 * 1000
+
 const MIN_SEARCH_COUNT = 2
+
 const MAX_VERSIONS_PER_PACKAGE = 20
+
 const TOP_PACKAGES_LIMIT = 1000
+
 const CONCURRENCY = 20
+
 const OUTPUT_PATH = path.join(__dirname, '../top-packages.json')
+
 const PROGRESS_PATH = path.join(__dirname, '../top-packages-progress.json')
 
 function isValidStableVersion(version: string) {
@@ -58,6 +65,7 @@ function isValidStableVersion(version: string) {
   }
 
   const cleaned = semver.valid(semver.coerce(version))
+
   return Boolean(cleaned)
 }
 
@@ -68,9 +76,11 @@ function loadProgress() {
         processedNames: string[]
         results: TopPackage[]
       }
+
       console.log(
         `Resuming from progress file: ${data.results.length} packages already processed`,
       )
+
       return data
     } catch {
       console.log('Could not load progress file, starting fresh')
@@ -86,6 +96,7 @@ function saveProgress(processedNames: Set<string>, results: TopPackage[]) {
     results,
     lastSaved: new Date().toISOString(),
   }
+
   fs.writeFileSync(PROGRESS_PATH, JSON.stringify(data, null, 2))
 }
 
@@ -122,9 +133,11 @@ async function processBatch(
         allVersions.sort((a, b) => {
           const cleanA = semver.valid(semver.coerce(a))
           const cleanB = semver.valid(semver.coerce(b))
+
           if (cleanA && cleanB) {
             return semver.compare(cleanB, cleanA)
           }
+
           return 0
         })
 
@@ -143,11 +156,13 @@ async function processBatch(
         `Error processing package ${pkg.name}:`,
         (err as Error).message,
       )
+
       return null
     }
   })
 
   const batchResults = await Promise.all(promises)
+
   return batchResults.filter((result): result is TopPackage => result !== null)
 }
 
@@ -156,6 +171,7 @@ async function main() {
 
   const sixMonthsAgo = Date.now() - SIX_MONTHS_MS
   const searchesSnapshot = await db.ref('searches-v2').once('value')
+
   const searchesData = searchesSnapshot.val() as Record<
     string,
     SearchRecord
@@ -174,6 +190,7 @@ async function main() {
 
   for (const [encodedName, data] of Object.entries(searchesData)) {
     const { count, lastSearched } = data
+
     if (count >= MIN_SEARCH_COUNT && lastSearched >= sixMonthsAgo) {
       eligiblePackages.push({
         encodedName,

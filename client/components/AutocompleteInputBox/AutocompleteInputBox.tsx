@@ -11,6 +11,7 @@ type AutocompleteInputBoxProps = React.PropsWithChildren &
 class AutocompleteInputBox extends Component<AutocompleteInputBoxProps> {
   render() {
     const { children, footer, className } = this.props
+
     return (
       <div className={cx('autocomplete-input-box', className)}>
         {children}
