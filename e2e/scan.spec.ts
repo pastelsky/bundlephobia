@@ -28,5 +28,8 @@ test('uploads package.json and builds the selected dependency', async ({
   await expect(packageResult.getByText('Min', { exact: true })).toBeVisible()
   await expect(packageResult.getByText('Min + GZIP')).toBeVisible()
   await expect(scanResultsPage.total).toBeVisible()
+  await expect(scanResultsPage.totalItem.getByText('Slow 3G')).toBeVisible()
+  await expect(scanResultsPage.totalItem.getByText('Emerging 4G')).toBeVisible()
+  await expect(scanResultsPage.totalItem.getByText('2G Edge')).toHaveCount(0)
   await expect(scanResultsPage.nextError).toHaveCount(0)
 })
