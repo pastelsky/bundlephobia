@@ -1,17 +1,22 @@
-jest.mock('../server/clients/npmRegistry', () => ({
-  fetchPackagePackument: jest.fn(),
-}))
-jest.mock('../utils/firebase.utils', () => ({
-  __esModule: true,
-  default: { getPackageHistory: jest.fn() },
-}))
-
 import { fetchPackagePackument } from '../server/clients/npmRegistry'
-import { fetchPackageHistory } from '../server/packageHistory'
+import {
+  fetchPackageHistory,
+  type PackageHistoryOptions,
+} from '../server/packageHistory'
 import firebaseUtils from '../utils/firebase.utils'
 
-const mockFetchPackagePackument = jest.mocked(fetchPackagePackument)
-const mockGetPackageHistory = jest.mocked(firebaseUtils.getPackageHistory)
+const mockFetchPackagePackument = jest.fn<typeof fetchPackagePackument>()
+
+const mockGetPackageHistory = jest.fn<typeof firebaseUtils.getPackageHistory>()
+
+const dependencies = {
+  fetchPackument: mockFetchPackagePackument,
+  getHistory: mockGetPackageHistory,
+}
+
+function getHistory(options: PackageHistoryOptions) {
+  return fetchPackageHistory('example', options, dependencies)
+}
 
 describe('package history', () => {
   beforeEach(() => {
@@ -38,7 +43,7 @@ describe('package history', () => {
     })
 
     await expect(
-      fetchPackageHistory('example', {
+      getHistory({
         from: '2024-01-01',
         to: '2024-03-02',
         limit: 40,
@@ -93,9 +98,7 @@ describe('package history', () => {
     })
     mockGetPackageHistory.mockResolvedValue({ '1.0.0': {} })
 
-    await expect(
-      fetchPackageHistory('example', { limit: 40 }),
-    ).resolves.toMatchObject({
+    await expect(getHistory({ limit: 40 })).resolves.toMatchObject({
       versions: [
         {
           version: '1.0.0',

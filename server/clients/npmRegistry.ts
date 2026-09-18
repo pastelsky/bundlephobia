@@ -11,7 +11,6 @@ export interface NpmPackageManifest {
   version: string
   description?: string
   repository?: RepositoryField
-  [key: string]: unknown
 }
 
 export interface NpmPackagePackument {

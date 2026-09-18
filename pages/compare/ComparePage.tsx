@@ -114,6 +114,7 @@ export default class ComparePage extends PureComponent<
         },
       ]),
     )
+
     formattedByVersion.set(results.version, {
       version: results.version,
       disabled: false,

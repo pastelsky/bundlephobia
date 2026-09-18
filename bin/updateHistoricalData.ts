@@ -99,6 +99,7 @@ async function getVersionsToBuild(name: string) {
     `http://localhost:${port}/api/package-history?package=${name}`
   )
 
+  // SAFETY: the local package-history endpoint returns PackageHistoryResponse.
   const versionInfo = (await res.json()) as PackageHistoryResponse
 
   versionInfo.versions.forEach(version => {

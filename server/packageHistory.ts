@@ -1,19 +1,36 @@
 import semver from 'semver'
 
 import firebaseUtils from '../utils/firebase.utils'
-import type { PackageHistoryResponse } from '../types/package-history'
-import { fetchPackagePackument } from './clients/npmRegistry'
+import type { PackageBuildInfoSnapshot } from '../types/package-domain'
+import type {
+  PackageHistoryRelease,
+  PackageHistoryResponse,
+  PackageHistoryVersion,
+} from '../types/package-history'
+import {
+  fetchPackagePackument,
+  type NpmPackagePackument,
+} from './clients/npmRegistry'
 import { parseGithubRepository } from './packages/npmPackage'
-
-type HistorySnapshot = {
-  size?: number
-  gzip?: number
-}
 
 export type PackageHistoryOptions = {
   from?: string
   to?: string
   limit: number
+}
+
+type PackageHistoryDependencies = {
+  fetchPackument: typeof fetchPackagePackument
+  getHistory: (
+    packageName: string,
+    limit: number,
+  ) => Promise<Record<string, PackageBuildInfoSnapshot>>
+}
+
+const defaultDependencies: PackageHistoryDependencies = {
+  fetchPackument: fetchPackagePackument,
+  getHistory: (packageName, limit) =>
+    firebaseUtils.getPackageHistory(packageName, limit),
 }
 
 function inRange(date: string, options: PackageHistoryOptions): boolean {
@@ -23,90 +40,144 @@ function inRange(date: string, options: PackageHistoryOptions): boolean {
   )
 }
 
+function parseRelease(
+  version: string,
+  rawDate: string,
+  options: PackageHistoryOptions,
+): PackageHistoryRelease | null {
+  const parsed = semver.parse(version)
+
+  if (!parsed || parsed.prerelease.length > 0) {
+    return null
+  }
+
+  const publishedAt = rawDate.slice(0, 10)
+
+  if (!inRange(publishedAt, options)) {
+    return null
+  }
+
+  const major = parsed.minor === 0 && parsed.patch === 0
+  const minor = parsed.patch === 0 && parsed.minor > 0
+
+  if (!major && !minor) {
+    return null
+  }
+
+  return { version, publishedAt, major, minor }
+}
+
 function releaseMetadata(
   time: Record<string, string> | undefined,
   options: PackageHistoryOptions,
 ): Pick<PackageHistoryResponse, 'releases'> {
-  const releases = Object.entries(time || {})
+  const releases = Object.entries(time ?? {})
     .flatMap(([version, rawDate]) => {
-      const parsed = semver.parse(version)
-      if (
-        !parsed ||
-        parsed.prerelease.length > 0 ||
-        typeof rawDate !== 'string'
-      ) {
-        return []
-      }
+      const release = parseRelease(version, rawDate, options)
 
-      const publishedAt = rawDate.slice(0, 10)
-      if (!inRange(publishedAt, options)) return []
-
-      const major = parsed.minor === 0 && parsed.patch === 0
-      const minor = parsed.patch === 0 && parsed.minor > 0
-      if (!major && !minor) return []
-
-      return [{ version, publishedAt, major, minor }]
+      return release ? [release] : []
     })
     .sort((a, b) => {
       const byDate = a.publishedAt.localeCompare(b.publishedAt)
+
       return byDate || semver.compare(a.version, b.version)
     })
 
   return { releases }
 }
 
+function getPublishDates(
+  time: Record<string, string> | undefined,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(time ?? {})
+      .filter(([version]) => Boolean(semver.valid(version)))
+      .map(([version, rawDate]) => [version, rawDate.slice(0, 10)]),
+  )
+}
+
+function toHistoryVersion(
+  version: string,
+  snapshot: PackageBuildInfoSnapshot,
+  publishDates: Record<string, string>,
+): PackageHistoryVersion {
+  const size = snapshot.size ?? null
+  const gzip = snapshot.gzip ?? null
+
+  return {
+    version,
+    publishedAt: publishDates[version] ?? null,
+    size,
+    gzip,
+    built: size !== null || gzip !== null,
+  }
+}
+
+function isVersionInRange(
+  version: PackageHistoryVersion,
+  options: PackageHistoryOptions,
+): boolean {
+  if (
+    options.from &&
+    (!version.publishedAt || version.publishedAt < options.from)
+  ) {
+    return false
+  }
+
+  if (
+    options.to &&
+    (!version.publishedAt || version.publishedAt > options.to)
+  ) {
+    return false
+  }
+
+  return true
+}
+
+function sortVersions(
+  versions: PackageHistoryVersion[],
+): PackageHistoryVersion[] {
+  return versions.sort((a, b) => {
+    const byDate = (a.publishedAt ?? '').localeCompare(b.publishedAt ?? '')
+
+    return byDate || semver.compare(a.version, b.version)
+  })
+}
+
+function latestManifest(packument: NpmPackagePackument) {
+  const version = packument['dist-tags']?.latest
+
+  return version ? packument.versions?.[version] : undefined
+}
+
+function repositoryForPackument(packument: NpmPackagePackument): string | null {
+  return (
+    parseGithubRepository(latestManifest(packument)?.repository) ||
+    parseGithubRepository(packument.repository)
+  )
+}
+
 export async function fetchPackageHistory(
   packageName: string,
   options: PackageHistoryOptions,
+  dependencies: PackageHistoryDependencies = defaultDependencies,
 ): Promise<PackageHistoryResponse> {
-  const [packument, rawHistory] = await Promise.all([
-    fetchPackagePackument(packageName),
-    firebaseUtils.getPackageHistory(packageName, options.limit),
+  const [packument, history] = await Promise.all([
+    dependencies.fetchPackument(packageName),
+    dependencies.getHistory(packageName, options.limit),
   ])
-  const history = rawHistory as Record<string, HistorySnapshot>
-  const publishDates = Object.fromEntries(
-    Object.entries(packument.time || {})
-      .filter(
-        ([version, rawDate]) =>
-          Boolean(semver.valid(version)) && typeof rawDate === 'string',
-      )
-      .map(([version, rawDate]) => [version, rawDate.slice(0, 10)]),
-  )
-  const latestVersion = packument['dist-tags']?.latest
-  const latestManifest = latestVersion
-    ? packument.versions?.[latestVersion]
-    : undefined
-  const repository =
-    parseGithubRepository(latestManifest?.repository) ||
-    parseGithubRepository(packument.repository)
 
-  const versions = Object.entries(history)
-    .map(([version, snapshot]) => {
-      const publishedAt = publishDates[version] || null
-      return {
-        version,
-        publishedAt,
-        size: typeof snapshot?.size === 'number' ? snapshot.size : null,
-        gzip: typeof snapshot?.gzip === 'number' ? snapshot.gzip : null,
-        built:
-          typeof snapshot?.size === 'number' ||
-          typeof snapshot?.gzip === 'number',
-      }
-    })
-    .filter(
-      version =>
-        !options.from ||
-        (version.publishedAt !== null && version.publishedAt >= options.from),
-    )
-    .filter(
-      version =>
-        !options.to ||
-        (version.publishedAt !== null && version.publishedAt <= options.to),
-    )
-    .sort((a, b) => {
-      const byDate = (a.publishedAt || '').localeCompare(b.publishedAt || '')
-      return byDate || semver.compare(a.version, b.version)
-    })
+  const publishDates = getPublishDates(packument.time)
+
+  const repository = repositoryForPackument(packument)
+
+  const versions = sortVersions(
+    Object.entries(history)
+      .map(([version, snapshot]) =>
+        toHistoryVersion(version, snapshot, publishDates),
+      )
+      .filter(version => isVersionInRange(version, options)),
+  )
 
   return {
     name: packageName,
@@ -114,8 +185,8 @@ export async function fetchPackageHistory(
     versions,
     ...releaseMetadata(packument.time, options),
     range: {
-      from: options.from || null,
-      to: options.to || null,
+      from: options.from ?? null,
+      to: options.to ?? null,
     },
   }
 }

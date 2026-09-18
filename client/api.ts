@@ -185,9 +185,13 @@ export default class API {
     options: { from?: string; to?: string; limit?: number } = {},
   ) {
     const params = new URLSearchParams({ package: packageName })
+
     if (options.from) params.set('from', options.from)
+
     if (options.to) params.set('to', options.to)
+
     if (options.limit) params.set('limit', String(options.limit))
+
     return API.get<PackageHistoryResponse>(`/api/package-history?${params}`)
   }
 

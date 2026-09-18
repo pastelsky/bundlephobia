@@ -86,7 +86,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     resultsError: null,
     historicalResultsPromiseState: null,
     inputInitialValue: getPackageStringFromRouter(this.props.router),
-    historicalResults: {},
+    historicalResults: null,
     similarPackages: [],
     similarPackagesCategory: '',
   }
@@ -177,7 +177,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   fetchHistory = (packageString: string, requestId: number) => {
-    API.getHistory(packageString, 15)
+    API.getHistory(packageString, { limit: 15 })
       .then(results => {
         if (!this.isActiveSearch(requestId)) return
 
@@ -246,7 +246,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         resultsPromiseState: 'pending',
         inputInitialValue: normalizedQuery,
         similarPackages: [],
-        historicalResults: {},
+        historicalResults: null,
         similarPackagesCategory: '',
       },
       () => {
@@ -298,6 +298,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         },
       ]),
     )
+
     formattedByVersion.set(results.version, {
       version: results.version,
       disabled: false,
@@ -309,8 +310,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       isModuleType: Boolean(results.isModuleType),
     })
 
-    const sorted = Array.from(formattedByVersion.values()).sort((packageA, packageB) =>
-      semver.compare(packageA.version, packageB.version),
+    const sorted = Array.from(formattedByVersion.values()).sort(
+      (packageA, packageB) =>
+        semver.compare(packageA.version, packageB.version),
     )
 
     return typeof window !== 'undefined' && window.innerWidth < 640
