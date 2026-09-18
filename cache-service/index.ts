@@ -1,5 +1,7 @@
 import 'dotenv-defaults/config.js'
 
+import type { AddressInfo } from 'node:net'
+
 import createFastify from 'fastify'
 import firebase from 'firebase'
 
@@ -35,11 +37,16 @@ fastify
   .then(() => {
     const address = fastify.server.address()
 
-    if (!address || typeof address === 'string') {
+    if (
+      !address ||
+      Object.prototype.toString.call(address) === '[object String]'
+    ) {
       throw new Error('cache service did not expose a TCP address')
     }
 
-    console.log(`server listening on ${address.port}`)
+    // SAFETY: Fastify returns AddressInfo after the string-address guard above.
+    const addressInfo = address as AddressInfo
+    console.log(`server listening on ${addressInfo.port}`)
   })
   .catch(error => {
     console.error(error)

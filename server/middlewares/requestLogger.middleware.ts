@@ -16,6 +16,18 @@ const API_ROUTES = new Set([
   '/api/stats-image',
 ])
 
+interface RequestMetric {
+  route: string
+  status: number
+  durationMs: number
+}
+
+export interface RequestLoggerDependencies {
+  recordRequestStart: () => void
+  recordRequestComplete: (request: RequestMetric) => void
+  logger: Pick<typeof logger, 'info'>
+}
+
 function normalizeRoute(path: string): string {
   if (path.startsWith('/api/')) {
     return API_ROUTES.has(path) ? path : '/api/*'
@@ -36,48 +48,58 @@ function normalizeRoute(path: string): string {
   return path === '/' ? '/' : 'other'
 }
 
-const requestLoggerMiddleware: Middleware = async (ctx, next) => {
-  const requestStart = now()
-  recordRequestStart()
+export function createRequestLoggerMiddleware(
+  dependencies: RequestLoggerDependencies = {
+    recordRequestStart,
+    recordRequestComplete,
+    logger,
+  },
+): Middleware {
+  return async (ctx, next) => {
+    const requestStart = now()
+    dependencies.recordRequestStart()
 
-  try {
-    await next()
-  } finally {
-    const requestEnd = now()
-    const time = requestEnd - requestStart
-    recordRequestComplete({
-      route: normalizeRoute(ctx.path),
-      status: ctx.response.status,
-      durationMs: time,
-    })
+    try {
+      await next()
+    } finally {
+      const requestEnd = now()
+      const time = requestEnd - requestStart
+      dependencies.recordRequestComplete({
+        route: normalizeRoute(ctx.path),
+        status: ctx.response.status,
+        durationMs: time,
+      })
 
-    if (ctx.request.url.includes('/api/')) {
-      logger.info(
-        'REQUEST',
-        {
-          url: ctx.request.url,
-          type: ctx.request.type,
-          query: ctx.request.query,
-          headers: ctx.request.headers,
-          ip:
-            ctx.request.header['x-koaip'] ||
-            ctx.request.header['cf-connecting-ip'] ||
-            ctx.ip,
-          requestId: ctx.state.id,
-          method: ctx.request.method,
-          origin: ctx.request.origin,
-          hostname: ctx.request.hostname,
-          status: ctx.response.status,
-          time,
-          language: ctx.state.analysis?.language,
-          operation: ctx.state.analysis?.operation,
-        },
-        `REQUEST: ${ctx.response.status} ${(time / 1000).toFixed(2)}s ${
-          ctx.req.method
-        } ${ctx.request.url}`,
-      )
+      if (ctx.request.url.includes('/api/')) {
+        dependencies.logger.info(
+          'REQUEST',
+          {
+            url: ctx.request.url,
+            type: ctx.request.type,
+            query: ctx.request.query,
+            headers: ctx.request.headers,
+            ip:
+              ctx.request.header['x-koaip'] ||
+              ctx.request.header['cf-connecting-ip'] ||
+              ctx.ip,
+            requestId: ctx.state.id,
+            method: ctx.request.method,
+            origin: ctx.request.origin,
+            hostname: ctx.request.hostname,
+            status: ctx.response.status,
+            time,
+            language: ctx.state.analysis?.language,
+            operation: ctx.state.analysis?.operation,
+          },
+          `REQUEST: ${ctx.response.status} ${(time / 1000).toFixed(2)}s ${
+            ctx.req.method
+          } ${ctx.request.url}`,
+        )
+      }
     }
   }
 }
+
+const requestLoggerMiddleware = createRequestLoggerMiddleware()
 
 export default requestLoggerMiddleware

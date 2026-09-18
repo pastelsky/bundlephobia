@@ -260,6 +260,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
       `/scan-results?${stringify(updatedQuery, { encode: false })}`,
     )
 
+    // SAFETY: browsers without View Transitions simply omit this optional API.
     const documentWithViewTransitions = document as Document & {
       startViewTransition?: (update: () => Promise<void>) => {
         finished: Promise<void>

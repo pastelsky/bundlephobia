@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 
 import axios from 'axios'
+import type { JsonValue } from '../types/json'
 
 interface ProgressState {
   completed: Set<string>
@@ -138,6 +139,7 @@ function loadProgress(): ProgressState {
 
   if (fs.existsSync(PROGRESS_PATH)) {
     try {
+      // SAFETY: the progress file is written by this script using this contract.
       const data = JSON.parse(fs.readFileSync(PROGRESS_PATH, 'utf8')) as {
         completed: string[]
         completed_exports?: string[]
@@ -302,6 +304,7 @@ async function buildPackage(
       return { success: false, error: 'Request aborted', v2: v2Result }
     }
 
+    // SAFETY: Axios errors expose the optional response payload inspected below.
     const axiosError = error as {
       response?: {
         data?: {
@@ -330,7 +333,7 @@ async function buildExports(
   signal: AbortSignal | null = null,
 ): Promise<ExportsBuildResult> {
   const key = `${packageName}@${version}`
-  let v2Result: unknown = null
+  let v2Result: JsonValue | null = null
 
   try {
     const v2Response = await axios.get(`${CACHE_SERVICE_BASE}/exports-cache`, {
@@ -339,7 +342,8 @@ async function buildExports(
     })
 
     if (v2Response.data) {
-      v2Result = v2Response.data
+      // SAFETY: the cache service returns serialized JSON for this endpoint.
+      v2Result = v2Response.data as JsonValue
     }
   } catch {}
 
@@ -372,6 +376,7 @@ async function buildExports(
       return { success: false, error: 'Request aborted', v2: v2Result }
     }
 
+    // SAFETY: Axios errors expose the optional response payload inspected below.
     const axiosError = error as {
       response?: {
         data?: {
@@ -561,6 +566,7 @@ async function main() {
     process.exit(1)
   }
 
+  // SAFETY: top-packages.json is produced by the typed generator in this repository.
   const packages = JSON.parse(
     fs.readFileSync(TOP_PACKAGES_PATH, 'utf8'),
   ) as TopPackage[]
@@ -602,41 +608,45 @@ async function main() {
   console.log('Loading progress and stats files...')
 
   const progress = loadProgress()
-  let detailedStats: unknown[] = []
-  let comparisons: unknown[] = []
-  let exportsStats: unknown[] = []
-  let exportsComparisons: unknown[] = []
+  let detailedStats: JsonValue[] = []
+  let comparisons: JsonValue[] = []
+  let exportsStats: JsonValue[] = []
+  let exportsComparisons: JsonValue[] = []
 
   if (!(shouldReset && !packageFilter)) {
     if (fs.existsSync(STATS_PATH)) {
       try {
+        // SAFETY: the stats files are serialized JSON arrays written below.
         detailedStats = JSON.parse(
           fs.readFileSync(STATS_PATH, 'utf8'),
-        ) as unknown[]
+        ) as JsonValue[]
       } catch {}
     }
 
     if (fs.existsSync(COMPARISON_PATH)) {
       try {
+        // SAFETY: the comparison file is a serialized JSON array written below.
         comparisons = JSON.parse(
           fs.readFileSync(COMPARISON_PATH, 'utf8'),
-        ) as unknown[]
+        ) as JsonValue[]
       } catch {}
     }
 
     if (fs.existsSync(EXPORTS_STATS_PATH)) {
       try {
+        // SAFETY: the exports stats file is a serialized JSON array written below.
         exportsStats = JSON.parse(
           fs.readFileSync(EXPORTS_STATS_PATH, 'utf8'),
-        ) as unknown[]
+        ) as JsonValue[]
       } catch {}
     }
 
     if (fs.existsSync(EXPORTS_COMPARISON_PATH)) {
       try {
+        // SAFETY: the exports comparison file is a serialized JSON array written below.
         exportsComparisons = JSON.parse(
           fs.readFileSync(EXPORTS_COMPARISON_PATH, 'utf8'),
-        ) as unknown[]
+        ) as JsonValue[]
       } catch {}
     }
   }
@@ -663,24 +673,28 @@ async function main() {
 
     detailedStats = detailedStats.filter(
       item =>
+        // SAFETY: persisted analysis entries optionally carry their package key.
         !(item as { package?: string }).package?.startsWith(
           `${packageFilter}@`,
         ),
     )
     comparisons = comparisons.filter(
       item =>
+        // SAFETY: persisted analysis entries optionally carry their package key.
         !(item as { package?: string }).package?.startsWith(
           `${packageFilter}@`,
         ),
     )
     exportsStats = exportsStats.filter(
       item =>
+        // SAFETY: persisted analysis entries optionally carry their package key.
         !(item as { package?: string }).package?.startsWith(
           `${packageFilter}@`,
         ),
     )
     exportsComparisons = exportsComparisons.filter(
       item =>
+        // SAFETY: persisted analysis entries optionally carry their package key.
         !(item as { package?: string }).package?.startsWith(
           `${packageFilter}@`,
         ),

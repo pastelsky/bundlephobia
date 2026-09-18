@@ -20,8 +20,11 @@ function createJavaScriptAdapter(): PackageAnalysisAdapter<'javascript'> {
       repository: '',
     })),
     isExactVersionSpecifier: jest.fn(() => true),
+    // SAFETY: the test adapter returns the package build result contract.
     analyzePackage: jest.fn(async () => ({ size: 1, gzip: 1 }) as never),
+    // SAFETY: the test adapter returns the package exports result contract.
     analyzePackageExports: jest.fn(async () => [] as never),
+    // SAFETY: the test adapter returns the export-size result contract.
     analyzePackageExportSizes: jest.fn(async () => ({}) as never),
   }
 }

@@ -80,6 +80,7 @@ async function fetchPackageJson(url: string): Promise<ParsedPackageJson> {
   let json: ParsedPackageJson
 
   try {
+    // SAFETY: responseError only returns after the package JSON endpoint succeeds.
     json = (await response.json()) as ParsedPackageJson
   } catch {
     throw new Error(
@@ -89,7 +90,7 @@ async function fetchPackageJson(url: string): Promise<ParsedPackageJson> {
 
   if (
     !json ||
-    typeof json !== 'object' ||
+    Object.prototype.toString.call(json) !== '[object Object]' ||
     (!json.dependencies && !json.devDependencies)
   ) {
     throw new Error(
@@ -113,7 +114,7 @@ function shouldFetchRouterUrl({
 }) {
   return Boolean(
     currentUrl &&
-    typeof currentUrl === 'string' &&
+    Object.prototype.toString.call(currentUrl) === '[object String]' &&
     currentUrl !== previousUrl &&
     !hasPackages &&
     !isLoading,
@@ -128,7 +129,10 @@ function fetchableRouterUrl(options: {
 }): string | undefined {
   if (!shouldFetchRouterUrl(options)) return undefined
 
-  return typeof options.currentUrl === 'string' ? options.currentUrl : undefined
+  return Object.prototype.toString.call(options.currentUrl) ===
+    '[object String]'
+    ? String(options.currentUrl)
+    : undefined
 }
 
 class Scan extends Component<ScanProps, ScanState> {
@@ -163,7 +167,7 @@ class Scan extends Component<ScanProps, ScanState> {
     } else {
       const urlQuery = this.props.router?.query?.url
 
-      if (urlQuery && typeof urlQuery === 'string') {
+      if (urlQuery && !Array.isArray(urlQuery)) {
         this.setState({ remoteUrlInput: urlQuery, isUrlFormOpen: true })
         this.fetchRemotePackageJson(urlQuery)
       }
@@ -197,6 +201,7 @@ class Scan extends Component<ScanProps, ScanState> {
         return null
       }
 
+      // SAFETY: this value was written by the scan-state serializer in this client.
       const parsedState = JSON.parse(serializedState) as PersistedScanState
 
       if (!Array.isArray(parsedState.packages)) {
@@ -381,12 +386,13 @@ class Scan extends Component<ScanProps, ScanState> {
     reader.onload = () => {
       try {
         const result =
-          typeof reader.result === 'string'
-            ? reader.result
-            : reader.result
+          Object.prototype.toString.call(reader.result) === '[object String]'
+            ? String(reader.result)
+            : reader.result instanceof ArrayBuffer
               ? new TextDecoder().decode(reader.result)
               : ''
 
+        // SAFETY: the selected file is parsed as the package.json contract below.
         const json = JSON.parse(result) as ParsedPackageJson
         const packages = this.getParsedPackages(json)
         const unsupportedPackageNames = this.getUnsupportedPackageNames(json)

@@ -18,6 +18,7 @@ import CacheServiceClient from './server/clients/cacheService'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
 import logger from './server/Logger'
+import type { JsonObject } from './types/json'
 import remoteMcpClient from './server/mcp/remoteClient'
 import {
   buildApiCatalog,
@@ -90,33 +91,48 @@ const app = next({ dev })
 
 const handle = app.getRequestHandler()
 
-type McpArguments = Record<string, unknown>
+type McpArguments = JsonObject
 
 type McpPayload = { name: string; arguments?: McpArguments }
 
-const localMcpPathBuilders: Record<
-  string,
-  (options: { packageName: string; args: McpArguments }) => string
-> = {
-  'bundlephobia.size': ({ packageName }) => `/api/size?package=${packageName}`,
-  'bundlephobia.exports': ({ packageName }) =>
-    `/api/exports?package=${packageName}`,
-  'bundlephobia.exportsSizes': ({ packageName }) =>
-    `/api/exports-sizes?package=${packageName}`,
-  'bundlephobia.packageHistory': ({ packageName, args }) =>
-    `/api/package-history?package=${packageName}&limit=${Number(args.limit ?? 10)}`,
-  'bundlephobia.similarPackages': ({ packageName }) =>
-    `/api/similar-packages?package=${packageName}`,
-}
+const localMcpPathBuilders = new Map([
+  [
+    'bundlephobia.size',
+    ({ packageName }: { packageName: string }) =>
+      `/api/size?package=${packageName}`,
+  ],
+  [
+    'bundlephobia.exports',
+    ({ packageName }: { packageName: string }) =>
+      `/api/exports?package=${packageName}`,
+  ],
+  [
+    'bundlephobia.exportsSizes',
+    ({ packageName }: { packageName: string }) =>
+      `/api/exports-sizes?package=${packageName}`,
+  ],
+  [
+    'bundlephobia.packageHistory',
+    ({ packageName, args }: { packageName: string; args: McpArguments }) =>
+      `/api/package-history?package=${packageName}&limit=${Number(args.limit ?? 10)}`,
+  ],
+  [
+    'bundlephobia.similarPackages',
+    ({ packageName }: { packageName: string }) =>
+      `/api/similar-packages?package=${packageName}`,
+  ],
+])
 
 function getLocalMcpRequest(name: string, args: McpArguments) {
-  const buildPath = localMcpPathBuilders[name]
+  const buildPath = localMcpPathBuilders.get(name)
 
   if (!buildPath) return null
 
+  const packageArgument = args.package
+
   const packageName =
-    typeof args.package === 'string'
-      ? encodeURIComponent(args.package)
+    Object.prototype.toString.call(packageArgument) === '[object String]'
+      ? encodeURIComponent(String(packageArgument))
       : undefined
 
   return packageName
@@ -125,12 +141,21 @@ function getLocalMcpRequest(name: string, args: McpArguments) {
 }
 
 function isMcpPayload(value: unknown): value is McpPayload {
+  if (
+    value === null ||
+    value === undefined ||
+    Object.prototype.toString.call(value) !== '[object Object]' ||
+    !('name' in Object(value))
+  ) {
+    return false
+  }
+
+  // SAFETY: the object-tag and property-presence checks establish the payload shape.
+  const name = (value as { name: unknown }).name
+
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    'name' in value &&
-    typeof value.name === 'string' &&
-    value.name.length > 0
+    Object.prototype.toString.call(name) === '[object String]' &&
+    String(name).length > 0
   )
 }
 
@@ -260,8 +285,9 @@ app.prepare().then(() => {
   router.get('/api/package-history', async ctx => {
     const packageQuery = ctx.query.package
 
-    const packageString =
-      typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+    const packageString = Array.isArray(packageQuery)
+      ? packageQuery.join('/')
+      : packageQuery
 
     invariant(packageString, 'package parameter is required')
     const { name } = parsePackageString(packageString)
@@ -359,8 +385,9 @@ app.prepare().then(() => {
         return
       }
 
+      // SAFETY: the remote MCP client returns the documented tools envelope.
       const remote = (await remoteMcpClient.listTools()) as {
-        tools?: Array<Record<string, unknown>>
+        tools?: JsonObject[]
       }
 
       ctx.body = {
@@ -454,6 +481,7 @@ app.prepare().then(() => {
   )
 
   router.post('/admin/restart', async ctx => {
+    // SAFETY: the admin endpoint body is parsed from its documented credentials contract.
     const { name, pass } = <{ name?: string; pass?: string }>ctx.request.body
 
     if (name !== 'bundlephobia' || pass !== env.basicAuthPassword) {
@@ -498,8 +526,9 @@ app.prepare().then(() => {
   router.get('/result', async ctx => {
     invariant(ctx.query.p, 'p parameter is required')
 
-    const packageString =
-      typeof ctx.query.p === 'string' ? ctx.query.p : ctx.query.p.join('/')
+    const packageString = Array.isArray(ctx.query.p)
+      ? ctx.query.p.join('/')
+      : ctx.query.p
 
     ctx.redirect(`/package/${packageString.trim()}`)
     ctx.status = 301

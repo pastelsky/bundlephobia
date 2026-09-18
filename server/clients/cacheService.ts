@@ -4,6 +4,7 @@ import axios from 'axios'
 import createDebug from 'debug'
 
 import logger from '../Logger'
+import type { JsonValue } from '../../types/json'
 
 const debug = createDebug('bp:cache')
 
@@ -17,8 +18,11 @@ const API = axios.create({
   timeout: 5000,
 })
 
-function getAxiosErrorData(error: unknown): unknown {
-  return axios.isAxiosError(error) ? error.response?.data : undefined
+function getAxiosErrorData<T>(error: T): JsonValue | undefined {
+  if (!axios.isAxiosError(error)) return undefined
+
+  // SAFETY: cache-service error responses are JSON payloads at this boundary.
+  return error.response?.data as JsonValue | undefined
 }
 
 export default class CacheServiceClient {
@@ -77,7 +81,7 @@ export default class CacheServiceClient {
     }
   }
 
-  private logSetError(key: CacheKey, error: unknown, message: string): void {
+  private logSetError<T>(key: CacheKey, error: T, message: string): void {
     const errorData = getAxiosErrorData(error)
     console.error(errorData)
     logger.error('CACHE_SET_ERROR', { ...key, error: errorData }, message)

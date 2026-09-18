@@ -70,6 +70,21 @@ export type PackageExportSizesResponse = {
 
 type APIResponse = Awaited<ReturnType<typeof fetch>>
 
+type FetchImplementation = typeof fetch
+
+let fetchImplementation: FetchImplementation = fetch
+
+export function setFetchImplementation(
+  implementation: FetchImplementation,
+): () => void {
+  const previous = fetchImplementation
+  fetchImplementation = implementation
+
+  return () => {
+    fetchImplementation = previous
+  }
+}
+
 type APIHeaders = {
   Accept: string
   'Content-Type'?: string
@@ -123,7 +138,7 @@ export default class API {
       headers['X-Bundlephobia-User'] = 'bundlephobia website'
     }
 
-    return fetch(url, { headers }).then(parseResponse<T>)
+    return fetchImplementation(url, { headers }).then(parseResponse<T>)
   }
 
   static post<T = unknown>(url: string, body: JsonObject): Promise<T> {
@@ -133,7 +148,7 @@ export default class API {
       'X-Bundlephobia-User': 'bundlephobia website',
     }
 
-    return fetch(url, {
+    return fetchImplementation(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),

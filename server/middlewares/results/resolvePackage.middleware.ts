@@ -16,8 +16,9 @@ export function createResolvePackageMiddleware(
     ctx.state.analysis = { language: 'javascript', operation }
     const packageQuery = ctx.query.package
 
-    const packageString =
-      typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+    const packageString = Array.isArray(packageQuery)
+      ? packageQuery.join('/')
+      : packageQuery
 
     if (!packageString) {
       ctx.throw(400, 'package query parameter is required')

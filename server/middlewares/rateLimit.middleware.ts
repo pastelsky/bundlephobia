@@ -1,8 +1,12 @@
 import type { Middleware } from 'koa'
 
 interface IpCheckerModule {
-  check(ip: string, map: Record<string, unknown>): boolean
-  map(list?: string[] | string): Record<string, unknown>
+  check(ip: string, map: IpCheckerMap): boolean
+  map(list?: string[] | string): IpCheckerMap
+}
+
+interface IpCheckerMap {
+  [key: string]: boolean
 }
 
 interface RateLimitOptions {
@@ -42,6 +46,7 @@ type RateLimitContext = {
   db: Record<string, RateLimitState>
 }
 
+// SAFETY: the pinned ipchecker module implements the map/check contract above.
 const ipchecker = require('ipchecker') as IpCheckerModule
 
 const defaults = {

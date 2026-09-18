@@ -2,10 +2,11 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 
 import logger from '../Logger'
+import type { JsonObject } from '../../types/json'
 
 interface MpcCallToolRequest {
   name: string
-  arguments?: Record<string, unknown>
+  arguments?: JsonObject
 }
 
 interface McpConfig {
@@ -73,7 +74,7 @@ class RemoteMcpClient {
     return this.connectPromise
   }
 
-  async listTools(): Promise<unknown> {
+  async listTools(): Promise<Awaited<ReturnType<Client['listTools']>>> {
     const client = await this.connect()
 
     return client.listTools(undefined, {
@@ -81,7 +82,9 @@ class RemoteMcpClient {
     })
   }
 
-  async callTool(request: MpcCallToolRequest): Promise<unknown> {
+  async callTool(
+    request: MpcCallToolRequest,
+  ): Promise<Awaited<ReturnType<Client['callTool']>>> {
     const client = await this.connect()
 
     return client.callTool(
@@ -96,7 +99,7 @@ class RemoteMcpClient {
     )
   }
 
-  resetConnection(error?: unknown): void {
+  resetConnection<T>(error?: T): void {
     if (error) {
       logger.error('MCP_CLIENT', error, 'Resetting MCP client connection')
     }

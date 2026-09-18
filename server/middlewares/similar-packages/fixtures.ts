@@ -15,7 +15,7 @@ export interface CategoryDefinition {
   similar: string[]
 }
 
-const categories: Record<string, CategoryDefinition> = {
+const categories = {
   'classname-strings': {
     name: 'Classname string construction',
     tags: [
@@ -753,6 +753,6 @@ const categories: Record<string, CategoryDefinition> = {
       'vue-tiny-slider',
     ],
   },
-}
+} satisfies Record<string, CategoryDefinition>
 
 export { categories }

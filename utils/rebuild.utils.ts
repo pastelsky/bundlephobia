@@ -9,6 +9,7 @@ import createDebug from 'debug'
 import firebase from 'firebase'
 
 import config from '../server/config'
+import type { JsonValue } from '../types/json'
 
 interface QueueModule {
   new (
@@ -47,17 +48,21 @@ interface GotModule {
 interface PackageBuildResult {
   gzip: number
   size: number
-  [key: string]: unknown
+  [key: string]: JsonValue | undefined
 }
 
 type PackageStore = Record<string, Record<string, PackageBuildResult>>
 
+// SAFETY: the pinned queue module implements the local queue contract.
 const Queue = require('promise-queue-plus') as QueueModule
 
+// SAFETY: lodash.isequal accepts and compares the package result values used here.
 const deepEqual = require('lodash.isequal') as DeepEqual
 
+// SAFETY: the pinned mkdir module exposes a promise-returning directory helper.
 const mkdir = require('mkdir-promise') as Mkdir
 
+// SAFETY: the pinned got module implements the JSON request contract above.
 const got = require('got') as GotModule
 
 const debug = createDebug('rebuild:script')
@@ -160,6 +165,7 @@ async function run() {
 
   // SAFETY: These repository fixtures are generated PackageStore snapshots.
   const packs = require('../modules-v2.json') as PackageStore
+  // SAFETY: this repository fixture is a generated PackageStore snapshot.
   const packsNew = require('../modules-v2-new.json') as PackageStore
   const failIndexes: number[] = []
 

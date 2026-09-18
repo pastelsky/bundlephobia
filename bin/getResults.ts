@@ -4,6 +4,12 @@ import firebase from 'firebase'
 
 import 'dotenv/config'
 
+import type { JsonObject } from '../types/json'
+
+interface FirebasePackageStore {
+  [packageName: string]: JsonObject
+}
+
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -16,9 +22,10 @@ function getFirebaseStoreFromDisk() {
   try {
     const firebaseModulesPath = path.join(__dirname, 'data/firebase-modules.json')
 
+    // SAFETY: the local Firebase snapshot is written using FirebasePackageStore.
     return JSON.parse(
       fs.readFileSync(firebaseModulesPath, 'utf8')
-    ) as Record<string, Record<string, unknown>>
+    ) as FirebasePackageStore
   } catch {
     console.log('not found on disk')
 
@@ -30,22 +37,24 @@ async function getFirebaseStoreFromNetwork() {
   const modulesRef = firebase.database().ref('modules-v2')
 
   const lastSnapshot =
+    // SAFETY: Firebase returns the modules-v2 package store at this boundary.
     ((await modulesRef.limitToLast(1).once('value').then(snapshot => snapshot.val())) as
-      | Record<string, unknown>
+      | FirebasePackageStore
       | null) ?? {}
 
   const firstSnapshot =
+    // SAFETY: Firebase returns the modules-v2 package store at this boundary.
     ((await modulesRef
       .limitToFirst(1)
       .once('value')
-      .then(snapshot => snapshot.val())) as Record<string, unknown> | null) ??
+      .then(snapshot => snapshot.val())) as FirebasePackageStore | null) ??
     {}
 
   const lastEntry = Object.keys(lastSnapshot)[0]
   const firstEntry = Object.keys(firstSnapshot)[0]
 
   let currentLastEntry = firstEntry
-  let allData: Record<string, Record<string, unknown>> = {}
+  let allData: FirebasePackageStore = {}
   let counter = 0
 
   console.log('fetching from ', firstEntry, ' to ', lastEntry)
@@ -53,6 +62,7 @@ async function getFirebaseStoreFromNetwork() {
   while (currentLastEntry !== lastEntry) {
     counter += 20000
 
+    // SAFETY: Firebase returns the modules-v2 package store at this boundary.
     const snapshot = (await firebase
       .database()
       .ref('modules-v2')
@@ -60,10 +70,7 @@ async function getFirebaseStoreFromNetwork() {
       .startAt(currentLastEntry)
       .limitToFirst(20000)
       .once('value')
-      .then(snapshotData => snapshotData.val())) as Record<
-      string,
-      Record<string, unknown>
-    >
+      .then(snapshotData => snapshotData.val())) as FirebasePackageStore
 
     const packageNames = Object.keys(snapshot)
     currentLastEntry = packageNames[packageNames.length - 1]
@@ -94,7 +101,7 @@ export async function getResults() {
 
   return Object.keys(firebaseStore ?? {}).flatMap(packageName =>
     Object.keys((firebaseStore ?? {})[packageName]).map(
-      version => (firebaseStore as Record<string, Record<string, unknown>>)[packageName][version]
+      version => firebaseStore[packageName][version]
     )
   )
 }

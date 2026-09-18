@@ -4,6 +4,7 @@ import admin from 'firebase-admin'
 import semver from 'semver'
 
 import { decodeFirebaseKey } from '../utils/index'
+import type { JsonObject } from '../types/json'
 
 type SearchRecord = {
   count: number
@@ -72,6 +73,7 @@ function isValidStableVersion(version: string) {
 function loadProgress() {
   if (fs.existsSync(PROGRESS_PATH)) {
     try {
+      // SAFETY: the progress file is written by this script using this contract.
       const data = JSON.parse(fs.readFileSync(PROGRESS_PATH, 'utf8')) as {
         processedNames: string[]
         results: TopPackage[]
@@ -87,6 +89,7 @@ function loadProgress() {
     }
   }
 
+  // SAFETY: these are the initial values for the script's progress contract.
   return { processedNames: [] as string[], results: [] as TopPackage[] }
 }
 
@@ -116,10 +119,8 @@ async function processBatch(
         .child(pkg.encodedName)
         .once('value')
 
-      const versionsData = versionsSnapshot.val() as Record<
-        string,
-        unknown
-      > | null
+      // SAFETY: Firebase returns the version map as a JSON object.
+      const versionsData = versionsSnapshot.val() as JsonObject | null
 
       if (versionsData) {
         const allVersions = Object.keys(versionsData)
@@ -154,6 +155,7 @@ async function processBatch(
     } catch (err) {
       console.error(
         `Error processing package ${pkg.name}:`,
+        // SAFETY: caught failures are logged through the standard Error contract.
         (err as Error).message,
       )
 
@@ -172,6 +174,7 @@ async function main() {
   const sixMonthsAgo = Date.now() - SIX_MONTHS_MS
   const searchesSnapshot = await db.ref('searches-v2').once('value')
 
+  // SAFETY: Firebase returns the searches-v2 record consumed below.
   const searchesData = searchesSnapshot.val() as Record<
     string,
     SearchRecord

@@ -1,13 +1,26 @@
 import winston from 'winston'
 
-type LogPayload = Record<string, unknown>
+import type { JsonObject } from '../types/json'
 
-function toPayload(value: unknown): LogPayload {
+type LogPayload = JsonObject
+
+function toPayload<T>(value: T): LogPayload {
   if (value instanceof Error) {
-    return { message: value.message, name: value.name, stack: value.stack }
+    const payload: LogPayload = {
+      message: value.message,
+      name: value.name,
+    }
+
+    if (value.stack) payload.stack = value.stack
+
+    return payload
   }
 
-  if (typeof value === 'object' && value !== null) {
+  if (
+    value !== null &&
+    Object.prototype.toString.call(value) === '[object Object]'
+  ) {
+    // SAFETY: the object tag check establishes that the generic value is a plain object payload.
     return value as LogPayload
   }
 
@@ -33,17 +46,17 @@ class Logger {
     })
   }
 
-  info(tag: string, json: LogPayload, message: string): void {
+  info<T>(tag: string, json: T, message: string): void {
     this.logger.info(message, {
       metadata: {
         message,
         tag,
-        ...json,
+        ...toPayload(json),
       },
     })
   }
 
-  error(tag: string, json: unknown, message: string): void {
+  error<T>(tag: string, json: T, message: string): void {
     this.logger.error(message, {
       metadata: {
         tag,

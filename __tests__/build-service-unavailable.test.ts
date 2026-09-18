@@ -10,47 +10,36 @@ import { createAnalysisKey, createQueueType } from '../server/analysis/keys'
 import { failureCache, pool, requestQueue } from '../server/init'
 import errorMiddleware from '../server/middlewares/results/error.middleware'
 
-jest.mock('../server/init', () => ({
-  failureCache: {
-    set: jest.fn(),
-  },
-  logger: {
-    increment: jest.fn(),
-    timing: jest.fn(),
-  },
-  pool: {
-    exec: jest.fn(),
-  },
-  requestQueue: {
-    addExecutor: jest.fn(),
-    cancel: jest.fn(),
-    process: jest.fn(),
-  },
-}))
+interface CircularErrorDetails {
+  message: string
+  self?: CircularErrorDetails
+}
 
-jest.mock('../server/Logger', () => ({
-  __esModule: true,
-  default: {
-    error: jest.fn(),
-  },
-}))
+function asGlobalAbortSignal(
+  signal: AbortController['signal'],
+): globalThis.AbortSignal {
+  // SAFETY: the test controller is used through the global AbortSignal contract.
+  return signal as globalThis.AbortSignal
+}
 
-const mockedFailureCache = failureCache as jest.Mocked<typeof failureCache>
+const mockedFailureCache = jest.spyOn(failureCache, 'set')
 
-const mockedPool = pool as jest.Mocked<typeof pool>
+const mockedPool = jest.spyOn(pool, 'exec')
 
-const mockedRequestQueue = requestQueue as jest.Mocked<typeof requestQueue>
+const mockedRequestQueue = {
+  addExecutor: jest.spyOn(requestQueue, 'addExecutor'),
+  process: jest.spyOn(requestQueue, 'process'),
+}
 
 describe('build service unavailability', () => {
   const originalBuildServiceEndpoint = process.env.BUILD_SERVICE_ENDPOINT
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockedFailureCache.mockReset()
+    mockedPool.mockReset()
+    mockedRequestQueue.addExecutor.mockReset()
+    mockedRequestQueue.process.mockReset()
     process.env.BUILD_SERVICE_ENDPOINT = 'http://127.0.0.1:7002'
-  })
-
-  afterEach(() => {
-    jest.restoreAllMocks()
   })
 
   afterAll(() => {
@@ -79,7 +68,7 @@ describe('build service unavailability', () => {
       executor(
         { packageString: '@example/unavailable@1.0.0' },
         {
-          signal: controller.signal as unknown as globalThis.AbortSignal,
+          signal: asGlobalAbortSignal(controller.signal),
         },
       ),
     ).rejects.toMatchObject({
@@ -138,7 +127,7 @@ describe('build service unavailability', () => {
   })
 
   it('preserves custom error details containing circular data', () => {
-    const originalError: { message: string; self?: unknown } = {
+    const originalError: CircularErrorDetails = {
       message: 'the useful build error',
     }
 
@@ -186,7 +175,7 @@ describe('build service unavailability', () => {
           onComplete,
         },
         {
-          signal: controller.signal as unknown as globalThis.AbortSignal,
+          signal: asGlobalAbortSignal(controller.signal),
         },
       ),
     ).rejects.toMatchObject(responseBody)
@@ -210,7 +199,7 @@ describe('build service unavailability', () => {
           onComplete,
         },
         {
-          signal: controller.signal as unknown as globalThis.AbortSignal,
+          signal: asGlobalAbortSignal(controller.signal),
         },
       ),
     ).resolves.toEqual({ size: 123 })
@@ -235,7 +224,7 @@ describe('build service unavailability', () => {
     const result = executor(
       { packageString: '@example/cancelled@1.0.0' },
       {
-        signal: controller.signal as unknown as globalThis.AbortSignal,
+        signal: asGlobalAbortSignal(controller.signal),
       },
     )
 
@@ -257,10 +246,11 @@ describe('build service unavailability', () => {
   it('cancels an in-process worker execution when its job aborts', async () => {
     delete process.env.BUILD_SERVICE_ENDPOINT
     const controller = new AbortController()
+    // SAFETY: this pending promise models the workerpool execution handle in this test.
     const execution = new Promise(() => {}) as ReturnType<typeof pool.exec>
     execution.timeout = jest.fn().mockReturnValue(execution)
     execution.cancel = jest.fn()
-    mockedPool.exec.mockReturnValue(execution)
+    mockedPool.mockReturnValue(execution)
 
     new BuildService()
     const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
@@ -268,7 +258,7 @@ describe('build service unavailability', () => {
     const result = executor(
       { packageString: '@example/cancelled@1.0.0' },
       {
-        signal: controller.signal as unknown as globalThis.AbortSignal,
+        signal: asGlobalAbortSignal(controller.signal),
       },
     )
 
@@ -296,6 +286,7 @@ describe('build service unavailability', () => {
       undefined,
     )
 
+    // SAFETY: the fixture supplies the context members exercised by the middleware.
     await errorMiddleware(ctx as never, async () => {
       throw error
     })
@@ -311,7 +302,7 @@ describe('build service unavailability', () => {
         },
       },
     })
-    expect(mockedFailureCache.set).not.toHaveBeenCalled()
+    expect(mockedFailureCache).not.toHaveBeenCalled()
   })
 
   it('does not cache internal build-service errors', async () => {
@@ -329,6 +320,7 @@ describe('build service unavailability', () => {
       { retryable: true },
     )
 
+    // SAFETY: the fixture supplies the context members exercised by the middleware.
     await errorMiddleware(ctx as never, async () => {
       throw error
     })
@@ -344,7 +336,7 @@ describe('build service unavailability', () => {
         },
       },
     })
-    expect(mockedFailureCache.set).not.toHaveBeenCalled()
+    expect(mockedFailureCache).not.toHaveBeenCalled()
   })
 
   it('continues caching genuine package build failures', async () => {
@@ -360,6 +352,7 @@ describe('build service unavailability', () => {
 
     const error = new CustomError('BuildError', 'parse failed', undefined)
 
+    // SAFETY: the fixture supplies the context members exercised by the middleware.
     await errorMiddleware(ctx as never, async () => {
       throw error
     })
@@ -373,7 +366,7 @@ describe('build service unavailability', () => {
         },
       },
     })
-    expect(mockedFailureCache.set).toHaveBeenCalledWith(
+    expect(mockedFailureCache).toHaveBeenCalledWith(
       createAnalysisKey({
         language: 'javascript',
         operation: 'package-analysis',

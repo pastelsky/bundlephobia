@@ -2,12 +2,19 @@ import AbortController from 'abort-controller'
 
 import Queue from '../server/Queue'
 
+function asGlobalAbortSignal(
+  signal: AbortController['signal'],
+): globalThis.AbortSignal {
+  // SAFETY: the test controller is used through the global AbortSignal contract.
+  return signal as globalThis.AbortSignal
+}
+
 describe('Queue cancellation', () => {
   const nativeAbortController = global.AbortController
 
   beforeAll(() => {
-    global.AbortController =
-      AbortController as unknown as typeof global.AbortController
+    // SAFETY: the test controller is compatible with the global constructor contract.
+    global.AbortController = AbortController as typeof global.AbortController
   })
 
   afterAll(() => {
@@ -115,6 +122,7 @@ describe('Queue cancellation', () => {
     const cancelExecutor = jest.fn()
     let resolveJob: (value: string) => void = () => {}
 
+    // SAFETY: this promise models the cancellable worker handle used by Queue.
     const jobPromise = new Promise<string>(resolve => {
       resolveJob = resolve
     }) as Promise<string> & { cancel?: () => void }
@@ -128,7 +136,7 @@ describe('Queue cancellation', () => {
       type: 'TEST',
       jobParams: {},
       options: {
-        signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
+        signal: asGlobalAbortSignal(firstSubscriber.signal),
       },
     })
 
@@ -137,7 +145,7 @@ describe('Queue cancellation', () => {
       type: 'TEST',
       jobParams: {},
       options: {
-        signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
+        signal: asGlobalAbortSignal(secondSubscriber.signal),
       },
     })
 
@@ -160,6 +168,7 @@ describe('Queue cancellation', () => {
     const secondSubscriber = new AbortController()
     const cancelExecutor = jest.fn()
 
+    // SAFETY: this pending promise models the cancellable worker handle used by Queue.
     const jobPromise = new Promise(() => {}) as Promise<never> & {
       cancel?: () => void
     }
@@ -173,7 +182,7 @@ describe('Queue cancellation', () => {
       type: 'TEST',
       jobParams: {},
       options: {
-        signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
+        signal: asGlobalAbortSignal(firstSubscriber.signal),
       },
     })
 
@@ -182,7 +191,7 @@ describe('Queue cancellation', () => {
       type: 'TEST',
       jobParams: {},
       options: {
-        signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
+        signal: asGlobalAbortSignal(secondSubscriber.signal),
       },
     })
 
@@ -221,7 +230,7 @@ describe('Queue cancellation', () => {
       type: 'TEST',
       jobParams: {},
       options: {
-        signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
+        signal: asGlobalAbortSignal(firstSubscriber.signal),
       },
     })
 
@@ -230,7 +239,7 @@ describe('Queue cancellation', () => {
       type: 'TEST',
       jobParams: {},
       options: {
-        signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
+        signal: asGlobalAbortSignal(secondSubscriber.signal),
       },
     })
 
@@ -266,7 +275,7 @@ describe('Queue cancellation', () => {
       type: 'TEST',
       jobParams: {},
       options: {
-        signal: subscriber.signal as unknown as globalThis.AbortSignal,
+        signal: asGlobalAbortSignal(subscriber.signal),
       },
     })
 
@@ -283,8 +292,8 @@ describe('Queue priority', () => {
   const nativeAbortController = global.AbortController
 
   beforeAll(() => {
-    global.AbortController =
-      AbortController as unknown as typeof global.AbortController
+    // SAFETY: the test controller is compatible with the global constructor contract.
+    global.AbortController = AbortController as typeof global.AbortController
   })
 
   afterAll(() => {

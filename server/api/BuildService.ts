@@ -4,6 +4,7 @@ import createDebug from 'debug'
 import CustomError from '../CustomError'
 import { JobCancelledError } from '../Queue'
 import type { AnalysisOperation } from '../analysis/contracts'
+import type { RuntimeValue } from '../../types/json'
 import { createAnalysisKey, createQueueType } from '../analysis/keys'
 import config from '../config'
 import { logger, pool, requestQueue } from '../init'
@@ -81,7 +82,7 @@ export default class BuildService {
     ] as const
 
     operations.forEach(operation => {
-      requestQueue.addExecutor<BuildServiceJobParams, unknown>(
+      requestQueue.addExecutor<BuildServiceJobParams, RuntimeValue>(
         createQueueType('javascript', operation.operation),
         async ({ packageString, onComplete }, { signal }) => {
           const startedAt = performance.now()
@@ -194,8 +195,9 @@ export default class BuildService {
     }
   }
 
-  private handleError(error: unknown, operation: OperationDefinition): never {
+  private handleError<T>(error: T, operation: OperationDefinition): never {
     if (axios.isAxiosError(error) && error.response) {
+      // SAFETY: the build service error endpoint returns this documented payload.
       const contents = error.response.data as BuildServerErrorPayload
       throw new CustomError(
         contents.name || 'BuildError',
@@ -211,6 +213,7 @@ export default class BuildService {
         {
           operation: operation.legacyName,
           reason: 'BUILD_SERVICE_UNREACHABLE',
+          // SAFETY: Axios request objects expose the current URL for diagnostics.
           url: (error.request as { _currentUrl?: string })._currentUrl,
         },
         undefined,
@@ -226,7 +229,7 @@ export default class BuildService {
     )
   }
 
-  async getPackageBuildStats<T>(
+  async getPackageBuildStats<T extends RuntimeValue>(
     packageString: string,
     priority: number,
     options: BuildRequestOptions = {},
@@ -251,7 +254,7 @@ export default class BuildService {
     })
   }
 
-  async getPackageExports<T>(
+  async getPackageExports<T extends RuntimeValue>(
     packageString: string,
     priority: number,
     options: BuildRequestOptions = {},
@@ -276,7 +279,7 @@ export default class BuildService {
     })
   }
 
-  async getPackageExportSizes<T>(
+  async getPackageExportSizes<T extends RuntimeValue>(
     packageString: string,
     priority: number,
     options: BuildRequestOptions = {},

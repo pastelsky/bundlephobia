@@ -16,8 +16,10 @@ export default function jsonCacheMiddleware<TKey, TValue>({
   set,
   hash: hashFn,
 }: JsonCacheConfig<TKey, TValue>): Middleware {
+  // SAFETY: koa-cash returns a middleware compatible with the server's Koa version.
   return koaCache({
     async get(key: string) {
+      // SAFETY: cache keys are serialized by this middleware's hash function.
       const parsedKey = JSON.parse(key) as TKey
       const value = await get(parsedKey)
 
@@ -27,11 +29,18 @@ export default function jsonCacheMiddleware<TKey, TValue>({
       }
     },
     async set(key: string, value: CacheEnvelope) {
+      // SAFETY: cache keys and bodies are serialized by this middleware.
       const parsedKey = JSON.parse(key) as TKey
-      await set(parsedKey, JSON.parse(value.body) as TValue)
+      const parsedBody = JSON.parse(value.body)
+      // SAFETY: cache bodies are serialized by this middleware's get function.
+      const typedBody = parsedBody as TValue
+      await set(parsedKey, typedBody)
     },
     hash(ctx) {
-      return JSON.stringify(hashFn(ctx as unknown as Context))
+      // SAFETY: koa-cash supplies the configured Koa context shape.
+      const cacheContext = ctx as Context & typeof ctx
+
+      return JSON.stringify(hashFn(cacheContext))
     },
-  }) as unknown as Middleware
+  }) as Middleware & ReturnType<typeof koaCache>
 }

@@ -200,6 +200,14 @@ const sizeRows = [
   })
   .join('\n')
 
+let npmPackageResult = 'Check unavailable'
+
+if (signals.exists === true) {
+  npmPackageResult = `[${packageName}](https://www.npmjs.com/package/${packageName})`
+} else if (signals.exists === false) {
+  npmPackageResult = 'Not found'
+}
+
 const report = `${REPORT_MARKER}
 ## Automated recommendation check
 
@@ -207,13 +215,7 @@ const report = `${REPORT_MARKER}
 
 | Signal | Result |
 | --- | --- |
-| npm package | ${icon(signals.exists === true)} ${
-  signals.exists === true
-    ? `[${packageName}](https://www.npmjs.com/package/${packageName})`
-    : signals.exists === false
-      ? 'Not found'
-      : 'Check unavailable'
-} |
+| npm package | ${icon(signals.exists === true)} ${npmPackageResult} |
 | Latest version | ${display(signals.latestVersion)}${
   signals.deprecated ? ' — deprecated' : ''
 } |

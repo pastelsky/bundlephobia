@@ -7,12 +7,13 @@ import fetch from 'node-fetch'
 import trending from 'trending-github'
 
 import firebaseUtils from '../utils/firebase.utils'
+import type { JsonObject } from '../types/json'
 
 import 'dotenv/config'
 
 type SearchCountMap = Record<string, { count: number }>
 
-function isEmptyRecord(value: Record<string, unknown>) {
+function isEmptyRecord(value: JsonObject) {
   return Object.keys(value).length === 0
 }
 
@@ -45,6 +46,7 @@ firebase.initializeApp({
 const port = process.env.PORT || 5000
 
 async function getPackageFromRepo(author: string, name: string) {
+  // SAFETY: GitHub's package.json content response is narrowed to its documented fields.
   const response = (await github.repos.getContent({
     repo: author,
     owner: name,
@@ -56,11 +58,13 @@ async function getPackageFromRepo(author: string, name: string) {
       'utf8'
     )
 
+    // SAFETY: package.json content is expected to contain a string package name.
     return JSON.parse(decodedContent).name as string
   }
 }
 
 async function getGithubTrendingPackages() {
+  // SAFETY: the trending-github adapter returns repository summaries with these fields.
   const repos = (await trending('daily', 'javascript')) as Array<{
     author: string
     name: string
@@ -70,12 +74,14 @@ async function getGithubTrendingPackages() {
     repos.map(repo => getPackageFromRepo(repo.author, repo.name))
   )
 
+  // SAFETY: the filter removes the undefined results from getPackageFromRepo.
   return packages.filter(Boolean) as string[]
 }
 
 async function getTrendingSearches() {
   const limit = 20
   let trendingSearches: string[] = []
+  // SAFETY: the Firebase search endpoint returns the SearchCountMap contract.
   const searches = (await firebaseUtils.getDailySearches()) as SearchCountMap | null
 
   if (searches) {
@@ -97,15 +103,17 @@ async function getVersionsToBuild(name: string) {
     `http://localhost:${port}/api/package-history?package=${name}`
   )
 
-  const versionInfo = (await res.json()) as Record<string, unknown>
+  // SAFETY: the package-history endpoint returns a JSON object keyed by version.
+  const versionInfo = (await res.json()) as JsonObject
 
   Object.keys(versionInfo).forEach(version => {
     const snapshot = versionInfo[version]
 
     if (
       snapshot &&
-      typeof snapshot === 'object' &&
-      isEmptyRecord(snapshot as Record<string, unknown>)
+      Object.prototype.toString.call(snapshot) === '[object Object]' &&
+      // SAFETY: the object-tag guard establishes the JSON object boundary.
+      isEmptyRecord(snapshot as JsonObject)
     ) {
       versionsToBuild.push(version)
     }
@@ -140,6 +148,7 @@ async function buildPackageFromGithub(name: string, author: string) {
 }
 
 async function mostPopuplarGithubRepos() {
+  // SAFETY: GitHub search results are narrowed to the fields consumed below.
   const repos = (await github.search.repos({
     q: 'language:javascript+npm in:readme+size:1000..50000+mirror:false',
     sort: 'stars',

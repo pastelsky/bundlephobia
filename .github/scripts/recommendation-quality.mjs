@@ -65,7 +65,10 @@ export function isPlausiblePackageName(packageName) {
 
 export function extractGitHubRepository(repository) {
   const value =
-    typeof repository === 'string' ? repository : (repository?.url ?? '')
+    repository &&
+    Object.prototype.toString.call(repository) === '[object Object]'
+      ? (repository.url ?? '')
+      : (repository ?? '')
 
   const match = value.match(
     /github\.com[/:]([^/]+)\/([^/#]+?)(?:\.git)?(?:#.*)?$/i,
@@ -161,6 +164,15 @@ export async function collectPackageSignals(
     latestManifest.repository ?? registry.repository,
   )
 
+  const githubHeaders = {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'bundlephobia-recommendation-checker',
+  }
+
+  if (githubToken) {
+    githubHeaders.Authorization = `Bearer ${githubToken}`
+  }
+
   const [downloads, github, bundleSize] = await Promise.all([
     fetchJson(
       `https://api.npmjs.org/downloads/point/last-week/${encodedName}`,
@@ -172,11 +184,7 @@ export async function collectPackageSignals(
           `https://api.github.com/repos/${repository}`,
           {
             headers: {
-              Accept: 'application/vnd.github+json',
-              'User-Agent': 'bundlephobia-recommendation-checker',
-              ...(githubToken
-                ? { Authorization: `Bearer ${githubToken}` }
-                : {}),
+              ...githubHeaders,
             },
           },
           fetchImpl,

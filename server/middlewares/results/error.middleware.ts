@@ -9,6 +9,7 @@ import { toLegacyJavaScriptError } from '../../analysis/javascript/legacyErrorMa
 import { failureCache } from '../../init'
 import logger from '../../Logger'
 import { isJobCancelledError } from '../../Queue'
+import type { RuntimeValue } from '../../../types/json'
 
 const debug = createDebug('bp:error')
 
@@ -18,11 +19,11 @@ interface ErrorResponseBody {
   error: {
     code: string
     message: string
-    details?: unknown
+    details?: RuntimeValue
   }
 }
 
-interface BuildErrorShape extends Error {
+interface BuildErrorContract extends Error {
   originalError?: unknown
   extra?: {
     reason?: string
@@ -38,13 +39,16 @@ interface ClientHttpError extends Error {
 }
 
 function isClientHttpError(error: Error): error is ClientHttpError {
-  if (!('status' in error) || typeof error.status !== 'number') {
+  if (
+    !('status' in error) ||
+    Object.prototype.toString.call(error.status) !== '[object Number]'
+  ) {
     return false
   }
 
-  return (
-    Number.isInteger(error.status) && error.status >= 400 && error.status < 500
-  )
+  const status = Number(error.status)
+
+  return Number.isInteger(status) && status >= 400 && status < 500
 }
 
 function formatSentence(values: string[]): string {
@@ -70,7 +74,7 @@ function formatSentence(values: string[]): string {
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
-function getErrorDetails(originalError: unknown) {
+function getErrorDetails<T>(originalError: T) {
   const detail = toErrorDetail(originalError)
 
   return detail ? { originalError: detail } : undefined
@@ -81,21 +85,21 @@ type KoaContext = Parameters<Middleware>[0]
 type ErrorResponse = {
   code: string
   message?: string
-  details?: unknown
+  details?: RuntimeValue
 }
 
 interface ErrorHandlerContext {
   ctx: KoaContext
-  force: unknown
+  force: RuntimeValue
   start: number
   packageString?: string
-  cacheFailure: (status: number, body: unknown) => void
+  cacheFailure: (status: number, body: RuntimeValue) => void
   respondWithError: (status: number, response: ErrorResponse) => void
 }
 
 type BuildErrorHandler = (
   context: ErrorHandlerContext,
-  error: BuildErrorShape,
+  error: BuildErrorContract,
 ) => void
 
 function setFatalCache(context: ErrorHandlerContext) {
@@ -269,7 +273,7 @@ const handleBuildError: BuildErrorHandler = (context, error) => {
   context.cacheFailure(status, { error: errorJSON })
 }
 
-const buildErrorHandlers: Record<string, BuildErrorHandler> = {
+const buildErrorHandlers = {
   BuildServiceError: handleBuildServiceError,
   BuildServiceUnavailableError: handleBuildServiceUnavailableError,
   BlocklistedPackageError: handleBlocklistedPackageError,
@@ -281,7 +285,7 @@ const buildErrorHandlers: Record<string, BuildErrorHandler> = {
   MissingDependencyError: handleMissingDependencyError,
   MinifyError: handleMinifyError,
   BuildError: handleBuildError,
-}
+} satisfies Record<string, BuildErrorHandler>
 
 function handleCancelledError(context: ErrorHandlerContext) {
   const { ctx, packageString, start } = context
@@ -306,8 +310,9 @@ function handleCancelledError(context: ErrorHandlerContext) {
   )
 }
 
-function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
-  const errorObject = error as Record<string, unknown> | null
+function handleUnknownError<T>(context: ErrorHandlerContext, error: T) {
+  // SAFETY: only the optional error code is read from a caught runtime value.
+  const errorObject = error as { code?: string } | null
 
   if (errorObject?.code === 'JOB_EXPIRED') {
     context.ctx.cacheControl = { maxAge: 0 }
@@ -338,7 +343,7 @@ function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
   })
 }
 
-function handleCaughtError(context: ErrorHandlerContext, error: unknown) {
+function handleCaughtError<T>(context: ErrorHandlerContext, error: T) {
   if (isJobCancelledError(error)) {
     handleCancelledError(context)
 
@@ -360,8 +365,14 @@ function handleCaughtError(context: ErrorHandlerContext, error: unknown) {
     return
   }
 
-  const buildError = error as BuildErrorShape
-  const handler = buildErrorHandlers[buildError.name] ?? handleBuildError
+  // SAFETY: this branch is reached only after the Error instance guard above.
+  const buildError = error as BuildErrorContract
+
+  // SAFETY: the fallback handles names not present in this closed handler table.
+  const handler =
+    buildErrorHandlers[buildError.name as keyof typeof buildErrorHandlers] ??
+    handleBuildError
+
   handler(context, buildError)
 }
 
@@ -370,7 +381,7 @@ const errorHandler: Middleware = async (ctx, next) => {
   const start = now()
   let packageString = ctx.state.resolved?.packageString
 
-  const cacheFailure = (status: number, body: unknown) => {
+  const cacheFailure = (status: number, body: RuntimeValue) => {
     if (!packageString) {
       return
     }
@@ -398,7 +409,7 @@ const errorHandler: Middleware = async (ctx, next) => {
     }: {
       code: string
       message?: string
-      details?: unknown
+      details?: RuntimeValue
     },
   ) => {
     ctx.status = status

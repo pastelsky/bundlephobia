@@ -3,6 +3,7 @@ import parsePackageSpec from 'npm-package-arg'
 import semver from 'semver'
 
 import { parseJavaScriptPackageSpecifier } from '../../../languages/javascript'
+import type { JsonObject, JsonValue } from '../../../types/json'
 import type { PackageReference } from '../../../types/language-domain'
 import CustomError from '../../CustomError'
 import BuildService from '../../api/BuildService'
@@ -24,6 +25,7 @@ interface PacoteModule {
   ): Promise<ResolvedPackageManifest>
 }
 
+// SAFETY: the pinned pacote module implements the manifest contract used here.
 const pacote = require('pacote') as PacoteModule
 
 type RegistryPackageSpec = parsePackageSpec.RegistryResult & {
@@ -34,6 +36,7 @@ interface NpmRegistryFetchModule {
   json(path: string): Promise<ResolvedPackageManifest>
 }
 
+// SAFETY: the pinned registry client returns package manifests from JSON endpoints.
 const registryFetch = require('npm-registry-fetch') as NpmRegistryFetchModule
 
 interface PacoteManifestError {
@@ -53,8 +56,8 @@ export interface ResolvedPackageManifest {
   name: string
   version: string
   description?: string
-  repository?: string | { url?: string }
-  [key: string]: unknown
+  repository?: string | JsonObject
+  [key: string]: JsonValue | undefined
 }
 
 function isAliasPackageSpec(
@@ -73,7 +76,8 @@ function registryManifestPath(name: string, version: string): string {
   return `/${name.replace('/', '%2f')}/${encodeURIComponent(version)}`
 }
 
-function isNotFound(error: unknown): boolean {
+function isNotFound<T>(error: T): boolean {
+  // SAFETY: the package clients expose these optional error fields on failures.
   const registryError = error as PacoteManifestError
 
   return registryError.code === 'E404' || registryError.statusCode === 404
@@ -155,7 +159,8 @@ async function findVersionMismatchError(
   }
 }
 
-function toManifestError(error: unknown): never {
+function toManifestError<T>(error: T): never {
+  // SAFETY: package-client failures are inspected only for these optional fields.
   const pacoteError = error as PacoteManifestError
 
   if (pacoteError.code === 'ETARGET') {
@@ -201,8 +206,9 @@ function toRepositoryUrl(repository: string | { url?: string } | undefined) {
   if (!repository) return ''
 
   try {
-    const rawRepository =
-      typeof repository === 'string' ? repository : (repository.url ?? '')
+    const rawRepository = hasRepositoryUrl(repository)
+      ? (repository.url ?? '')
+      : (repository ?? '')
 
     return gitURLParse(rawRepository).toString('https')
   } catch {
@@ -210,6 +216,12 @@ function toRepositoryUrl(repository: string | { url?: string } | undefined) {
 
     return ''
   }
+}
+
+function hasRepositoryUrl(
+  repository: string | { url?: string },
+): repository is { url?: string } {
+  return Object.prototype.toString.call(repository) === '[object Object]'
 }
 
 export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<'javascript'> {

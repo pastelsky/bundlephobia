@@ -29,13 +29,17 @@ const current = extractCuratedCategories(currentSource)
 const base = extractCuratedCategories(baseSource)
 
 const additions = [...current.values()]
-  .flatMap(category =>
-    [...category.packages]
-      .filter(
-        packageName => !base.get(category.slug)?.packages.has(packageName),
-      )
-      .map(packageName => ({ category, packageName })),
-  )
+  .flatMap(category => {
+    const categoryAdditions = []
+
+    for (const packageName of category.packages) {
+      if (!base.get(category.slug)?.packages.has(packageName)) {
+        categoryAdditions.push({ category, packageName })
+      }
+    }
+
+    return categoryAdditions
+  })
   .sort((left, right) =>
     `${left.category.slug}/${left.packageName}`.localeCompare(
       `${right.category.slug}/${right.packageName}`,

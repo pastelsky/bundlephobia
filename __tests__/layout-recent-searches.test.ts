@@ -1,10 +1,6 @@
 import API from '../client/api'
 import Layout from '../client/components/Layout/Layout'
 
-jest.mock('../client/assets/heart.svg', () => () => null)
-
-jest.mock('../client/assets/digital-ocean-logo.svg', () => () => null)
-
 describe('Layout recent searches', () => {
   afterEach(() => {
     jest.restoreAllMocks()

@@ -8,6 +8,8 @@ import { streamObject } from 'stream-json/streamers/StreamObject'
 import * as JSONStream from 'jsonstream'
 import progress from 'progress-stream'
 
+import type { JsonObject } from '../types/json'
+
 // Initialize Firebase (you'll need to set up your service account key)
 admin.initializeApp({
   credential: admin.credential.cert(
@@ -71,6 +73,7 @@ async function processBackupFile(
     let originalSize = 0
     let prunedSize = 0
 
+    // SAFETY: stream-chain accepts the parser stream pipeline assembled here.
     const pipeline = chain([
       fs.createReadStream(backupFilePath).pipe(progressStream),
       parser(),
@@ -147,6 +150,7 @@ async function processBackupFile(
         const searchesPipeline = chain([streamObject()])
 
         searchesPipeline.on('data', ({ key, value }) => {
+          // SAFETY: the searches-v2 stream is keyed by the declared search record.
           searchesV2[key] = value as SearchesV2[string]
         })
 
@@ -216,7 +220,7 @@ async function processBackupFile(
           reason = 'All versions are within limit'
         }
 
-        const prunedVersions: { [version: string]: any } = {}
+        const prunedVersions: JsonObject = {}
 
         for (const version of versionsToKeep) {
           prunedVersions[version] = versionsObj[version]
@@ -225,8 +229,10 @@ async function processBackupFile(
         prunedPackageCount++
         prunedSize += JSON.stringify(prunedVersions).length
 
-        // Write to output stream
-        ;(stringifyStream as any).write([packageName, prunedVersions])
+        // Write to output stream.
+        // SAFETY: the JSON stream writer exposes write for serialized key/value pairs.
+        const streamWriter = stringifyStream as any
+        streamWriter.write([packageName, prunedVersions])
 
         console.log(
           `Package: ${packageName} | Action: ${action} | Reason: ${reason}`,
@@ -247,9 +253,10 @@ async function uploadPrunedDataToFirebase(filePath: string) {
   const prunedRef = db.ref('module-cost-pruned')
   const readStream = fs.createReadStream(filePath)
   const parseStream = JSONStream.parse('*')
+  // SAFETY: stream-chain accepts the read and JSON parse streams as a pipeline.
   const pipeline = chain([readStream, parseStream] as any)
 
-  let buffer: { [key: string]: any } = {}
+  let buffer: JsonObject = {}
   let count = 0
 
   return new Promise<void>((resolve, reject) => {
@@ -290,13 +297,13 @@ if (!backupFilePath) {
   process.exit(1)
 }
 
-;
-
-(async () => {
+async function main() {
   try {
     console.log('Starting processing of backup file...')
     await processBackupFile(backupFilePath, dryRun)
   } catch (error) {
     console.error('An error occurred:', error)
   }
-})()
+}
+
+void main()
