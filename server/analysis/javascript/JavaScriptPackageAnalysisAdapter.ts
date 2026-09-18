@@ -32,71 +32,51 @@ interface PacoteManifestError {
   versions?: string[]
 }
 
-function isStringValue(value: unknown): value is string {
-  return Object.prototype.toString.call(value) === '[object String]'
+interface ManifestRequestContext {
+  packageName?: string
+  requestedVersion: string
+  packageSpec: NpmRegistryPackageSpec | null
 }
 
-function isNumberValue(value: unknown): value is number {
-  return Object.prototype.toString.call(value) === '[object Number]'
+function isNotFound<T>(error: T): boolean {
+  // SAFETY: pacote exposes these optional error fields on failures.
+  const registryError = error as PacoteManifestError
+
+  return registryError.code === 'E404' || registryError.statusCode === 404
 }
 
-function isStringMap(value: unknown): value is Record<string, string> {
-  return (
-    value !== null &&
-    Object.prototype.toString.call(value) === '[object Object]' &&
-    Object.values(Object(value)).every(isStringValue)
-  )
-}
+function manifestRequestContext(packageString: string): ManifestRequestContext {
+  const packageSpec = parseNpmRegistryPackageSpec(packageString)
 
-function hasValidPacoteFields(error: PacoteManifestError): boolean {
-  return (
-    (!('code' in error) || isStringValue(error.code)) &&
-    (!('distTags' in error) || isStringMap(error.distTags)) &&
-    (!('statusCode' in error) || isNumberValue(error.statusCode)) &&
-    (!('versions' in error) || Array.isArray(error.versions))
-  )
-}
-
-function isPacoteManifestError(error: unknown): error is PacoteManifestError {
-  if (
-    error === null ||
-    Object.prototype.toString.call(error) !== '[object Object]'
-  ) {
-    return false
+  return {
+    packageSpec,
+    packageName: packageSpec?.name,
+    requestedVersion: packageSpec?.fetchSpec || 'latest',
   }
-
-  // SAFETY: the object shape is validated by the field checks below.
-  return hasValidPacoteFields(error as PacoteManifestError)
 }
 
-function isNotFound(error: unknown): error is PacoteManifestError {
-  if (!isPacoteManifestError(error)) {
-    return false
-  }
-
-  return error.code === 'E404' || error.statusCode === 404
-}
-
-function requestedVersion(packageSpec: NpmRegistryPackageSpec): string {
-  const version = packageSpec.fetchSpec || 'latest'
-
-  return packageSpec.type === 'version'
-    ? (semver.clean(version) ?? version)
-    : version
-}
-
-async function fetchManifestForSpec(
+async function resolveRegistryManifest(
   packageString: string,
-  packageSpec: NpmRegistryPackageSpec | null,
+  context: ManifestRequestContext,
 ): Promise<NpmPackageManifest> {
+  const { packageSpec } = context
+
   if (!packageSpec) {
     return fetchPackageManifest(packageString, { fullMetadata: true })
   }
 
-  const version = requestedVersion(packageSpec)
+  if (packageSpec.type === 'version') {
+    const version =
+      semver.clean(context.requestedVersion) ?? context.requestedVersion
 
-  if (packageSpec.type === 'version' || packageSpec.type === 'tag') {
     return fetchPackageVersionManifest(packageSpec.name, version)
+  }
+
+  if (packageSpec.type === 'tag') {
+    return fetchPackageVersionManifest(
+      packageSpec.name,
+      context.requestedVersion,
+    )
   }
 
   const manifest = await fetchPackageManifest(packageString, {
@@ -106,63 +86,71 @@ async function fetchManifestForSpec(
   return fetchPackageVersionManifest(manifest.name, manifest.version)
 }
 
-async function getVersionMismatchError(
-  packageName: string,
+async function findVersionMismatchError(
+  context: ManifestRequestContext,
 ): Promise<CustomError | null> {
+  const packageName = context.packageName
+
+  if (!packageName) return null
+
   try {
     const latest = await fetchPackageVersionManifest(packageName, 'latest')
 
     return new CustomError('PackageVersionMismatchError', null, {
       suggestedVersion: latest.version,
     })
-  } catch (error) {
-    if (isNotFound(error)) {
-      return null
+  } catch (latestError) {
+    if (latestError instanceof CustomError) return latestError
+
+    if (!isNotFound(latestError)) {
+      return new CustomError('PackageNotFoundError', latestError, undefined)
     }
 
-    return new CustomError('PackageNotFoundError', error, undefined)
-  }
-}
-
-function getTargetMismatchError(
-  error: PacoteManifestError,
-): CustomError | null {
-  if (error.code !== 'ETARGET') {
     return null
   }
-
-  return new CustomError('PackageVersionMismatchError', null, {
-    validVersions: [
-      ...Object.keys(error.distTags ?? {}),
-      ...(error.versions ?? []),
-    ],
-  })
 }
 
-async function getManifestResolutionError(
-  cause: unknown,
-  packageName: string | undefined,
-  version: string,
-): Promise<CustomError> {
-  const pacoteError = isPacoteManifestError(cause) ? cause : null
+function toManifestError<T>(error: T): never {
+  // SAFETY: pacote failures expose these optional error fields.
+  const pacoteError = error as PacoteManifestError
 
-  const targetMismatchError = pacoteError
-    ? getTargetMismatchError(pacoteError)
-    : null
-
-  if (targetMismatchError) {
-    return targetMismatchError
+  if (pacoteError.code === 'ETARGET') {
+    throw new CustomError('PackageVersionMismatchError', null, {
+      validVersions: [
+        ...Object.keys(pacoteError.distTags ?? {}),
+        ...(pacoteError.versions ?? []),
+      ],
+    })
   }
 
-  if (packageName && version !== 'latest' && isNotFound(cause)) {
-    const mismatchError = await getVersionMismatchError(packageName)
+  throw new CustomError('PackageNotFoundError', error, undefined)
+}
 
-    if (mismatchError) {
-      return mismatchError
+async function resolveManifest(
+  packageString: string,
+): Promise<NpmPackageManifest> {
+  let context: ManifestRequestContext = {
+    packageSpec: null,
+    requestedVersion: 'latest',
+  }
+
+  try {
+    context = manifestRequestContext(packageString)
+
+    return await resolveRegistryManifest(packageString, context)
+  } catch (error) {
+    if (
+      context.packageName &&
+      context.requestedVersion !== 'latest' &&
+      isNotFound(error)
+    ) {
+      const mismatchError = await findVersionMismatchError(context)
+
+      if (mismatchError) throw mismatchError
     }
-  }
 
-  return new CustomError('PackageNotFoundError', cause, undefined)
+    return toManifestError(error)
+  }
 }
 
 export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<'javascript'> {
@@ -170,18 +158,8 @@ export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<
 
   constructor(private readonly buildService = new BuildService()) {}
 
-  private async resolveManifest(
-    packageString: string,
-  ): Promise<NpmPackageManifest> {
-    const packageSpec = parseNpmRegistryPackageSpec(packageString)
-    const packageName = packageSpec?.name
-    const version = packageSpec ? requestedVersion(packageSpec) : 'latest'
-
-    try {
-      return await fetchManifestForSpec(packageString, packageSpec)
-    } catch (error) {
-      throw await getManifestResolutionError(error, packageName, version)
-    }
+  private resolveManifest(packageString: string) {
+    return resolveManifest(packageString)
   }
 
   async resolvePackage(

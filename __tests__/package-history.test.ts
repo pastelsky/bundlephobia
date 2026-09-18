@@ -1,21 +1,17 @@
-import { fetchPackagePackument } from '../server/clients/npmRegistry'
+const pacote = require('pacote')
+
 import {
   fetchPackageHistory,
   type PackageHistoryOptions,
 } from '../server/packageHistory'
 import firebaseUtils from '../utils/firebase.utils'
 
-const mockFetchPackagePackument = jest.fn<typeof fetchPackagePackument>()
+const mockFetchPackagePackument = jest.spyOn(pacote, 'packument')
 
-const mockGetPackageHistory = jest.fn<typeof firebaseUtils.getPackageHistory>()
-
-const dependencies = {
-  fetchPackument: mockFetchPackagePackument,
-  getHistory: mockGetPackageHistory,
-}
+const mockGetPackageHistory = jest.spyOn(firebaseUtils, 'getPackageHistory')
 
 function getHistory(options: PackageHistoryOptions) {
-  return fetchPackageHistory('example', options, dependencies)
+  return fetchPackageHistory('example', options)
 }
 
 describe('package history', () => {

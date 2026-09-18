@@ -46,11 +46,13 @@ function repositoryString(repository: RepositoryField | undefined): string {
     return ''
   }
 
-  return isRepositoryString(repository) ? repository : (repository.url ?? '')
+  return hasRepositoryUrl(repository) ? (repository.url ?? '') : repository
 }
 
-function isRepositoryString(repository: RepositoryField): repository is string {
-  return Object.prototype.toString.call(repository) === '[object String]'
+function hasRepositoryUrl(
+  repository: RepositoryField,
+): repository is { url?: string } {
+  return Object.prototype.toString.call(repository) === '[object Object]'
 }
 
 export function normalizeRepositoryUrl(

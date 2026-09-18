@@ -19,20 +19,6 @@ export type PackageHistoryOptions = {
   limit: number
 }
 
-type PackageHistoryDependencies = {
-  fetchPackument: typeof fetchPackagePackument
-  getHistory: (
-    packageName: string,
-    limit: number,
-  ) => Promise<Record<string, PackageBuildInfoSnapshot>>
-}
-
-const defaultDependencies: PackageHistoryDependencies = {
-  fetchPackument: fetchPackagePackument,
-  getHistory: (packageName, limit) =>
-    firebaseUtils.getPackageHistory(packageName, limit),
-}
-
 function inRange(date: string, options: PackageHistoryOptions): boolean {
   return (
     (!options.from || date >= options.from) &&
@@ -144,15 +130,15 @@ function sortVersions(
   })
 }
 
-function latestManifest(packument: NpmPackagePackument) {
-  const version = packument['dist-tags']?.latest
-
-  return version ? packument.versions?.[version] : undefined
-}
-
 function repositoryForPackument(packument: NpmPackagePackument): string | null {
+  const latestVersion = packument['dist-tags']?.latest
+
+  const latestRepository = latestVersion
+    ? packument.versions?.[latestVersion]?.repository
+    : undefined
+
   return (
-    parseGithubRepository(latestManifest(packument)?.repository) ||
+    parseGithubRepository(latestRepository) ||
     parseGithubRepository(packument.repository)
   )
 }
@@ -160,11 +146,10 @@ function repositoryForPackument(packument: NpmPackagePackument): string | null {
 export async function fetchPackageHistory(
   packageName: string,
   options: PackageHistoryOptions,
-  dependencies: PackageHistoryDependencies = defaultDependencies,
 ): Promise<PackageHistoryResponse> {
   const [packument, history] = await Promise.all([
-    dependencies.fetchPackument(packageName),
-    dependencies.getHistory(packageName, options.limit),
+    fetchPackagePackument(packageName),
+    firebaseUtils.getPackageHistory(packageName, options.limit),
   ])
 
   const publishDates = getPublishDates(packument.time)
