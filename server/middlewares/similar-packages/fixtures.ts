@@ -97,17 +97,20 @@ const categories = {
     ],
     similar: ['melonjs', 'excalibur', 'phaser'],
   },
+  // The generic date/time tags below are deliberately weighted lower than the
+  // same tags in `general-purpose-date-time`. They are shared by both
+  // categories, so a package that matches only them must not land here.
   'date-nlp': {
     name: 'Natural language date-time utilities',
     tags: [
-      { tag: 'date', weight: Weight.HIGH },
-      { tag: 'time', weight: Weight.HIGH },
+      { tag: 'nlp', weight: Weight.MAX },
+      { tag: 'human', weight: Weight.MAX },
+      { tag: 'natural language', weight: Weight.HIGH },
+      { tag: 'date', weight: Weight.MID },
+      { tag: 'time', weight: Weight.MID },
       { tag: 'parse', weight: Weight.MID },
       { tag: 'parser', weight: Weight.MID },
-      { tag: 'nlp', weight: Weight.HIGH },
-      { tag: 'natural language', weight: Weight.HIGH },
-      { tag: 'format', weight: Weight.MID },
-      { tag: 'human', weight: Weight.MID },
+      { tag: 'format', weight: Weight.SMALL },
     ],
     similar: ['chrono-node', 'its-a-date', 'parse-messy-time'],
   },
@@ -485,6 +488,7 @@ const categories = {
   'react-animation': {
     name: 'React based animation',
     tags: [
+      { tag: 'react', weight: Weight.NORMAL },
       { tag: 'animation', weight: Weight.HIGH },
       { tag: 'transform', weight: Weight.NORMAL },
       { tag: 'motion', weight: Weight.NORMAL },
