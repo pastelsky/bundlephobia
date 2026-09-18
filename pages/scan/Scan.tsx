@@ -74,25 +74,30 @@ async function fetchPackageJson(url: string): Promise<ParsedPackageJson> {
   const response = await fetch(url).catch((error: Error) => {
     throw remoteFetchError(error)
   })
+
   if (!response.ok) throw responseError(response)
 
   let json: ParsedPackageJson
+
   try {
+    // SAFETY: responseError only returns after the package JSON endpoint succeeds.
     json = (await response.json()) as ParsedPackageJson
   } catch {
     throw new Error(
       'The response from this URL is not valid JSON. Please check the link or upload package.json manually.',
     )
   }
+
   if (
     !json ||
-    typeof json !== 'object' ||
+    Object.prototype.toString.call(json) !== '[object Object]' ||
     (!json.dependencies && !json.devDependencies)
   ) {
     throw new Error(
       'Fetched package.json does not contain a dependencies or devDependencies block.',
     )
   }
+
   return json
 }
 
@@ -109,7 +114,7 @@ function shouldFetchRouterUrl({
 }) {
   return Boolean(
     currentUrl &&
-    typeof currentUrl === 'string' &&
+    Object.prototype.toString.call(currentUrl) === '[object String]' &&
     currentUrl !== previousUrl &&
     !hasPackages &&
     !isLoading,
@@ -123,7 +128,11 @@ function fetchableRouterUrl(options: {
   isLoading: boolean
 }): string | undefined {
   if (!shouldFetchRouterUrl(options)) return undefined
-  return typeof options.currentUrl === 'string' ? options.currentUrl : undefined
+
+  return Object.prototype.toString.call(options.currentUrl) ===
+    '[object String]'
+    ? String(options.currentUrl)
+    : undefined
 }
 
 class Scan extends Component<ScanProps, ScanState> {
@@ -145,6 +154,7 @@ class Scan extends Component<ScanProps, ScanState> {
     Analytics.pageView('scan')
 
     const persistedScanState = this.readPersistedScanState()
+
     if (persistedScanState) {
       this.setState(
         {
@@ -156,7 +166,8 @@ class Scan extends Component<ScanProps, ScanState> {
       )
     } else {
       const urlQuery = this.props.router?.query?.url
-      if (urlQuery && typeof urlQuery === 'string') {
+
+      if (urlQuery && !Array.isArray(urlQuery)) {
         this.setState({ remoteUrlInput: urlQuery, isUrlFormOpen: true })
         this.fetchRemotePackageJson(urlQuery)
       }
@@ -173,6 +184,7 @@ class Scan extends Component<ScanProps, ScanState> {
       hasPackages: Boolean(this.state.packages),
       isLoading: this.state.isLoadingRemoteUrl,
     })
+
     if (urlToFetch) {
       this.setState({ remoteUrlInput: urlToFetch, isUrlFormOpen: true })
       this.fetchRemotePackageJson(urlToFetch)
@@ -184,11 +196,14 @@ class Scan extends Component<ScanProps, ScanState> {
       const serializedState = window.sessionStorage.getItem(
         persistedScanStateKey,
       )
+
       if (!serializedState) {
         return null
       }
 
+      // SAFETY: this value was written by the scan-state serializer in this client.
       const parsedState = JSON.parse(serializedState) as PersistedScanState
+
       if (!Array.isArray(parsedState.packages)) {
         return null
       }
@@ -206,6 +221,7 @@ class Scan extends Component<ScanProps, ScanState> {
       }
     } catch (error) {
       console.error('Could not restore scan state:', error)
+
       return null
     }
   }
@@ -216,6 +232,7 @@ class Scan extends Component<ScanProps, ScanState> {
     try {
       if (!packages) {
         window.sessionStorage.removeItem(persistedScanStateKey)
+
         return
       }
 
@@ -224,6 +241,7 @@ class Scan extends Component<ScanProps, ScanState> {
         selectedPackageValues,
         unsupportedPackageNames: this.state.unsupportedPackageNames,
       }
+
       window.sessionStorage.setItem(
         persistedScanStateKey,
         JSON.stringify(persistedState),
@@ -235,6 +253,7 @@ class Scan extends Component<ScanProps, ScanState> {
 
   resolveVersionFromRange = (range: string) => {
     const rangeSet = new semver.Range(range).set
+
     return rangeSet[0][0].semver.version
   }
 
@@ -246,6 +265,7 @@ class Scan extends Component<ScanProps, ScanState> {
 
     const selectedPackages = Array.from(checkedInputs).map(({ value }) => {
       const [name, resolvedVersion] = value.split('#')
+
       return { name, resolvedVersion }
     })
 
@@ -273,6 +293,7 @@ class Scan extends Component<ScanProps, ScanState> {
     return Object.keys(dependencies)
       .filter(packageName => {
         const versionRange = dependencies[packageName]
+
         return semver.valid(versionRange) || semver.validRange(versionRange)
       })
       .map(packageName => {
@@ -294,6 +315,7 @@ class Scan extends Component<ScanProps, ScanState> {
 
     return Object.keys(dependencies).filter(packageName => {
       const versionRange = dependencies[packageName]
+
       return !semver.valid(versionRange) && !semver.validRange(versionRange)
     })
   }
@@ -339,6 +361,7 @@ class Scan extends Component<ScanProps, ScanState> {
         err instanceof Error
           ? err.message
           : 'Could not fetch or parse the package.json file.'
+
       this.setState({
         remoteUrlError: errorMessage,
         isLoadingRemoteUrl: false,
@@ -355,6 +378,7 @@ class Scan extends Component<ScanProps, ScanState> {
   handleDropAccepted = ([file]: File[]) => {
     if (!file) {
       this.showInvalidFileError()
+
       return
     }
 
@@ -362,11 +386,13 @@ class Scan extends Component<ScanProps, ScanState> {
     reader.onload = () => {
       try {
         const result =
-          typeof reader.result === 'string'
-            ? reader.result
-            : reader.result
+          Object.prototype.toString.call(reader.result) === '[object String]'
+            ? String(reader.result)
+            : reader.result instanceof ArrayBuffer
               ? new TextDecoder().decode(reader.result)
               : ''
+
+        // SAFETY: the selected file is parsed as the package.json contract below.
         const json = JSON.parse(result) as ParsedPackageJson
         const packages = this.getParsedPackages(json)
         const unsupportedPackageNames = this.getUnsupportedPackageNames(json)
@@ -404,6 +430,7 @@ class Scan extends Component<ScanProps, ScanState> {
 
   handleScanClick = () => {
     const { selectedPackages } = this.state
+
     if (selectedPackages.length === 0) {
       return
     }
@@ -437,6 +464,7 @@ class Scan extends Component<ScanProps, ScanState> {
 
   renderUnsupportedPackages(packageNames: string[]) {
     if (packageNames.length === 0) return null
+
     return (
       <p className="scan__unsupported-packages">
         Skipped {packageNames.length}{' '}
@@ -457,6 +485,7 @@ class Scan extends Component<ScanProps, ScanState> {
       remoteUrlError,
       isUrlFormOpen,
     } = this.state
+
     let content: React.ReactNode
 
     if (packages) {

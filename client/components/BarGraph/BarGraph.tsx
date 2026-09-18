@@ -34,14 +34,17 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
       .map(reading => reading.size)
 
     const maxValue = Math.max(...[...gzipValues, ...sizeValues])
+
     return 100 / maxValue
   }
 
   getFirstSideEffectFreeIndex = () => {
     const { readings } = this.props
+
     const sideEffectFreeIntroducedRecently = !readings.every(
       reading => !reading.hasSideEffects,
     )
+
     const firstSideEffectFreeIndex = readings.findIndex(
       reading => !(reading.disabled || reading.hasSideEffects),
     )
@@ -51,9 +54,11 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
 
   getFirstTreeshakeableIndex = () => {
     const { readings } = this.props
+
     const treeshakingIntroducedRecently = !readings.every(
       reading => reading.hasJSModule,
     )
+
     const firstTreeshakingIndex = readings.findIndex(
       reading =>
         !reading.disabled &&
@@ -86,6 +91,7 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
     const getTooltipMessage = (tooltipReading: Reading) => {
       const formattedSize = formatSize(tooltipReading.size)
       const formattedGzip = formatSize(tooltipReading.gzip)
+
       return `Minified: ${formattedSize.size.toFixed(1)}${
         formattedSize.unit
       } | Gzipped: ${formattedGzip.size.toFixed(1)}${formattedGzip.unit}`

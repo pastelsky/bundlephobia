@@ -54,12 +54,6 @@ type ResultPageState = {
   similarPackagesCategory: string
 }
 
-type ResolvedBuildError = {
-  errorName: string | null
-  errorBody: string | null
-  errorDetails: string | null
-}
-
 function isEmptySnapshot(reading: PackageBuildInfoSnapshot) {
   return Object.keys(reading).length === 0
 }
@@ -78,10 +72,6 @@ function formatSentence(values: string[]) {
   }
 
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
-}
-
-function getResolvedBuildError(resultsError: unknown): ResolvedBuildError {
-  return resolveBuildError(resultsError)
 }
 
 function getPackageStringFromRouter(router: NextRouter) {
@@ -116,6 +106,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     Analytics.pageView('package result')
 
     const packageString = getPackageStringFromRouter(this.props.router)
+
     if (packageString) {
       this.handleSearchSubmit(packageString)
     }
@@ -160,6 +151,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
           },
           () => {
             this.activeQuery = newPackageString
+
             if (
               getPackageStringFromRouter(this.props.router) !== newPackageString
             ) {
@@ -266,6 +258,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         if (!this.isActiveSearch(requestId)) return
 
         this.activeQuery = normalizedQuery
+
         const navigation =
           getPackageStringFromRouter(this.props.router) === normalizedQuery
             ? Promise.resolve(true)
@@ -377,6 +370,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       const parsedPackage = parsePackageString(
         getPackageStringFromRouter(router),
       )
+
       name = parsedPackage.name
       version = parsedPackage.version
     }
@@ -387,6 +381,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         : window.location.origin
 
     const title = version ? `${name} v${version}` : name
+
     const description =
       resultsPromiseState === 'fulfilled'
         ? `Size of ${title} is ${formattedSizeText} (minified), and ${formattedGZIPSizeText} when compressed using GZIP. ${DEFAULT_DESCRIPTION_START}`
@@ -411,7 +406,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   renderQuickStatsBar() {
     const { resultsPromiseState, results } = this.state
+
     if (resultsPromiseState !== 'fulfilled' || !results) return null
+
     return (
       <QuickStatsBar
         description={results.description}
@@ -428,6 +425,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   renderPendingResult() {
     if (this.state.resultsPromiseState !== 'pending') return null
+
     return (
       <div className="result-pending">
         <BuildProgressIndicator
@@ -440,12 +438,14 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   renderMissingDependencyWarning() {
     const results = this.state.results
+
     if (
       this.state.resultsPromiseState !== 'fulfilled' ||
       !results?.ignoredMissingDependencies?.length
     ) {
       return null
     }
+
     return (
       <Warning>
         Ignoring the size of missing{' '}
@@ -468,7 +468,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   renderStats() {
     const { resultsPromiseState, results, historicalResultsPromiseState } =
       this.state
+
     if (resultsPromiseState !== 'fulfilled' || !results) return null
+
     return (
       <div className="content-split-container">
         <div className="stats-container">
@@ -525,9 +527,11 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   renderErrorResult() {
     if (this.state.resultsPromiseState !== 'rejected') return null
-    const { errorName, errorBody, errorDetails } = getResolvedBuildError(
+
+    const { errorName, errorBody, errorDetails } = resolveBuildError(
       this.state.resultsError,
     )
+
     return (
       <div className="result-error">
         <EmptyBox className="result-error__img" />
@@ -550,12 +554,14 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   renderTreemap() {
     const { resultsPromiseState, results } = this.state
+
     if (
       resultsPromiseState !== 'fulfilled' ||
       !results?.dependencySizes?.length
     ) {
       return null
     }
+
     return (
       <div className="content-container">
         <TreemapSection
@@ -569,7 +575,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   renderExports() {
     const { resultsPromiseState, results } = this.state
+
     if (resultsPromiseState !== 'fulfilled' || !results) return null
+
     return (
       <div className="content-container">
         <ExportAnalysisSection result={results} />
@@ -584,6 +592,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       similarPackages,
       similarPackagesCategory,
     } = this.state
+
     if (
       resultsPromiseState !== 'fulfilled' ||
       !results ||
@@ -591,6 +600,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     ) {
       return null
     }
+
     return (
       <div className="content-container">
         <SimilarPackagesSection
@@ -604,6 +614,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   renderInterLinks() {
     const { resultsPromiseState, results } = this.state
+
     if (
       resultsPromiseState !== 'fulfilled' ||
       !results ||
@@ -611,6 +622,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     ) {
       return null
     }
+
     return <InterLinksSection packageName={results.name} />
   }
 
@@ -618,6 +630,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     if (this.state.resultsPromiseState !== 'fulfilled' || !this.state.results) {
       return null
     }
+
     return <CarbonAd className="result-page__carbon-ad" />
   }
 

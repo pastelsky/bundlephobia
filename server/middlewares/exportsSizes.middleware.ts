@@ -11,13 +11,20 @@ import logger from '../Logger'
 
 const cache = new CacheServiceClient()
 
-function getRequestedPackage(packageQuery: unknown): string | undefined {
-  if (typeof packageQuery === 'string') return packageQuery
-  return Array.isArray(packageQuery) ? packageQuery.join('/') : undefined
+function getRequestedPackage(
+  packageQuery: string | string[] | undefined,
+): string | undefined {
+  if (Array.isArray(packageQuery)) return packageQuery.join('/')
+
+  return packageQuery
 }
 
-function getCacheMaxAge(force: unknown, requestedPackage?: string): number {
+function getCacheMaxAge(
+  force: string | string[] | undefined,
+  requestedPackage?: string,
+): number {
   if (force !== null && force !== undefined) return 0
+
   if (!requestedPackage) return config.CACHE.SIZE_API_DEFAULT
 
   return packageAnalysisGateway.isExactVersionSpecifier(
@@ -34,12 +41,14 @@ const exportSizesMiddleware: Middleware = async ctx => {
 
   if (peek) {
     ctx.body = { name, version, peekSuccess: false }
+
     return
   }
 
   const requestedPackage = getRequestedPackage(packageQuery)
 
   const buildStart = now()
+
   const result = await packageAnalysisGateway.analyzePackageExportSizes(
     ctx.state.resolved,
     {
@@ -49,6 +58,7 @@ const exportSizesMiddleware: Middleware = async ctx => {
       },
     },
   )
+
   const buildEnd = now()
 
   ctx.cacheControl = { maxAge: getCacheMaxAge(force, requestedPackage) }

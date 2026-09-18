@@ -145,6 +145,7 @@
     "@types/react": "19.2.18"
   },
   "devDependencies": {
+    "@oxlint/plugins": "1.78.0",
     "@playwright/test": "1.61.1",
     "@svgr/webpack": "^6.5.1",
     "@swc/core": "^1.15.47",

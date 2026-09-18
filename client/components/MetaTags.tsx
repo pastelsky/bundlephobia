@@ -23,6 +23,7 @@ export default function MetaTags({
 }: MetaTagsProps) {
   const defaultDescription = `${DEFAULT_DESCRIPTION_START} Find the size of any javascript package and its effect on your frontend bundle.`
   const defaultImage = 'https://bundlephobia.com/android-chrome-256x256.png'
+
   const origin =
     typeof window === 'undefined'
       ? 'https://bundlephobia.com'

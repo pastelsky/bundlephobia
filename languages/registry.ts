@@ -46,10 +46,12 @@ export function createLanguageRegistry(
     if (byId.has(descriptor.id)) {
       throw new Error(`Duplicate language descriptor: ${descriptor.id}`)
     }
+
     byId.set(descriptor.id, descriptor)
   })
 
   const missingIds = LANGUAGE_IDS.filter(id => !byId.has(id))
+
   if (missingIds.length > 0) {
     throw new Error(`Missing language descriptors: ${missingIds.join(', ')}`)
   }
@@ -60,13 +62,15 @@ export function createLanguageRegistry(
     all: () => all,
     get(id: LanguageId) {
       const descriptor = byId.get(id)
+
       if (!descriptor) {
         throw new Error(`Unknown language descriptor: ${id}`)
       }
+
       return descriptor
     },
     isLanguageId(value: string): value is LanguageId {
-      return byId.has(value as LanguageId)
+      return descriptors.some(descriptor => descriptor.id === value)
     },
     enabled: () => all.filter(descriptor => descriptor.state === 'enabled'),
     visible: () => all.filter(descriptor => descriptor.visibility === 'public'),

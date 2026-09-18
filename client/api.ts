@@ -6,6 +6,7 @@ import type {
   PackageExportAsset,
   PackageIdentity,
 } from '../types/package-domain'
+import type { JsonObject } from '../types/json'
 
 // Re-export domain types that client code imports from this module.
 export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
@@ -69,6 +70,27 @@ export type PackageExportSizesResponse = {
 
 type APIResponse = Awaited<ReturnType<typeof fetch>>
 
+type FetchImplementation = typeof fetch
+
+let fetchImplementation: FetchImplementation = fetch
+
+export function setFetchImplementation(
+  implementation: FetchImplementation,
+): () => void {
+  const previous = fetchImplementation
+  fetchImplementation = implementation
+
+  return () => {
+    fetchImplementation = previous
+  }
+}
+
+type APIHeaders = {
+  Accept: string
+  'Content-Type'?: string
+  'X-Bundlephobia-User'?: string
+}
+
 const getFallbackError = (status: number) => {
   if (status === 502 || status === 503) {
     return {
@@ -91,10 +113,12 @@ const getFallbackError = (status: number) => {
 
 async function parseResponse<T>(response: APIResponse): Promise<T> {
   if (response.ok) {
+    // SAFETY: API callers supply the response contract at each typed call site.
     return response.json() as Promise<T>
   }
 
   let error: unknown
+
   try {
     error = await response.json()
   } catch {
@@ -106,27 +130,25 @@ async function parseResponse<T>(response: APIResponse): Promise<T> {
 
 export default class API {
   static get<T = unknown>(url: string, isInternal = true): Promise<T> {
-    const headers: Record<string, string> = {
+    const headers: APIHeaders = {
       Accept: 'application/json',
     }
 
     if (isInternal) {
       headers['X-Bundlephobia-User'] = 'bundlephobia website'
     }
-    return fetch(url, { headers }).then(parseResponse<T>)
+
+    return fetchImplementation(url, { headers }).then(parseResponse<T>)
   }
 
-  static post<T = unknown>(
-    url: string,
-    body: Record<string, unknown>,
-  ): Promise<T> {
-    const headers: Record<string, string> = {
+  static post<T = unknown>(url: string, body: JsonObject): Promise<T> {
+    const headers: APIHeaders = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
       'X-Bundlephobia-User': 'bundlephobia website',
     }
 
-    return fetch(url, {
+    return fetchImplementation(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),

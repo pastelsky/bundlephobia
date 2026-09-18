@@ -5,5 +5,5 @@
   "singleQuote": true,
   "printWidth": 80,
   "sortPackageJson": false,
-  "ignorePatterns": [".next", "bin"]
+  "ignorePatterns": [".next", "bin", "tools/oxlint/anti-slop"]
 }

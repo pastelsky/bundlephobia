@@ -48,6 +48,7 @@ export function validateProcessContents(
     if (!app.name) errors.push(`${app.script} is missing a process name`)
 
     const scriptPath = path.resolve(root, app.script)
+
     if (!fs.existsSync(scriptPath)) {
       errors.push(
         `${app.name ?? app.script} points to missing script ${app.script}`,
@@ -67,6 +68,7 @@ export function validateProcessContents(
         ['--experimental-strip-types', '--check', scriptPath],
         { encoding: 'utf8' },
       )
+
       if (syntaxCheck.status !== 0) {
         errors.push(
           `${app.name ?? app.script} failed Node syntax validation: ${syntaxCheck.stderr.trim()}`,

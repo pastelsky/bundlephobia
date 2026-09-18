@@ -11,6 +11,10 @@ interface GotResponse<TBody> {
   body: TBody
 }
 
+interface ProcessedMarkdown {
+  toString(): string
+}
+
 interface GotModule {
   <TBody = string>(
     url: string,
@@ -21,10 +25,10 @@ interface GotModule {
 }
 
 interface RemarkProcessor {
-  use(plugin: unknown): RemarkProcessor
+  use(plugin: typeof strip): RemarkProcessor
   process(
     input: string,
-    callback: (error: Error | null, file: unknown) => void,
+    callback: (error: Error | null, file: ProcessedMarkdown) => void,
   ): void
 }
 
@@ -50,24 +54,31 @@ interface AlgoliaPackageBody {
   keywords?: string[]
   readme?: string
   repository: RepositoryInfo
-  [key: string]: unknown
 }
 
 type CategoryLabel = keyof typeof categories
+
 type CategoryEntry = (typeof categories)[CategoryLabel]
+
 type CategoryTag = CategoryEntry['tags'][number]
 
+// SAFETY: the pinned got module exposes the request interface used here.
 const got = require('got') as GotModule
+
+// SAFETY: the pinned remark module exports the configured processor factory.
 const remark = require('remark') as () => RemarkProcessor
+
+// SAFETY: the pinned natural module exposes the tokenizer and stemmer APIs used here.
 const natural = require('natural') as NaturalModule
 
 const debugTest = createDebug('classifier:test')
+
 const debug = createDebug('bp:similar')
 
 const MIN_CUTOFF_SCORE = 12
 
 function flatten<T>(items: T[][]): T[] {
-  return items.reduce<T[]>((accumulator, item) => accumulator.concat(item), [])
+  return items.flat()
 }
 
 const prefixURL = (
@@ -102,6 +113,7 @@ async function stripMarkdown(readme: string): Promise<string> {
       .process(readme, (error, file) => {
         if (error) {
           reject(error)
+
           return
         }
 
@@ -150,6 +162,7 @@ async function getReadme(
     const apiUrl = `https://gitlab.com/api/v4/projects/${user}%2F${project}/repository/files/${encodeURIComponent(
       `${path}/README.md`,
     )}?ref=${branch}`
+
     const { body } = await got<{
       encoding?: string
       content: string
@@ -166,6 +179,7 @@ async function getReadme(
         path ? path.replace('src', 'raw') : `/raw/${branch}`
       }/README.md`,
     )
+
     return body
   }
 
@@ -174,6 +188,7 @@ async function getReadme(
 
 async function getPackageDetails(packageName: string) {
   let readme = ''
+
   const { body } = await got<AlgoliaPackageBody>(
     `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(
       packageName,
@@ -181,7 +196,7 @@ async function getPackageDetails(packageName: string) {
     { json: true },
   )
 
-  if (typeof body.readme === 'string' && body.readme.trim()) {
+  if (body.readme?.trim()) {
     readme = await stripMarkdown(body.readme)
   } else {
     try {
@@ -200,11 +215,13 @@ function getScore(categoryTokens: CategoryTag[], packageTokens: string[]) {
 
   return packageTokensWithoutDupes.reduce((accumulator, currentToken) => {
     const match = categoryTokens.find(token => token.tag === currentToken)
+
     return match ? accumulator + match.weight : accumulator
   }, 0)
 }
 
 function getInCategoryMap(packageName: string) {
+  // SAFETY: categories is the closed category registry declared above.
   return (Object.keys(categories) as CategoryLabel[]).find(label =>
     categories[label].similar.some(
       similarPackage => similarPackage === packageName,
@@ -214,6 +231,7 @@ function getInCategoryMap(packageName: string) {
 
 async function getCategory(packageName: string) {
   const directCategory = getInCategoryMap(packageName)
+
   if (directCategory) {
     return {
       label: directCategory,
@@ -223,21 +241,31 @@ async function getCategory(packageName: string) {
 
   const { description = '', keywords = [] } =
     await getPackageDetails(packageName)
+
   const tokenizer = new natural.WordTokenizer()
+
   const tokenString = `${await stripMarkdown(description)} ${keywords.join(
     ' ',
   )}`
+
   const packageTokens = tokenizer
     .tokenize(tokenString)
     .map(token => token.toLowerCase())
     .map(natural.PorterStemmer.stem)
     .concat(tokenizer.tokenize(packageName).map(natural.PorterStemmer.stem))
 
-  let maxScoreCategory: { label?: CategoryLabel; score: number } = {
+  interface CategoryResult {
+    label?: CategoryLabel
+    score: number
+  }
+
+  let maxScoreCategory: CategoryResult = {
     score: 0,
   }
 
-  ;(Object.keys(categories) as CategoryLabel[]).forEach(label => {
+  // SAFETY: categories is the closed category registry declared above.
+  const categoryLabels = Object.keys(categories) as CategoryLabel[]
+  categoryLabels.forEach(label => {
     const categoryTokens = flatten(
       categories[label].tags.map(tagObject =>
         tokenizer.tokenize(tagObject.tag).map(tokenizedTag => ({
@@ -248,6 +276,7 @@ async function getCategory(packageName: string) {
     )
 
     const score = getScore(categoryTokens, packageTokens)
+
     if (score > maxScoreCategory.score) {
       maxScoreCategory = { label, score }
     }
@@ -257,7 +286,9 @@ async function getCategory(packageName: string) {
 }
 
 async function test() {
-  ;(Object.keys(categories) as CategoryLabel[]).forEach(label => {
+  // SAFETY: categories is the closed category registry declared above.
+  const categoryLabels = Object.keys(categories) as CategoryLabel[]
+  categoryLabels.forEach(label => {
     categories[label].similar.forEach(async pack => {
       const actualCategory = await getCategory(pack)
 
@@ -281,11 +312,14 @@ void test
 
 const similarPackagesMiddleware: Middleware = async ctx => {
   const packageQuery = ctx.query.package
-  const packageString =
-    typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+
+  const packageString = Array.isArray(packageQuery)
+    ? packageQuery.join('/')
+    : packageQuery
 
   if (!packageString) {
     ctx.throw(400, 'package query parameter is required')
+
     return
   }
 
@@ -311,6 +345,7 @@ const similarPackagesMiddleware: Middleware = async ctx => {
           similar: value.similar.filter(pack => pack !== name),
         },
       }
+
       return
     }
 

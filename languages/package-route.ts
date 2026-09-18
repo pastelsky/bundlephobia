@@ -11,18 +11,25 @@ export interface ParsedPackagePageRoute {
 
 type PackageRouteValue = string | readonly string[] | undefined
 
+function isStringRouteValue(value: PackageRouteValue): value is string {
+  return !Array.isArray(value)
+}
+
 function routeSegments(value: PackageRouteValue): string[] {
   if (value === undefined) return []
-  return typeof value === 'string' ? value.split('/') : [...value]
+
+  return isStringRouteValue(value) ? value.split('/') : [...value]
 }
 
 export function parsePackagePageRoute(
   value: PackageRouteValue,
 ): ParsedPackagePageRoute | null {
   const segments = routeSegments(value)
+
   if (segments.length === 0) return null
 
   const [possibleLanguage, ...specifierSegments] = segments
+
   if (
     specifierSegments.length > 0 &&
     languageRegistry.isLanguageId(possibleLanguage)

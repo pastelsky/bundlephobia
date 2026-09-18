@@ -4,6 +4,7 @@ import admin from 'firebase-admin'
 import semver from 'semver'
 
 import { decodeFirebaseKey } from '../utils/index'
+import type { JsonObject } from '../types/json'
 
 type SearchRecord = {
   count: number
@@ -44,12 +45,19 @@ admin.initializeApp({
 })
 
 const db = admin.database()
+
 const SIX_MONTHS_MS = 6 * 30 * 24 * 60 * 60 * 1000
+
 const MIN_SEARCH_COUNT = 2
+
 const MAX_VERSIONS_PER_PACKAGE = 20
+
 const TOP_PACKAGES_LIMIT = 1000
+
 const CONCURRENCY = 20
+
 const OUTPUT_PATH = path.join(__dirname, '../top-packages.json')
+
 const PROGRESS_PATH = path.join(__dirname, '../top-packages-progress.json')
 
 function isValidStableVersion(version: string) {
@@ -58,25 +66,30 @@ function isValidStableVersion(version: string) {
   }
 
   const cleaned = semver.valid(semver.coerce(version))
+
   return Boolean(cleaned)
 }
 
 function loadProgress() {
   if (fs.existsSync(PROGRESS_PATH)) {
     try {
+      // SAFETY: the progress file is written by this script using this contract.
       const data = JSON.parse(fs.readFileSync(PROGRESS_PATH, 'utf8')) as {
         processedNames: string[]
         results: TopPackage[]
       }
+
       console.log(
         `Resuming from progress file: ${data.results.length} packages already processed`,
       )
+
       return data
     } catch {
       console.log('Could not load progress file, starting fresh')
     }
   }
 
+  // SAFETY: these are the initial values for the script's progress contract.
   return { processedNames: [] as string[], results: [] as TopPackage[] }
 }
 
@@ -86,6 +99,7 @@ function saveProgress(processedNames: Set<string>, results: TopPackage[]) {
     results,
     lastSaved: new Date().toISOString(),
   }
+
   fs.writeFileSync(PROGRESS_PATH, JSON.stringify(data, null, 2))
 }
 
@@ -105,10 +119,8 @@ async function processBatch(
         .child(pkg.encodedName)
         .once('value')
 
-      const versionsData = versionsSnapshot.val() as Record<
-        string,
-        unknown
-      > | null
+      // SAFETY: Firebase returns the version map as a JSON object.
+      const versionsData = versionsSnapshot.val() as JsonObject | null
 
       if (versionsData) {
         const allVersions = Object.keys(versionsData)
@@ -122,9 +134,11 @@ async function processBatch(
         allVersions.sort((a, b) => {
           const cleanA = semver.valid(semver.coerce(a))
           const cleanB = semver.valid(semver.coerce(b))
+
           if (cleanA && cleanB) {
             return semver.compare(cleanB, cleanA)
           }
+
           return 0
         })
 
@@ -141,13 +155,16 @@ async function processBatch(
     } catch (err) {
       console.error(
         `Error processing package ${pkg.name}:`,
+        // SAFETY: caught failures are logged through the standard Error contract.
         (err as Error).message,
       )
+
       return null
     }
   })
 
   const batchResults = await Promise.all(promises)
+
   return batchResults.filter((result): result is TopPackage => result !== null)
 }
 
@@ -156,6 +173,8 @@ async function main() {
 
   const sixMonthsAgo = Date.now() - SIX_MONTHS_MS
   const searchesSnapshot = await db.ref('searches-v2').once('value')
+
+  // SAFETY: Firebase returns the searches-v2 record consumed below.
   const searchesData = searchesSnapshot.val() as Record<
     string,
     SearchRecord
@@ -174,6 +193,7 @@ async function main() {
 
   for (const [encodedName, data] of Object.entries(searchesData)) {
     const { count, lastSearched } = data
+
     if (count >= MIN_SEARCH_COUNT && lastSearched >= sixMonthsAgo) {
       eligiblePackages.push({
         encodedName,

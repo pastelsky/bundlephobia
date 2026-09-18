@@ -31,7 +31,10 @@ interface LruCacheConstructor {
   new <K, V>(options: { max: number; maxAge: number }): LruCacheInstance<K, V>
 }
 
+// SAFETY: the pinned lru-cache module implements the constructor contract above.
 const LRU = require('lru-cache') as LruCacheConstructor
+
+// SAFETY: the pinned workerpool module implements the pool contract above.
 const workerpool = require('workerpool') as WorkerpoolModule
 
 const failureCache = new LRU<string, FailureCacheEntry>({
@@ -46,6 +49,7 @@ const requestQueue = new Queue({
   maxAge: 60 * 2,
 })
 
+// SAFETY: workerpool returns the cancellable execution handle used by the server.
 const pool = workerpool.pool('./server/worker.js', {
   maxWorkers: config.MAX_WORKERS,
 }) as WorkerPoolLike

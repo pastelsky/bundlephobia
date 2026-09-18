@@ -4,11 +4,13 @@ import createDebug from 'debug'
 import CustomError from '../CustomError'
 import { JobCancelledError } from '../Queue'
 import type { AnalysisOperation } from '../analysis/contracts'
+import type { RuntimeValue } from '../../types/json'
 import { createAnalysisKey, createQueueType } from '../analysis/keys'
 import config from '../config'
 import { logger, pool, requestQueue } from '../init'
 
 const debug = createDebug('bp:build')
+
 export const MAX_BUILD_SERVICE_RESPONSE_BYTES = 8 * 1024 * 1024
 
 const OperationType = {
@@ -80,10 +82,11 @@ export default class BuildService {
     ] as const
 
     operations.forEach(operation => {
-      requestQueue.addExecutor<BuildServiceJobParams, unknown>(
+      requestQueue.addExecutor<BuildServiceJobParams, RuntimeValue>(
         createQueueType('javascript', operation.operation),
         async ({ packageString, onComplete }, { signal }) => {
           const startedAt = performance.now()
+
           if (process.env.BUILD_SERVICE_ENDPOINT) {
             return this.executeRemoteBuild({
               operation,
@@ -111,6 +114,7 @@ export default class BuildService {
       1,
       Math.ceil(performance.now() - options.startedAt),
     )
+
     options.onComplete?.(durationMs)
     logger.timing(
       `analysis.javascript.${options.operation.operation}.duration`,
@@ -130,6 +134,7 @@ export default class BuildService {
         `${process.env.BUILD_SERVICE_ENDPOINT}${operation.endpoint}?p=${encodeURIComponent(packageString)}`,
         { signal, maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES },
       )
+
       return response.data
     } catch (error) {
       if (axios.isCancel(error)) throw new JobCancelledError()
@@ -155,18 +160,24 @@ export default class BuildService {
     const execution = pool
       .exec(operation.methodName, [packageString])
       .timeout(config.WORKER_TIMEOUT)
+
     let rejectCancellation: (error: JobCancelledError) => void = () => {}
+
     const cancellation = new Promise<never>((_, reject) => {
       rejectCancellation = reject
     })
+
     const cancelExecution = () => {
       // workerpool cancellation terminates its worker and can leave a
       // subsequent job waiting indefinitely. Let this non-interruptible
       // worker finish while promptly detaching the aborted HTTP request.
       rejectCancellation(new JobCancelledError())
     }
+
     signal.addEventListener('abort', cancelExecution, { once: true })
+
     if (signal.aborted) cancelExecution()
+
     try {
       return await Promise.race([execution, cancellation])
     } catch (error) {
@@ -184,8 +195,9 @@ export default class BuildService {
     }
   }
 
-  private handleError(error: unknown, operation: OperationDefinition): never {
+  private handleError<T>(error: T, operation: OperationDefinition): never {
     if (axios.isAxiosError(error) && error.response) {
+      // SAFETY: the build service error endpoint returns this documented payload.
       const contents = error.response.data as BuildServerErrorPayload
       throw new CustomError(
         contents.name || 'BuildError',
@@ -201,6 +213,7 @@ export default class BuildService {
         {
           operation: operation.legacyName,
           reason: 'BUILD_SERVICE_UNREACHABLE',
+          // SAFETY: Axios request objects expose the current URL for diagnostics.
           url: (error.request as { _currentUrl?: string })._currentUrl,
         },
         undefined,
@@ -216,12 +229,13 @@ export default class BuildService {
     )
   }
 
-  async getPackageBuildStats<T>(
+  async getPackageBuildStats<T extends RuntimeValue>(
     packageString: string,
     priority: number,
     options: BuildRequestOptions = {},
   ): Promise<T> {
     logger.increment('analysis.javascript.package-analysis.requested')
+
     return requestQueue.process<T, BuildServiceJobParams>({
       id: createAnalysisKey({
         language: 'javascript',
@@ -240,12 +254,13 @@ export default class BuildService {
     })
   }
 
-  async getPackageExports<T>(
+  async getPackageExports<T extends RuntimeValue>(
     packageString: string,
     priority: number,
     options: BuildRequestOptions = {},
   ): Promise<T> {
     logger.increment('analysis.javascript.package-exports.requested')
+
     return requestQueue.process<T, BuildServiceJobParams>({
       id: createAnalysisKey({
         language: 'javascript',
@@ -264,12 +279,13 @@ export default class BuildService {
     })
   }
 
-  async getPackageExportSizes<T>(
+  async getPackageExportSizes<T extends RuntimeValue>(
     packageString: string,
     priority: number,
     options: BuildRequestOptions = {},
   ): Promise<T> {
     logger.increment('analysis.javascript.package-export-sizes.requested')
+
     return requestQueue.process<T, BuildServiceJobParams>({
       id: createAnalysisKey({
         language: 'javascript',

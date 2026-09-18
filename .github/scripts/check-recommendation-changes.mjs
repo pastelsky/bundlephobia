@@ -11,6 +11,7 @@ import {
 } from './recommendation-quality.mjs'
 
 const fixturePath = 'server/middlewares/similar-packages/fixtures.ts'
+
 const baseSha = process.argv[2]
 
 if (!baseSha) {
@@ -18,44 +19,57 @@ if (!baseSha) {
 }
 
 const currentSource = await readFile(fixturePath, 'utf8')
+
 const baseSource = execFileSync('git', ['show', `${baseSha}:${fixturePath}`], {
   encoding: 'utf8',
 })
+
 const current = extractCuratedCategories(currentSource)
+
 const base = extractCuratedCategories(baseSource)
+
 const additions = [...current.values()]
-  .flatMap(category =>
-    [...category.packages]
-      .filter(
-        packageName => !base.get(category.slug)?.packages.has(packageName),
-      )
-      .map(packageName => ({ category, packageName })),
-  )
+  .flatMap(category => {
+    const categoryAdditions = []
+
+    for (const packageName of category.packages) {
+      if (!base.get(category.slug)?.packages.has(packageName)) {
+        categoryAdditions.push({ category, packageName })
+      }
+    }
+
+    return categoryAdditions
+  })
   .sort((left, right) =>
     `${left.category.slug}/${left.packageName}`.localeCompare(
       `${right.category.slug}/${right.packageName}`,
     ),
   )
+
 const results = []
 
 for (const { category, packageName } of additions) {
   const signals = await collectPackageSignals(packageName)
   const { errors, notes } = evaluateRecommendation(signals)
+
   const previousPackages = [
     ...(base.get(category.slug)?.packages ?? new Set()),
   ].filter(previousPackage => previousPackage !== packageName)
+
   const comparisonSizes = await Promise.all(
     previousPackages.map(async previousPackage => ({
       packageName: previousPackage,
       bundleSize: await collectBundleSize(previousPackage),
     })),
   )
+
   const sizeEvaluation = previousPackages.length
     ? evaluateSizeAdvantage(signals, comparisonSizes)
     : {
         available: false,
         smallerThan: [],
       }
+
   if (previousPackages.length && !sizeEvaluation.available) {
     notes.push('Bundle size comparison was unavailable.')
   } else if (sizeEvaluation.available && !sizeEvaluation.smallerThan.length) {
@@ -143,9 +157,11 @@ const failures = results.filter(({ errors }) => errors.length > 0)
 if (failures.length) {
   for (const { category, packageName, errors } of failures) {
     console.error(`\n${packageName} in ${category.name}:`)
+
     for (const error of errors) {
       console.error(`- ${error}`)
     }
   }
+
   process.exitCode = 1
 }

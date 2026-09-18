@@ -13,7 +13,9 @@ interface RateLimitEntry {
 }
 
 const DEFAULT_DURATION_MS = 1000 * 60 * 5
+
 const DEFAULT_MAX_REQUESTS = 10
+
 const DEFAULT_MESSAGE = '429: Too Many Build Requests.'
 
 function getClientIp(ctx: Context): string {
@@ -21,6 +23,7 @@ function getClientIp(ctx: Context): string {
     ctx.request.header['x-koaip'] ||
     ctx.request.header['cf-connecting-ip'] ||
     ctx.ip
+
   return Array.isArray(rawIp) ? rawIp[0] : rawIp || ''
 }
 
@@ -36,12 +39,15 @@ export default function buildMissRateLimit(
   return async (ctx, next) => {
     if (ctx.method === 'OPTIONS') {
       await next()
+
       return
     }
 
     const ip = getClientIp(ctx)
+
     if (!ip || whiteList.has(ip)) {
       await next()
+
       return
     }
 
@@ -59,6 +65,7 @@ export default function buildMissRateLimit(
 
     const entry = db[ip]
     const remaining = Math.max(maxRequests - entry.count, 0)
+
     const retryAfterSeconds = Math.max(
       Math.trunc((entry.resetAt - now) / 1000),
       0,
@@ -72,6 +79,7 @@ export default function buildMissRateLimit(
       ctx.set('Retry-After', String(retryAfterSeconds))
       ctx.status = 429
       ctx.body = message429
+
       return
     }
 

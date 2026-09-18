@@ -13,9 +13,13 @@ import {
 } from './recommendation-quality.mjs'
 
 const REPORT_MARKER = '<!-- bundlephobia-recommendation-quality -->'
+
 const event = JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH, 'utf8'))
+
 const [owner, repository] = process.env.GITHUB_REPOSITORY.split('/')
+
 const issue = event.issue
+
 const token = process.env.GITHUB_TOKEN
 
 async function github(path, options = {}) {
@@ -51,6 +55,7 @@ async function findOpenDuplicates(packageName) {
   const query = encodeURIComponent(
     `repo:${owner}/${repository} is:issue is:open label:"similar suggestion" in:title "${packageName}"`,
   )
+
   const result = await github(`/search/issues?q=${query}&per_page=10`)
 
   return result.items.filter(candidate => candidate.number !== issue.number)
@@ -60,6 +65,7 @@ async function upsertReport(body) {
   const comments = await github(
     `/repos/${owner}/${repository}/issues/${issue.number}/comments?per_page=100`,
   )
+
   const previous = comments.find(comment =>
     comment.body?.includes(REPORT_MARKER),
   )
@@ -72,6 +78,7 @@ async function upsertReport(body) {
         body: JSON.stringify({ body }),
       },
     )
+
     return
   }
 
@@ -85,7 +92,9 @@ async function upsertReport(body) {
 }
 
 const answers = extractIssueFormAnswers(issue.body)
+
 const packageName = normalizePackageName(answers.packageName)
+
 const comparisonNames = parsePackageNames(answers.alternative)
 
 if (!isPlausiblePackageName(packageName)) {
@@ -115,9 +124,12 @@ const [signals, duplicates, fixtureSource, comparisonSizes] = await Promise.all(
     ),
   ],
 )
+
 const alreadyCurated =
   extractCuratedRecommendations(fixtureSource).has(packageName)
+
 const evaluation = evaluateRecommendation(signals, answers)
+
 const sizeEvaluation = evaluateSizeAdvantage(signals, comparisonSizes)
 
 for (const comparisonName of comparisonNames) {
@@ -127,6 +139,7 @@ for (const comparisonName of comparisonNames) {
     )
   }
 }
+
 if (!sizeEvaluation.available) {
   evaluation.notes.push('Bundle size comparison was unavailable.')
 } else if (!sizeEvaluation.smallerThan.length) {
@@ -140,6 +153,7 @@ if (alreadyCurated) {
     'This package is already in the curated recommendations.',
   )
 }
+
 if (duplicates.length) {
   evaluation.notes.push(
     `Found ${duplicates.length} other open recommendation issue(s) for this package.`,
@@ -151,10 +165,13 @@ evaluation.status = evaluation.errors.length
   : evaluation.notes.length
     ? 'needs review'
     : 'ready for maintainer review'
+
 const findings = [...evaluation.errors, ...evaluation.notes]
+
 const duplicateLinks = duplicates
   .map(candidate => `[#${candidate.number}](${candidate.html_url})`)
   .join(', ')
+
 const sizeRows = [
   { packageName, bundleSize: signals.bundleSize },
   ...comparisonSizes,
@@ -170,16 +187,27 @@ const sizeRows = [
                 bundleSize.gzip) *
                 100,
             )
+
             return `candidate is ${percentage}% ${
               signals.bundleSize.gzip < bundleSize.gzip ? 'smaller' : 'larger'
             }`
           })()
         : 'candidate'
+
     return `| ${sizePackageName} | ${
       bundleSize?.available ? bundleSize.gzip.toLocaleString() : 'Unavailable'
     } | ${delta} |`
   })
   .join('\n')
+
+let npmPackageResult = 'Check unavailable'
+
+if (signals.exists === true) {
+  npmPackageResult = `[${packageName}](https://www.npmjs.com/package/${packageName})`
+} else if (signals.exists === false) {
+  npmPackageResult = 'Not found'
+}
+
 const report = `${REPORT_MARKER}
 ## Automated recommendation check
 
@@ -187,13 +215,7 @@ const report = `${REPORT_MARKER}
 
 | Signal | Result |
 | --- | --- |
-| npm package | ${icon(signals.exists === true)} ${
-  signals.exists === true
-    ? `[${packageName}](https://www.npmjs.com/package/${packageName})`
-    : signals.exists === false
-      ? 'Not found'
-      : 'Check unavailable'
-} |
+| npm package | ${icon(signals.exists === true)} ${npmPackageResult} |
 | Latest version | ${display(signals.latestVersion)}${
   signals.deprecated ? ' — deprecated' : ''
 } |

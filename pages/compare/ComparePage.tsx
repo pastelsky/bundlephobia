@@ -106,6 +106,7 @@ export default class ComparePage extends PureComponent<
 
     const formattedResults = Object.keys(totalVersions).map(version => {
       const reading = totalVersions[version]
+
       if (!reading || Object.keys(reading).length === 0) {
         return {
           version,
@@ -134,6 +135,7 @@ export default class ComparePage extends PureComponent<
     const sorted = formattedResults.sort((packageA, packageB) => {
       const versionA = Number(packageA.version.replace(/\D/g, ''))
       const versionB = Number(packageB.version.replace(/\D/g, ''))
+
       return versionA - versionB
     })
 
@@ -144,6 +146,7 @@ export default class ComparePage extends PureComponent<
 
   handleBarClick = (reading: Reading) => {
     const { results } = this.state
+
     if (!results) {
       return
     }

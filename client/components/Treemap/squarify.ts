@@ -114,6 +114,7 @@ type SquarifyState = {
 
 function squarify(data: number[], state: SquarifyState): TreemapRectangle[][] {
   const { currentrow, container, stack } = state
+
   if (data.length === 0) {
     if (currentrow.length > 0) {
       stack.push(container.getCoordinates(currentrow))
@@ -127,6 +128,7 @@ function squarify(data: number[], state: SquarifyState): TreemapRectangle[][] {
 
   if (improvesRatio(currentrow, nextdatapoint, length)) {
     currentrow.push(nextdatapoint)
+
     return squarify(data.slice(1), state)
   }
 

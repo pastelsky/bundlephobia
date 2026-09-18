@@ -13,13 +13,20 @@ import type { PackageBuildResult } from '../../types'
 
 const cache = new CacheServiceClient()
 
-function getRequestedPackage(packageQuery: unknown): string | undefined {
-  if (typeof packageQuery === 'string') return packageQuery
-  return Array.isArray(packageQuery) ? packageQuery.join('/') : undefined
+function getRequestedPackage(
+  packageQuery: string | string[] | undefined,
+): string | undefined {
+  if (Array.isArray(packageQuery)) return packageQuery.join('/')
+
+  return packageQuery
 }
 
-function getCacheMaxAge(force: unknown, requestedPackage?: string): number {
+function getCacheMaxAge(
+  force: string | string[] | undefined,
+  requestedPackage?: string,
+): number {
   if (force !== null && force !== undefined) return 0
+
   if (!requestedPackage) return config.CACHE.SIZE_API_DEFAULT
 
   return packageAnalysisGateway.isExactVersionSpecifier(
@@ -31,8 +38,10 @@ function getCacheMaxAge(force: unknown, requestedPackage?: string): number {
 
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
+
   const { scoped, name, version, description, repository, packageString } =
     ctx.state.resolved
+
   const { force, record, package: packageQuery } = ctx.query
   const requestedPackage = getRequestedPackage(packageQuery)
 
@@ -58,6 +67,7 @@ const buildMiddleware: Middleware = async ctx => {
   ctx.res.on('close', onAborted)
 
   let result: PackageBuildResult
+
   try {
     result = await packageAnalysisGateway.analyzePackage(ctx.state.resolved, {
       priority,

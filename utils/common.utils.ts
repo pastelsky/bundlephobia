@@ -9,6 +9,7 @@ import {
  * should import the adapter-specific parser directly.
  */
 export type ParsedPackageString = ParsedJavaScriptPackageSpecifier
+
 export const parsePackageString = parseJavaScriptPackageSpecifier
 
 export function daysFromToday(date: string | number | Date): number {
@@ -16,6 +17,7 @@ export function daysFromToday(date: string | number | Date): number {
   const date2 = new Date(date)
   const diffTime = Math.abs(date2.getTime() - date1.getTime())
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
   return diffDays
 }
 
@@ -37,10 +39,12 @@ export function sanitizeErrorHTML(html: string): string {
 
 export function normalizePackageJsonUrl(inputUrl: string): string {
   const trimmed = inputUrl.trim()
+
   if (!trimmed) return ''
 
   try {
     const url = withHttpScheme(trimmed)
+
     return normalizeParsedPackageUrl(new URL(url), url)
   } catch {
     return trimmed
@@ -57,18 +61,22 @@ function normalizeParsedPackageUrl(url: URL, original: string): string {
   if (url.hostname !== 'github.com') return original
 
   const parts = url.pathname.split('/').filter(Boolean)
+
   if (parts.length < 2) return original
 
   const owner = parts[0]
   const repo = parts[1].replace(/\.git$/, '')
+
   if (parts.length === 2) {
     return `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/package.json`
   }
 
   if (parts[2] !== 'blob' && parts[2] !== 'raw') return original
+
   if (parts.length < 4) return original
 
   const branch = parts[3]
   const filePath = parts.slice(4).join('/') || 'package.json'
+
   return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`
 }

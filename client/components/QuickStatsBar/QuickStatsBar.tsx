@@ -30,6 +30,7 @@ function SideEffectStat({
     hasSideEffects.length
       ? 'some side-effects'
       : 'side-effect free'
+
   return (
     <div className="quick-stats-bar__stat">
       <SideEffectIcon className="quick-stats-bar__stat-icon" />{' '}
@@ -98,7 +99,9 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
     let statItemCount = 0
 
     if (isTreeShakeable) statItemCount += 1
+
     if (hasSideEffects !== true) statItemCount += 1
+
     return statItemCount
   }
 
@@ -121,6 +124,7 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
       name,
       repository,
     } = this.props
+
     const statItemCount = this.getStatItemCount()
     const description = this.getTrimmedDescription()
 

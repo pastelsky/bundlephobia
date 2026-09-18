@@ -9,6 +9,7 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
 
   React.useEffect(() => {
     const container = containerRef.current
+
     if (!container) return
 
     const script = document.createElement('script')

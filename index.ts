@@ -18,6 +18,7 @@ import CacheServiceClient from './server/clients/cacheService'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
 import logger from './server/Logger'
+import type { JsonObject } from './types/json'
 import remoteMcpClient from './server/mcp/remoteClient'
 import {
   buildApiCatalog,
@@ -60,11 +61,13 @@ function getEnv(env: Record<string, string | undefined | null>) {
 import { monitorEventLoopDelay } from 'node:perf_hooks'
 
 const eventLoopDelay = monitorEventLoopDelay({ resolution: 10 })
+
 eventLoopDelay.enable()
 
 setInterval(() => {
   const p99Ms = eventLoopDelay.percentile(99) / 1e6
   const maxMs = eventLoopDelay.max / 1e6
+
   if (p99Ms > 50) {
     logger.info(
       'EVENT_LOOP_LAG',
@@ -72,55 +75,87 @@ setInterval(() => {
       `High event loop latency detected: p99=${p99Ms.toFixed(1)}ms max=${maxMs.toFixed(1)}ms`,
     )
   }
+
   eventLoopDelay.reset()
 }, 10000)
 
 const env = getEnv(process.env)
 
 const cache = new CacheServiceClient()
+
 const port = env.port
+
 const dev = env.nodeEnv !== 'production'
+
 const app = next({ dev })
+
 const handle = app.getRequestHandler()
 
-type McpArguments = Record<string, unknown>
+type McpArguments = JsonObject
+
 type McpPayload = { name: string; arguments?: McpArguments }
 
-const localMcpPathBuilders: Record<
-  string,
-  (options: { packageName: string; args: McpArguments }) => string
-> = {
-  'bundlephobia.size': ({ packageName }) => `/api/size?package=${packageName}`,
-  'bundlephobia.exports': ({ packageName }) =>
-    `/api/exports?package=${packageName}`,
-  'bundlephobia.exportsSizes': ({ packageName }) =>
-    `/api/exports-sizes?package=${packageName}`,
-  'bundlephobia.packageHistory': ({ packageName, args }) =>
-    `/api/package-history?package=${packageName}&limit=${Number(args.limit ?? 10)}`,
-  'bundlephobia.similarPackages': ({ packageName }) =>
-    `/api/similar-packages?package=${packageName}`,
-}
+const localMcpPathBuilders = new Map([
+  [
+    'bundlephobia.size',
+    ({ packageName }: { packageName: string }) =>
+      `/api/size?package=${packageName}`,
+  ],
+  [
+    'bundlephobia.exports',
+    ({ packageName }: { packageName: string }) =>
+      `/api/exports?package=${packageName}`,
+  ],
+  [
+    'bundlephobia.exportsSizes',
+    ({ packageName }: { packageName: string }) =>
+      `/api/exports-sizes?package=${packageName}`,
+  ],
+  [
+    'bundlephobia.packageHistory',
+    ({ packageName, args }: { packageName: string; args: McpArguments }) =>
+      `/api/package-history?package=${packageName}&limit=${Number(args.limit ?? 10)}`,
+  ],
+  [
+    'bundlephobia.similarPackages',
+    ({ packageName }: { packageName: string }) =>
+      `/api/similar-packages?package=${packageName}`,
+  ],
+])
 
 function getLocalMcpRequest(name: string, args: McpArguments) {
-  const buildPath = localMcpPathBuilders[name]
+  const buildPath = localMcpPathBuilders.get(name)
+
   if (!buildPath) return null
 
+  const packageArgument = args.package
+
   const packageName =
-    typeof args.package === 'string'
-      ? encodeURIComponent(args.package)
+    Object.prototype.toString.call(packageArgument) === '[object String]'
+      ? encodeURIComponent(String(packageArgument))
       : undefined
+
   return packageName
     ? { path: buildPath({ packageName, args }) }
     : { invalid: true as const }
 }
 
 function isMcpPayload(value: unknown): value is McpPayload {
+  if (
+    value === null ||
+    value === undefined ||
+    Object.prototype.toString.call(value) !== '[object Object]' ||
+    !('name' in Object(value))
+  ) {
+    return false
+  }
+
+  // SAFETY: the object-tag and property-presence checks establish the payload shape.
+  const name = (value as { name: unknown }).name
+
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    'name' in value &&
-    typeof value.name === 'string' &&
-    value.name.length > 0
+    Object.prototype.toString.call(name) === '[object String]' &&
+    String(name).length > 0
   )
 }
 
@@ -249,11 +284,14 @@ app.prepare().then(() => {
 
   router.get('/api/package-history', async ctx => {
     const packageQuery = ctx.query.package
-    const packageString =
-      typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+
+    const packageString = Array.isArray(packageQuery)
+      ? packageQuery.join('/')
+      : packageQuery
 
     invariant(packageString, 'package parameter is required')
     const { name } = parsePackageString(packageString)
+
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
@@ -343,12 +381,15 @@ app.prepare().then(() => {
 
       if (!remoteMcpClient.isEnabled()) {
         ctx.body = { tools: localTools }
+
         return
       }
 
+      // SAFETY: the remote MCP client returns the documented tools envelope.
       const remote = (await remoteMcpClient.listTools()) as {
-        tools?: Array<Record<string, unknown>>
+        tools?: JsonObject[]
       }
+
       ctx.body = {
         tools: [...localTools, ...(remote.tools ?? [])],
       }
@@ -368,6 +409,7 @@ app.prepare().then(() => {
       ctx.body = {
         error: { code: 'InvalidMcpPayload', message: '`name` is required' },
       }
+
       return
     }
 
@@ -380,7 +422,9 @@ app.prepare().then(() => {
             'X-Bundlephobia-User': 'bundlephobia mcp tool',
           },
         })
+
         const body = await response.json()
+
         return {
           status: response.status,
           body,
@@ -388,19 +432,24 @@ app.prepare().then(() => {
       }
 
       const localRequest = getLocalMcpRequest(payload.name, args)
+
       if (localRequest?.invalid) {
         ctx.status = 400
         ctx.body = { error: { code: 'InvalidMcpPayload' } }
+
         return
       }
+
       if (localRequest) {
         ctx.body = await callLocalApi(localRequest.path)
+
         return
       }
 
       if (!remoteMcpClient.isEnabled()) {
         ctx.status = 404
         ctx.body = { error: { code: 'McpNotConfigured' } }
+
         return
       }
 
@@ -432,7 +481,9 @@ app.prepare().then(() => {
   )
 
   router.post('/admin/restart', async ctx => {
+    // SAFETY: the admin endpoint body is parsed from its documented credentials contract.
     const { name, pass } = <{ name?: string; pass?: string }>ctx.request.body
+
     if (name !== 'bundlephobia' || pass !== env.basicAuthPassword) {
       console.error('Failed to restart')
       ctx.status = 500
@@ -452,6 +503,7 @@ app.prepare().then(() => {
         const { stdout } = await exec.command(
           'rm -rf /tmp/tmp-build/cache/_cacache /tmp/tmp-build/packages/',
         )
+
         ctx.body = 'Cache cleared' + stdout
       } catch (err) {
         console.error('Failed to clear cache', err)
@@ -473,8 +525,10 @@ app.prepare().then(() => {
 
   router.get('/result', async ctx => {
     invariant(ctx.query.p, 'p parameter is required')
-    const packageString =
-      typeof ctx.query.p === 'string' ? ctx.query.p : ctx.query.p.join('/')
+
+    const packageString = Array.isArray(ctx.query.p)
+      ? ctx.query.p.join('/')
+      : ctx.query.p
 
     ctx.redirect(`/package/${packageString.trim()}`)
     ctx.status = 301

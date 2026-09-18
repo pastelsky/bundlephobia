@@ -122,8 +122,11 @@ function createStatGroup({
 }
 
 const IMAGE_WIDTH = 624
+
 const IMAGE_HEIGHT = 350
+
 const IMAGE_PAD = 5
+
 const IMAGE_WIDE_BY = 25
 
 function createImageCanvas({
@@ -131,11 +134,13 @@ function createImageCanvas({
   wide,
 }: Pick<DrawStatsImgOptions, 'theme' | 'wide'>) {
   const selectedTheme = theme === 'light' ? lightTheme : darkTheme
+
   const canvas = new fabric.StaticCanvas('c', {
     backgroundColor: selectedTheme.backgroundColor,
     width: wide ? IMAGE_WIDTH + IMAGE_WIDE_BY : IMAGE_WIDTH,
     height: IMAGE_HEIGHT,
   })
+
   canvas.enableRetinaScaling = true
   canvas.setDimensions(
     {
@@ -144,16 +149,19 @@ function createImageCanvas({
     },
     { cssOnly: true },
   )
+
   return { canvas, selectedTheme }
 }
 
 function createSeparators({ theme, wide }: { theme: Theme; wide: boolean }) {
   const x0 = wide ? IMAGE_WIDE_BY / 2 : 0
+
   const options = {
     stroke: theme.separatorColor,
     strokeWidth: 0.5,
     opacity: theme.separatorOpacity,
   }
+
   return [
     new fabric.Line([x0, 91, IMAGE_WIDTH, 91], options),
     new fabric.Line(
@@ -188,6 +196,7 @@ function createPackageNameGroup({
     opacity: 0.8,
     top: 19,
   })
+
   const packageAtText = new fabric.Text('@', {
     fontFamily: 'Source Code Pro',
     fontSize: 35,
@@ -195,6 +204,7 @@ function createPackageNameGroup({
     left: (packageNameText.width ?? 0) + IMAGE_PAD * 2,
     top: 24,
   })
+
   const packageVersionText = new fabric.Text(version, {
     fontFamily: 'Source Code Pro',
     fontSize: 35,
@@ -204,6 +214,7 @@ function createPackageNameGroup({
       (packageNameText.width ?? 0) + (packageAtText.width ?? 0) + IMAGE_PAD * 4,
     top: 28,
   })
+
   return new fabric.Group(
     [packageNameText, packageAtText, packageVersionText],
     { selectable: false },
@@ -229,6 +240,7 @@ function createStatGroups({
   const threeGTime = formatTime(times.threeG)
   const fourGTime = formatTime(times.fourG)
   const common = { theme, pad: IMAGE_PAD }
+
   return [
     createStatGroup({
       ...common,
@@ -270,13 +282,16 @@ export function drawStatsImg({
   wide = false,
 }: DrawStatsImgOptions) {
   const { canvas, selectedTheme } = createImageCanvas({ theme, wide })
+
   const [lineTopHorizontal, lineCenterVertical, lineCenterHorizontal] =
     createSeparators({ theme: selectedTheme, wide })
+
   const packageNameGroup = createPackageNameGroup({
     name,
     version,
     theme: selectedTheme,
   })
+
   const statGroups = createStatGroups({ min, gzip, theme: selectedTheme })
 
   canvas.add(lineTopHorizontal)
@@ -287,5 +302,6 @@ export function drawStatsImg({
 
   canvas.centerObjectH(packageNameGroup)
   canvas.renderAll()
+
   return canvas.createJPEGStream()
 }

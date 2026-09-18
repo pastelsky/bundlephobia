@@ -1,23 +1,24 @@
 const registryFetch = require('npm-registry-fetch')
-const pacote = require('pacote')
 
-jest.mock('npm-registry-fetch', () => ({ json: jest.fn() }))
-jest.mock('pacote', () => ({ manifest: jest.fn() }))
-jest.mock('../server/api/BuildService', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}))
+const pacote = require('pacote')
 
 import { createJavaScriptPackageReference } from '../languages/javascript'
 import { JavaScriptPackageAnalysisAdapter } from '../server/analysis/javascript/JavaScriptPackageAnalysisAdapter'
 
+// SAFETY: the adapter constructor receives no runtime options in this fixture.
 const adapter = new JavaScriptPackageAnalysisAdapter({} as never)
+
+const registryJson = jest.spyOn(registryFetch, 'json')
+
+const pacoteManifest = jest.spyOn(pacote, 'manifest')
+
 const resolvePackage = (specifier: string) =>
   adapter.resolvePackage(createJavaScriptPackageReference(specifier))
 
 describe('resolvePackage', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    registryJson.mockReset()
+    pacoteManifest.mockReset()
   })
 
   it.each([
