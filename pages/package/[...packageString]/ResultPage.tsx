@@ -54,12 +54,6 @@ type ResultPageState = {
   similarPackagesCategory: string
 }
 
-type ResolvedBuildError = {
-  errorName: string | null
-  errorBody: string | null
-  errorDetails: string | null
-}
-
 function isEmptySnapshot(reading: PackageBuildInfoSnapshot) {
   return Object.keys(reading).length === 0
 }
@@ -78,10 +72,6 @@ function formatSentence(values: string[]) {
   }
 
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
-}
-
-function getResolvedBuildError(resultsError: unknown): ResolvedBuildError {
-  return resolveBuildError(resultsError)
 }
 
 function getPackageStringFromRouter(router: NextRouter) {
@@ -116,6 +106,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     Analytics.pageView('package result')
 
     const packageString = getPackageStringFromRouter(this.props.router)
+
     if (packageString) {
       this.handleSearchSubmit(packageString)
     }
@@ -160,6 +151,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
           },
           () => {
             this.activeQuery = newPackageString
+
             if (
               getPackageStringFromRouter(this.props.router) !== newPackageString
             ) {
@@ -266,10 +258,11 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         if (!this.isActiveSearch(requestId)) return
 
         this.activeQuery = normalizedQuery
+
         const navigation =
-          getPackageStringFromRouter(this.props.router) !== normalizedQuery
-            ? Router.push(`/package/${normalizedQuery}`)
-            : Promise.resolve(true)
+          getPackageStringFromRouter(this.props.router) === normalizedQuery
+            ? Promise.resolve(true)
+            : Router.push(`/package/${normalizedQuery}`)
 
         navigation.then(() => {
           if (!this.isActiveSearch(requestId)) return
@@ -357,7 +350,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   getMetaTags = () => {
     const { router } = this.props
     const { resultsPromiseState, results } = this.state
-    let name = ''
+    let name: string
     let version: string | null | undefined
     let formattedSizeText = ''
     let formattedGZIPSizeText = ''
@@ -377,6 +370,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       const parsedPackage = parsePackageString(
         getPackageStringFromRouter(router),
       )
+
       name = parsedPackage.name
       version = parsedPackage.version
     }
@@ -387,6 +381,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         : window.location.origin
 
     const title = version ? `${name} v${version}` : name
+
     const description =
       resultsPromiseState === 'fulfilled'
         ? `Size of ${title} is ${formattedSizeText} (minified), and ${formattedGZIPSizeText} when compressed using GZIP. ${DEFAULT_DESCRIPTION_START}`
@@ -406,195 +401,264 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     )
   }
 
-  render() {
+  referenceSpeedInfoText = (speed: number, units: string) =>
+    `Download Speed: ⬇️ ${speed} ${units}.\nExclusive of HTTP request latency.`
+
+  renderQuickStatsBar() {
+    const { resultsPromiseState, results } = this.state
+
+    if (resultsPromiseState !== 'fulfilled' || !results) return null
+
+    return (
+      <QuickStatsBar
+        description={results.description}
+        dependencyCount={results.dependencyCount}
+        hasSideEffects={results.hasSideEffects}
+        isTreeShakeable={
+          results.hasJSModule || results.hasJSNext || results.isModuleType
+        }
+        repository={results.repository}
+        name={results.name}
+      />
+    )
+  }
+
+  renderPendingResult() {
+    if (this.state.resultsPromiseState !== 'pending') return null
+
+    return (
+      <div className="result-pending">
+        <BuildProgressIndicator
+          isDone={!!this.state.results?.version}
+          onDone={this.handleProgressDone}
+        />
+      </div>
+    )
+  }
+
+  renderMissingDependencyWarning() {
+    const results = this.state.results
+
+    if (
+      this.state.resultsPromiseState !== 'fulfilled' ||
+      !results?.ignoredMissingDependencies?.length
+    ) {
+      return null
+    }
+
+    return (
+      <Warning>
+        Ignoring the size of missing{' '}
+        {results.ignoredMissingDependencies.length > 1
+          ? 'dependencies'
+          : 'dependency'}{' '}
+        &nbsp;
+        <code>{formatSentence(results.ignoredMissingDependencies)}</code>.
+        <a
+          href="https://github.com/pastelsky/bundlephobia#1-why-does-search-for-package-x-throw-missingdependencyerror-"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Read more
+        </a>
+      </Warning>
+    )
+  }
+
+  renderStats() {
+    const { resultsPromiseState, results, historicalResultsPromiseState } =
+      this.state
+
+    if (resultsPromiseState !== 'fulfilled' || !results) return null
+
+    return (
+      <div className="content-split-container">
+        <div className="stats-container">
+          <div className="size-container">
+            <h3> Bundle Size </h3>
+            <div className="size-stats">
+              <Stat
+                value={results.size}
+                type={Stat.type.SIZE}
+                label="Minified"
+              />
+              <Stat
+                value={results.gzip}
+                type={Stat.type.SIZE}
+                label="Minified + Gzipped"
+              />
+            </div>
+          </div>
+          <div className="time-container">
+            <h3> Download Time </h3>
+            <div className="time-stats">
+              <Stat
+                value={getTimeFromSize(results.gzip).threeG}
+                type={Stat.type.TIME}
+                label="Slow 3G"
+                infoText={this.referenceSpeedInfoText(
+                  DownloadSpeed.THREE_G,
+                  'kB/s',
+                )}
+              />
+              <Stat
+                value={getTimeFromSize(results.gzip).fourG}
+                type={Stat.type.TIME}
+                label="Emerging 4G"
+                infoText={this.referenceSpeedInfoText(
+                  DownloadSpeed.FOUR_G,
+                  'kB/s',
+                )}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="chart-container">
+          {historicalResultsPromiseState === 'fulfilled' && (
+            <BarGraph
+              onBarClick={this.handleBarClick}
+              readings={this.formatHistoricalResults()}
+            />
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  renderErrorResult() {
+    if (this.state.resultsPromiseState !== 'rejected') return null
+
+    const { errorName, errorBody, errorDetails } = resolveBuildError(
+      this.state.resultsError,
+    )
+
+    return (
+      <div className="result-error">
+        <EmptyBox className="result-error__img" />
+        <h2 className="result-error__code">{errorName}</h2>
+        <p
+          className="result-error__message"
+          dangerouslySetInnerHTML={{
+            __html: sanitizeErrorHTML(errorBody ?? ''),
+          }}
+        />
+        {errorDetails && (
+          <details className="result-error__details">
+            <summary>Details</summary>
+            <pre>{errorDetails}</pre>
+          </details>
+        )}
+      </div>
+    )
+  }
+
+  renderTreemap() {
+    const { resultsPromiseState, results } = this.state
+
+    if (
+      resultsPromiseState !== 'fulfilled' ||
+      !results?.dependencySizes?.length
+    ) {
+      return null
+    }
+
+    return (
+      <div className="content-container">
+        <TreemapSection
+          packageName={results.name}
+          packageSize={results.size}
+          dependencySizes={results.dependencySizes}
+        />
+      </div>
+    )
+  }
+
+  renderExports() {
+    const { resultsPromiseState, results } = this.state
+
+    if (resultsPromiseState !== 'fulfilled' || !results) return null
+
+    return (
+      <div className="content-container">
+        <ExportAnalysisSection result={results} />
+      </div>
+    )
+  }
+
+  renderSimilarPackages() {
     const {
-      inputInitialValue,
       resultsPromiseState,
-      resultsError,
-      historicalResultsPromiseState,
       results,
       similarPackages,
       similarPackagesCategory,
     } = this.state
 
-    const { errorName, errorBody, errorDetails } =
-      getResolvedBuildError(resultsError)
+    if (
+      resultsPromiseState !== 'fulfilled' ||
+      !results ||
+      similarPackages.length === 0
+    ) {
+      return null
+    }
 
-    const referenceSpeedInfoText = (speed: number, units: string) =>
-      `Download Speed: ⬇️ ${speed} ${units}.\nExclusive of HTTP request latency.`
-
-    const getQuickStatsBar = () =>
-      resultsPromiseState === 'fulfilled' &&
-      results && (
-        <QuickStatsBar
-          description={results.description}
-          dependencyCount={results.dependencyCount}
-          hasSideEffects={results.hasSideEffects}
-          isTreeShakeable={
-            results.hasJSModule || results.hasJSNext || results.isModuleType
-          }
-          repository={results.repository}
-          name={results.name}
+    return (
+      <div className="content-container">
+        <SimilarPackagesSection
+          category={similarPackagesCategory}
+          packs={similarPackages}
+          comparisonGzip={results.gzip}
         />
-      )
+      </div>
+    )
+  }
 
+  renderInterLinks() {
+    const { resultsPromiseState, results } = this.state
+
+    if (
+      resultsPromiseState !== 'fulfilled' ||
+      !results ||
+      !parsePackageString(results.name).scoped
+    ) {
+      return null
+    }
+
+    return <InterLinksSection packageName={results.name} />
+  }
+
+  renderCarbonAd() {
+    if (this.state.resultsPromiseState !== 'fulfilled' || !this.state.results) {
+      return null
+    }
+
+    return <CarbonAd className="result-page__carbon-ad" />
+  }
+
+  render() {
     return (
       <ResultLayout>
         {this.getMetaTags()}
         <section className="content-container-wrap">
           <div className="content-container">
-            <AutocompleteInputBox footer={getQuickStatsBar()}>
+            <AutocompleteInputBox footer={this.renderQuickStatsBar()}>
               <AutocompleteInput
-                key={inputInitialValue}
-                initialValue={inputInitialValue}
+                key={this.state.inputInitialValue}
+                initialValue={this.state.inputInitialValue}
                 className="result-page__search-input"
                 onSearchSubmit={this.handleSearchSubmit}
                 renderAsH1
               />
             </AutocompleteInputBox>
-            {resultsPromiseState === 'pending' && (
-              <div className="result-pending">
-                <BuildProgressIndicator
-                  isDone={!!results?.version}
-                  onDone={this.handleProgressDone}
-                />
-              </div>
-            )}
-            {resultsPromiseState === 'fulfilled' &&
-              results &&
-              results.ignoredMissingDependencies &&
-              results.ignoredMissingDependencies.length > 0 && (
-                <Warning>
-                  Ignoring the size of missing{' '}
-                  {results.ignoredMissingDependencies.length > 1
-                    ? 'dependencies'
-                    : 'dependency'}{' '}
-                  &nbsp;
-                  <code>
-                    {formatSentence(results.ignoredMissingDependencies)}
-                  </code>
-                  .
-                  <a
-                    href="https://github.com/pastelsky/bundlephobia#1-why-does-search-for-package-x-throw-missingdependencyerror-"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Read more
-                  </a>
-                </Warning>
-              )}
-            {resultsPromiseState === 'fulfilled' && results && (
-              <div className="content-split-container">
-                <div className="stats-container">
-                  <div className="size-container">
-                    <h3> Bundle Size </h3>
-                    <div className="size-stats">
-                      <Stat
-                        value={results.size}
-                        type={Stat.type.SIZE}
-                        label="Minified"
-                      />
-                      <Stat
-                        value={results.gzip}
-                        type={Stat.type.SIZE}
-                        label="Minified + Gzipped"
-                      />
-                    </div>
-                  </div>
-                  <div className="time-container">
-                    <h3> Download Time </h3>
-                    <div className="time-stats">
-                      <Stat
-                        value={getTimeFromSize(results.gzip).threeG}
-                        type={Stat.type.TIME}
-                        label="Slow 3G"
-                        infoText={referenceSpeedInfoText(
-                          DownloadSpeed.THREE_G,
-                          'kB/s',
-                        )}
-                      />
-                      <Stat
-                        value={getTimeFromSize(results.gzip).fourG}
-                        type={Stat.type.TIME}
-                        label="Emerging 4G"
-                        infoText={referenceSpeedInfoText(
-                          DownloadSpeed.FOUR_G,
-                          'kB/s',
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="chart-container">
-                  {historicalResultsPromiseState === 'fulfilled' && (
-                    <BarGraph
-                      onBarClick={this.handleBarClick}
-                      readings={this.formatHistoricalResults()}
-                    />
-                  )}
-                </div>
-              </div>
-            )}
+            {this.renderPendingResult()}
+            {this.renderMissingDependencyWarning()}
+            {this.renderStats()}
           </div>
-
-          {resultsPromiseState === 'rejected' && (
-            <div className="result-error">
-              <EmptyBox className="result-error__img" />
-              <h2 className="result-error__code">{errorName}</h2>
-              <p
-                className="result-error__message"
-                dangerouslySetInnerHTML={{
-                  __html: sanitizeErrorHTML(errorBody ?? ''),
-                }}
-              />
-              {errorDetails && (
-                <details className="result-error__details">
-                  <summary>Details</summary>
-                  <pre>{errorDetails}</pre>
-                </details>
-              )}
-            </div>
-          )}
-          {resultsPromiseState === 'fulfilled' &&
-            results &&
-            results.dependencySizes &&
-            results.dependencySizes.length > 0 && (
-              <div className="content-container">
-                <TreemapSection
-                  packageName={results.name}
-                  packageSize={results.size}
-                  dependencySizes={results.dependencySizes}
-                />
-              </div>
-            )}
-
-          {resultsPromiseState === 'fulfilled' && results && (
-            <div className="content-container">
-              <ExportAnalysisSection result={results} />
-            </div>
-          )}
-
-          {resultsPromiseState === 'fulfilled' && results && (
-            <CarbonAd className="result-page__carbon-ad" />
-          )}
-
-          {resultsPromiseState === 'fulfilled' &&
-            results &&
-            similarPackages.length > 0 && (
-              <div className="content-container">
-                <SimilarPackagesSection
-                  category={similarPackagesCategory}
-                  packs={similarPackages}
-                  comparisonGzip={results.gzip}
-                />
-              </div>
-            )}
-
-          {resultsPromiseState === 'fulfilled' &&
-            results &&
-            parsePackageString(results.name).scoped && (
-              <InterLinksSection packageName={results.name} />
-            )}
+          {this.renderErrorResult()}
+          {this.renderTreemap()}
+          {this.renderExports()}
+          {this.renderCarbonAd()}
+          {this.renderSimilarPackages()}
+          {this.renderInterLinks()}
         </section>
       </ResultLayout>
     )

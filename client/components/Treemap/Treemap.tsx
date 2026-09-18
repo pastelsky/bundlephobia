@@ -12,6 +12,26 @@ type TreemapChildProps = {
   value: number
 }
 
+function radius(isRounded: boolean) {
+  return isRounded ? '10px' : '0px'
+}
+
+function getBorderRadius(
+  square: TreemapRectangle,
+  width: number,
+  height: number,
+) {
+  const topLeftRadius = radius(!(square[0] || square[1]))
+  const topRightRadius = radius(square[1] === 0 && square[2] === width)
+  const bottomLeftRadius = radius(square[3] === height && square[0] === 0)
+
+  const bottomRightRadius = radius(
+    Math.round(square[3]) === height && Math.round(square[2]) === width,
+  )
+
+  return `${topLeftRadius} ${topRightRadius} ${bottomRightRadius} ${bottomLeftRadius}`
+}
+
 class TreeMap extends Component<TreeMapProps> {
   render() {
     const { width, height, children, ...others } = this.props
@@ -20,22 +40,10 @@ class TreeMap extends Component<TreeMapProps> {
       (child): child is React.ReactElement<TreemapChildProps> =>
         React.isValidElement<TreemapChildProps>(child),
     )
+
     const values = squares.map(square => square.props.value)
 
-    const squared = squarify(values, width, height, 0, 0)
-    const getBorderRadius = (square: TreemapRectangle) => {
-      const topLeftRadius = square[0] || square[1] ? '0px' : '10px'
-      const topRightRadius =
-        square[1] === 0 && square[2] === width ? '10px' : '0px'
-      const bottomLeftRadius =
-        square[3] === height && square[0] === 0 ? '10px' : '0px'
-      const bottomRightRadius =
-        Math.round(square[3]) === height && Math.round(square[2]) === width
-          ? '10px'
-          : '0px'
-
-      return `${topLeftRadius} ${topRightRadius} ${bottomRightRadius} ${bottomLeftRadius}`
-    }
+    const squared = squarify(values, { width, height })
 
     return (
       <div style={{ width: '100%', height, position: 'relative' }} {...others}>
@@ -53,7 +61,7 @@ class TreeMap extends Component<TreeMapProps> {
             height: `${
               ((squared[index][3] - squared[index][1]) / height) * 100
             }%`,
-            borderRadius: getBorderRadius(squared[index]),
+            borderRadius: getBorderRadius(squared[index], width, height),
             data: squared[index],
           }
 

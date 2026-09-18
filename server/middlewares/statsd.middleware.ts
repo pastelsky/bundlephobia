@@ -7,6 +7,7 @@ const statsdMiddleware: Middleware = async (ctx, next) => {
     ctx.request.header['x-koaip'] ||
     ctx.request.header['cf-connecting-ip'] ||
     ctx.ip
+
   const ip = Array.isArray(rawIp) ? rawIp[0] : rawIp
 
   logger.increment('request.count')

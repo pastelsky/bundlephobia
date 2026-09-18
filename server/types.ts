@@ -3,8 +3,10 @@
 // re-exported from here so callers need only one import site.
 import type { PackageMetadata } from '../types/package-domain'
 import type { LanguageId } from '../types/language-domain'
-import type { AnalysisOperation } from './analysis/contracts'
-import type { ResolvedAnalysisPackage } from './analysis/contracts'
+import type {
+  AnalysisOperation,
+  ResolvedAnalysisPackage,
+} from './analysis/contracts'
 
 export type {
   PackageBuildResult,

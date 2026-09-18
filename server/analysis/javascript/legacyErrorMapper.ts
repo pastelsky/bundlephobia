@@ -6,7 +6,7 @@ import { PackageAnalysisGatewayError } from '../errors'
  * JavaScript build errors pass through unchanged so their status/body mapping
  * remains owned by the legacy error middleware.
  */
-export function toLegacyJavaScriptError(error: unknown): unknown {
+export function toLegacyJavaScriptError<T>(error: T): Error | T {
   if (!(error instanceof PackageAnalysisGatewayError)) return error
 
   switch (error.code) {

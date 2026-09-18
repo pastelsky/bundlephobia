@@ -1,20 +1,26 @@
-jest.mock('../server/init', () => ({
-  failureCache: { set: jest.fn() },
-}))
-
-jest.mock('../server/Logger', () => ({
-  __esModule: true,
-  default: { error: jest.fn() },
-}))
-
 import { failureCache } from '../server/init'
+import logger from '../server/Logger'
 import { createAnalysisKey } from '../server/analysis/keys'
 import CustomError from '../server/CustomError'
 import errorHandler from '../server/middlewares/results/error.middleware'
 
+const mockFailureCacheSet = jest.spyOn(failureCache, 'set')
+
+const mockLoggerError = jest.spyOn(logger, 'error')
+
+interface ErrorContextState {
+  id: string
+  analysis?: {
+    language: 'javascript'
+    operation: 'package-exports'
+  }
+  resolved?: { packageString: string }
+}
+
 describe('build API error middleware', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockFailureCacheSet.mockReset()
+    mockLoggerError.mockReset()
   })
 
   it('preserves client HTTP errors before package resolution', async () => {
@@ -25,6 +31,7 @@ describe('build API error middleware', () => {
         status: 400,
       },
     )
+
     const ctx = {
       body: undefined,
       cacheControl: undefined,
@@ -33,6 +40,10 @@ describe('build API error middleware', () => {
       status: undefined,
     }
 
+    // SAFETY: this fixture supplies only the context fields exercised by the middleware.
+    // SAFETY: this fixture supplies only the context fields exercised by the middleware.
+    // SAFETY: this fixture supplies only the context fields exercised by the middleware.
+    // SAFETY: this fixture supplies only the context fields exercised by the middleware.
     await errorHandler(ctx as never, async () => {
       throw error
     })
@@ -49,22 +60,19 @@ describe('build API error middleware', () => {
 
   it('caches build errors under the package resolved downstream', async () => {
     const packageString = '@example/build-error@1.0.0'
+
     const ctx = {
       body: undefined,
       cacheControl: undefined,
       query: {},
-      state: { id: 'request-id' } as {
-        id: string
-        analysis?: {
-          language: 'javascript'
-          operation: 'package-exports'
-        }
-        resolved?: { packageString: string }
-      },
+      // SAFETY: this fixture supplies the state fields exercised by the middleware.
+      state: { id: 'request-id' } as ErrorContextState,
       status: undefined,
     }
+
     const error = new CustomError('BuildError', 'compiler failed', undefined)
 
+    // SAFETY: this fixture supplies only the context fields exercised by the middleware.
     await errorHandler(ctx as never, async () => {
       ctx.state.analysis = {
         language: 'javascript',
@@ -97,6 +105,7 @@ describe('build API error middleware', () => {
       status: undefined,
     }
 
+    // SAFETY: this fixture supplies only the context fields exercised by the middleware.
     await errorHandler(ctx as never, async () => {
       throw new CustomError('PackageVersionMismatchError', null, {
         suggestedVersion: '19.1.1',

@@ -9,13 +9,16 @@ import logger from '../../Logger'
 
 const cachedResponse: Middleware = async (ctx, next) => {
   const { force, peep } = ctx.query
+
   if (force) {
     await next()
+
     return
   }
 
   const { name, version, packageString, language } = ctx.state.resolved
   const { operation } = ctx.state.analysis
+
   const failureCacheKey = createAnalysisKey({
     language,
     operation,
@@ -47,23 +50,26 @@ const cachedResponse: Middleware = async (ctx, next) => {
     )
 
   const cached = await ctx.cashed()
+
   if (cached) {
     ctx.cacheControl = {
       maxAge:
-        force != null
-          ? 0
-          : packageAnalysisGateway.isExactVersionSpecifier(
-                createJavaScriptPackageReference(`${name}@${version}`),
-              )
+        force === null || force === undefined
+          ? packageAnalysisGateway.isExactVersionSpecifier(
+              createJavaScriptPackageReference(`${name}@${version}`),
+            )
             ? config.CACHE.SIZE_API_HAS_VERSION
-            : config.CACHE.SIZE_API_DEFAULT,
+            : config.CACHE.SIZE_API_DEFAULT
+          : 0,
     }
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })
+
     return
   }
 
   const failureCacheEntry = failureCache.get(failureCacheKey)
+
   if (failureCacheEntry) {
     debug('fetched %s from failure cache', packageString)
 
@@ -75,6 +81,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
 
     ctx.status = failureCacheEntry.status
     ctx.body = failureCacheEntry.body
+
     return
   }
 
@@ -82,6 +89,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
 
   if (peep) {
     ctx.status = 404
+
     return
   }
 

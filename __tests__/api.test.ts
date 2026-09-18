@@ -1,16 +1,17 @@
 import fetch from 'unfetch'
 
-import API from '../client/api'
+import API, { setFetchImplementation } from '../client/api'
+import type { JsonValue } from '../types/json'
 
-jest.mock('unfetch')
+const mockedFetch = jest.fn<typeof fetch>()
 
-const mockedFetch = fetch as jest.MockedFunction<typeof fetch>
 type APIResponse = Awaited<ReturnType<typeof fetch>>
 
 function mockResponse(
   status: number,
-  json: () => Promise<unknown>,
+  json: () => Promise<JsonValue>,
 ): APIResponse {
+  // SAFETY: this fixture supplies the response members consumed by client/api.
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -24,8 +25,16 @@ const requestMethods = [
 ] as const
 
 describe('API error responses', () => {
+  let restoreFetch: () => void
+
   beforeEach(() => {
     mockedFetch.mockReset()
+    restoreFetch?.()
+    restoreFetch = setFetchImplementation(mockedFetch)
+  })
+
+  afterEach(() => {
+    restoreFetch()
   })
 
   test.each(requestMethods)(
@@ -37,6 +46,7 @@ describe('API error responses', () => {
           message: "The package you were looking for doesn't exist.",
         },
       }
+
       mockedFetch.mockResolvedValue(
         mockResponse(404, () => Promise.resolve(responseBody)),
       )

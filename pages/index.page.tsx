@@ -9,7 +9,6 @@ import CarbonAd from '../client/components/CarbonAd'
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
-import cx from 'classnames'
 
 const Logo = () => (
   <svg
@@ -105,6 +104,7 @@ const Home = () => {
 
   const handleSearchSubmit = (value: string) => {
     Analytics.performedSearch(value.trim())
+
     if (value ?? '') {
       router.push(`/package/${value.trim()}`)
     }

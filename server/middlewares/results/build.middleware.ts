@@ -12,13 +12,38 @@ import logger from '../../Logger'
 import type { PackageBuildResult } from '../../types'
 
 const cache = new CacheServiceClient()
+
+function getRequestedPackage(
+  packageQuery: string | string[] | undefined,
+): string | undefined {
+  if (Array.isArray(packageQuery)) return packageQuery.join('/')
+
+  return packageQuery
+}
+
+function getCacheMaxAge(
+  force: string | string[] | undefined,
+  requestedPackage?: string,
+): number {
+  if (force !== null && force !== undefined) return 0
+
+  if (!requestedPackage) return config.CACHE.SIZE_API_DEFAULT
+
+  return packageAnalysisGateway.isExactVersionSpecifier(
+    createJavaScriptPackageReference(requestedPackage),
+  )
+    ? config.CACHE.SIZE_API_HAS_VERSION
+    : config.CACHE.SIZE_API_DEFAULT
+}
+
 const buildMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
+
   const { scoped, name, version, description, repository, packageString } =
     ctx.state.resolved
+
   const { force, record, package: packageQuery } = ctx.query
-  const requestedPackage =
-    typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+  const requestedPackage = getRequestedPackage(packageQuery)
 
   const buildStart = now()
   const abortController = new AbortController()
@@ -42,6 +67,7 @@ const buildMiddleware: Middleware = async ctx => {
   ctx.res.on('close', onAborted)
 
   let result: PackageBuildResult
+
   try {
     result = await packageAnalysisGateway.analyzePackage(ctx.state.resolved, {
       priority,
@@ -56,17 +82,7 @@ const buildMiddleware: Middleware = async ctx => {
 
   const buildEnd = now()
 
-  ctx.cacheControl = {
-    maxAge:
-      force != null
-        ? 0
-        : requestedPackage &&
-            packageAnalysisGateway.isExactVersionSpecifier(
-              createJavaScriptPackageReference(requestedPackage),
-            )
-          ? config.CACHE.SIZE_API_HAS_VERSION
-          : config.CACHE.SIZE_API_DEFAULT,
-  }
+  ctx.cacheControl = { maxAge: getCacheMaxAge(force, requestedPackage) }
 
   const body: PackageBuildResult = {
     ...result,

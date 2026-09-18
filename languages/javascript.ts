@@ -21,6 +21,7 @@ export function parseJavaScriptPackageSpecifier(
   if (packageSpecifier.startsWith('@')) {
     scoped = true
     scope = packageSpecifier.substring(1, firstSlashIndex)
+
     if (lastAtIndex === 0) {
       name = packageSpecifier
       version = null

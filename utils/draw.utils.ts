@@ -1,6 +1,11 @@
 import * as fabric from 'fabric/node'
 
-import { formatSize, formatTime, getTimeFromSize } from './index'
+import {
+  formatSize,
+  formatTime,
+  getTimeFromSize,
+  type FormattedValue,
+} from './index'
 
 type ThemeName = 'dark' | 'light'
 
@@ -26,6 +31,19 @@ interface Theme {
   unitOpacity: number
   labelColor: string
   labelOpacity: number
+}
+
+interface StatGroupOptions {
+  number: string | number
+  unit: string
+  label: string
+  theme: Theme
+  pad: number
+  position: {
+    originX: 'center'
+    top: number
+    left: number
+  }
 }
 
 const lightTheme: Theme = {
@@ -58,18 +76,14 @@ const darkTheme: Theme = {
   labelOpacity: 0.55,
 }
 
-function createStatGroup(
-  number: string | number,
-  unit: string,
-  label: string,
-  theme: Theme,
-  pad: number,
-  options: {
-    originX: 'center'
-    top: number
-    left: number
-  },
-) {
+function createStatGroup({
+  number,
+  unit,
+  label,
+  theme,
+  pad,
+  position,
+}: StatGroupOptions) {
   const numberText = new fabric.Text(number.toString(), {
     fontFamily: 'SF Compact Text',
     fontSize: 55,
@@ -104,7 +118,159 @@ function createStatGroup(
     originX: 'center',
   })
 
-  return new fabric.Group([numberText, unitText, labelText], options)
+  return new fabric.Group([numberText, unitText, labelText], position)
+}
+
+const IMAGE_WIDTH = 624
+
+const IMAGE_HEIGHT = 350
+
+const IMAGE_PAD = 5
+
+const IMAGE_WIDE_BY = 25
+
+function createImageCanvas({
+  theme,
+  wide,
+}: Pick<DrawStatsImgOptions, 'theme' | 'wide'>) {
+  const selectedTheme = theme === 'light' ? lightTheme : darkTheme
+
+  const canvas = new fabric.StaticCanvas('c', {
+    backgroundColor: selectedTheme.backgroundColor,
+    width: wide ? IMAGE_WIDTH + IMAGE_WIDE_BY : IMAGE_WIDTH,
+    height: IMAGE_HEIGHT,
+  })
+
+  canvas.enableRetinaScaling = true
+  canvas.setDimensions(
+    {
+      width: (canvas.width ?? IMAGE_WIDTH) * 1.5,
+      height: (canvas.height ?? IMAGE_HEIGHT) * 1.5,
+    },
+    { cssOnly: true },
+  )
+
+  return { canvas, selectedTheme }
+}
+
+function createSeparators({ theme, wide }: { theme: Theme; wide: boolean }) {
+  const x0 = wide ? IMAGE_WIDE_BY / 2 : 0
+
+  const options = {
+    stroke: theme.separatorColor,
+    strokeWidth: 0.5,
+    opacity: theme.separatorOpacity,
+  }
+
+  return [
+    new fabric.Line([x0, 91, IMAGE_WIDTH, 91], options),
+    new fabric.Line(
+      [IMAGE_WIDTH / 2, 91, IMAGE_WIDTH / 2, IMAGE_HEIGHT],
+      options,
+    ),
+    new fabric.Line(
+      [
+        x0,
+        91 + (IMAGE_HEIGHT - 91) / 2,
+        IMAGE_WIDTH,
+        91 + (IMAGE_HEIGHT - 91) / 2,
+      ],
+      options,
+    ),
+  ]
+}
+
+function createPackageNameGroup({
+  name,
+  version,
+  theme,
+}: {
+  name: string
+  version: string
+  theme: Theme
+}) {
+  const packageNameText = new fabric.Text(name, {
+    fontFamily: 'Source Code Pro',
+    fontSize: 45,
+    fill: theme.nameColor,
+    opacity: 0.8,
+    top: 19,
+  })
+
+  const packageAtText = new fabric.Text('@', {
+    fontFamily: 'Source Code Pro',
+    fontSize: 35,
+    fill: '#91D396',
+    left: (packageNameText.width ?? 0) + IMAGE_PAD * 2,
+    top: 24,
+  })
+
+  const packageVersionText = new fabric.Text(version, {
+    fontFamily: 'Source Code Pro',
+    fontSize: 35,
+    fill: theme.versionColor,
+    opacity: theme.versionOpacity,
+    left:
+      (packageNameText.width ?? 0) + (packageAtText.width ?? 0) + IMAGE_PAD * 4,
+    top: 28,
+  })
+
+  return new fabric.Group(
+    [packageNameText, packageAtText, packageVersionText],
+    { selectable: false },
+  )
+}
+
+function formatStatValue(value: FormattedValue) {
+  return value.unit === 'ms' ? value.size : value.size.toFixed(1)
+}
+
+function createStatGroups({
+  min,
+  gzip,
+  theme,
+}: {
+  min: number
+  gzip: number
+  theme: Theme
+}) {
+  const minSize = formatSize(min)
+  const gzipSize = formatSize(gzip)
+  const times = getTimeFromSize(gzip)
+  const threeGTime = formatTime(times.threeG)
+  const fourGTime = formatTime(times.fourG)
+  const common = { theme, pad: IMAGE_PAD }
+
+  return [
+    createStatGroup({
+      ...common,
+      number: minSize.size.toFixed(2),
+      unit: minSize.unit,
+      label: 'minified',
+      position: { originX: 'center', top: 106, left: IMAGE_WIDTH / 4 },
+    }),
+    createStatGroup({
+      ...common,
+      number: gzipSize.size.toFixed(2),
+      unit: gzipSize.unit,
+      label: 'gzipped',
+      position: { originX: 'center', top: 106, left: IMAGE_WIDTH * (3 / 4) },
+    }),
+    createStatGroup({
+      ...common,
+      number: formatStatValue(threeGTime),
+      unit: threeGTime.unit,
+      label: 'slow 3G',
+      position: { originX: 'center', top: 235, left: IMAGE_WIDTH / 4 },
+    }),
+    createStatGroup({
+      ...common,
+      number: formatStatValue(fourGTime),
+      unit: fourGTime.unit,
+      label: 'emerging 4G',
+      position: { originX: 'center', top: 235, left: IMAGE_WIDTH * (3 / 4) },
+    }),
+  ]
 }
 
 export function drawStatsImg({
@@ -115,130 +281,27 @@ export function drawStatsImg({
   theme = 'dark',
   wide = false,
 }: DrawStatsImgOptions) {
-  const width = 624
-  const height = 350
-  const pad = 5
-  const wideBy = 25
-  const selectedTheme = theme === 'light' ? lightTheme : darkTheme
+  const { canvas, selectedTheme } = createImageCanvas({ theme, wide })
 
-  const canvas = new fabric.StaticCanvas('c', {
-    backgroundColor: selectedTheme.backgroundColor,
-    width: wide ? width + wideBy : width,
-    height,
+  const [lineTopHorizontal, lineCenterVertical, lineCenterHorizontal] =
+    createSeparators({ theme: selectedTheme, wide })
+
+  const packageNameGroup = createPackageNameGroup({
+    name,
+    version,
+    theme: selectedTheme,
   })
 
-  canvas.enableRetinaScaling = true
-  canvas.setDimensions(
-    {
-      width: (canvas.width ?? width) * 1.5,
-      height: (canvas.height ?? height) * 1.5,
-    },
-    { cssOnly: true },
-  )
-
-  const x0 = wide ? wideBy / 2 : 0
-
-  const separatorOptions = {
-    stroke: selectedTheme.separatorColor,
-    strokeWidth: 0.5,
-    opacity: selectedTheme.separatorOpacity,
-  }
-
-  const lineTopHorizontal = new fabric.Line(
-    [x0, 91, width, 91],
-    separatorOptions,
-  )
-  const lineCenterVertical = new fabric.Line(
-    [width / 2, 91, width / 2, height],
-    separatorOptions,
-  )
-  const lineCenterHorizontal = new fabric.Line(
-    [x0, 91 + (height - 91) / 2, width, 91 + (height - 91) / 2],
-    separatorOptions,
-  )
-
-  const packageNameText = new fabric.Text(name, {
-    fontFamily: 'Source Code Pro',
-    fontSize: 45,
-    fill: selectedTheme.nameColor,
-    opacity: 0.8,
-    top: 19,
-  })
-
-  const packageAtText = new fabric.Text('@', {
-    fontFamily: 'Source Code Pro',
-    fontSize: 35,
-    fill: '#91D396',
-    left: (packageNameText.width ?? 0) + pad * 2,
-    top: 24,
-  })
-
-  const packageVersionText = new fabric.Text(version, {
-    fontFamily: 'Source Code Pro',
-    fontSize: 35,
-    fill: selectedTheme.versionColor,
-    opacity: selectedTheme.versionOpacity,
-    left: (packageNameText.width ?? 0) + (packageAtText.width ?? 0) + pad * 4,
-    top: 28,
-  })
-
-  const packageNameGroup = new fabric.Group(
-    [packageNameText, packageAtText, packageVersionText],
-    { selectable: false },
-  )
-
-  const minSize = formatSize(min)
-  const gzipSize = formatSize(gzip)
-  const times = getTimeFromSize(gzip)
-  const threeGTime = formatTime(times.threeG)
-  const fourGTime = formatTime(times.fourG)
-
-  const minGroup = createStatGroup(
-    minSize.size.toFixed(2),
-    minSize.unit,
-    'minified',
-    selectedTheme,
-    pad,
-    { originX: 'center', top: 106, left: width / 4 },
-  )
-
-  const gzipGroup = createStatGroup(
-    gzipSize.size.toFixed(2),
-    gzipSize.unit,
-    'gzipped',
-    selectedTheme,
-    pad,
-    { originX: 'center', top: 106, left: width * (3 / 4) },
-  )
-
-  const threeGGroup = createStatGroup(
-    threeGTime.unit === 'ms' ? threeGTime.size : threeGTime.size.toFixed(1),
-    threeGTime.unit,
-    'slow 3G',
-    selectedTheme,
-    pad,
-    { originX: 'center', top: 235, left: width / 4 },
-  )
-
-  const fourGGroup = createStatGroup(
-    fourGTime.unit === 'ms' ? fourGTime.size : fourGTime.size.toFixed(1),
-    fourGTime.unit,
-    'emerging 4G',
-    selectedTheme,
-    pad,
-    { originX: 'center', top: 235, left: width * (3 / 4) },
-  )
+  const statGroups = createStatGroups({ min, gzip, theme: selectedTheme })
 
   canvas.add(lineTopHorizontal)
   canvas.add(lineCenterVertical)
   canvas.add(lineCenterHorizontal)
   canvas.add(packageNameGroup)
-  canvas.add(minGroup)
-  canvas.add(gzipGroup)
-  canvas.add(threeGGroup)
-  canvas.add(fourGGroup)
+  statGroups.forEach(group => canvas.add(group))
 
   canvas.centerObjectH(packageNameGroup)
   canvas.renderAll()
+
   return canvas.createJPEGStream()
 }

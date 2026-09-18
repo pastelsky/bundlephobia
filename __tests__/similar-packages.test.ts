@@ -14,10 +14,7 @@ const natural = require('natural')
 //
 // A short list still passes here, because the dropped words match no tag. That
 // is exactly why the claim needs a command behind it.
-const PACKAGES: Record<
-  string,
-  { description: string; keywords: string[]; category: string }
-> = {
+const PACKAGES = {
   'chrono-node': {
     description: 'A natural language date parser in Javascript',
     keywords: [],
@@ -80,7 +77,10 @@ const PACKAGES: Record<
     keywords: ['date', 'time', 'internationalization', 'date format'],
     category: 'general-purpose-date-time',
   },
-}
+} satisfies Record<
+  string,
+  { description: string; keywords: string[]; category: string }
+>
 
 describe('similar package categories', () => {
   describe('classifyPackage', () => {
@@ -113,6 +113,7 @@ describe('similar package categories', () => {
       categories[label].tags.forEach(tag => {
         tokenizer.tokenize(tag.tag).forEach(part => {
           const token = natural.PorterStemmer.stem(part).toLowerCase()
+
           // getScore stops at the FIRST matching tag, so that weight is the one
           // a duplicated token actually scores.
           if (!weights.has(token)) weights.set(token, tag.weight)
@@ -133,6 +134,7 @@ describe('similar package categories', () => {
 
         const dominated = [...tokens].every(([token, weight]) => {
           const earlierWeight = earlierTokens.get(token)
+
           return earlierWeight !== undefined && earlierWeight >= weight
         })
 

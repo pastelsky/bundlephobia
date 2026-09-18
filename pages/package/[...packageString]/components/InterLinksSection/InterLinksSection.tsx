@@ -18,6 +18,7 @@ function usePackagesFromSameScope(packageName: string) {
   useEffect(() => {
     if (!scope) {
       setMorePackages([])
+
       return
     }
 

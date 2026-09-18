@@ -4,10 +4,11 @@ import * as admin from 'firebase-admin'
 import * as semver from 'semver'
 import { chain } from 'stream-chain'
 import { parser } from 'stream-json'
-import { streamArray } from 'stream-json/streamers/StreamArray'
 import { streamObject } from 'stream-json/streamers/StreamObject'
 import * as JSONStream from 'jsonstream'
 import progress from 'progress-stream'
+
+import type { JsonObject } from '../types/json'
 
 // Initialize Firebase (you'll need to set up your service account key)
 admin.initializeApp({
@@ -19,6 +20,7 @@ admin.initializeApp({
   ),
   databaseURL: 'https://module-cost.firebaseio.com',
 })
+
 const db = admin.database()
 
 interface SearchesV2 {
@@ -29,6 +31,7 @@ interface SearchesV2 {
 }
 
 const searchesV2: SearchesV2 = {}
+
 const sixMonthsAgo = Date.now() - 6 * 30 * 24 * 60 * 60 * 1000 // Approximate 6 months in milliseconds
 
 function formatETA(seconds: number): string {
@@ -45,6 +48,7 @@ async function processBackupFile(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const fileSize = fs.statSync(backupFilePath).size
+
     const progressStream = progress({
       length: fileSize,
       time: 1000, // Update every second
@@ -69,6 +73,7 @@ async function processBackupFile(
     let originalSize = 0
     let prunedSize = 0
 
+    // SAFETY: stream-chain accepts the parser stream pipeline assembled here.
     const pipeline = chain([
       fs.createReadStream(backupFilePath).pipe(progressStream),
       parser(),
@@ -76,7 +81,6 @@ async function processBackupFile(
     ] as any)
 
     let isProcessingSearchesV2 = false
-    let isProcessingModuleCostV2 = false
 
     pipeline.on('data', ({ key, value }) => {
       if (key === 'searches-v2') {
@@ -120,7 +124,10 @@ async function processBackupFile(
         ).toFixed(2)}%`,
       )
 
-      if (!dryRun) {
+      if (dryRun) {
+        console.log('Dry run complete. No data has been modified.')
+        resolve()
+      } else {
         console.log('Pushing pruned data to Firebase...')
         uploadPrunedDataToFirebase('pruned-module-cost-v2.json')
           .then(() => {
@@ -130,9 +137,6 @@ async function processBackupFile(
             resolve()
           })
           .catch(reject)
-      } else {
-        console.log('Dry run complete. No data has been modified.')
-        resolve()
       }
     })
 
@@ -142,10 +146,11 @@ async function processBackupFile(
     })
 
     async function processSearchesV2(searchesData: any): Promise<void> {
-      return new Promise(resolve => {
+      return new Promise(resolveProcessing => {
         const searchesPipeline = chain([streamObject()])
 
         searchesPipeline.on('data', ({ key, value }) => {
+          // SAFETY: the searches-v2 stream is keyed by the declared search record.
           searchesV2[key] = value as SearchesV2[string]
         })
 
@@ -155,7 +160,7 @@ async function processBackupFile(
               Object.keys(searchesV2).length
             } searches`,
           )
-          resolve()
+          resolveProcessing()
         })
 
         searchesPipeline.write({ key: null, value: searchesData })
@@ -172,9 +177,6 @@ async function processBackupFile(
 
         const searchInfo = searchesV2[packageName]
 
-        let action = ''
-        let reason = ''
-
         // Check if package should be removed based on search criteria
         if (
           !searchInfo ||
@@ -182,18 +184,20 @@ async function processBackupFile(
           searchInfo.lastSearched < sixMonthsAgo
         ) {
           packagesRemoved++
-          action = 'Pruned'
+          let reason: string
+
           if (!searchInfo) {
             reason = 'Not found in searches-v2'
           } else if (searchInfo.count <= 1) {
             reason = `Search count (${searchInfo.count}) <= 1`
-          } else if (searchInfo.lastSearched < sixMonthsAgo) {
+          } else {
             reason = 'Last searched more than 6 months ago'
           }
 
           console.log(
-            `Package: ${packageName} | Action: ${action} | Reason: ${reason}`,
+            `Package: ${packageName} | Action: Pruned | Reason: ${reason}`,
           )
+
           return
         }
 
@@ -201,18 +205,23 @@ async function processBackupFile(
         const sortedVersions = Object.keys(versionsObj).sort((a, b) =>
           semver.compare(b, a),
         )
+
         const versionsToKeep = sortedVersions.slice(0, 20)
 
+        let action: string
+        let reason: string
+
         if (sortedVersions.length > 20) {
-          versionsRemoved += sortedVersions.length - 20
           action = 'Pruned versions'
-          reason = `Keeping only the latest 20 versions`
+          reason = 'Keeping only the latest 20 versions'
+          versionsRemoved += sortedVersions.length - 20
         } else {
           action = 'Kept'
-          reason = `All versions are within limit`
+          reason = 'All versions are within limit'
         }
 
-        const prunedVersions: { [version: string]: any } = {}
+        const prunedVersions: JsonObject = {}
+
         for (const version of versionsToKeep) {
           prunedVersions[version] = versionsObj[version]
         }
@@ -220,8 +229,10 @@ async function processBackupFile(
         prunedPackageCount++
         prunedSize += JSON.stringify(prunedVersions).length
 
-        // Write to output stream
-        ;(stringifyStream as any).write([packageName, prunedVersions])
+        // Write to output stream.
+        // SAFETY: the JSON stream writer exposes write for serialized key/value pairs.
+        const streamWriter = stringifyStream as any
+        streamWriter.write([packageName, prunedVersions])
 
         console.log(
           `Package: ${packageName} | Action: ${action} | Reason: ${reason}`,
@@ -242,9 +253,10 @@ async function uploadPrunedDataToFirebase(filePath: string) {
   const prunedRef = db.ref('module-cost-pruned')
   const readStream = fs.createReadStream(filePath)
   const parseStream = JSONStream.parse('*')
+  // SAFETY: stream-chain accepts the read and JSON parse streams as a pipeline.
   const pipeline = chain([readStream, parseStream] as any)
 
-  let buffer: { [key: string]: any } = {}
+  let buffer: JsonObject = {}
   let count = 0
 
   return new Promise<void>((resolve, reject) => {
@@ -264,6 +276,7 @@ async function uploadPrunedDataToFirebase(filePath: string) {
         prunedRef.update(buffer)
         console.log(`Uploaded remaining packages to Firebase`)
       }
+
       resolve()
     })
 
@@ -276,6 +289,7 @@ async function uploadPrunedDataToFirebase(filePath: string) {
 
 // Run the script
 const backupFilePath = process.argv[2]
+
 const dryRun = process.argv.includes('--dry-run')
 
 if (!backupFilePath) {
@@ -283,11 +297,13 @@ if (!backupFilePath) {
   process.exit(1)
 }
 
-;(async () => {
+async function main() {
   try {
     console.log('Starting processing of backup file...')
     await processBackupFile(backupFilePath, dryRun)
   } catch (error) {
     console.error('An error occurred:', error)
   }
-})()
+}
+
+void main()

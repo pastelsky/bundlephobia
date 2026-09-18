@@ -2,12 +2,19 @@ import AbortController from 'abort-controller'
 
 import Queue from '../server/Queue'
 
+function asGlobalAbortSignal(
+  signal: AbortController['signal'],
+): globalThis.AbortSignal {
+  // SAFETY: the test controller is used through the global AbortSignal contract.
+  return signal as globalThis.AbortSignal
+}
+
 describe('Queue cancellation', () => {
   const nativeAbortController = global.AbortController
 
   beforeAll(() => {
-    global.AbortController =
-      AbortController as unknown as typeof global.AbortController
+    // SAFETY: the test controller is compatible with the global constructor contract.
+    global.AbortController = AbortController as typeof global.AbortController
   })
 
   afterAll(() => {
@@ -18,14 +25,15 @@ describe('Queue cancellation', () => {
     const queue = new Queue({ concurrency: 1 })
 
     let resolveFirstJob: any
+
     const firstJobPromise = new Promise(resolve => {
       resolveFirstJob = resolve
     })
 
     queue.addExecutor('TEST', () => firstJobPromise)
 
-    const p1 = queue.process('job-1', 'TEST', {})
-    const p2 = queue.process('job-2', 'TEST', {})
+    const p1 = queue.process({ id: 'job-1', type: 'TEST', jobParams: {} })
+    const p2 = queue.process({ id: 'job-2', type: 'TEST', jobParams: {} })
 
     expect(queue.getReadyJobs().length).toBe(1)
     expect(queue.getRunningJobs().length).toBe(1)
@@ -58,7 +66,7 @@ describe('Queue cancellation', () => {
 
     queue.addExecutor('TEST', () => mockPromise)
 
-    const p1 = queue.process('job-1', 'TEST', {})
+    const p1 = queue.process({ id: 'job-1', type: 'TEST', jobParams: {} })
 
     expect(queue.getRunningJobs().length).toBe(1)
 
@@ -76,17 +84,20 @@ describe('Queue cancellation', () => {
     const queue = new Queue({ concurrency: 1 })
 
     let resolveFirstJob: any
+
     const firstJobPromise = new Promise(resolve => {
       resolveFirstJob = resolve
     })
+
     const executor = jest
       .fn()
       .mockReturnValueOnce(firstJobPromise)
       .mockResolvedValueOnce(undefined)
+
     queue.addExecutor('TEST', executor)
 
-    const p1 = queue.process('job-1', 'TEST', {})
-    const p2 = queue.process('job-2', 'TEST', {})
+    const p1 = queue.process({ id: 'job-1', type: 'TEST', jobParams: {} })
+    const p2 = queue.process({ id: 'job-2', type: 'TEST', jobParams: {} })
 
     queue.cancel('job-1', 'TEST')
 
@@ -110,29 +121,33 @@ describe('Queue cancellation', () => {
     const secondSubscriber = new AbortController()
     const cancelExecutor = jest.fn()
     let resolveJob: (value: string) => void = () => {}
+
+    // SAFETY: this promise models the cancellable worker handle used by Queue.
     const jobPromise = new Promise<string>(resolve => {
       resolveJob = resolve
     }) as Promise<string> & { cancel?: () => void }
+
     jobPromise.cancel = cancelExecutor
 
     queue.addExecutor('TEST', () => jobPromise)
 
-    const firstResult = queue.process<string, object>(
-      'shared-job',
-      'TEST',
-      {},
-      {
-        signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
+    const firstResult = queue.process<string, object>({
+      id: 'shared-job',
+      type: 'TEST',
+      jobParams: {},
+      options: {
+        signal: asGlobalAbortSignal(firstSubscriber.signal),
       },
-    )
-    const secondResult = queue.process<string, object>(
-      'shared-job',
-      'TEST',
-      {},
-      {
-        signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
+    })
+
+    const secondResult = queue.process<string, object>({
+      id: 'shared-job',
+      type: 'TEST',
+      jobParams: {},
+      options: {
+        signal: asGlobalAbortSignal(secondSubscriber.signal),
       },
-    )
+    })
 
     firstSubscriber.abort()
 
@@ -152,29 +167,33 @@ describe('Queue cancellation', () => {
     const firstSubscriber = new AbortController()
     const secondSubscriber = new AbortController()
     const cancelExecutor = jest.fn()
+
+    // SAFETY: this pending promise models the cancellable worker handle used by Queue.
     const jobPromise = new Promise(() => {}) as Promise<never> & {
       cancel?: () => void
     }
+
     jobPromise.cancel = cancelExecutor
 
     queue.addExecutor('TEST', () => jobPromise)
 
-    const firstResult = queue.process(
-      'shared-job',
-      'TEST',
-      {},
-      {
-        signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
+    const firstResult = queue.process({
+      id: 'shared-job',
+      type: 'TEST',
+      jobParams: {},
+      options: {
+        signal: asGlobalAbortSignal(firstSubscriber.signal),
       },
-    )
-    const secondResult = queue.process(
-      'shared-job',
-      'TEST',
-      {},
-      {
-        signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
+    })
+
+    const secondResult = queue.process({
+      id: 'shared-job',
+      type: 'TEST',
+      jobParams: {},
+      options: {
+        signal: asGlobalAbortSignal(secondSubscriber.signal),
       },
-    )
+    })
 
     firstSubscriber.abort()
     await expect(firstResult).rejects.toMatchObject({
@@ -195,31 +214,34 @@ describe('Queue cancellation', () => {
     const secondSubscriber = new AbortController()
     let executorSignal: globalThis.AbortSignal | undefined
     let rejectExecution: (error: Error) => void = () => {}
+
     const execution = new Promise((_resolve, reject) => {
       rejectExecution = reject
     })
 
     queue.addExecutor('TEST', (_params, { signal }) => {
       executorSignal = signal
+
       return execution
     })
 
-    const firstResult = queue.process(
-      'shared-job',
-      'TEST',
-      {},
-      {
-        signal: firstSubscriber.signal as unknown as globalThis.AbortSignal,
+    const firstResult = queue.process({
+      id: 'shared-job',
+      type: 'TEST',
+      jobParams: {},
+      options: {
+        signal: asGlobalAbortSignal(firstSubscriber.signal),
       },
-    )
-    const secondResult = queue.process(
-      'shared-job',
-      'TEST',
-      {},
-      {
-        signal: secondSubscriber.signal as unknown as globalThis.AbortSignal,
+    })
+
+    const secondResult = queue.process({
+      id: 'shared-job',
+      type: 'TEST',
+      jobParams: {},
+      options: {
+        signal: asGlobalAbortSignal(secondSubscriber.signal),
       },
-    )
+    })
 
     firstSubscriber.abort()
     await expect(firstResult).rejects.toMatchObject({
@@ -248,14 +270,14 @@ describe('Queue cancellation', () => {
     subscriber.abort()
     queue.addExecutor('TEST', executor)
 
-    const result = queue.process(
-      'job',
-      'TEST',
-      {},
-      {
-        signal: subscriber.signal as unknown as globalThis.AbortSignal,
+    const result = queue.process({
+      id: 'job',
+      type: 'TEST',
+      jobParams: {},
+      options: {
+        signal: asGlobalAbortSignal(subscriber.signal),
       },
-    )
+    })
 
     await expect(result).rejects.toMatchObject({
       code: 'JOB_CANCELLED',
@@ -270,8 +292,8 @@ describe('Queue priority', () => {
   const nativeAbortController = global.AbortController
 
   beforeAll(() => {
-    global.AbortController =
-      AbortController as unknown as typeof global.AbortController
+    // SAFETY: the test controller is compatible with the global constructor contract.
+    global.AbortController = AbortController as typeof global.AbortController
   })
 
   afterAll(() => {
@@ -282,41 +304,47 @@ describe('Queue priority', () => {
     const queue = new Queue({ concurrency: 1, aging: false })
     const executionOrder: string[] = []
     let releaseBlocker: () => void = () => {}
+
     const blocker = new Promise<void>(resolve => {
       releaseBlocker = resolve
     })
 
     queue.addExecutor<string, string>('TEST', async id => {
       executionOrder.push(id)
+
       if (id === 'blocker') {
         await blocker
       }
+
       return id
     })
 
-    const blockerResult = queue.process<string, string>(
-      'blocker',
-      'TEST',
-      'blocker',
-    )
-    const firstSharedResult = queue.process<string, string>(
-      'shared',
-      'TEST',
-      'shared',
-      { priority: Queue.priority.LOW },
-    )
-    const mediumResult = queue.process<string, string>(
-      'medium',
-      'TEST',
-      'medium',
-      { priority: Queue.priority.MEDIUM },
-    )
-    const secondSharedResult = queue.process<string, string>(
-      'shared',
-      'TEST',
-      'shared',
-      { priority: Queue.priority.HIGH },
-    )
+    const blockerResult = queue.process<string, string>({
+      id: 'blocker',
+      type: 'TEST',
+      jobParams: 'blocker',
+    })
+
+    const firstSharedResult = queue.process<string, string>({
+      id: 'shared',
+      type: 'TEST',
+      jobParams: 'shared',
+      options: { priority: Queue.priority.LOW },
+    })
+
+    const mediumResult = queue.process<string, string>({
+      id: 'medium',
+      type: 'TEST',
+      jobParams: 'medium',
+      options: { priority: Queue.priority.MEDIUM },
+    })
+
+    const secondSharedResult = queue.process<string, string>({
+      id: 'shared',
+      type: 'TEST',
+      jobParams: 'shared',
+      options: { priority: Queue.priority.HIGH },
+    })
 
     releaseBlocker()
 

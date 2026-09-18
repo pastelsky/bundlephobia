@@ -10,6 +10,30 @@ import config from '../config'
 import logger from '../Logger'
 
 const cache = new CacheServiceClient()
+
+function getRequestedPackage(
+  packageQuery: string | string[] | undefined,
+): string | undefined {
+  if (Array.isArray(packageQuery)) return packageQuery.join('/')
+
+  return packageQuery
+}
+
+function getCacheMaxAge(
+  force: string | string[] | undefined,
+  requestedPackage?: string,
+): number {
+  if (force !== null && force !== undefined) return 0
+
+  if (!requestedPackage) return config.CACHE.SIZE_API_DEFAULT
+
+  return packageAnalysisGateway.isExactVersionSpecifier(
+    createJavaScriptPackageReference(requestedPackage),
+  )
+    ? config.CACHE.SIZE_API_HAS_VERSION
+    : config.CACHE.SIZE_API_DEFAULT
+}
+
 const exportSizesMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
@@ -17,13 +41,14 @@ const exportSizesMiddleware: Middleware = async ctx => {
 
   if (peek) {
     ctx.body = { name, version, peekSuccess: false }
+
     return
   }
 
-  const requestedPackage =
-    typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+  const requestedPackage = getRequestedPackage(packageQuery)
 
   const buildStart = now()
+
   const result = await packageAnalysisGateway.analyzePackageExportSizes(
     ctx.state.resolved,
     {
@@ -33,19 +58,10 @@ const exportSizesMiddleware: Middleware = async ctx => {
       },
     },
   )
+
   const buildEnd = now()
 
-  ctx.cacheControl = {
-    maxAge:
-      force != null
-        ? 0
-        : requestedPackage &&
-            packageAnalysisGateway.isExactVersionSpecifier(
-              createJavaScriptPackageReference(requestedPackage),
-            )
-          ? config.CACHE.SIZE_API_HAS_VERSION
-          : config.CACHE.SIZE_API_DEFAULT,
-  }
+  ctx.cacheControl = { maxAge: getCacheMaxAge(force, requestedPackage) }
 
   const body = { name, version, ...result }
   ctx.body = body

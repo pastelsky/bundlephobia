@@ -48,11 +48,12 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
 
     const { pack, comparisonSizePercent } = this.props
     const { size, unit } = formatSize(pack.gzip)
+
     const sizeDiff = Math.abs(
       (comparisonSizePercent / 100) * pack.gzip - pack.gzip,
     )
 
-    const getComparisonNumber = (comparisonSizePercent: number) => {
+    const getComparisonNumber = (comparisonPercent: number) => {
       if (sizeDiff < 1500) {
         return (
           <div>
@@ -61,7 +62,7 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
             </div>
           </div>
         )
-      } else if (Math.abs(comparisonSizePercent) > 100) {
+      } else if (Math.abs(comparisonPercent) > 100) {
         return (
           <div>
             <div className="similar-package-card__number">

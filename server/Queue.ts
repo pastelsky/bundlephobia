@@ -1,5 +1,7 @@
 import createDebug from 'debug'
 
+import type { RuntimeValue } from '../types/json'
+
 const log = createDebug('bp:queue')
 
 const JobStatus = {
@@ -28,20 +30,26 @@ export class JobCancelledError extends Error {
   }
 }
 
-export function isJobCancelledError(
-  error: unknown,
-): error is JobCancelledError {
+export function isJobCancelledError<T>(
+  error: T,
+): error is T & JobCancelledError {
   return (
     error instanceof Error && 'code' in error && error.code === 'JOB_CANCELLED'
   )
 }
 
-type QueueExecutor<TParams = unknown, TResult = unknown> = (
+type QueueExecutor<
+  TParams extends RuntimeValue = RuntimeValue,
+  TResult extends RuntimeValue = RuntimeValue,
+> = (
   params: TParams,
   context: QueueExecutorContext,
 ) => TResult | Promise<TResult>
 
-interface QueueJob<TParams = unknown, TResult = unknown> {
+interface QueueJob<
+  TParams extends RuntimeValue = RuntimeValue,
+  TResult extends RuntimeValue = RuntimeValue,
+> {
   id: string
   type: JobType
   maxAge: number
@@ -50,7 +58,7 @@ interface QueueJob<TParams = unknown, TResult = unknown> {
   status: (typeof JobStatus)[keyof typeof JobStatus]
   params: TParams
   successListeners: Array<(result: TResult) => void>
-  failureListeners: Array<(error: unknown) => void>
+  failureListeners: Array<(error: RuntimeValue) => void>
   abortController: AbortController
   cancel?: () => void
 }
@@ -61,12 +69,44 @@ interface QueueOptions {
   maxAge?: number
 }
 
-interface ProcessOptions<TResult> {
+interface ProcessOptions<TResult extends RuntimeValue> {
   priority?: number
   maxAge?: number
   onSuccess?: (result: TResult) => void
-  onFailure?: (error: unknown) => void
+  onFailure?: (error: RuntimeValue) => void
   signal?: AbortSignal
+}
+
+interface ProcessRequest<
+  TResult extends RuntimeValue,
+  TParams extends RuntimeValue,
+> {
+  id: string
+  type: JobType
+  jobParams: TParams
+  options?: ProcessOptions<TResult>
+}
+
+type ProcessArguments<
+  TResult extends RuntimeValue,
+  TParams extends RuntimeValue,
+> =
+  | [request: ProcessRequest<TResult, TParams>]
+  | [
+      id: string,
+      type: JobType,
+      jobParams: TParams,
+      options?: ProcessOptions<TResult>,
+    ]
+
+function toProcessRequest<
+  TResult extends RuntimeValue,
+  TParams extends RuntimeValue,
+>(args: ProcessArguments<TResult, TParams>): ProcessRequest<TResult, TParams> {
+  if (args.length === 1) return args[0]
+  const [id, type, jobParams, options] = args
+
+  return { id, type, jobParams, options }
 }
 
 class Queue {
@@ -85,13 +125,7 @@ class Queue {
     }
   }
 
-  getDiagnostics(): {
-    total: number
-    ready: number
-    running: number
-    successListeners: number
-    failureListeners: number
-  } {
+  getDiagnostics() {
     let ready = 0
     let running = 0
     let successListeners = 0
@@ -103,6 +137,7 @@ class Queue {
       } else if (job.status === JobStatus.PROCESSING) {
         running += 1
       }
+
       successListeners += job.successListeners.length
       failureListeners += job.failureListeners.length
     }
@@ -116,11 +151,13 @@ class Queue {
     }
   }
 
-  addExecutor<TParams, TResult>(
+  addExecutor<TParams extends RuntimeValue, TResult extends RuntimeValue>(
     jobType: JobType,
     handler: QueueExecutor<TParams, TResult>,
   ): void {
-    this.executorMap[jobType] = handler as QueueExecutor
+    // SAFETY: the queue only stores runtime values and invokes the registered handler with its own params.
+    this.executorMap[jobType] = (params, context) =>
+      handler(params as TParams, context)
   }
 
   hasJob(id: string, type: JobType): boolean {
@@ -164,9 +201,11 @@ class Queue {
       .filter(job => job.status === JobStatus.READY)
       .sort((jobA, jobB) => {
         const priorityDiff = jobB.priority - jobA.priority
+
         if (priorityDiff) {
           return priorityDiff
         }
+
         return jobA.addedTime.getTime() - jobB.addedTime.getTime()
       })
       .shift()
@@ -195,15 +234,21 @@ class Queue {
   }
 
   cancel(id: string, type: JobType): void {
-    const job = this.jobs.find(job => job.id === id && job.type === type)
+    const job = this.jobs.find(
+      candidate => candidate.id === id && candidate.type === type,
+    )
+
     if (job) {
       log('cancelling job %s (%s)', id, job.status.toString())
+
       if (job.status === JobStatus.PROCESSING) {
         this.cancelJob(job)
       }
+
       job.failureListeners.forEach(listener => {
         listener(new JobCancelledError())
       })
+
       if (job.status === JobStatus.READY) {
         this.removeJob(id, type)
         this.executeNextJobIfPossible()
@@ -238,6 +283,7 @@ class Queue {
   executeNextJobIfPossible(): void {
     if (!this.getReadyJobs().length) {
       log('all done. job queue is empty')
+
       return
     }
 
@@ -245,6 +291,7 @@ class Queue {
       if (this.options.aging) {
         this.ageJobs()
       }
+
       this.pruneQueue()
       void this.executeNextJob()
     } else {
@@ -254,6 +301,7 @@ class Queue {
 
   async executeNextJob(): Promise<void> {
     const nextJob = this.getNextJobToRun()
+
     if (!nextJob) {
       return
     }
@@ -268,18 +316,26 @@ class Queue {
 
     try {
       const handler = this.executorMap[nextJob.type]
+
       const promiseOrValue = handler.call(this, nextJob.params, {
         signal: nextJob.abortController.signal,
       })
 
-      if (promiseOrValue && typeof promiseOrValue === 'object') {
+      if (promiseOrValue && 'cancel' in Object(promiseOrValue)) {
+        // SAFETY: the worker result is inspected only for the optional cancellation method.
         const cancelablePromise = promiseOrValue as Promise<unknown> & {
           cancel?: () => void
         }
-        if (typeof cancelablePromise.cancel === 'function') {
+
+        const cancel = cancelablePromise.cancel
+
+        if (
+          cancel &&
+          Object.prototype.toString.call(cancel) === '[object Function]'
+        ) {
           nextJob.cancel = () => {
             log('terminating running task for job %s', nextJob.id)
-            cancelablePromise.cancel!()
+            cancel.call(cancelablePromise)
           }
         }
       }
@@ -291,8 +347,10 @@ class Queue {
       })
     } catch (error) {
       log('job %s was a failure, removing it', nextJob.id, nextJob.type)
+      // SAFETY: JavaScript catch values are one of the RuntimeValue union members.
+      const runtimeError = error as RuntimeValue
       nextJob.failureListeners.forEach(listener => {
-        listener.call(this, error)
+        listener.call(this, runtimeError)
       })
     } finally {
       this.removeJob(nextJob.id, nextJob.type)
@@ -304,27 +362,24 @@ class Queue {
     id: string,
     type: JobType,
     listeners: {
-      resolve: (value: never) => void
-      reject: (reason?: unknown) => void
+      resolve: (value: RuntimeValue) => void
+      reject: (reason?: RuntimeValue) => void
     },
   ): void {
     this.jobs.forEach(job => {
       if (job.id === id && job.type === type) {
-        job.successListeners.push(
-          listeners.resolve as unknown as (result: unknown) => void,
-        )
+        job.successListeners.push(listeners.resolve)
         job.failureListeners.push(listeners.reject)
       }
     })
   }
 
-  process<TResult, TParams>(
-    id: string,
-    type: JobType,
-    jobParams: TParams,
-    options: ProcessOptions<TResult> = {},
+  process<TResult extends RuntimeValue, TParams extends RuntimeValue>(
+    ...args: ProcessArguments<TResult, TParams>
   ): Promise<TResult> {
+    const { id, type, jobParams, options = {} } = toProcessRequest(args)
     log('added new job %s %o %o', type, jobParams, options)
+
     const {
       priority = JobPriority.LOW,
       maxAge = this.options.maxAge,
@@ -337,6 +392,7 @@ class Queue {
 
     return new Promise<TResult>((resolve, reject) => {
       let settled = false
+
       const resolveSubscriber = (result: TResult) => {
         if (settled) return
         settled = true
@@ -344,19 +400,27 @@ class Queue {
         resolve(result)
         onSuccess(result)
       }
-      const rejectSubscriber = (error: unknown) => {
+
+      const rejectSubscriber = (error: RuntimeValue) => {
         if (settled) return
         settled = true
         signal?.removeEventListener('abort', cancelSubscriber)
         reject(error)
         onFailure(error)
       }
-      const successListener = resolveSubscriber as (result: unknown) => void
+
+      // SAFETY: process results are constrained to the queue's runtime-value domain.
+      const successListener = resolveSubscriber as (
+        result: RuntimeValue,
+      ) => void
+
       const failureListener = rejectSubscriber
+
       const cancelSubscriber = () => {
         const job = this.jobs.find(
           queuedJob => queuedJob.id === id && queuedJob.type === type,
         )
+
         if (!job || settled) return
 
         job.successListeners = job.successListeners.filter(
@@ -371,6 +435,7 @@ class Queue {
 
         if (job.failureListeners.length === 0) {
           log('cancelling orphaned job %s (%s)', id, job.status.toString())
+
           if (job.status === JobStatus.PROCESSING) {
             this.cancelJob(job)
           } else {
@@ -382,6 +447,7 @@ class Queue {
 
       if (signal?.aborted) {
         rejectSubscriber(new JobCancelledError())
+
         return
       }
 
@@ -389,16 +455,21 @@ class Queue {
 
       if (this.hasJob(id, type)) {
         log('job id %s already present, adding callbacks', id)
+
         const existingJob = this.jobs.find(
           queuedJob => queuedJob.id === id && queuedJob.type === type,
         )
+
         if (existingJob) {
           existingJob.priority = Math.max(existingJob.priority, priority)
         }
+
         this.addListenersToJob(id, type, {
-          resolve: successListener as (value: never) => void,
+          // SAFETY: TResult is constrained to the runtime-value domain used by Queue.
+          resolve: successListener as (value: RuntimeValue) => void,
           reject: failureListener,
         })
+
         return
       }
 

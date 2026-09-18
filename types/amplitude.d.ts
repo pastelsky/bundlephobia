@@ -2,7 +2,10 @@
 declare global {
   var amplitude: {
     getInstance: () => {
-      logEvent: (event: string, data?: Record<string, unknown>) => void
+      logEvent: (
+        event: string,
+        data?: Record<string, string | number | boolean | null | undefined>,
+      ) => void
     }
   }
 }

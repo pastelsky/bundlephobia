@@ -3,6 +3,7 @@ import createDebug from 'debug'
 import firebaseSDK from 'firebase'
 import semver from 'semver'
 
+import type { PackageBuildInfoSnapshot } from '../types/package-domain'
 import { decodeFirebaseKey, encodeFirebaseKey } from './index'
 
 const debug = createDebug('bp:firebase-util')
@@ -24,7 +25,7 @@ interface SearchRecord {
   count: number
 }
 
-type PackageHistory = Record<string, Record<string, unknown>>
+type PackageHistory = Record<string, PackageBuildInfoSnapshot>
 
 interface AlgoliaPackageResponse {
   version: string
@@ -52,7 +53,10 @@ class FirebaseUtils {
     void searches
       .child(encodeFirebaseKey(name))
       .once('value')
-      .then(snapshot => snapshot.val() as SearchRecord | null)
+      .then(snapshot => {
+        // SAFETY: searches-v2 values are written as SearchRecord entries.
+        return snapshot.val() as SearchRecord | null
+      })
       .then(result => {
         if (result) {
           return searches.child(encodeFirebaseKey(name)).update({
@@ -89,14 +93,17 @@ class FirebaseUtils {
         .child(encodeFirebaseKey(name))
 
       return ref.once('value').then(snapshot => {
-        return snapshot.val() as Record<string, Record<string, unknown>> | null
+        // SAFETY: modules-v2 and modules-v3 history values are package snapshots.
+        return snapshot.val() as PackageHistory | null
       })
     }
 
     const firebasePromise = (async () => {
       const result = await getHistoryFromKey(FIREBASE_READ_KEY)
+
       if (result) {
         debug('package history from %s', FIREBASE_READ_KEY)
+
         return result
       }
 
@@ -105,9 +112,11 @@ class FirebaseUtils {
         !process.env.DISABLE_FIREBASE_V2_FALLBACK
       ) {
         const fallback = await getHistoryFromKey('modules-v2')
+
         if (fallback) {
           debug('package history from modules-v2 (fallback)')
         }
+
         return fallback
       }
 
@@ -127,7 +136,7 @@ class FirebaseUtils {
       },
     )
 
-    let firebaseHistory: Record<string, Record<string, unknown>> | null
+    let firebaseHistory: PackageHistory | null
     let versions: string[]
 
     try {
@@ -161,6 +170,7 @@ class FirebaseUtils {
     debug('last npm %d %s versions %o', limit, name, limitedVersions)
 
     const latestVersion = versions[versions.length - 1]
+
     if (latestVersion?.includes('-')) {
       limitedVersions.shift()
       limitedVersions.push(latestVersion)
@@ -176,6 +186,7 @@ class FirebaseUtils {
 
     Object.keys(firebaseHistory).forEach(version => {
       const decodedVersion = decodeFirebaseKey(version)
+
       if (limitedVersions.includes(decodedVersion)) {
         packageHistory[decodedVersion] = firebaseHistory?.[version] ?? {}
       }
@@ -196,7 +207,10 @@ class FirebaseUtils {
       .orderByChild('lastSearched')
       .limitToLast(Number(limit))
       .once('value')
-      .then(snapshot => snapshot.val() as Record<string, SearchRecord> | null)
+      .then(snapshot => {
+        // SAFETY: searches-v2 values are keyed SearchRecord entries.
+        return snapshot.val() as Record<string, SearchRecord> | null
+      })
       .then(result => {
         if (!result) {
           return recentSearches
@@ -223,6 +237,7 @@ class FirebaseUtils {
       .startAt(Date.now() - 1000 * 60 * 60 * 24 * 4, 'lastSearched')
       .once('value')
 
+    // SAFETY: searches-v2 values are keyed SearchRecord entries.
     const packages = snapshot.val() as Record<string, SearchRecord> | null
 
     if (packages) {

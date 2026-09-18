@@ -1,19 +1,20 @@
-jest.mock('@amplitude/analytics-browser', () => ({
-  init: jest.fn(),
-  track: jest.fn(),
-}))
-
 import Analytics from '../analytics'
-import { initializeAmplitude } from '../amplitude'
-import * as amplitude from '@amplitude/analytics-browser'
+import { initializeAmplitude, setAmplitudeLoader } from '../amplitude'
 
 describe('Analytics', () => {
-  const init = amplitude.init as jest.Mock
-  const track = amplitude.track as jest.Mock
+  const init = jest.fn()
+  const track = jest.fn()
+  let restoreAmplitude: () => void
+
+  // SAFETY: the test module factory replaces the browser init function with a Jest spy.
+  const amplitude = { init, track }
+  // SAFETY: the test module factory replaces the browser track function with a Jest spy.
 
   beforeEach(() => {
     init.mockReset()
     track.mockReset()
+    restoreAmplitude?.()
+    restoreAmplitude = setAmplitudeLoader(async () => amplitude)
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
       value: {},
@@ -21,13 +22,16 @@ describe('Analytics', () => {
   })
 
   afterEach(() => {
+    restoreAmplitude()
     Reflect.deleteProperty(globalThis, 'window')
   })
 
   it('initializes Amplitude only once in the browser', async () => {
     initializeAmplitude()
     Analytics.pageView('scan')
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await new Promise(resolve => {
+      setTimeout(resolve, 0)
+    })
 
     expect(init).toHaveBeenCalledTimes(1)
     expect(init).toHaveBeenCalledWith('93638c7d7bac8785dca060653e104732', {
@@ -39,7 +43,9 @@ describe('Analytics', () => {
 
   it('sends page context through Amplitude', async () => {
     Analytics.pageView('scan')
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await new Promise(resolve => {
+      setTimeout(resolve, 0)
+    })
 
     expect(track).toHaveBeenCalledWith('page_context_viewed', {
       page_type: 'scan',
@@ -48,7 +54,9 @@ describe('Analytics', () => {
 
   it('preserves typed event data for package searches', async () => {
     Analytics.searchSuccess({ packageName: 'react', timeTaken: 123 })
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await new Promise(resolve => {
+      setTimeout(resolve, 0)
+    })
 
     expect(track).toHaveBeenCalledWith('search_succeeded', {
       package: 'react',

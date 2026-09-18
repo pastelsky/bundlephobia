@@ -2,6 +2,7 @@ import { configure } from 'safe-stable-stringify'
 import truncate from 'truncate'
 
 const MAX_ERROR_MESSAGE_LENGTH = 16_000
+
 const stringifyError = configure({
   deterministic: false,
   maximumBreadth: 20,
@@ -11,13 +12,19 @@ const stringifyError = configure({
 function serializeValue(value) {
   const serialized = stringifyError(value, (_key, item) => {
     if (item instanceof Error) {
-      return {
+      const serializedError = {
         name: item.name,
         message: item.message,
-        ...(typeof item.code === 'string' ? { code: item.code } : {}),
       }
+
+      if (Object.prototype.toString.call(item.code) === '[object String]') {
+        serializedError.code = item.code
+      }
+
+      return serializedError
     }
-    return typeof item === 'string'
+
+    return Object.prototype.toString.call(item) === '[object String]'
       ? truncate(item, MAX_ERROR_MESSAGE_LENGTH)
       : item
   })
@@ -25,27 +32,44 @@ function serializeValue(value) {
   return serialized === undefined ? undefined : JSON.parse(serialized)
 }
 
-export default function serializeError(error) {
+function serializeJsonError(error) {
   if (
     error &&
-    typeof error === 'object' &&
-    typeof error.toJSON === 'function'
+    Object.prototype.toString.call(error) === '[object Object]' &&
+    error.toJSON instanceof Function
   ) {
     const serialized = serializeValue(error)
-    if (serialized && typeof serialized.name === 'string') {
+
+    if (
+      serialized &&
+      Object.prototype.toString.call(serialized.name) === '[object String]'
+    ) {
       return serialized
     }
   }
 
+  return undefined
+}
+
+function serializeFallbackError(error) {
+  const originalError = {
+    message: truncate(
+      error instanceof Error ? error.message : String(error),
+      MAX_ERROR_MESSAGE_LENGTH,
+    ),
+  }
+
+  if (Object.prototype.toString.call(error?.code) === '[object String]') {
+    originalError.code = error.code
+  }
+
   return {
     name: 'BuildServiceError',
-    originalError: {
-      message: truncate(
-        error instanceof Error ? error.message : String(error),
-        MAX_ERROR_MESSAGE_LENGTH,
-      ),
-      ...(typeof error?.code === 'string' ? { code: error.code } : {}),
-    },
+    originalError,
     extra: { retryable: true },
   }
+}
+
+export default function serializeError(error) {
+  return serializeJsonError(error) || serializeFallbackError(error)
 }

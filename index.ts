@@ -18,6 +18,7 @@ import CacheServiceClient from './server/clients/cacheService'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
 import logger from './server/Logger'
+import type { JsonObject } from './types/json'
 import remoteMcpClient from './server/mcp/remoteClient'
 import {
   buildApiCatalog,
@@ -60,11 +61,13 @@ function getEnv(env: Record<string, string | undefined | null>) {
 import { monitorEventLoopDelay } from 'node:perf_hooks'
 
 const eventLoopDelay = monitorEventLoopDelay({ resolution: 10 })
+
 eventLoopDelay.enable()
 
 setInterval(() => {
   const p99Ms = eventLoopDelay.percentile(99) / 1e6
   const maxMs = eventLoopDelay.max / 1e6
+
   if (p99Ms > 50) {
     logger.info(
       'EVENT_LOOP_LAG',
@@ -72,16 +75,89 @@ setInterval(() => {
       `High event loop latency detected: p99=${p99Ms.toFixed(1)}ms max=${maxMs.toFixed(1)}ms`,
     )
   }
+
   eventLoopDelay.reset()
 }, 10000)
 
 const env = getEnv(process.env)
 
 const cache = new CacheServiceClient()
+
 const port = env.port
+
 const dev = env.nodeEnv !== 'production'
+
 const app = next({ dev })
+
 const handle = app.getRequestHandler()
+
+type McpArguments = JsonObject
+
+type McpPayload = { name: string; arguments?: McpArguments }
+
+const localMcpPathBuilders = new Map([
+  [
+    'bundlephobia.size',
+    ({ packageName }: { packageName: string }) =>
+      `/api/size?package=${packageName}`,
+  ],
+  [
+    'bundlephobia.exports',
+    ({ packageName }: { packageName: string }) =>
+      `/api/exports?package=${packageName}`,
+  ],
+  [
+    'bundlephobia.exportsSizes',
+    ({ packageName }: { packageName: string }) =>
+      `/api/exports-sizes?package=${packageName}`,
+  ],
+  [
+    'bundlephobia.packageHistory',
+    ({ packageName, args }: { packageName: string; args: McpArguments }) =>
+      `/api/package-history?package=${packageName}&limit=${Number(args.limit ?? 10)}`,
+  ],
+  [
+    'bundlephobia.similarPackages',
+    ({ packageName }: { packageName: string }) =>
+      `/api/similar-packages?package=${packageName}`,
+  ],
+])
+
+function getLocalMcpRequest(name: string, args: McpArguments) {
+  const buildPath = localMcpPathBuilders.get(name)
+
+  if (!buildPath) return null
+
+  const packageArgument = args.package
+
+  const packageName =
+    Object.prototype.toString.call(packageArgument) === '[object String]'
+      ? encodeURIComponent(String(packageArgument))
+      : undefined
+
+  return packageName
+    ? { path: buildPath({ packageName, args }) }
+    : { invalid: true as const }
+}
+
+function isMcpPayload(value: unknown): value is McpPayload {
+  if (
+    value === null ||
+    value === undefined ||
+    Object.prototype.toString.call(value) !== '[object Object]' ||
+    !('name' in Object(value))
+  ) {
+    return false
+  }
+
+  // SAFETY: the object-tag and property-presence checks establish the payload shape.
+  const name = (value as { name: unknown }).name
+
+  return (
+    Object.prototype.toString.call(name) === '[object String]' &&
+    String(name).length > 0
+  )
+}
 
 app.prepare().then(() => {
   const server = new Koa()
@@ -103,9 +179,9 @@ app.prepare().then(() => {
     )
   }
 
-  server.use(async (ctx, next) => {
+  server.use(async (ctx, nextMiddleware) => {
     try {
-      await next()
+      await nextMiddleware()
     } catch (err) {
       if (err instanceof Error && 'status' in err && err.status === 401) {
         ctx.status = 401
@@ -199,20 +275,23 @@ app.prepare().then(() => {
     } catch (err) {
       console.error('in /api/recent', err)
       const message = err instanceof Error ? err.message : String(err)
-      const name = err instanceof Error ? err.name : 'Error'
+      const errorName = err instanceof Error ? err.name : 'Error'
       logger.error('RECENT', err, 'RECENT FAILED: failed')
       ctx.status = 422
-      ctx.body = { type: name, message }
+      ctx.body = { type: errorName, message }
     }
   })
 
   router.get('/api/package-history', async ctx => {
     const packageQuery = ctx.query.package
-    const packageString =
-      typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+
+    const packageString = Array.isArray(packageQuery)
+      ? packageQuery.join('/')
+      : packageQuery
 
     invariant(packageString, 'package parameter is required')
     const { name } = parsePackageString(packageString)
+
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
@@ -224,14 +303,14 @@ app.prepare().then(() => {
     } catch (err) {
       console.error(err)
       const message = err instanceof Error ? err.message : String(err)
-      const name = err instanceof Error ? err.name : 'Error'
+      const errorName = err instanceof Error ? err.name : 'Error'
       logger.error(
         'HISTORY',
         err,
         'HISTORY FAILED: for package' + ctx.query.package,
       )
       ctx.status = 422
-      ctx.body = { type: name, message }
+      ctx.body = { type: errorName, message }
     }
   })
 
@@ -302,12 +381,15 @@ app.prepare().then(() => {
 
       if (!remoteMcpClient.isEnabled()) {
         ctx.body = { tools: localTools }
+
         return
       }
 
+      // SAFETY: the remote MCP client returns the documented tools envelope.
       const remote = (await remoteMcpClient.listTools()) as {
-        tools?: Array<Record<string, unknown>>
+        tools?: JsonObject[]
       }
+
       ctx.body = {
         tools: [...localTools, ...(remote.tools ?? [])],
       }
@@ -320,24 +402,19 @@ app.prepare().then(() => {
   })
 
   router.post('/api/mcp/call-tool', async ctx => {
-    const payload = ctx.request.body as
-      | { name?: string; arguments?: Record<string, unknown> }
-      | undefined
+    const payload = ctx.request.body
 
-    if (!payload?.name || typeof payload.name !== 'string') {
+    if (!isMcpPayload(payload)) {
       ctx.status = 400
       ctx.body = {
         error: { code: 'InvalidMcpPayload', message: '`name` is required' },
       }
+
       return
     }
 
     try {
       const args = payload.arguments ?? {}
-      const packageName =
-        typeof args.package === 'string'
-          ? encodeURIComponent(args.package)
-          : undefined
 
       const callLocalApi = async (path: string) => {
         const response = await fetch(`http://127.0.0.1:${port}${path}`, {
@@ -345,73 +422,34 @@ app.prepare().then(() => {
             'X-Bundlephobia-User': 'bundlephobia mcp tool',
           },
         })
+
         const body = await response.json()
+
         return {
           status: response.status,
           body,
         }
       }
 
-      switch (payload.name) {
-        case 'bundlephobia.size': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          ctx.body = await callLocalApi(`/api/size?package=${packageName}`)
-          return
-        }
-        case 'bundlephobia.exports': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          ctx.body = await callLocalApi(`/api/exports?package=${packageName}`)
-          return
-        }
-        case 'bundlephobia.exportsSizes': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          ctx.body = await callLocalApi(
-            `/api/exports-sizes?package=${packageName}`,
-          )
-          return
-        }
-        case 'bundlephobia.packageHistory': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          const limit = Number(args.limit ?? 10)
-          ctx.body = await callLocalApi(
-            `/api/package-history?package=${packageName}&limit=${limit}`,
-          )
-          return
-        }
-        case 'bundlephobia.similarPackages': {
-          if (!packageName) {
-            ctx.status = 400
-            ctx.body = { error: { code: 'InvalidMcpPayload' } }
-            return
-          }
-          ctx.body = await callLocalApi(
-            `/api/similar-packages?package=${packageName}`,
-          )
-          return
-        }
-        default:
-          break
+      const localRequest = getLocalMcpRequest(payload.name, args)
+
+      if (localRequest?.invalid) {
+        ctx.status = 400
+        ctx.body = { error: { code: 'InvalidMcpPayload' } }
+
+        return
+      }
+
+      if (localRequest) {
+        ctx.body = await callLocalApi(localRequest.path)
+
+        return
       }
 
       if (!remoteMcpClient.isEnabled()) {
         ctx.status = 404
         ctx.body = { error: { code: 'McpNotConfigured' } }
+
         return
       }
 
@@ -430,9 +468,9 @@ app.prepare().then(() => {
   router.get(
     '/admin/restart',
     auth({ name: 'bundlephobia', pass: env.basicAuthPassword }),
-    async (ctx, next) => {
+    async ctx => {
       try {
-        const { stdout, stderr } = await exec.command('pm2 reload all')
+        const { stdout } = await exec.command('pm2 reload all')
         ctx.body = 'Server restarted' + stdout
       } catch (err) {
         console.error('Failed to restart', err)
@@ -443,7 +481,9 @@ app.prepare().then(() => {
   )
 
   router.post('/admin/restart', async ctx => {
+    // SAFETY: the admin endpoint body is parsed from its documented credentials contract.
     const { name, pass } = <{ name?: string; pass?: string }>ctx.request.body
+
     if (name !== 'bundlephobia' || pass !== env.basicAuthPassword) {
       console.error('Failed to restart')
       ctx.status = 500
@@ -458,11 +498,12 @@ app.prepare().then(() => {
   router.get(
     '/admin/clear-cache',
     auth({ name: 'bundlephobia', pass: env.basicAuthPassword }),
-    async (ctx, next) => {
+    async ctx => {
       try {
         const { stdout } = await exec.command(
           'rm -rf /tmp/tmp-build/cache/_cacache /tmp/tmp-build/packages/',
         )
+
         ctx.body = 'Cache cleared' + stdout
       } catch (err) {
         console.error('Failed to clear cache', err)
@@ -484,8 +525,10 @@ app.prepare().then(() => {
 
   router.get('/result', async ctx => {
     invariant(ctx.query.p, 'p parameter is required')
-    const packageString =
-      typeof ctx.query.p === 'string' ? ctx.query.p : ctx.query.p.join('/')
+
+    const packageString = Array.isArray(ctx.query.p)
+      ? ctx.query.p.join('/')
+      : ctx.query.p
 
     ctx.redirect(`/package/${packageString.trim()}`)
     ctx.status = 301
@@ -498,9 +541,9 @@ app.prepare().then(() => {
     ctx.respond = false
   })
 
-  server.use(async (ctx, next) => {
+  server.use(async (ctx, nextMiddleware) => {
     ctx.res.statusCode = 200
-    await next()
+    await nextMiddleware()
   })
 
   server.use(router.routes())
