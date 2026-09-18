@@ -58,17 +58,7 @@ const PACKAGES = {
   },
   moment: {
     description: 'Parse, validate, manipulate, and display dates',
-    keywords: [
-      'moment',
-      'date',
-      'time',
-      'parse',
-      'format',
-      'validate',
-      'i18n',
-      'l10n',
-      'ender',
-    ],
+    keywords: ['moment', 'date', 'time', 'i18n', 'l10n'],
     category: 'general-purpose-date-time',
   },
   '@formkit/tempo': {
@@ -99,7 +89,7 @@ describe('similar package categories', () => {
   // explicit `similar` entry can ever reach it.
   //
   // The comparison runs on TOKENS, not on the raw tag strings, because that is
-  // what scoring compares. `getCategory` tokenizes each tag, stems it and
+  // what scoring compares. `classifyPackage` tokenizes each tag, stems it and
   // lowercases it, so `animation` and `animations` are one token to the scorer
   // and two different strings to a naive check. A multi-word tag also becomes
   // several independent tokens, each carrying the tag's whole weight.
