@@ -1,12 +1,19 @@
-import gitURLParse from 'git-url-parse'
-import parsePackageSpec from 'npm-package-arg'
 import semver from 'semver'
 
 import { parseJavaScriptPackageSpecifier } from '../../../languages/javascript'
-import type { JsonObject, JsonValue } from '../../../types/json'
 import type { PackageReference } from '../../../types/language-domain'
+import {
+  fetchPackageManifest,
+  fetchPackageVersionManifest,
+  type NpmPackageManifest,
+} from '../../clients/npmRegistry'
 import CustomError from '../../CustomError'
 import BuildService from '../../api/BuildService'
+import {
+  normalizeRepositoryUrl,
+  parseNpmRegistryPackageSpec,
+} from '../../packages/npmPackage'
+import type { NpmRegistryPackageSpec } from '../../packages/npmPackage'
 import type {
   PackageBuildResult,
   PackageExportSizesResult,
@@ -18,27 +25,6 @@ import type {
   ResolvedAnalysisPackage,
 } from '../contracts'
 
-interface PacoteModule {
-  manifest(
-    spec: string,
-    options: { fullMetadata: boolean },
-  ): Promise<ResolvedPackageManifest>
-}
-
-// SAFETY: the pinned pacote module implements the manifest contract used here.
-const pacote = require('pacote') as PacoteModule
-
-type RegistryPackageSpec = parsePackageSpec.RegistryResult & {
-  escapedName: string
-}
-
-interface NpmRegistryFetchModule {
-  json(path: string): Promise<ResolvedPackageManifest>
-}
-
-// SAFETY: the pinned registry client returns package manifests from JSON endpoints.
-const registryFetch = require('npm-registry-fetch') as NpmRegistryFetchModule
-
 interface PacoteManifestError {
   code?: string
   distTags?: Record<string, string>
@@ -49,59 +35,22 @@ interface PacoteManifestError {
 interface ManifestRequestContext {
   packageName?: string
   requestedVersion: string
-  packageSpec: RegistryPackageSpec | null
-}
-
-export interface ResolvedPackageManifest {
-  name: string
-  version: string
-  description?: string
-  repository?: string | JsonObject
-  [key: string]: JsonValue | undefined
-}
-
-function isAliasPackageSpec(
-  spec: parsePackageSpec.Result,
-): spec is parsePackageSpec.AliasResult {
-  return spec.type === 'alias'
-}
-
-function isRegistryPackageSpec(
-  spec: parsePackageSpec.Result,
-): spec is RegistryPackageSpec {
-  return spec.registry && Boolean(spec.escapedName)
-}
-
-function registryManifestPath(name: string, version: string): string {
-  return `/${name.replace('/', '%2f')}/${encodeURIComponent(version)}`
+  packageSpec: NpmRegistryPackageSpec | null
 }
 
 function isNotFound<T>(error: T): boolean {
-  // SAFETY: the package clients expose these optional error fields on failures.
+  // SAFETY: pacote exposes these optional error fields on failures.
   const registryError = error as PacoteManifestError
 
   return registryError.code === 'E404' || registryError.statusCode === 404
 }
 
-async function fetchVersionManifest(name: string, version: string) {
-  return registryFetch.json(registryManifestPath(name, version))
-}
-
-function registryPackageSpec(
-  packageString: string,
-): RegistryPackageSpec | null {
-  const parsed = parsePackageSpec(packageString)
-  const target = isAliasPackageSpec(parsed) ? parsed.subSpec : parsed
-
-  return isRegistryPackageSpec(target) ? target : null
-}
-
 function manifestRequestContext(packageString: string): ManifestRequestContext {
-  const packageSpec = registryPackageSpec(packageString)
+  const packageSpec = parseNpmRegistryPackageSpec(packageString)
 
   return {
     packageSpec,
-    packageName: packageSpec?.escapedName,
+    packageName: packageSpec?.name,
     requestedVersion: packageSpec?.fetchSpec || 'latest',
   }
 }
@@ -109,30 +58,32 @@ function manifestRequestContext(packageString: string): ManifestRequestContext {
 async function resolveRegistryManifest(
   packageString: string,
   context: ManifestRequestContext,
-): Promise<ResolvedPackageManifest> {
+): Promise<NpmPackageManifest> {
   const { packageSpec } = context
 
   if (!packageSpec) {
-    return pacote.manifest(packageString, { fullMetadata: true })
+    return fetchPackageManifest(packageString, { fullMetadata: true })
   }
 
   if (packageSpec.type === 'version') {
     const version =
       semver.clean(context.requestedVersion) ?? context.requestedVersion
 
-    return fetchVersionManifest(packageSpec.escapedName, version)
+    return fetchPackageVersionManifest(packageSpec.name, version)
   }
 
   if (packageSpec.type === 'tag') {
-    return fetchVersionManifest(
-      packageSpec.escapedName,
+    return fetchPackageVersionManifest(
+      packageSpec.name,
       context.requestedVersion,
     )
   }
 
-  const manifest = await pacote.manifest(packageString, { fullMetadata: false })
+  const manifest = await fetchPackageManifest(packageString, {
+    fullMetadata: false,
+  })
 
-  return fetchVersionManifest(manifest.name, manifest.version)
+  return fetchPackageVersionManifest(manifest.name, manifest.version)
 }
 
 async function findVersionMismatchError(
@@ -143,7 +94,7 @@ async function findVersionMismatchError(
   if (!packageName) return null
 
   try {
-    const latest = await fetchVersionManifest(packageName, 'latest')
+    const latest = await fetchPackageVersionManifest(packageName, 'latest')
 
     return new CustomError('PackageVersionMismatchError', null, {
       suggestedVersion: latest.version,
@@ -160,7 +111,7 @@ async function findVersionMismatchError(
 }
 
 function toManifestError<T>(error: T): never {
-  // SAFETY: package-client failures are inspected only for these optional fields.
+  // SAFETY: pacote failures expose these optional error fields.
   const pacoteError = error as PacoteManifestError
 
   if (pacoteError.code === 'ETARGET') {
@@ -177,7 +128,7 @@ function toManifestError<T>(error: T): never {
 
 async function resolveManifest(
   packageString: string,
-): Promise<ResolvedPackageManifest> {
+): Promise<NpmPackageManifest> {
   let context: ManifestRequestContext = {
     packageSpec: null,
     requestedVersion: 'latest',
@@ -200,28 +151,6 @@ async function resolveManifest(
 
     return toManifestError(error)
   }
-}
-
-function toRepositoryUrl(repository: string | { url?: string } | undefined) {
-  if (!repository) return ''
-
-  try {
-    const rawRepository = hasRepositoryUrl(repository)
-      ? (repository.url ?? '')
-      : (repository ?? '')
-
-    return gitURLParse(rawRepository).toString('https')
-  } catch {
-    console.error('failed to parse repository url', repository)
-
-    return ''
-  }
-}
-
-function hasRepositoryUrl(
-  repository: string | { url?: string },
-): repository is { url?: string } {
-  return Object.prototype.toString.call(repository) === '[object Object]'
 }
 
 export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<'javascript'> {
@@ -252,7 +181,7 @@ export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<
       displayName: manifest.name,
       canonicalSpecifier: `${manifest.name}@${manifest.version}`,
       description,
-      repository: toRepositoryUrl(manifest.repository),
+      repository: normalizeRepositoryUrl(manifest.repository),
     }
   }
 

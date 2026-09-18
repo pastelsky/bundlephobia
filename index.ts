@@ -18,7 +18,7 @@ import CacheServiceClient from './server/clients/cacheService'
 import { parsePackageString } from './utils/common.utils'
 import firebaseUtils from './utils/firebase.utils'
 import logger from './server/Logger'
-import type { JsonObject } from './types/json'
+import type { JsonObject, JsonValue } from './types/json'
 import remoteMcpClient from './server/mcp/remoteClient'
 import {
   buildApiCatalog,
@@ -43,6 +43,7 @@ import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
 
 import config from './server/config'
 import { createAnalysisContextMiddleware } from './server/analysis'
+import { fetchPackageHistory } from './server/packageHistory'
 
 function getEnv(env: Record<string, string | undefined | null>) {
   invariant(
@@ -95,6 +96,50 @@ type McpArguments = JsonObject
 
 type McpPayload = { name: string; arguments?: McpArguments }
 
+function isStringJsonValue(value: JsonValue | undefined): value is string {
+  return Object.prototype.toString.call(value) === '[object String]'
+}
+
+function getMcpString(value: JsonValue | undefined): string | undefined {
+  return isStringJsonValue(value) ? value : undefined
+}
+
+function getQueryValue(
+  value: string | string[] | undefined,
+  joinArrays = false,
+): string | undefined {
+  if (Array.isArray(value)) {
+    return joinArrays ? value.join('/') : undefined
+  }
+
+  return value
+}
+
+function getPackageHistoryLimit(value: string | string[] | undefined): number {
+  const requestedLimit = Number(getQueryValue(value))
+
+  return Number.isInteger(requestedLimit)
+    ? Math.min(Math.max(requestedLimit, 1), 500)
+    : 40
+}
+
+function getPackageHistoryDateError(
+  from: string | undefined,
+  to: string | undefined,
+): string | undefined {
+  for (const date of [from, to]) {
+    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return 'from and to must be YYYY-MM-DD dates'
+    }
+  }
+
+  if (from && to && from > to) {
+    return 'from must not be after to'
+  }
+
+  return undefined
+}
+
 const localMcpPathBuilders = new Map([
   [
     'bundlephobia.size',
@@ -113,8 +158,21 @@ const localMcpPathBuilders = new Map([
   ],
   [
     'bundlephobia.packageHistory',
-    ({ packageName, args }: { packageName: string; args: McpArguments }) =>
-      `/api/package-history?package=${packageName}&limit=${Number(args.limit ?? 10)}`,
+    ({ packageName, args }: { packageName: string; args: McpArguments }) => {
+      const params = new URLSearchParams({
+        package: packageName,
+        limit: String(Number(args.limit ?? 40)),
+      })
+
+      const from = getMcpString(args.from)
+      const to = getMcpString(args.to)
+
+      if (from) params.set('from', from)
+
+      if (to) params.set('to', to)
+
+      return `/api/package-history?${params}`
+    },
   ],
   [
     'bundlephobia.similarPackages',
@@ -130,10 +188,11 @@ function getLocalMcpRequest(name: string, args: McpArguments) {
 
   const packageArgument = args.package
 
-  const packageName =
-    Object.prototype.toString.call(packageArgument) === '[object String]'
-      ? encodeURIComponent(String(packageArgument))
-      : undefined
+  const packageNameValue = getMcpString(packageArgument)
+
+  const packageName = packageNameValue
+    ? encodeURIComponent(packageNameValue)
+    : undefined
 
   return packageName
     ? { path: buildPath({ packageName, args }) }
@@ -283,23 +342,24 @@ app.prepare().then(() => {
   })
 
   router.get('/api/package-history', async ctx => {
-    const packageQuery = ctx.query.package
-
-    const packageString = Array.isArray(packageQuery)
-      ? packageQuery.join('/')
-      : packageQuery
+    const packageString = getQueryValue(ctx.query.package, true)
 
     invariant(packageString, 'package parameter is required')
     const { name } = parsePackageString(packageString)
+    const from = getQueryValue(ctx.query.from)
+    const to = getQueryValue(ctx.query.to)
+    const limit = getPackageHistoryLimit(ctx.query.limit)
+    const dateError = getPackageHistoryDateError(from, to)
+
+    if (dateError) {
+      ctx.throw(400, dateError)
+    }
 
     try {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
       }
-      ctx.body = await firebaseUtils.getPackageHistory(
-        name,
-        Number(ctx.query.limit),
-      )
+      ctx.body = await fetchPackageHistory(name, { from, to, limit })
     } catch (err) {
       console.error(err)
       const message = err instanceof Error ? err.message : String(err)
