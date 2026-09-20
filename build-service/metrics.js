@@ -22,6 +22,10 @@ const MAX_COMMAND_LENGTH = 160
 
 const DEFAULT_MAX_ARTIFACTS = 200
 
+const MAX_PROCESS_PEAKS = 12
+
+const MIN_PEAK_DETAIL_DELTA_BYTES = 16 * 1024 * 1024
+
 let artifactSequence = 0
 
 function positiveNumber(value, fallback) {
@@ -109,7 +113,8 @@ function parseMemoryStats(contents) {
 
     if (!Number.isFinite(parsed)) continue
 
-    stats[key] = unit === 'kB' ? parsed * 1024 : parsed
+    const normalizedKey = key.endsWith(':') ? key.slice(0, -1) : key
+    stats[normalizedKey] = unit === 'kB' ? parsed * 1024 : parsed
   }
 
   return stats
@@ -194,6 +199,8 @@ async function readProcessTree() {
     return {
       processes: new Map(),
       rssBytes: memory.rss,
+      nodeRssBytes: memory.rss,
+      childRssBytes: 0,
       cpuMs: 0,
       processCount: 1,
     }
@@ -241,7 +248,20 @@ async function readProcessTree() {
       ((record.userTicks + record.systemTicks) * 1000) / CLOCK_TICKS_PER_SECOND
   }
 
-  return { processes: tree, rssBytes, cpuMs, processCount: tree.size }
+  const nodeRecord = [...tree.values()].find(
+    record => record.pid === process.pid,
+  )
+
+  const nodeRssBytes = nodeRecord?.rssBytes ?? 0
+
+  return {
+    processes: tree,
+    rssBytes,
+    nodeRssBytes,
+    childRssBytes: Math.max(0, rssBytes - nodeRssBytes),
+    cpuMs,
+    processCount: tree.size,
+  }
 }
 
 async function readFilesystemStats(path) {
@@ -284,6 +304,18 @@ function safePackageName(packageString) {
   return packageString.replace(/[^a-zA-Z0-9._-]+/g, '-').slice(0, 80)
 }
 
+// oxlint-disable-next-line complexity
+function compareArtifacts(left, right) {
+  return (
+    (right.peakRssBytes ?? 0) - (left.peakRssBytes ?? 0) ||
+    (right.rssRetainedBytes ?? 0) - (left.rssRetainedBytes ?? 0) ||
+    (right.durationMs ?? 0) - (left.durationMs ?? 0) ||
+    (right.cpuMs ?? 0) - (left.cpuMs ?? 0) ||
+    Math.abs(right.diskUsedDeltaBytes ?? 0) -
+      Math.abs(left.diskUsedDeltaBytes ?? 0)
+  )
+}
+
 async function pruneMetricArtifacts(directory) {
   const entries = await fs.readdir(directory, { withFileTypes: true })
 
@@ -292,19 +324,27 @@ async function pruneMetricArtifacts(directory) {
       .filter(entry => entry.isFile() && entry.name.endsWith('.json'))
       .map(async entry => ({
         name: entry.name,
-        modifiedAt: (await fs.stat(path.join(directory, entry.name))).mtimeMs,
+        metrics: await fs
+          .readFile(path.join(directory, entry.name), 'utf8')
+          .then(contents => JSON.parse(contents))
+          .catch(() => ({})),
       })),
   )
 
-  const staleArtifacts = artifacts
-    .sort((left, right) => right.modifiedAt - left.modifiedAt)
-    .slice(getMaxArtifacts())
+  const rankedArtifacts = artifacts.sort((left, right) =>
+    compareArtifacts(left.metrics, right.metrics),
+  )
+
+  const retainedArtifacts = rankedArtifacts.slice(0, getMaxArtifacts())
+  const staleArtifacts = rankedArtifacts.slice(getMaxArtifacts())
 
   await Promise.all(
     staleArtifacts.map(artifact =>
       fs.unlink(path.join(directory, artifact.name)).catch(() => {}),
     ),
   )
+
+  return new Set(retainedArtifacts.map(artifact => artifact.name))
 }
 
 async function writeMetricsArtifact(metrics) {
@@ -323,9 +363,9 @@ async function writeMetricsArtifact(metrics) {
       'utf8',
     )
     await fs.rename(temporaryPath, artifactPath)
-    await pruneMetricArtifacts(directory)
+    const retainedArtifacts = await pruneMetricArtifacts(directory)
 
-    return artifactPath
+    return retainedArtifacts.has(filename) ? artifactPath : undefined
   } catch (error) {
     await fs.unlink(temporaryPath).catch(() => {})
 
@@ -341,6 +381,9 @@ function summarizeMetrics(metrics, artifactPath) {
     durationMs: metrics.durationMs,
     cpuMs: metrics.cpuMs,
     peakRssMb: metrics.peakRssMb,
+    peakNodeRssMb: round(metrics.peakNodeRssBytes / 1024 / 1024),
+    peakChildRssMb: round(metrics.peakChildRssBytes / 1024 / 1024),
+    peakUnattributedMb: round(metrics.peakUnattributedBytes / 1024 / 1024),
     rssAfterMb: metrics.rssAfterMb,
     rssRetainedMb: round(metrics.rssRetainedBytes / 1024 / 1024),
     processCountAtPeak: metrics.processCountAtPeak,
@@ -382,25 +425,45 @@ export async function measureBuild({ operation, packageString, run }) {
   let peakExternalBytes = 0
   let peakArrayBuffersBytes = 0
   let initialRssBytes
+  let initialNodeRssBytes
+  let initialChildRssBytes
   let initialHeapUsedBytes
   let initialProcessCount
   let processCountAtPeak = 0
+  let peakNodeRssBytes = 0
+  let peakChildRssBytes = 0
+  let lastDetailedPeakRssBytes = 0
   let peakProcesses = []
+  const processPeaks = new Map()
 
+  // oxlint-disable-next-line complexity
   const sample = async () => {
     const snapshot = await readProcessTree()
     const memory = process.memoryUsage()
     const reachedNewPeak = snapshot.rssBytes > peakRssBytes
     peakRssBytes = Math.max(peakRssBytes, snapshot.rssBytes)
+    peakNodeRssBytes = Math.max(peakNodeRssBytes, snapshot.nodeRssBytes)
+    peakChildRssBytes = Math.max(peakChildRssBytes, snapshot.childRssBytes)
     peakHeapUsedBytes = Math.max(peakHeapUsedBytes, memory.heapUsed)
     peakExternalBytes = Math.max(peakExternalBytes, memory.external)
     peakArrayBuffersBytes = Math.max(peakArrayBuffersBytes, memory.arrayBuffers)
     initialRssBytes ??= snapshot.rssBytes
+    initialNodeRssBytes ??= snapshot.nodeRssBytes
+    initialChildRssBytes ??= snapshot.childRssBytes
     initialHeapUsedBytes ??= memory.heapUsed
     initialProcessCount ??= snapshot.processCount
 
     if (reachedNewPeak) {
       processCountAtPeak = snapshot.processCount
+    }
+
+    if (
+      reachedNewPeak &&
+      (peakProcesses.length === 0 ||
+        snapshot.rssBytes >=
+          lastDetailedPeakRssBytes + MIN_PEAK_DETAIL_DELTA_BYTES)
+    ) {
+      lastDetailedPeakRssBytes = snapshot.rssBytes
 
       const topProcesses = [...snapshot.processes.values()]
         .sort((left, right) => right.rssBytes - left.rssBytes)
@@ -413,16 +476,33 @@ export async function measureBuild({ operation, packageString, run }) {
           startTime: processRecord.startTime,
           rssBytes: processRecord.rssBytes,
           command: await readProcessCommand(processRecord.pid),
+          memory: await readProcessMemory(processRecord.pid),
         })),
       )
     }
 
     for (const [key, processRecord] of snapshot.processes) {
+      const previous = previousProcesses.get(key)
+
+      const existingPeak = processPeaks.get(key)
+
       const processCpuMs =
         ((processRecord.userTicks + processRecord.systemTicks) * 1000) /
         CLOCK_TICKS_PER_SECOND
 
-      const previous = previousProcesses.get(key)
+      processPeaks.set(key, {
+        pid: processRecord.pid,
+        ppid: processRecord.ppid,
+        startTime: processRecord.startTime,
+        peakRssBytes: Math.max(
+          existingPeak?.peakRssBytes ?? 0,
+          processRecord.rssBytes,
+        ),
+        peakCpuMs: Math.max(existingPeak?.peakCpuMs ?? 0, processCpuMs),
+        command:
+          existingPeak?.command ??
+          (await readProcessCommand(processRecord.pid)),
+      })
 
       if (previous) {
         cpuMs += Math.max(0, processCpuMs - previous)
@@ -462,6 +542,10 @@ export async function measureBuild({ operation, packageString, run }) {
     const endedCgroup = await readCgroupStats()
     const finalSnapshot = await readProcessTree()
 
+    const processPeakDetails = [...processPeaks.values()]
+      .sort((left, right) => right.peakRssBytes - left.peakRssBytes)
+      .slice(0, MAX_PROCESS_PEAKS)
+
     const metrics = {
       package: packageString,
       operation,
@@ -469,10 +553,21 @@ export async function measureBuild({ operation, packageString, run }) {
       durationMs: round(performance.now() - startedAt),
       cpuMs: round(cpuMs),
       rssBeforeBytes: initialRssBytes,
+      nodeRssBeforeBytes: initialNodeRssBytes,
+      childRssBeforeBytes: initialChildRssBytes,
       rssAfterBytes: finalSnapshot.rssBytes,
+      nodeRssAfterBytes: finalSnapshot.nodeRssBytes,
+      childRssAfterBytes: finalSnapshot.childRssBytes,
       rssAfterMb: round(finalSnapshot.rssBytes / 1024 / 1024),
       rssRetainedBytes: finalSnapshot.rssBytes - initialRssBytes,
+      nodeRssRetainedBytes: finalSnapshot.nodeRssBytes - initialNodeRssBytes,
       peakRssBytes,
+      peakNodeRssBytes,
+      peakChildRssBytes,
+      peakUnattributedBytes: Math.max(
+        0,
+        peakRssBytes - peakHeapUsedBytes - peakExternalBytes,
+      ),
       peakRssMb: round(peakRssBytes / 1024 / 1024),
       peakHeapUsedBytes,
       peakExternalBytes,
@@ -487,6 +582,7 @@ export async function measureBuild({ operation, packageString, run }) {
       processCountAtPeak,
       processCountAtEnd: finalSnapshot.processCount,
       peakProcesses,
+      processPeakDetails,
       cgroupAtStart: startedCgroup,
       cgroupAtEnd: endedCgroup,
       heapUsedBeforeBytes: initialHeapUsedBytes,
