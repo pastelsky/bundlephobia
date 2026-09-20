@@ -207,15 +207,10 @@ export function buildChartModel({
 
   const allPoints = rawSeries.flatMap(series => series.points)
 
-  const releaseCandidates = rawSeries.flatMap(raw =>
-    metric === 'size'
-      ? raw.releases.filter(release =>
-          release.major ? showMajorReleases : showMinorReleases,
-        )
-      : [],
-  )
-
-  if (allPoints.length === 0 && releaseCandidates.length === 0) return null
+  // Release metadata cannot form a meaningful chart on its own. In
+  // particular, size history may be unavailable while releases are present;
+  // continuing with an empty value domain produces NaN SVG coordinates.
+  if (allPoints.length === 0) return null
 
   // Keep the coordinate system tied to the requested range, not to whichever
   // series happens to have data. Otherwise a sparse metric collapses the whole
