@@ -149,6 +149,24 @@ describe('installation service store', () => {
     await store.close()
   })
 
+  it('expires abandoned subscriptions', async () => {
+    jest.useFakeTimers()
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    const store = createStore(api, root, 1_000, 1_000)
+    await store.start()
+    const subscription = await store.subscribe('react@19.1.1')
+
+    await jest.advanceTimersByTimeAsync(2_100)
+    await store.sweep()
+
+    expect((await store.diagnostics()).installations).toHaveLength(0)
+    expect(api.disposePackage).toHaveBeenCalledWith({
+      installPath: subscription.installation.installPath,
+    })
+    await store.close()
+  })
+
   it('removes incomplete directories when the service starts', async () => {
     const root = await temporaryRoot()
     const abandonedPath = await fs.mkdtemp(path.join(root, 'abandoned-'))

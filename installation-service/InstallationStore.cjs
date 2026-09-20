@@ -146,7 +146,12 @@ class InstallationStore {
       }
 
       const id = randomUUID()
-      this.subscriptions.set(id, { id, key, directory })
+      this.subscriptions.set(id, {
+        id,
+        key,
+        directory,
+        activeUntil: entry.activeUntil,
+      })
       this.activeCounts.set(
         directory,
         (this.activeCounts.get(directory) || 0) + 1
@@ -207,10 +212,25 @@ class InstallationStore {
 
           await this.withKeyLock(metadata.key, async () => {
             const current = await this.read(directory)
-            if (!current || this.activeCounts.get(directory)) return
+            if (!current) return
+
+            const now = Date.now()
+            for (const [id, subscription] of this.subscriptions) {
+              if (
+                subscription.directory === directory &&
+                subscription.activeUntil <= now
+              ) {
+                this.subscriptions.delete(id)
+                this.activeCounts.set(
+                  directory,
+                  (this.activeCounts.get(directory) || 1) - 1
+                )
+              }
+            }
             if (
-              (current.activeUntil || 0) > Date.now() ||
-              current.lastUsedAt + this.retentionMs > Date.now()
+              this.activeCounts.get(directory) ||
+              (current.activeUntil || 0) > now ||
+              current.lastUsedAt + this.retentionMs > now
             ) {
               return
             }
