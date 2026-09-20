@@ -1,3 +1,3 @@
-export * from './cache.ts'
+export * from './cache/index.ts'
 
 export * from './package.ts'

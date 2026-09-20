@@ -46,13 +46,14 @@ function repositoryString(repository: RepositoryField | undefined): string {
     return ''
   }
 
-  return hasRepositoryUrl(repository) ? (repository.url ?? '') : repository
-}
+  if (Object.prototype.toString.call(repository) === '[object Object]') {
+    // SAFETY: the object-tag check establishes the object RepositoryField variant.
+    return (repository as { url?: string }).url ?? ''
+  }
 
-function hasRepositoryUrl(
-  repository: RepositoryField,
-): repository is { url?: string } {
-  return Object.prototype.toString.call(repository) === '[object Object]'
+  return Object.prototype.toString.call(repository) === '[object String]'
+    ? String(repository)
+    : ''
 }
 
 export function normalizeRepositoryUrl(

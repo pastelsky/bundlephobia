@@ -9,7 +9,7 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./cache": "./src/cache.ts",
+    "./cache": "./src/cache/index.ts",
     "./package": "./src/package.ts"
   }
 }
