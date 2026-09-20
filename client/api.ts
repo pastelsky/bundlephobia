@@ -5,7 +5,7 @@ import type {
   PackageBuildInfoSnapshot,
   PackageExportAsset,
   PackageIdentity,
-} from '../types/package-domain'
+} from '@bundlephobia/service-contracts/package'
 import type { JsonObject } from '../types/json'
 import type { PackageHistoryResponse } from '../types/package-history'
 

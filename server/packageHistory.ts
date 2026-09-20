@@ -1,7 +1,7 @@
 import semver from 'semver'
 
 import firebaseUtils from '../utils/firebase.utils'
-import type { PackageBuildInfoSnapshot } from '../types/package-domain'
+import type { PackageBuildInfoSnapshot } from '@bundlephobia/service-contracts/package'
 import type {
   PackageHistoryRelease,
   PackageHistoryResponse,
@@ -147,12 +147,18 @@ export async function fetchPackageHistory(
   packageName: string,
   options: PackageHistoryOptions,
 ): Promise<PackageHistoryResponse> {
-  const [packument, history] = await Promise.all([
-    fetchPackagePackument(packageName),
-    firebaseUtils.getPackageHistory(packageName, options.limit),
-  ])
-
+  const packument = await fetchPackagePackument(packageName)
   const publishDates = getPublishDates(packument.time)
+
+  const history = await firebaseUtils.getPackageHistory(
+    packageName,
+    options.limit,
+    version => {
+      const publishedAt = publishDates[version]
+
+      return publishedAt ? inRange(publishedAt, options) : false
+    },
+  )
 
   const repository = repositoryForPackument(packument)
 

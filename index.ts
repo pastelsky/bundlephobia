@@ -28,18 +28,24 @@ import {
 
 import limit from './server/middlewares/rateLimit.middleware'
 import exportsMiddlware from './server/middlewares/exports.middleware'
-import exportsSizesMiddlware from './server/middlewares/exportsSizes.middleware'
+import { createExportSizesMiddleware } from './server/middlewares/exportsSizes.middleware'
 import blockBlacklistMiddleware from './server/middlewares/results/blockBlacklist.middleware'
 import { createResolvePackageMiddleware } from './server/middlewares/results/resolvePackage.middleware'
 import cachedResponseMiddleware from './server/middlewares/results/cachedResponse.middleware'
-import buildMiddleware from './server/middlewares/results/build.middleware'
+import { createBuildMiddleware } from './server/middlewares/results/build.middleware'
 import errorMiddleware from './server/middlewares/results/error.middleware'
 import requestLoggerMiddleware from './server/middlewares/requestLogger.middleware'
 import similarPackagesMiddleware from './server/middlewares/similar-packages/similarPackages.middleware'
-import generateImgMiddleware from './server/middlewares/generateImg.middleware'
+import { createGenerateImgMiddleware } from './server/middlewares/generateImg.middleware'
 import buildMissRateLimit from './server/middlewares/buildMissRateLimit.middleware'
 
 import jsonCacheMiddleware from './server/middlewares/jsonCache.middleware'
+
+import type {
+  CacheKey,
+  ExportsCacheResult,
+  PackageCacheResult,
+} from '@bundlephobia/service-contracts/cache'
 
 import config from './server/config'
 import { createAnalysisContextMiddleware } from './server/analysis'
@@ -83,6 +89,12 @@ setInterval(() => {
 const env = getEnv(process.env)
 
 const cache = new CacheServiceClient()
+
+const buildMiddleware = createBuildMiddleware(cache)
+
+const exportSizesMiddleware = createExportSizesMiddleware(cache)
+
+const generateImgMiddleware = createGenerateImgMiddleware(cache)
 
 const port = env.port
 
@@ -160,7 +172,7 @@ const localMcpPathBuilders = new Map([
     'bundlephobia.packageHistory',
     ({ packageName, args }: { packageName: string; args: McpArguments }) => {
       const params = new URLSearchParams({
-        package: packageName,
+        package: decodeURIComponent(packageName),
         limit: String(Number(args.limit ?? 40)),
       })
 
@@ -265,16 +277,12 @@ app.prepare().then(() => {
     }),
   )
 
-  type Key = {
-    name: string
-    version: string
-  }
-
   router.get(
     '/api/size',
     jsonCacheMiddleware({
-      get: (key: Key) => cache.getPackageSize(key),
-      set: (key: Key, value: string) => cache.setPackageSize(key, value),
+      get: (key: CacheKey) => cache.getPackageSize(key),
+      set: (key: CacheKey, value: PackageCacheResult) =>
+        cache.setPackageSize(key, value),
       hash: (ctx: Context) => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
@@ -305,8 +313,9 @@ app.prepare().then(() => {
   router.get(
     '/api/exports-sizes',
     jsonCacheMiddleware({
-      get: (key: Key) => cache.getExportsSize(key),
-      set: (key: Key, value: string) => cache.setExportsSize(key, value),
+      get: (key: CacheKey) => cache.getExportsSize(key),
+      set: (key: CacheKey, value: ExportsCacheResult) =>
+        cache.setExportsSize(key, value),
       hash: (ctx: Context) => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
@@ -322,7 +331,7 @@ app.prepare().then(() => {
       maxRequests: 10,
       whiteList: ['127.0.0.1', '::1'],
     }),
-    exportsSizesMiddlware,
+    exportSizesMiddleware,
   )
 
   router.get('/api/recent', async ctx => {
@@ -423,6 +432,8 @@ app.prepare().then(() => {
             properties: {
               package: { type: 'string' },
               limit: { type: 'number' },
+              from: { type: 'string', format: 'date' },
+              to: { type: 'string', format: 'date' },
             },
           },
         },

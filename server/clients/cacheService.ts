@@ -1,89 +1,161 @@
 import 'dotenv-defaults/config'
 
-import axios from 'axios'
+import axios, { type AxiosInstance } from 'axios'
 import createDebug from 'debug'
 
+import {
+  CACHE_ROUTE,
+  parseExportsCacheResult,
+  parsePackageCacheResult,
+  type CacheKey,
+  type CacheReadResult,
+  type CacheValue,
+  type ExportsCacheResult,
+  type PackageCacheResult,
+} from '@bundlephobia/service-contracts/cache'
+
 import logger from '../Logger'
-import type { JsonValue } from '../../types/json'
 
 const debug = createDebug('bp:cache')
 
-export interface CacheKey {
-  name: string
-  version: string
+export type { CacheKey } from '@bundlephobia/service-contracts/cache'
+
+export interface CacheServiceClientOptions {
+  api?: Pick<AxiosInstance, 'get' | 'post'>
+  endpoint?: string
+  timeoutMs?: number
 }
 
-const API = axios.create({
-  baseURL: process.env.CACHE_SERVICE_ENDPOINT,
-  timeout: 5000,
-})
-
-function getAxiosErrorData<T>(error: T): JsonValue | undefined {
-  if (!axios.isAxiosError(error)) return undefined
-
-  // SAFETY: cache-service error responses are JSON payloads at this boundary.
-  return error.response?.data as JsonValue | undefined
+function errorPayload(error: Error) {
+  return { name: error.name, message: error.message }
 }
 
 export default class CacheServiceClient {
-  async getPackageSize<T>(key: CacheKey): Promise<T | undefined> {
-    try {
-      const result = await API.get<T>('/package-cache', { params: key })
+  private readonly api: Pick<AxiosInstance, 'get' | 'post'>
 
-      return result.data
+  constructor(options: CacheServiceClientOptions = {}) {
+    this.api =
+      options.api ??
+      axios.create({
+        baseURL: options.endpoint ?? process.env.CACHE_SERVICE_ENDPOINT,
+        timeout: options.timeoutMs ?? 5000,
+      })
+  }
+
+  async getPackageSize(
+    key: CacheKey,
+  ): Promise<CacheReadResult<PackageCacheResult>> {
+    return this.read({
+      route: CACHE_ROUTE.package,
+      key,
+      parse: parsePackageCacheResult,
+      label: 'package',
+    })
+  }
+
+  async setPackageSize(
+    key: CacheKey,
+    result: PackageCacheResult,
+  ): Promise<void> {
+    await this.write({
+      route: CACHE_ROUTE.package,
+      key,
+      result,
+      label: 'package',
+    })
+  }
+
+  async getExportsSize(
+    key: CacheKey,
+  ): Promise<CacheReadResult<ExportsCacheResult>> {
+    return this.read({
+      route: CACHE_ROUTE.exports,
+      key,
+      parse: parseExportsCacheResult,
+      label: 'exports',
+    })
+  }
+
+  async setExportsSize(
+    key: CacheKey,
+    result: ExportsCacheResult,
+  ): Promise<void> {
+    await this.write({
+      route: CACHE_ROUTE.exports,
+      key,
+      result,
+      label: 'exports',
+    })
+  }
+
+  private async read<T>(options: {
+    route: string
+    key: CacheKey
+    parse: (value: CacheValue) => T | null
+    label: string
+  }): Promise<CacheReadResult<T>> {
+    const { route, key, parse, label } = options
+
+    try {
+      const response = await this.api.get<CacheValue>(route, { params: key })
+
+      const value = parse(response.data)
+
+      if (value === null) {
+        const error = new Error(`Invalid ${label} cache response`)
+        this.logReadError(key, error, label)
+
+        return { status: 'invalid', error }
+      }
+
+      debug('cache hit: %s %s@%s', label, key.name, key.version)
+
+      return { status: 'hit', value }
     } catch (error) {
-      console.error(
-        axios.isAxiosError(error) ? error.response?.statusText : undefined,
-      )
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        debug('cache miss: %s %s@%s', label, key.name, key.version)
 
-      return undefined
+        return { status: 'miss' }
+      }
+
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error))
+
+      this.logReadError(key, normalizedError, label)
+
+      return { status: 'unavailable', error: normalizedError }
     }
   }
 
-  async setPackageSize<T>(key: CacheKey, result: T): Promise<void> {
-    debug('set package %O to %O', key, result)
+  private async write<
+    T extends PackageCacheResult | ExportsCacheResult,
+  >(options: {
+    route: string
+    key: CacheKey
+    result: T
+    label: string
+  }): Promise<void> {
+    const { route, key, result, label } = options
 
     try {
-      await API.post('/package-cache', { ...key, result })
+      await this.api.post(route, { ...key, result })
     } catch (error) {
-      this.logSetError(
-        key,
-        error,
-        `CACHE ERROR for package ${key.name}@${key.version}`,
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error))
+
+      logger.error(
+        'CACHE_WRITE_ERROR',
+        { ...key, ...errorPayload(normalizedError) },
+        `CACHE WRITE FAILED: ${label}`,
       )
     }
   }
 
-  async getExportsSize<T>(key: CacheKey): Promise<T | undefined> {
-    debug('get exports %s@%s', key.name, key.version)
-
-    try {
-      const result = await API.get<T>('/exports-cache', { params: key })
-      debug('cache hit')
-
-      return result.data
-    } catch {
-      return undefined
-    }
-  }
-
-  async setExportsSize<T>(key: CacheKey, result: T): Promise<void> {
-    debug('set exports %O to %O', key, result)
-
-    try {
-      await API.post('/exports-cache', { ...key, result })
-    } catch (error) {
-      this.logSetError(
-        key,
-        error,
-        `CACHE ERROR for package exports ${key.name}@${key.version}`,
-      )
-    }
-  }
-
-  private logSetError<T>(key: CacheKey, error: T, message: string): void {
-    const errorData = getAxiosErrorData(error)
-    console.error(errorData)
-    logger.error('CACHE_SET_ERROR', { ...key, error: errorData }, message)
+  private logReadError(key: CacheKey, error: Error, label: string): void {
+    logger.error(
+      'CACHE_READ_ERROR',
+      { ...key, ...errorPayload(error) },
+      `CACHE READ FAILED: ${label}`,
+    )
   }
 }

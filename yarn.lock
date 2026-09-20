@@ -2063,6 +2063,14 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bundlephobia/service-contracts@workspace:*, @bundlephobia/service-contracts@workspace:packages/service-contracts":
+  version: 0.0.0-use.local
+  resolution: "@bundlephobia/service-contracts@workspace:packages/service-contracts"
+  dependencies:
+    zod: "npm:^4.4.2"
+  languageName: unknown
+  linkType: soft
+
 "@colors/colors@npm:1.5.0":
   version: 1.5.0
   resolution: "@colors/colors@npm:1.5.0"
@@ -8955,6 +8963,7 @@ __metadata:
   dependencies:
     "@amplitude/analytics-browser": "npm:^2.45.5"
     "@base-ui/react": "npm:^1.7.0"
+    "@bundlephobia/service-contracts": "workspace:*"
     "@contentful/rich-text-react-renderer": "npm:^16.2.2"
     "@contentful/rich-text-types": "npm:^17.2.7"
     "@floating-ui/dom": "npm:^1.8.0"
@@ -9208,6 +9217,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "cache@workspace:cache-service"
   dependencies:
+    "@bundlephobia/service-contracts": "workspace:*"
     debug: "npm:^4.3.4"
     dotenv: "npm:^8.6.0"
     dotenv-defaults: "npm:^2.0.2"

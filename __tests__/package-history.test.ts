@@ -85,7 +85,15 @@ describe('package history', () => {
       ],
       range: { from: '2024-01-01', to: '2024-03-02' },
     })
-    expect(mockGetPackageHistory).toHaveBeenCalledWith('example', 40)
+    expect(mockGetPackageHistory).toHaveBeenCalledWith(
+      'example',
+      40,
+      expect.any(Function),
+    )
+
+    const includeVersion = mockGetPackageHistory.mock.calls[0][2]
+    expect(includeVersion?.('1.0.0')).toBe(true)
+    expect(includeVersion?.('2.1.1')).toBe(false)
   })
 
   it('returns placeholders for versions without a cached build', async () => {

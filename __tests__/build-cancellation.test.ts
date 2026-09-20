@@ -4,11 +4,17 @@ import { EventEmitter } from 'events'
 import logger from '../server/Logger'
 import { JobCancelledError } from '../server/Queue'
 import { packageAnalysisGateway } from '../server/analysis'
-import buildMiddleware from '../server/middlewares/results/build.middleware'
+import { createBuildMiddleware } from '../server/middlewares/results/build.middleware'
 
 const mockAnalyzePackage = jest.spyOn(packageAnalysisGateway, 'analyzePackage')
 
 const mockLoggerInfo = jest.spyOn(logger, 'info')
+
+const cache = {
+  setPackageSize: jest.fn(),
+}
+
+const buildMiddleware = createBuildMiddleware(cache)
 
 function createContext() {
   const request = new EventEmitter()
