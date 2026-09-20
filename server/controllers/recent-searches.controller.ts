@@ -1,6 +1,6 @@
 import type { Middleware } from 'koa'
 
-import config from '../config/server.config'
+import config from '../config'
 import logger from '../infrastructure/logger.service'
 import firebaseUtils from '../../utils/firebase.utils'
 

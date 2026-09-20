@@ -2,19 +2,16 @@ import AbortController from 'abort-controller'
 import axios from 'axios'
 
 import serializeError from '../build-service/serializeError'
-import CustomError from '../server/errors/custom.error'
+import CustomError from '../server/custom-error'
 import BuildService, {
   MAX_BUILD_SERVICE_RESPONSE_BYTES,
 } from '../server/clients/build-service.client'
-import {
-  createAnalysisKey,
-  createQueueType,
-} from '../server/analysis/analysis.key'
+import { createAnalysisKey, createQueueType } from '../server/analysis/keys'
 import {
   failureCache,
   pool,
   requestQueue,
-} from '../server/infrastructure/runtime.init'
+} from '../server/infrastructure/runtime'
 import errorMiddleware from '../server/middlewares/results/error.middleware'
 
 interface CircularErrorDetails {

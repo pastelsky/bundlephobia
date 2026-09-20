@@ -2,8 +2,8 @@ import createDebug from 'debug'
 
 import logger from './logger.service'
 import Queue from './queue.service'
-import config from '../config/server.config'
-import type { FailureCacheEntry } from '../types/server.type'
+import config from '../config'
+import type { FailureCacheEntry } from '../types'
 import { registerMetricsProvider } from './memory-diagnostics.service'
 
 interface WorkerPoolExecution extends Promise<unknown> {

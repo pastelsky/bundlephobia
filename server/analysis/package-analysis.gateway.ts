@@ -13,8 +13,8 @@ import type {
   AnalysisRequestOptions,
   PackageAnalysisAdapter,
   ResolvedAnalysisPackage,
-} from './analysis.contract'
-import { PackageAnalysisGatewayError } from './analysis.error'
+} from './contracts'
+import { PackageAnalysisGatewayError } from './errors'
 
 export class PackageAnalysisGateway {
   private readonly adapters = new Map<LanguageId, PackageAnalysisAdapter>()

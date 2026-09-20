@@ -1,5 +1,5 @@
-import CustomError from '../../errors/custom.error'
-import { PackageAnalysisGatewayError } from '../analysis.error'
+import CustomError from '../../custom-error'
+import { PackageAnalysisGatewayError } from '../errors'
 
 /**
  * Keeps legacy JavaScript routes decoupled from gateway-native errors. Existing

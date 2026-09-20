@@ -7,13 +7,13 @@ import {
   fetchPackageVersionManifest,
   type NpmPackageManifest,
 } from '../../clients/npm-registry.client'
-import CustomError from '../../errors/custom.error'
+import CustomError from '../../custom-error'
 import BuildService from '../../clients/build-service.client'
 import {
   normalizeRepositoryUrl,
   parseNpmRegistryPackageSpec,
-} from '../../packages/npm-package.utils'
-import type { NpmRegistryPackageSpec } from '../../packages/npm-package.utils'
+} from '../../packages/npm-package'
+import type { NpmRegistryPackageSpec } from '../../packages/npm-package'
 import type {
   PackageBuildResult,
   PackageExportSizesResult,
@@ -23,7 +23,7 @@ import type {
   AnalysisRequestOptions,
   PackageAnalysisAdapter,
   ResolvedAnalysisPackage,
-} from '../analysis.contract'
+} from '../contracts'
 
 interface PacoteManifestError {
   code?: string

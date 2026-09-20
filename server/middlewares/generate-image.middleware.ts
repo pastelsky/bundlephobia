@@ -11,7 +11,7 @@ import type {
 
 import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { drawStatsImg } from '../../utils/draw.utils'
-import { packageAnalysisGateway } from '../analysis/analysis.module'
+import { packageAnalysisGateway } from '../analysis'
 
 interface StatsImageResult {
   name: string

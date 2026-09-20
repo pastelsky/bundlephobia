@@ -5,7 +5,7 @@ import type { Middleware } from 'koa'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { UrlWithParsedQuery } from 'node:url'
 
-import config from '../config/server.config'
+import config from '../config'
 import {
   buildApiCatalog,
   CATALOG_CONTENT_TYPE,

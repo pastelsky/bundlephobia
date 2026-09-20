@@ -13,7 +13,7 @@ import requestId from 'koa-requestid'
 import invariant from 'ts-invariant'
 
 import CacheServiceClient from './clients/cache-service.client'
-import config from './config/server.config'
+import config from './config'
 import logger from './infrastructure/logger.service'
 import { apiDiscoveryMiddleware } from './middlewares/api-discovery.middleware'
 import { registerAdminRoutes } from './routes/admin.route'

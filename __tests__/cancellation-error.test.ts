@@ -1,4 +1,4 @@
-import { failureCache } from '../server/infrastructure/runtime.init'
+import { failureCache } from '../server/infrastructure/runtime'
 import logger from '../server/infrastructure/logger.service'
 import { JobCancelledError } from '../server/infrastructure/queue.service'
 import errorHandler from '../server/middlewares/results/error.middleware'

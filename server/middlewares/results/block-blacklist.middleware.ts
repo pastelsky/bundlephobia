@@ -1,8 +1,8 @@
 import type { Middleware } from 'koa'
 
 import { parsePackageString } from '../../../utils/common.utils'
-import config from '../../config/server.config'
-import CustomError from '../../errors/custom.error'
+import config from '../../config'
+import CustomError from '../../custom-error'
 
 const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
   const { package: packageQuery, force } = ctx.query

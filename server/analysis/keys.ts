@@ -1,5 +1,5 @@
 import type { LanguageId } from '../../types/language-domain'
-import type { AnalysisOperation } from './analysis.contract'
+import type { AnalysisOperation } from './contracts'
 
 interface AnalysisKeyParts {
   language: LanguageId

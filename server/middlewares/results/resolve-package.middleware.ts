@@ -5,9 +5,9 @@ import {
   createJavaScriptPackageReference,
   parseJavaScriptPackageSpecifier,
 } from '../../../languages/javascript'
-import { packageAnalysisGateway } from '../../analysis/analysis.module'
-import type { AnalysisOperation } from '../../analysis/analysis.contract'
-import { debug, logger } from '../../infrastructure/runtime.init'
+import { packageAnalysisGateway } from '../../analysis'
+import type { AnalysisOperation } from '../../analysis/contracts'
+import { debug, logger } from '../../infrastructure/runtime'
 
 export function createResolvePackageMiddleware(
   operation: AnalysisOperation,

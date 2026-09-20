@@ -1,3 +1,3 @@
-import { startServer } from './server/server.bootstrap'
+import { startServer } from './server/bootstrap'
 
 void startServer()

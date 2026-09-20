@@ -1,13 +1,13 @@
 import axios from 'axios'
 import createDebug from 'debug'
 
-import CustomError from '../errors/custom.error'
+import CustomError from '../custom-error'
 import { JobCancelledError } from '../infrastructure/queue.service'
-import type { AnalysisOperation } from '../analysis/analysis.contract'
+import type { AnalysisOperation } from '../analysis/contracts'
 import type { RuntimeValue } from '../../types/json'
-import { createAnalysisKey, createQueueType } from '../analysis/analysis.key'
-import config from '../config/server.config'
-import { logger, pool, requestQueue } from '../infrastructure/runtime.init'
+import { createAnalysisKey, createQueueType } from '../analysis/keys'
+import config from '../config'
+import { logger, pool, requestQueue } from '../infrastructure/runtime'
 
 const debug = createDebug('bp:build')
 

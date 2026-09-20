@@ -3,7 +3,7 @@ import createDebug from 'debug'
 import strip from 'strip-markdown'
 
 import { parsePackageString } from '../../../utils/common.utils'
-import config from '../../config/server.config'
+import config from '../../config'
 import logger from '../../infrastructure/logger.service'
 import { categories } from './similar-packages.fixtures'
 

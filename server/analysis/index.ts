@@ -1,5 +1,5 @@
 import { JavaScriptPackageAnalysisAdapter } from './adapters/javascript-package-analysis.adapter'
-import { PackageAnalysisGateway } from './analysis.gateway'
+import { PackageAnalysisGateway } from './package-analysis.gateway'
 
 export const packageAnalysisGateway = new PackageAnalysisGateway()
 

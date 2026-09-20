@@ -3,7 +3,7 @@ import {
   normalizeRepositoryUrl,
   parseNpmRegistryPackageSpec,
   parseGithubRepository,
-} from '../server/packages/npm-package.utils'
+} from '../server/packages/npm-package'
 
 describe('server package utilities', () => {
   it.each([

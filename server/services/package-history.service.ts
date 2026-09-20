@@ -11,7 +11,7 @@ import {
   fetchPackagePackument,
   type NpmPackagePackument,
 } from '../clients/npm-registry.client'
-import { parseGithubRepository } from '../packages/npm-package.utils'
+import { parseGithubRepository } from '../packages/npm-package'
 
 export type PackageHistoryOptions = {
   from?: string

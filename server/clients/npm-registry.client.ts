@@ -4,7 +4,7 @@ import pacote from 'pacote'
 import {
   getEscapedNpmPackageName,
   type RepositoryField,
-} from '../packages/npm-package.utils'
+} from '../packages/npm-package'
 
 export interface NpmPackageManifest {
   name: string

@@ -9,9 +9,9 @@ import type {
 import { createJavaScriptPackageReference } from '../../../languages/javascript'
 import firebaseUtils from '../../../utils/firebase.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
-import { packageAnalysisGateway } from '../../analysis/analysis.module'
+import { packageAnalysisGateway } from '../../analysis'
 import { BUILD_DURATION_HEADER } from '../../clients/build-service.client'
-import config from '../../config/server.config'
+import config from '../../config'
 import logger from '../../infrastructure/logger.service'
 import type { PackageBuildResult } from '@bundlephobia/service-contracts/package'
 

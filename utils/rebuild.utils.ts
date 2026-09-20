@@ -8,7 +8,7 @@ import axios from 'axios'
 import createDebug from 'debug'
 import firebase from 'firebase'
 
-import config from '../server/config/server.config'
+import config from '../server/config'
 import type { JsonValue } from '../types/json'
 import { decodeFirebaseKey, encodeFirebaseKey } from './index'
 

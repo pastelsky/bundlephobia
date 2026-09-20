@@ -1,10 +1,10 @@
 import type { Middleware } from 'koa'
 
 import { createJavaScriptPackageReference } from '../../../languages/javascript'
-import { packageAnalysisGateway } from '../../analysis/analysis.module'
-import config from '../../config/server.config'
-import { createAnalysisKey } from '../../analysis/analysis.key'
-import { debug, failureCache } from '../../infrastructure/runtime.init'
+import { packageAnalysisGateway } from '../../analysis'
+import config from '../../config'
+import { createAnalysisKey } from '../../analysis/keys'
+import { debug, failureCache } from '../../infrastructure/runtime'
 import logger from '../../infrastructure/logger.service'
 
 const cachedResponse: Middleware = async (ctx, next) => {
