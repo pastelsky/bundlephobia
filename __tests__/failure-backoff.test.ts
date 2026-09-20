@@ -14,12 +14,14 @@ describe('failure backoff', () => {
 
     expect(first.consecutiveFailures).toBe(1)
     expect(first.blockedUntil).toBeUndefined()
-    expect(second.blockedUntil).toBe(2_000 + 15 * 60 * 1000)
-    expect(third.blockedUntil).toBe(3_000 + 60 * 60 * 1000)
+    expect(second.blockedUntil).toBe(2_000 + 60 * 60 * 1000)
+    expect(third.blockedUntil).toBe(3_000 + 6 * 60 * 60 * 1000)
+    expect(getFailureCooldownMs(4)).toBe(12 * 60 * 60 * 1000)
+    expect(getFailureCooldownMs(5)).toBe(24 * 60 * 60 * 1000)
   })
 
   it('caps the cooldown at three days', () => {
-    expect(getFailureCooldownMs(7)).toBe(3 * 24 * 60 * 60 * 1000)
+    expect(getFailureCooldownMs(6)).toBe(3 * 24 * 60 * 60 * 1000)
     expect(getFailureCooldownMs(100)).toBe(3 * 24 * 60 * 60 * 1000)
   })
 

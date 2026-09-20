@@ -1,17 +1,15 @@
 import type { FailureCacheEntry } from './types'
 
-const MINUTE_MS = 60 * 1000
-
-const HOUR_MS = 60 * MINUTE_MS
+const HOUR_MS = 60 * 60 * 1000
 
 const DAY_MS = 24 * HOUR_MS
 
 const FAILURE_COOLDOWNS_MS = [
-  15 * MINUTE_MS,
   HOUR_MS,
-  4 * HOUR_MS,
+  6 * HOUR_MS,
   12 * HOUR_MS,
   DAY_MS,
+  3 * DAY_MS,
   3 * DAY_MS,
 ] as const
 
