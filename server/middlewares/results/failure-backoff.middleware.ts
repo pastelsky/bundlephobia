@@ -61,7 +61,7 @@ const failureBackoffMiddleware: Middleware = async (ctx, next) => {
       ctx.status = failureCacheEntry.status
       ctx.body = {
         error: {
-          code: 'BuildBackoffError',
+          code: 'BuildError',
           message: `Build retries are temporarily paused. Please try again in ${formatRetryAfter(retryAfterSeconds)}.`,
         },
       }

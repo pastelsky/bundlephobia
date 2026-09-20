@@ -47,7 +47,7 @@ describe('failure backoff middleware', () => {
     expect(ctx.status).toBe(422)
     expect(ctx.body).toEqual({
       error: {
-        code: 'BuildBackoffError',
+        code: 'BuildError',
         message: 'Build retries are temporarily paused. Please try again in 1 hour.',
       },
     })
