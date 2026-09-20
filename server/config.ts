@@ -45,6 +45,12 @@ const config = {
     SIZE_API_ERROR_UNSUPPORTED: dev ? 0 : 24 * 60 * 60,
     SIZE_API_HAS_VERSION: dev ? 0 : 24 * 60 * 60,
   },
+  EXTERNAL_SERVICES: {
+    TIMEOUT_MS: {
+      GITHUB: 10_000,
+      NPM_DOWNLOADS: 10_000,
+    },
+  },
 } as const
 
 export default config
