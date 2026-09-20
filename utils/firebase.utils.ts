@@ -3,7 +3,7 @@ import createDebug from 'debug'
 import firebaseSDK from 'firebase'
 import semver from 'semver'
 
-import type { PackageBuildInfoSnapshot } from '../types/package-domain'
+import type { PackageBuildInfoSnapshot } from '@bundlephobia/service-contracts/package'
 import { decodeFirebaseKey, encodeFirebaseKey } from './index'
 
 const debug = createDebug('bp:firebase-util')
@@ -30,6 +30,57 @@ type PackageHistory = Record<string, PackageBuildInfoSnapshot>
 interface AlgoliaPackageResponse {
   version: string
   versions: Record<string, string>
+}
+
+async function readPackageHistoryWithFallback(
+  getHistoryFromKey: (key: string) => Promise<PackageHistory | null>,
+): Promise<PackageHistory | null> {
+  const result = await getHistoryFromKey(FIREBASE_READ_KEY)
+
+  if (result) {
+    debug('package history from %s', FIREBASE_READ_KEY)
+
+    return result
+  }
+
+  if (
+    FIREBASE_READ_KEY !== 'modules-v3' ||
+    process.env.DISABLE_FIREBASE_V2_FALLBACK
+  ) {
+    return null
+  }
+
+  const fallback = await getHistoryFromKey('modules-v2')
+
+  if (fallback) {
+    debug('package history from modules-v2 (fallback)')
+  }
+
+  return fallback
+}
+
+function selectPackageHistoryVersions(
+  versions: string[],
+  limit: number,
+  includeVersion: (version: string) => boolean,
+): string[] {
+  const filteredVersions = versions
+    .filter(includeVersion)
+    .filter(version => !version.includes('-'))
+    .sort((versionA, versionB) => semver.compare(versionA, versionB))
+
+  const limitedVersions = filteredVersions.slice(
+    Math.max(filteredVersions.length - limit, 0),
+  )
+
+  const latestVersion = versions.filter(includeVersion).at(-1)
+
+  if (latestVersion?.includes('-')) {
+    limitedVersions.shift()
+    limitedVersions.push(latestVersion)
+  }
+
+  return limitedVersions
 }
 
 class FirebaseUtils {
@@ -76,7 +127,11 @@ class FirebaseUtils {
       .catch(error => console.log(error))
   }
 
-  async getPackageHistory(name: string, limit = 15): Promise<PackageHistory> {
+  async getPackageHistory(
+    name: string,
+    limit = 15,
+    includeVersion: (version: string) => boolean = () => true,
+  ): Promise<PackageHistory> {
     if (!this.firebase) {
       return {}
     }
@@ -98,30 +153,7 @@ class FirebaseUtils {
       })
     }
 
-    const firebasePromise = (async () => {
-      const result = await getHistoryFromKey(FIREBASE_READ_KEY)
-
-      if (result) {
-        debug('package history from %s', FIREBASE_READ_KEY)
-
-        return result
-      }
-
-      if (
-        FIREBASE_READ_KEY === 'modules-v3' &&
-        !process.env.DISABLE_FIREBASE_V2_FALLBACK
-      ) {
-        const fallback = await getHistoryFromKey('modules-v2')
-
-        if (fallback) {
-          debug('package history from modules-v2 (fallback)')
-        }
-
-        return fallback
-      }
-
-      return null
-    })()
+    const firebasePromise = readPackageHistoryWithFallback(getHistoryFromKey)
 
     const yarnPromise = axios.get<AlgoliaPackageResponse>(
       `https://${
@@ -159,22 +191,13 @@ class FirebaseUtils {
       )
     }
 
-    const filteredVersions = versions
-      .filter(version => !version.includes('-'))
-      .sort((versionA, versionB) => semver.compare(versionA, versionB))
-
-    const limitedVersions = filteredVersions.slice(
-      Math.max(filteredVersions.length - limit, 0),
+    const limitedVersions = selectPackageHistoryVersions(
+      versions,
+      limit,
+      includeVersion,
     )
 
     debug('last npm %d %s versions %o', limit, name, limitedVersions)
-
-    const latestVersion = versions[versions.length - 1]
-
-    if (latestVersion?.includes('-')) {
-      limitedVersions.shift()
-      limitedVersions.push(latestVersion)
-    }
 
     limitedVersions.forEach(version => {
       packageHistory[version] = {}

@@ -7,15 +7,11 @@ import fetch from 'node-fetch'
 import trending from 'trending-github'
 
 import firebaseUtils from '../utils/firebase.utils'
-import type { JsonObject } from '../types/json'
+import type { PackageHistoryResponse } from '../types/package-history'
 
 import 'dotenv/config'
 
 type SearchCountMap = Record<string, { count: number }>
-
-function isEmptyRecord(value: JsonObject) {
-  return Object.keys(value).length === 0
-}
 
 async function runSerial<T>(tasks: Array<() => Promise<T>>) {
   const results: T[] = []
@@ -103,20 +99,11 @@ async function getVersionsToBuild(name: string) {
     `http://localhost:${port}/api/package-history?package=${name}`
   )
 
-  // SAFETY: the package-history endpoint returns a JSON object keyed by version.
-  const versionInfo = (await res.json()) as JsonObject
+  // SAFETY: the local package-history endpoint returns PackageHistoryResponse.
+  const versionInfo = (await res.json()) as PackageHistoryResponse
 
-  Object.keys(versionInfo).forEach(version => {
-    const snapshot = versionInfo[version]
-
-    if (
-      snapshot &&
-      Object.prototype.toString.call(snapshot) === '[object Object]' &&
-      // SAFETY: the object-tag guard establishes the JSON object boundary.
-      isEmptyRecord(snapshot as JsonObject)
-    ) {
-      versionsToBuild.push(version)
-    }
+  versionInfo.versions.forEach(version => {
+    if (!version.built) versionsToBuild.push(version.version)
   })
 
   return versionsToBuild

@@ -5,6 +5,7 @@
   "main": "index.ts",
   "license": "MIT",
   "dependencies": {
+    "@bundlephobia/service-contracts": "workspace:*",
     "debug": "^4.3.4",
     "dotenv": "^8.6.0",
     "dotenv-defaults": "^2.0.2",

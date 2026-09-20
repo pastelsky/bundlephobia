@@ -10,7 +10,8 @@
     "build-service",
     "cache-service",
     "jvm-package-build-stats",
-    "scripts"
+    "scripts",
+    "packages/*"
   ],
   "engines": {
     "node": ">= 24.0.0",
@@ -19,6 +20,7 @@
   "dependencies": {
     "@amplitude/analytics-browser": "^2.45.5",
     "@base-ui/react": "^1.7.0",
+    "@bundlephobia/service-contracts": "workspace:*",
     "@contentful/rich-text-react-renderer": "^16.2.2",
     "@contentful/rich-text-types": "^17.2.7",
     "@floating-ui/dom": "^1.8.0",

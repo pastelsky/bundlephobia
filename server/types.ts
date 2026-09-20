@@ -1,20 +1,10 @@
 // Server-specific types only.
-// Domain types (PackageBuildResult, PackageExports*, etc.) are
-// re-exported from here so callers need only one import site.
-import type { PackageMetadata } from '../types/package-domain'
+import type { PackageMetadata } from '@bundlephobia/service-contracts/package'
 import type { LanguageId } from '../types/language-domain'
 import type {
   AnalysisOperation,
   ResolvedAnalysisPackage,
 } from './analysis/contracts'
-
-export type {
-  PackageBuildResult,
-  PackageDependencySize,
-  PackageExportAsset,
-  PackageExportsResult,
-  PackageExportSizesResult,
-} from '../types/package-domain'
 
 /**
  * State attached to Koa's `ctx.state.resolved` after the
