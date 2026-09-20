@@ -5,24 +5,6 @@ import { isFailureBlocked } from '../../failure-backoff'
 import { failureCache } from '../../infrastructure/runtime'
 import logger from '../../infrastructure/logger.service'
 
-function formatRetryAfter(seconds: number): string {
-  if (seconds >= 24 * 60 * 60) {
-    const days = Math.ceil(seconds / (24 * 60 * 60))
-
-    return `${days} day${days === 1 ? '' : 's'}`
-  }
-
-  if (seconds >= 60 * 60) {
-    const hours = Math.ceil(seconds / (60 * 60))
-
-    return `${hours} hour${hours === 1 ? '' : 's'}`
-  }
-
-  const minutes = Math.ceil(seconds / 60)
-
-  return `${minutes} minute${minutes === 1 ? '' : 's'}`
-}
-
 const failureBackoffMiddleware: Middleware = async (ctx, next) => {
   const { force } = ctx.query
   const { language, operation } = ctx.state.analysis
@@ -62,7 +44,8 @@ const failureBackoffMiddleware: Middleware = async (ctx, next) => {
       ctx.body = {
         error: {
           code: 'BuildError',
-          message: `Build retries are temporarily paused. Please try again in ${formatRetryAfter(retryAfterSeconds)}.`,
+          message:
+            'The package has failed to build multiple times recently and further tries are temporarily paused. Please try again later.',
         },
       }
 

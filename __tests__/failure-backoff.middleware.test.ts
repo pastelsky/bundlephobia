@@ -48,7 +48,8 @@ describe('failure backoff middleware', () => {
     expect(ctx.body).toEqual({
       error: {
         code: 'BuildError',
-        message: 'Build retries are temporarily paused. Please try again in 1 hour.',
+        message:
+          'The package has failed to build multiple times recently and further tries are temporarily paused. Please try again later.',
       },
     })
     expect(ctx.set).toHaveBeenCalledWith('Retry-After', expect.any(String))
