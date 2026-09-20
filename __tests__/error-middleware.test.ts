@@ -89,10 +89,19 @@ describe('build API error middleware', () => {
         operation: 'package-exports',
         packageSpecifier: packageString,
       }),
-      {
+      expect.objectContaining({
         status: 422,
         body: responseBody,
-      },
+        consecutiveFailures: 1,
+      }),
+    )
+
+    failureCache.del(
+      createAnalysisKey({
+        language: 'javascript',
+        operation: 'package-exports',
+        packageSpecifier: packageString,
+      }),
     )
   })
 
