@@ -49,7 +49,6 @@ export function registerApiRoutes(
     errorMiddleware,
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-analysis'),
-    failureBackoffMiddleware,
     createCachedResponseMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,
@@ -84,7 +83,6 @@ export function registerApiRoutes(
     errorMiddleware,
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-export-sizes'),
-    failureBackoffMiddleware,
     createCachedResponseMiddleware,
     buildMissRateLimit({
       durationMs: 1000 * 60 * 5,
