@@ -50,23 +50,51 @@ const trendsResponse = {
 } satisfies TrendsResponse
 
 test('renders package trends and chart controls', async ({ page }) => {
-  await page.route('**/api/trends?*', route =>
-    route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify(trendsResponse),
-    }),
+  await page.route(
+    '**/api/trends?*',
+    route =>
+      new Promise(resolve =>
+        setTimeout(
+          () =>
+            resolve(
+              route.fulfill({
+                contentType: 'application/json',
+                body: JSON.stringify(trendsResponse),
+              }),
+            ),
+          3_000,
+        ),
+      ),
   )
 
   await page.goto(
     '/trends?packages=react,vue&metric=downloads&range=last-year&groupBy=week',
   )
 
+  await expect(page.getByText('[ ANALYZING PACKAGE TRENDS ]')).toBeVisible({
+    timeout: 5_000,
+  })
   await expect(
     page.getByRole('heading', { name: 'Package trends' }),
   ).toBeVisible()
-  await expect(page.getByText('1,440,000 / week')).toBeVisible()
-  await expect(page.locator('.trends-chart svg')).toBeVisible()
-  await expect(page.getByLabel('Metric')).toHaveValue('downloads')
+  await expect(page.getByText('1.44', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('img', { name: 'downloads trends chart' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Downloads', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText('[ ANALYZING PACKAGE TRENDS ]')).toBeHidden()
+  await expect
+    .poll(async () => {
+      const width = await page
+        .locator('[data-series-clip]')
+        .first()
+        .getAttribute('width')
+
+      return Number(width)
+    })
+    .toBeGreaterThan(1_000)
 
   await page.screenshot({
     path: 'artifacts/trends-desktop.png',

@@ -10,7 +10,11 @@ import type { JsonObject } from '../types/json'
 import type { PackageHistoryResponse } from '../types/package-history'
 import type {
   TrendsGroupBy,
+  TrendsMetric,
+  TrendsPackageSeries,
   TrendsRange,
+  TrendsRelease,
+  TrendsPoint,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
 
@@ -19,7 +23,15 @@ export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
 
 export type { PackageHistoryResponse }
 
-export type { TrendsGroupBy, TrendsRange, TrendsResponse }
+export type {
+  TrendsGroupBy,
+  TrendsMetric,
+  TrendsPackageSeries,
+  TrendsPoint,
+  TrendsRange,
+  TrendsRelease,
+  TrendsResponse,
+}
 
 /** A single npm-search suggestion returned by the npms.io API. */
 export type PackageSuggestion = {
