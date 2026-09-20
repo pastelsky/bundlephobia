@@ -34,11 +34,12 @@ function installationApi(root: string) {
   }
 }
 
-function createStore(api, rootPath, retentionMs = 60_000) {
+function createStore(api, rootPath, retentionMs = 60_000, leaseMs = 60_000) {
   return new InstallationStore(api, {
     queue: createInstallQueue(2),
     rootPath,
     retentionMs,
+    leaseMs,
   })
 }
 
@@ -57,18 +58,22 @@ describe('installation service store', () => {
     await store.start()
 
     const [first, second] = await Promise.all([
-      store.get('lodash@4.17.21', { installTimeout: 30_000 }),
-      store.get('lodash@4.17.21', { installTimeout: 60_000 }),
+      store.subscribe('lodash@4.17.21', { installTimeout: 30_000 }),
+      store.subscribe('lodash@4.17.21', { installTimeout: 60_000 }),
     ])
 
     expect(api.installPackage).toHaveBeenCalledTimes(1)
-    expect(first.installPath).toBe(second.installPath)
+    expect(first.installation.installPath).toBe(second.installation.installPath)
+    expect(first.id).not.toBe(second.id)
     expect((await store.diagnostics()).installations).toEqual([
       expect.objectContaining({
         packageString: 'lodash@4.17.21',
         packageVersion: '4.17.21',
+        activeSubscriptions: 2,
       }),
     ])
+    await store.unsubscribe(first.id)
+    await store.unsubscribe(second.id)
     await store.close()
   })
 
@@ -77,15 +82,18 @@ describe('installation service store', () => {
     const api = installationApi(root)
     const firstStore = createStore(api, root)
     await firstStore.start()
-    const first = await firstStore.get('date-fns@4.1.0')
+    const first = await firstStore.subscribe('date-fns@4.1.0')
     await firstStore.close()
 
     const restartedStore = createStore(api, root)
     await restartedStore.start()
-    const restored = await restartedStore.get('date-fns@4.1.0')
+    const restored = await restartedStore.subscribe('date-fns@4.1.0')
 
-    expect(restored.installPath).toBe(first.installPath)
+    expect(restored.installation.installPath).toBe(
+      first.installation.installPath
+    )
     expect(api.installPackage).toHaveBeenCalledTimes(1)
+    await restartedStore.unsubscribe(restored.id)
     await restartedStore.close()
   })
 
@@ -96,11 +104,13 @@ describe('installation service store', () => {
     store.directory = () => path.join(root, 'forced-collision')
     await store.start()
 
-    await store.get('lodash@4.17.21')
-    const react = await store.get('react@19.1.1')
+    const lodash = await store.subscribe('lodash@4.17.21')
+    const react = await store.subscribe('react@19.1.1')
 
-    expect(react.packageString).toBe('react@19.1.1')
+    expect(react.installation.packageString).toBe('react@19.1.1')
     expect(api.installPackage).toHaveBeenCalledTimes(2)
+    await store.unsubscribe(lodash.id)
+    await store.unsubscribe(react.id)
     await store.close()
   })
 
@@ -110,15 +120,32 @@ describe('installation service store', () => {
     const api = installationApi(root)
     const store = createStore(api, root, 1_000)
     await store.start()
-    const installed = await store.get('three@0.170.0')
+    const subscription = await store.subscribe('three@0.170.0')
+    await store.unsubscribe(subscription.id)
 
     await jest.advanceTimersByTimeAsync(1_100)
     await store.sweep()
 
     expect((await store.diagnostics()).installations).toHaveLength(0)
     expect(api.disposePackage).toHaveBeenCalledWith({
-      installPath: installed.installPath,
+      installPath: subscription.installation.installPath,
     })
+    await store.close()
+  })
+
+  it('retains an installation while a subscription is active', async () => {
+    jest.useFakeTimers()
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    const store = createStore(api, root, 1_000, 10_000)
+    await store.start()
+    const subscription = await store.subscribe('react@19.1.1')
+
+    await jest.advanceTimersByTimeAsync(2_000)
+    await store.sweep()
+
+    expect(api.disposePackage).not.toHaveBeenCalled()
+    await store.unsubscribe(subscription.id)
     await store.close()
   })
 

@@ -67,8 +67,9 @@ const store = new InstallationStore(
       process.env.INSTALLATION_ROOT_PATH || '/tmp/tmp-build/installations',
     retentionMs: positiveInteger(
       process.env.INSTALLATION_RETENTION_MS,
-      20 * 60_000
+      5 * 60_000
     ),
+    leaseMs: positiveInteger(process.env.INSTALLATION_LEASE_MS, 10 * 60_000),
   }
 )
 await store.start()
@@ -92,10 +93,11 @@ fastify.post('/installations', async (request, reply) => {
         resolveRegistryPackageSpec(packageString)
       )
     )
-    return await store.get(exactPackageString, {
+    const { id, installation } = await store.subscribe(exactPackageString, {
       ...options,
       additionalPackages: exactAdditionalPackages,
     })
+    return { ...installation, subscriptionId: id }
   } catch (error) {
     if (error instanceof UnsupportedRegistryPackageSpecError) {
       return reply.code(400).send({
@@ -109,6 +111,11 @@ fastify.post('/installations', async (request, reply) => {
     if (packageNotFound) serialized.name = 'PackageNotFoundError'
     return reply.code(status).send(serialized)
   }
+})
+
+fastify.delete('/installations/:id', async (request, reply) => {
+  await store.unsubscribe(request.params.id)
+  return reply.code(204).send()
 })
 
 fastify.get('/diagnostics', async () => store.diagnostics())

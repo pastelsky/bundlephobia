@@ -52,7 +52,8 @@ apps:
       DEBUG: 'bp:*'
       PORT: 7003
       INSTALLATION_CONCURRENCY: 2
-      INSTALLATION_RETENTION_MS: 1200000
+      INSTALLATION_RETENTION_MS: 300000
+      INSTALLATION_LEASE_MS: 600000
 
   - script: ./cache-service/index.js
     name: cache-service
