@@ -47,7 +47,9 @@ export default function Stat({
           </div>
         </div>
         <div className="stat-container__unit">
-          {type === Type.SIZE ? formatSize(value).unit : formatTime(value).unit}{' '}
+          {type === Type.SIZE
+            ? formatSize(value).unit
+            : formatTime(value).unit}{' '}
         </div>
       </div>
       <div className="stat-container__divider" />

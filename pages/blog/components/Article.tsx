@@ -1,4 +1,3 @@
-import { useRouter } from 'next/router'
 import React from 'react'
 import BlogLayout from '../../../client/components/BlogLayout'
 import { useContentful } from 'react-contentful'
@@ -16,8 +15,6 @@ const ArticleWithContent = () => {
 }
 
 const Article = () => {
-  const router = useRouter()
-
   const { data, error, loading } = useContentful({
     contentType: 'blogPost',
   })

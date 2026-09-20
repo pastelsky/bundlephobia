@@ -26,13 +26,13 @@ export function SuggestionItem({
       role="option"
       aria-selected={isHighlighted}
     >
-      {item.highlight != null ? (
+      {item.highlight === null || item.highlight === undefined ? (
+        <div key="name">{item.package.name}</div>
+      ) : (
         <div
           key="highlight"
           dangerouslySetInnerHTML={{ __html: item.highlight }}
         />
-      ) : (
-        <div key="name">{item.package.name}</div>
       )}
 
       <div

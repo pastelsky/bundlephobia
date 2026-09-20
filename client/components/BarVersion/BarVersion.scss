@@ -8,7 +8,9 @@
   transform: rotate(-90deg) translateX(#{-$global-spacing * 1.5});
   font-variant-numeric: tabular-nums;
   color: var(--color-bar-version);
-  transition: opacity 0.2s, color 0.2s;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
   font-family: $font-family-code;
   letter-spacing: -1px;
   line-height: 1;

@@ -34,16 +34,19 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
       .map(reading => reading.size)
 
     const maxValue = Math.max(...[...gzipValues, ...sizeValues])
+
     return 100 / maxValue
   }
 
   getFirstSideEffectFreeIndex = () => {
     const { readings } = this.props
+
     const sideEffectFreeIntroducedRecently = !readings.every(
-      reading => !reading.hasSideEffects
+      reading => !reading.hasSideEffects,
     )
+
     const firstSideEffectFreeIndex = readings.findIndex(
-      reading => !(reading.disabled || reading.hasSideEffects)
+      reading => !(reading.disabled || reading.hasSideEffects),
     )
 
     return sideEffectFreeIntroducedRecently ? firstSideEffectFreeIndex : -1
@@ -51,13 +54,15 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
 
   getFirstTreeshakeableIndex = () => {
     const { readings } = this.props
+
     const treeshakingIntroducedRecently = !readings.every(
-      reading => reading.hasJSModule
+      reading => reading.hasJSModule,
     )
+
     const firstTreeshakingIndex = readings.findIndex(
       reading =>
         !reading.disabled &&
-        (reading.hasJSModule || reading.hasJSNext || reading.isModuleType)
+        (reading.hasJSModule || reading.hasJSNext || reading.isModuleType),
     )
 
     return treeshakingIntroducedRecently ? firstTreeshakingIndex : -1
@@ -81,11 +86,12 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
   renderActiveBar = (
     reading: Reading,
     scale: number,
-    options: { isFirstTreeshakeable: boolean; isFirstSideEffectFree: boolean }
+    options: { isFirstTreeshakeable: boolean; isFirstSideEffectFree: boolean },
   ) => {
-    const getTooltipMessage = (reading: Reading) => {
-      const formattedSize = formatSize(reading.size)
-      const formattedGzip = formatSize(reading.gzip)
+    const getTooltipMessage = (tooltipReading: Reading) => {
+      const formattedSize = formatSize(tooltipReading.size)
+      const formattedGzip = formatSize(tooltipReading.gzip)
+
       return `Minified: ${formattedSize.size.toFixed(1)}${
         formattedSize.unit
       } | Gzipped: ${formattedGzip.size.toFixed(1)}${formattedGzip.unit}`
@@ -154,7 +160,7 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
               : this.renderActiveBar(reading, graphScale, {
                   isFirstTreeshakeable: index === firstTreeshakeableIndex,
                   isFirstSideEffectFree: index === firstSideEffectFreeIndex,
-                })
+                }),
           )}
         </figure>
         <div className="bar-graph__legend">

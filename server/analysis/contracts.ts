@@ -7,9 +7,9 @@ import type {
   PackageBuildResult,
   PackageExportSizesResult,
   PackageExportsResult,
-} from '../types'
+} from '@bundlephobia/service-contracts/package'
 
-export const ANALYSIS_OPERATIONS = [
+const ANALYSIS_OPERATIONS = [
   'package-analysis',
   'package-exports',
   'package-export-sizes',
@@ -23,38 +23,39 @@ export interface AnalysisRequestOptions {
   onComplete?: (durationMs: number) => void
 }
 
-export interface ResolvedAnalysisPackage<L extends LanguageId = LanguageId>
-  extends ResolvedPackageIdentity<L> {
+export interface ResolvedAnalysisPackage<
+  L extends LanguageId = LanguageId,
+> extends ResolvedPackageIdentity<L> {
   description: string
   repository: string
 }
 
-export interface PackageResolutionAdapter<L extends LanguageId = LanguageId> {
+interface PackageResolutionAdapter<L extends LanguageId = LanguageId> {
   readonly language: L
   resolvePackage(
-    reference: PackageReference<L>
+    reference: PackageReference<L>,
   ): Promise<ResolvedAnalysisPackage<L>>
   isExactVersionSpecifier(specifier: string): boolean
 }
 
-export interface PackageBuildAnalysisAdapter {
+interface PackageBuildAnalysisAdapter {
   analyzePackage(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageBuildResult>
 }
 
-export interface PackageExportsAnalysisAdapter {
+interface PackageExportsAnalysisAdapter {
   analyzePackageExports(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageExportsResult>
 }
 
-export interface PackageExportSizesAnalysisAdapter {
+interface PackageExportSizesAnalysisAdapter {
   analyzePackageExportSizes(
     resolved: ResolvedAnalysisPackage,
-    options: AnalysisRequestOptions
+    options: AnalysisRequestOptions,
   ): Promise<PackageExportSizesResult>
 }
 

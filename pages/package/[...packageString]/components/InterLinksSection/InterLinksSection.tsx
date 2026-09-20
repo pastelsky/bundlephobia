@@ -18,6 +18,7 @@ function usePackagesFromSameScope(packageName: string) {
   useEffect(() => {
     if (!scope) {
       setMorePackages([])
+
       return
     }
 
@@ -33,7 +34,7 @@ function usePackagesFromSameScope(packageName: string) {
         .sort(
           (packageA, packageB) =>
             packageB.score.detail.popularity * getAgeScore(packageB) -
-            packageA.score.detail.popularity * getAgeScore(packageA)
+            packageA.score.detail.popularity * getAgeScore(packageA),
         )
 
       setMorePackages(sorted)

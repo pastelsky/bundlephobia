@@ -13,6 +13,25 @@ type ProgressHexAnimatorProps = {
   svg: SVGSVGElement
 }
 
+type PointAtDistanceOptions = {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  distance: number
+}
+
+type LineCoordsOptions = {
+  x1?: number
+  x2?: number
+  y1?: number
+  y2?: number
+}
+
+function isCircleElement(element: Element): element is SVGCircleElement {
+  return element.tagName.toLowerCase() === 'circle'
+}
+
 export default class ProgressHexAnimator {
   circlesMap: CirclesMap
   circles: NodeListOf<SVGCircleElement>
@@ -49,24 +68,27 @@ export default class ProgressHexAnimator {
 
   getTranslation(circle: SVGCircleElement, distance: number) {
     const { cx, cy } = this.circlesMap.get(circle)!
-    const { x, y } = this.pointAtDistance(
-      cx,
-      cy,
-      this.width / 2,
-      this.height / 2,
-      distance
-    )
+
+    const { x, y } = this.pointAtDistance({
+      x1: cx,
+      y1: cy,
+      x2: this.width / 2,
+      y2: this.height / 2,
+      distance,
+    })
 
     return { x: x - cx, y: y - cy }
   }
 
-  pointAtDistance(x1: number, y1: number, x2: number, y2: number, d: number) {
+  pointAtDistance({ x1, y1, x2, y2, distance }: PointAtDistanceOptions) {
     const curDistanceBetweenPoints = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
     if (curDistanceBetweenPoints === 0) return { x: x1, y: y1 }
 
-    const t = d / curDistanceBetweenPoints
+    const t = distance / curDistanceBetweenPoints
     const x = (x1 - t * x2) / (1 - t)
     const y = (y1 - t * y2) / (1 - t)
+
     return { x, y }
   }
 
@@ -99,11 +121,17 @@ export default class ProgressHexAnimator {
         this.getTranslation(circle, 4).y,
       translateX: (circle: SVGCircleElement) =>
         this.getTranslation(circle, 4).x,
-      delay: ((el: SVGCircleElement) =>
-        (Math.pow(this.circlesMap.get(el)!.ringNumber, 0.6) * DURATION) / 4 +
-        (this.circlesMap.get(el)!.ringNumber > 0
-          ? DURATION / 2.5
-          : 0)) as unknown as AnimeAnimParams['delay'],
+      delay: (el: Element) => {
+        if (!isCircleElement(el)) return 0
+
+        const circle = el
+        const ringNumber = this.circlesMap.get(circle)!.ringNumber
+
+        return (
+          (Math.pow(ringNumber, 0.6) * DURATION) / 4 +
+          (ringNumber > 0 ? DURATION / 2.5 : 0)
+        )
+      },
       duration: DURATION,
       easing: () => (t: number) => Math.sin(t * Math.PI),
       changeBegin: () => this.trailBlaze.start(),
@@ -147,6 +175,7 @@ class Trailblaze {
     this.lines = []
     this.circlesMap = circlesMap
     this.ringsCount = ringsCount
+
     for (let i = 0; i < linesCount; i++) {
       const line = this.createTrail()
       this.lines.push(line)
@@ -158,10 +187,14 @@ class Trailblaze {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
     line.setAttribute('stroke-width', '0.5')
     line.setAttribute('class', 'progress-hex__trail')
+
     return line
   }
 
-  setLineCoords(line: SVGLineElement, x1 = 0, x2 = 0, y1 = 0, y2 = 0) {
+  setLineCoords(
+    line: SVGLineElement,
+    { x1 = 0, x2 = 0, y1 = 0, y2 = 0 }: LineCoordsOptions = {},
+  ) {
     line.setAttribute('x1', `${x1}`)
     line.setAttribute('x2', `${x2}`)
     line.setAttribute('y1', `${y1}`)
@@ -175,6 +208,7 @@ class Trailblaze {
         circles.push(value)
       }
     })
+
     return circles
   }
 
@@ -185,41 +219,47 @@ class Trailblaze {
   getRandomConnection() {
     const rings = zeroToN(this.ringsCount)
     const sourceRingNumber = randomFromArray(rings.slice(0, -1))
-    if (sourceRingNumber == null) {
+
+    if (sourceRingNumber === null || sourceRingNumber === undefined) {
       throw new Error('Missing source ring')
     }
+
     const destinationRingNumber = sourceRingNumber + 1
 
     const eligibleSourceCircles = this.getCirclesInRing(sourceRingNumber)
     const sourceCircle = randomFromArray(eligibleSourceCircles)
+
     if (!sourceCircle) {
       throw new Error('Missing source circle')
     }
 
     const eligibleDestinationCircles = this.getCirclesInRing(
-      destinationRingNumber
+      destinationRingNumber,
     )
 
     const destinationCircleDistances = eligibleDestinationCircles.map(
       (circle, index) => ({
         index,
         distance: this.distanceBetweenCircles(sourceCircle, circle),
-      })
+      }),
     )
 
     const eligibleDistancesMin = Math.min(
-      ...destinationCircleDistances.map(a => a.distance)
+      ...destinationCircleDistances.map(a => a.distance),
     )
+
     const eligibleDestinationIndexes = destinationCircleDistances
       .filter(c => Math.abs(eligibleDistancesMin - c.distance) < 2)
       .map(d => d.index)
 
     const destinationIndex = randomFromArray(eligibleDestinationIndexes)
-    if (destinationIndex == null) {
+
+    if (destinationIndex === null || destinationIndex === undefined) {
       throw new Error('Missing destination circle')
     }
 
     const destinationCircle = eligibleDestinationCircles[destinationIndex]
+
     if (!destinationCircle) {
       throw new Error('Missing destination circle')
     }
@@ -232,11 +272,13 @@ class Trailblaze {
 
   getDashOffset = (element: SVGElement | HTMLElement | null) => {
     if (!element) return 0
+
     try {
       return anime.setDashoffset(element)
     } catch (err) {
       // Called before the element was rendered
       console.error(err)
+
       return 0
     }
   }
@@ -251,18 +293,18 @@ class Trailblaze {
       const { source, destination } = this.getRandomConnection()
       lineMap.set(line, { source, destination })
       const strokeColor = randomFromArray(colors)
+
       if (!strokeColor) {
         throw new Error('Missing stroke color')
       }
 
       line.setAttribute('stroke', strokeColor)
-      this.setLineCoords(
-        line,
-        source.cx,
-        destination.cx,
-        source.cy,
-        destination.cy
-      )
+      this.setLineCoords(line, {
+        x1: source.cx,
+        x2: destination.cx,
+        y1: source.cy,
+        y2: destination.cy,
+      })
     })
 
     anime({

@@ -19,6 +19,7 @@ export const LANGUAGE_CAPABILITIES = [
 export type LanguageCapability = (typeof LANGUAGE_CAPABILITIES)[number]
 
 export type LanguageState = 'enabled' | 'disabled'
+
 export type LanguageVisibility = 'public' | 'hidden'
 
 export interface LanguageDescriptor {
@@ -36,8 +37,9 @@ export interface PackageReference<L extends LanguageId = LanguageId> {
 }
 
 /** Stable identity shared by package reports after language-specific resolution. */
-export interface ResolvedPackageIdentity<L extends LanguageId = LanguageId>
-  extends PackageReference<L> {
+export interface ResolvedPackageIdentity<
+  L extends LanguageId = LanguageId,
+> extends PackageReference<L> {
   name: string
   version: string
   displayName: string
@@ -45,6 +47,7 @@ export interface ResolvedPackageIdentity<L extends LanguageId = LanguageId>
 }
 
 export type PackageReportStatus = 'complete' | 'partial' | 'failed'
+
 export type PackageDiagnosticSeverity = 'info' | 'warning' | 'error'
 
 export interface PackageDiagnostic {
@@ -81,8 +84,7 @@ export interface JavaScriptPackageAnalysis {
   dependencySizes?: readonly JavaScriptDependencySize[]
 }
 
-export interface JavaScriptPackageReport
-  extends PackageReportBase<'javascript'> {
+export interface JavaScriptPackageReport extends PackageReportBase<'javascript'> {
   analysis: JavaScriptPackageAnalysis
 }
 

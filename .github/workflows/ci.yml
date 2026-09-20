@@ -11,29 +11,94 @@ on:
 
 jobs:
   build:
+    name: build (${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [24.x]
+        node-version: [26.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
+          package-manager-cache: false
       - name: Enable Corepack
         run: corepack enable
+      - name: Get Yarn cache directory
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+      - name: Cache Yarn packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
       - name: Install project dependencies
-        run: yarn install
+        run: yarn install --immutable
+      - name: Cache Next.js build
+        uses: actions/cache@v6
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
       - name: Run lint
         run: yarn lint
       - name: Test package recommendation automation
         run: yarn test:recommendations
+      - name: Type check
+        run: yarn typecheck
       - run: yarn build
         env:
           CI: true
+
+  integration:
+    name: integration (${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [26.x]
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          package-manager-cache: false
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Get Yarn cache directory
+        id: yarn-cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+      - name: Cache Yarn packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
+      - name: Install project dependencies
+        run: yarn install --immutable
+      - name: Cache Next.js build
+        uses: actions/cache@v6
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
+      - name: Build application for integration tests
+        run: yarn build
+        env:
+          CI: true
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - name: Install Playwright Chromium
         run: yarn playwright install --with-deps chromium
       - name: Run end-to-end tests
@@ -41,8 +106,8 @@ jobs:
         env:
           CI: true
       - name: Upload Playwright report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v5
+        if: ${{ !cancelled() && hashFiles('playwright-report/**') != '' }}
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/

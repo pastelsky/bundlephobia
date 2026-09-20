@@ -75,11 +75,11 @@ describe('build api', () => {
     expect(errorJSON.error.message).toBe(
       'The package you were looking for is blocklisted ' +
         "because it failed to build multiple times in the past and further tries aren't likely to succeed. This can " +
-        "happen if this package wasn't meant to be bundled in a client side application."
+        "happen if this package wasn't meant to be bundled in a client side application.",
     )
   })
 
-  it('gives right error messages on when trying to build entry point error ', async () => {
+  it('gives right error messages on when trying to build entry point error', async () => {
     const resultURL = baseURL + '@bundlephobia/test-entry-point-error'
     const result = await fetch(resultURL)
     const errorJSON: ErrorResponse = await result.json()
@@ -88,7 +88,7 @@ describe('build api', () => {
     expect(result.headers.get('cache-control')).toBe('max-age=3600')
     expect(errorJSON.error.code).toBe('EntryPointError')
     expect(errorJSON.error.message).toBe(
-      "We could not guess a valid entry point for this package. Perhaps the author hasn't specified one in its package.json ?"
+      "We could not guess a valid entry point for this package. Perhaps the author hasn't specified one in its package.json ?",
     )
   })
 
@@ -115,7 +115,7 @@ describe('build api', () => {
     expect(result.headers.get('cache-control')).toBe('max-age=60')
     expect(errorJSON.error.code).toBe('PackageNotFoundError')
     expect(errorJSON.error.message).toBe(
-      "The package you were looking for doesn't exist."
+      "The package you were looking for doesn't exist.",
     )
   })
 

@@ -1,16 +1,17 @@
 import fetch from 'unfetch'
 
-import API from '../client/api'
+import API, { setFetchImplementation } from '../client/api'
+import type { JsonValue } from '../types/json'
 
-jest.mock('unfetch')
+const mockedFetch = jest.fn<typeof fetch>()
 
-const mockedFetch = fetch as jest.MockedFunction<typeof fetch>
 type APIResponse = Awaited<ReturnType<typeof fetch>>
 
 function mockResponse(
   status: number,
-  json: () => Promise<unknown>
+  json: () => Promise<JsonValue>,
 ): APIResponse {
+  // SAFETY: this fixture supplies the response members consumed by client/api.
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -24,8 +25,16 @@ const requestMethods = [
 ] as const
 
 describe('API error responses', () => {
+  let restoreFetch: () => void
+
   beforeEach(() => {
     mockedFetch.mockReset()
+    restoreFetch?.()
+    restoreFetch = setFetchImplementation(mockedFetch)
+  })
+
+  afterEach(() => {
+    restoreFetch()
   })
 
   test.each(requestMethods)(
@@ -37,26 +46,27 @@ describe('API error responses', () => {
           message: "The package you were looking for doesn't exist.",
         },
       }
+
       mockedFetch.mockResolvedValue(
-        mockResponse(404, () => Promise.resolve(responseBody))
+        mockResponse(404, () => Promise.resolve(responseBody)),
       )
 
       await expect(request()).rejects.toEqual(responseBody)
-    }
+    },
   )
 
   test.each([
     ...requestMethods.map(
-      ([method, request]) => [method, 502, request] as const
+      ([method, request]) => [method, 502, request] as const,
     ),
     ...requestMethods.map(
-      ([method, request]) => [method, 503, request] as const
+      ([method, request]) => [method, 503, request] as const,
     ),
   ])(
     '%s returns a retryable structured error for a malformed %s response',
     async (_method, status, request) => {
       mockedFetch.mockResolvedValue(
-        mockResponse(status, () => Promise.reject(new SyntaxError('HTML')))
+        mockResponse(status, () => Promise.reject(new SyntaxError('HTML'))),
       )
 
       await expect(request()).rejects.toEqual({
@@ -66,14 +76,14 @@ describe('API error responses', () => {
             'The build service is temporarily unavailable. Please try again in a few minutes.',
         },
       })
-    }
+    },
   )
 
   test.each(requestMethods)(
     '%s returns a generic structured error for another malformed response',
     async (_method, request) => {
       mockedFetch.mockResolvedValue(
-        mockResponse(500, () => Promise.reject(new SyntaxError('HTML')))
+        mockResponse(500, () => Promise.reject(new SyntaxError('HTML'))),
       )
 
       await expect(request()).rejects.toEqual({
@@ -83,6 +93,6 @@ describe('API error responses', () => {
             "Oops, something went wrong and we don't have an appropriate error for this. Open an issue maybe?",
         },
       })
-    }
+    },
   )
 })

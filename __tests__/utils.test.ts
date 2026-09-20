@@ -3,6 +3,11 @@ import {
   normalizePackageJsonUrl,
 } from '../utils/common.utils'
 import { resolveBuildError } from '../utils'
+import type { JsonValue } from '../types/json'
+
+interface CircularDetails {
+  self?: CircularDetails
+}
 
 describe('parsePackageString', () => {
   it('handles scoped packages correctly', () => {
@@ -61,7 +66,7 @@ describe('parsePackageString', () => {
 })
 
 describe('resolveBuildError', () => {
-  const resolveDetails = (originalError: unknown) =>
+  const resolveDetails = (originalError: JsonValue) =>
     resolveBuildError({
       error: {
         code: 'BuildError',
@@ -76,7 +81,7 @@ describe('resolveBuildError', () => {
 
   it('preserves every array entry', () => {
     expect(resolveDetails(['first failure', 'second failure'])).toBe(
-      'first failure\n\nsecond failure'
+      'first failure\n\nsecond failure',
     )
   })
 
@@ -85,7 +90,7 @@ describe('resolveBuildError', () => {
       resolveDetails({
         reason: 'BUILD_SERVICE_UNREACHABLE',
         retryable: true,
-      })
+      }),
     ).toBe(
       JSON.stringify(
         {
@@ -93,14 +98,14 @@ describe('resolveBuildError', () => {
           retryable: true,
         },
         null,
-        2
-      )
+        2,
+      ),
     )
   })
 
   it('uses an Error message without exposing its stack', () => {
     expect(resolveDetails(new Error('safe failure message'))).toBe(
-      'safe failure message'
+      'safe failure message',
     )
   })
 
@@ -108,11 +113,11 @@ describe('resolveBuildError', () => {
     'omits empty details: %p',
     value => {
       expect(resolveDetails(value)).toBeNull()
-    }
+    },
   )
 
   it('handles circular error details', () => {
-    const circular: { self?: unknown } = {}
+    const circular: CircularDetails = {}
     circular.self = circular
 
     expect(resolveDetails(circular)).toContain('[Circular]')
@@ -122,30 +127,30 @@ describe('resolveBuildError', () => {
 describe('normalizePackageJsonUrl', () => {
   it('converts GitHub repo URL to raw package.json URL', () => {
     expect(normalizePackageJsonUrl('https://github.com/facebook/react')).toBe(
-      'https://raw.githubusercontent.com/facebook/react/HEAD/package.json'
+      'https://raw.githubusercontent.com/facebook/react/HEAD/package.json',
     )
     expect(normalizePackageJsonUrl('github.com/facebook/react')).toBe(
-      'https://raw.githubusercontent.com/facebook/react/HEAD/package.json'
+      'https://raw.githubusercontent.com/facebook/react/HEAD/package.json',
     )
   })
 
   it('converts GitHub blob URL to raw URL', () => {
     expect(
       normalizePackageJsonUrl(
-        'https://github.com/pastelsky/bundlephobia/blob/bundlephobia/package.json'
-      )
+        'https://github.com/pastelsky/bundlephobia/blob/bundlephobia/package.json',
+      ),
     ).toBe(
-      'https://raw.githubusercontent.com/pastelsky/bundlephobia/bundlephobia/package.json'
+      'https://raw.githubusercontent.com/pastelsky/bundlephobia/bundlephobia/package.json',
     )
   })
 
   it('leaves direct raw URLs and non-github URLs untouched', () => {
     expect(
       normalizePackageJsonUrl(
-        'https://raw.githubusercontent.com/pastelsky/bundlephobia/bundlephobia/package.json'
-      )
+        'https://raw.githubusercontent.com/pastelsky/bundlephobia/bundlephobia/package.json',
+      ),
     ).toBe(
-      'https://raw.githubusercontent.com/pastelsky/bundlephobia/bundlephobia/package.json'
+      'https://raw.githubusercontent.com/pastelsky/bundlephobia/bundlephobia/package.json',
     )
   })
 })

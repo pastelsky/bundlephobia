@@ -56,25 +56,32 @@ type ExportListProps = {
 
 function getBGClass(ratio: number) {
   if (ratio < 0.05) return 'low-1'
+
   if (ratio < 0.15) return 'low-2'
+
   if (ratio < 0.25) return 'med-1'
+
   if (ratio < 0.4) return 'med-2'
+
   if (ratio < 0.5) return 'med-3'
+
   if (ratio < 0.7) return 'high-1'
+
   return 'high-2'
 }
 
 class ExportPill extends React.Component<ExportPillProps> {
   render() {
     const { name, size, totalSize, isLoading } = this.props
+
     return (
       <li className="export-analysis-section__pill export-analysis-section__dont-break">
         <div
           className={cx(
             'export-analysis-section__pill-fill',
             `export-analysis-section__pill-fill--${getBGClass(
-              (size ?? 0) / totalSize
-            )}`
+              (size ?? 0) / totalSize,
+            )}`,
           )}
           style={{
             transform: `scaleX(${Math.min((size || 0) / totalSize, 1)})`,
@@ -102,6 +109,7 @@ function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
 
   exports.forEach(exp => {
     const firstLetter = exp.name[0].toLowerCase()
+
     if (exportDictionary[firstLetter]) {
       exportDictionary[firstLetter].push(exp)
     } else {
@@ -210,11 +218,13 @@ export default class ExportAnalysisSection extends Component<
             packageName: packageString,
             timeTaken: Date.now() - startTime,
           })
+
           return Promise.reject(err)
-        }
+        },
       )
       .then(() => {
         sizeStartTime = Date.now()
+
         return API.getExportsSizes(packageString)
       })
       .then(
@@ -239,8 +249,9 @@ export default class ExportAnalysisSection extends Component<
             packageName: packageString,
             timeTaken: Date.now() - sizeStartTime,
           })
+
           return Promise.reject(err)
-        }
+        },
       )
       .catch(err => {
         this.setState({ analysisState: State.REJECTED, resultError: err })
@@ -254,6 +265,7 @@ export default class ExportAnalysisSection extends Component<
 
   renderProgress() {
     const { result } = this.props
+
     return (
       <div className="export-analysis-section__progress-container">
         Fetching all named exports in&nbsp;<code>{result.name}</code>{' '}
@@ -264,12 +276,15 @@ export default class ExportAnalysisSection extends Component<
 
   getIncompatibleMessage() {
     const { result } = this.props
+
     if (!(result.hasJSModule || result.hasJSNext || result.isModuleType)) {
       return 'This package does not export ES6 modules.'
     }
+
     if (result.hasSideEffects === true) {
       return "This package exports ES6 modules, but isn't marked side-effect free."
     }
+
     return ''
   }
 
@@ -296,7 +311,7 @@ export default class ExportAnalysisSection extends Component<
             .map(exp => ({ name: exp }))
 
     const matchedExports = normalizedExports.filter(asset =>
-      filterText ? asset.name.toLowerCase().includes(filterText) : true
+      filterText ? asset.name.toLowerCase().includes(filterText) : true,
     )
 
     return (
@@ -321,12 +336,8 @@ export default class ExportAnalysisSection extends Component<
 
   renderFailure() {
     const { errorName, errorBody, errorDetails } = resolveBuildError(
-      this.state.resultError
-    ) as {
-      errorName: string | null
-      errorBody: string | null
-      errorDetails: string | null
-    }
+      this.state.resultError,
+    )
 
     return (
       <div className="export-analysis-section__error">

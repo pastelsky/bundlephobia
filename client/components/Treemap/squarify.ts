@@ -1,12 +1,24 @@
 export type TreemapRectangle = [number, number, number, number]
 
+export type TreemapOptions = {
+  width: number
+  height: number
+  xoffset?: number
+  yoffset?: number
+}
+
 class Container {
-  constructor(
-    private readonly xoffset: number,
-    private readonly yoffset: number,
-    private readonly width: number,
-    private readonly height: number
-  ) {}
+  private readonly xoffset: number
+  private readonly yoffset: number
+  private readonly width: number
+  private readonly height: number
+
+  constructor({ xoffset, yoffset, width, height }: TreemapOptions) {
+    this.xoffset = xoffset ?? 0
+    this.yoffset = yoffset ?? 0
+    this.width = width
+    this.height = height
+  }
 
   shortestEdge() {
     return Math.min(this.height, this.width)
@@ -50,23 +62,23 @@ class Container {
       const areawidth = area / this.height
       const newwidth = this.width - areawidth
 
-      return new Container(
-        this.xoffset + areawidth,
-        this.yoffset,
-        newwidth,
-        this.height
-      )
+      return new Container({
+        xoffset: this.xoffset + areawidth,
+        yoffset: this.yoffset,
+        width: newwidth,
+        height: this.height,
+      })
     }
 
     const areaheight = area / this.width
     const newheight = this.height - areaheight
 
-    return new Container(
-      this.xoffset,
-      this.yoffset + areaheight,
-      this.width,
-      newheight
-    )
+    return new Container({
+      xoffset: this.xoffset,
+      yoffset: this.yoffset + areaheight,
+      width: this.width,
+      height: newheight,
+    })
   }
 }
 
@@ -79,17 +91,13 @@ function normalize(data: number[], area: number) {
 
 export default function squarifyTreemap(
   data: number[],
-  width: number,
-  height: number,
-  xoffset = 0,
-  yoffset = 0
+  { width, height, xoffset = 0, yoffset = 0 }: TreemapOptions,
 ): TreemapRectangle[] {
-  const rawTreemap = squarify(
-    normalize(data, width * height),
-    [],
-    new Container(xoffset, yoffset, width, height),
-    []
-  )
+  const rawTreemap = squarify(normalize(data, width * height), {
+    currentrow: [],
+    container: new Container({ xoffset, yoffset, width, height }),
+    stack: [],
+  })
 
   return flattenTreemap(rawTreemap)
 }
@@ -98,12 +106,15 @@ function flattenTreemap(rawTreemap: TreemapRectangle[][]) {
   return rawTreemap.flat()
 }
 
-function squarify(
-  data: number[],
-  currentrow: number[],
-  container: Container,
+type SquarifyState = {
+  currentrow: number[]
+  container: Container
   stack: TreemapRectangle[][]
-): TreemapRectangle[][] {
+}
+
+function squarify(data: number[], state: SquarifyState): TreemapRectangle[][] {
+  const { currentrow, container, stack } = state
+
   if (data.length === 0) {
     if (currentrow.length > 0) {
       stack.push(container.getCoordinates(currentrow))
@@ -117,13 +128,18 @@ function squarify(
 
   if (improvesRatio(currentrow, nextdatapoint, length)) {
     currentrow.push(nextdatapoint)
-    return squarify(data.slice(1), currentrow, container, stack)
+
+    return squarify(data.slice(1), state)
   }
 
   const newcontainer = container.cutArea(sumArray(currentrow))
   stack.push(container.getCoordinates(currentrow))
 
-  return squarify(data, [], newcontainer, stack)
+  return squarify(data, {
+    currentrow: [],
+    container: newcontainer,
+    stack,
+  })
 }
 
 function improvesRatio(currentrow: number[], nextnode: number, length: number) {
@@ -147,7 +163,7 @@ function calculateRatio(row: number[], length: number) {
 
   return Math.max(
     (Math.pow(length, 2) * max) / Math.pow(sum, 2),
-    Math.pow(sum, 2) / (Math.pow(length, 2) * min)
+    Math.pow(sum, 2) / (Math.pow(length, 2) * min),
   )
 }
 

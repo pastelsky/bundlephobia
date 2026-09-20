@@ -1,23 +1,24 @@
 const registryFetch = require('npm-registry-fetch')
+
 const pacote = require('pacote')
 
-jest.mock('npm-registry-fetch', () => ({ json: jest.fn() }))
-jest.mock('pacote', () => ({ manifest: jest.fn() }))
-jest.mock('../server/api/BuildService', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}))
-
 import { createJavaScriptPackageReference } from '../languages/javascript'
-import { JavaScriptPackageAnalysisAdapter } from '../server/analysis/javascript/JavaScriptPackageAnalysisAdapter'
+import { JavaScriptPackageAnalysisAdapter } from '../server/analysis/adapters/javascript-package-analysis.adapter'
 
+// SAFETY: the adapter constructor receives no runtime options in this fixture.
 const adapter = new JavaScriptPackageAnalysisAdapter({} as never)
+
+const registryJson = jest.spyOn(registryFetch, 'json')
+
+const pacoteManifest = jest.spyOn(pacote, 'manifest')
+
 const resolvePackage = (specifier: string) =>
   adapter.resolvePackage(createJavaScriptPackageReference(specifier))
 
 describe('resolvePackage', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    registryJson.mockReset()
+    pacoteManifest.mockReset()
   })
 
   it.each([
@@ -70,7 +71,7 @@ describe('resolvePackage', () => {
     pacote.manifest.mockResolvedValue({ name: 'react', version: '18.2.0' })
 
     await expect(
-      resolvePackage('github:facebook/react')
+      resolvePackage('github:facebook/react'),
     ).resolves.toMatchObject({
       name: 'react',
       version: '18.2.0',
@@ -96,7 +97,7 @@ describe('resolvePackage', () => {
     registryFetch.json.mockRejectedValue({ code: 'E404' })
 
     await expect(
-      resolvePackage('definitely-not-a-real-package')
+      resolvePackage('definitely-not-a-real-package'),
     ).rejects.toMatchObject({
       name: 'PackageNotFoundError',
     })

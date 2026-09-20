@@ -8,6 +8,7 @@ import {
 } from 'package-build-stats'
 import Amplitude from '@amplitude/node'
 import serializeError from './serializeError.js'
+import { measureBuild } from './metrics.js'
 
 const fastify = Fastify()
 
@@ -18,6 +19,7 @@ function sendBuildError(res, packageString, error) {
     name: serialized.name,
     originalError: serialized.originalError,
   })
+
   return res.code(500).send(serialized)
 }
 
@@ -41,10 +43,17 @@ if (process.env.AMPLITUDE_API_KEY) {
 
 fastify.get('/size', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
+
   try {
-    const result = await getPackageStats(packageString, {
-      installTimeout: 60000,
+    const result = await measureBuild({
+      operation: 'size',
+      packageString,
+      run: () =>
+        getPackageStats(packageString, {
+          installTimeout: 60000,
+        }),
     })
+
     return res.code(200).send(result)
   } catch (err) {
     return sendBuildError(res, packageString, err)
@@ -55,9 +64,15 @@ fastify.get('/exports-sizes', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
 
   try {
-    const result = await getPackageExportSizes(packageString, {
-      installTimeout: 60000,
+    const result = await measureBuild({
+      operation: 'exports-sizes',
+      packageString,
+      run: () =>
+        getPackageExportSizes(packageString, {
+          installTimeout: 60000,
+        }),
     })
+
     return res.code(200).send(result)
   } catch (err) {
     return sendBuildError(res, packageString, err)
@@ -68,9 +83,15 @@ fastify.get('/exports', async (req, res) => {
   const packageString = decodeURIComponent(req.query.p)
 
   try {
-    const result = await getAllPackageExports(packageString, {
-      installTimeout: 60000,
+    const result = await measureBuild({
+      operation: 'exports',
+      packageString,
+      run: () =>
+        getAllPackageExports(packageString, {
+          installTimeout: 60000,
+        }),
     })
+
     return res.code(200).send(result)
   } catch (err) {
     return sendBuildError(res, packageString, err)

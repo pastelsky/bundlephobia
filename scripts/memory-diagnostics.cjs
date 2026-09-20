@@ -1,6 +1,9 @@
 const fs = require('fs')
+
 const path = require('path')
+
 const v8 = require('v8')
+
 const {
   PerformanceObserver,
   monitorEventLoopDelay,
@@ -8,9 +11,13 @@ const {
 } = require('perf_hooks')
 
 const GIB = 1024 ** 3
+
 const DEFAULT_INTERVAL_MS = 3000
+
 const DEFAULT_COOLDOWN_MS = 10 * 60 * 1000
+
 const DEFAULT_MIN_FREE_BYTES = 8 * GIB
+
 const DEFAULT_TIMELINE_SAMPLES = 120
 
 function createRuntimeMetrics() {
@@ -44,11 +51,13 @@ function createRuntimeMetrics() {
 
     registerProvider(name, provider) {
       providers.set(name, provider)
+
       return () => providers.delete(name)
     },
 
     takeSnapshot() {
       const providerValues = {}
+
       for (const [name, provider] of providers) {
         try {
           providerValues[name] = provider()
@@ -79,6 +88,7 @@ function createRuntimeMetrics() {
       intervalMaxDurationMs = 0
       intervalRoutes = Object.create(null)
       intervalStatuses = Object.create(null)
+
       return snapshot
     },
   }
@@ -88,16 +98,19 @@ const runtimeMetrics = createRuntimeMetrics()
 
 function parseBytes(value) {
   const match = /^(\d+)([KMG])?$/i.exec(String(value || '').trim())
+
   if (!match) {
     throw new Error(`Invalid byte value: ${value}`)
   }
 
   const units = { K: 1024, M: 1024 ** 2, G: GIB }
+
   return Number(match[1]) * (units[match[2]?.toUpperCase()] || 1)
 }
 
 function getAvailableBytes(directory, fsImpl = fs) {
   const stats = fsImpl.statfsSync(directory, { bigint: true })
+
   return Number(stats.bavail * stats.bsize)
 }
 
@@ -129,8 +142,9 @@ function createMemoryDiagnostics(options) {
 
   const serviceDirectory = path.join(
     outputRoot,
-    service.replace(/[^a-z0-9_-]/gi, '_')
+    service.replace(/[^a-z0-9_-]/gi, '_'),
   )
+
   const latestSnapshot = path.join(serviceDirectory, 'latest.heapsnapshot')
   const latestMetadata = path.join(serviceDirectory, 'latest.metadata.json')
   const latestTimeline = path.join(serviceDirectory, 'latest.timeline.json')
@@ -143,6 +157,7 @@ function createMemoryDiagnostics(options) {
   let previousCpuUsage = cpuUsage()
   const eventLoopDelay = monitorEventLoopDelay({ resolution: 20 })
   eventLoopDelay.enable()
+
   const gcObserver = new PerformanceObserver(list => {
     for (const entry of list.getEntries()) {
       const kind = String(entry.detail?.kind ?? 'unknown')
@@ -151,6 +166,7 @@ function createMemoryDiagnostics(options) {
       gcInterval.kinds[kind] = (gcInterval.kinds[kind] || 0) + 1
     }
   })
+
   gcObserver.observe({ entryTypes: ['gc'] })
 
   function histogramMilliseconds(value) {
@@ -159,12 +175,14 @@ function createMemoryDiagnostics(options) {
 
   function collectSample(memory = memoryUsage()) {
     const currentEventLoopUtilization = performance.eventLoopUtilization(
-      previousEventLoopUtilization
+      previousEventLoopUtilization,
     )
+
     previousEventLoopUtilization = performance.eventLoopUtilization()
     const currentCpuUsage = cpuUsage(previousCpuUsage)
     previousCpuUsage = cpuUsage()
     const resources = {}
+
     for (const resource of activeResourcesInfo()) {
       resources[resource] = (resources[resource] || 0) + 1
     }
@@ -194,13 +212,16 @@ function createMemoryDiagnostics(options) {
     }
 
     timeline.push(sample)
+
     if (timeline.length > timelineSamples) {
       timeline.shift()
     }
+
     gcInterval.count = 0
     gcInterval.durationMs = 0
     gcInterval.kinds = Object.create(null)
     eventLoopDelay.reset()
+
     return sample
   }
 
@@ -218,21 +239,26 @@ function createMemoryDiagnostics(options) {
 
       try {
         const ownerPid = Number(fsImpl.readFileSync(lockOwner, 'utf8'))
+
         if (!Number.isInteger(ownerPid) || ownerPid < 1) {
-          throw new Error('Invalid lock owner')
+          throw new Error('Invalid lock owner', { cause: error })
         }
+
         process.kill(ownerPid, 0)
+
         return false
       } catch (lockError) {
         if (lockError.code === 'EPERM') {
           return false
         }
+
         fsImpl.rmSync(lockDirectory, { recursive: true, force: true })
         fsImpl.mkdirSync(lockDirectory)
       }
     }
 
     fsImpl.writeFileSync(lockOwner, String(pid), { mode: 0o600 })
+
     return true
   }
 
@@ -245,6 +271,7 @@ function createMemoryDiagnostics(options) {
   }
 
   fsImpl.mkdirSync(serviceDirectory, { recursive: true, mode: 0o700 })
+
   if (acquireLock()) {
     removeIncompleteCaptures()
     releaseLock()
@@ -253,6 +280,7 @@ function createMemoryDiagnostics(options) {
   function check() {
     const memory = memoryUsage()
     collectSample(memory)
+
     if (handled || memory.rss < thresholdBytes) {
       return false
     }
@@ -260,24 +288,29 @@ function createMemoryDiagnostics(options) {
     if (!acquireLock()) {
       return false
     }
+
     removeIncompleteCaptures()
 
     const suffix = `${now()}-${pid}`
+
     const temporarySnapshot = path.join(
       serviceDirectory,
-      `.latest-${suffix}.heapsnapshot`
+      `.latest-${suffix}.heapsnapshot`,
     )
+
     const temporaryReport = path.join(
       serviceDirectory,
-      `.latest-${suffix}.report.json`
+      `.latest-${suffix}.report.json`,
     )
+
     const temporaryMetadata = path.join(
       serviceDirectory,
-      `.latest-${suffix}.metadata.json`
+      `.latest-${suffix}.metadata.json`,
     )
+
     const temporaryTimeline = path.join(
       serviceDirectory,
-      `.latest-${suffix}.timeline.json`
+      `.latest-${suffix}.timeline.json`,
     )
 
     try {
@@ -292,18 +325,20 @@ function createMemoryDiagnostics(options) {
       const requiredFreeBytes = captureHeapSnapshot
         ? Math.max(minFreeBytes, thresholdBytes * 3)
         : 0
+
       if (
         requiredFreeBytes > 0 &&
         getAvailableBytes(serviceDirectory, fsImpl) < requiredFreeBytes
       ) {
         logger.error(
-          `[memory-diagnostics] Skipping ${service} capture: insufficient free disk space`
+          `[memory-diagnostics] Skipping ${service} capture: insufficient free disk space`,
         )
+
         return false
       }
 
       logger.error(
-        `[memory-diagnostics] Capturing ${service} at ${memory.rss} bytes RSS`
+        `[memory-diagnostics] Capturing ${service} at ${memory.rss} bytes RSS`,
       )
       handled = true
 
@@ -314,6 +349,7 @@ function createMemoryDiagnostics(options) {
       }
 
       let smapsRollup
+
       try {
         smapsRollup = fsImpl.readFileSync('/proc/self/smaps_rollup', 'utf8')
       } catch {}
@@ -330,35 +366,39 @@ function createMemoryDiagnostics(options) {
             heapSnapshotCaptured: captureHeapSnapshot,
           },
           null,
-          2
+          2,
         ),
-        { mode: 0o600 }
+        { mode: 0o600 },
       )
 
       fsImpl.writeFileSync(
         temporaryTimeline,
         JSON.stringify({ service, pid, samples: timeline }, null, 2),
-        { mode: 0o600 }
+        { mode: 0o600 },
       )
 
       if (captureHeapSnapshot) {
         writeHeapSnapshot(temporarySnapshot)
         fsImpl.renameSync(temporarySnapshot, latestSnapshot)
       }
+
       if (report) {
         fsImpl.renameSync(
           temporaryReport,
-          path.join(serviceDirectory, 'latest.report.json')
+          path.join(serviceDirectory, 'latest.report.json'),
         )
       }
+
       fsImpl.renameSync(temporaryMetadata, latestMetadata)
       fsImpl.renameSync(temporaryTimeline, latestTimeline)
       logger.error(`[memory-diagnostics] Captured ${service} diagnostics`)
+
       return true
     } catch (error) {
       logger.error(
-        `[memory-diagnostics] Failed to capture ${service}: ${error.message}`
+        `[memory-diagnostics] Failed to capture ${service}: ${error.message}`,
       )
+
       return false
     } finally {
       for (const filename of [
@@ -371,12 +411,14 @@ function createMemoryDiagnostics(options) {
           fsImpl.rmSync(filename, { force: true })
         } catch {}
       }
+
       releaseLock()
     }
   }
 
   const timer = setInterval(check, intervalMs)
   timer.unref()
+
   return {
     check,
     stop: () => {
@@ -391,6 +433,7 @@ function getStartupEnvironment(environment = process.env) {
   if (!environment.pm2_env) {
     return environment
   }
+
   return { ...JSON.parse(environment.pm2_env), ...environment }
 }
 
@@ -398,6 +441,7 @@ function startFromEnvironment() {
   const environment = getStartupEnvironment()
   const service = environment.MEMORY_DIAGNOSTICS_SERVICE
   const threshold = environment.MEMORY_DIAGNOSTICS_RSS_THRESHOLD
+
   if (!service || !threshold) {
     return false
   }
@@ -410,6 +454,7 @@ function startFromEnvironment() {
     captureHeapSnapshot:
       environment.MEMORY_DIAGNOSTICS_HEAP_SNAPSHOT !== 'false',
   })
+
   return true
 }
 

@@ -1,3 +1,9 @@
+import { trackAmplitudeEvent } from './amplitude'
+
+type AnalyticsValue = string | number | boolean | null | undefined
+
+type AnalyticsEventData = Record<string, AnalyticsValue>
+
 type HasPackageName = {
   packageName: string
 }
@@ -15,30 +21,26 @@ type HasSuccessRatio = {
 }
 
 type HasPackageNameAndTimeTaken = HasPackageName & HasTimeTaken
+
 type HasOpen = {
   open: boolean
 }
+
 type HasToolCount = {
   toolCount: number
 }
+
 type HasToolName = {
   toolName: string
 }
+
 type HasAction = {
   action: string
 }
-type HasAdPlacement = {
-  placement: 'homepage' | 'package_result'
-}
-type HasAdUnavailableReason = HasAdPlacement & {
-  reason: 'script_error' | 'creative_timeout'
-}
 
 export default class Analytics {
-  private static logEvent(eventName: string, eventData?: UmamiEventData) {
-    if (typeof window !== 'undefined') {
-      window.umami?.track(eventName, eventData)
-    }
+  private static logEvent(eventName: string, eventData?: AnalyticsEventData) {
+    trackAmplitudeEvent(eventName, eventData)
   }
 
   static pageView(pageType: string) {
@@ -177,16 +179,5 @@ export default class Analytics {
 
   static mcpDocsOpened() {
     Analytics.logEvent('mcp_docs_opened')
-  }
-
-  static advertisementImpression({ placement }: HasAdPlacement) {
-    Analytics.logEvent('advertisement_impression', { placement })
-  }
-
-  static advertisementUnavailable({
-    placement,
-    reason,
-  }: HasAdUnavailableReason) {
-    Analytics.logEvent('advertisement_unavailable', { placement, reason })
   }
 }

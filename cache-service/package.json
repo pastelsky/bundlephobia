@@ -1,18 +1,20 @@
 {
   "name": "cache",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "main": "index.ts",
   "license": "MIT",
   "dependencies": {
+    "@bundlephobia/service-contracts": "workspace:*",
     "debug": "^4.3.4",
     "dotenv": "^8.6.0",
     "dotenv-defaults": "^2.0.2",
     "fastify": "^4.25.2",
     "firebase": "^8.10.1",
-    "lru-cache": "^5.1.1"
+    "lru-cache": "^11.5.2"
   },
   "scripts": {
-    "start": "DEBUG=bp* node index",
-    "dev": "DEBUG=bp* node index"
+    "start": "DEBUG=bp* node --experimental-strip-types index.ts",
+    "dev": "DEBUG=bp* node --watch --experimental-strip-types index.ts"
   }
 }

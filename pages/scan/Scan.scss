@@ -26,7 +26,9 @@
   border: none;
   padding: $global-spacing $global-spacing * 2;
   display: block;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   color: var(--color-btn-text);
   letter-spacing: 1px;
   font-weight: $font-weight-bold;
@@ -159,7 +161,9 @@
   border: 1px solid var(--color-border-primary);
   background: var(--color-bg-surface);
   color: var(--color-text-primary);
-  transition: border-color $motion-fast, box-shadow $motion-fast;
+  transition:
+    border-color $motion-fast,
+    box-shadow $motion-fast;
 
   &:focus-visible {
     border-color: var(--color-link);

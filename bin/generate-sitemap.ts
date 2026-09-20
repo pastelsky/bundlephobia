@@ -183,6 +183,7 @@ const popularPackages = [
 ] as const
 
 const otherPages = ['', '/scan']
+
 const links = [
   ...otherPages.map(page => ({
     url: page,

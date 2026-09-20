@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 
 import axios from 'axios'
+import type { JsonValue } from '../types/json'
 
 interface ProgressState {
   completed: Set<string>
@@ -43,46 +44,61 @@ interface ExportsBuildResult {
 }
 
 const API_BASE = process.env.API_BASE || 'http://localhost:5000'
+
 const CONCURRENCY = parseInt(process.env.CONCURRENCY || '3', 10)
+
 const TIMEOUT_MS = 120000
+
 const TOP_PACKAGES_PATH = path.join(__dirname, '../top-packages.json')
+
 const PROGRESS_PATH = path.join(__dirname, '../populate-v3-progress.json')
+
 const STATS_PATH = path.join(__dirname, '../populate-v3-stats.json')
+
 const COMPARISON_PATH = path.join(__dirname, '../populate-v3-comparison.json')
+
 const EXPORTS_STATS_PATH = path.join(
   __dirname,
-  '../populate-v3-exports-stats.json'
+  '../populate-v3-exports-stats.json',
 )
+
 const EXPORTS_COMPARISON_PATH = path.join(
   __dirname,
-  '../populate-v3-exports-comparison.json'
+  '../populate-v3-exports-comparison.json',
 )
+
 const CACHE_SERVICE_BASE =
   process.env.CACHE_SERVICE_BASE || 'http://localhost:7001'
 
 const args = process.argv.slice(2)
+
 const shouldReset = args.includes('--reset')
+
 const concurrencyArg = args.find(argument =>
-  argument.startsWith('--concurrency=')
+  argument.startsWith('--concurrency='),
 )
+
 const concurrency = concurrencyArg
   ? parseInt(concurrencyArg.split('=')[1], 10)
   : CONCURRENCY
 
 const limitArg = args.find(argument => argument.startsWith('--limit-packages='))
+
 const packageLimit = limitArg ? parseInt(limitArg.split('=')[1], 10) : Infinity
 
 const packageFilterArg = args.find(argument =>
-  argument.startsWith('--package=')
+  argument.startsWith('--package='),
 )
+
 const packageFilter = packageFilterArg ? packageFilterArg.split('=')[1] : null
 
 const sizesOnly = args.includes('--sizes-only')
+
 const exportsOnly = args.includes('--exports-only')
 
 if (sizesOnly && exportsOnly) {
   console.error(
-    'Error: Cannot use both --sizes-only and --exports-only flags together'
+    'Error: Cannot use both --sizes-only and --exports-only flags together',
   )
   process.exit(1)
 }
@@ -98,14 +114,15 @@ Mode: ${
   sizesOnly
     ? 'Sizes Only'
     : exportsOnly
-    ? 'Exports Only'
-    : 'Both (Sizes + Exports)'
+      ? 'Exports Only'
+      : 'Both (Sizes + Exports)'
 }
 `)
 
 function loadProgress(): ProgressState {
   if (shouldReset && !packageFilter) {
     console.log('Resetting ALL progress...')
+
     return {
       completed: new Set(),
       completed_exports: new Set(),
@@ -122,19 +139,22 @@ function loadProgress(): ProgressState {
 
   if (fs.existsSync(PROGRESS_PATH)) {
     try {
+      // SAFETY: the progress file is written by this script using this contract.
       const data = JSON.parse(fs.readFileSync(PROGRESS_PATH, 'utf8')) as {
         completed: string[]
         completed_exports?: string[]
         failed: string[]
         stats?: Partial<ProgressState['stats']>
       }
+
       console.log(
         `Resuming: ${data.completed.length} sizes completed, ${
           data.completed_exports?.length || 0
-        } exports completed, ${data.failed.length} failed`
+        } exports completed, ${data.failed.length} failed`,
       )
 
       const stats = data.stats || {}
+
       return {
         completed: new Set(data.completed),
         completed_exports: new Set(data.completed_exports || []),
@@ -174,6 +194,7 @@ function saveProgress(progress: ProgressState) {
     stats: progress.stats,
     lastSaved: new Date().toISOString(),
   }
+
   fs.writeFileSync(PROGRESS_PATH, JSON.stringify(data, null, 2))
 }
 
@@ -192,14 +213,14 @@ function saveExportsStats(stats: unknown[]) {
 function saveExportsComparisons(comparisons: unknown[]) {
   fs.writeFileSync(
     EXPORTS_COMPARISON_PATH,
-    JSON.stringify(comparisons, null, 2)
+    JSON.stringify(comparisons, null, 2),
   )
 }
 
 function withAbortableTimeout<T>(
   promiseFactory: (signal: AbortSignal) => Promise<T>,
   timeoutMs: number,
-  timeoutValue: T
+  timeoutValue: T,
 ) {
   const controller = new AbortController()
   let timeoutId: NodeJS.Timeout
@@ -215,16 +236,19 @@ function withAbortableTimeout<T>(
   const workPromise = promiseFactory(controller.signal)
     .then(result => {
       clearTimeout(timeoutId)
+
       return result
     })
     .catch(error => {
       clearTimeout(timeoutId)
+
       if (
         error instanceof Error &&
         (error.name === 'CanceledError' || error.name === 'AbortError')
       ) {
         return timeoutValue
       }
+
       throw error
     })
 
@@ -234,7 +258,7 @@ function withAbortableTimeout<T>(
 async function buildPackage(
   packageName: string,
   version: string,
-  signal: AbortSignal | null = null
+  signal: AbortSignal | null = null,
 ): Promise<SizeBuildResult> {
   const key = `${packageName}@${version}`
   let v2Result: SizeBuildResult['v2'] = null
@@ -244,13 +268,14 @@ async function buildPackage(
       params: { name: packageName, version, readKey: 'modules-v2' },
       timeout: 10000,
     })
+
     if (v2Response.data && v2Response.data.size) {
       v2Result = { size: v2Response.data.size, gzip: v2Response.data.gzip }
     }
   } catch {}
 
   const url = `${API_BASE}/api/size?package=${encodeURIComponent(
-    key
+    key,
   )}&record=true&force=true`
 
   try {
@@ -263,6 +288,7 @@ async function buildPackage(
       timeout: TIMEOUT_MS,
       cancelToken: cancelSource.token,
     })
+
     if (response.data && response.data.size) {
       return {
         success: true,
@@ -271,12 +297,14 @@ async function buildPackage(
         v2: v2Result,
       }
     }
+
     return { success: false, error: 'No size in response', v2: v2Result }
   } catch (error) {
     if (axios.isCancel(error)) {
       return { success: false, error: 'Request aborted', v2: v2Result }
     }
 
+    // SAFETY: Axios errors expose the optional response payload inspected below.
     const axiosError = error as {
       response?: {
         data?: {
@@ -302,23 +330,25 @@ async function buildPackage(
 async function buildExports(
   packageName: string,
   version: string,
-  signal: AbortSignal | null = null
+  signal: AbortSignal | null = null,
 ): Promise<ExportsBuildResult> {
   const key = `${packageName}@${version}`
-  let v2Result: unknown = null
+  let v2Result: JsonValue | null = null
 
   try {
     const v2Response = await axios.get(`${CACHE_SERVICE_BASE}/exports-cache`, {
       params: { name: packageName, version, readKey: 'exports' },
       timeout: 10000,
     })
+
     if (v2Response.data) {
-      v2Result = v2Response.data
+      // SAFETY: the cache service returns serialized JSON for this endpoint.
+      v2Result = v2Response.data as JsonValue
     }
   } catch {}
 
   const url = `${API_BASE}/api/exports-sizes?package=${encodeURIComponent(
-    key
+    key,
   )}&force=true`
 
   try {
@@ -331,6 +361,7 @@ async function buildExports(
       timeout: TIMEOUT_MS,
       cancelToken: cancelSource.token,
     })
+
     if (response.data) {
       return {
         success: true,
@@ -338,12 +369,14 @@ async function buildExports(
         v2: v2Result,
       }
     }
+
     return { success: false, error: 'No data in response', v2: v2Result }
   } catch (error) {
     if (axios.isCancel(error)) {
       return { success: false, error: 'Request aborted', v2: v2Result }
     }
 
+    // SAFETY: Axios errors expose the optional response payload inspected below.
     const axiosError = error as {
       response?: {
         data?: {
@@ -372,16 +405,18 @@ async function processBatch(
   detailedStats: unknown[],
   comparisons: unknown[],
   exportsStats: unknown[],
-  exportsComparisons: unknown[]
+  exportsComparisons: unknown[],
 ) {
   const promises = batch.map(async ({ packageName, version }) => {
     const key = `${packageName}@${version}`
     const shouldBuildSize = !exportsOnly && !progress.completed.has(key)
+
     const shouldBuildExports =
       !sizesOnly && !progress.completed_exports.has(key)
 
     if (!shouldBuildSize && !shouldBuildExports) {
       progress.stats.skipped++
+
       return { key, skipped: true }
     }
 
@@ -397,10 +432,10 @@ async function processBatch(
         withAbortableTimeout(
           signal => buildPackage(packageName, version, signal),
           TIMEOUT_MS + 5000,
-          { success: false, error: 'Operation timeout (aborted)' }
+          { success: false, error: 'Operation timeout (aborted)' },
         ).then(result => {
           sizeResult = result
-        })
+        }),
       )
     }
 
@@ -410,10 +445,10 @@ async function processBatch(
         withAbortableTimeout(
           signal => buildExports(packageName, version, signal),
           TIMEOUT_MS + 5000,
-          { success: false, error: 'Operation timeout (aborted)' }
+          { success: false, error: 'Operation timeout (aborted)' },
         ).then(result => {
           exportsResult = result
-        })
+        }),
       )
     }
 
@@ -423,8 +458,8 @@ async function processBatch(
 
     console.log(
       `[DEBUG] Completed ${key} in ${((Date.now() - startTime) / 1000).toFixed(
-        1
-      )}s`
+        1,
+      )}s`,
     )
     const duration = ((Date.now() - startTime) / 1000).toFixed(1)
 
@@ -443,8 +478,10 @@ async function processBatch(
 
         if (
           sizeResult.v2 &&
-          sizeResult.size != null &&
-          sizeResult.gzip != null
+          sizeResult.size !== null &&
+          sizeResult.size !== undefined &&
+          sizeResult.gzip !== null &&
+          sizeResult.gzip !== undefined
         ) {
           comparisons.push({
             package: key,
@@ -517,31 +554,36 @@ function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
   const s = Math.floor(seconds % 60)
+
   return `${h}h ${m}m ${s}s`
 }
 
 async function main() {
   if (!fs.existsSync(TOP_PACKAGES_PATH)) {
     console.error(
-      'top-packages.json not found. Run generate-top-packages.js first.'
+      'top-packages.json not found. Run generate-top-packages.js first.',
     )
     process.exit(1)
   }
 
+  // SAFETY: top-packages.json is produced by the typed generator in this repository.
   const packages = JSON.parse(
-    fs.readFileSync(TOP_PACKAGES_PATH, 'utf8')
+    fs.readFileSync(TOP_PACKAGES_PATH, 'utf8'),
   ) as TopPackage[]
+
   console.log(`Loaded ${packages.length} packages from top-packages.json`)
 
   let targetPackages = packages
+
   if (packageFilter) {
     targetPackages = packages.filter(pkg => pkg.name === packageFilter)
     console.log(
-      `Filtering to package: ${packageFilter} (found ${targetPackages.length} matches)`
+      `Filtering to package: ${packageFilter} (found ${targetPackages.length} matches)`,
     )
   }
 
   targetPackages = targetPackages.slice(0, packageLimit)
+
   if (packageLimit !== Infinity) {
     console.log(`Limiting to top ${packageLimit} packages`)
   }
@@ -566,38 +608,45 @@ async function main() {
   console.log('Loading progress and stats files...')
 
   const progress = loadProgress()
-  let detailedStats: unknown[] = []
-  let comparisons: unknown[] = []
-  let exportsStats: unknown[] = []
-  let exportsComparisons: unknown[] = []
+  let detailedStats: JsonValue[] = []
+  let comparisons: JsonValue[] = []
+  let exportsStats: JsonValue[] = []
+  let exportsComparisons: JsonValue[] = []
 
   if (!(shouldReset && !packageFilter)) {
     if (fs.existsSync(STATS_PATH)) {
       try {
+        // SAFETY: the stats files are serialized JSON arrays written below.
         detailedStats = JSON.parse(
-          fs.readFileSync(STATS_PATH, 'utf8')
-        ) as unknown[]
+          fs.readFileSync(STATS_PATH, 'utf8'),
+        ) as JsonValue[]
       } catch {}
     }
+
     if (fs.existsSync(COMPARISON_PATH)) {
       try {
+        // SAFETY: the comparison file is a serialized JSON array written below.
         comparisons = JSON.parse(
-          fs.readFileSync(COMPARISON_PATH, 'utf8')
-        ) as unknown[]
+          fs.readFileSync(COMPARISON_PATH, 'utf8'),
+        ) as JsonValue[]
       } catch {}
     }
+
     if (fs.existsSync(EXPORTS_STATS_PATH)) {
       try {
+        // SAFETY: the exports stats file is a serialized JSON array written below.
         exportsStats = JSON.parse(
-          fs.readFileSync(EXPORTS_STATS_PATH, 'utf8')
-        ) as unknown[]
+          fs.readFileSync(EXPORTS_STATS_PATH, 'utf8'),
+        ) as JsonValue[]
       } catch {}
     }
+
     if (fs.existsSync(EXPORTS_COMPARISON_PATH)) {
       try {
+        // SAFETY: the exports comparison file is a serialized JSON array written below.
         exportsComparisons = JSON.parse(
-          fs.readFileSync(EXPORTS_COMPARISON_PATH, 'utf8')
-        ) as unknown[]
+          fs.readFileSync(EXPORTS_COMPARISON_PATH, 'utf8'),
+        ) as JsonValue[]
       } catch {}
     }
   }
@@ -624,23 +673,36 @@ async function main() {
 
     detailedStats = detailedStats.filter(
       item =>
-        !(item as { package?: string }).package?.startsWith(`${packageFilter}@`)
+        // SAFETY: persisted analysis entries optionally carry their package key.
+        !(item as { package?: string }).package?.startsWith(
+          `${packageFilter}@`,
+        ),
     )
     comparisons = comparisons.filter(
       item =>
-        !(item as { package?: string }).package?.startsWith(`${packageFilter}@`)
+        // SAFETY: persisted analysis entries optionally carry their package key.
+        !(item as { package?: string }).package?.startsWith(
+          `${packageFilter}@`,
+        ),
     )
     exportsStats = exportsStats.filter(
       item =>
-        !(item as { package?: string }).package?.startsWith(`${packageFilter}@`)
+        // SAFETY: persisted analysis entries optionally carry their package key.
+        !(item as { package?: string }).package?.startsWith(
+          `${packageFilter}@`,
+        ),
     )
     exportsComparisons = exportsComparisons.filter(
       item =>
-        !(item as { package?: string }).package?.startsWith(`${packageFilter}@`)
+        // SAFETY: persisted analysis entries optionally carry their package key.
+        !(item as { package?: string }).package?.startsWith(
+          `${packageFilter}@`,
+        ),
     )
   }
 
   console.log('Checking API reachability...')
+
   try {
     await axios.get(`${API_BASE}/api/recent?limit=1`, { timeout: 10000 })
     console.log('API is reachable')
@@ -652,7 +714,7 @@ async function main() {
   }
 
   const startTime = Date.now()
-  let processed = 0
+  let processed: number
 
   console.log('\nStarting builds...\n')
 
@@ -663,7 +725,7 @@ async function main() {
         Math.floor(index / concurrency) + 1
       }, packages: ${batch
         .map(item => `${item.packageName}@${item.version}`)
-        .join(', ')}`
+        .join(', ')}`,
     )
 
     const results = await processBatch(
@@ -672,8 +734,9 @@ async function main() {
       detailedStats,
       comparisons,
       exportsStats,
-      exportsComparisons
+      exportsComparisons,
     )
+
     console.log(`[DEBUG] Batch completed, got ${results.length} results`)
 
     for (const result of results) {
@@ -685,7 +748,11 @@ async function main() {
       }
 
       if (result.size) {
-        if (result.size.success && result.size.size != null) {
+        if (
+          result.size.success &&
+          result.size.size !== null &&
+          result.size.size !== undefined
+        ) {
           parts.push(`Size: ${(result.size.size / 1024).toFixed(1)}kB`)
         } else {
           symbol = '✗'
@@ -703,7 +770,7 @@ async function main() {
       }
 
       console.log(
-        `${symbol} ${result.key} (${result.duration}s) - ${parts.join(', ')}`
+        `${symbol} ${result.key} (${result.duration}s) - ${parts.join(', ')}`,
       )
     }
 
@@ -713,10 +780,10 @@ async function main() {
     const remaining = (allVersions.length - processed) / (rate || 1)
 
     console.log(
-      `\n[${processed}/${allVersions.length}] Sizes (S: ${progress.stats.success}, F: ${progress.stats.failed}), Exports (S: ${progress.stats.exports_success}, F: ${progress.stats.exports_failed}), Skipped: ${progress.stats.skipped}`
+      `\n[${processed}/${allVersions.length}] Sizes (S: ${progress.stats.success}, F: ${progress.stats.failed}), Exports (S: ${progress.stats.exports_success}, F: ${progress.stats.exports_failed}), Skipped: ${progress.stats.skipped}`,
     )
     console.log(
-      `Elapsed: ${formatTime(elapsed)}, ETA: ${formatTime(remaining)}\n`
+      `Elapsed: ${formatTime(elapsed)}, ETA: ${formatTime(remaining)}\n`,
     )
 
     saveProgress(progress)

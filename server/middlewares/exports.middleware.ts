@@ -4,18 +4,21 @@ import now from 'performance-now'
 import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
-import { BUILD_DURATION_HEADER } from '../api/BuildService'
+import { BUILD_DURATION_HEADER } from '../clients/build-service.client'
 import config from '../config'
-import logger from '../Logger'
+import logger from '../infrastructure/logger.service'
 
 const exportsMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
   const { force, package: packageQuery } = ctx.query
-  const requestedPackage =
-    typeof packageQuery === 'string' ? packageQuery : packageQuery?.join('/')
+
+  const requestedPackage = Array.isArray(packageQuery)
+    ? packageQuery.join('/')
+    : packageQuery
 
   const buildStart = now()
+
   const result = await packageAnalysisGateway.analyzePackageExports(
     ctx.state.resolved,
     {
@@ -23,20 +26,21 @@ const exportsMiddleware: Middleware = async ctx => {
       onComplete: durationMs => {
         ctx.set(BUILD_DURATION_HEADER, String(durationMs))
       },
-    }
+    },
   )
+
   const buildEnd = now()
 
   ctx.cacheControl = {
     maxAge:
-      force != null
-        ? 0
-        : requestedPackage &&
+      force === null || force === undefined
+        ? requestedPackage &&
           packageAnalysisGateway.isExactVersionSpecifier(
-            createJavaScriptPackageReference(requestedPackage)
+            createJavaScriptPackageReference(requestedPackage),
           )
-        ? config.CACHE.SIZE_API_HAS_VERSION
-        : config.CACHE.SIZE_API_DEFAULT,
+          ? config.CACHE.SIZE_API_HAS_VERSION
+          : config.CACHE.SIZE_API_DEFAULT
+        : 0,
   }
 
   ctx.body = { name, version, exports: result }
@@ -52,7 +56,7 @@ const exportsMiddleware: Middleware = async ctx => {
       operation: ctx.state.analysis.operation,
       time,
     },
-    `BUILD EXPORTS: ${packageString} built in ${time.toFixed()}s`
+    `BUILD EXPORTS: ${packageString} built in ${time.toFixed()}s`,
   )
 }
 

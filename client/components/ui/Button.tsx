@@ -3,6 +3,7 @@ import cx from 'classnames'
 import { Button as BaseButton } from '@base-ui/react/button'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'quiet' | 'danger'
+
 export type ButtonSize = 'sm' | 'md'
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -19,7 +20,7 @@ export const Button = React.forwardRef<HTMLElement, ButtonProps>(
       type = 'button',
       ...props
     },
-    ref
+    ref,
   ) => (
     <BaseButton
       ref={ref}
@@ -28,11 +29,11 @@ export const Button = React.forwardRef<HTMLElement, ButtonProps>(
         'ui-button',
         `ui-button--${variant}`,
         `ui-button--${size}`,
-        className
+        className,
       )}
       {...props}
     />
-  )
+  ),
 )
 
 Button.displayName = 'Button'

@@ -9,7 +9,7 @@ export interface ParsedJavaScriptPackageSpecifier {
 
 /** Parse npm's name, scoped-name, and optional version syntax. */
 export function parseJavaScriptPackageSpecifier(
-  packageSpecifier: string
+  packageSpecifier: string,
 ): ParsedJavaScriptPackageSpecifier {
   let name: string
   let version: string | null
@@ -21,6 +21,7 @@ export function parseJavaScriptPackageSpecifier(
   if (packageSpecifier.startsWith('@')) {
     scoped = true
     scope = packageSpecifier.substring(1, firstSlashIndex)
+
     if (lastAtIndex === 0) {
       name = packageSpecifier
       version = null
@@ -40,7 +41,7 @@ export function parseJavaScriptPackageSpecifier(
 }
 
 export function formatJavaScriptPackageSpecifier(
-  parsed: Pick<ParsedJavaScriptPackageSpecifier, 'name' | 'version'>
+  parsed: Pick<ParsedJavaScriptPackageSpecifier, 'name' | 'version'>,
 ): string {
   return parsed.version === null
     ? parsed.name
@@ -48,7 +49,7 @@ export function formatJavaScriptPackageSpecifier(
 }
 
 export function createJavaScriptPackageReference(
-  specifier: string
+  specifier: string,
 ): PackageReference {
   return { language: 'javascript', specifier }
 }

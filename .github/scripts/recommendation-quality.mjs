@@ -1,10 +1,14 @@
 const WEEKLY_DOWNLOAD_MINIMUM = 1_000
+
 const GITHUB_STAR_MINIMUM = 100
+
 const RECENT_ACTIVITY_DAYS = 730
+
 const MAX_RECOMMENDATIONS_PER_CATEGORY = 6
 
 function cleanIssueAnswer(value = '') {
   const answer = value.trim()
+
   return answer === '_No response_' ? '' : answer
 }
 
@@ -17,10 +21,11 @@ export function extractIssueFormAnswers(body = '') {
   }
 
   const legacyPackage = body.match(
-    /\*\*Package name\*\*\s*\n+([\s\S]*?)(?=\n+\*\*Alternative to\*\*)/i
+    /\*\*Package name\*\*\s*\n+([\s\S]*?)(?=\n+\*\*Alternative to\*\*)/i,
   )
+
   const legacyAlternative = body.match(
-    /\*\*Alternative to\*\*\s*\n+([\s\S]*?)(?=\n+(?:<!--|\*\*Quality check\*\*))/i
+    /\*\*Alternative to\*\*\s*\n+([\s\S]*?)(?=\n+(?:<!--|\*\*Quality check\*\*))/i,
   )
 
   return {
@@ -42,8 +47,9 @@ export function parsePackageNames(value = '') {
 
 export function normalizePackageName(value = '') {
   const markdownLink = value.match(/^\[([^\]]+)\]\([^)]+\)$/)
+
   const npmUrl = value.match(
-    /^https?:\/\/(?:www\.)?npmjs\.com\/package\/([^/?#]+(?:\/[^/?#]+)?)/
+    /^https?:\/\/(?:www\.)?npmjs\.com\/package\/([^/?#]+(?:\/[^/?#]+)?)/,
   )
 
   return (markdownLink?.[1] ?? npmUrl?.[1] ?? value)
@@ -53,15 +59,19 @@ export function normalizePackageName(value = '') {
 
 export function isPlausiblePackageName(packageName) {
   return /^(?:@[a-z0-9][a-z0-9._~-]*\/)?[a-z0-9][a-z0-9._~-]*$/.test(
-    packageName
+    packageName,
   )
 }
 
 export function extractGitHubRepository(repository) {
   const value =
-    typeof repository === 'string' ? repository : repository?.url ?? ''
+    repository &&
+    Object.prototype.toString.call(repository) === '[object Object]'
+      ? (repository.url ?? '')
+      : (repository ?? '')
+
   const match = value.match(
-    /github\.com[/:]([^/]+)\/([^/#]+?)(?:\.git)?(?:#.*)?$/i
+    /github\.com[/:]([^/]+)\/([^/#]+?)(?:\.git)?(?:#.*)?$/i,
   )
 
   return match ? `${match[1]}/${match[2]}` : null
@@ -71,11 +81,13 @@ function isRecent(date, now = new Date()) {
   if (!date) return false
 
   const age = now.getTime() - new Date(date).getTime()
+
   return Number.isFinite(age) && age <= RECENT_ACTIVITY_DAYS * 86_400_000
 }
 
 function isStableVersion(version = '') {
   const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-|$)/)
+
   return Boolean(match && Number(match[1]) >= 1 && !version.includes('-'))
 }
 
@@ -84,6 +96,7 @@ async function fetchJson(url, options, fetchImpl) {
   const response = await fetchImpl(requestUrl, options)
 
   if (response.status === 404) return null
+
   if (!response.ok) {
     throw new Error(`${requestUrl} returned HTTP ${response.status}`)
   }
@@ -93,13 +106,14 @@ async function fetchJson(url, options, fetchImpl) {
 
 export async function collectBundleSize(
   packageName,
-  { fetchImpl = fetch } = {}
+  { fetchImpl = fetch } = {},
 ) {
   const url = new URL('https://bundlephobia.com/api/size')
   url.searchParams.set('package', packageName)
 
   try {
     const result = await fetchJson(url, undefined, fetchImpl)
+
     return {
       available: Number.isFinite(result?.gzip),
       version: result?.version ?? null,
@@ -118,7 +132,7 @@ export async function collectBundleSize(
 
 export async function collectPackageSignals(
   packageName,
-  { fetchImpl = fetch, githubToken = process.env.GITHUB_TOKEN } = {}
+  { fetchImpl = fetch, githubToken = process.env.GITHUB_TOKEN } = {},
 ) {
   const encodedName = encodeURIComponent(packageName)
   let registry
@@ -127,7 +141,7 @@ export async function collectPackageSignals(
     registry = await fetchJson(
       `https://registry.npmjs.org/${encodedName}`,
       undefined,
-      fetchImpl
+      fetchImpl,
     )
   } catch {
     return {
@@ -141,32 +155,39 @@ export async function collectPackageSignals(
   }
 
   const latestVersion = registry['dist-tags']?.latest ?? null
+
   const latestManifest = latestVersion
-    ? registry.versions?.[latestVersion] ?? {}
+    ? (registry.versions?.[latestVersion] ?? {})
     : {}
+
   const repository = extractGitHubRepository(
-    latestManifest.repository ?? registry.repository
+    latestManifest.repository ?? registry.repository,
   )
+
+  const githubHeaders = {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'bundlephobia-recommendation-checker',
+  }
+
+  if (githubToken) {
+    githubHeaders.Authorization = `Bearer ${githubToken}`
+  }
 
   const [downloads, github, bundleSize] = await Promise.all([
     fetchJson(
       `https://api.npmjs.org/downloads/point/last-week/${encodedName}`,
       undefined,
-      fetchImpl
+      fetchImpl,
     ).catch(() => null),
     repository
       ? fetchJson(
           `https://api.github.com/repos/${repository}`,
           {
             headers: {
-              Accept: 'application/vnd.github+json',
-              'User-Agent': 'bundlephobia-recommendation-checker',
-              ...(githubToken
-                ? { Authorization: `Bearer ${githubToken}` }
-                : {}),
+              ...githubHeaders,
             },
           },
-          fetchImpl
+          fetchImpl,
         ).catch(() => null)
       : null,
     collectBundleSize(packageName, { fetchImpl }),
@@ -175,6 +196,7 @@ export async function collectPackageSignals(
   const publishedAt = latestVersion ? registry.time?.[latestVersion] : null
   const weeklyDownloads = downloads?.downloads ?? null
   const githubStars = github?.stargazers_count ?? null
+
   const recentActivity =
     isRecent(publishedAt) || isRecent(github?.pushed_at ?? github?.updated_at)
 
@@ -202,25 +224,31 @@ export function evaluateRecommendation(signals, answers = {}) {
   const notes = []
 
   if (signals.exists === false) errors.push('The package was not found on npm.')
+
   if (signals.exists === null) {
     notes.push(
-      'The npm registry could not be checked; retry or review manually.'
+      'The npm registry could not be checked; retry or review manually.',
     )
   }
+
   if (signals.deprecated) errors.push('The latest npm version is deprecated.')
+
   if (signals.repositoryArchived) {
     notes.push('The linked source repository is archived.')
   }
+
   if (signals.exists && !signals.popular) {
     notes.push(
-      `Popularity is below ${WEEKLY_DOWNLOAD_MINIMUM.toLocaleString()} weekly npm downloads and ${GITHUB_STAR_MINIMUM.toLocaleString()} GitHub stars.`
+      `Popularity is below ${WEEKLY_DOWNLOAD_MINIMUM.toLocaleString()} weekly npm downloads and ${GITHUB_STAR_MINIMUM.toLocaleString()} GitHub stars.`,
     )
   }
+
   if (signals.exists && !signals.activeOrStable) {
     notes.push(
-      `No activity was found in the last ${RECENT_ACTIVITY_DAYS} days and the latest release is not a stable 1.x-or-newer version.`
+      `No activity was found in the last ${RECENT_ACTIVITY_DAYS} days and the latest release is not a stable 1.x-or-newer version.`,
     )
   }
+
   if (answers.advantage !== undefined && answers.advantage.trim().length < 40) {
     notes.push('The relative-advantage explanation needs more detail.')
   }
@@ -231,18 +259,19 @@ export function evaluateRecommendation(signals, answers = {}) {
     status: errors.length
       ? 'invalid'
       : notes.length
-      ? 'needs review'
-      : 'ready for maintainer review',
+        ? 'needs review'
+        : 'ready for maintainer review',
   }
 }
 
 export function evaluateSizeAdvantage(candidate, alternatives) {
   const availableAlternatives = alternatives.filter(
-    alternative => alternative.bundleSize?.available
+    alternative => alternative.bundleSize?.available,
   )
+
   const smallerThan = candidate.bundleSize?.available
     ? availableAlternatives.filter(
-        alternative => candidate.bundleSize.gzip < alternative.bundleSize.gzip
+        alternative => candidate.bundleSize.gzip < alternative.bundleSize.gzip,
       )
     : []
 
@@ -269,6 +298,7 @@ export function extractCuratedRecommendations(source) {
 
 export function extractCuratedCategories(source) {
   const categories = new Map()
+
   const categoryPattern =
     /^  (?:'([^']+)'|"([^"]+)"|([a-zA-Z0-9-]+)):\s*\{([\s\S]*?)^  \},/gm
 

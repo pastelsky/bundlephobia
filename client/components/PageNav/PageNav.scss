@@ -235,7 +235,10 @@
   justify-content: center;
   cursor: pointer;
   opacity: 0.75;
-  transition: opacity 0.2s, transform 0.12s, border-color 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.12s,
+    border-color 0.2s;
 
   &:hover {
     opacity: 1;
@@ -266,7 +269,9 @@
     opacity: 0;
     pointer-events: none;
     transform: translateY(2px);
-    transition: opacity 0.15s, transform 0.15s;
+    transition:
+      opacity 0.15s,
+      transform 0.15s;
   }
 }
 

@@ -1,28 +1,24 @@
-import requestLoggerMiddleware from '../server/middlewares/requestLogger.middleware'
-import {
-  recordRequestComplete,
-  recordRequestStart,
-} from '../server/MemoryDiagnostics'
+import { createRequestLoggerMiddleware } from '../server/middlewares/request-logger.middleware'
 
-jest.mock('../server/MemoryDiagnostics', () => ({
-  recordRequestStart: jest.fn(),
-  recordRequestComplete: jest.fn(),
-}))
+const mockRecordRequestStart = jest.fn()
 
-const mockRecordRequestStart = recordRequestStart as jest.MockedFunction<
-  typeof recordRequestStart
->
-const mockRecordRequestComplete = recordRequestComplete as jest.MockedFunction<
-  typeof recordRequestComplete
->
+const mockRecordRequestComplete = jest.fn()
+
+const requestLoggerMiddleware = createRequestLoggerMiddleware({
+  recordRequestStart: mockRecordRequestStart,
+  recordRequestComplete: mockRecordRequestComplete,
+  logger: { info: jest.fn() },
+})
 
 describe('request memory metrics', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockRecordRequestStart.mockReset()
+    mockRecordRequestComplete.mockReset()
   })
 
   it('records normalized request metrics without swallowing errors', async () => {
     const error = new Error('request failed')
+
     const context = {
       path: '/package/example',
       request: { url: '/package/example' },
@@ -30,9 +26,10 @@ describe('request memory metrics', () => {
     }
 
     await expect(
+      // SAFETY: this fixture supplies the request fields exercised by the middleware.
       requestLoggerMiddleware(context as never, async () => {
         throw error
-      })
+      }),
     ).rejects.toBe(error)
 
     expect(mockRecordRequestStart).toHaveBeenCalledTimes(1)

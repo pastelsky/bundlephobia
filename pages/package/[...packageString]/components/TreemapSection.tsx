@@ -41,8 +41,10 @@ class TreemapSection extends Component<
 
   componentDidMount() {
     const { dependencySizes } = this.props
+
     const width =
       this.treemapSectionRef.current?.getBoundingClientRect().width ?? 0
+
     let heightMultiplier = 1
 
     if (dependencySizes.length < 5) {
@@ -69,6 +71,7 @@ class TreemapSection extends Component<
 
   getFormattedSize = (value: number) => {
     const { size, unit } = formatSize(value)
+
     return `${size.toFixed(2)} ${unit}`
   }
 
@@ -104,7 +107,7 @@ class TreemapSection extends Component<
 
     const sizeSum = dependencies.reduce(
       (acc, dep) => acc + dep.approximateSize,
-      0
+      0,
     )
 
     if (sizeSum === 0) {
@@ -120,7 +123,7 @@ class TreemapSection extends Component<
       .map(dep => ({
         ...dep,
         tooltip: `${dep.name} ｜ ${dep.percentShare.toFixed(
-          1
+          1,
         )}% ｜ ~ ${this.getFormattedSize(dep.sizeShare)}`,
       }))
       .sort((depA, depB) => depB.percentShare - depA.percentShare)
@@ -140,11 +143,11 @@ class TreemapSection extends Component<
       name: '(others)',
       approximateSize: otherDependencies.reduce(
         (acc, dep) => acc + dep.approximateSize,
-        0
+        0,
       ),
       percentShare: otherDependencies.reduce(
         (acc, dep) => acc + dep.percentShare,
-        0
+        0,
       ),
       sizeShare: otherDependencies.reduce((acc, dep) => acc + dep.sizeShare, 0),
       isOthers: true,
@@ -152,8 +155,8 @@ class TreemapSection extends Component<
         .map(
           dep =>
             `${dep.name} ｜ ${dep.percentShare.toFixed(
-              1
-            )}% ｜ ~ ${this.getFormattedSize(dep.sizeShare)} min`
+              1,
+            )}% ｜ ~ ${this.getFormattedSize(dep.sizeShare)} min`,
         )
         .join(' \u000D\u000A  \u000D\u000A '),
     })
@@ -165,8 +168,9 @@ class TreemapSection extends Component<
     const { packageName } = this.props
     const { width, height } = this.state
     const { ellipsizeLimit } = this.getCompactThresholds()
+
     const compactedDependencies = this.getCompactedDependencies(
-      this.getDependencies()
+      this.getDependencies(),
     )
 
     return (

@@ -9,7 +9,6 @@ import CarbonAd from '../client/components/CarbonAd'
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
-import cx from 'classnames'
 
 const Logo = () => (
   <svg
@@ -105,6 +104,7 @@ const Home = () => {
 
   const handleSearchSubmit = (value: string) => {
     Analytics.performedSearch(value.trim())
+
     if (value ?? '') {
       router.push(`/package/${value.trim()}`)
     }
@@ -134,6 +134,7 @@ const Home = () => {
               autoFocus={true}
             />
           </AutocompleteInputBox>
+          <CarbonAd className="homepage__carbon-ad" />
           <div className="homepage__or-divider">or</div>
           <div className="homepage__scan-link">
             <Link href="/scan">
@@ -144,7 +145,6 @@ const Home = () => {
               <sup>beta</sup>
             </Link>
           </div>
-          <CarbonAd className="homepage__carbon-ad" placement="homepage" />
         </div>
       </div>
     </Layout>

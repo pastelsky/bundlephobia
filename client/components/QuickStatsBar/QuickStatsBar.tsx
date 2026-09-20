@@ -19,6 +19,76 @@ type QuickStatsBarProps = Pick<
   | 'hasSideEffects'
 >
 
+function SideEffectStat({
+  hasSideEffects,
+}: Pick<QuickStatsBarProps, 'hasSideEffects'>) {
+  if (hasSideEffects === true) return null
+
+  const label =
+    hasSideEffects !== false &&
+    Array.isArray(hasSideEffects) &&
+    hasSideEffects.length
+      ? 'some side-effects'
+      : 'side-effect free'
+
+  return (
+    <div className="quick-stats-bar__stat">
+      <SideEffectIcon className="quick-stats-bar__stat-icon" />{' '}
+      <span>{label}</span>
+    </div>
+  )
+}
+
+function DependencyStat({
+  dependencyCount,
+}: Pick<QuickStatsBarProps, 'dependencyCount'>) {
+  return (
+    <div className="quick-stats-bar__stat quick-stats-bar__stat--optional">
+      <DependencyIcon className="quick-stats-bar__stat-icon" />
+      <span>
+        {dependencyCount === 0 ? (
+          'no dependencies'
+        ) : (
+          <span>
+            {dependencyCount}{' '}
+            {dependencyCount > 1 ? 'dependencies' : 'dependency'}
+          </span>
+        )}
+      </span>
+    </div>
+  )
+}
+
+function PackageLinks({
+  name,
+  repository,
+}: Pick<QuickStatsBarProps, 'name' | 'repository'>) {
+  return (
+    <div className="quick-stats-bar__stat">
+      <a
+        className="quick-stats-bar__link"
+        href={'https://npmjs.com/package/' + name}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`View ${name} on npm`}
+      >
+        <NPMIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon--npm" />
+      </a>
+      {repository && (
+        <a
+          className="quick-stats-bar__link"
+          href={repository}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`View ${name} repository`}
+        >
+          <GithubIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon quick-stats-bar__logo-icon--github" />
+        </a>
+      )}
+    </div>
+  )
+}
+
 class QuickStatsBar extends Component<QuickStatsBarProps> {
   static defaultProps = {
     description: '',
@@ -29,7 +99,9 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
     let statItemCount = 0
 
     if (isTreeShakeable) statItemCount += 1
+
     if (hasSideEffects !== true) statItemCount += 1
+
     return statItemCount
   }
 
@@ -52,6 +124,7 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
       name,
       repository,
     } = this.props
+
     const statItemCount = this.getStatItemCount()
     const description = this.getTrimmedDescription()
 
@@ -80,53 +153,9 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
           </div>
         )}
 
-        {!(hasSideEffects === true) && (
-          <div className="quick-stats-bar__stat">
-            <SideEffectIcon className="quick-stats-bar__stat-icon" />{' '}
-            <span>
-              {!(hasSideEffects === false) &&
-              Array.isArray(hasSideEffects) &&
-              hasSideEffects.length
-                ? 'some side-effects'
-                : 'side-effect free'}
-            </span>
-          </div>
-        )}
-        <div className="quick-stats-bar__stat quick-stats-bar__stat--optional">
-          <DependencyIcon className="quick-stats-bar__stat-icon" />
-          <span>
-            {dependencyCount === 0 ? (
-              'no dependencies'
-            ) : (
-              <span>
-                {dependencyCount}{' '}
-                {dependencyCount > 1 ? 'dependencies' : 'dependency'}
-              </span>
-            )}
-          </span>
-        </div>
-        <div className="quick-stats-bar__stat">
-          <a
-            className="quick-stats-bar__link"
-            href={'https://npmjs.com/package/' + name}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`View ${name} on npm`}
-          >
-            <NPMIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon--npm" />
-          </a>
-          {repository && (
-            <a
-              className="quick-stats-bar__link"
-              href={repository}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`View ${name} repository`}
-            >
-              <GithubIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon quick-stats-bar__logo-icon--github" />
-            </a>
-          )}
-        </div>
+        <SideEffectStat hasSideEffects={hasSideEffects} />
+        <DependencyStat dependencyCount={dependencyCount} />
+        <PackageLinks name={name} repository={repository} />
       </div>
     )
   }

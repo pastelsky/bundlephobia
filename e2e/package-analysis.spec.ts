@@ -10,7 +10,7 @@ test('searches for and builds a real package', async ({
   await homePage.searchFor(cheapPackage.specifier)
 
   await expect(page).toHaveURL(
-    new RegExp(`/package/${cheapPackage.name}@${cheapPackage.version}$`)
+    new RegExp(`/package/${cheapPackage.name}@${cheapPackage.version}$`),
   )
   await expect(packagePage.packageHeading(cheapPackage.name)).toBeVisible()
   await expect(packagePage.bundleSizeHeading).toBeVisible()
@@ -19,7 +19,7 @@ test('searches for and builds a real package', async ({
   await expect(page.getByText('Minified + Gzipped')).toBeVisible()
   await expect(packagePage.exportsAnalysisHeading).toBeVisible()
   await expect(
-    page.getByText('This package does not export ES6 modules.')
+    page.getByText('This package does not export ES6 modules.'),
   ).toBeVisible()
   await expect(packagePage.nextError).toHaveCount(0)
 })
@@ -41,7 +41,7 @@ test('submits a typed package with one Enter while suggestions are open', async 
           searchScore: 1,
         },
       ]),
-    })
+    }),
   )
 
   await homePage.goto()
@@ -59,10 +59,10 @@ test('renders a real package-not-found response in the result shell', async ({
   await packagePage.goto(missingPackage)
 
   await expect(
-    page.getByRole('heading', { name: 'PackageNotFoundError' })
+    page.getByRole('heading', { name: 'PackageNotFoundError' }),
   ).toBeVisible()
   await expect(
-    page.getByText("The package you were looking for doesn't exist.")
+    page.getByText("The package you were looking for doesn't exist."),
   ).toBeVisible()
   await expect(packagePage.searchInput).toBeVisible()
   await expect(packagePage.nextError).toHaveCount(0)

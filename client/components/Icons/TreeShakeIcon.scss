@@ -7,7 +7,9 @@ svg.treeshake-icon-animated {
   &:hover {
     .tree-shake-icon-svg__shake {
       transform-origin: 50% 50%;
-      animation: move-to-sides 0.3s, shake 0.3s 0.15s;
+      animation:
+        move-to-sides 0.3s,
+        shake 0.3s 0.15s;
     }
 
     .tree-shake-icon-svg__bush {

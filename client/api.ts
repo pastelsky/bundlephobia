@@ -5,12 +5,14 @@ import type {
   PackageBuildInfoSnapshot,
   PackageExportAsset,
   PackageIdentity,
-} from '../types/package-domain'
+} from '@bundlephobia/service-contracts/package'
+import type { JsonObject } from '../types/json'
+import type { PackageHistoryResponse } from '../types/package-history'
 
 // Re-export domain types that client code imports from this module.
 export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
 
-export type PackageHistoryResponse = Record<string, PackageBuildInfoSnapshot>
+export type { PackageHistoryResponse }
 
 /** A single npm-search suggestion returned by the npms.io API. */
 export type PackageSuggestion = {
@@ -27,7 +29,7 @@ export type PackageSuggestion = {
 
 export function sortSuggestionsBySearchScore(
   packageA: PackageSuggestion,
-  packageB: PackageSuggestion
+  packageB: PackageSuggestion,
 ) {
   if (
     Math.abs(Math.log(packageB.searchScore) - Math.log(packageA.searchScore)) >
@@ -55,52 +57,8 @@ export type SimilarPackagesResponse = {
   category: {
     label?: string
     score: number
-    tags?: Array<{ tag: string; weight: number }>
     similar: string[]
   }
-}
-
-export type TrendsMetric = 'downloads' | 'stars' | 'size' | 'issues'
-export type TrendsRange = 'last-2-months' | 'last-year' | 'last-3-years'
-export type TrendsGroupBy = 'day' | 'week' | 'month'
-
-export type TrendsPoint = {
-  date: string
-  value: number
-  version?: string
-  partial?: boolean
-}
-
-export type TrendsRelease = {
-  version: string
-  date: string
-  major: boolean
-  minor: boolean
-}
-
-export type TrendsPackageSeries = {
-  name: string
-  repository: string | null
-  downloads: TrendsPoint[]
-  stars: TrendsPoint[]
-  issues: TrendsPoint[]
-  size: TrendsPoint[]
-  releases: TrendsRelease[]
-  current: {
-    weeklyDownloads: number | null
-    stars: number | null
-    openIssues: number | null
-    gzip: number | null
-    size: number | null
-  }
-  warnings: string[]
-}
-
-export type TrendsResponse = {
-  packages: TrendsPackageSeries[]
-  range: TrendsRange
-  groupBy: TrendsGroupBy
-  generatedAt: string
 }
 
 export type PackageExportsResponse = {
@@ -112,6 +70,27 @@ export type PackageExportSizesResponse = {
 }
 
 type APIResponse = Awaited<ReturnType<typeof fetch>>
+
+type FetchImplementation = typeof fetch
+
+let fetchImplementation: FetchImplementation = fetch
+
+export function setFetchImplementation(
+  implementation: FetchImplementation,
+): () => void {
+  const previous = fetchImplementation
+  fetchImplementation = implementation
+
+  return () => {
+    fetchImplementation = previous
+  }
+}
+
+type APIHeaders = {
+  Accept: string
+  'Content-Type'?: string
+  'X-Bundlephobia-User'?: string
+}
 
 const getFallbackError = (status: number) => {
   if (status === 502 || status === 503) {
@@ -135,10 +114,12 @@ const getFallbackError = (status: number) => {
 
 async function parseResponse<T>(response: APIResponse): Promise<T> {
   if (response.ok) {
+    // SAFETY: API callers supply the response contract at each typed call site.
     return response.json() as Promise<T>
   }
 
   let error: unknown
+
   try {
     error = await response.json()
   } catch {
@@ -150,27 +131,25 @@ async function parseResponse<T>(response: APIResponse): Promise<T> {
 
 export default class API {
   static get<T = unknown>(url: string, isInternal = true): Promise<T> {
-    const headers: Record<string, string> = {
+    const headers: APIHeaders = {
       Accept: 'application/json',
     }
 
     if (isInternal) {
       headers['X-Bundlephobia-User'] = 'bundlephobia website'
     }
-    return fetch(url, { headers }).then(parseResponse<T>)
+
+    return fetchImplementation(url, { headers }).then(parseResponse<T>)
   }
 
-  static post<T = unknown>(
-    url: string,
-    body: Record<string, unknown>
-  ): Promise<T> {
-    const headers: Record<string, string> = {
+  static post<T = unknown>(url: string, body: JsonObject): Promise<T> {
+    const headers: APIHeaders = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
       'X-Bundlephobia-User': 'bundlephobia website',
     }
 
-    return fetch(url, {
+    return fetchImplementation(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
@@ -179,32 +158,41 @@ export default class API {
 
   static getInfo(packageString: string) {
     return API.get<PackageBuildInfo>(
-      `/api/size?package=${packageString}&record=true`
+      `/api/size?package=${packageString}&record=true`,
     )
   }
 
   static getExports(packageString: string) {
     return API.get<PackageExportsResponse>(
-      `/api/exports?package=${packageString}`
+      `/api/exports?package=${packageString}`,
     )
   }
 
   static getExportsSizes(packageString: string) {
     return API.get<PackageExportSizesResponse>(
-      `/api/exports-sizes?package=${packageString}`
+      `/api/exports-sizes?package=${packageString}`,
     )
   }
 
   static getDependencies(packageString: string) {
     return API.get<PackageDependencyInfo[]>(
-      `/api/dependencies?package=${packageString}`
+      `/api/dependencies?package=${packageString}`,
     )
   }
 
-  static getHistory(packageString: string, limit: number) {
-    return API.get<PackageHistoryResponse>(
-      `/api/package-history?package=${packageString}&limit=${limit}`
-    )
+  static getHistory(
+    packageName: string,
+    options: { from?: string; to?: string; limit?: number } = {},
+  ) {
+    const params = new URLSearchParams({ package: packageName })
+
+    if (options.from) params.set('from', options.from)
+
+    if (options.to) params.set('to', options.to)
+
+    if (options.limit) params.set('limit', String(options.limit))
+
+    return API.get<PackageHistoryResponse>(`/api/package-history?${params}`)
   }
 
   static getRecentSearches(limit: number) {
@@ -213,27 +201,14 @@ export default class API {
 
   static getSimilar(packageName: string) {
     return API.get<SimilarPackagesResponse>(
-      `/api/similar-packages?package=${packageName}`
-    )
-  }
-
-  static getTrends(
-    packages: string[],
-    range: TrendsRange,
-    groupBy: TrendsGroupBy
-  ) {
-    const packageQuery = packages.map(encodeURIComponent).join(',')
-    return API.get<TrendsResponse>(
-      `/api/trends?packages=${packageQuery}&range=${encodeURIComponent(
-        range
-      )}&groupBy=${encodeURIComponent(groupBy)}`
+      `/api/similar-packages?package=${packageName}`,
     )
   }
 
   static getSuggestions(query: string) {
     return API.get<PackageSuggestion[]>(
       `https://api.npms.io/v2/search/suggestions?q=${query}`,
-      false
+      false,
     ).then(result => result.sort(sortSuggestionsBySearchScore))
   }
 }
