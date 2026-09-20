@@ -2,15 +2,22 @@ import fs from 'node:fs/promises'
 import { monitorEventLoopDelay, performance } from 'node:perf_hooks'
 
 const DEFAULT_SAMPLE_INTERVAL_MS = 250
+
 const DEFAULT_SLOW_BUILD_MS = 10_000
+
 const DEFAULT_PEAK_RSS_MB = 512
+
 const DEFAULT_CPU_MS = 5_000
+
 const DEFAULT_DISK_DELTA_MB = 256
+
 const CLOCK_TICKS_PER_SECOND = 100
+
 const PAGE_SIZE_BYTES = 4096
 
 function positiveNumber(value, fallback) {
   const parsed = Number(value)
+
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
@@ -39,12 +46,14 @@ const thresholds = {
 
 function parseProcStat(contents) {
   const closingParen = contents.lastIndexOf(')')
+
   if (closingParen < 0) return undefined
 
   const fields = contents
     .slice(closingParen + 2)
     .trim()
     .split(/\s+/)
+
   if (fields.length < 22) return undefined
 
   return {
@@ -59,7 +68,9 @@ function parseProcStat(contents) {
 async function readProcessRecord(pid) {
   try {
     const stat = parseProcStat(await fs.readFile(`/proc/${pid}/stat`, 'utf8'))
+
     if (!stat || !Number.isFinite(stat.ppid)) return undefined
+
     return { pid, ...stat }
   } catch {
     // Processes can exit between /proc enumeration and readFile.
@@ -67,9 +78,12 @@ async function readProcessRecord(pid) {
   }
 }
 
+// Process discovery necessarily branches around platform and process-lifecycle races.
+// oxlint-disable-next-line complexity
 async function readProcessTree() {
   if (process.platform !== 'linux') {
     const memory = process.memoryUsage()
+
     return {
       processes: new Map(),
       rssBytes: memory.rss,
@@ -78,6 +92,7 @@ async function readProcessTree() {
   }
 
   const entries = await fs.readdir('/proc', { withFileTypes: true })
+
   const records = (
     await Promise.all(
       entries
@@ -87,6 +102,7 @@ async function readProcessTree() {
   ).filter(Boolean)
 
   const childrenByParent = new Map()
+
   for (const record of records) {
     const children = childrenByParent.get(record.ppid) ?? []
     children.push(record)
@@ -95,11 +111,14 @@ async function readProcessTree() {
 
   const tree = new Map()
   const pending = [process.pid]
+
   while (pending.length > 0) {
     const pid = pending.pop()
+
     if (tree.has(pid)) continue
 
     const record = records.find(item => item.pid === pid)
+
     if (!record) continue
     tree.set(`${record.pid}:${record.startTime}`, record)
     pending.push(...(childrenByParent.get(pid) ?? []).map(item => item.pid))
@@ -107,6 +126,7 @@ async function readProcessTree() {
 
   let rssBytes = 0
   let cpuMs = 0
+
   for (const record of tree.values()) {
     rssBytes += record.rssBytes
     cpuMs +=
@@ -121,6 +141,7 @@ async function readFilesystemStats(path) {
     const stats = await fs.statfs(path)
     const totalBytes = Number(stats.blocks) * Number(stats.bsize)
     const freeBytes = Number(stats.bavail) * Number(stats.bsize)
+
     return {
       totalBytes,
       freeBytes,
@@ -145,11 +166,16 @@ export function isExpensiveBuild(metrics) {
   )
 }
 
+// Sampling and finalization intentionally live together so every build has one
+// consistent lifecycle, including failures during setup and cleanup.
+// oxlint-disable-next-line complexity
 export async function measureBuild({ operation, packageString, run }) {
   const startedAt = performance.now()
+
   const startedFilesystem = await readFilesystemStats(
     process.env.BUILD_TMP_DIR || '/tmp/tmp-build',
   )
+
   const eventLoopDelay = monitorEventLoopDelay({ resolution: 20 })
   const previousProcesses = new Map()
   let cpuMs = 0
@@ -172,23 +198,29 @@ export async function measureBuild({ operation, packageString, run }) {
       const processCpuMs =
         ((processRecord.userTicks + processRecord.systemTicks) * 1000) /
         CLOCK_TICKS_PER_SECOND
+
       const previous = previousProcesses.get(key)
+
       if (previous) {
         cpuMs += Math.max(0, processCpuMs - previous)
       }
+
       previousProcesses.set(key, processCpuMs)
     }
   }
 
   await sample()
   eventLoopDelay.enable()
+
   const interval = setInterval(() => {
     void sample()
   }, thresholds.sampleIntervalMs)
+
   interval.unref?.()
 
   let status = 'success'
   let error
+
   try {
     return await run()
   } catch (caughtError) {
@@ -203,6 +235,7 @@ export async function measureBuild({ operation, packageString, run }) {
     const endedFilesystem = await readFilesystemStats(
       process.env.BUILD_TMP_DIR || '/tmp/tmp-build',
     )
+
     const metrics = {
       package: packageString,
       operation,

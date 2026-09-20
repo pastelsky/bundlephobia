@@ -29,6 +29,7 @@ describe('build-service metrics thresholds', () => {
 
   it('logs metrics for failed builds with package and operation context', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
     const error = Object.assign(new Error('install failed'), {
       code: 'INSTALL_FAILED',
     })
