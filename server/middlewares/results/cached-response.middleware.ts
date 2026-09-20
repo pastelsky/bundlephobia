@@ -3,27 +3,18 @@ import type { Middleware } from 'koa'
 import { createJavaScriptPackageReference } from '../../../languages/javascript'
 import { packageAnalysisGateway } from '../../analysis'
 import config from '../../config'
-import { createAnalysisKey } from '../../analysis/keys'
-import { debug, failureCache } from '../../infrastructure/runtime'
 import logger from '../../infrastructure/logger.service'
 
 const cachedResponse: Middleware = async (ctx, next) => {
   const { force, peep } = ctx.query
+  const { name, version, packageString, language } = ctx.state.resolved
+  const { operation } = ctx.state.analysis
 
   if (force) {
     await next()
 
     return
   }
-
-  const { name, version, packageString, language } = ctx.state.resolved
-  const { operation } = ctx.state.analysis
-
-  const failureCacheKey = createAnalysisKey({
-    language,
-    operation,
-    packageSpecifier: packageString,
-  })
 
   const logCache = ({
     hit,
@@ -64,23 +55,6 @@ const cachedResponse: Middleware = async (ctx, next) => {
     }
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })
-
-    return
-  }
-
-  const failureCacheEntry = failureCache.get(failureCacheKey)
-
-  if (failureCacheEntry) {
-    debug('fetched %s from failure cache', packageString)
-
-    logCache({
-      hit: true,
-      type: 'failure',
-      message: `FAILURE CACHE HIT: ${packageString}`,
-    })
-
-    ctx.status = failureCacheEntry.status
-    ctx.body = failureCacheEntry.body
 
     return
   }

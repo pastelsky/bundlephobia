@@ -25,4 +25,6 @@ export interface PackageAnalysisRequestState {
 export interface FailureCacheEntry {
   status: number
   body: unknown
+  consecutiveFailures: number
+  blockedUntil?: number
 }

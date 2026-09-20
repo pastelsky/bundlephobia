@@ -24,7 +24,7 @@ interface LruCacheInstance<K, V> {
   itemCount: number
   get(key: K): V | undefined
   set(key: K, value: V): this
-  del?(key: K): void
+  del(key: K): void
 }
 
 interface LruCacheConstructor {
@@ -39,7 +39,7 @@ const workerpool = require('workerpool') as WorkerpoolModule
 
 const failureCache = new LRU<string, FailureCacheEntry>({
   max: config.MAX_FAILURE_CACHE_ENTRIES,
-  maxAge: 6 * 1000 * 60 * 60,
+  maxAge: 30 * 24 * 60 * 60 * 1000,
 })
 
 const debug = createDebug('bp:request')

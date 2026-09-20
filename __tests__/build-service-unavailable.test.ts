@@ -275,7 +275,7 @@ describe('build service unavailability', () => {
     expect(execution.cancel).not.toHaveBeenCalled()
   })
 
-  it('returns a retryable response without caching the failure', async () => {
+  it('returns a retryable response and records the failure', async () => {
     const ctx = {
       query: {},
       state: {
@@ -306,10 +306,13 @@ describe('build service unavailability', () => {
         },
       },
     })
-    expect(mockedFailureCache).not.toHaveBeenCalled()
+    expect(mockedFailureCache).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ status: 503, consecutiveFailures: 1 }),
+    )
   })
 
-  it('does not cache internal build-service errors', async () => {
+  it('records internal build-service errors', async () => {
     const ctx = {
       query: {},
       state: {
@@ -340,7 +343,10 @@ describe('build service unavailability', () => {
         },
       },
     })
-    expect(mockedFailureCache).not.toHaveBeenCalled()
+    expect(mockedFailureCache).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ status: 503, consecutiveFailures: 1 }),
+    )
   })
 
   it('continues caching genuine package build failures', async () => {
