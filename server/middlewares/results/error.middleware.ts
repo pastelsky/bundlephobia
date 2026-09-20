@@ -6,11 +6,11 @@ import { toErrorDetail } from '../../../utils'
 import config from '../../config'
 import { createAnalysisKey } from '../../analysis/keys'
 import { toLegacyJavaScriptError } from '../../analysis/adapters/legacy-error.mapper'
-import { recordFailure } from '../../failure-backoff'
 import { failureCache } from '../../infrastructure/runtime'
 import logger from '../../infrastructure/logger.service'
 import { isJobCancelledError } from '../../infrastructure/queue.service'
 import type { RuntimeValue } from '../../../types/json'
+import { recordFailure } from './failure-backoff.middleware'
 
 const debug = createDebug('bp:error')
 

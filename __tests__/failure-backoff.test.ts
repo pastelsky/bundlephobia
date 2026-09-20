@@ -2,7 +2,7 @@ import {
   getFailureCooldownMs,
   isFailureBlocked,
   recordFailure,
-} from '../server/failure-backoff'
+} from '../server/middlewares/results/failure-backoff.middleware'
 
 const failure = { status: 422, body: { error: { code: 'BuildError' } } }
 

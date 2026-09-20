@@ -1,6 +1,7 @@
 import { createAnalysisKey } from '../server/analysis/keys'
-import { recordFailure } from '../server/failure-backoff'
-import failureBackoffMiddleware from '../server/middlewares/results/failure-backoff.middleware'
+import failureBackoffMiddleware, {
+  recordFailure,
+} from '../server/middlewares/results/failure-backoff.middleware'
 import { failureCache, logger } from '../server/infrastructure/runtime'
 
 const packageString = '@example/package@1.0.0'
