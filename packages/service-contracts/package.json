@@ -10,6 +10,6 @@
   "exports": {
     ".": "./src/index.ts",
     "./cache": "./src/cache/index.ts",
-    "./package": "./src/package.ts"
+    "./package": "./src/package.contract.ts"
   }
 }

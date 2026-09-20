@@ -1,10 +1,10 @@
 import AbortController from 'abort-controller'
 import { EventEmitter } from 'events'
 
-import logger from '../server/Logger'
-import { JobCancelledError } from '../server/Queue'
-import { packageAnalysisGateway } from '../server/analysis'
-import { createBuildMiddleware } from '../server/middlewares/results/build.middleware'
+import logger from '../server/infrastructure/logger.service'
+import { JobCancelledError } from '../server/infrastructure/queue.service'
+import { packageAnalysisGateway } from '../server/analysis/analysis.module'
+import { createBuildMiddleware } from '../server/middlewares/results/build-result.middleware'
 
 const mockAnalyzePackage = jest.spyOn(packageAnalysisGateway, 'analyzePackage')
 

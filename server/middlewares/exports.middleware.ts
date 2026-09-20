@@ -3,10 +3,10 @@ import now from 'performance-now'
 
 import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { getRequestPriority } from '../../utils/server.utils'
-import { packageAnalysisGateway } from '../analysis'
-import { BUILD_DURATION_HEADER } from '../api/BuildService'
-import config from '../config'
-import logger from '../Logger'
+import { packageAnalysisGateway } from '../analysis/analysis.module'
+import { BUILD_DURATION_HEADER } from '../clients/build-service.client'
+import config from '../config/server.config'
+import logger from '../infrastructure/logger.service'
 
 const exportsMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)

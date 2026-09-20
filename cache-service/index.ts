@@ -8,12 +8,12 @@ import createFastify from 'fastify'
 import firebase from 'firebase'
 
 import {
-  getExportsSizeMiddlware,
+  getExportsSizeMiddleware,
   postExportsSizeMiddleware,
 } from './middlewares/exports-size.middleware.ts'
 import {
-  getPackageSizeMiddlware,
-  postPackageSizeMiddlware,
+  getPackageSizeMiddleware,
+  postPackageSizeMiddleware,
 } from './middlewares/package-size.middleware.ts'
 
 const fastify = createFastify()
@@ -26,11 +26,11 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig)
 
-fastify.get(CACHE_ROUTE.package, getPackageSizeMiddlware)
+fastify.get(CACHE_ROUTE.package, getPackageSizeMiddleware)
 
-fastify.post(CACHE_ROUTE.package, postPackageSizeMiddlware)
+fastify.post(CACHE_ROUTE.package, postPackageSizeMiddleware)
 
-fastify.get(CACHE_ROUTE.exports, getExportsSizeMiddlware)
+fastify.get(CACHE_ROUTE.exports, getExportsSizeMiddleware)
 
 fastify.post(CACHE_ROUTE.exports, postExportsSizeMiddleware)
 

@@ -1,3 +1,3 @@
-export * from './types.ts'
+export * from './cache.type.ts'
 
-export * from './schema.ts'
+export * from './cache.schema.ts'

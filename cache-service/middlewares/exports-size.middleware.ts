@@ -1,8 +1,8 @@
 import { parseExportsCacheResult } from '@bundlephobia/service-contracts/cache'
 
-import { cacheConfig } from '../cacheConfig.ts'
-import { createCacheHandlers } from '../cacheHandlers.ts'
-import { createCacheRepository } from '../cacheRepository.ts'
+import { cacheConfig } from '../cache.config.ts'
+import { createCacheHandlers } from '../cache.handlers.ts'
+import { createCacheRepository } from '../cache.repository.ts'
 
 const handlers = createCacheHandlers({
   label: 'exports',
@@ -10,6 +10,6 @@ const handlers = createCacheHandlers({
   parseResult: parseExportsCacheResult,
 })
 
-export const getExportsSizeMiddlware = handlers.get
+export const getExportsSizeMiddleware = handlers.get
 
 export const postExportsSizeMiddleware = handlers.post

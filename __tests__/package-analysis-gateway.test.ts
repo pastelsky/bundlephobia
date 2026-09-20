@@ -1,10 +1,10 @@
 import type { PackageReference } from '../types/language-domain'
-import { PackageAnalysisGateway } from '../server/analysis/PackageAnalysisGateway'
-import type { PackageAnalysisAdapter } from '../server/analysis/contracts'
-import { PackageAnalysisGatewayError } from '../server/analysis/errors'
-import { createAnalysisKey } from '../server/analysis/keys'
-import { toLegacyJavaScriptError } from '../server/analysis/javascript/legacyErrorMapper'
-import CustomError from '../server/CustomError'
+import { PackageAnalysisGateway } from '../server/analysis/analysis.gateway'
+import type { PackageAnalysisAdapter } from '../server/analysis/analysis.contract'
+import { PackageAnalysisGatewayError } from '../server/analysis/analysis.error'
+import { createAnalysisKey } from '../server/analysis/analysis.key'
+import { toLegacyJavaScriptError } from '../server/analysis/adapters/legacy-error.mapper'
+import CustomError from '../server/errors/custom.error'
 
 function createJavaScriptAdapter(): PackageAnalysisAdapter<'javascript'> {
   return {

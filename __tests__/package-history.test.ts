@@ -3,7 +3,7 @@ const pacote = require('pacote')
 import {
   fetchPackageHistory,
   type PackageHistoryOptions,
-} from '../server/packageHistory'
+} from '../server/services/package-history.service'
 import firebaseUtils from '../utils/firebase.utils'
 
 const mockFetchPackagePackument = jest.spyOn(pacote, 'packument')

@@ -1,4 +1,4 @@
-import CacheServiceClient from '../server/clients/cacheService'
+import CacheServiceClient from '../server/clients/cache-service.client'
 
 const api = {
   get: jest.fn(),

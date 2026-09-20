@@ -3,12 +3,12 @@ import now from 'performance-now'
 import createDebug from 'debug'
 
 import { toErrorDetail } from '../../../utils'
-import config from '../../config'
-import { createAnalysisKey } from '../../analysis/keys'
-import { toLegacyJavaScriptError } from '../../analysis/javascript/legacyErrorMapper'
-import { failureCache } from '../../init'
-import logger from '../../Logger'
-import { isJobCancelledError } from '../../Queue'
+import config from '../../config/server.config'
+import { createAnalysisKey } from '../../analysis/analysis.key'
+import { toLegacyJavaScriptError } from '../../analysis/adapters/legacy-error.mapper'
+import { failureCache } from '../../infrastructure/runtime.init'
+import logger from '../../infrastructure/logger.service'
+import { isJobCancelledError } from '../../infrastructure/queue.service'
 import type { RuntimeValue } from '../../../types/json'
 
 const debug = createDebug('bp:error')

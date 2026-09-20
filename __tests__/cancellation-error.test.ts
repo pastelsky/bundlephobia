@@ -1,6 +1,6 @@
-import { failureCache } from '../server/init'
-import logger from '../server/Logger'
-import { JobCancelledError } from '../server/Queue'
+import { failureCache } from '../server/infrastructure/runtime.init'
+import logger from '../server/infrastructure/logger.service'
+import { JobCancelledError } from '../server/infrastructure/queue.service'
 import errorHandler from '../server/middlewares/results/error.middleware'
 
 const mockFailureCacheSet = jest.spyOn(failureCache, 'set')

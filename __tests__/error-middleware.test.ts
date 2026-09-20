@@ -1,7 +1,7 @@
-import { failureCache } from '../server/init'
-import logger from '../server/Logger'
-import { createAnalysisKey } from '../server/analysis/keys'
-import CustomError from '../server/CustomError'
+import { failureCache } from '../server/infrastructure/runtime.init'
+import logger from '../server/infrastructure/logger.service'
+import { createAnalysisKey } from '../server/analysis/analysis.key'
+import CustomError from '../server/errors/custom.error'
 import errorHandler from '../server/middlewares/results/error.middleware'
 
 const mockFailureCacheSet = jest.spyOn(failureCache, 'set')

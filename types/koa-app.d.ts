@@ -5,7 +5,7 @@ import type {
   PackageAnalysisRequestState,
   PackageBuildResult,
   ResolvedPackageState,
-} from '../server/types'
+} from '../server/types/server.type'
 
 declare module 'koa' {
   interface DefaultState {

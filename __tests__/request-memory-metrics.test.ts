@@ -1,4 +1,4 @@
-import { createRequestLoggerMiddleware } from '../server/middlewares/requestLogger.middleware'
+import { createRequestLoggerMiddleware } from '../server/middlewares/request-logger.middleware'
 
 const mockRecordRequestStart = jest.fn()
 
