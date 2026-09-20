@@ -168,8 +168,13 @@ export function resolveBuildError<T>(resultsError?: T) {
 
   const error = resultsError.error
 
+  const errorName =
+    error?.code === 'BuildBackoffError'
+      ? 'Build temporarily paused'
+      : (error?.code ?? 'InternalServerError')
+
   return {
-    errorName: error?.code ?? 'InternalServerError',
+    errorName,
     errorBody: error?.message ?? 'Something went wrong!',
     errorDetails: toErrorDetail(error?.details?.originalError),
   }

@@ -73,7 +73,18 @@ describe('resolveBuildError', () => {
         message: 'Failed to build this package.',
         details: { originalError },
       },
-    }).errorDetails
+      }).errorDetails
+
+  it('gives backoff errors a user-friendly title', () => {
+    expect(
+      resolveBuildError({
+        error: {
+          code: 'BuildBackoffError',
+          message: 'Build retries are temporarily paused.',
+        },
+      }).errorName,
+    ).toBe('Build temporarily paused')
+  })
 
   it('preserves string details', () => {
     expect(resolveDetails('plain failure')).toBe('plain failure')
