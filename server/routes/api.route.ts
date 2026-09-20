@@ -16,7 +16,6 @@ import jsonCacheMiddleware from '../middlewares/json-cache.middleware'
 import errorMiddleware from '../middlewares/results/error.middleware'
 import blockBlacklistMiddleware from '../middlewares/results/block-blacklist.middleware'
 import createCachedResponseMiddleware from '../middlewares/results/cached-response.middleware'
-import failureBackoffMiddleware from '../middlewares/results/failure-backoff.middleware'
 import { createBuildMiddleware } from '../middlewares/results/build-result.middleware'
 import { createResolvePackageMiddleware } from '../middlewares/results/resolve-package.middleware'
 import similarPackagesMiddleware from '../middlewares/similar-packages/similar-packages.middleware'
@@ -64,7 +63,6 @@ export function registerApiRoutes(
     errorMiddleware,
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-exports'),
-    failureBackoffMiddleware,
     exportsMiddleware,
   )
 

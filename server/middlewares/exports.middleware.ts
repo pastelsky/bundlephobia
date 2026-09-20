@@ -4,14 +4,42 @@ import now from 'performance-now'
 import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
+import { createAnalysisKey } from '../analysis/keys'
 import { BUILD_DURATION_HEADER } from '../clients/build-service.client'
 import config from '../config'
+import { isFailureBlocked } from '../failure-backoff'
+import { debug, failureCache } from '../infrastructure/runtime'
 import logger from '../infrastructure/logger.service'
 
 const exportsMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
   const { name, version, packageString } = ctx.state.resolved
+  const { language, operation } = ctx.state.analysis
   const { force, package: packageQuery } = ctx.query
+
+  const failureCacheKey = createAnalysisKey({
+    language,
+    operation,
+    packageSpecifier: packageString,
+  })
+
+  if (!force) {
+    const failureCacheEntry = failureCache.get(failureCacheKey)
+
+    if (isFailureBlocked(failureCacheEntry)) {
+      const retryAfterSeconds = Math.ceil(
+        (failureCacheEntry.blockedUntil - Date.now()) / 1000,
+      )
+
+      debug('blocked %s after repeated failures', packageString)
+      ctx.set('Retry-After', String(retryAfterSeconds))
+      ctx.cacheControl = { maxAge: 0 }
+      ctx.status = failureCacheEntry.status
+      ctx.body = failureCacheEntry.body
+
+      return
+    }
+  }
 
   const requestedPackage = Array.isArray(packageQuery)
     ? packageQuery.join('/')
@@ -44,6 +72,7 @@ const exportsMiddleware: Middleware = async ctx => {
   }
 
   ctx.body = { name, version, exports: result }
+  failureCache.del(failureCacheKey)
   const time = buildEnd - buildStart
 
   logger.info(
