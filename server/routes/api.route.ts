@@ -23,6 +23,7 @@ import similarPackagesMiddleware from '../middlewares/similar-packages/similar-p
 import { createMcpController } from '../controllers/mcp.controller'
 import { createPackageHistoryController } from '../controllers/package-history.controller'
 import { createRecentSearchesController } from '../controllers/recent-searches.controller'
+import { createTrendsController } from '../controllers/trends.controller'
 
 export function registerApiRoutes(
   router: Router,
@@ -96,6 +97,7 @@ export function registerApiRoutes(
 
   router.get('/api/recent', createRecentSearchesController())
   router.get('/api/package-history', createPackageHistoryController())
+  router.get('/api/trends', createTrendsController())
   router.get('/api/similar-packages', similarPackagesMiddleware)
   router.get('/api/stats-image', generateImgMiddleware)
   router.get('/api/mcp/tools', mcpController.listTools)

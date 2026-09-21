@@ -8,11 +8,30 @@ import type {
 } from '@bundlephobia/service-contracts/package'
 import type { JsonObject } from '../types/json'
 import type { PackageHistoryResponse } from '../types/package-history'
+import type {
+  TrendsGroupBy,
+  TrendsMetric,
+  TrendsPackageSeries,
+  TrendsRange,
+  TrendsRelease,
+  TrendsPoint,
+  TrendsResponse,
+} from '@bundlephobia/service-contracts/trends'
 
 // Re-export domain types that client code imports from this module.
 export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
 
 export type { PackageHistoryResponse }
+
+export type {
+  TrendsGroupBy,
+  TrendsMetric,
+  TrendsPackageSeries,
+  TrendsPoint,
+  TrendsRange,
+  TrendsRelease,
+  TrendsResponse,
+}
 
 /** A single npm-search suggestion returned by the npms.io API. */
 export type PackageSuggestion = {
@@ -193,6 +212,20 @@ export default class API {
     if (options.limit) params.set('limit', String(options.limit))
 
     return API.get<PackageHistoryResponse>(`/api/package-history?${params}`)
+  }
+
+  static getTrends(
+    packages: string[],
+    range: TrendsRange,
+    groupBy: TrendsGroupBy,
+  ) {
+    const params = new URLSearchParams({
+      packages: packages.join(','),
+      range,
+      groupBy,
+    })
+
+    return API.get<TrendsResponse>(`/api/trends?${params}`)
   }
 
   static getRecentSearches(limit: number) {
