@@ -1,0 +1,16 @@
+{
+  "name": "@bundlephobia/service-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "zod": "^4.4.2"
+  },
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./cache": "./src/cache/index.ts",
+    "./package": "./src/package.contract.ts",
+    "./trends": "./src/trends.contract.ts"
+  }
+}

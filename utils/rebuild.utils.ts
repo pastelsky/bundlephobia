@@ -10,6 +10,7 @@ import firebase from 'firebase'
 
 import config from '../server/config'
 import type { JsonValue } from '../types/json'
+import { decodeFirebaseKey, encodeFirebaseKey } from './index'
 
 interface QueueModule {
   new (
@@ -94,14 +95,6 @@ const firebaseConfig = {
 
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig)
-}
-
-function encodeFirebaseKey(key: string) {
-  return key.replace(/[.]/g, ',').replace(/\//g, '__')
-}
-
-function decodeFirebaseKey(key: string) {
-  return key.replace(/[,]/g, '.').replace(/__/g, '/')
 }
 
 async function getFirebaseStore() {

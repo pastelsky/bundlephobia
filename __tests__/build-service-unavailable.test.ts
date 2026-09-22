@@ -2,12 +2,16 @@ import AbortController from 'abort-controller'
 import axios from 'axios'
 
 import serializeError from '../build-service/serializeError'
-import CustomError from '../server/CustomError'
+import CustomError from '../server/custom-error'
 import BuildService, {
   MAX_BUILD_SERVICE_RESPONSE_BYTES,
-} from '../server/api/BuildService'
+} from '../server/clients/build-service.client'
 import { createAnalysisKey, createQueueType } from '../server/analysis/keys'
-import { failureCache, pool, requestQueue } from '../server/init'
+import {
+  failureCache,
+  pool,
+  requestQueue,
+} from '../server/infrastructure/runtime'
 import errorMiddleware from '../server/middlewares/results/error.middleware'
 
 interface CircularErrorDetails {
@@ -271,7 +275,7 @@ describe('build service unavailability', () => {
     expect(execution.cancel).not.toHaveBeenCalled()
   })
 
-  it('returns a retryable response without caching the failure', async () => {
+  it('returns a retryable response and records the failure', async () => {
     const ctx = {
       query: {},
       state: {
@@ -302,10 +306,13 @@ describe('build service unavailability', () => {
         },
       },
     })
-    expect(mockedFailureCache).not.toHaveBeenCalled()
+    expect(mockedFailureCache).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ status: 503, consecutiveFailures: 1 }),
+    )
   })
 
-  it('does not cache internal build-service errors', async () => {
+  it('records internal build-service errors', async () => {
     const ctx = {
       query: {},
       state: {
@@ -336,7 +343,10 @@ describe('build service unavailability', () => {
         },
       },
     })
-    expect(mockedFailureCache).not.toHaveBeenCalled()
+    expect(mockedFailureCache).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ status: 503, consecutiveFailures: 1 }),
+    )
   })
 
   it('continues caching genuine package build failures', async () => {

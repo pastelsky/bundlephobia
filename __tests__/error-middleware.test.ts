@@ -1,7 +1,7 @@
-import { failureCache } from '../server/init'
-import logger from '../server/Logger'
+import { failureCache } from '../server/infrastructure/runtime'
+import logger from '../server/infrastructure/logger.service'
 import { createAnalysisKey } from '../server/analysis/keys'
-import CustomError from '../server/CustomError'
+import CustomError from '../server/custom-error'
 import errorHandler from '../server/middlewares/results/error.middleware'
 
 const mockFailureCacheSet = jest.spyOn(failureCache, 'set')
@@ -89,10 +89,19 @@ describe('build API error middleware', () => {
         operation: 'package-exports',
         packageSpecifier: packageString,
       }),
-      {
+      expect.objectContaining({
         status: 422,
         body: responseBody,
-      },
+        consecutiveFailures: 1,
+      }),
+    )
+
+    failureCache.del(
+      createAnalysisKey({
+        language: 'javascript',
+        operation: 'package-exports',
+        packageSpecifier: packageString,
+      }),
     )
   })
 

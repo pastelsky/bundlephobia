@@ -3,7 +3,7 @@ const registryFetch = require('npm-registry-fetch')
 const pacote = require('pacote')
 
 import { createJavaScriptPackageReference } from '../languages/javascript'
-import { JavaScriptPackageAnalysisAdapter } from '../server/analysis/javascript/JavaScriptPackageAnalysisAdapter'
+import { JavaScriptPackageAnalysisAdapter } from '../server/analysis/adapters/javascript-package-analysis.adapter'
 
 // SAFETY: the adapter constructor receives no runtime options in this fixture.
 const adapter = new JavaScriptPackageAnalysisAdapter({} as never)

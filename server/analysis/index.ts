@@ -1,16 +1,6 @@
-import { JavaScriptPackageAnalysisAdapter } from './javascript/JavaScriptPackageAnalysisAdapter'
-import { PackageAnalysisGateway } from './PackageAnalysisGateway'
+import { JavaScriptPackageAnalysisAdapter } from './adapters/javascript-package-analysis.adapter'
+import { PackageAnalysisGateway } from './package-analysis.gateway'
 
 export const packageAnalysisGateway = new PackageAnalysisGateway()
 
 packageAnalysisGateway.register(new JavaScriptPackageAnalysisAdapter())
-
-export * from './contracts'
-
-export * from './context.middleware'
-
-export * from './errors'
-
-export * from './keys'
-
-export { PackageAnalysisGateway }

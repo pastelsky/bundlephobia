@@ -1,5 +1,5 @@
-import { classifyPackage } from '../server/middlewares/similar-packages/similarPackages.middleware'
-import { categories } from '../server/middlewares/similar-packages/fixtures'
+import { classifyPackage } from '../server/middlewares/similar-packages/similar-packages.middleware'
+import { categories } from '../server/middlewares/similar-packages/similar-packages.fixtures'
 
 // Same tokenizer the middleware scores with, so the check below compares what
 // scoring compares rather than the raw tag strings.

@@ -5,11 +5,12 @@ import createDebug from 'debug'
 import { toErrorDetail } from '../../../utils'
 import config from '../../config'
 import { createAnalysisKey } from '../../analysis/keys'
-import { toLegacyJavaScriptError } from '../../analysis/javascript/legacyErrorMapper'
-import { failureCache } from '../../init'
-import logger from '../../Logger'
-import { isJobCancelledError } from '../../Queue'
+import { toLegacyJavaScriptError } from '../../analysis/adapters/legacy-error.mapper'
+import { failureCache } from '../../infrastructure/runtime'
+import logger from '../../infrastructure/logger.service'
+import { isJobCancelledError } from '../../infrastructure/queue.service'
 import type { RuntimeValue } from '../../../types/json'
+import { recordFailure } from './failure-backoff.middleware'
 
 const debug = createDebug('bp:error')
 
@@ -118,19 +119,25 @@ function respondTemporaryError(
 }
 
 const handleBuildServiceError: BuildErrorHandler = context => {
-  respondTemporaryError(
-    context,
-    'BuildServiceError',
-    'The build service encountered a temporary error. Please try again in a few minutes.',
-  )
+  const response = {
+    code: 'BuildServiceError',
+    message:
+      'The build service encountered a temporary error. Please try again in a few minutes.',
+  }
+
+  respondTemporaryError(context, response.code, response.message)
+  context.cacheFailure(503, { error: response })
 }
 
 const handleBuildServiceUnavailableError: BuildErrorHandler = context => {
-  respondTemporaryError(
-    context,
-    'BuildServiceUnavailableError',
-    'The build service is temporarily unavailable. Please try again in a few minutes.',
-  )
+  const response = {
+    code: 'BuildServiceUnavailableError',
+    message:
+      'The build service is temporarily unavailable. Please try again in a few minutes.',
+  }
+
+  respondTemporaryError(context, response.code, response.message)
+  context.cacheFailure(503, { error: response })
 }
 
 const handleBlocklistedPackageError: BuildErrorHandler = context => {
@@ -156,10 +163,13 @@ const handleUnsupportedPackageError: BuildErrorHandler = (context, error) => {
 }
 
 const handlePackageNotFoundError: BuildErrorHandler = context => {
-  context.respondWithError(404, {
+  const response = {
     code: 'PackageNotFoundError',
     message: "The package you were looking for doesn't exist.",
-  })
+  }
+
+  context.respondWithError(404, response)
+  context.cacheFailure(404, { error: response })
 }
 
 const handlePackageVersionMismatchError: BuildErrorHandler = (
@@ -169,10 +179,13 @@ const handlePackageVersionMismatchError: BuildErrorHandler = (
   const suggestedVersion = error.extra?.suggestedVersion
 
   if (suggestedVersion) {
-    context.respondWithError(404, {
+    const response = {
       code: 'PackageVersionMismatchError',
       message: `This package has not been published with this particular version. The latest version is \`<code>${suggestedVersion}</code>\`.`,
-    })
+    }
+
+    context.respondWithError(404, response)
+    context.cacheFailure(404, { error: response })
 
     return
   }
@@ -183,17 +196,23 @@ const handlePackageVersionMismatchError: BuildErrorHandler = (
     ),
   )
 
-  context.respondWithError(404, {
+  const response = {
     code: 'PackageVersionMismatchError',
     message: `This package has not been published with this particular version. Valid versions - ${validVersions}`,
-  })
+  }
+
+  context.respondWithError(404, response)
+  context.cacheFailure(404, { error: response })
 }
 
 const handleInstallError: BuildErrorHandler = context => {
-  context.respondWithError(500, {
+  const response = {
     code: 'InstallError',
     message: 'Installing the package failed.',
-  })
+  }
+
+  context.respondWithError(500, response)
+  context.cacheFailure(500, { error: response })
   context.ctx.cacheControl = { maxAge: 0 }
 }
 
@@ -390,13 +409,16 @@ const errorHandler: Middleware = async (ctx, next) => {
     const analysis = ctx.state.analysis
     const language = analysis?.language ?? 'javascript'
     const operation = analysis?.operation ?? 'package-analysis'
+
+    const failureCacheKey = createAnalysisKey({
+      language,
+      operation,
+      packageSpecifier: packageString,
+    })
+
     failureCache.set(
-      createAnalysisKey({
-        language,
-        operation,
-        packageSpecifier: packageString,
-      }),
-      { status, body },
+      failureCacheKey,
+      recordFailure(failureCache.get(failureCacheKey), { status, body }),
     )
   }
 

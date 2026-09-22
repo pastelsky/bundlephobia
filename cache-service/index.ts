@@ -2,16 +2,18 @@ import 'dotenv-defaults/config.js'
 
 import type { AddressInfo } from 'node:net'
 
+import { CACHE_ROUTE } from '@bundlephobia/service-contracts/cache'
+
 import createFastify from 'fastify'
 import firebase from 'firebase'
 
 import {
-  getExportsSizeMiddlware,
+  getExportsSizeMiddleware,
   postExportsSizeMiddleware,
 } from './middlewares/exports-size.middleware.ts'
 import {
-  getPackageSizeMiddlware,
-  postPackageSizeMiddlware,
+  getPackageSizeMiddleware,
+  postPackageSizeMiddleware,
 } from './middlewares/package-size.middleware.ts'
 
 const fastify = createFastify()
@@ -24,13 +26,13 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig)
 
-fastify.get('/package-cache', getPackageSizeMiddlware)
+fastify.get(CACHE_ROUTE.package, getPackageSizeMiddleware)
 
-fastify.post('/package-cache', postPackageSizeMiddlware)
+fastify.post(CACHE_ROUTE.package, postPackageSizeMiddleware)
 
-fastify.get('/exports-cache', getExportsSizeMiddlware)
+fastify.get(CACHE_ROUTE.exports, getExportsSizeMiddleware)
 
-fastify.post('/exports-cache', postExportsSizeMiddleware)
+fastify.post(CACHE_ROUTE.exports, postExportsSizeMiddleware)
 
 fastify
   .listen({ port: 7001 })

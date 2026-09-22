@@ -132,6 +132,7 @@ $font-family-code:
 // Padding / Spacing
 $global-spacing: 10px;
 $layout-max-width: 1200px;
+$layout-gutter: $global-spacing * 3;
 
 // Shared UI controls
 $control-border-radius: 6px;

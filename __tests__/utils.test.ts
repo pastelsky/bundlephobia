@@ -73,7 +73,7 @@ describe('resolveBuildError', () => {
         message: 'Failed to build this package.',
         details: { originalError },
       },
-    }).errorDetails
+      }).errorDetails
 
   it('preserves string details', () => {
     expect(resolveDetails('plain failure')).toBe('plain failure')

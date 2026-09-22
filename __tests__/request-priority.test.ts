@@ -1,6 +1,6 @@
 import type { Context } from 'koa'
 
-import Queue from '../server/Queue'
+import Queue from '../server/infrastructure/queue.service'
 import { getRequestPriority } from '../utils/server.utils'
 
 function contextFor(client?: string): Context {
