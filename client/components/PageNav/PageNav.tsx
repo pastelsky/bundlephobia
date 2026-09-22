@@ -37,6 +37,9 @@ const NavigationLinks = ({ includeScan }: NavigationLinksProps) => (
     <li>
       <Link href="/blog">Blog</Link>
     </li>
+    <li>
+      <Link href="/trends">Trends</Link>
+    </li>
     {includeScan && (
       <li>
         <Link href="/scan">Scan package.json</Link>

@@ -3,6 +3,11 @@ import {
   normalizePackageJsonUrl,
 } from '../utils/common.utils'
 import { resolveBuildError } from '../utils'
+import type { JsonValue } from '../types/json'
+
+interface CircularDetails {
+  self?: CircularDetails
+}
 
 describe('parsePackageString', () => {
   it('handles scoped packages correctly', () => {
@@ -61,14 +66,14 @@ describe('parsePackageString', () => {
 })
 
 describe('resolveBuildError', () => {
-  const resolveDetails = (originalError: unknown) =>
+  const resolveDetails = (originalError: JsonValue) =>
     resolveBuildError({
       error: {
         code: 'BuildError',
         message: 'Failed to build this package.',
         details: { originalError },
       },
-    }).errorDetails
+      }).errorDetails
 
   it('preserves string details', () => {
     expect(resolveDetails('plain failure')).toBe('plain failure')
@@ -112,7 +117,7 @@ describe('resolveBuildError', () => {
   )
 
   it('handles circular error details', () => {
-    const circular: { self?: unknown } = {}
+    const circular: CircularDetails = {}
     circular.self = circular
 
     expect(resolveDetails(circular)).toContain('[Circular]')

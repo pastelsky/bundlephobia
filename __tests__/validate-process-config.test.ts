@@ -34,9 +34,11 @@ test('cache-service PM2 command starts the configured listener', async () => {
         () => reject(new Error('cache-service did not start')),
         5000,
       )
+
       let output = ''
       child.stdout.on('data', chunk => {
         output += chunk.toString()
+
         if (output.includes('server listening on 7001')) {
           clearTimeout(timeout)
           resolve()

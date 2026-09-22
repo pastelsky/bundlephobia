@@ -3,6 +3,7 @@ import cx from 'classnames'
 import { Button as BaseButton } from '@base-ui/react/button'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'quiet' | 'danger'
+
 export type ButtonSize = 'sm' | 'md'
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {

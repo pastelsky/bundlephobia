@@ -1,19 +1,20 @@
-jest.mock('@amplitude/analytics-browser', () => ({
-  init: jest.fn(),
-  track: jest.fn(),
-}))
-
 import Analytics from '../analytics'
-import { initializeAmplitude } from '../amplitude'
-import * as amplitude from '@amplitude/analytics-browser'
+import { initializeAmplitude, setAmplitudeLoader } from '../amplitude'
 
 describe('Analytics', () => {
-  const init = amplitude.init as jest.Mock
-  const track = amplitude.track as jest.Mock
+  const init = jest.fn()
+  const track = jest.fn()
+  let restoreAmplitude: () => void
+
+  // SAFETY: the test module factory replaces the browser init function with a Jest spy.
+  const amplitude = { init, track }
+  // SAFETY: the test module factory replaces the browser track function with a Jest spy.
 
   beforeEach(() => {
     init.mockReset()
     track.mockReset()
+    restoreAmplitude?.()
+    restoreAmplitude = setAmplitudeLoader(async () => amplitude)
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
       value: {},
@@ -21,6 +22,7 @@ describe('Analytics', () => {
   })
 
   afterEach(() => {
+    restoreAmplitude()
     Reflect.deleteProperty(globalThis, 'window')
   })
 

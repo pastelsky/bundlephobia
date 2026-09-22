@@ -1,6 +1,6 @@
 import React from 'react'
 
-import type { PackageBuildBase } from './package-domain'
+import type { PackageBuildBase } from '@bundlephobia/service-contracts/package'
 
 /**
  * Props shape used by UI components that display package stats.

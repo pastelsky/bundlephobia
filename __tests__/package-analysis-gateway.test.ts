@@ -1,10 +1,10 @@
 import type { PackageReference } from '../types/language-domain'
-import { PackageAnalysisGateway } from '../server/analysis/PackageAnalysisGateway'
+import { PackageAnalysisGateway } from '../server/analysis/package-analysis.gateway'
 import type { PackageAnalysisAdapter } from '../server/analysis/contracts'
 import { PackageAnalysisGatewayError } from '../server/analysis/errors'
 import { createAnalysisKey } from '../server/analysis/keys'
-import { toLegacyJavaScriptError } from '../server/analysis/javascript/legacyErrorMapper'
-import CustomError from '../server/CustomError'
+import { toLegacyJavaScriptError } from '../server/analysis/adapters/legacy-error.mapper'
+import CustomError from '../server/custom-error'
 
 function createJavaScriptAdapter(): PackageAnalysisAdapter<'javascript'> {
   return {
@@ -20,8 +20,11 @@ function createJavaScriptAdapter(): PackageAnalysisAdapter<'javascript'> {
       repository: '',
     })),
     isExactVersionSpecifier: jest.fn(() => true),
+    // SAFETY: the test adapter returns the package build result contract.
     analyzePackage: jest.fn(async () => ({ size: 1, gzip: 1 }) as never),
+    // SAFETY: the test adapter returns the package exports result contract.
     analyzePackageExports: jest.fn(async () => [] as never),
+    // SAFETY: the test adapter returns the export-size result contract.
     analyzePackageExportSizes: jest.fn(async () => ({}) as never),
   }
 }
@@ -31,6 +34,7 @@ describe('PackageAnalysisGateway', () => {
     const gateway = new PackageAnalysisGateway()
     const adapter = createJavaScriptAdapter()
     gateway.register(adapter)
+
     const reference: PackageReference<'javascript'> = {
       language: 'javascript',
       specifier: 'example@latest',
@@ -47,6 +51,7 @@ describe('PackageAnalysisGateway', () => {
     const gateway = new PackageAnalysisGateway()
     const adapter = createJavaScriptAdapter()
     gateway.register(adapter)
+
     const resolved = {
       language: 'javascript' as const,
       specifier: 'example@1.0.0',
@@ -57,6 +62,7 @@ describe('PackageAnalysisGateway', () => {
       description: '',
       repository: '',
     }
+
     const options = { priority: 20 }
 
     await gateway.analyzePackage(resolved, options)
@@ -123,6 +129,7 @@ describe('PackageAnalysisGateway', () => {
 describe('analysis identities', () => {
   it('cannot collide across languages or operations', () => {
     const packageSpecifier = '@scope/example@1.0.0'
+
     const keys = [
       createAnalysisKey({
         language: 'javascript',

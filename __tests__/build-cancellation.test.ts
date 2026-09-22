@@ -1,44 +1,30 @@
 import AbortController from 'abort-controller'
 import { EventEmitter } from 'events'
 
-const mockGetPackageBuildStats = jest.fn()
+import logger from '../server/infrastructure/logger.service'
+import { JobCancelledError } from '../server/infrastructure/queue.service'
+import { packageAnalysisGateway } from '../server/analysis'
+import { createBuildMiddleware } from '../server/middlewares/results/build-result.middleware'
 
-jest.mock('../server/api/BuildService', () => ({
-  __esModule: true,
-  BUILD_DURATION_HEADER: 'x-bundlephobia-build-duration-ms',
-  default: jest.fn().mockImplementation(() => ({
-    getPackageBuildStats: (...args: unknown[]) =>
-      mockGetPackageBuildStats(...args),
-  })),
-}))
+const mockAnalyzePackage = jest.spyOn(packageAnalysisGateway, 'analyzePackage')
 
-jest.mock('../server/clients/cacheService', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
-    setPackageSize: jest.fn(),
-  })),
-}))
+const mockLoggerInfo = jest.spyOn(logger, 'info')
 
-jest.mock('../utils/firebase.utils', () => ({
-  __esModule: true,
-  default: { setRecentSearch: jest.fn() },
-}))
+const cache = {
+  setPackageSize: jest.fn(),
+}
 
-jest.mock('../server/Logger', () => ({
-  __esModule: true,
-  default: { info: jest.fn() },
-}))
-
-import logger from '../server/Logger'
-import { JobCancelledError } from '../server/Queue'
-import buildMiddleware from '../server/middlewares/results/build.middleware'
+const buildMiddleware = createBuildMiddleware(cache)
 
 function createContext() {
   const request = new EventEmitter()
+
   const response = Object.assign(new EventEmitter(), {
     writableEnded: false,
   })
+
   const headers: Record<string, string> = {}
+
   return {
     context: {
       body: undefined,
@@ -79,8 +65,8 @@ describe('build request cancellation', () => {
   const nativeAbortController = global.AbortController
 
   beforeAll(() => {
-    global.AbortController =
-      AbortController as unknown as typeof global.AbortController
+    // SAFETY: the test controller is compatible with the global constructor contract.
+    global.AbortController = AbortController as typeof global.AbortController
   })
 
   afterAll(() => {
@@ -88,25 +74,27 @@ describe('build request cancellation', () => {
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockAnalyzePackage.mockReset()
+    mockLoggerInfo.mockReset()
   })
 
   it('aborts a build only when the response closes prematurely', async () => {
     let buildSignal: AbortSignal | undefined
-    mockGetPackageBuildStats.mockImplementation(
-      (_packageString, _priority, options: { signal: AbortSignal }) => {
-        buildSignal = options.signal
-        return new Promise((_resolve, reject) => {
-          options.signal.addEventListener(
-            'abort',
-            () => reject(new JobCancelledError()),
-            { once: true },
-          )
-        })
-      },
-    )
+    mockAnalyzePackage.mockImplementation(async (_resolved, options) => {
+      const { signal } = options
+      buildSignal = options.signal
+
+      return new Promise((_resolve, reject) => {
+        signal?.addEventListener(
+          'abort',
+          () => reject(new JobCancelledError()),
+          { once: true },
+        )
+      })
+    })
     const { context, request, response } = createContext()
 
+    // SAFETY: this fixture supplies the context fields exercised by the middleware.
     const result = buildMiddleware(context as never, jest.fn())
 
     request.emit('close')
@@ -129,16 +117,17 @@ describe('build request cancellation', () => {
   it('does not abort after the response has ended normally', async () => {
     let buildSignal: AbortSignal | undefined
     let resolveBuild: (result: { size: number }) => void = () => {}
-    mockGetPackageBuildStats.mockImplementation(
-      (_packageString, _priority, options: { signal: AbortSignal }) => {
-        buildSignal = options.signal
-        return new Promise(resolve => {
-          resolveBuild = resolve
-        })
-      },
-    )
+
+    mockAnalyzePackage.mockImplementation(async (_resolved, options) => {
+      buildSignal = options.signal
+
+      return new Promise(resolve => {
+        resolveBuild = resolve
+      })
+    })
     const { context, response } = createContext()
 
+    // SAFETY: this fixture supplies the context fields exercised by the middleware.
     const result = buildMiddleware(context as never, jest.fn())
 
     response.writableEnded = true
@@ -163,18 +152,14 @@ describe('build request cancellation', () => {
   })
 
   it('sets the measured build duration for the proxy', async () => {
-    mockGetPackageBuildStats.mockImplementation(
-      (
-        _packageString,
-        _priority,
-        options: { onComplete: (durationMs: number) => void },
-      ) => {
-        options.onComplete(321)
-        return Promise.resolve({ size: 123 })
-      },
-    )
+    mockAnalyzePackage.mockImplementation(async (_resolved, options) => {
+      options.onComplete(321)
+
+      return Promise.resolve({ size: 123 })
+    })
     const { context } = createContext()
 
+    // SAFETY: this fixture supplies the context fields exercised by the middleware.
     await buildMiddleware(context as never, jest.fn())
 
     expect(context.headers['x-bundlephobia-build-duration-ms']).toBe('321')

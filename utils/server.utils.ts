@@ -2,7 +2,7 @@ import 'dotenv-defaults/config'
 
 import type { Context } from 'koa'
 
-import Queue from '../server/Queue'
+import Queue from '../server/infrastructure/queue.service'
 
 export function getRequestPriority(ctx: Context): number {
   const client = ctx.headers['x-bundlephobia-user']

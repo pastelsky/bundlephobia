@@ -5,23 +5,26 @@ import createDebug from 'debug'
 import { toErrorDetail } from '../../../utils'
 import config from '../../config'
 import { createAnalysisKey } from '../../analysis/keys'
-import { toLegacyJavaScriptError } from '../../analysis/javascript/legacyErrorMapper'
-import { failureCache } from '../../init'
-import logger from '../../Logger'
-import { isJobCancelledError } from '../../Queue'
+import { toLegacyJavaScriptError } from '../../analysis/adapters/legacy-error.mapper'
+import { failureCache } from '../../infrastructure/runtime'
+import logger from '../../infrastructure/logger.service'
+import { isJobCancelledError } from '../../infrastructure/queue.service'
+import type { RuntimeValue } from '../../../types/json'
+import { recordFailure } from './failure-backoff.middleware'
 
 const debug = createDebug('bp:error')
+
 const MAX_ERROR_LIST_ITEMS = 20
 
 interface ErrorResponseBody {
   error: {
     code: string
     message: string
-    details?: unknown
+    details?: RuntimeValue
   }
 }
 
-interface BuildErrorShape extends Error {
+interface BuildErrorContract extends Error {
   originalError?: unknown
   extra?: {
     reason?: string
@@ -37,17 +40,22 @@ interface ClientHttpError extends Error {
 }
 
 function isClientHttpError(error: Error): error is ClientHttpError {
-  if (!('status' in error) || typeof error.status !== 'number') {
+  if (
+    !('status' in error) ||
+    Object.prototype.toString.call(error.status) !== '[object Number]'
+  ) {
     return false
   }
-  return (
-    Number.isInteger(error.status) && error.status >= 400 && error.status < 500
-  )
+
+  const status = Number(error.status)
+
+  return Number.isInteger(status) && status >= 400 && status < 500
 }
 
 function formatSentence(values: string[]): string {
   const omittedCount = values.length - MAX_ERROR_LIST_ITEMS
   values = values.slice(0, MAX_ERROR_LIST_ITEMS)
+
   if (omittedCount > 0) {
     values.push(`${omittedCount} more`)
   }
@@ -55,39 +63,44 @@ function formatSentence(values: string[]): string {
   if (values.length === 0) {
     return ''
   }
+
   if (values.length === 1) {
     return values[0]
   }
+
   if (values.length === 2) {
     return `${values[0]} and ${values[1]}`
   }
+
   return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
-function getErrorDetails(originalError: unknown) {
+function getErrorDetails<T>(originalError: T) {
   const detail = toErrorDetail(originalError)
+
   return detail ? { originalError: detail } : undefined
 }
 
 type KoaContext = Parameters<Middleware>[0]
+
 type ErrorResponse = {
   code: string
   message?: string
-  details?: unknown
+  details?: RuntimeValue
 }
 
 interface ErrorHandlerContext {
   ctx: KoaContext
-  force: unknown
+  force: RuntimeValue
   start: number
   packageString?: string
-  cacheFailure: (status: number, body: unknown) => void
+  cacheFailure: (status: number, body: RuntimeValue) => void
   respondWithError: (status: number, response: ErrorResponse) => void
 }
 
 type BuildErrorHandler = (
   context: ErrorHandlerContext,
-  error: BuildErrorShape,
+  error: BuildErrorContract,
 ) => void
 
 function setFatalCache(context: ErrorHandlerContext) {
@@ -106,19 +119,25 @@ function respondTemporaryError(
 }
 
 const handleBuildServiceError: BuildErrorHandler = context => {
-  respondTemporaryError(
-    context,
-    'BuildServiceError',
-    'The build service encountered a temporary error. Please try again in a few minutes.',
-  )
+  const response = {
+    code: 'BuildServiceError',
+    message:
+      'The build service encountered a temporary error. Please try again in a few minutes.',
+  }
+
+  respondTemporaryError(context, response.code, response.message)
+  context.cacheFailure(503, { error: response })
 }
 
 const handleBuildServiceUnavailableError: BuildErrorHandler = context => {
-  respondTemporaryError(
-    context,
-    'BuildServiceUnavailableError',
-    'The build service is temporarily unavailable. Please try again in a few minutes.',
-  )
+  const response = {
+    code: 'BuildServiceUnavailableError',
+    message:
+      'The build service is temporarily unavailable. Please try again in a few minutes.',
+  }
+
+  respondTemporaryError(context, response.code, response.message)
+  context.cacheFailure(503, { error: response })
 }
 
 const handleBlocklistedPackageError: BuildErrorHandler = context => {
@@ -144,10 +163,13 @@ const handleUnsupportedPackageError: BuildErrorHandler = (context, error) => {
 }
 
 const handlePackageNotFoundError: BuildErrorHandler = context => {
-  context.respondWithError(404, {
+  const response = {
     code: 'PackageNotFoundError',
     message: "The package you were looking for doesn't exist.",
-  })
+  }
+
+  context.respondWithError(404, response)
+  context.cacheFailure(404, { error: response })
 }
 
 const handlePackageVersionMismatchError: BuildErrorHandler = (
@@ -155,11 +177,16 @@ const handlePackageVersionMismatchError: BuildErrorHandler = (
   error,
 ) => {
   const suggestedVersion = error.extra?.suggestedVersion
+
   if (suggestedVersion) {
-    context.respondWithError(404, {
+    const response = {
       code: 'PackageVersionMismatchError',
       message: `This package has not been published with this particular version. The latest version is \`<code>${suggestedVersion}</code>\`.`,
-    })
+    }
+
+    context.respondWithError(404, response)
+    context.cacheFailure(404, { error: response })
+
     return
   }
 
@@ -168,22 +195,30 @@ const handlePackageVersionMismatchError: BuildErrorHandler = (
       version => `\`<code>${version}</code>\``,
     ),
   )
-  context.respondWithError(404, {
+
+  const response = {
     code: 'PackageVersionMismatchError',
     message: `This package has not been published with this particular version. Valid versions - ${validVersions}`,
-  })
+  }
+
+  context.respondWithError(404, response)
+  context.cacheFailure(404, { error: response })
 }
 
 const handleInstallError: BuildErrorHandler = context => {
-  context.respondWithError(500, {
+  const response = {
     code: 'InstallError',
     message: 'Installing the package failed.',
-  })
+  }
+
+  context.respondWithError(500, response)
+  context.cacheFailure(500, { error: response })
   context.ctx.cacheControl = { maxAge: 0 }
 }
 
 const handleEntryPointError: BuildErrorHandler = context => {
   const status = 422
+
   const body = {
     error: {
       code: 'EntryPointError',
@@ -192,6 +227,7 @@ const handleEntryPointError: BuildErrorHandler = context => {
         "Perhaps the author hasn't specified one in its package.json ?",
     },
   }
+
   setFatalCache(context)
   context.respondWithError(status, body.error)
   context.cacheFailure(status, body)
@@ -200,9 +236,11 @@ const handleEntryPointError: BuildErrorHandler = context => {
 const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
   const status = 422
   const missingModulesList = error.extra?.missingModules ?? []
+
   const missingModules = formatSentence(
     missingModulesList.map(module => `\`<code>${module}</code>\``),
   )
+
   const body = {
     error: {
       code: 'MissingDependencyError',
@@ -214,6 +252,7 @@ const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
       details: getErrorDetails(error.originalError) ?? {},
     },
   }
+
   setFatalCache(context)
   context.respondWithError(status, body.error)
   context.cacheFailure(status, body)
@@ -221,6 +260,7 @@ const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
 
 const handleMinifyError: BuildErrorHandler = (context, error) => {
   const status = 422
+
   const body = {
     error: {
       code: 'MinifyError',
@@ -232,6 +272,7 @@ const handleMinifyError: BuildErrorHandler = (context, error) => {
       details: { ...getErrorDetails(error.originalError) },
     },
   }
+
   setFatalCache(context)
   context.respondWithError(status, body.error)
   context.cacheFailure(status, body)
@@ -240,16 +281,18 @@ const handleMinifyError: BuildErrorHandler = (context, error) => {
 const handleBuildError: BuildErrorHandler = (context, error) => {
   const status = 422
   const details = getErrorDetails(error.originalError) ?? {}
+
   const errorJSON = {
     code: 'BuildError',
     message: 'Failed to build this package.',
     details,
   }
+
   context.respondWithError(status, errorJSON)
   context.cacheFailure(status, { error: errorJSON })
 }
 
-const buildErrorHandlers: Record<string, BuildErrorHandler> = {
+const buildErrorHandlers = {
   BuildServiceError: handleBuildServiceError,
   BuildServiceUnavailableError: handleBuildServiceUnavailableError,
   BlocklistedPackageError: handleBlocklistedPackageError,
@@ -261,7 +304,7 @@ const buildErrorHandlers: Record<string, BuildErrorHandler> = {
   MissingDependencyError: handleMissingDependencyError,
   MinifyError: handleMinifyError,
   BuildError: handleBuildError,
-}
+} satisfies Record<string, BuildErrorHandler>
 
 function handleCancelledError(context: ErrorHandlerContext) {
   const { ctx, packageString, start } = context
@@ -286,8 +329,10 @@ function handleCancelledError(context: ErrorHandlerContext) {
   )
 }
 
-function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
-  const errorObject = error as Record<string, unknown> | null
+function handleUnknownError<T>(context: ErrorHandlerContext, error: T) {
+  // SAFETY: only the optional error code is read from a caught runtime value.
+  const errorObject = error as { code?: string } | null
+
   if (errorObject?.code === 'JOB_EXPIRED') {
     context.ctx.cacheControl = { maxAge: 0 }
     context.respondWithError(503, {
@@ -296,8 +341,10 @@ function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
         'The build queue is currently full and this request timed out. ' +
         'Please try again in a few minutes.',
     })
+
     return
   }
+
   if (errorObject?.code === 'QUEUE_CLEARED') {
     context.ctx.cacheControl = { maxAge: 0 }
     context.respondWithError(503, {
@@ -305,32 +352,46 @@ function handleUnknownError(context: ErrorHandlerContext, error: unknown) {
       message:
         'The build queue was cleared. Please try building the package again.',
     })
+
     return
   }
+
   context.respondWithError(500, {
     code: 'UnknownError',
     details: getErrorDetails(error),
   })
 }
 
-function handleCaughtError(context: ErrorHandlerContext, error: unknown) {
+function handleCaughtError<T>(context: ErrorHandlerContext, error: T) {
   if (isJobCancelledError(error)) {
     handleCancelledError(context)
+
     return
   }
+
   if (!(error instanceof Error)) {
     handleUnknownError(context, error)
+
     return
   }
+
   if (isClientHttpError(error)) {
     context.respondWithError(error.status, {
       code: error.name,
       message: error.message,
     })
+
     return
   }
-  const buildError = error as BuildErrorShape
-  const handler = buildErrorHandlers[buildError.name] ?? handleBuildError
+
+  // SAFETY: this branch is reached only after the Error instance guard above.
+  const buildError = error as BuildErrorContract
+
+  // SAFETY: the fallback handles names not present in this closed handler table.
+  const handler =
+    buildErrorHandlers[buildError.name as keyof typeof buildErrorHandlers] ??
+    handleBuildError
+
   handler(context, buildError)
 }
 
@@ -339,21 +400,25 @@ const errorHandler: Middleware = async (ctx, next) => {
   const start = now()
   let packageString = ctx.state.resolved?.packageString
 
-  const cacheFailure = (status: number, body: unknown) => {
+  const cacheFailure = (status: number, body: RuntimeValue) => {
     if (!packageString) {
       return
     }
+
     debug('saved %s to failure cache', packageString)
     const analysis = ctx.state.analysis
     const language = analysis?.language ?? 'javascript'
     const operation = analysis?.operation ?? 'package-analysis'
+
+    const failureCacheKey = createAnalysisKey({
+      language,
+      operation,
+      packageSpecifier: packageString,
+    })
+
     failureCache.set(
-      createAnalysisKey({
-        language,
-        operation,
-        packageSpecifier: packageString,
-      }),
-      { status, body },
+      failureCacheKey,
+      recordFailure(failureCache.get(failureCacheKey), { status, body }),
     )
   }
 
@@ -366,7 +431,7 @@ const errorHandler: Middleware = async (ctx, next) => {
     }: {
       code: string
       message?: string
-      details?: unknown
+      details?: RuntimeValue
     },
   ) => {
     ctx.status = status

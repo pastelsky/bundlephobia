@@ -1,12 +1,15 @@
 import type { Context } from 'koa'
 
-import Queue from '../server/Queue'
+import Queue from '../server/infrastructure/queue.service'
 import { getRequestPriority } from '../utils/server.utils'
 
 function contextFor(client?: string): Context {
-  return {
+  const context = {
     headers: client ? { 'x-bundlephobia-user': client } : {},
-  } as unknown as Context
+  }
+
+  // SAFETY: this fixture only exercises the request headers read by the priority helper.
+  return context as Context
 }
 
 describe('request priority', () => {

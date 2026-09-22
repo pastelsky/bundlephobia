@@ -68,6 +68,7 @@ export default class BuildProgressIndicator extends Component<
       minifying: 'Minifying, GZipping',
       calculating: 'Calculating file sizes',
     }
+
     return progressText[stage]
   }
 
@@ -99,6 +100,7 @@ export default class BuildProgressIndicator extends Component<
 
   render() {
     const { progressText, started } = this.state
+
     if (!started) {
       return null
     }

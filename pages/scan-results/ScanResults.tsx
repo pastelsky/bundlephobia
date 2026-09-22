@@ -14,6 +14,7 @@ import { parsePackageString, sanitizeErrorHTML } from '../../utils/common.utils'
 import { getTimeFromSize } from '../../utils'
 
 type PromiseState = 'pending' | 'fulfilled' | 'rejected'
+
 type SortMode = 'alphabetic' | 'size'
 
 type PackageBuildError = {
@@ -69,6 +70,7 @@ function getPackagesFromRouter(router: NextRouter): ScanPackage[] {
 
 function getSortModeFromRouter(router: NextRouter): SortMode {
   const sortMode = getQueryValue(router.query.sortMode)
+
   return sortMode === 'size' ? 'size' : 'alphabetic'
 }
 
@@ -258,11 +260,13 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
       `/scan-results?${stringify(updatedQuery, { encode: false })}`,
     )
 
+    // SAFETY: browsers without View Transitions simply omit this optional API.
     const documentWithViewTransitions = document as Document & {
       startViewTransition?: (update: () => Promise<void>) => {
         finished: Promise<void>
       }
     }
+
     const prefersReducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches
@@ -272,6 +276,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
       prefersReducedMotion
     ) {
       React.startTransition(() => this.setState({ sortMode }))
+
       return
     }
 
@@ -283,6 +288,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
           })
         }),
     )
+
     transition.finished.catch(() => {})
   }
 

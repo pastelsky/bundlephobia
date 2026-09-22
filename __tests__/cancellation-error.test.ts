@@ -1,18 +1,21 @@
-jest.mock('../server/init', () => ({
-  failureCache: { set: jest.fn() },
-}))
-
-jest.mock('../server/Logger', () => ({
-  __esModule: true,
-  default: { error: jest.fn(), info: jest.fn() },
-}))
-
-import { failureCache } from '../server/init'
-import logger from '../server/Logger'
-import { JobCancelledError } from '../server/Queue'
+import { failureCache } from '../server/infrastructure/runtime'
+import logger from '../server/infrastructure/logger.service'
+import { JobCancelledError } from '../server/infrastructure/queue.service'
 import errorHandler from '../server/middlewares/results/error.middleware'
 
+const mockFailureCacheSet = jest.spyOn(failureCache, 'set')
+
+const mockLoggerError = jest.spyOn(logger, 'error')
+
+const mockLoggerInfo = jest.spyOn(logger, 'info')
+
 describe('build cancellation errors', () => {
+  beforeEach(() => {
+    mockFailureCacheSet.mockReset()
+    mockLoggerError.mockReset()
+    mockLoggerInfo.mockReset()
+  })
+
   it('returns a non-cacheable client error without recording a build failure', async () => {
     const ctx = {
       body: undefined,
@@ -25,6 +28,7 @@ describe('build cancellation errors', () => {
       status: undefined,
     }
 
+    // SAFETY: this fixture supplies only the context fields exercised by the middleware.
     await errorHandler(ctx as never, async () => {
       throw new JobCancelledError()
     })

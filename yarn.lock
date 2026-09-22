@@ -2063,6 +2063,14 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bundlephobia/service-contracts@workspace:*, @bundlephobia/service-contracts@workspace:packages/service-contracts":
+  version: 0.0.0-use.local
+  resolution: "@bundlephobia/service-contracts@workspace:packages/service-contracts"
+  dependencies:
+    zod: "npm:^4.4.2"
+  languageName: unknown
+  linkType: soft
+
 "@colors/colors@npm:1.5.0":
   version: 1.5.0
   resolution: "@colors/colors@npm:1.5.0"
@@ -5329,6 +5337,13 @@ __metadata:
   version: 1.78.0
   resolution: "@oxlint/binding-win32-x64-msvc@npm:1.78.0"
   conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oxlint/plugins@npm:1.78.0":
+  version: 1.78.0
+  resolution: "@oxlint/plugins@npm:1.78.0"
+  checksum: cd3bdb50efc92ff7137858a7be3e6e1f60118b502f7246eab0c822b96d2103926aba91eb3e9566d985807bc9480aea292fe5e3abdb9345989b11a1610a2fb834
   languageName: node
   linkType: hard
 
@@ -8948,11 +8963,13 @@ __metadata:
   dependencies:
     "@amplitude/analytics-browser": "npm:^2.45.5"
     "@base-ui/react": "npm:^1.7.0"
+    "@bundlephobia/service-contracts": "workspace:*"
     "@contentful/rich-text-react-renderer": "npm:^16.2.2"
     "@contentful/rich-text-types": "npm:^17.2.7"
     "@floating-ui/dom": "npm:^1.8.0"
     "@koa/router": "npm:^12.0.1"
     "@modelcontextprotocol/sdk": "npm:^1.29.0"
+    "@oxlint/plugins": "npm:1.78.0"
     "@playwright/test": "npm:1.61.1"
     "@svgr/webpack": "npm:^6.5.1"
     "@swc/core": "npm:^1.15.47"
@@ -9200,6 +9217,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "cache@workspace:cache-service"
   dependencies:
+    "@bundlephobia/service-contracts": "workspace:*"
     debug: "npm:^4.3.4"
     dotenv: "npm:^8.6.0"
     dotenv-defaults: "npm:^2.0.2"

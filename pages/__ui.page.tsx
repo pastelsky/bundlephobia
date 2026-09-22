@@ -15,6 +15,7 @@ import {
 
 export const getServerSideProps: GetServerSideProps = async () => {
   if (process.env.NODE_ENV === 'production') return { notFound: true }
+
   return { props: {} }
 }
 

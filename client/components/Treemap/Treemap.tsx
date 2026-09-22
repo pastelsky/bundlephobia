@@ -24,6 +24,7 @@ function getBorderRadius(
   const topLeftRadius = radius(!(square[0] || square[1]))
   const topRightRadius = radius(square[1] === 0 && square[2] === width)
   const bottomLeftRadius = radius(square[3] === height && square[0] === 0)
+
   const bottomRightRadius = radius(
     Math.round(square[3]) === height && Math.round(square[2]) === width,
   )
@@ -39,9 +40,11 @@ class TreeMap extends Component<TreeMapProps> {
       (child): child is React.ReactElement<TreemapChildProps> =>
         React.isValidElement<TreemapChildProps>(child),
     )
+
     const values = squares.map(square => square.props.value)
 
     const squared = squarify(values, { width, height })
+
     return (
       <div style={{ width: '100%', height, position: 'relative' }} {...others}>
         {React.Children.map(children, (child, index) => {

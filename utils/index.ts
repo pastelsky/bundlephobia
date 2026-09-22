@@ -1,6 +1,16 @@
 import { configure } from 'safe-stable-stringify'
 import truncate from 'truncate'
 
+type ErrorValue =
+  | string
+  | number
+  | bigint
+  | boolean
+  | symbol
+  | null
+  | undefined
+  | object
+
 export interface FormattedValue {
   unit: 'B' | 'kB' | 'MB' | 'μs' | 'ms' | 's'
   size: number
@@ -81,19 +91,24 @@ export function zeroToN(n: number): number[] {
 }
 
 const MAX_ERROR_DETAIL_LENGTH = 12_000
+
 const stringifyError = configure({ maximumBreadth: 20, maximumDepth: 4 })
 
 function formatArrayError(originalError: unknown[]): string | null {
-  const details = originalError
-    .map(toErrorDetail)
-    .filter((detail): detail is string => detail !== null)
+  const details = originalError.flatMap(error => {
+    const detail = toErrorDetail(error)
+
+    return detail === null ? [] : [detail]
+  })
+
   return details.length
     ? truncate(details.join('\n\n'), MAX_ERROR_DETAIL_LENGTH)
     : null
 }
 
-function formatObjectError(originalError: object): string | null {
+function formatObjectError<T extends object>(originalError: T): string | null {
   const serialized = stringifyError(originalError, null, 2)
+
   return serialized ? truncate(serialized, MAX_ERROR_DETAIL_LENGTH) : null
 }
 
@@ -109,20 +124,40 @@ function formatNativeError(originalError: Error): string | null {
     : null
 }
 
-export function toErrorDetail(originalError: unknown): string | null {
+function isStringValue<T>(value: T): value is Extract<T, string> {
+  return (
+    Object(value) !== value &&
+    Object.prototype.toString.call(value) === '[object String]'
+  )
+}
+
+function isObjectValue<T>(value: T): value is Extract<T, object> {
+  return (
+    value !== null &&
+    Object(value) === value &&
+    Object.prototype.toString.call(value) !== '[object Function]'
+  )
+}
+
+export function toErrorDetail<T>(originalError: T): string | null {
   if (originalError === null || originalError === undefined) return null
-  if (typeof originalError === 'string') return formatStringError(originalError)
+
+  if (isStringValue(originalError)) return formatStringError(originalError)
+
   if (originalError instanceof Error) return formatNativeError(originalError)
+
   if (Array.isArray(originalError)) return formatArrayError(originalError)
-  if (typeof originalError === 'object') return formatObjectError(originalError)
+
+  if (isObjectValue(originalError)) return formatObjectError(originalError)
+
   return truncate(String(originalError), MAX_ERROR_DETAIL_LENGTH)
 }
 
-function isBuildErrorResponse(value: unknown): value is BuildErrorResponse {
-  return typeof value === 'object' && value !== null
+function isBuildErrorResponse<T>(value: T): value is T & BuildErrorResponse {
+  return isObjectValue(value)
 }
 
-export function resolveBuildError(resultsError?: unknown) {
+export function resolveBuildError<T>(resultsError?: T) {
   if (!isBuildErrorResponse(resultsError)) {
     return {
       errorName: null,
@@ -132,6 +167,7 @@ export function resolveBuildError(resultsError?: unknown) {
   }
 
   const error = resultsError.error
+
   return {
     errorName: error?.code ?? 'InternalServerError',
     errorBody: error?.message ?? 'Something went wrong!',
