@@ -65,11 +65,8 @@ export async function fetchNpmDownloadRange(
       `/downloads/range/${chunk}/${packagePath}`,
     )
 
-    for (const point of data.downloads || [])
-      pointsByDay.set(point.day, point)
+    for (const point of data.downloads || []) pointsByDay.set(point.day, point)
   }
 
-  return [...pointsByDay.values()].sort((a, b) =>
-    a.day.localeCompare(b.day),
-  )
+  return [...pointsByDay.values()].sort((a, b) => a.day.localeCompare(b.day))
 }
