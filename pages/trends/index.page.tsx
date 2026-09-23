@@ -55,7 +55,11 @@ function parsePackageParam(value: string | string[]) {
 const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
   [
     { id: 'downloads', label: 'Downloads', description: 'Daily npm downloads' },
-    { id: 'stars', label: 'Stars', description: 'Total repository stargazers' },
+    {
+      id: 'stars',
+      label: 'Stars',
+      description: 'Repository stars gained per period',
+    },
     { id: 'size', label: 'Size', description: 'Cached gzip size history' },
   ]
 
