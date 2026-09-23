@@ -141,6 +141,19 @@ function getRangeStartTimestamp(range: TrendsRange) {
   return Date.parse(start.toISOString().slice(0, 10))
 }
 
+function alignToGroupStart(timestamp: number, groupBy: TrendsGroupBy) {
+  const date = new Date(timestamp)
+
+  if (groupBy === 'month') {
+    date.setUTCDate(1)
+  } else if (groupBy === 'week') {
+    const day = date.getUTCDay()
+    date.setUTCDate(date.getUTCDate() + (day === 0 ? -6 : 1 - day))
+  }
+
+  return Date.parse(date.toISOString().slice(0, 10))
+}
+
 function buildXAxisTicks(
   minTime: number,
   maxTime: number,
@@ -212,10 +225,25 @@ export function buildChartModel({
   // continuing with an empty value domain produces NaN SVG coordinates.
   if (allPoints.length === 0) return null
 
-  // Keep the coordinate system tied to the requested range, not to whichever
-  // series happens to have data. Otherwise a sparse metric collapses the whole
-  // x-axis to one date and every generated month label overlaps.
-  const minTime = getRangeStartTimestamp(range)
+  // Keep the axis within the requested range while removing empty leading
+  // space when an upstream source returns less history than requested. Align
+  // to the bucket boundary because monthly/weekly points can be dated before
+  // the exact requested start (for example, Sep 1 for a Sep 23 request).
+  const requestedMinTime = getRangeStartTimestamp(range)
+
+  const pointTimes = allPoints
+    .map(point => Date.parse(point.date))
+    .filter(Number.isFinite)
+
+  if (pointTimes.length === 0) return null
+
+  const earliestPointTime = Math.min(...pointTimes)
+
+  const minTime = alignToGroupStart(
+    Math.max(requestedMinTime, earliestPointTime),
+    groupBy,
+  )
+
   const maxTime = Date.parse(new Date().toISOString().slice(0, 10))
   const values = allPoints.map(point => point.value)
   const minValue = Math.min(...values)
