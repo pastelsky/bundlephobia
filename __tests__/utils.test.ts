@@ -2,7 +2,7 @@ import {
   parsePackageString,
   normalizePackageJsonUrl,
 } from '../utils/common.utils'
-import { resolveBuildError } from '../utils'
+import { resolveBuildError, sampleEvenly } from '../utils'
 import type { JsonValue } from '../types/json'
 
 interface CircularDetails {
@@ -62,6 +62,21 @@ describe('parsePackageString', () => {
       version: '0.7.0-beta',
       scope: undefined,
     })
+  })
+})
+
+describe('sampleEvenly', () => {
+  it('returns small collections unchanged', () => {
+    expect(sampleEvenly([1, 2, 3], 5)).toEqual([1, 2, 3])
+  })
+
+  it('limits dense collections while preserving their endpoints', () => {
+    const values = Array.from({ length: 1_097 }, (_, index) => index)
+    const sampled = sampleEvenly(values, 143)
+
+    expect(sampled).toHaveLength(143)
+    expect(sampled[0]).toBe(0)
+    expect(sampled.at(-1)).toBe(1_096)
   })
 })
 

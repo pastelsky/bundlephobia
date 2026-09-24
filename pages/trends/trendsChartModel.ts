@@ -20,13 +20,15 @@ import type {
   TrendsPoint,
   TrendsRange,
 } from '../../client/api'
-import { formatSize } from '../../utils'
+import { formatSize, sampleEvenly } from '../../utils'
 
 export const CHART_HEIGHT = 380
 
 export const INITIAL_CHART_WIDTH = 1000
 
 export const PLOT = { top: 12, right: 0, bottom: 34, left: 0 }
+
+const MIN_MARKER_GAP = 8
 
 export const TRENDS_SERIES_COLORS = [
   'var(--trends-series-1)',
@@ -61,6 +63,17 @@ export type SeriesAnnotation = {
 }
 
 export type FormattedMetricValue = { value: string; unit: string }
+
+export function sampleChartMarkers(
+  points: ChartPoint[],
+  plotWidth: number,
+): ChartPoint[] {
+  const maxMarkers = Math.max(2, Math.floor(plotWidth / MIN_MARKER_GAP) + 1)
+
+  if (points.length <= maxMarkers) return points
+
+  return sampleEvenly(points, maxMarkers)
+}
 
 export function seriesForMetric(
   pack: TrendsPackageSeries,
@@ -336,7 +349,9 @@ export function buildChartModel({
           ? [partialStart, ...partial].map(toChartPoint)
           : [],
       partialMarkers,
-      markers: plotted,
+      // Keep every point in the line and interaction model, but avoid
+      // rendering more SVG circles than the chart can visually distinguish.
+      markers: sampleChartMarkers(plotted, plotWidth),
       releaseMarkers,
     }
   })

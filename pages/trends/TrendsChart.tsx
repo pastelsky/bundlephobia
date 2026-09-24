@@ -406,7 +406,7 @@ export default function TrendsChart({
                   const nearestPoint = model.series
                     .flatMap(series =>
                       [
-                        ...series.markers,
+                        ...series.points,
                         ...series.partialMarkers,
                         ...series.releaseMarkers,
                       ].map(point => ({ point, seriesName: series.name })),
@@ -670,7 +670,7 @@ export default function TrendsChart({
                       />
                     ))}
                     {[
-                      ...series.markers,
+                      ...series.points,
                       ...series.partialMarkers,
                       ...series.releaseMarkers,
                     ]

@@ -90,6 +90,26 @@ export function zeroToN(n: number): number[] {
   return Array.from(Array(n).keys())
 }
 
+export function sampleEvenly<T>(values: readonly T[], maxItems: number): T[] {
+  const sampleSize = Math.min(values.length, Math.max(0, Math.floor(maxItems)))
+
+  if (sampleSize === values.length) return [...values]
+
+  if (sampleSize === 0) return []
+
+  if (sampleSize === 1) return values.slice(0, 1)
+
+  const lastIndex = values.length - 1
+
+  return Array.from({ length: sampleSize }, (_, index) => {
+    const valueIndex = Math.round(
+      (index * lastIndex) / Math.max(sampleSize - 1, 1),
+    )
+
+    return values[valueIndex]!
+  })
+}
+
 const MAX_ERROR_DETAIL_LENGTH = 12_000
 
 const stringifyError = configure({ maximumBreadth: 20, maximumDepth: 4 })

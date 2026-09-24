@@ -6,6 +6,7 @@ import type {
   TrendsRange,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
+import { addDays, format, parseISO } from 'date-fns'
 
 const trendsResponse = {
   range: 'last-year',
@@ -215,6 +216,27 @@ function permutationResponse(
   }
 }
 
+function denseDailyResponse(): TrendsResponse {
+  const response = permutationResponse('last-3-years', 'day')
+  const start = parseISO('2023-09-24')
+
+  const dates = Array.from({ length: 1_097 }, (_, index) =>
+    format(addDays(start, index), 'yyyy-MM-dd'),
+  )
+
+  return {
+    ...response,
+    packages: response.packages.map((pack, packageIndex) => ({
+      ...pack,
+      downloads: dates.map((date, index) => ({
+        date,
+        value: (packageIndex + 1) * 1_000_000 + index * 10_000,
+        partial: index === dates.length - 1,
+      })),
+    })),
+  }
+}
+
 async function selectControl(page: Page, name: string): Promise<void> {
   const button = page.getByRole('button', { name, exact: true })
 
@@ -341,4 +363,46 @@ test('keeps every metric, range, and grouping permutation consistent', async ({
       .locator('.trends-stat__value')
       .nth(1),
   ).toHaveText('100')
+})
+
+test('bounds dense daily markers without reducing line fidelity', async ({
+  page,
+}) => {
+  await page.route('**/api/trends?*', route =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(denseDailyResponse()),
+    }),
+  )
+
+  await page.goto(
+    '/trends?packages=react~vs~vue&metric=downloads&range=last-3-years&groupBy=day',
+  )
+
+  await expect.poll(() => page.locator('[data-series-dot]').count()).toBe(288)
+  await expect
+    .poll(async () => {
+      const path = await page
+        .locator('path.trends-chart__line')
+        .first()
+        .getAttribute('d')
+
+      return path?.length ?? 0
+    })
+    .toBeGreaterThan(20_000)
+  await expectSeriesFullyRevealed(page)
+
+  const chartBox = await page.locator('.trends-chart__svg').boundingBox()
+
+  expect(chartBox).not.toBeNull()
+
+  if (chartBox) {
+    await page.mouse.move(
+      chartBox.x + (chartBox.width * 500) / 1_096,
+      chartBox.y + chartBox.height / 2,
+    )
+  }
+
+  await expect(page.locator('.trends-chart__tooltip')).toBeVisible()
+  await expect(page.locator('.trends-chart__series-dot-magnet')).toHaveCount(2)
 })
