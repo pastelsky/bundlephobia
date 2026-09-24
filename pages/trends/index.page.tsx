@@ -24,7 +24,7 @@ import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
-import { groupTrendsPackage } from './trendsData'
+import { groupTrendsPackage } from '../../utils/trends'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 
@@ -59,7 +59,7 @@ const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
     {
       id: 'stars',
       label: 'Stars',
-      description: 'Repository stars gained per period',
+      description: 'Total repository stars',
     },
     { id: 'size', label: 'Size', description: 'Cached gzip size history' },
   ]

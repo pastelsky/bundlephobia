@@ -180,7 +180,7 @@ function permutationResponse(range: TrendsRange): TrendsResponse {
       releases: [],
       current: {
         weeklyDownloads: responseCode + packageIndex,
-        stars: 100 + packageIndex,
+        stars: (packageIndex + 1) * 100 + (rawDates.length - 1) * 10,
         size: 20_000 + packageIndex,
         gzip: 10_000 + packageIndex,
       },

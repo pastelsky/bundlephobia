@@ -19,7 +19,7 @@ import type {
   TrendsRange,
 } from '../../client/api'
 import { formatSize } from '../../utils'
-import { startOfTrendsRange } from '../../utils/trendsRange'
+import { startOfTrendsRange } from '../../utils/trends'
 
 export const CHART_HEIGHT = 380
 

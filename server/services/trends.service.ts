@@ -8,10 +8,9 @@ import type {
   TrendsRange,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
-import { addDays, parseISO } from 'date-fns'
-import { formatTrendsDate, startOfTrendsRange } from '../../utils/trendsRange'
+import { formatTrendsDate, startOfTrendsRangeDate } from '../../utils/trends'
 import {
-  fetchGithubRepository,
+  fetchGithubStarCount,
   fetchGithubStarHistoryPage,
   type GithubStarHistoryRow,
 } from '../clients/github.client'
@@ -53,7 +52,7 @@ export function getTrendsRangeStart(
   range: TrendsRange,
   now = new Date(),
 ): string {
-  return isoDate(startOfTrendsRange(range, now))
+  return startOfTrendsRangeDate(range, now)
 }
 
 export function getNpmTrendsRange(
@@ -83,31 +82,69 @@ function dateForGithubDay(week: number, day: number): string | null {
 
   if (!Number.isFinite(weekStart.getTime())) return null
 
-  // GitHub weeks are UTC epoch timestamps. Convert that boundary to a
-  // calendar date before applying date-fns calendar arithmetic so server
-  // timezone cannot shift the week back a day.
-  const utcWeekStart = parseISO(weekStart.toISOString().slice(0, 10))
+  // GitHub says day zero is Sunday but its week boundary may not align with
+  // UTC. Normalize the epoch's UTC date to the nearest Sunday before applying
+  // calendar arithmetic, independently of the server timezone.
+  const utcDay = weekStart.getUTCDay()
+  const daysToSunday = utcDay <= 3 ? -utcDay : 7 - utcDay
+  const utcWeekStart = new Date(weekStart)
+  utcWeekStart.setUTCDate(utcWeekStart.getUTCDate() + daysToSunday + day)
 
-  return isoDate(addDays(utcWeekStart, day))
+  return isoDate(utcWeekStart)
 }
 
-function mapGithubRows(
+function githubGainsByDate(
   rows: GithubStarHistoryRow[],
-  from: string,
+  today: string,
+): Map<string, number> {
+  const gainsByDate = new Map<string, number>()
+
+  for (const row of rows) {
+    for (const [day, value] of row.days.entries()) {
+      const date = dateForGithubDay(row.week, day)
+
+      if (!date || date > today) continue
+
+      gainsByDate.set(date, value)
+    }
+  }
+
+  return gainsByDate
+}
+
+export function buildGithubStarTotals(
+  rows: GithubStarHistoryRow[],
+  current: number,
+  options: { from: string; now?: Date },
 ): TrendsPoint[] {
-  const today = isoDate(new Date())
+  const { from, now = new Date() } = options
+  const today = isoDate(now)
+  const gainsByDate = githubGainsByDate(rows, today)
 
-  return rows
-    .flatMap(row =>
-      row.days.flatMap((value, day) => {
-        const date = dateForGithubDay(row.week, day)
+  // GitHub exposes created-star history but not historical unstars. Walking
+  // backward from the active-star count produces the closest available total
+  // history and guarantees that the latest point is authoritative.
+  if (!gainsByDate.has(today)) gainsByDate.set(today, 0)
 
-        if (!date || date < from || date > today) return []
+  const gains = [...gainsByDate]
+    .map(([date, value]) => ({ date, value }))
+    .sort((left, right) => left.date.localeCompare(right.date))
 
-        return [{ date, value, partial: date === today }]
-      }),
-    )
-    .sort((a, b) => a.date.localeCompare(b.date))
+  const totals: TrendsPoint[] = []
+  let total = current
+
+  for (let index = gains.length - 1; index >= 0; index -= 1) {
+    const gain = gains[index]
+
+    totals.push({
+      date: gain.date,
+      value: Math.max(0, total),
+      partial: gain.date === today,
+    })
+    total -= gain.value
+  }
+
+  return totals.reverse().filter(point => point.date >= from)
 }
 
 type GithubHistoryCursor = {
@@ -150,13 +187,11 @@ async function fetchGithubStars(
     page += 1
   }
 
-  const metadata = await fetchGithubRepository(repository)
+  const current = await fetchGithubStarCount(repository)
 
   return {
-    points: mapGithubRows(rows, from),
-    current: Number.isSafeInteger(metadata.stargazers_count)
-      ? metadata.stargazers_count!
-      : null,
+    points: buildGithubStarTotals(rows, current, { from }),
+    current,
   }
 }
 
