@@ -10,7 +10,6 @@ import { addDays, format, parseISO } from 'date-fns'
 
 const trendsResponse = {
   range: 'last-year',
-  groupBy: 'week',
   generatedAt: '2026-09-20T00:00:00.000Z',
   packages: [
     {
@@ -92,16 +91,7 @@ test('renders package trends and chart controls', async ({ page }) => {
     page.getByRole('button', { name: 'Downloads', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByText('[ ANALYZING PACKAGE TRENDS ]')).toBeHidden()
-  await expect
-    .poll(async () => {
-      const width = await page
-        .locator('[data-series-clip]')
-        .first()
-        .getAttribute('width')
-
-      return Number(width)
-    })
-    .toBeGreaterThan(1_000)
+  await expectSeriesFullyRevealed(page)
 
   await page.screenshot({
     path: 'artifacts/trends-desktop.png',
@@ -129,25 +119,21 @@ const metricLabels: Record<TrendsMetric, string> = {
   size: 'Size',
 }
 
-const pointCounts: Record<TrendsGroupBy, Record<TrendsMetric, number>> = {
-  day: { downloads: 2, stars: 3, size: 4 },
-  week: { downloads: 5, stars: 6, size: 7 },
-  month: { downloads: 1, stars: 2, size: 3 },
+const pointCounts: Record<TrendsGroupBy, number> = {
+  day: 7,
+  week: 3,
+  month: 3,
 }
 
-const groupDates: Record<TrendsGroupBy, string[]> = {
-  day: ['2026-09-17', '2026-09-18', '2026-09-19', '2026-09-20'],
-  week: [
-    '2026-08-10',
-    '2026-08-17',
-    '2026-08-24',
-    '2026-08-31',
-    '2026-09-07',
-    '2026-09-14',
-    '2026-09-21',
-  ],
-  month: ['2026-07-01', '2026-08-01', '2026-09-01'],
-}
+const rawDates = [
+  '2026-07-01',
+  '2026-07-02',
+  '2026-08-10',
+  '2026-08-11',
+  '2026-09-14',
+  '2026-09-15',
+  '2026-09-20',
+]
 
 const ranges: TrendsRange[] = ['last-2-months', 'last-year', 'last-3-years']
 
@@ -155,10 +141,10 @@ const groups: TrendsGroupBy[] = ['day', 'week', 'month']
 
 const metrics: TrendsMetric[] = ['downloads', 'stars', 'size']
 
-const responseDelays: Record<TrendsGroupBy, number> = {
-  day: 20,
-  week: 60,
-  month: 140,
+const responseDelays: Record<TrendsRange, number> = {
+  'last-2-months': 140,
+  'last-year': 60,
+  'last-3-years': 20,
 }
 
 function parseRange(value: string | null): TrendsRange {
@@ -172,31 +158,18 @@ function parseRange(value: string | null): TrendsRange {
   throw new Error(`Unexpected trends range: ${value}`)
 }
 
-function parseGroupBy(value: string | null): TrendsGroupBy {
-  if (value === 'day' || value === 'week' || value === 'month') return value
-
-  throw new Error(`Unexpected trends grouping: ${value}`)
-}
-
-function permutationResponse(
-  range: TrendsRange,
-  groupBy: TrendsGroupBy,
-): TrendsResponse {
-  const responseCode =
-    (ranges.indexOf(range) + 1) * 100 + groups.indexOf(groupBy)
+function permutationResponse(range: TrendsRange): TrendsResponse {
+  const responseCode = (ranges.indexOf(range) + 1) * 100
 
   const points = (metric: TrendsMetric, packageIndex: number) =>
-    groupDates[groupBy]
-      .slice(0, pointCounts[groupBy][metric])
-      .map((date, index) => ({
-        date,
-        value: (packageIndex + 1) * 100 + index * 10,
-        version: metric === 'size' ? `1.${index}.0` : undefined,
-      }))
+    rawDates.map((date, index) => ({
+      date,
+      value: (packageIndex + 1) * 100 + index * 10,
+      version: metric === 'size' ? `1.${index}.0` : undefined,
+    }))
 
   return {
     range,
-    groupBy,
     generatedAt: '2026-09-20T00:00:00.000Z',
     packages: ['react', 'vue'].map((name, packageIndex) => ({
       name,
@@ -217,7 +190,7 @@ function permutationResponse(
 }
 
 function denseDailyResponse(): TrendsResponse {
-  const response = permutationResponse('last-3-years', 'day')
+  const response = permutationResponse('last-3-years')
   const start = parseISO('2023-09-24')
 
   const dates = Array.from({ length: 1_097 }, (_, index) =>
@@ -261,7 +234,7 @@ async function assertMetric(
   ).toBeVisible()
   await expect
     .poll(() => page.locator('[data-series-dot]').count())
-    .toBe(pointCounts[groupBy][metric] * 2)
+    .toBe(pointCounts[groupBy] * 2)
   await expect(
     page.locator(
       '.trends-chart__svg [d*="NaN"], .trends-chart__svg [cx="NaN"], .trends-chart__svg [cy="NaN"]',
@@ -279,7 +252,12 @@ async function expectSeriesFullyRevealed(page: Page): Promise<void> {
       const clipWidths = await page
         .locator('[data-series-clip]')
         .evaluateAll(clips =>
-          clips.map(clip => Number(clip.getAttribute('width'))),
+          clips.map(clip => {
+            // SAFETY: the locator targets SVG rect elements owned by the chart.
+            const rect = clip as SVGRectElement
+
+            return rect.width.animVal.value
+          }),
         )
 
       return (
@@ -293,17 +271,19 @@ async function expectSeriesFullyRevealed(page: Page): Promise<void> {
 test('keeps every metric, range, and grouping permutation consistent', async ({
   page,
 }) => {
+  const apiRequests: URL[] = []
+
   await page.route('**/api/trends?*', async route => {
     const url = new URL(route.request().url())
     const range = parseRange(url.searchParams.get('range'))
-    const groupBy = parseGroupBy(url.searchParams.get('groupBy'))
+    apiRequests.push(url)
 
-    const delay = responseDelays[groupBy]
+    const delay = responseDelays[range]
 
     await new Promise(resolve => setTimeout(resolve, delay))
     await route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify(permutationResponse(range, groupBy)),
+      body: JSON.stringify(permutationResponse(range)),
     })
   })
 
@@ -316,8 +296,7 @@ test('keeps every metric, range, and grouping permutation consistent', async ({
       await selectControl(page, rangeLabels[range])
       await selectControl(page, groupLabels[groupBy])
 
-      const expectedCode =
-        (ranges.indexOf(range) + 1) * 100 + groups.indexOf(groupBy)
+      const expectedCode = (ranges.indexOf(range) + 1) * 100
 
       const reactCard = page
         .locator('.trends-card')
@@ -363,9 +342,20 @@ test('keeps every metric, range, and grouping permutation consistent', async ({
       .locator('.trends-stat__value')
       .nth(1),
   ).toHaveText('100')
+
+  expect(
+    apiRequests.every(request => !request.searchParams.has('groupBy')),
+  ).toBe(true)
+
+  const requestCount = apiRequests.length
+  await selectControl(page, groupLabels.week)
+  await selectControl(page, groupLabels.month)
+  await selectControl(page, groupLabels.day)
+  await page.waitForTimeout(200)
+  expect(apiRequests).toHaveLength(requestCount)
 })
 
-test('bounds dense daily markers without reducing line fidelity', async ({
+test('omits dense daily markers without reducing line fidelity', async ({
   page,
 }) => {
   await page.route('**/api/trends?*', route =>
@@ -379,7 +369,7 @@ test('bounds dense daily markers without reducing line fidelity', async ({
     '/trends?packages=react~vs~vue&metric=downloads&range=last-3-years&groupBy=day',
   )
 
-  await expect.poll(() => page.locator('[data-series-dot]').count()).toBe(288)
+  await expect.poll(() => page.locator('[data-series-dot]').count()).toBe(2)
   await expect
     .poll(async () => {
       const path = await page

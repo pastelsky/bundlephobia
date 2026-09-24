@@ -1,10 +1,12 @@
 import {
   getNpmTrendsRange,
   getTrendsRangeStart,
-  groupPackageTrends,
-  rollupTrendsPoints,
 } from '../server/services/trends.service'
 import type { TrendsPackageSeries } from '@bundlephobia/service-contracts/trends'
+import {
+  groupTrendsPackage,
+  rollupTrendsPoints,
+} from '../pages/trends/trendsData'
 
 const now = new Date('2026-09-20T12:00:00Z')
 
@@ -98,7 +100,7 @@ describe('trends service primitives', () => {
   })
 
   it('uses the same grouping boundary for every metric', () => {
-    expect(groupPackageTrends(rawSeries(), 'week')).toMatchObject({
+    expect(groupTrendsPackage(rawSeries(), 'week')).toMatchObject({
       downloads: [{ date: '2026-09-14', value: 5 }],
       stars: [{ date: '2026-09-14', value: 12 }],
       size: [{ date: '2026-09-14', value: 12, version: '1.1.0' }],

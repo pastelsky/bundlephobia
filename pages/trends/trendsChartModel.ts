@@ -1,16 +1,14 @@
 /* eslint-disable max-params, anti-slop/no-array-filter-map */
 
-import { scaleLinear } from 'd3-scale'
+import { extent } from 'd3-array'
+import { scaleLinear, scaleTime } from 'd3-scale'
 import { curveMonotoneX, line } from 'd3-shape'
 import {
-  addMonths,
   getTime,
   parseISO,
   startOfDay,
   startOfMonth,
   startOfWeek,
-  subMonths,
-  subYears,
 } from 'date-fns'
 
 import type {
@@ -20,7 +18,8 @@ import type {
   TrendsPoint,
   TrendsRange,
 } from '../../client/api'
-import { formatSize, sampleEvenly } from '../../utils'
+import { formatSize } from '../../utils'
+import { startOfTrendsRange } from '../../utils/trendsRange'
 
 export const CHART_HEIGHT = 380
 
@@ -44,7 +43,8 @@ export type ChartPoint = TrendsPoint & {
   placeholder?: boolean
 }
 
-export type ChartSeries = {
+type ChartSeries = {
+  renderKey: string
   name: string
   color: string
   points: ChartPoint[]
@@ -63,17 +63,6 @@ export type SeriesAnnotation = {
 }
 
 export type FormattedMetricValue = { value: string; unit: string }
-
-export function sampleChartMarkers(
-  points: ChartPoint[],
-  plotWidth: number,
-): ChartPoint[] {
-  const maxMarkers = Math.max(2, Math.floor(plotWidth / MIN_MARKER_GAP) + 1)
-
-  if (points.length <= maxMarkers) return points
-
-  return sampleEvenly(points, maxMarkers)
-}
 
 export function seriesForMetric(
   pack: TrendsPackageSeries,
@@ -142,7 +131,7 @@ export function annotationPath(annotation: SeriesAnnotation) {
   return `M ${annotation.point.x} ${annotation.point.y} Q ${controlX} ${targetY} ${targetX} ${targetY}`
 }
 
-export function partialLinkThreshold(groupBy: TrendsGroupBy) {
+function partialLinkThreshold(groupBy: TrendsGroupBy) {
   if (groupBy === 'day') return 2 * 24 * 60 * 60 * 1000
 
   if (groupBy === 'week') return 10 * 24 * 60 * 60 * 1000
@@ -151,14 +140,7 @@ export function partialLinkThreshold(groupBy: TrendsGroupBy) {
 }
 
 function getRangeStartTimestamp(range: TrendsRange) {
-  const now = new Date()
-
-  const start =
-    range === 'last-2-months'
-      ? subMonths(now, 2)
-      : subYears(now, range === 'last-year' ? 1 : 3)
-
-  return getTime(startOfDay(start))
+  return getTime(startOfDay(startOfTrendsRange(range)))
 }
 
 function alignToGroupStart(timestamp: number, groupBy: TrendsGroupBy) {
@@ -169,44 +151,6 @@ function alignToGroupStart(timestamp: number, groupBy: TrendsGroupBy) {
   if (groupBy === 'week') return getTime(startOfWeek(date, { weekStartsOn: 1 }))
 
   return timestamp
-}
-
-function buildXAxisTicks(
-  minTime: number,
-  maxTime: number,
-  groupBy: TrendsGroupBy,
-  plotWidth: number,
-) {
-  const maxTickCount = Math.max(
-    3,
-    Math.min(10, Math.floor(plotWidth / 120) + 1),
-  )
-
-  if (groupBy === 'month') {
-    const candidates = [new Date(minTime)]
-    let cursor = addMonths(startOfMonth(new Date(minTime)), 1)
-
-    while (cursor.getTime() <= maxTime) {
-      candidates.push(cursor)
-      cursor = addMonths(cursor, 1)
-    }
-
-    if (candidates.length <= maxTickCount) return candidates
-
-    return Array.from({ length: maxTickCount }, (_, index) => {
-      const candidateIndex = Math.round(
-        (index * (candidates.length - 1)) / (maxTickCount - 1),
-      )
-
-      return candidates[candidateIndex]
-    })
-  }
-
-  return Array.from(
-    { length: maxTickCount },
-    (_, index) =>
-      new Date(minTime + ((maxTime - minTime) * index) / (maxTickCount - 1)),
-  )
 }
 
 export function buildChartModel({
@@ -252,7 +196,9 @@ export function buildChartModel({
 
   if (pointTimes.length === 0) return null
 
-  const earliestPointTime = Math.min(...pointTimes)
+  const [earliestPointTime] = extent(pointTimes)
+
+  if (earliestPointTime === undefined) return null
 
   const minTime = alignToGroupStart(
     Math.max(requestedMinTime, earliestPointTime),
@@ -260,9 +206,9 @@ export function buildChartModel({
   )
 
   const maxTime = getTime(startOfDay(new Date()))
-  const values = allPoints.map(point => point.value)
-  const minValue = Math.min(...values)
-  const maxValue = Math.max(...values)
+  const [minValue, maxValue] = extent(allPoints, point => point.value)
+
+  if (minValue === undefined || maxValue === undefined) return null
 
   const valuePadding = Math.max(
     (maxValue - minValue) * 0.08,
@@ -278,14 +224,13 @@ export function buildChartModel({
     .nice(4)
     .range([PLOT.top + plotHeight, PLOT.top])
 
-  const xFor = (date: string) => {
-    if (maxTime === minTime) return PLOT.left + plotWidth / 2
+  const xScale = scaleTime()
+    .domain([new Date(minTime), new Date(maxTime)])
+    .range([PLOT.left, PLOT.left + plotWidth])
 
-    return (
-      PLOT.left +
-      ((getTime(parseISO(date)) - minTime) / (maxTime - minTime)) * plotWidth
-    )
-  }
+  const xFor = (date: string) => xScale(parseISO(date))
+  const xForDate = (date: Date) => xScale(date)
+  const timestampForX = (x: number) => getTime(xScale.invert(x))
 
   const yFor = (value: number) => yScale(value)
 
@@ -297,75 +242,89 @@ export function buildChartModel({
     y: yFor(point.value),
   })
 
+  const releaseIsVisible = (release: { major: boolean }) =>
+    release.major ? showMajorReleases : showMinorReleases
+
+  const releaseIsInRange = (release: { date: string }) => {
+    const time = getTime(parseISO(release.date))
+
+    return time >= minTime && time <= maxTime
+  }
+
+  const releaseMarkersFor = (raw: (typeof rawSeries)[number]) => {
+    if (metric !== 'size') return []
+
+    return raw.releases
+      .filter(releaseIsVisible)
+      .filter(releaseIsInRange)
+      .filter(
+        release => !raw.points.some(point => point.version === release.version),
+      )
+      .map(release =>
+        toChartPoint({
+          date: release.date,
+          value: minValue,
+          version: release.version,
+          placeholder: true,
+        }),
+      )
+  }
+
+  const partialPointsFor = (
+    complete: TrendsPoint[],
+    partial: TrendsPoint[],
+  ) => {
+    const firstPartial = partial[0]
+
+    if (!firstPartial) return []
+
+    const partialStart = complete
+      .filter(point => point.date < firstPartial.date)
+      .at(-1)
+
+    if (!partialStart) return []
+
+    const gap =
+      getTime(parseISO(firstPartial.date)) -
+      getTime(parseISO(partialStart.date))
+
+    return gap <= partialLinkThreshold(groupBy)
+      ? [partialStart, ...partial].map(toChartPoint)
+      : []
+  }
+
   const series: ChartSeries[] = rawSeries.map(raw => {
     const complete = raw.points.filter(point => !point.partial)
     const partial = raw.points.filter(point => point.partial)
 
-    const partialStart = partial[0]
-      ? complete.filter(point => point.date < partial[0].date).at(-1)
-      : undefined
-
     const plotted = complete.map(toChartPoint)
     const partialMarkers = partial.map(toChartPoint)
 
-    const releaseMarkers =
-      metric === 'size'
-        ? raw.releases
-            .filter(release =>
-              release.major ? showMajorReleases : showMinorReleases,
-            )
-            .filter(release => {
-              const time = getTime(parseISO(release.date))
-
-              return (
-                time >= minTime &&
-                time <= maxTime &&
-                !raw.points.some(point => point.version === release.version)
-              )
-            })
-            .map(release =>
-              toChartPoint({
-                date: release.date,
-                value: minValue,
-                version: release.version,
-                placeholder: true,
-              }),
-            )
-        : []
-
-    const canJoinPartial =
-      partialStart &&
-      partial[0] &&
-      getTime(parseISO(partial[0].date)) -
-        getTime(parseISO(partialStart.date)) <=
-        partialLinkThreshold(groupBy)
-
     return {
+      renderKey: [
+        raw.name,
+        metric,
+        range,
+        groupBy,
+        raw.points.length,
+        raw.points.at(-1)?.date,
+      ].join(':'),
       name: raw.name,
       color: raw.color,
       points: plotted,
-      partialPoints:
-        canJoinPartial && partial.length
-          ? [partialStart, ...partial].map(toChartPoint)
-          : [],
+      partialPoints: partialPointsFor(complete, partial),
       partialMarkers,
-      // Keep every point in the line and interaction model, but avoid
-      // rendering more SVG circles than the chart can visually distinguish.
-      markers: sampleChartMarkers(plotted, plotWidth),
-      releaseMarkers,
+      // Dense lines are clearer without indistinguishable point markers. The
+      // full-resolution points remain available for paths and interaction.
+      markers: plotted.length * MIN_MARKER_GAP <= plotWidth ? plotted : [],
+      releaseMarkers: releaseMarkersFor(raw),
     }
   })
 
   const releaseLines = rawSeries.flatMap(raw =>
     raw.releases
-      .filter(release =>
-        release.major ? showMajorReleases : showMinorReleases,
-      )
-      .filter(release => {
-        const time = getTime(parseISO(release.date))
-
-        return time >= minTime && time <= maxTime
-      })
+      .filter(releaseIsVisible)
+      .filter(releaseIsInRange)
       .map(release => ({
         ...release,
         color: raw.color,
@@ -422,19 +381,24 @@ export function buildChartModel({
   if (overflow)
     seriesAnnotations.forEach(annotation => (annotation.labelY -= overflow))
 
+  const maxTickCount = Math.max(
+    3,
+    Math.min(10, Math.floor(plotWidth / 120) + 1),
+  )
+
   return {
     series,
     seriesAnnotations,
     minTime,
     maxTime,
     yTicks: yScale.ticks(4),
-    xTicks: buildXAxisTicks(minTime, maxTime, groupBy, plotWidth),
+    xTicks: xScale.ticks(maxTickCount),
     releaseLines,
     xFor,
+    xForDate,
+    timestampForX,
     yFor,
     plotWidth,
     plotHeight,
   }
 }
-
-export type TrendsChartModel = NonNullable<ReturnType<typeof buildChartModel>>

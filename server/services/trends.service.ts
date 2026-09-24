@@ -3,21 +3,13 @@ import type {
   PackageHistoryVersion,
 } from '../../types/package-history'
 import type {
-  TrendsGroupBy,
   TrendsPackageSeries,
   TrendsPoint,
   TrendsRange,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
-import {
-  addDays,
-  format,
-  parseISO,
-  startOfMonth,
-  startOfWeek,
-  subMonths,
-  subYears,
-} from 'date-fns'
+import { addDays, parseISO } from 'date-fns'
+import { formatTrendsDate, startOfTrendsRange } from '../../utils/trendsRange'
 import {
   fetchGithubRepository,
   fetchGithubStarHistoryPage,
@@ -32,29 +24,36 @@ const COMPLETE_CACHE_TTL_MS = 10 * 60 * 1000
 
 const DEGRADED_CACHE_TTL_MS = 30 * 1000
 
-type PackageTrendsSource = TrendsPackageSeries
+const MAX_CACHED_PACKAGE_RANGES = 250
 
-type PackageTrendsCacheEntry = {
-  expiresAt: number
-  value: Promise<PackageTrendsSource>
+interface LruCache<K, V> {
+  get(key: K): V | undefined
+  set(key: K, value: V, maxAge?: number): this
 }
 
-const packageTrendsCache = new Map<string, PackageTrendsCacheEntry>()
+interface LruCacheConstructor {
+  new <K, V>(options: { max: number; maxAge: number }): LruCache<K, V>
+}
+
+// SAFETY: the pinned lru-cache package uses this constructor and set contract.
+const LRU = require('lru-cache') as LruCacheConstructor
+
+const packageTrendsCache = new LRU<string, TrendsPackageSeries>({
+  max: MAX_CACHED_PACKAGE_RANGES,
+  maxAge: COMPLETE_CACHE_TTL_MS,
+})
+
+const packageTrendsRequests = new Map<string, Promise<TrendsPackageSeries>>()
 
 function isoDate(date: Date): string {
-  return format(date, 'yyyy-MM-dd')
+  return formatTrendsDate(date)
 }
 
 export function getTrendsRangeStart(
   range: TrendsRange,
   now = new Date(),
 ): string {
-  const start =
-    range === 'last-2-months'
-      ? subMonths(now, 2)
-      : subYears(now, range === 'last-year' ? 1 : 3)
-
-  return isoDate(start)
+  return isoDate(startOfTrendsRange(range, now))
 }
 
 export function getNpmTrendsRange(
@@ -65,50 +64,6 @@ export function getNpmTrendsRange(
   const start = getTrendsRangeStart(range, now)
 
   return `${start}:${end}`
-}
-
-function bucketDate(date: string, groupBy: TrendsGroupBy): string {
-  const value = parseISO(date)
-
-  if (groupBy === 'month') return isoDate(startOfMonth(value))
-
-  if (groupBy === 'week')
-    return isoDate(startOfWeek(value, { weekStartsOn: 1 }))
-
-  return isoDate(value)
-}
-
-export function rollupTrendsPoints(
-  points: TrendsPoint[],
-  groupBy: TrendsGroupBy,
-  options: { mode: 'sum' | 'last'; now?: Date },
-): TrendsPoint[] {
-  const buckets = new Map<string, TrendsPoint[]>()
-  const { mode, now = new Date() } = options
-  const currentBucket = bucketDate(isoDate(now), groupBy)
-
-  for (const point of points) {
-    const key = bucketDate(point.date, groupBy)
-    buckets.set(key, [...(buckets.get(key) ?? []), point])
-  }
-
-  return [...buckets.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, bucket]) => {
-      const last = bucket.at(-1)!
-
-      return {
-        date,
-        value:
-          mode === 'sum'
-            ? bucket.reduce((total, point) => total + point.value, 0)
-            : last.value,
-        version: last.version,
-        partial:
-          bucket.some(point => point.partial) ||
-          (mode === 'sum' && date === currentBucket),
-      }
-    })
 }
 
 function parsePackages(packages: string[]): string[] {
@@ -269,7 +224,7 @@ function getSettledGithub(
 async function fetchPackageTrendsSource(
   packageName: string,
   range: TrendsRange,
-): Promise<PackageTrendsSource> {
+): Promise<TrendsPackageSeries> {
   const from = getTrendsRangeStart(range)
 
   const history = await fetchPackageHistory(packageName, {
@@ -317,71 +272,40 @@ async function fetchPackageTrendsSource(
   }
 }
 
-function removeExpiredPackageTrends(now: number): void {
-  packageTrendsCache.forEach((entry, key) => {
-    if (entry.expiresAt <= now) packageTrendsCache.delete(key)
-  })
-}
-
 function getPackageTrendsSource(
   packageName: string,
   range: TrendsRange,
-): Promise<PackageTrendsSource> {
-  const now = Date.now()
+): Promise<TrendsPackageSeries> {
   const key = `${packageName}|${range}`
-
-  removeExpiredPackageTrends(now)
-
   const cached = packageTrendsCache.get(key)
 
-  if (cached) return cached.value
+  if (cached) return Promise.resolve(cached)
 
-  const value = fetchPackageTrendsSource(packageName, range)
+  const pending = packageTrendsRequests.get(key)
 
-  packageTrendsCache.set(key, {
-    // An in-flight source has no expiry so concurrent grouping requests always
-    // share it. Every upstream client has its own timeout.
-    expiresAt: Number.POSITIVE_INFINITY,
-    value,
-  })
+  if (pending) return pending
 
-  void value.then(
-    source => {
-      const entry = packageTrendsCache.get(key)
-
-      if (entry?.value !== value) return
-
-      entry.expiresAt =
-        Date.now() +
-        (source.warnings.length > 0
+  const request = fetchPackageTrendsSource(packageName, range)
+    .then(source => {
+      const ttl =
+        source.warnings.length > 0
           ? DEGRADED_CACHE_TTL_MS
-          : COMPLETE_CACHE_TTL_MS)
-    },
-    () => {
-      if (packageTrendsCache.get(key)?.value === value)
-        packageTrendsCache.delete(key)
-    },
-  )
+          : COMPLETE_CACHE_TTL_MS
 
-  return value
-}
+      packageTrendsCache.set(key, source, ttl)
 
-export function groupPackageTrends(
-  source: PackageTrendsSource,
-  groupBy: TrendsGroupBy,
-): TrendsPackageSeries {
-  return {
-    ...source,
-    downloads: rollupTrendsPoints(source.downloads, groupBy, { mode: 'sum' }),
-    stars: rollupTrendsPoints(source.stars, groupBy, { mode: 'sum' }),
-    size: rollupTrendsPoints(source.size, groupBy, { mode: 'last' }),
-  }
+      return source
+    })
+    .finally(() => packageTrendsRequests.delete(key))
+
+  packageTrendsRequests.set(key, request)
+
+  return request
 }
 
 export async function buildTrendsResponse(
   packageNames: string[],
   range: TrendsRange,
-  groupBy: TrendsGroupBy,
 ): Promise<TrendsResponse> {
   const packages = parsePackages(packageNames)
 
@@ -390,9 +314,8 @@ export async function buildTrendsResponse(
   )
 
   return {
-    packages: sources.map(source => groupPackageTrends(source, groupBy)),
+    packages: sources,
     range,
-    groupBy,
     generatedAt: new Date().toISOString(),
   }
 }

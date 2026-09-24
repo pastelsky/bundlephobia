@@ -599,17 +599,6 @@
     stroke-width: 1.75;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition:
-      opacity 0.18s ease,
-      stroke-width 0.18s ease;
-
-    &--active {
-      stroke-width: 2.7;
-    }
-
-    &--dimmed {
-      opacity: 0.24;
-    }
 
     &--partial {
       stroke-dasharray: 2 3;
@@ -622,17 +611,6 @@
     stroke-width: 0.75;
     transform-box: fill-box;
     transform-origin: center;
-    transition:
-      transform 0.18s ease,
-      opacity 0.18s ease;
-
-    &--active {
-      transform: scale(1.28);
-    }
-
-    &--dimmed {
-      opacity: 0.24 !important;
-    }
 
     &--placeholder {
       stroke: var(--color-bg-base);
@@ -654,20 +632,12 @@
 
   &__series-annotation {
     pointer-events: none;
-    opacity: 0;
+    animation: trends-annotation-in 0.24s ease-out 0.76s both;
     transition:
       opacity 0.24s ease,
       transform 0.24s ease;
     transform-box: fill-box;
     transform-origin: center;
-
-    &--visible {
-      opacity: 1;
-    }
-
-    &--active {
-      transform: translate(2px, -3px) rotate(-2deg);
-    }
 
     path {
       fill: none;
@@ -824,6 +794,25 @@
   to {
     opacity: 0.72;
     r: 6.5px;
+  }
+}
+
+@keyframes trends-annotation-in {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trends-chart__series-annotation,
+  .trends-chart__series-dot-magnet {
+    animation: none;
   }
 }
 

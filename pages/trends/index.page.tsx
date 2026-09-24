@@ -1,6 +1,6 @@
 /* eslint-disable complexity, max-params, anti-slop/no-runtime-typeof, anti-slop/require-safety-comment-for-type-assertion */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { Button } from '@base-ui/react/button'
@@ -24,6 +24,7 @@ import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
+import { groupTrendsPackage } from './trendsData'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 
@@ -130,17 +131,12 @@ export default function TrendsPage() {
   const [copied, setCopied] = useState(false)
   const [relatedPackageNames, setRelatedPackageNames] = useState<string[]>([])
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
-  const trendsCache = useRef(new Map<string, TrendsResponse>())
 
-  const packageTrendsCache = useRef(
-    new Map<string, TrendsResponse['packages'][number]>(),
+  const chartPackages = useMemo(
+    () =>
+      trendsData?.packages.map(pack => groupTrendsPackage(pack, groupBy)) ?? [],
+    [groupBy, trendsData],
   )
-
-  const trendsDataRef = useRef<TrendsResponse | null>(null)
-
-  useEffect(() => {
-    trendsDataRef.current = trendsData
-  }, [trendsData])
 
   // Sync state with URL params on mount / router change
   useEffect(() => {
@@ -251,61 +247,6 @@ export default function TrendsPage() {
       return
     }
 
-    const cacheKey = `${packages.join(',')}|${range}|${groupBy}`
-    const cached = trendsCache.current.get(cacheKey)
-
-    if (cached) {
-      setTrendsData(cached)
-      setError(null)
-      setLoading(false)
-
-      return
-    }
-
-    const packageCacheKey = (packageName: string) =>
-      `${packageName}|${range}|${groupBy}`
-
-    const missingPackages = packages.filter(
-      packageName =>
-        !packageTrendsCache.current.has(packageCacheKey(packageName)),
-    )
-
-    const composeCachedResponse = (
-      metadata: Pick<TrendsResponse, 'range' | 'groupBy' | 'generatedAt'>,
-    ) => {
-      const composed: TrendsResponse = {
-        ...metadata,
-        packages: packages
-          .map(packageName =>
-            packageTrendsCache.current.get(packageCacheKey(packageName)),
-          )
-          .filter(
-            (
-              packageSeries,
-            ): packageSeries is TrendsResponse['packages'][number] =>
-              Boolean(packageSeries),
-          ),
-      }
-
-      trendsCache.current.set(cacheKey, composed)
-
-      return composed
-    }
-
-    if (missingPackages.length === 0) {
-      const cachedResponse = composeCachedResponse({
-        range,
-        groupBy,
-        generatedAt: new Date().toISOString(),
-      })
-
-      setTrendsData(cachedResponse)
-      setError(null)
-      setLoading(false)
-
-      return
-    }
-
     let isMounted = true
     let completed = false
     // An indicator that flashes for a quick cache or network response is more
@@ -318,35 +259,13 @@ export default function TrendsPage() {
       if (isMounted && !completed) setLoading(true)
     }, 400)
 
-    // Fetch only package series that are not already cached. This keeps an
-    // existing chart stable while a newly added comparison package resolves.
-    API.getTrends(
-      missingPackages.length > 0 ? missingPackages : packages,
-      range,
-      groupBy,
-    )
+    API.getTrends(packages, range)
       .then(res => {
         completed = true
         window.clearTimeout(loadingTimer)
 
         if (isMounted) {
-          res.packages.forEach(packageSeries => {
-            packageTrendsCache.current.set(
-              packageCacheKey(packageSeries.name),
-              packageSeries,
-            )
-          })
-          const previous = trendsDataRef.current
-
-          const merged = composeCachedResponse({
-            range: res.range,
-            groupBy: res.groupBy,
-            generatedAt: res.generatedAt,
-          })
-
-          // Keep the previously rendered response in place if the request did
-          // not return a usable series for a newly requested package.
-          setTrendsData(merged.packages.length > 0 ? merged : previous || res)
+          setTrendsData(res)
           setLoading(false)
         }
       })
@@ -364,7 +283,7 @@ export default function TrendsPage() {
       isMounted = false
       window.clearTimeout(loadingTimer)
     }
-  }, [packages, range, groupBy])
+  }, [packages, range])
 
   const [inputKey, setInputKey] = useState(0)
 
@@ -637,9 +556,9 @@ export default function TrendsPage() {
               // Keep the last resolved series mounted while an incremental
               // request is in flight; the chart can then draw the new series
               // into the existing frame instead of blanking the plot.
-              packages={trendsData?.packages || []}
+              packages={chartPackages}
               metric={metric}
-              range={range}
+              range={trendsData?.range ?? range}
               groupBy={groupBy}
               showMajorReleases={showMajorReleases}
               showMinorReleases={showMinorReleases}
