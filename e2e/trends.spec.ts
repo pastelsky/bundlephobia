@@ -247,6 +247,27 @@ async function assertMetric(
   ).toHaveCount(0)
 }
 
+async function expectSeriesFullyRevealed(page: Page): Promise<void> {
+  await expect
+    .poll(async () => {
+      const svgWidth = await page
+        .locator('.trends-chart__svg')
+        .evaluate(svg => svg.viewBox.baseVal.width)
+
+      const clipWidths = await page
+        .locator('[data-series-clip]')
+        .evaluateAll(clips =>
+          clips.map(clip => Number(clip.getAttribute('width'))),
+        )
+
+      return (
+        clipWidths.length > 0 &&
+        clipWidths.every(width => Math.abs(width - svgWidth) < 1)
+      )
+    })
+    .toBe(true)
+}
+
 test('keeps every metric, range, and grouping permutation consistent', async ({
   page,
 }) => {
@@ -287,6 +308,26 @@ test('keeps every metric, range, and grouping permutation consistent', async ({
       for (const metric of metrics) await assertMetric(page, metric, groupBy)
     }
   }
+
+  await selectControl(page, rangeLabels['last-year'])
+  await selectControl(page, groupLabels.day)
+  await expect(
+    page
+      .locator('.trends-card')
+      .filter({ hasText: 'react' })
+      .locator('.trends-stat__value')
+      .nth(1),
+  ).toHaveText('200')
+
+  await selectControl(page, rangeLabels['last-3-years'])
+  await expect(
+    page
+      .locator('.trends-card')
+      .filter({ hasText: 'react' })
+      .locator('.trends-stat__value')
+      .nth(1),
+  ).toHaveText('300')
+  await expectSeriesFullyRevealed(page)
 
   await page.getByRole('button', { name: '3Y', exact: true }).click()
   await page.getByRole('button', { name: 'Month', exact: true }).click()

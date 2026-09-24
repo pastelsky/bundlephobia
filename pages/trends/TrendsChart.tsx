@@ -108,13 +108,7 @@ export default function TrendsChart({
   const svgRef = useRef<SVGSVGElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [chartWidth, setChartWidth] = useState(INITIAL_CHART_WIDTH)
-  const animatedSeriesRef = useRef<Set<string>>(new Set())
-
-  const animationContextRef = useRef<{
-    metric: TrendsMetric
-    range: TrendsRange
-    groupBy: TrendsGroupBy
-  } | null>(null)
+  const animatedSeriesRef = useRef<Map<string, string>>(new Map())
 
   const [visibleAnnotations, setVisibleAnnotations] = useState<Set<string>>(
     new Set(),
@@ -203,40 +197,48 @@ export default function TrendsChart({
     ],
   )
 
-  const animationKey = `${metric}:${range}:${groupBy}:${packages
-    .map(pack => pack.name)
-    .join(',')}:${model?.series.map(series => series.points.length).join(',')}`
+  const seriesAnimationSignatures = new Map(
+    model?.series.map(series => [
+      series.name,
+      [
+        metric,
+        range,
+        groupBy,
+        series.points.length,
+        series.partialPoints.length,
+        series.points[0]?.date,
+        series.points.at(-1)?.date,
+      ].join(':'),
+    ]),
+  )
+
+  const animationKey = [...seriesAnimationSignatures.entries()]
+    .map(([name, signature]) => `${name}:${signature}`)
+    .join('|')
 
   const plotWidth = model?.plotWidth
 
   useIsomorphicLayoutEffect(() => {
     if (!plotWidth || loading || !chartSeriesRef.current) return
     const root = chartSeriesRef.current
-    const context = { metric, range, groupBy }
-    const previousContext = animationContextRef.current
+    const currentNames = new Set(seriesAnimationSignatures.keys())
 
-    const contextChanged =
-      !previousContext ||
-      previousContext.metric !== context.metric ||
-      previousContext.range !== context.range ||
-      previousContext.groupBy !== context.groupBy
+    const namesToAnimate = new Set(
+      [...currentNames].filter(
+        name =>
+          animatedSeriesRef.current.get(name) !==
+          seriesAnimationSignatures.get(name),
+      ),
+    )
 
-    const currentNames = new Set(model?.series.map(series => series.name) || [])
-
-    const namesToAnimate = contextChanged
-      ? currentNames
-      : new Set(
-          [...currentNames].filter(
-            name => !animatedSeriesRef.current.has(name),
-          ),
-        )
-
-    animationContextRef.current = context
+    for (const name of animatedSeriesRef.current.keys()) {
+      if (!currentNames.has(name)) animatedSeriesRef.current.delete(name)
+    }
 
     if (namesToAnimate.size === 0) return
 
     setVisibleAnnotations(previous => {
-      const next = contextChanged ? new Set<string>() : new Set(previous)
+      const next = new Set(previous)
       namesToAnimate.forEach(name => next.delete(name))
 
       return next
@@ -256,7 +258,11 @@ export default function TrendsChart({
       duration: DRAW_DURATION,
       easing: CHART_EASING,
       complete: () => {
-        namesToAnimate.forEach(name => animatedSeriesRef.current.add(name))
+        namesToAnimate.forEach(name => {
+          const signature = seriesAnimationSignatures.get(name)
+
+          if (signature) animatedSeriesRef.current.set(name, signature)
+        })
         setVisibleAnnotations(previous => {
           const next = new Set(previous)
           namesToAnimate.forEach(name => next.add(name))
