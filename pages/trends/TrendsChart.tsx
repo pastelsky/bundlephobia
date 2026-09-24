@@ -401,6 +401,8 @@ export default function TrendsChart({
                 {model.series.map((series, index) => (
                   <g
                     key={series.renderKey}
+                    data-chart-series
+                    data-series-name={series.name}
                     clipPath={`url(#trends-series-clip-${index})`}
                   >
                     <path

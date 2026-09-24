@@ -6,7 +6,8 @@ import type {
   TrendsRange,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
-import { addDays, format, parseISO } from 'date-fns'
+import { addDays, eachDayOfInterval, format, parseISO } from 'date-fns'
+import { groupTrendsPackage } from '../utils/trends'
 
 const trendsResponse = {
   range: 'last-year',
@@ -119,22 +120,6 @@ const metricLabels: Record<TrendsMetric, string> = {
   size: 'Size',
 }
 
-const pointCounts: Record<TrendsGroupBy, number> = {
-  day: 7,
-  week: 3,
-  month: 3,
-}
-
-const rawDates = [
-  '2026-07-01',
-  '2026-07-02',
-  '2026-08-10',
-  '2026-08-11',
-  '2026-09-14',
-  '2026-09-15',
-  '2026-09-20',
-]
-
 const ranges: TrendsRange[] = ['last-2-months', 'last-year', 'last-3-years']
 
 const groups: TrendsGroupBy[] = ['day', 'week', 'month']
@@ -161,12 +146,27 @@ function parseRange(value: string | null): TrendsRange {
 function permutationResponse(range: TrendsRange): TrendsResponse {
   const responseCode = (ranges.indexOf(range) + 1) * 100
 
-  const points = (metric: TrendsMetric, packageIndex: number) =>
-    rawDates.map((date, index) => ({
+  const startDates: Record<TrendsRange, string> = {
+    'last-2-months': '2026-07-20',
+    'last-year': '2025-09-20',
+    'last-3-years': '2023-09-20',
+  }
+
+  const dates = eachDayOfInterval({
+    start: parseISO(startDates[range]),
+    end: parseISO('2026-09-20'),
+  }).map(date => format(date, 'yyyy-MM-dd'))
+
+  const dailyPoints = (base: number, packageIndex: number) =>
+    dates.map((date, index) => ({
       date,
-      value: (packageIndex + 1) * 100 + index * 10,
-      version: metric === 'size' ? `1.${index}.0` : undefined,
+      value: base * (packageIndex + 1) + index * 10,
+      partial: index === dates.length - 1,
     }))
+
+  const sizeDates = dates.filter(
+    (_, index) => index % 23 === 0 || index === dates.length - 1,
+  )
 
   return {
     range,
@@ -174,13 +174,17 @@ function permutationResponse(range: TrendsRange): TrendsResponse {
     packages: ['react', 'vue'].map((name, packageIndex) => ({
       name,
       repository: name === 'react' ? 'facebook/react' : 'vuejs/core',
-      downloads: points('downloads', packageIndex),
-      stars: points('stars', packageIndex),
-      size: points('size', packageIndex),
+      downloads: dailyPoints(1_000_000, packageIndex),
+      stars: dailyPoints(100_000, packageIndex),
+      size: sizeDates.map((date, index) => ({
+        date,
+        value: 10_000 * (packageIndex + 1) + index * 100,
+        version: `1.${index}.0`,
+      })),
       releases: [],
       current: {
         weeklyDownloads: responseCode + packageIndex,
-        stars: (packageIndex + 1) * 100 + (rawDates.length - 1) * 10,
+        stars: (packageIndex + 1) * 100 + (dates.length - 1) * 10,
         size: 20_000 + packageIndex,
         gzip: 10_000 + packageIndex,
       },
@@ -219,9 +223,14 @@ async function selectControl(page: Page, name: string): Promise<void> {
 
 async function assertMetric(
   page: Page,
-  metric: TrendsMetric,
-  groupBy: TrendsGroupBy,
+  selection: {
+    metric: TrendsMetric
+    range: TrendsRange
+    groupBy: TrendsGroupBy
+  },
 ): Promise<void> {
+  const { metric, range, groupBy } = selection
+
   const metricButton = page.getByRole('button', {
     name: metricLabels[metric],
     exact: true,
@@ -232,9 +241,30 @@ async function assertMetric(
   await expect(
     page.getByRole('img', { name: `${metric} trends chart` }),
   ).toBeVisible()
+
+  const expectedCounts = permutationResponse(range).packages.map(pack => {
+    const grouped = groupTrendsPackage(pack, groupBy)
+
+    return grouped[metric].length
+  })
+
   await expect
-    .poll(() => page.locator('[data-series-dot]').count())
-    .toBe(pointCounts[groupBy] * 2)
+    .poll(() =>
+      page.locator('[data-chart-series]').evaluateAll(series =>
+        series.map(item => {
+          const circleCount = item.querySelectorAll('[data-series-dot]').length
+
+          const denseCount = Number(
+            item
+              .querySelector('[data-series-marker-path]')
+              ?.getAttribute('data-point-count') ?? 0,
+          )
+
+          return circleCount + denseCount
+        }),
+      ),
+    )
+    .toEqual(expectedCounts)
   await expect(
     page.locator(
       '.trends-chart__svg [d*="NaN"], .trends-chart__svg [cx="NaN"], .trends-chart__svg [cy="NaN"]',
@@ -335,7 +365,8 @@ test('keeps every metric, range, and grouping permutation consistent', async ({
         String(expectedCode),
       )
 
-      for (const metric of metrics) await assertMetric(page, metric, groupBy)
+      for (const metric of metrics)
+        await assertMetric(page, { metric, range, groupBy })
     }
   }
 
