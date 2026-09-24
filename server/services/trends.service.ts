@@ -10,6 +10,15 @@ import type {
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
 import {
+  addDays,
+  format,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+  subYears,
+} from 'date-fns'
+import {
   fetchGithubRepository,
   fetchGithubStarHistoryPage,
   type GithubStarHistoryRow,
@@ -33,20 +42,17 @@ type PackageTrendsCacheEntry = {
 const packageTrendsCache = new Map<string, PackageTrendsCacheEntry>()
 
 function isoDate(date: Date): string {
-  return date.toISOString().slice(0, 10)
+  return format(date, 'yyyy-MM-dd')
 }
 
 export function getTrendsRangeStart(
   range: TrendsRange,
   now = new Date(),
 ): string {
-  const start = new Date(now)
-
-  if (range === 'last-2-months') start.setUTCMonth(start.getUTCMonth() - 2)
-
-  if (range === 'last-year') start.setUTCFullYear(start.getUTCFullYear() - 1)
-
-  if (range === 'last-3-years') start.setUTCFullYear(start.getUTCFullYear() - 3)
+  const start =
+    range === 'last-2-months'
+      ? subMonths(now, 2)
+      : subYears(now, range === 'last-year' ? 1 : 3)
 
   return isoDate(start)
 }
@@ -62,16 +68,12 @@ export function getNpmTrendsRange(
 }
 
 function bucketDate(date: string, groupBy: TrendsGroupBy): string {
-  const value = new Date(`${date}T00:00:00Z`)
+  const value = parseISO(date)
 
-  if (groupBy === 'month') {
-    return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, '0')}-01`
-  }
+  if (groupBy === 'month') return isoDate(startOfMonth(value))
 
-  if (groupBy === 'week') {
-    const day = value.getUTCDay()
-    value.setUTCDate(value.getUTCDate() + (day === 0 ? -6 : 1 - day))
-  }
+  if (groupBy === 'week')
+    return isoDate(startOfWeek(value, { weekStartsOn: 1 }))
 
   return isoDate(value)
 }
@@ -122,13 +124,16 @@ function parsePackages(packages: string[]): string[] {
 }
 
 function dateForGithubDay(week: number, day: number): string | null {
-  const date = new Date(week * 1000)
+  const weekStart = new Date(week * 1000)
 
-  if (!Number.isFinite(date.getTime())) return null
+  if (!Number.isFinite(weekStart.getTime())) return null
 
-  date.setUTCDate(date.getUTCDate() + day)
+  // GitHub weeks are UTC epoch timestamps. Convert that boundary to a
+  // calendar date before applying date-fns calendar arithmetic so server
+  // timezone cannot shift the week back a day.
+  const utcWeekStart = parseISO(weekStart.toISOString().slice(0, 10))
 
-  return isoDate(date)
+  return isoDate(addDays(utcWeekStart, day))
 }
 
 function mapGithubRows(

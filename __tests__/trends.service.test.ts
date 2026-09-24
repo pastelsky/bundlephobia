@@ -52,6 +52,15 @@ describe('trends service primitives', () => {
     expect(getNpmTrendsRange('last-3-years', now)).toBe('2023-09-20:2026-09-20')
   })
 
+  it('clamps ranges at calendar boundaries', () => {
+    expect(
+      getTrendsRangeStart('last-2-months', new Date('2024-03-31T12:00:00Z')),
+    ).toBe('2024-01-31')
+    expect(
+      getTrendsRangeStart('last-year', new Date('2024-02-29T12:00:00Z')),
+    ).toBe('2023-02-28')
+  })
+
   it('rolls daily values into Monday weeks', () => {
     expect(
       rollupTrendsPoints(

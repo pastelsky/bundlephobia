@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { addDays, format, isAfter, isValid, parseISO } from 'date-fns'
 
 import config from '../config'
 import { getEscapedNpmPackageName } from '../packages/npm-package'
@@ -18,7 +19,7 @@ const client = axios.create({
 })
 
 function isoDate(date: Date) {
-  return date.toISOString().slice(0, 10)
+  return format(date, 'yyyy-MM-dd')
 }
 
 export function splitNpmDateRange(range: string): string[] {
@@ -26,27 +27,23 @@ export function splitNpmDateRange(range: string): string[] {
 
   if (!match) return [range]
 
-  const start = new Date(`${match[1]}T00:00:00Z`)
-  const end = new Date(`${match[2]}T00:00:00Z`)
+  const start = parseISO(match[1])
+  const end = parseISO(match[2])
 
-  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()))
-    return [range]
+  if (!isValid(start) || !isValid(end)) return [range]
 
-  if (start > end) return [range]
+  if (isAfter(start, end)) return [range]
 
   const ranges: string[] = []
   let chunkStart = start
 
-  while (chunkStart <= end) {
-    const chunkEnd = new Date(chunkStart)
-    chunkEnd.setUTCDate(chunkEnd.getUTCDate() + MAX_RANGE_DAYS - 1)
-
-    if (chunkEnd > end) chunkEnd.setTime(end.getTime())
+  while (!isAfter(chunkStart, end)) {
+    const proposedEnd = addDays(chunkStart, MAX_RANGE_DAYS - 1)
+    const chunkEnd = isAfter(proposedEnd, end) ? end : proposedEnd
 
     ranges.push(`${isoDate(chunkStart)}:${isoDate(chunkEnd)}`)
 
-    chunkStart = new Date(chunkEnd)
-    chunkStart.setUTCDate(chunkStart.getUTCDate() + 1)
+    chunkStart = addDays(chunkEnd, 1)
   }
 
   return ranges

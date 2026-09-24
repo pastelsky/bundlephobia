@@ -2,6 +2,16 @@
 
 import { scaleLinear } from 'd3-scale'
 import { curveMonotoneX, line } from 'd3-shape'
+import {
+  addMonths,
+  getTime,
+  parseISO,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+  subYears,
+} from 'date-fns'
 
 import type {
   TrendsGroupBy,
@@ -128,30 +138,24 @@ export function partialLinkThreshold(groupBy: TrendsGroupBy) {
 }
 
 function getRangeStartTimestamp(range: TrendsRange) {
-  const start = new Date()
+  const now = new Date()
 
-  if (range === 'last-2-months') {
-    start.setUTCMonth(start.getUTCMonth() - 2)
-  } else if (range === 'last-year') {
-    start.setUTCFullYear(start.getUTCFullYear() - 1)
-  } else {
-    start.setUTCFullYear(start.getUTCFullYear() - 3)
-  }
+  const start =
+    range === 'last-2-months'
+      ? subMonths(now, 2)
+      : subYears(now, range === 'last-year' ? 1 : 3)
 
-  return Date.parse(start.toISOString().slice(0, 10))
+  return getTime(startOfDay(start))
 }
 
 function alignToGroupStart(timestamp: number, groupBy: TrendsGroupBy) {
   const date = new Date(timestamp)
 
-  if (groupBy === 'month') {
-    date.setUTCDate(1)
-  } else if (groupBy === 'week') {
-    const day = date.getUTCDay()
-    date.setUTCDate(date.getUTCDate() + (day === 0 ? -6 : 1 - day))
-  }
+  if (groupBy === 'month') return getTime(startOfMonth(date))
 
-  return Date.parse(date.toISOString().slice(0, 10))
+  if (groupBy === 'week') return getTime(startOfWeek(date, { weekStartsOn: 1 }))
+
+  return timestamp
 }
 
 function buildXAxisTicks(
@@ -167,13 +171,11 @@ function buildXAxisTicks(
 
   if (groupBy === 'month') {
     const candidates = [new Date(minTime)]
-    const cursor = new Date(minTime)
-    cursor.setUTCDate(1)
-    cursor.setUTCMonth(cursor.getUTCMonth() + 1)
+    let cursor = addMonths(startOfMonth(new Date(minTime)), 1)
 
     while (cursor.getTime() <= maxTime) {
-      candidates.push(new Date(cursor))
-      cursor.setUTCMonth(cursor.getUTCMonth() + 1)
+      candidates.push(cursor)
+      cursor = addMonths(cursor, 1)
     }
 
     if (candidates.length <= maxTickCount) return candidates
@@ -232,7 +234,7 @@ export function buildChartModel({
   const requestedMinTime = getRangeStartTimestamp(range)
 
   const pointTimes = allPoints
-    .map(point => Date.parse(point.date))
+    .map(point => getTime(parseISO(point.date)))
     .filter(Number.isFinite)
 
   if (pointTimes.length === 0) return null
@@ -244,7 +246,7 @@ export function buildChartModel({
     groupBy,
   )
 
-  const maxTime = Date.parse(new Date().toISOString().slice(0, 10))
+  const maxTime = getTime(startOfDay(new Date()))
   const values = allPoints.map(point => point.value)
   const minValue = Math.min(...values)
   const maxValue = Math.max(...values)
@@ -268,7 +270,7 @@ export function buildChartModel({
 
     return (
       PLOT.left +
-      ((Date.parse(date) - minTime) / (maxTime - minTime)) * plotWidth
+      ((getTime(parseISO(date)) - minTime) / (maxTime - minTime)) * plotWidth
     )
   }
 
@@ -300,7 +302,7 @@ export function buildChartModel({
               release.major ? showMajorReleases : showMinorReleases,
             )
             .filter(release => {
-              const time = Date.parse(release.date)
+              const time = getTime(parseISO(release.date))
 
               return (
                 time >= minTime &&
@@ -321,7 +323,8 @@ export function buildChartModel({
     const canJoinPartial =
       partialStart &&
       partial[0] &&
-      Date.parse(partial[0].date) - Date.parse(partialStart.date) <=
+      getTime(parseISO(partial[0].date)) -
+        getTime(parseISO(partialStart.date)) <=
         partialLinkThreshold(groupBy)
 
     return {
@@ -344,7 +347,7 @@ export function buildChartModel({
         release.major ? showMajorReleases : showMinorReleases,
       )
       .filter(release => {
-        const time = Date.parse(release.date)
+        const time = getTime(parseISO(release.date))
 
         return time >= minTime && time <= maxTime
       })
