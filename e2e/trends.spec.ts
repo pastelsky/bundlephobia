@@ -408,7 +408,7 @@ test('restarts the series reveal when a chart selection changes', async ({
   )
 })
 
-test('omits dense daily markers without reducing line fidelity', async ({
+test('renders dense daily markers without excessive SVG nodes', async ({
   page,
 }) => {
   await page.route('**/api/trends?*', route =>
@@ -423,6 +423,26 @@ test('omits dense daily markers without reducing line fidelity', async ({
   )
 
   await expect.poll(() => page.locator('[data-series-dot]').count()).toBe(2)
+  await expect(page.locator('[data-series-marker-path]')).toHaveCount(2)
+  await expect
+    .poll(() =>
+      page
+        .locator('[data-series-marker-path]')
+        .evaluateAll(paths =>
+          paths.map(path => Number(path.getAttribute('data-point-count'))),
+        ),
+    )
+    .toEqual([1_096, 1_096])
+  await expect
+    .poll(async () => {
+      const path = await page
+        .locator('[data-series-marker-path]')
+        .first()
+        .getAttribute('d')
+
+      return path?.length ?? 0
+    })
+    .toBeGreaterThan(30_000)
   await expect
     .poll(async () => {
       const path = await page

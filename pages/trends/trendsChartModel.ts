@@ -1,6 +1,7 @@
 /* eslint-disable max-params, anti-slop/no-array-filter-map */
 
 import { extent } from 'd3-array'
+import { path as createPath } from 'd3-path'
 import { scaleLinear, scaleTime } from 'd3-scale'
 import { curveMonotoneX, line } from 'd3-shape'
 import {
@@ -51,6 +52,7 @@ type ChartSeries = {
   partialPoints: ChartPoint[]
   partialMarkers: ChartPoint[]
   markers: ChartPoint[]
+  denseMarkerPath: string
   releaseMarkers: ChartPoint[]
 }
 
@@ -121,6 +123,17 @@ export function pathFor(points: ChartPoint[]) {
       .y(point => point.y)
       .curve(curveMonotoneX)(points) || ''
   )
+}
+
+function markerPathFor(points: ChartPoint[], radius: number) {
+  const markerPath = createPath()
+
+  for (const point of points) {
+    markerPath.moveTo(point.x + radius, point.y)
+    markerPath.arc(point.x, point.y, radius, 0, Math.PI * 2)
+  }
+
+  return markerPath.toString()
 }
 
 export function annotationPath(annotation: SeriesAnnotation) {
@@ -299,6 +312,7 @@ export function buildChartModel({
 
     const plotted = complete.map(toChartPoint)
     const partialMarkers = partial.map(toChartPoint)
+    const isDense = plotted.length * MIN_MARKER_GAP > plotWidth
 
     return {
       renderKey: [
@@ -314,9 +328,10 @@ export function buildChartModel({
       points: plotted,
       partialPoints: partialPointsFor(complete, partial),
       partialMarkers,
-      // Dense lines are clearer without indistinguishable point markers. The
-      // full-resolution points remain available for paths and interaction.
-      markers: plotted.length * MIN_MARKER_GAP <= plotWidth ? plotted : [],
+      markers: isDense ? [] : plotted,
+      // One compound D3 path keeps every dense observation visible without
+      // creating thousands of SVG circle nodes.
+      denseMarkerPath: isDense ? markerPathFor(plotted, 1.25) : '',
       releaseMarkers: releaseMarkersFor(raw),
     }
   })

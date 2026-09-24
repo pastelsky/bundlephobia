@@ -415,6 +415,15 @@ export default function TrendsChart({
                         stroke={series.color}
                       />
                     )}
+                    {series.denseMarkerPath && (
+                      <path
+                        data-series-marker-path
+                        data-point-count={series.points.length}
+                        className="trends-chart__series-marker-path"
+                        d={series.denseMarkerPath}
+                        fill={series.color}
+                      />
+                    )}
                     {series.markers.map(point => (
                       <circle
                         key={`${series.name}-${point.date}`}

@@ -613,6 +613,12 @@
     transform-origin: left center;
   }
 
+  &__series-marker-path {
+    stroke: var(--color-bg-base);
+    stroke-width: 0.4;
+    pointer-events: none;
+  }
+
   &__series-dot {
     stroke: var(--color-bg-base);
     stroke-width: 0.75;
