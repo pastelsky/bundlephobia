@@ -30,8 +30,6 @@ export { TRENDS_SERIES_COLORS } from './trendsChartModel'
 const useIsomorphicLayoutEffect =
   typeof window === 'undefined' ? React.useEffect : useLayoutEffect
 
-const DRAW_DURATION = 760
-
 const CHART_EASING = 'easeOutCubic'
 
 const DOT_MAGNET_RADIUS = 9
@@ -316,22 +314,12 @@ export default function TrendsChart({
                     >
                       <rect
                         data-series-clip
+                        className="trends-chart__series-clip"
                         x={PLOT.left}
                         y={PLOT.top}
                         width={model.plotWidth}
                         height={model.plotHeight}
-                      >
-                        <animate
-                          attributeName="width"
-                          from="0"
-                          to={model.plotWidth}
-                          dur={`${DRAW_DURATION}ms`}
-                          calcMode="spline"
-                          keyTimes="0;1"
-                          keySplines="0.215 0.61 0.355 1"
-                          fill="freeze"
-                        />
-                      </rect>
+                      />
                     </clipPath>
                   ))}
                 </defs>

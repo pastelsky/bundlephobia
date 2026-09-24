@@ -245,27 +245,56 @@ async function assertMetric(
 async function expectSeriesFullyRevealed(page: Page): Promise<void> {
   await expect
     .poll(async () => {
-      const svgWidth = await page
-        .locator('.trends-chart__svg')
-        .evaluate(svg => svg.viewBox.baseVal.width)
-
-      const clipWidths = await page
+      const clipScales = await page
         .locator('[data-series-clip]')
         .evaluateAll(clips =>
-          clips.map(clip => {
-            // SAFETY: the locator targets SVG rect elements owned by the chart.
-            const rect = clip as SVGRectElement
-
-            return rect.width.animVal.value
-          }),
+          clips.map(clip => new DOMMatrix(getComputedStyle(clip).transform).a),
         )
 
-      return (
-        clipWidths.length > 0 &&
-        clipWidths.every(width => Math.abs(width - svgWidth) < 1)
-      )
+      return clipScales.length > 0 && clipScales.every(scale => scale > 0.999)
     })
     .toBe(true)
+}
+
+async function expectSeriesRevealAfter(
+  page: Page,
+  changeSelection: () => Promise<void>,
+): Promise<void> {
+  const previousClip = await page
+    .locator('[data-series-clip]')
+    .first()
+    .elementHandle()
+
+  expect(previousClip).not.toBeNull()
+  await changeSelection()
+
+  if (previousClip)
+    await expect
+      .poll(() => previousClip.evaluate(clip => clip.isConnected))
+      .toBe(false)
+
+  await expectActiveSeriesReveal(page)
+}
+
+async function expectActiveSeriesReveal(page: Page): Promise<void> {
+  const clip = page.locator('[data-series-clip]').first()
+
+  await clip.waitFor({ state: 'attached' })
+
+  const initialScale = await clip.evaluate(
+    element => new DOMMatrix(getComputedStyle(element).transform).a,
+  )
+
+  expect(initialScale).toBeLessThan(0.8)
+  await page.waitForTimeout(180)
+
+  const intermediateScale = await clip.evaluate(
+    element => new DOMMatrix(getComputedStyle(element).transform).a,
+  )
+
+  expect(intermediateScale).toBeGreaterThan(initialScale)
+  expect(intermediateScale).toBeLessThan(1)
+  await expectSeriesFullyRevealed(page)
 }
 
 test('keeps every metric, range, and grouping permutation consistent', async ({
@@ -353,6 +382,30 @@ test('keeps every metric, range, and grouping permutation consistent', async ({
   await selectControl(page, groupLabels.day)
   await page.waitForTimeout(200)
   expect(apiRequests).toHaveLength(requestCount)
+})
+
+test('restarts the series reveal when a chart selection changes', async ({
+  page,
+}) => {
+  await page.route('**/api/trends?*', async route => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(permutationResponse('last-year')),
+    })
+  })
+
+  await page.goto(
+    '/trends?packages=react~vs~vue&metric=downloads&range=last-year&groupBy=day',
+  )
+  await expectActiveSeriesReveal(page)
+
+  await expectSeriesRevealAfter(page, () =>
+    selectControl(page, groupLabels.week),
+  )
+  await expectSeriesRevealAfter(page, () =>
+    selectControl(page, metricLabels.stars),
+  )
 })
 
 test('omits dense daily markers without reducing line fidelity', async ({

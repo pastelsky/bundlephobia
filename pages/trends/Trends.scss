@@ -606,6 +606,13 @@
     }
   }
 
+  &__series-clip {
+    animation: trends-series-reveal 760ms cubic-bezier(0.215, 0.61, 0.355, 1)
+      both;
+    transform-box: fill-box;
+    transform-origin: left center;
+  }
+
   &__series-dot {
     stroke: var(--color-bg-base);
     stroke-width: 0.75;
@@ -785,6 +792,16 @@
   }
 }
 
+@keyframes trends-series-reveal {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @keyframes trends-dot-magnet {
   from {
     opacity: 0.22;
@@ -810,6 +827,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .trends-chart__series-clip,
   .trends-chart__series-annotation,
   .trends-chart__series-dot-magnet {
     animation: none;
