@@ -2728,6 +2728,7 @@ __metadata:
     package-build-stats: "npm:9.2.3"
     safe-stable-stringify: "npm:^2.5.0"
     truncate: "npm:^3.0.0"
+    zod: "npm:^4.4.2"
   languageName: unknown
   linkType: soft
 
@@ -10159,5 +10160,12 @@ __metadata:
   version: 2.1.2
   resolution: "yoctocolors@npm:2.1.2"
   checksum: 6ee42d665a4cc161c7de3f015b2a65d6c65d2808bfe3b99e228bd2b1b784ef1e54d1907415c025fc12b400f26f372bfc1b71966c6c738d998325ca422eb39363
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.4.2":
+  version: 4.6.5
+  resolution: "zod@npm:4.6.5"
+  checksum: db004952e4dc6eab38b70f0cdef9251a65da84f5d08c5a0ef85e2590cfa9c477544ce734161ff5c05f89a15f0967137607a7feb16716195e04965f030db47213
   languageName: node
   linkType: hard

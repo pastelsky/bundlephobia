@@ -21,7 +21,7 @@ const { getPackageStats, getAllPackageExports, getPackageExportSizes } =
 
 workerpool.worker({
   getPackageStats,
-  getAllPackageExports,
+  getPackageExports: getAllPackageExports,
   getPackageExportSizes,
 })
 

@@ -13,6 +13,7 @@ test('all PM2 process entrypoints exist and TypeScript services are runnable by 
   expect(result.apps.map(app => app.name)).toEqual([
     'main',
     'build-service',
+    'installation-service',
     'cache-service',
   ])
 })

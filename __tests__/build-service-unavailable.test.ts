@@ -242,6 +242,7 @@ describe('build service unavailability', () => {
       'http://127.0.0.1:7002/size?p=%40example%2Fcancelled%401.0.0',
       expect.objectContaining({
         maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES,
+        timeout: 600 * 1000,
         signal: controller.signal,
       }),
     )

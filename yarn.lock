@@ -8931,6 +8931,7 @@ __metadata:
     package-build-stats: "npm:9.2.3"
     safe-stable-stringify: "npm:^2.5.0"
     truncate: "npm:^3.0.0"
+    zod: "npm:^4.4.2"
   languageName: unknown
   linkType: soft
 
@@ -9025,6 +9026,7 @@ __metadata:
     esbuild-register: "npm:^3.5.0"
     execa: "npm:^5.1.1"
     fabric: "npm:^6.0.0"
+    fastify: "npm:^4.25.2"
     firebase: "npm:^8.10.1"
     firebase-admin: "npm:^12.6.0"
     flatten: "npm:^1.0.3"
