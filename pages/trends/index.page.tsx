@@ -123,7 +123,7 @@ export default function TrendsPage() {
   const [range, setRange] = useState<TrendsRange>('last-year')
   const [groupBy, setGroupBy] = useState<TrendsGroupBy>('day')
   const [showMajorReleases, setShowMajorReleases] = useState(true)
-  const [showMinorReleases, setShowMinorReleases] = useState(true)
+  const [showMinorReleases, setShowMinorReleases] = useState(false)
 
   const [loading, setLoading] = useState(true)
   const [fetchingRange, setFetchingRange] = useState<TrendsRange | null>(null)
