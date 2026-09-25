@@ -11,7 +11,8 @@
     "now-logs": "^0.0.7",
     "package-build-stats": "9.2.3",
     "safe-stable-stringify": "^2.5.0",
-    "truncate": "^3.0.0"
+    "truncate": "^3.0.0",
+    "zod": "^4.4.2"
   },
   "engines": {
     "node": ">= 9.x.x",
