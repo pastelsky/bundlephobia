@@ -355,7 +355,7 @@ export default function TrendsPage() {
     <Layout className="trends-page">
       <MetaTags
         title={pageTitle}
-        description="Compare package download velocity, GitHub star actions, and bundle size history."
+        description="Compare downloads, GitHub stars, and size history across packages."
         canonicalPath="/trends"
       />
       <div className="trends-page__container">
@@ -364,8 +364,7 @@ export default function TrendsPage() {
         <header className="trends-page__header">
           <h1>Package trends</h1>
           <p className="trends-page__subtitle">
-            Compare download velocity, star growth, and size history across
-            packages.
+            Compare downloads, GitHub stars, and size history across packages.
           </p>
         </header>
 
