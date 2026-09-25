@@ -71,11 +71,7 @@ const remark = require('remark') as () => RemarkProcessor
 // SAFETY: the pinned natural module exposes the tokenizer and stemmer APIs used here.
 const natural = require('natural') as NaturalModule
 
-const debugTest = createDebug('classifier:test')
-
 const debug = createDebug('bp:similar')
-
-const MIN_CUTOFF_SCORE = 12
 
 function flatten<T>(items: T[][]): T[] {
   return items.flat()
@@ -229,19 +225,18 @@ function getInCategoryMap(packageName: string) {
   )
 }
 
-async function getCategory(packageName: string) {
-  const directCategory = getInCategoryMap(packageName)
-
-  if (directCategory) {
-    return {
-      label: directCategory,
-      score: 999,
-    }
-  }
-
-  const { description = '', keywords = [] } =
-    await getPackageDetails(packageName)
-
+/**
+ * Scores a package against every category from its npm description and
+ * keywords. Exported so the category fixtures can be tested without a network
+ * round trip.
+ */
+export async function classifyPackage(
+  packageName: string,
+  {
+    description = '',
+    keywords = [],
+  }: { description?: string; keywords?: string[] },
+) {
   const tokenizer = new natural.WordTokenizer()
 
   const tokenString = `${await stripMarkdown(description)} ${keywords.join(
@@ -285,30 +280,18 @@ async function getCategory(packageName: string) {
   return maxScoreCategory
 }
 
-async function test() {
-  // SAFETY: categories is the closed category registry declared above.
-  const categoryLabels = Object.keys(categories) as CategoryLabel[]
-  categoryLabels.forEach(label => {
-    categories[label].similar.forEach(async pack => {
-      const actualCategory = await getCategory(pack)
+async function getCategory(packageName: string) {
+  const directCategory = getInCategoryMap(packageName)
 
-      if (
-        !actualCategory ||
-        actualCategory.label !== label ||
-        actualCategory.score < MIN_CUTOFF_SCORE
-      ) {
-        debugTest(
-          'Package %s. Category expected: %s, got: %o',
-          pack,
-          label,
-          actualCategory,
-        )
-      }
-    })
-  })
+  if (directCategory) {
+    return {
+      label: directCategory,
+      score: 999,
+    }
+  }
+
+  return classifyPackage(packageName, await getPackageDetails(packageName))
 }
-
-void test
 
 const similarPackagesMiddleware: Middleware = async ctx => {
   const packageQuery = ctx.query.package
