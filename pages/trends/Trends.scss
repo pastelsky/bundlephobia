@@ -179,6 +179,17 @@
     margin-left: 0;
   }
 
+  &__spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid var(--color-border-subtle);
+    border-top-color: var(--color-text-primary);
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: trends-chip-spin 0.7s linear infinite;
+  }
+
   &__external-link {
     display: inline-flex;
     width: 14px;
@@ -212,6 +223,18 @@
     @include font-size-sm;
     line-height: 1;
     transition: none;
+  }
+}
+
+@keyframes trends-chip-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trends-chip__spinner {
+    animation: none;
   }
 }
 

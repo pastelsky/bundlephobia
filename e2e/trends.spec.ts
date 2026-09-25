@@ -102,6 +102,105 @@ test('renders package trends and chart controls', async ({ page }) => {
   await page.screenshot({ path: 'artifacts/trends-mobile.png', fullPage: true })
 })
 
+test('shows progress on a newly added package until its data arrives', async ({
+  page,
+}) => {
+  let releaseThird: (() => void) | undefined
+  let signalThirdStarted: () => void = () => {}
+
+  let releaseFourth: (() => void) | undefined
+
+  let signalFourthStarted: () => void = () => {}
+
+  const thirdStarted = new Promise<void>(resolve => {
+    signalThirdStarted = resolve
+  })
+
+  const fourthStarted = new Promise<void>(resolve => {
+    signalFourthStarted = resolve
+  })
+
+  await page.route('**/api/trends?*', async route => {
+    const requested =
+      new URL(route.request().url()).searchParams.get('packages') ?? ''
+
+    if (requested.includes('axios')) {
+      signalFourthStarted()
+      await new Promise<void>(resolve => {
+        releaseFourth = resolve
+      })
+      await route.fulfill({ status: 503, body: 'Unavailable' })
+
+      return
+    }
+
+    if (requested.includes('lodash') && !releaseThird) {
+      signalThirdStarted()
+      await new Promise<void>(resolve => {
+        releaseThird = resolve
+      })
+    }
+
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ...trendsResponse,
+        packages: requested.includes('lodash')
+          ? [
+              ...trendsResponse.packages,
+              { ...trendsResponse.packages[0], name: 'lodash' },
+            ]
+          : trendsResponse.packages,
+      }),
+    })
+  })
+
+  await page.goto(
+    '/trends?packages=react~vs~vue&metric=downloads&range=last-year&groupBy=week',
+  )
+  await expect(page.locator('.trends-card')).toHaveCount(2)
+
+  const search = page.getByRole('combobox', { name: 'Package name' })
+
+  await search.fill('lodash')
+  await search.press('Enter')
+  await thirdStarted
+
+  const newChip = page.getByRole('group', {
+    name: 'lodash selected package',
+  })
+
+  await expect(
+    newChip.getByRole('status', { name: 'Loading lodash trends' }),
+  ).toBeVisible()
+  await expect(
+    newChip.getByRole('button', { name: 'Remove lodash' }),
+  ).toBeEnabled()
+  await expect(page.locator('.trends-card')).toHaveCount(2)
+
+  releaseThird?.()
+  await expect(page.locator('.trends-card')).toHaveCount(3)
+  await expect(newChip.getByRole('status')).toHaveCount(0)
+
+  await search.fill('axios')
+  await search.press('Enter')
+  await fourthStarted
+
+  const failedChip = page.getByRole('group', {
+    name: 'axios selected package',
+  })
+
+  await expect(
+    failedChip.getByRole('status', { name: 'Loading axios trends' }),
+  ).toBeVisible()
+  releaseFourth?.()
+  await expect(page.locator('.trends-chart-area__state--error')).toBeVisible()
+  await expect(failedChip.getByRole('status')).toHaveCount(0)
+
+  await failedChip.getByRole('button', { name: 'Remove axios' }).click()
+  await expect(failedChip).toHaveCount(0)
+})
+
 const rangeLabels: Record<TrendsRange, string> = {
   'last-2-months': '2M',
   'last-year': '1Y',
@@ -428,6 +527,7 @@ test('restarts the series reveal when a chart selection changes', async ({
 
   await page.goto(
     '/trends?packages=react~vs~vue&metric=downloads&range=last-year&groupBy=day',
+    { waitUntil: 'domcontentloaded' },
   )
   await expectActiveSeriesReveal(page)
 

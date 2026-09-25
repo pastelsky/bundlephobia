@@ -126,6 +126,7 @@ export default function TrendsPage() {
   const [showMinorReleases, setShowMinorReleases] = useState(true)
 
   const [loading, setLoading] = useState(true)
+  const [fetchingRange, setFetchingRange] = useState<TrendsRange | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [trendsData, setTrendsData] = useState<TrendsResponse | null>(null)
   const [copied, setCopied] = useState(false)
@@ -243,6 +244,7 @@ export default function TrendsPage() {
     if (packages.length === 0) {
       setTrendsData(null)
       setLoading(false)
+      setFetchingRange(null)
 
       return
     }
@@ -253,6 +255,7 @@ export default function TrendsPage() {
     // distracting than helpful. Keep the current chart visible until a request
     // has genuinely taken long enough to need a loading state.
     setLoading(false)
+    setFetchingRange(range)
     setError(null)
 
     const loadingTimer = window.setTimeout(() => {
@@ -267,6 +270,7 @@ export default function TrendsPage() {
         if (isMounted) {
           setTrendsData(res)
           setLoading(false)
+          setFetchingRange(null)
         }
       })
       .catch(err => {
@@ -276,6 +280,7 @@ export default function TrendsPage() {
         if (isMounted) {
           setError(err?.message || 'Failed to fetch trends data')
           setLoading(false)
+          setFetchingRange(null)
         }
       })
 
@@ -296,6 +301,7 @@ export default function TrendsPage() {
     if (packages.length >= MAX_PACKAGES) return
     const updated = [...packages, clean]
     setPackages(updated)
+    setFetchingRange(range)
     setSuggestedPackages(current =>
       current.filter(packageName => packageName.toLowerCase() !== clean),
     )
@@ -316,6 +322,7 @@ export default function TrendsPage() {
 
   const handleRangeChange = (newRange: TrendsRange) => {
     setRange(newRange)
+    setFetchingRange(newRange)
     updateUrl(packages, metric, newRange, groupBy)
   }
 
@@ -380,6 +387,14 @@ export default function TrendsPage() {
                   }}
                 />
                 <span className="trends-chip__name">{pkg}</span>
+                {fetchingRange === range &&
+                  (trendsData?.range !== range ||
+                    !trendsData.packages.some(pack => pack.name === pkg)) && (
+                    <output
+                      className="trends-chip__spinner"
+                      aria-label={`Loading ${pkg} trends`}
+                    />
+                  )}
                 <Button
                   type="button"
                   className="trends-chip__remove"
