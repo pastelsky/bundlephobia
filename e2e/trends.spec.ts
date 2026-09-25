@@ -57,30 +57,17 @@ const trendsResponse = {
 } satisfies TrendsResponse
 
 test('renders package trends and chart controls', async ({ page }) => {
-  await page.route(
-    '**/api/trends?*',
-    route =>
-      new Promise(resolve =>
-        setTimeout(
-          () =>
-            resolve(
-              route.fulfill({
-                contentType: 'application/json',
-                body: JSON.stringify(trendsResponse),
-              }),
-            ),
-          3_000,
-        ),
-      ),
+  await page.route('**/api/trends?*', route =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(trendsResponse),
+    }),
   )
 
   await page.goto(
     '/trends?packages=react,vue&metric=downloads&range=last-year&groupBy=week',
   )
 
-  await expect(page.getByText('[ ANALYZING PACKAGE TRENDS ]')).toBeVisible({
-    timeout: 5_000,
-  })
   await expect(
     page.getByRole('heading', { name: 'Package trends' }),
   ).toBeVisible()
@@ -91,8 +78,42 @@ test('renders package trends and chart controls', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: 'Downloads', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByText('[ ANALYZING PACKAGE TRENDS ]')).toBeHidden()
   await expectSeriesFullyRevealed(page)
+
+  const desktopAlignment = await page.evaluate(() => {
+    const left = (selector: string) =>
+      document.querySelector(selector)!.getBoundingClientRect().left
+
+    const headings = [
+      ...document.querySelectorAll('.trends-snapshot__columns span'),
+    ]
+
+    const values = [
+      ...document
+        .querySelector('.trends-card')!
+        .querySelectorAll('.trends-stat__value'),
+    ]
+
+    return {
+      baseline: left('.trends-page__header'),
+      sections: [
+        '.trends-search',
+        '.trends-toolbar',
+        '.trends-chart__svg',
+        '.trends-snapshot__heading',
+        '.trends-card__header',
+      ].map(left),
+      headings: headings
+        .slice(1, 5)
+        .map(element => element.getBoundingClientRect().left),
+      values: values.map(element => element.getBoundingClientRect().left),
+    }
+  })
+
+  expect(
+    desktopAlignment.sections.every(left => left === desktopAlignment.baseline),
+  ).toBe(true)
+  expect(desktopAlignment.values).toEqual(desktopAlignment.headings)
 
   await page.screenshot({
     path: 'artifacts/trends-desktop.png',

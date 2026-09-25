@@ -865,6 +865,8 @@
 
 // ─── Snapshot Section (Sharp Flat Columns, Rich Hover States)
 .trends-snapshot {
+  --trends-snapshot-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr)) 26px;
+
   margin-bottom: $global-spacing * 4;
 
   &__heading {
@@ -884,9 +886,9 @@
 
   &__columns {
     display: grid;
-    grid-template-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr)) auto;
+    grid-template-columns: var(--trends-snapshot-columns);
     gap: $global-spacing * 1.5;
-    padding: $global-spacing * 1.1 $global-spacing * 2 ($global-spacing * 0.75);
+    padding: ($global-spacing * 1.1) 0 ($global-spacing * 0.75);
     color: var(--color-text-muted);
     font-family: $font-family-body;
     @include font-size-xs;
@@ -906,10 +908,10 @@
   border: none;
   border-radius: 0 !important;
   display: grid;
-  grid-template-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr)) auto;
+  grid-template-columns: var(--trends-snapshot-columns);
   gap: $global-spacing * 1.5;
   align-items: center;
-  padding: ($global-spacing * 1.5) ($global-spacing * 2);
+  padding: ($global-spacing * 1.5) 0;
   border-bottom: 1px solid var(--color-border-subtle);
   transition: background 0.15s ease;
 
