@@ -51,6 +51,5 @@ export type TrendsPackageSeries = {
 export type TrendsResponse = {
   packages: TrendsPackageSeries[]
   range: TrendsRange
-  groupBy: TrendsGroupBy
   generatedAt: string
 }

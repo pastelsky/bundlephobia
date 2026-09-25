@@ -1,6 +1,6 @@
 /* eslint-disable complexity, max-params, anti-slop/no-runtime-typeof, anti-slop/require-safety-comment-for-type-assertion */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { Button } from '@base-ui/react/button'
@@ -24,6 +24,7 @@ import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
+import { groupTrendsPackage } from '../../utils/trends'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 
@@ -55,7 +56,11 @@ function parsePackageParam(value: string | string[]) {
 const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
   [
     { id: 'downloads', label: 'Downloads', description: 'Daily npm downloads' },
-    { id: 'stars', label: 'Stars', description: 'Total repository stargazers' },
+    {
+      id: 'stars',
+      label: 'Stars',
+      description: 'Total repository stars',
+    },
     { id: 'size', label: 'Size', description: 'Cached gzip size history' },
   ]
 
@@ -118,25 +123,21 @@ export default function TrendsPage() {
   const [range, setRange] = useState<TrendsRange>('last-year')
   const [groupBy, setGroupBy] = useState<TrendsGroupBy>('day')
   const [showMajorReleases, setShowMajorReleases] = useState(true)
-  const [showMinorReleases, setShowMinorReleases] = useState(true)
+  const [showMinorReleases, setShowMinorReleases] = useState(false)
 
   const [loading, setLoading] = useState(true)
+  const [fetchingRange, setFetchingRange] = useState<TrendsRange | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [trendsData, setTrendsData] = useState<TrendsResponse | null>(null)
   const [copied, setCopied] = useState(false)
   const [relatedPackageNames, setRelatedPackageNames] = useState<string[]>([])
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
-  const trendsCache = useRef(new Map<string, TrendsResponse>())
 
-  const packageTrendsCache = useRef(
-    new Map<string, TrendsResponse['packages'][number]>(),
+  const chartPackages = useMemo(
+    () =>
+      trendsData?.packages.map(pack => groupTrendsPackage(pack, groupBy)) ?? [],
+    [groupBy, trendsData],
   )
-
-  const trendsDataRef = useRef<TrendsResponse | null>(null)
-
-  useEffect(() => {
-    trendsDataRef.current = trendsData
-  }, [trendsData])
 
   // Sync state with URL params on mount / router change
   useEffect(() => {
@@ -243,61 +244,7 @@ export default function TrendsPage() {
     if (packages.length === 0) {
       setTrendsData(null)
       setLoading(false)
-
-      return
-    }
-
-    const cacheKey = `${packages.join(',')}|${range}|${groupBy}`
-    const cached = trendsCache.current.get(cacheKey)
-
-    if (cached) {
-      setTrendsData(cached)
-      setError(null)
-      setLoading(false)
-
-      return
-    }
-
-    const packageCacheKey = (packageName: string) =>
-      `${packageName}|${range}|${groupBy}`
-
-    const missingPackages = packages.filter(
-      packageName =>
-        !packageTrendsCache.current.has(packageCacheKey(packageName)),
-    )
-
-    const composeCachedResponse = (
-      metadata: Pick<TrendsResponse, 'range' | 'groupBy' | 'generatedAt'>,
-    ) => {
-      const composed: TrendsResponse = {
-        ...metadata,
-        packages: packages
-          .map(packageName =>
-            packageTrendsCache.current.get(packageCacheKey(packageName)),
-          )
-          .filter(
-            (
-              packageSeries,
-            ): packageSeries is TrendsResponse['packages'][number] =>
-              Boolean(packageSeries),
-          ),
-      }
-
-      trendsCache.current.set(cacheKey, composed)
-
-      return composed
-    }
-
-    if (missingPackages.length === 0) {
-      const cachedResponse = composeCachedResponse({
-        range,
-        groupBy,
-        generatedAt: new Date().toISOString(),
-      })
-
-      setTrendsData(cachedResponse)
-      setError(null)
-      setLoading(false)
+      setFetchingRange(null)
 
       return
     }
@@ -308,42 +255,22 @@ export default function TrendsPage() {
     // distracting than helpful. Keep the current chart visible until a request
     // has genuinely taken long enough to need a loading state.
     setLoading(false)
+    setFetchingRange(range)
     setError(null)
 
     const loadingTimer = window.setTimeout(() => {
       if (isMounted && !completed) setLoading(true)
     }, 400)
 
-    // Fetch only package series that are not already cached. This keeps an
-    // existing chart stable while a newly added comparison package resolves.
-    API.getTrends(
-      missingPackages.length > 0 ? missingPackages : packages,
-      range,
-      groupBy,
-    )
+    API.getTrends(packages, range)
       .then(res => {
         completed = true
         window.clearTimeout(loadingTimer)
 
         if (isMounted) {
-          res.packages.forEach(packageSeries => {
-            packageTrendsCache.current.set(
-              packageCacheKey(packageSeries.name),
-              packageSeries,
-            )
-          })
-          const previous = trendsDataRef.current
-
-          const merged = composeCachedResponse({
-            range: res.range,
-            groupBy: res.groupBy,
-            generatedAt: res.generatedAt,
-          })
-
-          // Keep the previously rendered response in place if the request did
-          // not return a usable series for a newly requested package.
-          setTrendsData(merged.packages.length > 0 ? merged : previous || res)
+          setTrendsData(res)
           setLoading(false)
+          setFetchingRange(null)
         }
       })
       .catch(err => {
@@ -353,6 +280,7 @@ export default function TrendsPage() {
         if (isMounted) {
           setError(err?.message || 'Failed to fetch trends data')
           setLoading(false)
+          setFetchingRange(null)
         }
       })
 
@@ -360,7 +288,7 @@ export default function TrendsPage() {
       isMounted = false
       window.clearTimeout(loadingTimer)
     }
-  }, [packages, range, groupBy])
+  }, [packages, range])
 
   const [inputKey, setInputKey] = useState(0)
 
@@ -373,6 +301,7 @@ export default function TrendsPage() {
     if (packages.length >= MAX_PACKAGES) return
     const updated = [...packages, clean]
     setPackages(updated)
+    setFetchingRange(range)
     setSuggestedPackages(current =>
       current.filter(packageName => packageName.toLowerCase() !== clean),
     )
@@ -393,6 +322,7 @@ export default function TrendsPage() {
 
   const handleRangeChange = (newRange: TrendsRange) => {
     setRange(newRange)
+    setFetchingRange(newRange)
     updateUrl(packages, metric, newRange, groupBy)
   }
 
@@ -425,7 +355,7 @@ export default function TrendsPage() {
     <Layout className="trends-page">
       <MetaTags
         title={pageTitle}
-        description="Compare package download velocity, GitHub star actions, and bundle size history."
+        description="Compare downloads, GitHub stars, and size history across packages."
         canonicalPath="/trends"
       />
       <div className="trends-page__container">
@@ -434,8 +364,7 @@ export default function TrendsPage() {
         <header className="trends-page__header">
           <h1>Package trends</h1>
           <p className="trends-page__subtitle">
-            Compare download velocity, star growth, and size history across
-            packages.
+            Compare downloads, GitHub stars, and size history across packages.
           </p>
         </header>
 
@@ -457,6 +386,14 @@ export default function TrendsPage() {
                   }}
                 />
                 <span className="trends-chip__name">{pkg}</span>
+                {fetchingRange === range &&
+                  (trendsData?.range !== range ||
+                    !trendsData.packages.some(pack => pack.name === pkg)) && (
+                    <output
+                      className="trends-chip__spinner"
+                      aria-label={`Loading ${pkg} trends`}
+                    />
+                  )}
                 <Button
                   type="button"
                   className="trends-chip__remove"
@@ -633,9 +570,9 @@ export default function TrendsPage() {
               // Keep the last resolved series mounted while an incremental
               // request is in flight; the chart can then draw the new series
               // into the existing frame instead of blanking the plot.
-              packages={trendsData?.packages || []}
+              packages={chartPackages}
               metric={metric}
-              range={range}
+              range={trendsData?.range ?? range}
               groupBy={groupBy}
               showMajorReleases={showMajorReleases}
               showMinorReleases={showMinorReleases}

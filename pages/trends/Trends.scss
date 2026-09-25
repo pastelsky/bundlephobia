@@ -179,6 +179,17 @@
     margin-left: 0;
   }
 
+  &__spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid var(--color-border-subtle);
+    border-top-color: var(--color-text-primary);
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: trends-chip-spin 0.7s linear infinite;
+  }
+
   &__external-link {
     display: inline-flex;
     width: 14px;
@@ -212,6 +223,18 @@
     @include font-size-sm;
     line-height: 1;
     transition: none;
+  }
+}
+
+@keyframes trends-chip-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trends-chip__spinner {
+    animation: none;
   }
 }
 
@@ -599,17 +622,6 @@
     stroke-width: 1.75;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition:
-      opacity 0.18s ease,
-      stroke-width 0.18s ease;
-
-    &--active {
-      stroke-width: 2.7;
-    }
-
-    &--dimmed {
-      opacity: 0.24;
-    }
 
     &--partial {
       stroke-dasharray: 2 3;
@@ -617,22 +629,24 @@
     }
   }
 
+  &__series-clip {
+    animation: trends-series-reveal 760ms cubic-bezier(0.215, 0.61, 0.355, 1)
+      both;
+    transform-box: fill-box;
+    transform-origin: left center;
+  }
+
+  &__series-marker-path {
+    stroke: var(--color-bg-base);
+    stroke-width: 0.4;
+    pointer-events: none;
+  }
+
   &__series-dot {
     stroke: var(--color-bg-base);
     stroke-width: 0.75;
     transform-box: fill-box;
     transform-origin: center;
-    transition:
-      transform 0.18s ease,
-      opacity 0.18s ease;
-
-    &--active {
-      transform: scale(1.28);
-    }
-
-    &--dimmed {
-      opacity: 0.24 !important;
-    }
 
     &--placeholder {
       stroke: var(--color-bg-base);
@@ -654,20 +668,12 @@
 
   &__series-annotation {
     pointer-events: none;
-    opacity: 0;
+    animation: trends-annotation-in 0.24s ease-out 0.76s both;
     transition:
       opacity 0.24s ease,
       transform 0.24s ease;
     transform-box: fill-box;
     transform-origin: center;
-
-    &--visible {
-      opacity: 1;
-    }
-
-    &--active {
-      transform: translate(2px, -3px) rotate(-2deg);
-    }
 
     path {
       fill: none;
@@ -815,6 +821,16 @@
   }
 }
 
+@keyframes trends-series-reveal {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @keyframes trends-dot-magnet {
   from {
     opacity: 0.22;
@@ -827,8 +843,30 @@
   }
 }
 
+@keyframes trends-annotation-in {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trends-chart__series-clip,
+  .trends-chart__series-annotation,
+  .trends-chart__series-dot-magnet {
+    animation: none;
+  }
+}
+
 // ─── Snapshot Section (Sharp Flat Columns, Rich Hover States)
 .trends-snapshot {
+  --trends-snapshot-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr)) 26px;
+
   margin-bottom: $global-spacing * 4;
 
   &__heading {
@@ -848,9 +886,9 @@
 
   &__columns {
     display: grid;
-    grid-template-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr)) auto;
+    grid-template-columns: var(--trends-snapshot-columns);
     gap: $global-spacing * 1.5;
-    padding: $global-spacing * 1.1 $global-spacing * 2 ($global-spacing * 0.75);
+    padding: ($global-spacing * 1.1) 0 ($global-spacing * 0.75);
     color: var(--color-text-muted);
     font-family: $font-family-body;
     @include font-size-xs;
@@ -870,10 +908,10 @@
   border: none;
   border-radius: 0 !important;
   display: grid;
-  grid-template-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr)) auto;
+  grid-template-columns: var(--trends-snapshot-columns);
   gap: $global-spacing * 1.5;
   align-items: center;
-  padding: ($global-spacing * 1.5) ($global-spacing * 2);
+  padding: ($global-spacing * 1.5) 0;
   border-bottom: 1px solid var(--color-border-subtle);
   transition: background 0.15s ease;
 

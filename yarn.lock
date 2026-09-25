@@ -9011,6 +9011,7 @@ __metadata:
     canvas: "npm:^3.2.1"
     classnames: "npm:^2.5.1"
     d3-array: "npm:^3.2.4"
+    d3-path: "npm:^3.1.0"
     d3-scale: "npm:^4.0.2"
     d3-shape: "npm:^3.2.0"
     date-fns: "npm:^2.30.0"
