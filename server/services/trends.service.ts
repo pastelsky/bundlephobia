@@ -262,6 +262,12 @@ async function fetchPackageTrendsSource(
 ): Promise<TrendsPackageSeries> {
   const from = getTrendsRangeStart(range)
 
+  // npm downloads do not depend on the package's release history or repository.
+  // Attach a rejection handler immediately while the history request is pending.
+  const downloadsResults = Promise.allSettled([
+    fetchDownloads(packageName, range),
+  ])
+
   const history = await fetchPackageHistory(packageName, {
     from,
     limit: 500,
@@ -269,11 +275,13 @@ async function fetchPackageTrendsSource(
 
   const warnings: string[] = []
 
-  const [downloadsResult, githubResult] = await Promise.allSettled([
-    fetchDownloads(packageName, range),
-    history.repository
-      ? fetchGithubStars(history.repository, from)
-      : Promise.resolve({ points: [], current: null }),
+  const [[downloadsResult], [githubResult]] = await Promise.all([
+    downloadsResults,
+    Promise.allSettled([
+      history.repository
+        ? fetchGithubStars(history.repository, from)
+        : Promise.resolve({ points: [], current: null }),
+    ]),
   ])
 
   const downloads = getSettledDownloads(downloadsResult, warnings)
