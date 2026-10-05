@@ -180,18 +180,20 @@ test('cumulative proposals preserve approved and pending packages; repeated disc
   const scopedResult = mergeProposal(baseline, scoped)
 
   assert.equal(scopedResult.example.similar.at(-1), '@scope/package')
-  assert.equal(
-    scopedResult.example.research!.recommendations['@scope/package'].package,
-    '@scope/package',
-  )
+  assert.deepEqual(Object.keys(scopedResult.example).sort(), [
+    'name',
+    'similar',
+    'tags',
+  ])
 
   const second = mergeProposal(first, proposal('another'))
   assert.deepEqual(second.example.similar, ['original', 'candidate', 'another'])
   assert.deepEqual(mergeProposal(second, proposal('candidate')), second)
-  assert.equal(
-    second.example.research!.recommendations.candidate.reason,
-    item('candidate').reason,
-  )
+  assert.deepEqual(Object.keys(second.example).sort(), [
+    'name',
+    'similar',
+    'tags',
+  ])
   assert.deepEqual(mergeProposal({}, proposal('one', 'two')).example.similar, [
     'one',
     'two',
@@ -512,18 +514,23 @@ test('publishes only one branch/PR, accumulates evidence, preserves human PR tex
     state.prs[0].body,
     /Discovery source:.*news.ycombinator.com\/item\?id=candidate/,
   )
-  assert.deepEqual(
-    state.catalogs[state.head!].example.research!.recommendations.candidate
-      .discovery,
-    item('candidate').discovery,
-  )
+  assert.deepEqual(Object.keys(state.catalogs[state.head!].example).sort(), [
+    'name',
+    'similar',
+    'tags',
+  ])
+  assert.equal(state.prs[0].body.match(/#### candidate/g)?.length, 1)
+  assert.equal(state.prs[0].body.match(/#### another/g)?.length, 1)
   assert.equal(
     state.writes.filter(write => write.path.includes('/dispatches')).length,
     2,
   )
   const count = state.writes.length
+  const previousBody = state.prs[0].body
+
   await run(proposal('candidate'))
-  assert.equal(state.writes.length, count + 1) // Refresh only the managed PR summary.
+  assert.equal(state.writes.length, count)
+  assert.equal(state.prs[0].body, previousBody)
 })
 
 test('a rejected PR blocks publication, and failed identity checks create no branch', async () => {
