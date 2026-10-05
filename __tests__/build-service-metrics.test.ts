@@ -47,6 +47,25 @@ it('attributes interleaved library phase events to the right build', async () =>
 })
 
 describe('build-service metrics thresholds', () => {
+  it('attributes a contextless native event only when one build is active', () => {
+    const first = startBuildTrace('size', 'first@1.0.0')
+
+    recordBuildPhase('TASK_PACKAGE_COMPILE', { duration: 12 })
+    expect(first.phases[0].attribution).toBe('sole-active-build')
+
+    const second = startBuildTrace('size', 'second@1.0.0')
+
+    try {
+      recordBuildPhase('TASK_PACKAGE_COMPILE', { duration: 20 })
+      recordBuildPhase('TASK_PACKAGE_BUILD', null)
+      expect(first.phases).toHaveLength(1)
+      expect(second.phases).toHaveLength(0)
+    } finally {
+      first.finish()
+      second.finish()
+    }
+  })
+
   it('does not classify ordinary builds as expensive', () => {
     expect(isExpensiveBuild(baseMetrics)).toBe(false)
   })

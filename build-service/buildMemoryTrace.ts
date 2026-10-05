@@ -6,6 +6,7 @@ const phaseDetails = z.object({ duration: z.number() })
 
 type PhaseMark = {
   event: string
+  attribution: 'async-context' | 'sole-active-build'
   elapsedMs: number
   durationMs: number
   rssBytes: number
@@ -68,7 +69,13 @@ export function recordBuildPhase(
   // oxlint-disable-next-line anti-slop/no-unknown-parameters
   details: unknown,
 ) {
-  const trace = storage.getStore()
+  const contextualTrace = storage.getStore()
+
+  // Rspack's native completion callback can lose async context. A single
+  // active build is unambiguous; never guess when multiple builds overlap.
+  const trace =
+    contextualTrace ??
+    (active.size === 1 ? active.values().next().value : undefined)
   const phase = String(event)
 
   if (!trace || !phase.startsWith('TASK_PACKAGE_')) {
@@ -82,6 +89,7 @@ export function recordBuildPhase(
   const memory = process.memoryUsage()
   trace.phases.push({
     event: phase,
+    attribution: contextualTrace ? 'async-context' : 'sole-active-build',
     elapsedMs: Math.round(performance.now() - trace.startedAt),
     durationMs: Math.round(parsed.data.duration),
     rssBytes: memory.rss,

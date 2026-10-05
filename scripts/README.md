@@ -28,6 +28,8 @@ Outputs:
   every 200 ms from the supervisor, unaffected by the child's blocked event loop.
 - Existing build-metrics artifacts: library phase events, V8/external memory,
   CPU, concurrency and process-tree samples. Each replay handles one build at a time.
+  Native callbacks that lose async context are attributed only with one active
+  build and labeled `sole-active-build`; overlapping contextless events are omitted.
 - `retained-N.json`: before/after/post-GC-and-idle memory for repeated builds.
 - `result-N.json` and a Node CPU profile: compare outputs and JavaScript hotspots.
 
