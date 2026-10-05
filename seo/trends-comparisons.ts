@@ -1,26 +1,29 @@
-export const trendsComparisons = [
-  ['react', 'vue'],
-  ['react', 'preact'],
-  ['react', 'svelte'],
-  ['react', '@angular/core'],
-  ['date-fns', 'dayjs'],
-  ['moment', 'dayjs'],
-  ['date-fns', 'luxon'],
-  ['lodash', 'ramda'],
-  ['lodash', 'underscore'],
-  ['axios', 'ky'],
-  ['react-hook-form', 'formik'],
-  ['zustand', 'jotai'],
-  ['zustand', '@reduxjs/toolkit'],
-  ['zod', 'yup'],
-  ['zod', 'valibot'],
-  ['@tanstack/react-query', 'swr'],
-  ['recharts', 'chart.js'],
-  ['clsx', 'classnames'],
-  ['express', 'fastify'],
-  ['vite', 'webpack'],
-  ['jest', 'vitest'],
-] as const
+import { categories, comparisonGroups } from '../utils/similarPackages'
+
+function deriveComparisons() {
+  const pairs = new Map<string, string[]>()
+
+  const groups = [
+    ...comparisonGroups.map(group => group.packages),
+    ...Object.values(categories).map(category => category.similar),
+  ]
+
+  for (const packages of groups) {
+    const peers = [...new Set(packages)]
+
+    peers.forEach((name, index) => {
+      for (const peer of peers.slice(index + 1)) {
+        const key = [name, peer].sort().join('~vs~')
+
+        if (!pairs.has(key)) pairs.set(key, [name, peer])
+      }
+    })
+  }
+
+  return [...pairs.values()]
+}
+
+export const trendsComparisons = deriveComparisons()
 
 export function trendsComparisonPath(packages: readonly string[]) {
   return `/trends?packages=${packages.map(encodeURIComponent).join('~vs~')}`

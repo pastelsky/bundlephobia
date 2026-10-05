@@ -35,12 +35,7 @@ test.describe('trends SEO and discovery without JavaScript', () => {
         ),
     ).toBe(true)
 
-    for (const packages of [
-      'react~vs~vue',
-      'lodash~vs~ramda',
-      'date-fns~vs~dayjs',
-      'axios~vs~ky',
-    ]) {
+    for (const packages of ['react~vs~vue', 'react~vs~preact']) {
       await expect(
         page.locator(`a[href="/trends?packages=${packages}"]`),
       ).toBeVisible()
@@ -72,18 +67,18 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     page,
   }) => {
     await page.goto(
-      '/trends?packages=lodash~vs~ramda&metric=size&range=last-3-years',
+      '/trends?packages=axios~vs~ky&metric=size&range=last-3-years',
     )
     await expect(page).toHaveTitle(
-      'lodash vs ramda — downloads, stars & size | Bundlephobia',
+      'axios vs ky — downloads, stars & size | Bundlephobia',
     )
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       'content',
-      'lodash vs ramda — downloads, stars & size | Bundlephobia',
+      'axios vs ky — downloads, stars & size | Bundlephobia',
     )
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
-      'https://bundlephobia.com/trends?packages=lodash~vs~ramda',
+      'https://bundlephobia.com/trends?packages=axios~vs~ky',
     )
   })
 
@@ -109,6 +104,19 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     }
 
     expect(sitemap).not.toMatch(/metric=|range=|groupBy=/)
+
+    // These come from existing peer groups and similar-package categories,
+    // including a pair that was not in the old SEO list.
+    for (const packages of [
+      ['react', 'vue'],
+      ['axios', 'ky'],
+      ['formik', 'react-hook-form'],
+      ['clsx', 'classix'],
+    ]) {
+      expect(sitemap).toContain(
+        `<loc>https://bundlephobia.com${trendsComparisonPath(packages)}</loc>`,
+      )
+    }
   })
 
   for (const [packagePath, packageName] of [
@@ -142,10 +150,16 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     })
   }
 
-  test('every sitemap comparison has matching initial metadata and selected packages', async ({
+  test('comparisons from peer groups and similar categories have matching initial HTML', async ({
     page,
   }) => {
-    for (const packages of trendsComparisons) {
+    for (const packages of [
+      ['react', 'vue'],
+      ['date-fns', 'dayjs'],
+      ['axios', 'ky'],
+      ['@sinclair/typebox', 'valibot'],
+      ['clsx', 'classix'],
+    ]) {
       await page.goto(trendsComparisonPath(packages))
       await expect(page).toHaveTitle(
         `${packages.join(' vs ')} — downloads, stars & size | Bundlephobia`,
@@ -165,7 +179,7 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     }
   })
 
-  test('package order and filters consolidate to the same curated comparison', async ({
+  test('package order and filters consolidate to the same comparison', async ({
     page,
   }) => {
     await page.goto(

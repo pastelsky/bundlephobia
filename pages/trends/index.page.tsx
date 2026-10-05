@@ -122,7 +122,11 @@ function MetricValue({
   )
 }
 
-function TrendsGuide() {
+function TrendsGuide({ packages }: { packages: string[] }) {
+  const relatedComparisons = trendsComparisons
+    .filter(comparison => comparison.some(name => packages.includes(name)))
+    .slice(0, 10)
+
   return (
     <section
       className="trends-page__container trends-guide"
@@ -132,10 +136,10 @@ function TrendsGuide() {
       <p>
         Downloads include automated installs and CI jobs. Stars are repository
         totals and may include estimated history. Sizes come from previously
-        analyzed versions; coverage can be sparse.
+        analyzed versions.
       </p>
       <ul className="trends-guide__comparisons">
-        {trendsComparisons.map(packages => (
+        {relatedComparisons.map(packages => (
           <li key={packages.join('~vs~')}>
             <Link href={trendsComparisonPath(packages)}>
               {packages.join(' vs ')}
@@ -404,7 +408,10 @@ export default function TrendsPage({
     : 'Compare downloads, GitHub stars, and size history across packages.'
 
   return (
-    <Layout className="trends-page" bottomContent={<TrendsGuide />}>
+    <Layout
+      className="trends-page"
+      bottomContent={<TrendsGuide packages={packages} />}
+    >
       <MetaTags
         title={pageTitle}
         description={description}
