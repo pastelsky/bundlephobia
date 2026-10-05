@@ -7,9 +7,7 @@ import {
 test.describe('trends SEO and discovery without JavaScript', () => {
   test.use({ javaScriptEnabled: false })
 
-  test('the landing page explains the tool and links to starter comparisons', async ({
-    page,
-  }) => {
+  test('the landing page has matching initial metadata', async ({ page }) => {
     const response = await page.goto('/trends')
     expect(response?.status()).toBe(200)
     await expect(page).toHaveTitle(
@@ -19,48 +17,6 @@ test.describe('trends SEO and discovery without JavaScript', () => {
       'href',
       'https://bundlephobia.com/trends',
     )
-    await expect(
-      page.getByRole('heading', { name: 'About these comparisons' }),
-    ).toBeVisible()
-    await expect(
-      page.getByText('Downloads include automated installs and CI jobs.', {
-        exact: false,
-      }),
-    ).toBeVisible()
-    expect(
-      await page
-        .locator('.layout')
-        .evaluate(element =>
-          element.lastElementChild?.classList.contains('trends-guide'),
-        ),
-    ).toBe(true)
-
-    for (const packages of ['react~vs~vue', 'react~vs~preact']) {
-      await expect(
-        page.locator(`a[href="/trends?packages=${packages}"]`),
-      ).toBeVisible()
-    }
-
-    await page.locator('.trends-guide').scrollIntoViewIfNeeded()
-    await page.screenshot({ path: 'test-results/trends-discovery-bottom.png' })
-    await page
-      .locator('.trends-guide')
-      .screenshot({ path: 'test-results/trends-discovery-desktop.png' })
-  })
-
-  test('the discovery guide stays within a narrow mobile viewport', async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 375, height: 812 })
-    await page.goto('/trends')
-    const guide = page.locator('.trends-guide')
-    await expect(guide).toBeVisible()
-    const bounds = await guide.boundingBox()
-    expect(bounds?.x).toBeGreaterThanOrEqual(0)
-    expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(375)
-    await guide.screenshot({
-      path: 'test-results/trends-discovery-mobile.png',
-    })
   })
 
   test('a non-default comparison does not advertise react versus vue in its initial metadata', async ({

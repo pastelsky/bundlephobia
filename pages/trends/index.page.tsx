@@ -27,7 +27,6 @@ import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
 import { groupTrendsPackage } from '../../utils/trends'
 import {
-  trendsComparisons,
   trendsComparisonPath,
   findTrendsComparison,
 } from '../../seo/trends-comparisons'
@@ -119,35 +118,6 @@ function MetricValue({
         <span className="trends-stat__unit">{formatted.unit}</span>
       )}
     </>
-  )
-}
-
-function TrendsGuide({ packages }: { packages: string[] }) {
-  const relatedComparisons = trendsComparisons
-    .filter(comparison => comparison.some(name => packages.includes(name)))
-    .slice(0, 10)
-
-  return (
-    <section
-      className="trends-page__container trends-guide"
-      aria-labelledby="trends-guide-heading"
-    >
-      <h2 id="trends-guide-heading">About these comparisons</h2>
-      <p>
-        Downloads include automated installs and CI jobs. Stars are repository
-        totals and may include estimated history. Sizes come from previously
-        analyzed versions.
-      </p>
-      <ul className="trends-guide__comparisons">
-        {relatedComparisons.map(packages => (
-          <li key={packages.join('~vs~')}>
-            <Link href={trendsComparisonPath(packages)}>
-              {packages.join(' vs ')}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
   )
 }
 
@@ -408,10 +378,7 @@ export default function TrendsPage({
     : 'Compare downloads, GitHub stars, and size history across packages.'
 
   return (
-    <Layout
-      className="trends-page"
-      bottomContent={<TrendsGuide packages={packages} />}
-    >
+    <Layout className="trends-page">
       <MetaTags
         title={pageTitle}
         description={description}
