@@ -6,7 +6,8 @@ on:
   pull_request:
     branches: [bundlephobia]
     paths:
-      - server/middlewares/similar-packages/fixtures.ts
+      - utils/similar-packages.catalog.json
+      - utils/similarPackages.ts
       - .github/scripts/recommendation-quality.mjs
       - .github/scripts/check-recommendation-changes.mjs
       - .github/workflows/package-recommendations.yml

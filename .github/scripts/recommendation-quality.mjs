@@ -132,7 +132,11 @@ export async function collectBundleSize(
 
 export async function collectPackageSignals(
   packageName,
-  { fetchImpl = fetch, githubToken = process.env.GITHUB_TOKEN } = {},
+  {
+    fetchImpl = fetch,
+    githubToken = process.env.GITHUB_TOKEN,
+    includeBundleSize = true,
+  } = {},
 ) {
   const encodedName = encodeURIComponent(packageName)
   let registry
@@ -190,7 +194,7 @@ export async function collectPackageSignals(
           fetchImpl,
         ).catch(() => null)
       : null,
-    collectBundleSize(packageName, { fetchImpl }),
+    includeBundleSize ? collectBundleSize(packageName, { fetchImpl }) : null,
   ])
 
   const publishedAt = latestVersion ? registry.time?.[latestVersion] : null

@@ -1,0 +1,1620 @@
+{
+  "classname-strings": {
+    "name": "Classname string construction",
+    "tags": [
+      {
+        "tag": "class",
+        "weight": 7
+      },
+      {
+        "tag": "classnames",
+        "weight": 7
+      },
+      {
+        "tag": "string",
+        "weight": 3
+      },
+      {
+        "tag": "construct",
+        "weight": 3
+      },
+      {
+        "tag": "conditional",
+        "weight": 3
+      }
+    ],
+    "similar": ["clsx", "classnames", "classcat", "classix"]
+  },
+  "clipboard": {
+    "name": "Clipboard Utilities",
+    "tags": [
+      {
+        "tag": "clipboard",
+        "weight": 15
+      },
+      {
+        "tag": "copy",
+        "weight": 3
+      },
+      {
+        "tag": "cut",
+        "weight": 3
+      }
+    ],
+    "similar": [
+      "clipboard",
+      "clipboardy",
+      "clipboard-copy",
+      "copy-text-to-clipboard",
+      "clipboard-polyfill"
+    ]
+  },
+  "css-in-js": {
+    "name": "CSS in JS libraries",
+    "tags": [
+      {
+        "tag": "css js",
+        "weight": 5
+      },
+      {
+        "tag": "styles",
+        "weight": 5
+      },
+      {
+        "tag": "inline",
+        "weight": 5
+      },
+      {
+        "tag": "in",
+        "weight": 3
+      }
+    ],
+    "similar": ["styled-components", "@emotion/css", "jss", "linaria"]
+  },
+  "color-manipulation": {
+    "name": "Color parsing and manipulation",
+    "tags": [
+      {
+        "tag": "color convert parse manipulate",
+        "weight": 5
+      }
+    ],
+    "similar": ["chroma-js", "color", "tinycolor2", "colors.js", "color2k"]
+  },
+  "cookie-browser": {
+    "name": "Cookie Manipulation for Node.js",
+    "tags": [
+      {
+        "tag": "cookie",
+        "weight": 15
+      },
+      {
+        "tag": "manipulate",
+        "weight": 5
+      },
+      {
+        "tag": "parse",
+        "weight": 3
+      },
+      {
+        "tag": "parser",
+        "weight": 3
+      },
+      {
+        "tag": "jar",
+        "weight": 5
+      },
+      {
+        "tag": "node",
+        "weight": 5
+      }
+    ],
+    "similar": [
+      "cookie",
+      "tough-cookie",
+      "js-cookie",
+      "tiny-cookie",
+      "universal-cookie"
+    ]
+  },
+  "cookie-node": {
+    "name": "Cookie Manipulation for Browsers",
+    "tags": [
+      {
+        "tag": "cookie",
+        "weight": 15
+      },
+      {
+        "tag": "manipulate",
+        "weight": 5
+      },
+      {
+        "tag": "parse",
+        "weight": 3
+      },
+      {
+        "tag": "parser",
+        "weight": 3
+      },
+      {
+        "tag": "browser",
+        "weight": 1
+      }
+    ],
+    "similar": ["js-cookie", "browser-cookies", "universal-cookie"]
+  },
+  "browser-2d-game-engine": {
+    "name": "Browser 2D game engines",
+    "tags": [
+      {
+        "tag": "game engine",
+        "weight": 15
+      },
+      {
+        "tag": "2d",
+        "weight": 7
+      },
+      {
+        "tag": "canvas",
+        "weight": 5
+      },
+      {
+        "tag": "webgl",
+        "weight": 5
+      },
+      {
+        "tag": "browser",
+        "weight": 5
+      }
+    ],
+    "similar": ["melonjs", "excalibur", "phaser"]
+  },
+  "date-nlp": {
+    "name": "Natural language date-time utilities",
+    "tags": [
+      {
+        "tag": "date",
+        "weight": 7
+      },
+      {
+        "tag": "time",
+        "weight": 7
+      },
+      {
+        "tag": "parse",
+        "weight": 3
+      },
+      {
+        "tag": "parser",
+        "weight": 3
+      },
+      {
+        "tag": "nlp",
+        "weight": 7
+      },
+      {
+        "tag": "natural language",
+        "weight": 7
+      },
+      {
+        "tag": "format",
+        "weight": 3
+      },
+      {
+        "tag": "human",
+        "weight": 3
+      }
+    ],
+    "similar": ["chrono-node", "its-a-date", "parse-messy-time"]
+  },
+  "deep-equality": {
+    "name": "Deep Equality Check",
+    "tags": [
+      {
+        "tag": "deep equal",
+        "weight": 5
+      },
+      {
+        "tag": "object",
+        "weight": 3
+      },
+      {
+        "tag": "compare",
+        "weight": 5
+      },
+      {
+        "tag": "isequal",
+        "weight": 7
+      }
+    ],
+    "similar": [
+      "dequal",
+      "fast-deep-equal",
+      "@gilbarbara/deep-equal",
+      "deep-eql",
+      "deep-equal"
+    ]
+  },
+  "drag-and-drop": {
+    "name": "Drag & Drop Libraries",
+    "tags": [
+      {
+        "tag": "drag drop",
+        "weight": 5
+      },
+      {
+        "tag": "sort",
+        "weight": 3
+      },
+      {
+        "tag": "order",
+        "weight": 3
+      }
+    ],
+    "similar": [
+      "@shopify/draggable",
+      "dragula",
+      "muuri",
+      "sortablejs",
+      "draggabilly",
+      "interactjs"
+    ]
+  },
+  "dom-capture": {
+    "name": "DOM screenshot and image capture",
+    "tags": [
+      {
+        "tag": "screenshot",
+        "weight": 15
+      },
+      {
+        "tag": "capture",
+        "weight": 7
+      },
+      {
+        "tag": "dom",
+        "weight": 7
+      },
+      {
+        "tag": "image",
+        "weight": 5
+      },
+      {
+        "tag": "canvas",
+        "weight": 3
+      }
+    ],
+    "similar": [
+      "dom-to-image-more",
+      "html-to-image",
+      "modern-screenshot",
+      "html2canvas"
+    ]
+  },
+  "excel-parsers": {
+    "name": "Excel file readers",
+    "tags": [
+      {
+        "tag": "excel",
+        "weight": 7
+      },
+      {
+        "tag": "read",
+        "weight": 5
+      },
+      {
+        "tag": "parse",
+        "weight": 5
+      },
+      {
+        "tag": "import",
+        "weight": 3
+      }
+    ],
+    "similar": ["read-excel-file", "xlsx", "exceljs"]
+  },
+  "excel-export-browser": {
+    "name": "Browser spreadsheet export",
+    "tags": [
+      {
+        "tag": "export",
+        "weight": 15
+      },
+      {
+        "tag": "excel",
+        "weight": 7
+      },
+      {
+        "tag": "spreadsheet",
+        "weight": 7
+      },
+      {
+        "tag": "xlsx",
+        "weight": 7
+      },
+      {
+        "tag": "csv",
+        "weight": 3
+      },
+      {
+        "tag": "browser",
+        "weight": 5
+      },
+      {
+        "tag": "table",
+        "weight": 5
+      }
+    ],
+    "similar": ["excellentexport", "write-excel-file", "export-from-json"]
+  },
+  "finite-state-machine": {
+    "name": "Finite state machine libraries",
+    "tags": [
+      {
+        "tag": "state machine",
+        "weight": 15
+      },
+      {
+        "tag": "finite state",
+        "weight": 7
+      },
+      {
+        "tag": "statechart",
+        "weight": 7
+      },
+      {
+        "tag": "fsm",
+        "weight": 7
+      },
+      {
+        "tag": "actor",
+        "weight": 3
+      }
+    ],
+    "similar": ["robot3", "xstate", "@zag-js/core"]
+  },
+  "full-text-search": {
+    "name": "Text search",
+    "tags": [
+      {
+        "tag": "search",
+        "weight": 5
+      },
+      {
+        "tag": "solr",
+        "weight": 7
+      },
+      {
+        "tag": "fuzzy",
+        "weight": 5
+      },
+      {
+        "tag": "text",
+        "weight": 5
+      }
+    ],
+    "similar": ["minisearch", "flexsearch", "fuse.js", "lunr"]
+  },
+  "fetch-polyfill": {
+    "name": "Fetch polyfills",
+    "tags": [
+      {
+        "tag": "fetch",
+        "weight": 7
+      },
+      {
+        "tag": "polyfill",
+        "weight": 5
+      },
+      {
+        "tag": "xhr",
+        "weight": 5
+      },
+      {
+        "tag": "http",
+        "weight": 3
+      },
+      {
+        "tag": "request",
+        "weight": 3
+      }
+    ],
+    "similar": ["whatwg-fetch", "node-fetch", "unfetch", "make-fetch-happen"]
+  },
+  "general-purpose-date-time": {
+    "name": "General purpose date-time utilities",
+    "tags": [
+      {
+        "tag": "date",
+        "weight": 7
+      },
+      {
+        "tag": "time",
+        "weight": 7
+      },
+      {
+        "tag": "parse",
+        "weight": 3
+      },
+      {
+        "tag": "parser",
+        "weight": 3
+      },
+      {
+        "tag": "format",
+        "weight": 3
+      }
+    ],
+    "similar": ["@formkit/tempo", "moment", "luxon", "dayjs", "date-fns"]
+  },
+  "general-purpose-3d": {
+    "name": "General purpose 3D libraries",
+    "tags": [
+      {
+        "tag": "3d",
+        "weight": 15
+      },
+      {
+        "tag": "webgl",
+        "weight": 15
+      },
+      {
+        "tag": "gl",
+        "weight": 7
+      }
+    ],
+    "similar": ["ogl", "playcanvas", "three", "babylonjs"]
+  },
+  "general-purpose-animation": {
+    "name": "General purpose animation libraries",
+    "tags": [
+      {
+        "tag": "animation",
+        "weight": 7
+      },
+      {
+        "tag": "tween",
+        "weight": 5
+      },
+      {
+        "tag": "easing",
+        "weight": 3
+      },
+      {
+        "tag": "morph",
+        "weight": 3
+      },
+      {
+        "tag": "transform",
+        "weight": 5
+      },
+      {
+        "tag": "motion",
+        "weight": 5
+      },
+      {
+        "tag": "svg",
+        "weight": 3
+      },
+      {
+        "tag": "physics",
+        "weight": 3
+      },
+      {
+        "tag": "dom",
+        "weight": 3
+      }
+    ],
+    "similar": ["gsap", "animejs", "velocity-animate", "popmotion"]
+  },
+  "general-purpose-charting": {
+    "name": "General purpose Charting libraries",
+    "tags": [
+      {
+        "tag": "dom",
+        "weight": 3
+      },
+      {
+        "tag": "visualization",
+        "weight": 7
+      },
+      {
+        "tag": "dataviz",
+        "weight": 7
+      },
+      {
+        "tag": "svg",
+        "weight": 1
+      },
+      {
+        "tag": "canvas",
+        "weight": 3
+      },
+      {
+        "tag": "charts",
+        "weight": 15
+      },
+      {
+        "tag": "data",
+        "weight": 3
+      }
+    ],
+    "similar": [
+      "ag-charts-community",
+      "d3",
+      "chart.js",
+      "echarts",
+      "highcharts",
+      "uplot"
+    ]
+  },
+  "graphql-client": {
+    "name": "GraphQL Clients",
+    "tags": [
+      {
+        "tag": "graphql",
+        "weight": 7
+      },
+      {
+        "tag": "client",
+        "weight": 3
+      },
+      {
+        "tag": "js",
+        "weight": 3
+      },
+      {
+        "tag": "javascript",
+        "weight": 3
+      }
+    ],
+    "similar": ["@apollo/client", "graphql-request", "relay-runtime", "urql"]
+  },
+  "html-sanitization": {
+    "name": "HTML Sanitization",
+    "tags": [
+      {
+        "tag": "html",
+        "weight": 5
+      },
+      {
+        "tag": "dom",
+        "weight": 5
+      },
+      {
+        "tag": "sanitize",
+        "weight": 7
+      },
+      {
+        "tag": "untrusted",
+        "weight": 1
+      },
+      {
+        "tag": "escape",
+        "weight": 3
+      },
+      {
+        "tag": "filter",
+        "weight": 5
+      },
+      {
+        "tag": "xss",
+        "weight": 7
+      },
+      {
+        "tag": "whitelist",
+        "weight": 1
+      }
+    ],
+    "similar": ["sanitize-html", "xss", "dompurify", "sanitizer"]
+  },
+  "input-masking": {
+    "name": "Input masking and formatting",
+    "tags": [
+      {
+        "tag": "mask",
+        "weight": 15
+      },
+      {
+        "tag": "input",
+        "weight": 7
+      },
+      {
+        "tag": "format",
+        "weight": 5
+      },
+      {
+        "tag": "pattern",
+        "weight": 3
+      }
+    ],
+    "similar": ["maska", "@maskito/core", "imask", "inputmask"]
+  },
+  "i18n": {
+    "name": "Internationalization",
+    "tags": [
+      {
+        "tag": "i18n",
+        "weight": 7
+      },
+      {
+        "tag": "intl",
+        "weight": 7
+      },
+      {
+        "tag": "internation",
+        "weight": 7
+      },
+      {
+        "tag": "language",
+        "weight": 3
+      }
+    ],
+    "similar": ["fbt", "globalize", "i18next", "node-polyglot", "@lingui/core"]
+  },
+  "node-http-request": {
+    "name": "HTTP client libraries for Node.js",
+    "tags": [
+      {
+        "tag": "http",
+        "weight": 5
+      },
+      {
+        "tag": "get",
+        "weight": 5
+      },
+      {
+        "tag": "post",
+        "weight": 5
+      },
+      {
+        "tag": "ajax",
+        "weight": 7
+      },
+      {
+        "tag": "url",
+        "weight": 1
+      },
+      {
+        "tag": "request",
+        "weight": 7
+      },
+      {
+        "tag": "agent",
+        "weight": 3
+      },
+      {
+        "tag": "xhr",
+        "weight": 5
+      },
+      {
+        "tag": "node node.js",
+        "weight": 5
+      }
+    ],
+    "similar": ["wretch", "ofetch", "axios", "got"]
+  },
+  "browser-http-request": {
+    "name": "HTTP client libraries for Browser",
+    "tags": [
+      {
+        "tag": "http",
+        "weight": 5
+      },
+      {
+        "tag": "get",
+        "weight": 5
+      },
+      {
+        "tag": "post",
+        "weight": 5
+      },
+      {
+        "tag": "ajax",
+        "weight": 7
+      },
+      {
+        "tag": "url",
+        "weight": 1
+      },
+      {
+        "tag": "request",
+        "weight": 7
+      },
+      {
+        "tag": "agent",
+        "weight": 3
+      },
+      {
+        "tag": "xhr",
+        "weight": 5
+      },
+      {
+        "tag": "browser",
+        "weight": 5
+      }
+    ],
+    "similar": ["axios", "ky", "xior", "superagent", "redaxios"]
+  },
+  "icu-message-fromatter": {
+    "name": "ICU message string formatters",
+    "tags": [
+      {
+        "tag": "icu",
+        "weight": 7
+      },
+      {
+        "tag": "message",
+        "weight": 5
+      },
+      {
+        "tag": "format",
+        "weight": 3
+      },
+      {
+        "tag": "plural",
+        "weight": 3
+      },
+      {
+        "tag": "gender",
+        "weight": 3
+      },
+      {
+        "tag": "parse",
+        "weight": 1
+      }
+    ],
+    "similar": ["messageformat", "intl-messageformat"]
+  },
+  "image-color-extraction": {
+    "name": "Image color extraction",
+    "tags": [
+      {
+        "tag": "color",
+        "weight": 7
+      },
+      {
+        "tag": "image",
+        "weight": 7
+      },
+      {
+        "tag": "extract",
+        "weight": 7
+      },
+      {
+        "tag": "dominant",
+        "weight": 7
+      },
+      {
+        "tag": "palette",
+        "weight": 7
+      },
+      {
+        "tag": "pixels",
+        "weight": 3
+      }
+    ],
+    "similar": ["extract-colors", "node-vibrant"]
+  },
+  "immutable-data-structures": {
+    "name": "Immutable Data",
+    "tags": [
+      {
+        "tag": "immutable",
+        "weight": 7
+      },
+      {
+        "tag": "persistent",
+        "weight": 5
+      },
+      {
+        "tag": "functional",
+        "weight": 3
+      },
+      {
+        "tag": "collection",
+        "weight": 5
+      },
+      {
+        "tag": "structure",
+        "weight": 5
+      },
+      {
+        "tag": "tree",
+        "weight": 3
+      },
+      {
+        "tag": "freeze",
+        "weight": 3
+      },
+      {
+        "tag": "cursor",
+        "weight": 3
+      }
+    ],
+    "similar": ["immer", "immutable", "immutability-helper"]
+  },
+  "lazy-load-content": {
+    "name": "Lazy Loading Content",
+    "tags": [
+      {
+        "tag": "lazy",
+        "weight": 5
+      },
+      {
+        "tag": "load",
+        "weight": 5
+      },
+      {
+        "tag": "lazyload",
+        "weight": 7
+      },
+      {
+        "tag": "image",
+        "weight": 5
+      },
+      {
+        "tag": "iframe",
+        "weight": 3
+      },
+      {
+        "tag": "video",
+        "weight": 3
+      }
+    ],
+    "similar": ["lazysizes", "lozad", "vanilla-lazyload"]
+  },
+  "markdown-parser": {
+    "name": "Markdown parsers",
+    "tags": [
+      {
+        "tag": "markdown",
+        "weight": 7
+      },
+      {
+        "tag": "parse",
+        "weight": 5
+      },
+      {
+        "tag": "parser",
+        "weight": 5
+      },
+      {
+        "tag": "ast",
+        "weight": 3
+      },
+      {
+        "tag": "abstract syntax tree",
+        "weight": 3
+      },
+      {
+        "tag": "md",
+        "weight": 7
+      }
+    ],
+    "similar": ["marked", "markdown-it", "showdown"]
+  },
+  "memoization": {
+    "name": "Memoization",
+    "tags": [
+      {
+        "tag": "memoize",
+        "weight": 7
+      },
+      {
+        "tag": "cache",
+        "weight": 5
+      },
+      {
+        "tag": "performance",
+        "weight": 3
+      }
+    ],
+    "similar": [
+      "memoize",
+      "memoize-one",
+      "lodash.memoize",
+      "mem",
+      "fast-memoize"
+    ]
+  },
+  "number-manipulation": {
+    "name": "Number and Currency Formatting",
+    "tags": [
+      {
+        "tag": "format",
+        "weight": 5
+      },
+      {
+        "tag": "manipulate",
+        "weight": 5
+      },
+      {
+        "tag": "currency",
+        "weight": 7
+      },
+      {
+        "tag": "money",
+        "weight": 7
+      },
+      {
+        "tag": "number",
+        "weight": 7
+      }
+    ],
+    "similar": ["numeral", "numbro", "accounting", "currency.js", "dinero.js"]
+  },
+  "pdf-generator": {
+    "name": "Client-side PDF Creation",
+    "tags": [
+      {
+        "tag": "pdf",
+        "weight": 7
+      },
+      {
+        "tag": "generate",
+        "weight": 3
+      },
+      {
+        "tag": "create",
+        "weight": 3
+      },
+      {
+        "tag": "document",
+        "weight": 3
+      },
+      {
+        "tag": "client",
+        "weight": 5
+      },
+      {
+        "tag": "browser",
+        "weight": 5
+      }
+    ],
+    "similar": [
+      "@pdfme/generator",
+      "jspdf",
+      "pdfkit",
+      "pdfmake",
+      "@react-pdf/renderer"
+    ]
+  },
+  "phone-number": {
+    "name": "Phone number parsing, validation and formatting",
+    "tags": [
+      {
+        "tag": "phone",
+        "weight": 15
+      },
+      {
+        "tag": "telephone",
+        "weight": 7
+      },
+      {
+        "tag": "number",
+        "weight": 5
+      },
+      {
+        "tag": "validate",
+        "weight": 3
+      },
+      {
+        "tag": "format",
+        "weight": 3
+      }
+    ],
+    "similar": [
+      "phone",
+      "libphonenumber-js",
+      "awesome-phonenumber",
+      "google-libphonenumber"
+    ]
+  },
+  "promise-polyfill": {
+    "name": "Promise polyfills",
+    "tags": [
+      {
+        "tag": "promise",
+        "weight": 7
+      },
+      {
+        "tag": "polyfill",
+        "weight": 3
+      },
+      {
+        "tag": "es6",
+        "weight": 3
+      },
+      {
+        "tag": "aplus",
+        "weight": 7
+      },
+      {
+        "tag": "async",
+        "weight": 3
+      },
+      {
+        "tag": "implementation",
+        "weight": 3
+      }
+    ],
+    "similar": [
+      "promise",
+      "es6-promise",
+      "promise-polyfill",
+      "es6-promise-polyfill"
+    ]
+  },
+  "react-animation": {
+    "name": "React based animation",
+    "tags": [
+      {
+        "tag": "animation",
+        "weight": 7
+      },
+      {
+        "tag": "transform",
+        "weight": 5
+      },
+      {
+        "tag": "motion",
+        "weight": 5
+      }
+    ],
+    "similar": ["react-spring", "framer-motion"]
+  },
+  "react-autocomplete": {
+    "name": "React based autocomplete components",
+    "tags": [
+      {
+        "tag": "react",
+        "weight": 5
+      },
+      {
+        "tag": "autocomplete",
+        "weight": 5
+      },
+      {
+        "tag": "autosuggest",
+        "weight": 5
+      },
+      {
+        "tag": "typeahead",
+        "weight": 5
+      }
+    ],
+    "similar": ["react-autosuggest", "downshift", "react-select"]
+  },
+  "react-head-meta": {
+    "name": "React based meta tags management",
+    "tags": [
+      {
+        "tag": "react",
+        "weight": 5
+      },
+      {
+        "tag": "head",
+        "weight": 3
+      },
+      {
+        "tag": "document",
+        "weight": 3
+      },
+      {
+        "tag": "title",
+        "weight": 3
+      },
+      {
+        "tag": "meta tags",
+        "weight": 3
+      }
+    ],
+    "similar": ["react-helmet-async", "react-meta-tags", "react-document-title"]
+  },
+  "react-hooks": {
+    "name": "React hook collections",
+    "tags": [
+      {
+        "tag": "react",
+        "weight": 5
+      },
+      {
+        "tag": "hooks",
+        "weight": 15
+      },
+      {
+        "tag": "hook",
+        "weight": 7
+      },
+      {
+        "tag": "utilities",
+        "weight": 5
+      }
+    ],
+    "similar": ["@react-hookz/web", "react-use", "ahooks", "usehooks-ts"]
+  },
+  "react-i18n": {
+    "name": "React based internationalization",
+    "tags": [
+      {
+        "tag": "react",
+        "weight": 5
+      },
+      {
+        "tag": "i18n",
+        "weight": 7
+      },
+      {
+        "tag": "intl",
+        "weight": 7
+      },
+      {
+        "tag": "internation",
+        "weight": 7
+      }
+    ],
+    "similar": [
+      "next-intl",
+      "react-intl",
+      "react-i18next",
+      "next-translate",
+      "react-intl-universal",
+      "@lingui/react"
+    ]
+  },
+  "react-form": {
+    "name": "React based form builders & validators",
+    "tags": [
+      {
+        "tag": "react",
+        "weight": 5
+      },
+      {
+        "tag": "redux",
+        "weight": 3
+      },
+      {
+        "tag": "form",
+        "weight": 7
+      },
+      {
+        "tag": "validate",
+        "weight": 1
+      }
+    ],
+    "similar": [
+      "formik",
+      "react-final-form",
+      "informed",
+      "formsy-react",
+      "react-hook-form"
+    ]
+  },
+  "react-charting": {
+    "name": "React charting components",
+    "tags": [
+      {
+        "tag": "react",
+        "weight": 7
+      },
+      {
+        "tag": "chart",
+        "weight": 15
+      },
+      {
+        "tag": "visualization",
+        "weight": 7
+      },
+      {
+        "tag": "dataviz",
+        "weight": 7
+      },
+      {
+        "tag": "svg",
+        "weight": 3
+      }
+    ],
+    "similar": ["recharts", "react-chartjs-2", "victory"]
+  },
+  "react-inline-svg": {
+    "name": "React inline SVG loaders",
+    "tags": [
+      {
+        "tag": "react",
+        "weight": 7
+      },
+      {
+        "tag": "svg",
+        "weight": 15
+      },
+      {
+        "tag": "inline",
+        "weight": 15
+      },
+      {
+        "tag": "inject",
+        "weight": 7
+      },
+      {
+        "tag": "loader",
+        "weight": 5
+      }
+    ],
+    "similar": ["react-inlinesvg", "react-svg"]
+  },
+  "react-native-charting": {
+    "name": "React Native charting components",
+    "tags": [
+      {
+        "tag": "react native",
+        "weight": 15
+      },
+      {
+        "tag": "chart",
+        "weight": 15
+      },
+      {
+        "tag": "visualization",
+        "weight": 7
+      },
+      {
+        "tag": "mobile",
+        "weight": 5
+      }
+    ],
+    "similar": [
+      "victory-native",
+      "react-native-gifted-charts",
+      "react-native-chart-kit"
+    ]
+  },
+  "react-range-slider": {
+    "name": "React range slider components",
+    "tags": [
+      {
+        "tag": "react",
+        "weight": 7
+      },
+      {
+        "tag": "range",
+        "weight": 7
+      },
+      {
+        "tag": "slider",
+        "weight": 15
+      },
+      {
+        "tag": "input",
+        "weight": 7
+      },
+      {
+        "tag": "handle",
+        "weight": 3
+      }
+    ],
+    "similar": ["rc-slider", "react-range", "react-slider"]
+  },
+  "react-tooltip": {
+    "name": "React tooltip components",
+    "tags": [
+      {
+        "tag": "react",
+        "weight": 7
+      },
+      {
+        "tag": "tooltip",
+        "weight": 15
+      },
+      {
+        "tag": "popover",
+        "weight": 3
+      },
+      {
+        "tag": "hover",
+        "weight": 5
+      }
+    ],
+    "similar": ["react-tooltip", "@radix-ui/react-tooltip", "rc-tooltip"]
+  },
+  "schema-validation": {
+    "name": "Runtime schema validation",
+    "tags": [
+      {
+        "tag": "JSON",
+        "weight": 3
+      },
+      {
+        "tag": "object",
+        "weight": 3
+      },
+      {
+        "tag": "schema",
+        "weight": 5
+      },
+      {
+        "tag": "validator",
+        "weight": 7
+      },
+      {
+        "tag": "JSON",
+        "weight": 5
+      },
+      {
+        "tag": "assert",
+        "weight": 1
+      },
+      {
+        "tag": "check",
+        "weight": 1
+      },
+      {
+        "tag": "structure",
+        "weight": 3
+      }
+    ],
+    "similar": ["@sinclair/typebox", "valibot", "ajv", "yup", "zod"]
+  },
+  "querystring-parser": {
+    "name": "Query String Parsers",
+    "tags": [
+      {
+        "tag": "query string",
+        "weight": 5
+      },
+      {
+        "tag": "querystring",
+        "weight": 7
+      },
+      {
+        "tag": "parse",
+        "weight": 3
+      },
+      {
+        "tag": "parser",
+        "weight": 3
+      },
+      {
+        "tag": "url",
+        "weight": 3
+      },
+      {
+        "tag": "search params",
+        "weight": 3
+      },
+      {
+        "tag": "qs",
+        "weight": 3
+      },
+      {
+        "tag": "parameter",
+        "weight": 5
+      },
+      {
+        "tag": "params",
+        "weight": 5
+      }
+    ],
+    "similar": ["qs", "query-string", "querystringify", "querystring"]
+  },
+  "rich-text-editors": {
+    "name": "Rich Text Editors",
+    "tags": [
+      {
+        "tag": "richtext rich text editor WYSIWYG contenteditable",
+        "weight": 5
+      }
+    ],
+    "similar": [
+      "lexical",
+      "@tiptap/core",
+      "@milkdown/core",
+      "slate",
+      "quill",
+      "froala-editor"
+    ]
+  },
+  "site-tour": {
+    "name": "Site Tours",
+    "tags": [
+      {
+        "tag": "walkthrough",
+        "weight": 5
+      },
+      {
+        "tag": "focus",
+        "weight": 3
+      },
+      {
+        "tag": "tour",
+        "weight": 5
+      },
+      {
+        "tag": "guide",
+        "weight": 5
+      }
+    ],
+    "similar": ["intro.js", "hopscotch", "driver.js"]
+  },
+  "state-management": {
+    "name": "State management libraries",
+    "tags": [
+      {
+        "tag": "state",
+        "weight": 7
+      },
+      {
+        "tag": "management",
+        "weight": 7
+      },
+      {
+        "tag": "store",
+        "weight": 5
+      },
+      {
+        "tag": "react",
+        "weight": 3
+      },
+      {
+        "tag": "observable",
+        "weight": 3
+      },
+      {
+        "tag": "atom",
+        "weight": 3
+      }
+    ],
+    "similar": ["valtio", "zustand", "jotai", "mobx", "@reduxjs/toolkit"]
+  },
+  "slider": {
+    "name": "General purpose sliders & carousels",
+    "tags": [
+      {
+        "tag": "touch swipe",
+        "weight": 3
+      },
+      {
+        "tag": "carousel",
+        "weight": 5
+      },
+      {
+        "tag": "slider",
+        "weight": 5
+      }
+    ],
+    "similar": [
+      "embla-carousel",
+      "keen-slider",
+      "swiper",
+      "@glidejs/glide",
+      "slick-carousel"
+    ]
+  },
+  "templating": {
+    "name": "General purpose templating",
+    "tags": [
+      {
+        "tag": "template",
+        "weight": 5
+      },
+      {
+        "tag": "logic",
+        "weight": 3
+      },
+      {
+        "tag": "render",
+        "weight": 5
+      },
+      {
+        "tag": "html",
+        "weight": 1
+      }
+    ],
+    "similar": ["mustache", "handlebars", "pug", "nunjucks"]
+  },
+  "tree-data-structures": {
+    "name": "Tree data structures",
+    "tags": [
+      {
+        "tag": "tree",
+        "weight": 7
+      },
+      {
+        "tag": "graph",
+        "weight": 3
+      },
+      {
+        "tag": "node",
+        "weight": 1
+      },
+      {
+        "tag": "data structure",
+        "weight": 3
+      }
+    ],
+    "similar": ["functional-red-black-tree", "suffix-tree", "bin-tree"]
+  },
+  "url-manipulation": {
+    "name": "URL parsing and manipulation",
+    "tags": [
+      {
+        "tag": "url",
+        "weight": 7
+      },
+      {
+        "tag": "parse",
+        "weight": 5
+      },
+      {
+        "tag": "hostname",
+        "weight": 5
+      },
+      {
+        "tag": "domain",
+        "weight": 5
+      },
+      {
+        "tag": "path",
+        "weight": 5
+      },
+      {
+        "tag": "query",
+        "weight": 5
+      },
+      {
+        "tag": "scheme",
+        "weight": 5
+      },
+      {
+        "tag": "string",
+        "weight": 1
+      }
+    ],
+    "similar": ["url-parse", "normalize-url", "normalize-path"]
+  },
+  "virtual-dom": {
+    "name": "Virtual DOM libraries",
+    "tags": [
+      {
+        "tag": "virtual",
+        "weight": 7
+      },
+      {
+        "tag": "dom",
+        "weight": 7
+      },
+      {
+        "tag": "render",
+        "weight": 5
+      }
+    ],
+    "similar": ["hyperhtml", "snabbdom", "virtual-dom"]
+  },
+  "vue-carousel": {
+    "name": "Vue JS Sliders & Carousels",
+    "tags": [
+      {
+        "tag": "vue",
+        "weight": 7
+      },
+      {
+        "tag": "touch swipe",
+        "weight": 3
+      },
+      {
+        "tag": "carousel",
+        "weight": 5
+      },
+      {
+        "tag": "slider",
+        "weight": 5
+      }
+    ],
+    "similar": [
+      "vue-awesome-swiper",
+      "vue-carousel",
+      "vue-slick",
+      "vue-tiny-slider"
+    ]
+  }
+}
