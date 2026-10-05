@@ -10,8 +10,16 @@ import Amplitude from '@amplitude/node'
 import serializeError from './serializeError.js'
 import { measureBuild } from './metrics.js'
 import { createInstallationProvider } from './installationProvider.ts'
+import { activeBuilds, recordBuildPhase } from './buildMemoryTrace.ts'
+import memoryDiagnostics from '../scripts/memory-diagnostics.cjs'
 
 const fastify = Fastify()
+
+memoryDiagnostics.registerMetricsProvider('builds', () => ({
+  active: activeBuilds(),
+}))
+
+eventQueue.on('*', recordBuildPhase)
 
 const installationProvider = process.env.INSTALLATION_SERVICE_ENDPOINT
   ? createInstallationProvider(process.env.INSTALLATION_SERVICE_ENDPOINT)
