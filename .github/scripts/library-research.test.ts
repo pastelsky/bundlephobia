@@ -16,7 +16,7 @@ import {
   carryPending,
   mergeProposal,
   publishResearch,
-  readResearchSubmission,
+  readResearchProposal,
   verifyPackages,
   type GitHubApi,
   type Proposal,
@@ -70,30 +70,30 @@ test('artifact handoff preserves scoped names and evidence URLs; rejects missing
     proposal: 'proposal.json',
   }
 
-  const expected = { proposal: proposal('@tabler/icons'), feedback: [] }
+  const expected = proposal('@tabler/icons')
 
-  expected.proposal[0].recommendations[0].repository = 'tabler/tabler-icons'
-  expected.proposal[0].recommendations[0].sources[0] =
+  expected[0].recommendations[0].repository = 'tabler/tabler-icons'
+  expected[0].recommendations[0].sources[0] =
     'https://github.com/tabler/tabler-icons'
 
-  expected.proposal[0].recommendations[0].sources.push(
+  expected[0].recommendations[0].sources.push(
     'https://www.npmjs.com/package/@tabler/icons',
   )
 
   try {
     await writeFile(outputPath, JSON.stringify({ items: [submission] }))
     await assert.rejects(
-      readResearchSubmission(outputPath, proposalPath),
+      readResearchProposal(outputPath, proposalPath),
       /ENOENT/,
     )
     await writeFile(proposalPath, JSON.stringify(expected))
     assert.deepEqual(
-      await readResearchSubmission(outputPath, proposalPath),
+      await readResearchProposal(outputPath, proposalPath),
       expected,
     )
     await writeFile(proposalPath, '{')
     await assert.rejects(
-      readResearchSubmission(outputPath, proposalPath),
+      readResearchProposal(outputPath, proposalPath),
       SyntaxError,
     )
     await writeFile(
@@ -101,7 +101,7 @@ test('artifact handoff preserves scoped names and evidence URLs; rejects missing
       JSON.stringify({ items: [submission, submission] }),
     )
     await assert.rejects(
-      readResearchSubmission(outputPath, proposalPath),
+      readResearchProposal(outputPath, proposalPath),
       /exactly one/,
     )
     await writeFile(
@@ -109,7 +109,7 @@ test('artifact handoff preserves scoped names and evidence URLs; rejects missing
       JSON.stringify({ items: [{ ...submission, proposal: '../other.json' }] }),
     )
     await assert.rejects(
-      readResearchSubmission(outputPath, proposalPath),
+      readResearchProposal(outputPath, proposalPath),
       z.ZodError,
     )
   } finally {
@@ -562,159 +562,6 @@ test('a rejected PR blocks publication, and failed identity checks create no bra
     /invalid identity/,
   )
   assert.equal(state.writes.length, 0)
-})
-
-test('addresses conversation, inline and review feedback; pending removals, edited comments and retries stay cumulative', async () => {
-  for (const endpoint of [
-    '/issues/1/comments',
-    '/pulls/1/comments',
-    '/pulls/1/reviews',
-  ]) {
-    const { state, api } = github()
-    const verify = async () => {}
-
-    await publishResearch({ api, proposal: proposal('candidate'), verify })
-    state.prs[0].body = `Maintainer notes\n${state.prs[0].body}`
-
-    const feedback = {
-      source: 'https://github.com/owner/repo/pull/1#issuecomment-123',
-      comment: 'Please remove candidate: it targets a different runtime.',
-      response:
-        'Removed candidate from the pending shortlist after confirming the runtime mismatch. Approved packages were retained.',
-      remove: [{ slug: 'example', package: 'candidate' }],
-    }
-
-    const repeatedRequest = {
-      ...feedback,
-      source: 'https://github.com/owner/repo/pull/1#issuecomment-124',
-    }
-
-    const comments = [
-      {
-        html_url: feedback.source,
-        body: feedback.comment,
-        user: { login: 'owner' },
-      },
-      {
-        html_url: repeatedRequest.source,
-        body: repeatedRequest.comment,
-        user: { login: 'owner' },
-      },
-    ]
-
-    const feedbackApi: GitHubApi = async (path, options) =>
-      path.startsWith('/issues/1/comments?') ||
-      path.startsWith('/pulls/1/comments?') ||
-      path.startsWith('/pulls/1/reviews?')
-        ? path.startsWith(endpoint + '?')
-          ? comments
-          : []
-        : api(path, options)
-
-    const run = () =>
-      publishResearch({
-        api: feedbackApi,
-        proposal: [],
-        feedback: [feedback, repeatedRequest],
-        verify,
-      })
-
-    await run()
-    assert.deepEqual(state.catalogs[state.head!].example.similar, ['original'])
-    assert.match(state.prs[0].body, /Maintainer notes/)
-    assert.match(state.prs[0].body, /Removed candidate/)
-    assert.equal(
-      state.writes.filter(write => write.path === '/pulls').length,
-      1,
-    )
-
-    const count = state.writes.length
-    const head = state.head
-
-    await run()
-    assert.equal(state.writes.length, count)
-
-    comments[0].body = feedback.comment =
-      'Thanks; please clarify whether the original library is still included.'
-    feedback.remove = []
-    feedback.response =
-      'Confirmed the original approved library remains in the category; no catalog changes were needed.'
-    await run()
-    assert.equal(state.head, head)
-    assert.equal(state.writes.length, count + 1)
-    assert.match(state.prs[0].body, /Confirmed the original/)
-    assert.match(state.prs[0].body, /Removed candidate/)
-  }
-})
-
-test('rejects stale or untrusted feedback and approved removals before any write; reads paginated comments', async () => {
-  const { state, api } = github()
-  const verify = async () => {}
-
-  await publishResearch({ api, proposal: proposal('candidate'), verify })
-
-  const feedback = {
-    source: 'https://github.com/owner/repo/pull/1#issuecomment-123',
-    comment: 'Please remove candidate from the pending shortlist.',
-    response:
-      'Removed the pending candidate after examining the maintainer feedback and checking its runtime requirements.',
-    remove: [{ slug: 'example', package: 'candidate' }],
-  }
-
-  const comment = {
-    html_url: feedback.source,
-    body: 'edited',
-    user: { login: 'owner' },
-  }
-
-  let pageTwoRead = false
-  let permission = 'read'
-
-  const feedbackApi: GitHubApi = async (path, options) => {
-    if (path.startsWith('/issues/1/comments?')) {
-      if (path.endsWith('page=1'))
-        return Array.from({ length: 100 }, (_, index) => ({
-          ...comment,
-          html_url: `https://github.com/owner/repo/pull/1#issuecomment-${index}`,
-        }))
-      pageTwoRead = true
-
-      return [comment]
-    }
-
-    if (
-      path.startsWith('/pulls/1/comments?') ||
-      path.startsWith('/pulls/1/reviews?')
-    )
-      return []
-
-    if (path.startsWith('/collaborators/')) return { permission }
-
-    return api(path, options)
-  }
-
-  const run = () =>
-    publishResearch({
-      api: feedbackApi,
-      proposal: [],
-      feedback: [feedback],
-      verify,
-    })
-
-  const count = state.writes.length
-
-  await assert.rejects(run(), /missing or changed/)
-  assert.equal(pageTwoRead, true)
-  comment.body = feedback.comment
-  comment.user.login = 'reader'
-  await assert.rejects(run(), /Only maintainers/)
-  permission = 'write'
-  feedback.remove[0].package = 'original'
-  await assert.rejects(run(), /approved recommendations/)
-  assert.equal(state.writes.length, count)
-  feedback.remove[0].package = 'candidate'
-  await run()
-  assert.deepEqual(state.catalogs[state.head!].example.similar, ['original'])
 })
 
 test('reuses the same branch after merge, without losing approved recommendations', async () => {

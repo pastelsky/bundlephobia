@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises'
-import { createHash } from 'node:crypto'
 import { pathToFileURL } from 'node:url'
 import { request } from '@octokit/request'
 import { z } from 'zod'
@@ -124,38 +123,6 @@ const proposalSchema = z
   )
 
 export type Proposal = z.infer<typeof proposalSchema>
-
-const feedbackSchema = z
-  .array(
-    z.object({
-      source: sourceSchema,
-      comment: z.string().min(1).max(65000),
-      response: researchText(40),
-      remove: z
-        .array(
-          z.object({
-            slug: z.string(),
-            package: z.string().refine(isPlausiblePackageName),
-          }),
-        )
-        .max(12)
-        .default([]),
-    }),
-  )
-  .max(20)
-  .refine(items => unique(items.map(item => item.source)), 'Duplicate feedback')
-
-const submissionSchema = z.object({
-  proposal: proposalSchema,
-  feedback: feedbackSchema.default([]),
-})
-
-type Submission = z.infer<typeof submissionSchema>
-
-const feedbackMarker = (item: z.infer<typeof feedbackSchema>[number]) =>
-  `<!-- library-feedback:${createHash('sha256')
-    .update(JSON.stringify([item.source, item.comment]))
-    .digest('hex')} -->`
 
 // Raw agent JSON is deliberately unknown until this schema establishes its contract.
 // oxlint-disable-next-line anti-slop/no-unknown-parameters
@@ -391,18 +358,15 @@ export function researchBody(
 export async function publishResearch({
   api,
   proposal: rawProposal,
-  feedback: rawFeedback = [],
   verify = verifyPackages,
   runUrl = 'Manual research run',
 }: {
   api: GitHubApi
   proposal: unknown
-  feedback?: unknown
   verify?: (proposal: Proposal) => Promise<void>
   runUrl?: string
 }) {
   const proposal = validateProposal(rawProposal)
-  const feedback = feedbackSchema.parse(rawFeedback)
 
   const repository = z
     .object({
@@ -472,108 +436,13 @@ export async function publishResearch({
     current = carryPending(base, ancestor, pending)
   }
 
-  const updates = feedback.filter(
-    item => !open[0]?.body?.includes(feedbackMarker(item)),
-  )
-
-  const revised = structuredClone(current)
-
-  if (updates.length) {
-    if (!open[0]) fail('Feedback requires an existing open research PR')
-
-    const commentSchema = z.object({
-      html_url: z.string(),
-      body: z.string().nullable(),
-      user: z.object({ login: z.string() }),
-    })
-
-    const readComments = async (path: string) => {
-      const comments: z.infer<typeof commentSchema>[] = []
-
-      for (let page = 1; ; page++) {
-        const batch = z
-          .array(commentSchema)
-          .parse(await api(`${path}?per_page=100&page=${page}`))
-
-        comments.push(...batch)
-
-        if (batch.length < 100) return comments
-      }
-    }
-
-    const comments = (
-      await Promise.all([
-        readComments(`/issues/${open[0].number}/comments`),
-        readComments(`/pulls/${open[0].number}/comments`),
-        readComments(`/pulls/${open[0].number}/reviews`),
-      ])
-    ).flat()
-
-    for (const item of updates) {
-      const comment =
-        comments.find(
-          comment =>
-            comment.html_url === item.source && comment.body === item.comment,
-        ) ?? fail('Feedback comment is missing or changed; reread the PR')
-
-      if (item.remove.length && comment.user.login !== repository.owner.login) {
-        const permission = z
-          .object({ permission: z.string() })
-          .parse(
-            await api(
-              `/collaborators/${encodeURIComponent(comment.user.login)}/permission`,
-            ),
-          )
-
-        if (!['admin', 'maintain', 'write'].includes(permission.permission))
-          fail(
-            'Only maintainers may request removal of pending recommendations',
-          )
-      }
-
-      for (const removal of item.remove) {
-        if (base[removal.slug]?.similar.includes(removal.package))
-          fail('Feedback cannot remove approved recommendations')
-
-        if (!current[removal.slug]?.similar.includes(removal.package))
-          fail('Feedback removal is not a pending recommendation')
-
-        const category = revised[removal.slug]
-
-        if (!category?.similar.includes(removal.package)) continue
-
-        if (
-          proposal.some(
-            category =>
-              category.slug === removal.slug &&
-              category.recommendations.some(
-                item => item.package === removal.package,
-              ),
-          )
-        )
-          fail('Do not re-propose a rejected recommendation')
-        category.similar = category.similar.filter(
-          name => name !== removal.package,
-        )
-
-        if (!category.similar.length) delete revised[removal.slug]
-      }
-    }
-  }
-
-  const catalog = mergeProposal(revised, proposal)
-
-  for (const [slug, category] of Object.entries(catalog))
-    if (!base[slug] && category.similar.length < 2)
-      fail('New categories need at least two alternatives after feedback')
+  const catalog = mergeProposal(current, proposal)
   await verify(proposal)
   const changed = !same(current, catalog)
 
-  if (!changed && !updates.length && open[0])
-    return { status: 'unchanged', url: open[0].html_url }
+  if (!changed && open[0]) return { status: 'unchanged', url: open[0].html_url }
 
-  if (!changed && !updates.length && same(base, catalog))
-    return { status: 'no changes' }
+  if (!changed && same(base, catalog)) return { status: 'no changes' }
 
   const start = '<!-- library-research:start -->'
   const end = '<!-- library-research:end -->'
@@ -591,10 +460,6 @@ export async function publishResearch({
   const summary = [
     previousSummary,
     researchBody(pr ? current : base, catalog, proposal, runUrl),
-    ...updates.map(
-      item =>
-        `### Review feedback\n\n[Comment](<${item.source}>)\n\n${markdown(item.response)}\n\n${feedbackMarker(item)}`,
-    ),
   ]
     .filter(Boolean)
     .join('\n\n---\n\n')
@@ -710,10 +575,10 @@ export async function publishResearch({
   return { status: changed ? 'published' : 'unchanged', url: pr.html_url }
 }
 
-export async function readResearchSubmission(
+export async function readResearchProposal(
   outputPath: string,
   proposalPath: string,
-): Promise<Submission> {
+): Promise<Proposal> {
   const output = z
     .object({
       items: z.array(
@@ -734,9 +599,7 @@ export async function readResearchSubmission(
 
   z.literal('proposal.json').parse(items[0].proposal)
 
-  return submissionSchema.parse(
-    JSON.parse(await readFile(proposalPath, 'utf8')),
-  )
+  return proposalSchema.parse(JSON.parse(await readFile(proposalPath, 'utf8')))
 }
 
 if (
@@ -753,7 +616,7 @@ if (
     })
     .parse(process.env)
 
-  const submission = await readResearchSubmission(
+  const proposal = await readResearchProposal(
     env.GH_AW_AGENT_OUTPUT,
     env.LIBRARY_RESEARCH_PROPOSAL,
   )
@@ -792,7 +655,7 @@ if (
   console.log(
     await publishResearch({
       api,
-      ...submission,
+      proposal,
       runUrl: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
     }),
   )
