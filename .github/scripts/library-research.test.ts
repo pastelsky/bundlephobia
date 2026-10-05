@@ -97,7 +97,17 @@ test('first-run publication preserves the branch filter through the real GitHub 
 })
 
 test('cumulative proposals preserve approved and pending packages; repeated discovery is a no-op', () => {
-  const first = mergeProposal(baseline, proposal('candidate'))
+  const existingCategory = proposal('candidate')
+  delete existingCategory[0].tags
+
+  const first = mergeProposal(baseline, existingCategory)
+
+  assert.deepEqual(first.example.tags, baseline.example.tags)
+  assert.throws(
+    () => mergeProposal({}, existingCategory),
+    /require matching tags/,
+  )
+
   const second = mergeProposal(first, proposal('another'))
   assert.deepEqual(second.example.similar, ['original', 'candidate', 'another'])
   assert.deepEqual(mergeProposal(second, proposal('candidate')), second)

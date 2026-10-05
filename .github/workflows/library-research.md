@@ -115,11 +115,15 @@ or exceed six recommendations in a category. Propose at most twelve packages in
 five categories, prioritize evidence quality, and skip weak candidates.
 
 Call publish-library-research exactly once with proposal as a JSON string of an
-array. Each category object must contain:
+array. Do not hand-write escaped JSON into the tool call. Construct the proposal
+as a JavaScript array in a local Node script, serialize it with JSON.stringify,
+and parse the serialized result with JSON.parse to verify it before submitting
+that exact string. Do not publish a partial or truncated payload.
+Each category object must contain:
 
 - slug: existing category key, or a descriptive kebab-case key
 - name: user-facing purpose-level category name
-- tags: array of {tag: matching keyword(s), weight: integer 1..15}; only used for new categories
+- tags: required only for new categories; array of {tag: matching keyword(s), weight: integer 1..15}. Omit for existing categories, whose tags are preserved.
 - reason: why these are interchangeable for a concrete task (at least 60 characters)
 - recommendations: array of {package: exact npm name, repository: owner/repo,
   reason: at least 60 characters on relative value/use case,

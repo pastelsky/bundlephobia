@@ -69,7 +69,8 @@ const proposalSchema = z
           }),
         )
         .min(1)
-        .max(10),
+        .max(10)
+        .optional(),
       reason: researchText(60),
       recommendations: z
         .array(
@@ -162,6 +163,9 @@ export function mergeProposal(catalog: Catalog, proposal: Proposal): Catalog {
 
   for (const category of validateProposal(proposal)) {
     const existing = result[category.slug]
+    const tags = existing?.tags ?? category.tags
+
+    if (!tags) fail('New categories require matching tags')
 
     const similar = [
       ...new Set([
@@ -185,7 +189,7 @@ export function mergeProposal(catalog: Catalog, proposal: Proposal): Catalog {
     if (existing && same(similar, existing.similar)) continue
     result[category.slug] = {
       name: existing?.name ?? category.name,
-      tags: existing?.tags ?? category.tags,
+      tags,
       similar,
       research: {
         reason: existing?.research?.reason ?? category.reason,
