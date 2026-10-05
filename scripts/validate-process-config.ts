@@ -57,6 +57,12 @@ export function validateProcessContents(
     }
 
     if (path.extname(scriptPath) === '.ts') {
+      if (!/^    interpreter: node$/m.test(app.block)) {
+        errors.push(
+          `${app.name ?? app.script} must use the Node interpreter for TypeScript`,
+        )
+      }
+
       if (!app.block.includes('--experimental-strip-types')) {
         errors.push(
           `${app.name ?? app.script} runs TypeScript without --experimental-strip-types`,

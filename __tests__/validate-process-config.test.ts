@@ -92,5 +92,6 @@ test('validator rejects missing scripts and TypeScript without a runtime loader'
   )
 
   expect(result.errors[0]).toMatch(/missing script/)
-  expect(result.errors[1]).toMatch(/without --experimental-strip-types/)
+  expect(result.errors[1]).toMatch(/Node interpreter/)
+  expect(result.errors[2]).toMatch(/without --experimental-strip-types/)
 })
