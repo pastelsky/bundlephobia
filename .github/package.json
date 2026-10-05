@@ -1,0 +1,23 @@
+{
+  "name": "@bundlephobia/recommendation-automation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test scripts/*.test.ts",
+    "check": "tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "@bundlephobia/service-contracts": "workspace:*",
+    "@octokit/request": "^10.0.16",
+    "git-url-parse": "^16.1.0",
+    "semver": "^7.6.3",
+    "validate-npm-package-name": "^8.0.0",
+    "zod": "^4.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/semver": "^7.7.1",
+    "@types/validate-npm-package-name": "^4.0.2",
+    "typescript": "^7.0.2"
+  }
+}

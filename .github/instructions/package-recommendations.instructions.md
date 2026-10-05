@@ -1,5 +1,5 @@
 ---
-applyTo: 'server/middlewares/similar-packages/fixtures.ts,.github/scripts/*recommendation*.mjs,.github/ISSUE_TEMPLATE/2-package-recommendation.yml'
+applyTo: 'utils/similar-packages.catalog.json,.github/scripts/*recommendation*.ts,.github/ISSUE_TEMPLATE/2-package-recommendation.yml'
 ---
 
 # Package recommendation reviews
