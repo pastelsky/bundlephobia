@@ -7,13 +7,13 @@ import {
   disposePackage,
   installPackage,
 } from 'package-build-stats/installation'
-import InstallationStore from './InstallationStore.cjs'
-import createInstallQueue from './createInstallQueue.cjs'
-import registryPackageSpec from './resolveRegistryPackageSpec.cjs'
+import InstallationStore from './InstallationStore.js'
+import createInstallQueue from './createInstallQueue.js'
+import {
+  resolveRegistryPackageSpec,
+  UnsupportedRegistryPackageSpecError,
+} from './resolveRegistryPackageSpec.js'
 import serializeError from '../build-service/serializeError.js'
-
-const { resolveRegistryPackageSpec, UnsupportedRegistryPackageSpecError } =
-  registryPackageSpec
 
 function positiveInteger(value, fallback) {
   const parsed = Number(value)

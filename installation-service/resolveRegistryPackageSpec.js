@@ -1,17 +1,17 @@
-const npa = require('npm-package-arg')
+import npa from 'npm-package-arg'
 
-const pacote = require('pacote')
+import pacote from 'pacote'
 
-const semver = require('semver')
+import semver from 'semver'
 
-const { z } = require('zod')
+import { z } from 'zod'
 
 const manifestSchema = z.object({ name: z.string(), version: z.string() })
 
-class UnsupportedRegistryPackageSpecError extends Error {}
+export class UnsupportedRegistryPackageSpecError extends Error {}
 
 /** Resolves an npm tag or range to the exact package version used for installation. */
-async function resolveRegistryPackageSpec(
+export async function resolveRegistryPackageSpec(
   packageString,
   manifest = pacote.manifest,
 ) {
@@ -38,9 +38,4 @@ async function resolveRegistryPackageSpec(
   )
 
   return `${resolved.name}@${resolved.version}`
-}
-
-module.exports = {
-  resolveRegistryPackageSpec,
-  UnsupportedRegistryPackageSpecError,
 }
