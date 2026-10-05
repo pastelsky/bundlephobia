@@ -27,6 +27,7 @@ apps:
     name: build-service
     node_args:
       - --require=./scripts/memory-diagnostics.cjs
+      - --experimental-strip-types
     instances: 3
     max_memory_restart: 1000M
     exec_mode: cluster
@@ -43,8 +44,10 @@ apps:
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
       MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics
 
-  - script: ./installation-service/index.mjs
+  - script: ./installation-service/index.ts
     name: installation-service
+    node_args:
+      - --experimental-strip-types
     instances: 1
     max_memory_restart: 500M
     exec_mode: fork

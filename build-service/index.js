@@ -9,7 +9,7 @@ import {
 import Amplitude from '@amplitude/node'
 import serializeError from './serializeError.js'
 import { measureBuild } from './metrics.js'
-import { createInstallationProvider } from './installationProvider.js'
+import { createInstallationProvider } from './installationProvider.ts'
 
 const fastify = Fastify()
 

@@ -1,21 +1,21 @@
 import 'dotenv-defaults/config.js'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import Fastify from 'fastify'
+import Fastify, { type FastifyReply } from 'fastify'
 import { z } from 'zod'
 import {
   disposePackage,
   installPackage,
 } from 'package-build-stats/installation'
-import InstallationStore from './InstallationStore.cjs'
-import createInstallQueue from './createInstallQueue.cjs'
-import registryPackageSpec from './resolveRegistryPackageSpec.cjs'
+import InstallationStore, { type InstallOptions } from './InstallationStore.ts'
+import createInstallQueue from './createInstallQueue.ts'
+import {
+  resolveRegistryPackageSpec,
+  UnsupportedRegistryPackageSpecError,
+} from './resolveRegistryPackageSpec.ts'
 import serializeError from '../build-service/serializeError.js'
 
-const { resolveRegistryPackageSpec, UnsupportedRegistryPackageSpecError } =
-  registryPackageSpec
-
-function positiveInteger(value, fallback) {
+function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value)
 
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
@@ -32,11 +32,10 @@ const installOptionsSchema = z.object({
   debug: z.boolean().optional(),
 })
 
-function installOptions(value) {
-  return installOptionsSchema.parse(value ?? {})
-}
-
-async function installPackageWithVersion(packageString, options) {
+async function installPackageWithVersion(
+  packageString: string,
+  options: InstallOptions,
+) {
   const installation = await installPackage(packageString, options)
 
   try {
@@ -79,6 +78,28 @@ await store.start()
 
 const fastify = Fastify({ bodyLimit: 64 * 1024 })
 
+function sendInstallationError(error: Error, reply: FastifyReply) {
+  if (
+    error instanceof UnsupportedRegistryPackageSpecError ||
+    error instanceof z.ZodError
+  ) {
+    return reply.code(400).send({
+      name: 'InstallError',
+      originalError: error.message,
+    })
+  }
+
+  const serialized = serializeError(error)
+
+  const code = 'code' in error ? error.code : undefined
+
+  const packageNotFound = code === 'E404' || code === 'ETARGET'
+
+  if (packageNotFound) serialized.name = 'PackageNotFoundError'
+
+  return reply.code(packageNotFound ? 404 : 500).send(serialized)
+}
+
 fastify.post('/installations', async (request, reply) => {
   const parsed = z
     .object({ packageString: z.string(), options: z.unknown().optional() })
@@ -95,7 +116,7 @@ fastify.post('/installations', async (request, reply) => {
     const body = parsed.data
     // Resolve mutable tags/ranges immediately before queueing so the cache and
     // filesystem are always keyed by the exact version that will be installed.
-    const options = installOptions(body.options)
+    const options = installOptionsSchema.parse(body.options ?? {})
 
     const [exactPackageString, ...exactAdditionalPackages] = await Promise.all(
       [body.packageString, ...options.additionalPackages].map(packageString =>
@@ -111,31 +132,21 @@ fastify.post('/installations', async (request, reply) => {
 
     return { ...installation, subscriptionId: id }
   } catch (error) {
-    if (
-      error instanceof UnsupportedRegistryPackageSpecError ||
-      error instanceof z.ZodError
-    ) {
-      return reply.code(400).send({
-        name: 'InstallError',
-        originalError: error.message,
-      })
-    }
-
-    const serialized = serializeError(error)
-    const packageNotFound = ['E404', 'ETARGET'].includes(error?.code)
-    const status = packageNotFound ? 404 : 500
-
-    if (packageNotFound) serialized.name = 'PackageNotFoundError'
-
-    return reply.code(status).send(serialized)
+    return sendInstallationError(
+      error instanceof Error ? error : new Error(String(error)),
+      reply,
+    )
   }
 })
 
-fastify.delete('/installations/:id', async (request, reply) => {
-  await store.unsubscribe(request.params.id)
+fastify.delete<{ Params: { id: string } }>(
+  '/installations/:id',
+  async (request, reply) => {
+    await store.unsubscribe(request.params.id)
 
-  return reply.code(204).send()
-})
+    return reply.code(204).send()
+  },
+)
 
 fastify.get('/diagnostics', async () => store.diagnostics())
 

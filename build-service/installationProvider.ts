@@ -19,17 +19,20 @@ const installationSchema = z.object({
   subscriptionId: z.string(),
 })
 
-function serviceError(payload, status) {
-  const parsed = serviceErrorSchema.safeParse(payload)
+interface InstallationRequestOptions {
+  client?: string | string[]
+  limitConcurrency?: boolean
+  networkConcurrency?: number
+  additionalPackages?: string[]
+  installTimeout?: number
+  debug?: boolean
+  signal?: AbortSignal
+}
 
-  if (!parsed.success) {
-    return new InstallError('Installation service returned an invalid error', {
-      retryable: true,
-    })
-  }
-
-  const { name, originalError, extra } = parsed.data
-
+function serviceError(
+  { name, originalError, extra }: z.infer<typeof serviceErrorSchema>,
+  status: number,
+) {
   if (status === 404 || name === 'PackageNotFoundError') {
     return new PackageNotFoundError(originalError, extra)
   }
@@ -40,7 +43,11 @@ function serviceError(payload, status) {
   })
 }
 
-async function requestInstallation(url, packageString, options) {
+async function requestInstallation(
+  url: string,
+  packageString: string,
+  options: InstallationRequestOptions,
+): Promise<Response> {
   try {
     return await fetch(`${url}/installations`, {
       method: 'POST',
@@ -64,7 +71,10 @@ async function requestInstallation(url, packageString, options) {
   }
 }
 
-async function releaseInstallation(url, subscriptionId) {
+async function releaseInstallation(
+  url: string,
+  subscriptionId: string,
+): Promise<void> {
   try {
     const result = await fetch(
       `${url}/installations/${encodeURIComponent(subscriptionId)}`,
@@ -79,13 +89,13 @@ async function releaseInstallation(url, subscriptionId) {
   }
 }
 
-export function createInstallationProvider(endpoint) {
+export function createInstallationProvider(endpoint: string) {
   const url = endpoint.replace(/\/$/, '')
 
-  return async (packageString, options) => {
+  return async (packageString: string, options: InstallationRequestOptions) => {
     const response = await requestInstallation(url, packageString, options)
 
-    let payload
+    let payload: unknown
 
     try {
       payload = await response.json()
@@ -93,7 +103,18 @@ export function createInstallationProvider(endpoint) {
       throw new InstallError(error, { retryable: true })
     }
 
-    if (!response.ok) throw serviceError(payload, response.status)
+    if (!response.ok) {
+      const parsedError = serviceErrorSchema.safeParse(payload)
+
+      if (!parsedError.success) {
+        throw new InstallError(
+          'Installation service returned an invalid error',
+          { retryable: true },
+        )
+      }
+
+      throw serviceError(parsedError.data, response.status)
+    }
 
     const parsed = installationSchema.safeParse(payload)
 
