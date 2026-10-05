@@ -76,6 +76,7 @@ export function recordBuildPhase(
   const trace =
     contextualTrace ??
     (active.size === 1 ? active.values().next().value : undefined)
+
   const phase = String(event)
 
   if (!trace || !phase.startsWith('TASK_PACKAGE_')) {
