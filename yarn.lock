@@ -5824,7 +5824,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rspack/core@npm:^2.1.4":
+"@rspack/core@npm:2.1.5, @rspack/core@npm:^2.1.4":
   version: 2.1.5
   resolution: "@rspack/core@npm:2.1.5"
   dependencies:
@@ -8998,6 +8998,7 @@ __metadata:
   resolution: "build-service@workspace:build-service"
   dependencies:
     "@amplitude/node": "npm:^1.10.2"
+    "@rspack/core": "npm:2.1.5"
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^4.25.2"
     now-logs: "npm:^0.0.7"
