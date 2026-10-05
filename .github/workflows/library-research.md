@@ -16,7 +16,6 @@ engine:
   env:
     COPILOT_PROVIDER_WIRE_API: responses
   args:
-    - --excluded-tools=task,list_agents,read_agent,write_agent
     - --allow-url=github.com
     - --allow-url=api.github.com
     - --allow-url=raw.githubusercontent.com
@@ -91,8 +90,10 @@ safe-outputs:
           run: node .github/scripts/library-research.ts
 ---
 
-Work as a single research agent: parallelize independent source reads, not
-delegation to other agents. All validation and publication is deterministic.
+Delegate independent investigations to subagents when useful and parallelize
+source reads. The lead agent assembles one proposal; validation and publication
+are deterministic. Reasons, discovery evidence and trade-offs belong only in
+the PR description, never in the catalog's name/tags/similar data.
 
 Find genuine JavaScript/TypeScript alternatives for Bundlephobia. Read
 utils/similar-packages.catalog.json and comparisonGroups in utils/similarPackages.ts.
