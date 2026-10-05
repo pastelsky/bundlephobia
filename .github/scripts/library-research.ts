@@ -182,23 +182,12 @@ export function mergeProposal(catalog: Catalog, proposal: Proposal): Catalog {
       fail(
         'Categories need two to six alternatives; do not remove existing recommendations automatically',
       )
-    const recommendations = { ...existing?.research?.recommendations }
-
-    for (const item of category.recommendations) {
-      // Repeated discovery is a no-op; maintainers own existing rationale.
-      if (!existing?.similar.includes(item.package))
-        recommendations[item.package] = item
-    }
 
     if (existing && same(similar, existing.similar)) continue
     result[category.slug] = {
       name: existing?.name ?? category.name,
       tags,
       similar,
-      research: {
-        reason: existing?.research?.reason ?? category.reason,
-        recommendations,
-      },
     }
   }
 
@@ -291,7 +280,12 @@ export async function verifyPackages(
 
 const markdown = (value: string) => value.replace(/[\\`*_[\]#@|]/g, '\\$&')
 
-export function researchBody(base: Catalog, catalog: Catalog, runUrl: string) {
+export function researchBody(
+  base: Catalog,
+  catalog: Catalog,
+  proposal: Proposal,
+  runUrl: string,
+) {
   const lines = [
     '## Weekly library research',
     '',
@@ -305,18 +299,21 @@ export function researchBody(base: Catalog, catalog: Catalog, runUrl: string) {
     )
 
     if (!additions.length) continue
+
+    const research = proposal.find(item => item.slug === slug)
+
     lines.push(
       `### ${markdown(category.name)}${base[slug] ? '' : ' (new category)'}`,
       '',
       markdown(
-        category.research?.reason ??
+        research?.reason ??
           'Maintainer-edited category; please review its intended scope.',
       ),
       '',
     )
 
     for (const name of additions) {
-      const item = category.research?.recommendations[name]
+      const item = research?.recommendations.find(item => item.package === name)
       lines.push(
         `#### ${markdown(name)}`,
         '',
@@ -329,8 +326,8 @@ export function researchBody(base: Catalog, catalog: Catalog, runUrl: string) {
 
       if (item)
         lines.push(
-          `Why considered: ${markdown(item.discovery?.reason ?? 'Discovery trigger was not recorded by the original research run; no trending or recent-release claim is established.')}`,
-          ...(item.discovery?.source
+          `Why considered: ${markdown(item.discovery.reason)}`,
+          ...(item.discovery.source
             ? [`Discovery source: [Source](<${item.discovery.source}>)`]
             : []),
           '',
@@ -442,14 +439,44 @@ export async function publishResearch({
   const catalog = mergeProposal(current, proposal)
   await verify(proposal)
   const changed = !same(current, catalog)
-  const summary = researchBody(base, catalog, runUrl)
 
-  if (summary.length > 60000)
+  if (!changed && open[0]) return { status: 'unchanged', url: open[0].html_url }
+
+  if (!changed && same(base, catalog)) return { status: 'no changes' }
+
+  const start = '<!-- library-research:start -->'
+  const end = '<!-- library-research:end -->'
+  let pr = open[0]
+  const previousBody = pr?.body ?? ''
+
+  const from = previousBody.indexOf(start),
+    to = previousBody.indexOf(end)
+
+  const previousSummary =
+    from >= 0 && to > from
+      ? previousBody.slice(from + start.length, to).trim()
+      : ''
+
+  const summary = [
+    previousSummary,
+    researchBody(pr ? current : base, catalog, proposal, runUrl),
+  ]
+    .filter(Boolean)
+    .join('\n\n---\n\n')
+
+  const section = `${start}\n${summary}\n${end}`
+
+  const body =
+    from >= 0 && to > from
+      ? previousBody.slice(0, from) +
+        section +
+        previousBody.slice(to + end.length)
+      : [previousBody, section].filter(Boolean).join('\n\n')
+
+  if (body.length > 60000)
     fail(
       'Review or merge the pending research PR before accumulating more recommendations',
     )
-
-  if (!changed && same(base, catalog)) return { status: 'no changes' }
 
   if (changed) {
     const baseCommit = z
@@ -518,25 +545,10 @@ export async function publishResearch({
       })
   }
 
-  const start = '<!-- library-research:start -->'
-  const end = '<!-- library-research:end -->'
-  const section = `${start}\n${summary}\n${end}`
-  let pr = open[0]
-
   if (pr) {
-    const body = pr.body ?? ''
-
-    const from = body.indexOf(start),
-      to = body.indexOf(end)
-
     await api(`/pulls/${pr.number}`, {
       method: 'PATCH',
-      body: {
-        body:
-          from >= 0 && to > from
-            ? body.slice(0, from) + section + body.slice(to + end.length)
-            : `${body}\n\n${section}`,
-      },
+      body: { body },
     })
   } else {
     pr = prSchema.parse(
@@ -546,7 +558,7 @@ export async function publishResearch({
           title: 'Refresh similar-library recommendations',
           head: branch,
           base: baseBranch,
-          body: section,
+          body,
           draft: true,
         },
       }),
