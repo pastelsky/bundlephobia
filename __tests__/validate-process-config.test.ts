@@ -63,6 +63,17 @@ test('cache-service PM2 command starts the configured listener', async () => {
   }
 })
 
+test('immediate native memory purging applies only to build workers', () => {
+  const { apps } = validateProcessConfig()
+  const buildWorker = apps.find(app => app.name === 'build-service')
+  expect(buildWorker?.block).toMatch(/^\s+MIMALLOC_PURGE_DELAY: '0'$/m)
+  expect(
+    apps
+      .filter(app => app.name !== 'build-service')
+      .every(app => !app.block.includes('MIMALLOC_PURGE_DELAY')),
+  ).toBe(true)
+})
+
 test('process parser keeps each app block attached to its script', () => {
   const apps = parseProcessApps(`
   - script: ./service.ts
