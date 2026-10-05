@@ -9,6 +9,7 @@ type AnalyticsEvent = {
     environment?: string
     packageCount?: number
     selection?: string
+    enabled?: boolean
     metric?: string
     groupBy?: string
     range?: string
@@ -94,7 +95,7 @@ test('reports partial data, selections and confirmed sharing without reloading d
     sizePackageCount: 0,
     warningPackageCount: 2,
     page_domain: '127.0.0.1',
-    environment: 'production',
+    environment: process.env.E2E_ENVIRONMENT ?? 'production',
   })
   expect(loaded()[0].event_properties.timeTaken).toBeGreaterThanOrEqual(0)
   await page.getByRole('button', { name: 'Stars', exact: true }).click()
@@ -129,6 +130,24 @@ test('reports partial data, selections and confirmed sharing without reloading d
         event.event_properties.page_type === 'trends',
     ),
   ).toHaveLength(1)
+  await page.getByRole('checkbox', { name: 'Major version' }).uncheck()
+  await page.getByRole('checkbox', { name: 'Minor version' }).check()
+  await expect
+    .poll(() =>
+      events
+        .filter(event => event.event_type === 'trends_selection_changed')
+        .map(event => ({
+          selection: event.event_properties.selection,
+          enabled: event.event_properties.enabled,
+        })),
+    )
+    .toEqual([
+      { selection: 'metric', enabled: undefined },
+      { selection: 'group_by', enabled: undefined },
+      { selection: 'major_releases', enabled: false },
+      { selection: 'minor_releases', enabled: true },
+    ])
+  expect(loaded()).toHaveLength(1)
 })
 
 test('a failed request records failure rather than data acceptance', async ({

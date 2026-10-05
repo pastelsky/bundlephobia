@@ -393,6 +393,23 @@ export default function TrendsPage() {
     })
   }
 
+  const handleReleaseOverlayChange = (
+    selection: 'major_releases' | 'minor_releases',
+    enabled: boolean,
+  ) => {
+    const setVisible =
+      selection === 'major_releases'
+        ? setShowMajorReleases
+        : setShowMinorReleases
+
+    setVisible(enabled)
+    Analytics.trendsSelectionChanged({
+      ...analyticsContext,
+      selection,
+      enabled,
+    })
+  }
+
   const handleCopyLink = () => {
     if (typeof window === 'undefined') return
     navigator.clipboard
@@ -592,14 +609,9 @@ export default function TrendsPage() {
               <label className="trends-toggle">
                 <Checkbox.Root
                   checked={showMajorReleases}
-                  onCheckedChange={enabled => {
-                    setShowMajorReleases(enabled)
-                    Analytics.trendsSelectionChanged({
-                      ...analyticsContext,
-                      selection: 'major_releases',
-                      enabled,
-                    })
-                  }}
+                  onCheckedChange={enabled =>
+                    handleReleaseOverlayChange('major_releases', enabled)
+                  }
                   className="trends-toggle__control"
                 >
                   <Checkbox.Indicator
@@ -616,14 +628,9 @@ export default function TrendsPage() {
               <label className="trends-toggle">
                 <Checkbox.Root
                   checked={showMinorReleases}
-                  onCheckedChange={enabled => {
-                    setShowMinorReleases(enabled)
-                    Analytics.trendsSelectionChanged({
-                      ...analyticsContext,
-                      selection: 'minor_releases',
-                      enabled,
-                    })
-                  }}
+                  onCheckedChange={enabled =>
+                    handleReleaseOverlayChange('minor_releases', enabled)
+                  }
                   className="trends-toggle__control"
                 >
                   <Checkbox.Indicator
