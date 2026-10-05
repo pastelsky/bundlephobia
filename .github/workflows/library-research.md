@@ -46,6 +46,7 @@ tools:
   bash: ['*']
 safe-outputs:
   threat-detection: false
+  allowed-domains: [npmjs.com, www.npmjs.com]
   jobs:
     publish-library-research:
       description: Validate recommendations and cumulatively update the single review PR.
