@@ -2,15 +2,48 @@ import 'dotenv-defaults/config.js'
 import Fastify from 'fastify'
 import {
   getPackageStats,
-  getAllPackageExports,
   getPackageExportSizes,
+  getAllPackageExports as getPackageExports,
   eventQueue,
 } from 'package-build-stats'
 import Amplitude from '@amplitude/node'
 import serializeError from './serializeError.js'
 import { measureBuild } from './metrics.js'
+import { createInstallationProvider } from './installationProvider.ts'
+import { activeBuilds, recordBuildPhase } from './buildMemoryTrace.ts'
+import memoryDiagnostics from '../scripts/memory-diagnostics.cjs'
 
 const fastify = Fastify()
+
+memoryDiagnostics.registerMetricsProvider('builds', () => ({
+  active: activeBuilds(),
+}))
+
+eventQueue.on('*', recordBuildPhase)
+
+const installationProvider = process.env.INSTALLATION_SERVICE_ENDPOINT
+  ? createInstallationProvider(process.env.INSTALLATION_SERVICE_ENDPOINT)
+  : undefined
+
+async function analyzePackage(req, res, analyze) {
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  const timeout = setTimeout(abort, 10 * 60_000)
+  req.raw.once('aborted', abort)
+  res.raw.once('close', abort)
+
+  try {
+    return await analyze(decodeURIComponent(req.query.p), {
+      installTimeout: 60000,
+      installationProvider,
+      signal: controller.signal,
+    })
+  } finally {
+    clearTimeout(timeout)
+    req.raw.off('aborted', abort)
+    res.raw.off('close', abort)
+  }
+}
 
 function sendBuildError(res, packageString, error) {
   const serialized = serializeError(error)
@@ -48,10 +81,7 @@ fastify.get('/size', async (req, res) => {
     const result = await measureBuild({
       operation: 'size',
       packageString,
-      run: () =>
-        getPackageStats(packageString, {
-          installTimeout: 60000,
-        }),
+      run: () => analyzePackage(req, res, getPackageStats),
     })
 
     return res.code(200).send(result)
@@ -67,10 +97,7 @@ fastify.get('/exports-sizes', async (req, res) => {
     const result = await measureBuild({
       operation: 'exports-sizes',
       packageString,
-      run: () =>
-        getPackageExportSizes(packageString, {
-          installTimeout: 60000,
-        }),
+      run: () => analyzePackage(req, res, getPackageExportSizes),
     })
 
     return res.code(200).send(result)
@@ -86,10 +113,7 @@ fastify.get('/exports', async (req, res) => {
     const result = await measureBuild({
       operation: 'exports',
       packageString,
-      run: () =>
-        getAllPackageExports(packageString, {
-          installTimeout: 60000,
-        }),
+      run: () => analyzePackage(req, res, getPackageExports),
     })
 
     return res.code(200).send(result)

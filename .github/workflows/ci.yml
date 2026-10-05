@@ -4,6 +4,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [bundlephobia]
   pull_request:
@@ -48,6 +49,8 @@ jobs:
         run: yarn lint
       - name: Test package recommendation automation
         run: yarn test:recommendations
+      - name: Type check recommendation automation
+        run: yarn typecheck:recommendations
       - name: Type check
         run: yarn typecheck
       - run: yarn build

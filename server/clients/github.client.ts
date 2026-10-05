@@ -1,16 +1,21 @@
 import axios from 'axios'
+import { z } from 'zod'
 
 import config from '../config'
 
-export type GithubRepositoryMetadata = {
-  stargazers_count?: number
-}
+const githubStarCountSchema = z.object({
+  count: z.number().int().nonnegative(),
+})
 
-export type GithubStarHistoryRow = {
-  week: number
-  total: number
-  days: number[]
-}
+const githubStarHistoryRowSchema = z.object({
+  week: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  days: z.array(z.number().int().nonnegative()).length(7),
+})
+
+const githubStarHistorySchema = z.array(githubStarHistoryRowSchema)
+
+export type GithubStarHistoryRow = z.infer<typeof githubStarHistoryRowSchema>
 
 export type GithubStarHistoryPage = {
   rows: GithubStarHistoryRow[]
@@ -51,17 +56,17 @@ function assertRepository(repository: string): void {
   }
 }
 
-export async function fetchGithubRepository(
+export async function fetchGithubStarCount(
   repository: string,
-): Promise<GithubRepositoryMetadata> {
+): Promise<number> {
   assertRepository(repository)
 
-  const { data } = await client.get<GithubRepositoryMetadata>(
-    `/repos/${repository}`,
+  const { data } = await client.get<unknown>(
+    `/repos/${repository}/stargazers/count`,
     { headers: requestHeaders(), maxRedirects: 5 },
   )
 
-  return data
+  return githubStarCountSchema.parse(data).count
 }
 
 export async function fetchGithubStarHistoryPage(
@@ -74,7 +79,7 @@ export async function fetchGithubStarHistoryPage(
     throw new RangeError(`Invalid GitHub star history page: ${page}`)
   }
 
-  const response = await client.get<GithubStarHistoryRow[]>(
+  const response = await client.get<unknown>(
     `/repos/${repository}/stargazers/history`,
     {
       params: { per_page: 30, page },
@@ -88,7 +93,7 @@ export async function fetchGithubStarHistoryPage(
   const lastPageMatch = link ? findLastPage(link) : null
 
   return {
-    rows: Array.isArray(response.data) ? response.data : [],
+    rows: githubStarHistorySchema.parse(response.data),
     lastPage: lastPageMatch ? Number(lastPageMatch[1]) : null,
   }
 }

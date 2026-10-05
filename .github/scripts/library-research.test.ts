@@ -1,0 +1,780 @@
+import assert from 'node:assert/strict'
+import { z } from 'zod'
+import {
+  catalogSchema,
+  type Catalog,
+} from '@bundlephobia/service-contracts/recommendations'
+import test from 'node:test'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { execFileSync } from 'node:child_process'
+import { request } from '@octokit/request'
+import {
+  branch,
+  catalogPath,
+  carryPending,
+  mergeProposal,
+  publishResearch,
+  readResearchSubmission,
+  verifyPackages,
+  type GitHubApi,
+  type Proposal,
+} from './library-research.ts'
+
+const item = (name: string) => ({
+  package: name,
+  repository: `owner/${name}`,
+  reason:
+    'A compatible alternative for the same concrete task, with a simpler API for applications that do not need plugins.',
+  discovery: {
+    reason:
+      'Investigated after a maintainer announcement about this library on Hacker News during the research window.',
+    source: `https://news.ycombinator.com/item?id=${name}`,
+  },
+  tradeoffs:
+    'Fewer integrations; consumers still need to verify the runtime and migration costs.',
+  sources: [
+    `https://github.com/owner/${name}`,
+    `https://news.ycombinator.com/item?id=${name}`,
+  ],
+})
+
+const proposal = (...names: string[]): Proposal => [
+  {
+    slug: 'example',
+    name: 'Example utilities',
+    tags: [{ tag: 'example', weight: 7 }],
+    reason:
+      'These packages perform the same concrete application task in the same runtime, not just matching broad tags.',
+    recommendations: names.map(item),
+  },
+]
+
+const baseline = {
+  example: {
+    name: 'Example utilities',
+    tags: [{ tag: 'example', weight: 7 }],
+    similar: ['original'],
+  },
+}
+
+test('artifact handoff preserves scoped names and evidence URLs; rejects missing, malformed or duplicate submissions', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'library-research-'))
+
+  const outputPath = join(directory, 'agent_output.json')
+  const proposalPath = join(directory, 'proposal.json')
+
+  const submission = {
+    type: 'publish_library_research',
+    proposal: 'proposal.json',
+  }
+
+  const expected = {
+    proposal: proposal('@tabler/icons'),
+    summary: 'Verified scoped package with primary-source evidence.',
+    expectedHead: null,
+  }
+
+  expected.proposal[0].recommendations[0].repository = 'tabler/tabler-icons'
+  expected.proposal[0].recommendations[0].sources[0] =
+    'https://github.com/tabler/tabler-icons'
+
+  expected.proposal[0].recommendations[0].sources.push(
+    'https://www.npmjs.com/package/@tabler/icons',
+  )
+
+  try {
+    await writeFile(outputPath, JSON.stringify({ items: [submission] }))
+    await assert.rejects(
+      readResearchSubmission(outputPath, proposalPath),
+      /ENOENT/,
+    )
+    await writeFile(proposalPath, JSON.stringify(expected))
+    assert.deepEqual(
+      await readResearchSubmission(outputPath, proposalPath),
+      expected,
+    )
+    await writeFile(proposalPath, '{')
+    await assert.rejects(
+      readResearchSubmission(outputPath, proposalPath),
+      SyntaxError,
+    )
+    await writeFile(
+      outputPath,
+      JSON.stringify({ items: [submission, submission] }),
+    )
+    await assert.rejects(
+      readResearchSubmission(outputPath, proposalPath),
+      /exactly one/,
+    )
+    await writeFile(
+      outputPath,
+      JSON.stringify({ items: [{ ...submission, proposal: '../other.json' }] }),
+    )
+    await assert.rejects(
+      readResearchSubmission(outputPath, proposalPath),
+      z.ZodError,
+    )
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+})
+
+test('first-run publication preserves the branch filter through the real GitHub transport', async () => {
+  const { api: fixture } = github()
+
+  const client = request.defaults({
+    request: {
+      fetch: async (
+        input: Parameters<typeof fetch>[0],
+        options?: RequestInit,
+      ) => {
+        const url = new URL(
+          input instanceof Request ? input.url : String(input),
+        )
+
+        assert.equal(url.hostname, 'api.github.com')
+        assert.equal(options?.method, 'GET')
+
+        if (url.pathname.endsWith('/pulls')) {
+          assert.equal(url.searchParams.get('head'), `owner:${branch}`)
+          assert.equal(url.searchParams.get('state'), 'all')
+        }
+
+        return Response.json(
+          await fixture(
+            url.pathname.replace('/repos/owner/repo', '') + url.search,
+          ),
+        )
+      },
+    },
+  })
+
+  const result = await publishResearch({
+    api: async path =>
+      (
+        await client({
+          method: 'GET',
+          url: `/repos/owner/repo${path}`,
+          data: undefined,
+        })
+      ).data,
+    proposal: [],
+    summary: 'No useful candidates found.',
+    expectedHead: null,
+  })
+
+  assert.deepEqual(result, { status: 'no changes' })
+})
+
+test('cumulative proposals preserve approved and pending packages; repeated discovery is a no-op', () => {
+  const existingCategory = proposal('candidate')
+  delete existingCategory[0].tags
+
+  const first = mergeProposal(baseline, existingCategory)
+
+  assert.deepEqual(first.example.tags, baseline.example.tags)
+  assert.throws(
+    () => mergeProposal({}, existingCategory),
+    /require matching tags/,
+  )
+
+  const scoped = proposal('package')
+  scoped[0].recommendations[0].package = '`@scope/package`'
+
+  const scopedResult = mergeProposal(baseline, scoped)
+
+  assert.equal(scopedResult.example.similar.at(-1), '@scope/package')
+  assert.deepEqual(Object.keys(scopedResult.example).sort(), [
+    'name',
+    'similar',
+    'tags',
+  ])
+
+  const second = mergeProposal(first, proposal('another'))
+  assert.deepEqual(second.example.similar, ['original', 'candidate', 'another'])
+  assert.deepEqual(mergeProposal(second, proposal('candidate')), second)
+  assert.deepEqual(Object.keys(second.example).sort(), [
+    'name',
+    'similar',
+    'tags',
+  ])
+  assert.deepEqual(mergeProposal({}, proposal('one', 'two')).example.similar, [
+    'one',
+    'two',
+  ])
+})
+
+test('rejects unsupported groups, weak evidence, invalid identities and oversized catalogs', () => {
+  assert.throws(() => mergeProposal({}, proposal('one')), /two to six/)
+  assert.throws(
+    () => mergeProposal(baseline, proposal('a', 'b', 'c', 'd', 'e', 'f')),
+    /two to six/,
+  )
+
+  for (const patch of [
+    { package: '../bad' },
+    { sources: ['https://github.com/owner/one', 'http://localhost/'] },
+    { reason: 'hype' },
+    { repository: 'different/repo' },
+    { discovery: undefined },
+    { discovery: { reason: 'hype', source: null } },
+  ]) {
+    const p = proposal('one', 'two')
+    Object.assign(p[0].recommendations[0], patch)
+    assert.throws(() => mergeProposal({}, p))
+  }
+})
+
+test('fails closed on npm identity/deprecation, registry failure or archived source; never calls size APIs', async () => {
+  const urls: string[] = []
+  await verifyPackages(
+    proposal('candidate'),
+    async (url, options) => {
+      urls.push(url)
+
+      assert.equal(
+        new Headers(options?.headers).get('Authorization'),
+        url.includes('api.github.com') ? 'Bearer test-token' : null,
+      )
+
+      return {
+        ok: true,
+        json: async () =>
+          url.includes('registry.npmjs.org')
+            ? {
+                name: 'candidate',
+                repository: 'https://github.com/owner/candidate',
+              }
+            : { archived: false },
+      }
+    },
+    'test-token',
+  )
+  assert.equal(urls.length, 2)
+  assert.ok(urls.every(url => !url.includes('bundlephobia')))
+
+  for (const manifest of [
+    { name: 'other' },
+    { name: 'candidate', deprecated: 'use another' },
+    { name: 'candidate', repository: 'https://github.com/other/repo' },
+  ]) {
+    await assert.rejects(
+      verifyPackages(proposal('candidate'), async () => ({
+        ok: true,
+        json: async () => manifest,
+      })),
+    )
+  }
+
+  await assert.rejects(
+    verifyPackages(proposal('candidate'), async () => ({
+      ok: false,
+      status: 503,
+      json: async () => null,
+    })),
+  )
+  await assert.rejects(
+    verifyPackages(proposal('candidate'), async url => ({
+      ok: true,
+      json: async () =>
+        url.includes('registry.npmjs.org')
+          ? {
+              name: 'candidate',
+              repository: 'https://github.com/owner/candidate',
+            }
+          : { archived: true },
+    })),
+    /archived/,
+  )
+})
+
+test('verifies candidates concurrently but checks npm identity before authenticated repository reads', async () => {
+  const registryReads: string[] = []
+  const repositoryReads: string[] = []
+  let release!: () => void
+
+  const gate = new Promise<void>(resolve => {
+    release = resolve
+  })
+
+  const verification = verifyPackages(
+    proposal('one', 'two', 'three'),
+    async url => {
+      const name = url.split('/').at(-2)!
+
+      if (url.includes('registry.npmjs.org')) {
+        registryReads.push(name)
+        await gate
+
+        return {
+          ok: true,
+          json: async () => ({
+            name,
+            repository: `https://github.com/owner/${name}`,
+          }),
+        }
+      }
+
+      repositoryReads.push(url)
+
+      return { ok: true, json: async () => ({ archived: false }) }
+    },
+  )
+
+  try {
+    assert.deepEqual(registryReads, ['one', 'two', 'three'])
+    assert.deepEqual(repositoryReads, [])
+  } finally {
+    release()
+    await verification
+  }
+
+  assert.equal(repositoryReads.length, 3)
+})
+
+test('three-way carry retains new approved categories and stops on overlapping maintainer edits', () => {
+  const pending = mergeProposal(baseline, proposal('candidate'))
+
+  const latest = {
+    ...baseline,
+    new: { name: 'Approved', tags: [], similar: ['safe'] },
+  }
+
+  assert.deepEqual(carryPending(latest, baseline, pending), {
+    ...pending,
+    new: latest.new,
+  })
+  assert.throws(
+    () =>
+      carryPending(
+        mergeProposal(baseline, proposal('human')),
+        baseline,
+        pending,
+      ),
+    /resolution/,
+  )
+})
+
+function github() {
+  type PullRequest = {
+    number: number
+    state: 'open' | 'closed'
+    merged_at?: string | null
+    base: { ref: string }
+    html_url: string
+    body: string
+  }
+
+  type MockState = {
+    head: string | null
+    catalogs: Record<string, Catalog>
+    prs: PullRequest[]
+    writes: Array<{ path: string; method: string; body: unknown }>
+    blobs: Record<string, Catalog>
+    trees: Record<string, Catalog>
+    next: number
+  }
+
+  const state: MockState = {
+    head: null,
+    catalogs: { base: baseline },
+    prs: [],
+    writes: [],
+    blobs: {},
+    trees: {},
+    next: 0,
+  }
+
+  const api: GitHubApi = async (path, options = {}) => {
+    const { body, method = 'GET' } = options
+
+    if (method !== 'GET') state.writes.push({ path, method, body })
+
+    if (path === '')
+      return { default_branch: 'bundlephobia', owner: { login: 'owner' } }
+
+    if (path === '/git/ref/heads/bundlephobia')
+      return { object: { sha: 'base' } }
+
+    if (path === `/git/ref/heads/${branch}`)
+      return state.head ? { object: { sha: state.head } } : null
+
+    if (path.startsWith('/pulls?')) return state.prs
+
+    if (path.startsWith('/contents/'))
+      return {
+        content: Buffer.from(
+          JSON.stringify(state.catalogs[path.split('ref=')[1]]),
+        ).toString('base64'),
+      }
+
+    if (path.startsWith('/compare/'))
+      return {
+        merge_base_commit: { sha: 'base' },
+        files: [{ filename: catalogPath }],
+      }
+
+    if (path === '/git/commits/base') return { tree: { sha: 'base-tree' } }
+
+    if (path === '/git/blobs') {
+      const sha = `blob${++state.next}`
+      state.blobs[sha] = catalogSchema.parse(
+        JSON.parse(z.string().parse(body?.content)),
+      )
+
+      return { sha }
+    }
+
+    if (path === '/git/trees') {
+      assert.deepEqual(
+        z
+          .array(z.object({ path: z.string(), sha: z.string() }))
+          .parse(body?.tree)
+          .map(file => file.path),
+        [catalogPath],
+      )
+      const sha = `tree${++state.next}`
+      state.trees[sha] =
+        state.blobs[
+          z.array(z.object({ sha: z.string() })).parse(body?.tree)[0].sha
+        ]
+
+      return { sha }
+    }
+
+    if (path === '/git/commits') {
+      const sha = `commit${++state.next}`
+      state.catalogs[sha] = state.trees[z.string().parse(body?.tree)]
+
+      return { sha }
+    }
+
+    if (path === '/git/refs' || path.startsWith('/git/refs/heads/')) {
+      assert.notEqual(body?.force, true)
+      state.head = z.string().parse(body?.sha)
+
+      return {}
+    }
+
+    if (path === '/pulls') {
+      const pr: PullRequest = {
+        body: z.string().parse(body?.body),
+        number: 1,
+        state: 'open',
+        base: { ref: z.string().parse(body?.base) },
+        html_url: 'https://github.com/owner/repo/pull/1',
+      }
+
+      state.prs = [pr]
+
+      return pr
+    }
+
+    if (path === '/pulls/1') {
+      Object.assign(state.prs[0], body)
+
+      return state.prs[0]
+    }
+
+    if (path === '/actions/workflows/ci.yml/dispatches') return null
+    throw new Error(`Unexpected API ${path}`)
+  }
+
+  return { state, api }
+}
+
+test('publishes one branch/PR, preserves agent evidence and human notes, and dispatches CI only for catalog changes', async () => {
+  const { state, api } = github()
+
+  const run = (p: Proposal, summary: string) =>
+    publishResearch({
+      api,
+      proposal: p,
+      verify: async () => {},
+      summary,
+      expectedHead: state.head,
+    })
+
+  await run(
+    proposal('candidate'),
+    'Candidate rationale with discovery evidence.',
+  )
+  state.prs[0].body = `Human review notes\n${state.prs[0].body}`
+
+  const summary =
+    'Revised candidate rationale and another recommendation. [Discovery](<https://news.ycombinator.com/item?id=candidate>)'
+
+  await run(proposal('another'), summary)
+  assert.equal(
+    state.writes.filter(write => write.path === '/git/refs').length,
+    1,
+  )
+  assert.equal(state.writes.filter(write => write.path === '/pulls').length, 1)
+  assert.deepEqual(state.catalogs[state.head!].example.similar, [
+    'original',
+    'candidate',
+    'another',
+  ])
+  assert.match(state.prs[0].body, /Human review notes/)
+  assert.match(state.prs[0].body, /candidate/)
+  assert.match(state.prs[0].body, /another/)
+  assert.ok(state.prs[0].body.includes(summary))
+  assert.doesNotMatch(state.prs[0].body, /Candidate rationale with/)
+  assert.deepEqual(Object.keys(state.catalogs[state.head!].example).sort(), [
+    'name',
+    'similar',
+    'tags',
+  ])
+  assert.equal(
+    state.writes.filter(write => write.path.includes('/dispatches')).length,
+    2,
+  )
+  const count = state.writes.length
+  const previousBody = state.prs[0].body
+
+  await run(proposal('candidate'), summary)
+  assert.equal(state.writes.length, count)
+  assert.equal(state.prs[0].body, previousBody)
+})
+
+test('a rejected PR blocks publication, and failed identity checks create no branch', async () => {
+  const { state, api } = github()
+  state.prs = [
+    {
+      number: 1,
+      state: 'closed',
+      merged_at: null,
+      base: { ref: 'bundlephobia' },
+      html_url: 'https://github.com/owner/repo/pull/1',
+      body: '',
+    },
+  ]
+  await assert.rejects(
+    publishResearch({
+      api,
+      proposal: proposal('candidate'),
+      summary: 'Candidate rationale.',
+      expectedHead: null,
+    }),
+    /rejected/,
+  )
+  assert.equal(state.writes.length, 0)
+  state.prs = []
+  await assert.rejects(
+    publishResearch({
+      api,
+      proposal: proposal('candidate'),
+      summary: 'Candidate rationale.',
+      expectedHead: null,
+      verify: async () => {
+        throw new Error('invalid identity')
+      },
+    }),
+    /invalid identity/,
+  )
+  assert.equal(state.writes.length, 0)
+})
+
+test('agent revisions can edit the pending catalog and summary without overwriting newer data or bypassing evidence checks', async () => {
+  const { state, api } = github()
+  const verify = async () => {}
+
+  await publishResearch({
+    api,
+    proposal: proposal('candidate'),
+    summary: '#### candidate',
+    expectedHead: null,
+    verify,
+  })
+  state.prs[0].body = `Human notes\n${state.prs[0].body}`
+  const expectedHead = state.head
+  const desired = structuredClone(state.catalogs[state.head!])
+
+  desired.example.name = 'Corrected category'
+  desired.example.similar = ['original']
+  state.catalogs.ancestor = structuredClone(state.catalogs.base)
+  state.catalogs.base.newApproved = {
+    name: 'New approved data',
+    tags: [],
+    similar: ['approved'],
+  }
+
+  const revisionApi: GitHubApi = async (path, options) =>
+    path.startsWith('/compare/')
+      ? {
+          merge_base_commit: { sha: 'ancestor' },
+          files: [{ filename: catalogPath }],
+        }
+      : api(path, options)
+
+  const revision = {
+    api: revisionApi,
+    proposal: [],
+    catalog: desired,
+    expectedHead,
+    summary:
+      'Updated rationale and addressed [maintainer feedback](<https://github.com/owner/repo/pull/1#issuecomment-123>).',
+    verify,
+  }
+
+  await publishResearch(revision)
+  assert.deepEqual(state.catalogs[state.head!].example.similar, ['original'])
+  assert.equal(state.catalogs[state.head!].example.name, 'Corrected category')
+  assert.deepEqual(
+    state.catalogs[state.head!].newApproved,
+    state.catalogs.base.newApproved,
+  )
+  assert.match(state.prs[0].body, /Human notes/)
+  assert.match(state.prs[0].body, /Updated rationale/)
+  assert.doesNotMatch(state.prs[0].body, /#### candidate/)
+
+  const count = state.writes.length
+  const head = state.head
+
+  await assert.rejects(
+    publishResearch(revision),
+    /changed since the agent read/,
+  )
+  assert.equal(state.writes.length, count)
+
+  const summaryOnly = {
+    api: revisionApi,
+    proposal: [],
+    expectedHead: head,
+    summary:
+      'Clarified the answer to the maintainer without changing any catalog entries.',
+    verify,
+  }
+
+  await publishResearch(summaryOnly)
+  assert.equal(state.head, head)
+  assert.equal(state.writes.length, count + 1)
+  await publishResearch(summaryOnly)
+  assert.equal(state.writes.length, count + 1)
+
+  const unresearched = structuredClone(state.catalogs[state.head!])
+
+  unresearched.example.similar.push('unresearched')
+  await assert.rejects(
+    publishResearch({ ...revision, expectedHead: head, catalog: unresearched }),
+    /requires research evidence/,
+  )
+  assert.equal(state.writes.length, count + 1)
+})
+
+test('reuses the same branch after merge, without losing approved recommendations', async () => {
+  const { state, api } = github()
+
+  const run = (p: Proposal, summary: string) =>
+    publishResearch({
+      api,
+      proposal: p,
+      verify: async () => {},
+      summary,
+      expectedHead: state.head,
+    })
+
+  await run(proposal('candidate'), '#### candidate')
+  state.catalogs.base = state.catalogs[state.head!]
+  state.prs[0].state = 'closed'
+  state.prs[0].merged_at = '2026-10-05T00:00:00Z'
+  await run(proposal('another'), '#### another')
+  assert.deepEqual(state.catalogs[state.head!].example.similar, [
+    'original',
+    'candidate',
+    'another',
+  ])
+  assert.equal(
+    state.writes.filter(write => write.path === '/git/refs').length,
+    1,
+  )
+  assert.equal(state.writes.filter(write => write.path === '/pulls').length, 2)
+  assert.doesNotMatch(state.prs[0].body, /#### candidate/)
+  assert.match(state.prs[0].body, /#### another/)
+})
+
+test('refuses a branch containing code changes and never overwrites concurrent edits', async () => {
+  const { state, api } = github()
+
+  const options = {
+    verify: async () => {},
+    summary: 'Verified recommendations.',
+    expectedHead: state.head,
+  }
+
+  await publishResearch({ ...options, api, proposal: proposal('candidate') })
+  options.expectedHead = state.head
+  state.writes = []
+  await assert.rejects(
+    publishResearch({
+      ...options,
+      proposal: proposal('another'),
+      api: async (path, params) =>
+        path.startsWith('/compare/')
+          ? {
+              files: [{ filename: 'package.json' }],
+              merge_base_commit: { sha: 'base' },
+            }
+          : api(path, params),
+    }),
+    /non-catalog/,
+  )
+  assert.equal(state.writes.length, 0)
+  let reads = 0
+  await assert.rejects(
+    publishResearch({
+      ...options,
+      proposal: proposal('another'),
+      api: async (path, params) => {
+        if (path === `/git/ref/heads/${branch}` && ++reads === 2)
+          return { object: { sha: 'maintainer-edit' } }
+
+        return api(path, params)
+      },
+    }),
+    /changed during publishing/,
+  )
+  assert.ok(
+    !state.writes.some(
+      write =>
+        write.path.startsWith('/git/refs') || write.path.startsWith('/pulls'),
+    ),
+  )
+})
+
+test('the shared catalog retains the existing category contract', async () => {
+  const catalog = catalogSchema.parse(
+    JSON.parse(
+      await readFile(
+        new URL('../../utils/similar-packages.catalog.json', import.meta.url),
+        'utf8',
+      ),
+    ),
+  )
+
+  assert.ok(Object.keys(catalog).length > 20)
+
+  const exported = JSON.parse(
+    execFileSync(
+      process.execPath,
+      [
+        '-r',
+        'esbuild-register',
+        '-e',
+        'console.log(JSON.stringify(require("./utils/similarPackages")))',
+      ],
+      { encoding: 'utf8', cwd: new URL('../../', import.meta.url) },
+    ),
+  )
+
+  assert.deepEqual(exported.categories, catalog)
+  assert.ok(exported.comparisonGroups.length > 0)
+
+  for (const category of Object.values(catalog)) {
+    assert.ok(category.name.trim().length > 0)
+    assert.ok(category.similar.length <= 6)
+    assert.ok(category.tags.every(tag => Number.isInteger(tag.weight)))
+  }
+})

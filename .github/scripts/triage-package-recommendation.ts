@@ -1,70 +1,97 @@
 import { readFile } from 'node:fs/promises'
+import { catalogSchema } from '@bundlephobia/service-contracts/recommendations'
+import { z } from 'zod'
+import { request } from '@octokit/request'
 
 import {
   collectBundleSize,
   collectPackageSignals,
   evaluateRecommendation,
   evaluateSizeAdvantage,
-  extractCuratedRecommendations,
   extractIssueFormAnswers,
   isPlausiblePackageName,
   normalizePackageName,
   parsePackageNames,
-} from './recommendation-quality.mjs'
+} from './recommendation-quality.ts'
 
 const REPORT_MARKER = '<!-- bundlephobia-recommendation-quality -->'
 
-const event = JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH, 'utf8'))
+const env = z
+  .object({
+    GITHUB_EVENT_PATH: z.string(),
+    GITHUB_REPOSITORY: z.string(),
+    GITHUB_TOKEN: z.string(),
+  })
+  .parse(process.env)
 
-const [owner, repository] = process.env.GITHUB_REPOSITORY.split('/')
+const event = z
+  .object({
+    issue: z.object({ number: z.number(), body: z.string().nullable() }),
+  })
+  .parse(JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8')))
+
+const [owner, repository] = env.GITHUB_REPOSITORY.split('/')
 
 const issue = event.issue
 
-const token = process.env.GITHUB_TOKEN
+const token = env.GITHUB_TOKEN
 
-async function github(path, options = {}) {
-  const response = await fetch(`https://api.github.com${path}`, {
-    ...options,
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'User-Agent': 'bundlephobia-recommendation-checker',
-      ...options.headers,
-    },
+const githubRequest = request.defaults({
+  headers: { authorization: `Bearer ${token}` },
+  request: { redirect: 'error' },
+})
+
+async function github(
+  path: string,
+  options: { method?: 'GET' | 'POST' | 'PATCH'; body?: string } = {},
+  // Raw GitHub JSON is validated with the endpoint schema by each caller.
+  // oxlint-disable-next-line anti-slop/no-unknown-returns
+): Promise<unknown> {
+  const response = await githubRequest({
+    method: options.method ?? 'GET',
+    url: path,
+    data: options.body ? JSON.parse(options.body) : undefined,
+    request: { signal: AbortSignal.timeout(30000) },
   })
 
-  if (!response.ok) {
-    throw new Error(`GitHub API ${path} returned HTTP ${response.status}`)
-  }
-
-  return response.status === 204 ? null : response.json()
+  return response.status === 204 ? null : response.data
 }
 
-function display(value, fallback = 'Unavailable') {
+function display(
+  value: string | number | null | undefined,
+  fallback = 'Unavailable',
+) {
   return value === null || value === undefined || value === ''
     ? fallback
     : value
 }
 
-function icon(value) {
+function icon(value: boolean) {
   return value ? '✅' : '⚠️'
 }
 
-async function findOpenDuplicates(packageName) {
+async function findOpenDuplicates(packageName: string) {
   const query = encodeURIComponent(
     `repo:${owner}/${repository} is:issue is:open label:"similar suggestion" in:title "${packageName}"`,
   )
 
-  const result = await github(`/search/issues?q=${query}&per_page=10`)
+  const result = z
+    .object({
+      items: z.array(z.object({ number: z.number(), html_url: z.string() })),
+    })
+    .parse(await github(`/search/issues?q=${query}&per_page=10`))
 
   return result.items.filter(candidate => candidate.number !== issue.number)
 }
 
-async function upsertReport(body) {
-  const comments = await github(
-    `/repos/${owner}/${repository}/issues/${issue.number}/comments?per_page=100`,
-  )
+async function upsertReport(body: string) {
+  const comments = z
+    .array(z.object({ id: z.number(), body: z.string().nullable().optional() }))
+    .parse(
+      await github(
+        `/repos/${owner}/${repository}/issues/${issue.number}/comments?per_page=100`,
+      ),
+    )
 
   const previous = comments.find(comment =>
     comment.body?.includes(REPORT_MARKER),
@@ -91,7 +118,7 @@ async function upsertReport(body) {
   )
 }
 
-const answers = extractIssueFormAnswers(issue.body)
+const answers = extractIssueFormAnswers(issue.body ?? '')
 
 const packageName = normalizePackageName(answers.packageName)
 
@@ -109,11 +136,14 @@ _This automation checks objective signals only. Maintainers decide functional eq
   process.exit(0)
 }
 
-const [signals, duplicates, fixtureSource, comparisonSizes] = await Promise.all(
+const [signals, duplicates, catalogSource, comparisonSizes] = await Promise.all(
   [
     collectPackageSignals(packageName, { githubToken: token }),
     findOpenDuplicates(packageName),
-    readFile('server/middlewares/similar-packages/fixtures.ts', 'utf8'),
+    readFile(
+      new URL('../../utils/similar-packages.catalog.json', import.meta.url),
+      'utf8',
+    ),
     Promise.all(
       comparisonNames
         .filter(isPlausiblePackageName)
@@ -125,8 +155,9 @@ const [signals, duplicates, fixtureSource, comparisonSizes] = await Promise.all(
   ],
 )
 
-const alreadyCurated =
-  extractCuratedRecommendations(fixtureSource).has(packageName)
+const alreadyCurated = Object.values(
+  catalogSchema.parse(JSON.parse(catalogSource)),
+).some(category => category.similar.includes(packageName))
 
 const evaluation = evaluateRecommendation(signals, answers)
 
@@ -172,27 +203,28 @@ const duplicateLinks = duplicates
   .map(candidate => `[#${candidate.number}](${candidate.html_url})`)
   .join(', ')
 
+const candidateSize = signals.bundleSize
+
 const sizeRows = [
   { packageName, bundleSize: signals.bundleSize },
   ...comparisonSizes,
 ]
   .map(({ packageName: sizePackageName, bundleSize }) => {
-    const delta =
-      signals.bundleSize?.available &&
-      bundleSize?.available &&
-      sizePackageName !== packageName
-        ? (() => {
-            const percentage = Math.round(
-              (Math.abs(signals.bundleSize.gzip - bundleSize.gzip) /
-                bundleSize.gzip) *
-                100,
-            )
+    let delta = 'candidate'
 
-            return `candidate is ${percentage}% ${
-              signals.bundleSize.gzip < bundleSize.gzip ? 'smaller' : 'larger'
-            }`
-          })()
-        : 'candidate'
+    if (
+      candidateSize?.available &&
+      bundleSize?.available &&
+      bundleSize.gzip > 0 &&
+      sizePackageName !== packageName
+    ) {
+      const percentage = Math.round(
+        (Math.abs(candidateSize.gzip - bundleSize.gzip) / bundleSize.gzip) *
+          100,
+      )
+
+      delta = `candidate is ${percentage}% ${candidateSize.gzip < bundleSize.gzip ? 'smaller' : 'larger'}`
+    }
 
     return `| ${sizePackageName} | ${
       bundleSize?.available ? bundleSize.gzip.toLocaleString() : 'Unavailable'

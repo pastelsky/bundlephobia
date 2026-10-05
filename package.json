@@ -7,6 +7,7 @@
   "license": "MIT",
   "private": true,
   "workspaces": [
+    ".github",
     "build-service",
     "cache-service",
     "jvm-package-build-stats",
@@ -36,6 +37,7 @@
     "canvas": "^3.2.1",
     "classnames": "^2.5.1",
     "d3-array": "^3.2.4",
+    "d3-path": "^3.1.0",
     "d3-scale": "^4.0.2",
     "d3-shape": "^3.2.0",
     "date-fns": "^2.30.0",
@@ -49,6 +51,7 @@
     "esbuild-register": "^3.5.0",
     "execa": "^5.1.1",
     "fabric": "^6.0.0",
+    "fastify": "^4.25.2",
     "firebase": "^8.10.1",
     "firebase-admin": "^12.6.0",
     "flatten": "^1.0.3",
@@ -84,7 +87,7 @@
     "npm-package-arg": "^8.1.5",
     "npm-registry-fetch": "^11.0.0",
     "p-queue": "^3.2.0",
-    "package-build-stats": "9.2.3",
+    "package-build-stats": "9.4.0",
     "pacote": "^11.3.5",
     "performance-now": "^2.1.0",
     "progress-stream": "^2.0.0",
@@ -115,8 +118,8 @@
   },
   "scripts": {
     "dev": "DEBUG='bp:*' NODE_ENV=development nodemon --watch ./server --watch ./utils --watch ./index.ts",
-    "build": "NODE_ENV=production next build",
-    "prebuild": "node -r ts-node/register bin/generate-sitemap.ts",
+    "build": "yarn sitemap && NODE_ENV=production next build",
+    "sitemap": "node -r esbuild-register bin/generate-sitemap.ts",
     "prestart": "yarn build",
     "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
     "prod": "yarn run build && yarn start",
@@ -130,7 +133,8 @@
     "jvm:check": "yarn workspace jvm-package-build-stats check",
     "jvm:format": "yarn workspace jvm-package-build-stats format",
     "jvm:test": "yarn workspace jvm-package-build-stats test",
-    "test:recommendations": "node --test .github/scripts/*.test.mjs",
+    "test:recommendations": "node --test .github/scripts/*.test.ts",
+    "typecheck:recommendations": "yarn workspace @bundlephobia/recommendation-automation check",
     "test:watch": "jest --watch",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
@@ -192,7 +196,8 @@
     "sass-loader": "^10.5.2",
     "sitemap": "^7.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "xml-formatter": "^3.7.0"
   },
   "packageManager": "yarn@4.0.2"
 }

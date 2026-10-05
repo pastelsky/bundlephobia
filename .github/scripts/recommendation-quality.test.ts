@@ -1,5 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { mkdtemp, writeFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 import {
   collectPackageSignals,
@@ -12,7 +15,7 @@ import {
   isPlausiblePackageName,
   normalizePackageName,
   parsePackageNames,
-} from './recommendation-quality.mjs'
+} from './recommendation-quality.ts'
 
 test('extracts required answers from a GitHub issue form body', () => {
   const answers = extractIssueFormAnswers(`### npm package name
@@ -88,6 +91,15 @@ test('extracts GitHub repositories from npm metadata', () => {
     extractGitHubRepository({ url: 'git://github.com/user/project.git' }),
     'user/project',
   )
+  assert.equal(
+    extractGitHubRepository('git@github.com:owner/repo.git'),
+    'owner/repo',
+  )
+  assert.equal(
+    extractGitHubRepository('https://notgithub.com/owner/repo.git'),
+    null,
+  )
+  assert.equal(extractGitHubRepository(null), null)
 })
 
 test('collects objective npm and GitHub quality signals', async () => {
@@ -122,7 +134,7 @@ test('collects objective npm and GitHub quality signals', async () => {
     ],
   ])
 
-  const fetchImpl = async url => ({
+  const fetchImpl = async (url: string) => ({
     ok: responses.has(url),
     status: responses.has(url) ? 200 : 404,
     json: async () => responses.get(url),
@@ -137,7 +149,7 @@ test('collects objective npm and GitHub quality signals', async () => {
   assert.equal(signals.popular, true)
   assert.equal(signals.activeOrStable, true)
   assert.equal(signals.repository, 'example/package')
-  assert.equal(signals.bundleSize.gzip, 2_000)
+  assert.equal(signals.bundleSize?.gzip, 2_000)
 })
 
 test('blocks authoritative failures but keeps incomplete signals advisory', () => {
@@ -238,4 +250,76 @@ test('summarizes size evidence without turning it into a gate', () => {
   const result = evaluateSizeAdvantage(candidate, alternatives)
   assert.equal(result.available, true)
   assert.deepEqual(result.smallerThan, ['large'])
+})
+
+test('the issue-triage entrypoint reads the shared catalog and publishes one report', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'bundlephobia-triage-'))
+  const eventPath = join(directory, 'event.json')
+
+  const variables = [
+    'GITHUB_EVENT_PATH',
+    'GITHUB_REPOSITORY',
+    'GITHUB_TOKEN',
+  ] as const
+
+  const original = variables.map(key => process.env[key])
+  const reports: string[] = []
+
+  t.after(async () => {
+    variables.forEach((key, index) => {
+      if (original[index] === undefined) delete process.env[key]
+      else process.env[key] = original[index]
+    })
+    await rm(directory, { recursive: true, force: true })
+  })
+  await writeFile(
+    eventPath,
+    JSON.stringify({
+      issue: {
+        number: 42,
+        body: '### npm package name\n\ndate-fns\n\n### Why is this a better alternative?\n\nAn established library for rendering dates and time formatting.',
+      },
+    }),
+  )
+  process.env.GITHUB_EVENT_PATH = eventPath
+  process.env.GITHUB_REPOSITORY = 'owner/repo'
+  process.env.GITHUB_TOKEN = 'test-token'
+
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async (input: Parameters<typeof fetch>[0], options?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input)
+      let body
+
+      if (url.includes('registry.npmjs.org'))
+        body = {
+          'dist-tags': { latest: '1.0.0' },
+          versions: {
+            '1.0.0': { repository: 'https://github.com/date-fns/date-fns' },
+          },
+        }
+      else if (url.includes('api.npmjs.org')) body = { downloads: 10_000 }
+      else if (url.includes('/repos/date-fns/date-fns'))
+        body = { stargazers_count: 10_000, archived: false }
+      else if (url.includes('bundlephobia.com/api/size'))
+        body = { version: '1.0.0', size: 1000, gzip: 300 }
+      else if (url.includes('/search/issues')) body = { items: [] }
+      else if (
+        url.includes('/issues/42/comments') &&
+        options?.method === 'POST'
+      ) {
+        reports.push(JSON.parse(String(options.body)).body)
+        body = { id: 1 }
+      } else if (url.includes('/issues/42/comments')) body = []
+      else throw new Error(`Unexpected request: ${url}`)
+
+      return Response.json(body)
+    },
+  )
+
+  await import('./triage-package-recommendation.ts')
+  assert.equal(reports.length, 1)
+  assert.match(reports[0], /Already curated \| Yes/)
+  assert.match(reports[0], /npm package/)
 })

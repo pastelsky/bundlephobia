@@ -1,35 +1,11 @@
 import type { SimilarPackagesResponse } from '../client/api'
-
-type ComparisonGroup = {
-  packages: string[]
-}
+import { comparisonGroups } from './similarPackages'
 
 export const TRUSTED_SIMILARITY_SCORE = 12
 
 export const RECOMMENDATION_SCORE_FLOOR = 44
 
 export const DEFAULT_RECOMMENDATION_LIMIT = 10
-
-// Broad, foundational packages need a purpose-level peer set. A token classifier
-// cannot reliably distinguish a framework from the plugins built for it.
-const comparisonGroups: ComparisonGroup[] = [
-  {
-    packages: [
-      'react',
-      'preact',
-      'vue',
-      'svelte',
-      'solid-js',
-      '@angular/core',
-      'lit',
-    ],
-  },
-  { packages: ['express', 'fastify', 'koa', 'hono', '@nestjs/core'] },
-  { packages: ['vite', 'webpack', 'rollup', 'esbuild', 'parcel'] },
-  { packages: ['jest', 'vitest', 'ava', 'mocha'] },
-  { packages: ['redux', 'zustand', 'jotai', 'mobx', 'recoil'] },
-  { packages: ['date-fns', 'dayjs', 'luxon', 'moment'] },
-]
 
 type RecommendationInput = {
   packages: string[]

@@ -13,7 +13,6 @@ import type {
   TrendsMetric,
   TrendsPackageSeries,
   TrendsRange,
-  TrendsRelease,
   TrendsPoint,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
@@ -29,7 +28,6 @@ export type {
   TrendsPackageSeries,
   TrendsPoint,
   TrendsRange,
-  TrendsRelease,
   TrendsResponse,
 }
 
@@ -214,15 +212,10 @@ export default class API {
     return API.get<PackageHistoryResponse>(`/api/package-history?${params}`)
   }
 
-  static getTrends(
-    packages: string[],
-    range: TrendsRange,
-    groupBy: TrendsGroupBy,
-  ) {
+  static getTrends(packages: string[], range: TrendsRange) {
     const params = new URLSearchParams({
       packages: packages.join(','),
       range,
-      groupBy,
     })
 
     return API.get<TrendsResponse>(`/api/trends?${params}`)

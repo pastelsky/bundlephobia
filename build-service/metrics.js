@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { monitorEventLoopDelay, performance } from 'node:perf_hooks'
+import { activeBuildCount, startBuildTrace } from './buildMemoryTrace.ts'
 
 const DEFAULT_SAMPLE_INTERVAL_MS = 250
 
@@ -25,6 +26,12 @@ const DEFAULT_MAX_ARTIFACTS = 200
 const MAX_PROCESS_PEAKS = 12
 
 const MIN_PEAK_DETAIL_DELTA_BYTES = 16 * 1024 * 1024
+
+const MAX_MEMORY_SAMPLES = 1200
+
+const MEMORY_SAMPLE_INTERVAL_MS = 1000
+
+const MEMORY_SAMPLE_RSS_DELTA_BYTES = 16 * 1024 * 1024
 
 let artifactSequence = 0
 
@@ -335,8 +342,26 @@ async function pruneMetricArtifacts(directory) {
     compareArtifacts(left.metrics, right.metrics),
   )
 
-  const retainedArtifacts = rankedArtifacts.slice(0, getMaxArtifacts())
-  const staleArtifacts = rankedArtifacts.slice(getMaxArtifacts())
+  const maxArtifacts = getMaxArtifacts()
+
+  const newestArtifacts = [...artifacts].sort((left, right) =>
+    right.name.localeCompare(left.name),
+  )
+
+  const retainedNames = new Set(
+    newestArtifacts
+      .slice(0, Math.floor(maxArtifacts / 2))
+      .map(artifact => artifact.name),
+  )
+
+  for (const artifact of rankedArtifacts) {
+    if (retainedNames.size >= maxArtifacts) break
+    retainedNames.add(artifact.name)
+  }
+
+  const staleArtifacts = artifacts.filter(
+    artifact => !retainedNames.has(artifact.name),
+  )
 
   await Promise.all(
     staleArtifacts.map(artifact =>
@@ -344,7 +369,7 @@ async function pruneMetricArtifacts(directory) {
     ),
   )
 
-  return new Set(retainedArtifacts.map(artifact => artifact.name))
+  return retainedNames
 }
 
 async function writeMetricsArtifact(metrics) {
@@ -410,6 +435,7 @@ export function isExpensiveBuild(metrics) {
 // oxlint-disable-next-line complexity
 export async function measureBuild({ operation, packageString, run }) {
   const startedAt = performance.now()
+  const trace = startBuildTrace(operation, packageString)
 
   const startedFilesystem = await readFilesystemStats(
     process.env.BUILD_TMP_DIR || '/tmp/tmp-build',
@@ -435,6 +461,7 @@ export async function measureBuild({ operation, packageString, run }) {
   let lastDetailedPeakRssBytes = 0
   let peakProcesses = []
   const processPeaks = new Map()
+  const memorySamples = []
 
   // oxlint-disable-next-line complexity
   const sample = async () => {
@@ -452,6 +479,28 @@ export async function measureBuild({ operation, packageString, run }) {
     initialChildRssBytes ??= snapshot.childRssBytes
     initialHeapUsedBytes ??= memory.heapUsed
     initialProcessCount ??= snapshot.processCount
+
+    const elapsedMs = round(performance.now() - startedAt)
+    const previousSample = memorySamples.at(-1)
+
+    if (
+      !previousSample ||
+      elapsedMs - previousSample.elapsedMs >= MEMORY_SAMPLE_INTERVAL_MS ||
+      Math.abs(snapshot.rssBytes - previousSample.rssBytes) >=
+        MEMORY_SAMPLE_RSS_DELTA_BYTES
+    ) {
+      memorySamples.push({
+        elapsedMs,
+        rssBytes: snapshot.rssBytes,
+        heapUsedBytes: memory.heapUsed,
+        externalBytes: memory.external,
+        concurrentBuilds: activeBuildCount(),
+      })
+
+      if (memorySamples.length > MAX_MEMORY_SAMPLES) {
+        memorySamples.shift()
+      }
+    }
 
     if (reachedNewPeak) {
       processCountAtPeak = snapshot.processCount
@@ -525,13 +574,14 @@ export async function measureBuild({ operation, packageString, run }) {
   let error
 
   try {
-    return await run()
+    return await trace.run(run)
   } catch (caughtError) {
     status = 'error'
     error = caughtError
     throw caughtError
   } finally {
     clearInterval(interval)
+    trace.finish()
     await sample()
     eventLoopDelay.disable()
 
@@ -583,6 +633,10 @@ export async function measureBuild({ operation, packageString, run }) {
       processCountAtEnd: finalSnapshot.processCount,
       peakProcesses,
       processPeakDetails,
+      // Process-wide samples are correlated with phase events and concurrency;
+      // they are not per-package allocation measurements when builds overlap.
+      memorySamples,
+      phaseMarks: trace.phases,
       cgroupAtStart: startedCgroup,
       cgroupAtEnd: endedCgroup,
       heapUsedBeforeBytes: initialHeapUsedBytes,

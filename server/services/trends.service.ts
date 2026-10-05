@@ -3,14 +3,14 @@ import type {
   PackageHistoryVersion,
 } from '../../types/package-history'
 import type {
-  TrendsGroupBy,
   TrendsPackageSeries,
   TrendsPoint,
   TrendsRange,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
+import { formatTrendsDate, startOfTrendsRangeDate } from '../../utils/trends'
 import {
-  fetchGithubRepository,
+  fetchGithubStarCount,
   fetchGithubStarHistoryPage,
   type GithubStarHistoryRow,
 } from '../clients/github.client'
@@ -19,85 +19,50 @@ import { fetchPackageHistory } from './package-history.service'
 
 const MAX_GITHUB_HISTORY_PAGES = 100
 
-const cache = new Map<string, { expiresAt: number; value: TrendsResponse }>()
+const COMPLETE_CACHE_TTL_MS = 10 * 60 * 1000
 
-const cacheTtlMs = 10 * 60 * 1000
+const DEGRADED_CACHE_TTL_MS = 30 * 1000
+
+const MAX_CACHED_PACKAGE_RANGES = 250
+
+interface LruCache<K, V> {
+  get(key: K): V | undefined
+  set(key: K, value: V, maxAge?: number): this
+}
+
+interface LruCacheConstructor {
+  new <K, V>(options: { max: number; maxAge: number }): LruCache<K, V>
+}
+
+// SAFETY: the pinned lru-cache package uses this constructor and set contract.
+const LRU = require('lru-cache') as LruCacheConstructor
+
+const packageTrendsCache = new LRU<string, TrendsPackageSeries>({
+  max: MAX_CACHED_PACKAGE_RANGES,
+  maxAge: COMPLETE_CACHE_TTL_MS,
+})
+
+const packageTrendsRequests = new Map<string, Promise<TrendsPackageSeries>>()
 
 function isoDate(date: Date): string {
-  return date.toISOString().slice(0, 10)
+  return formatTrendsDate(date)
 }
 
 export function getTrendsRangeStart(
   range: TrendsRange,
   now = new Date(),
 ): string {
-  const start = new Date(now)
-
-  if (range === 'last-2-months') start.setUTCMonth(start.getUTCMonth() - 2)
-
-  if (range === 'last-year') start.setUTCFullYear(start.getUTCFullYear() - 1)
-
-  if (range === 'last-3-years') start.setUTCFullYear(start.getUTCFullYear() - 3)
-
-  return isoDate(start)
+  return startOfTrendsRangeDate(range, now)
 }
 
-function npmRange(range: TrendsRange, now = new Date()): string {
+export function getNpmTrendsRange(
+  range: TrendsRange,
+  now = new Date(),
+): string {
   const end = isoDate(now)
+  const start = getTrendsRangeStart(range, now)
 
-  if (range === 'last-year') return 'last-year'
-
-  const start = new Date(now)
-
-  if (range === 'last-2-months') start.setUTCMonth(start.getUTCMonth() - 2)
-
-  if (range === 'last-3-years') start.setUTCFullYear(start.getUTCFullYear() - 3)
-
-  return `${isoDate(start)}:${end}`
-}
-
-function bucketDate(date: string, groupBy: TrendsGroupBy): string {
-  const value = new Date(`${date}T00:00:00Z`)
-
-  if (groupBy === 'month') {
-    return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, '0')}-01`
-  }
-
-  if (groupBy === 'week') {
-    const day = value.getUTCDay()
-    value.setUTCDate(value.getUTCDate() + (day === 0 ? -6 : 1 - day))
-  }
-
-  return isoDate(value)
-}
-
-export function rollupTrendsPoints(
-  points: TrendsPoint[],
-  groupBy: TrendsGroupBy,
-  mode: 'sum' | 'last',
-): TrendsPoint[] {
-  const buckets = new Map<string, TrendsPoint[]>()
-
-  for (const point of points) {
-    const key = bucketDate(point.date, groupBy)
-    buckets.set(key, [...(buckets.get(key) ?? []), point])
-  }
-
-  return [...buckets.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, bucket]) => {
-      const last = bucket.at(-1)!
-
-      return {
-        date,
-        value:
-          mode === 'sum'
-            ? bucket.reduce((total, point) => total + point.value, 0)
-            : last.value,
-        version: last.version,
-        partial: bucket.some(point => point.partial),
-      }
-    })
+  return `${start}:${end}`
 }
 
 function parsePackages(packages: string[]): string[] {
@@ -113,32 +78,73 @@ function parsePackages(packages: string[]): string[] {
 }
 
 function dateForGithubDay(week: number, day: number): string | null {
-  const date = new Date(week * 1000)
+  const weekStart = new Date(week * 1000)
 
-  if (!Number.isFinite(date.getTime())) return null
+  if (!Number.isFinite(weekStart.getTime())) return null
 
-  date.setUTCDate(date.getUTCDate() + day)
+  // GitHub says day zero is Sunday but its week boundary may not align with
+  // UTC. Normalize the epoch's UTC date to the nearest Sunday before applying
+  // calendar arithmetic, independently of the server timezone.
+  const utcDay = weekStart.getUTCDay()
+  const daysToSunday = utcDay <= 3 ? -utcDay : 7 - utcDay
+  const utcWeekStart = new Date(weekStart)
+  utcWeekStart.setUTCDate(utcWeekStart.getUTCDate() + daysToSunday + day)
 
-  return isoDate(date)
+  return isoDate(utcWeekStart)
 }
 
-function mapGithubRows(
+function githubGainsByDate(
   rows: GithubStarHistoryRow[],
-  from: string,
+  today: string,
+): Map<string, number> {
+  const gainsByDate = new Map<string, number>()
+
+  for (const row of rows) {
+    for (const [day, value] of row.days.entries()) {
+      const date = dateForGithubDay(row.week, day)
+
+      if (!date || date > today) continue
+
+      gainsByDate.set(date, value)
+    }
+  }
+
+  return gainsByDate
+}
+
+export function buildGithubStarTotals(
+  rows: GithubStarHistoryRow[],
+  current: number,
+  options: { from: string; now?: Date },
 ): TrendsPoint[] {
-  const today = isoDate(new Date())
+  const { from, now = new Date() } = options
+  const today = isoDate(now)
+  const gainsByDate = githubGainsByDate(rows, today)
 
-  return rows
-    .flatMap(row =>
-      row.days.flatMap((value, day) => {
-        const date = dateForGithubDay(row.week, day)
+  // GitHub exposes created-star history but not historical unstars. Walking
+  // backward from the active-star count produces the closest available total
+  // history and guarantees that the latest point is authoritative.
+  if (!gainsByDate.has(today)) gainsByDate.set(today, 0)
 
-        if (!date || date < from || date > today) return []
+  const gains = [...gainsByDate]
+    .map(([date, value]) => ({ date, value }))
+    .sort((left, right) => left.date.localeCompare(right.date))
 
-        return [{ date, value, partial: date === today }]
-      }),
-    )
-    .sort((a, b) => a.date.localeCompare(b.date))
+  const totals: TrendsPoint[] = []
+  let total = current
+
+  for (let index = gains.length - 1; index >= 0; index -= 1) {
+    const gain = gains[index]
+
+    totals.push({
+      date: gain.date,
+      value: Math.max(0, total),
+      partial: gain.date === today,
+    })
+    total -= gain.value
+  }
+
+  return totals.reverse().filter(point => point.date >= from)
 }
 
 type GithubHistoryCursor = {
@@ -181,13 +187,11 @@ async function fetchGithubStars(
     page += 1
   }
 
-  const metadata = await fetchGithubRepository(repository)
+  const current = await fetchGithubStarCount(repository)
 
   return {
-    points: mapGithubRows(rows, from),
-    current: Number.isSafeInteger(metadata.stargazers_count)
-      ? metadata.stargazers_count!
-      : null,
+    points: buildGithubStarTotals(rows, current, { from }),
+    current,
   }
 }
 
@@ -195,7 +199,10 @@ async function fetchDownloads(
   packageName: string,
   range: TrendsRange,
 ): Promise<TrendsPoint[]> {
-  const points = await fetchNpmDownloadRange(packageName, npmRange(range))
+  const points = await fetchNpmDownloadRange(
+    packageName,
+    getNpmTrendsRange(range),
+  )
 
   return points
     .filter(point => /^\d{4}-\d{2}-\d{2}$/.test(point.day))
@@ -249,12 +256,17 @@ function getSettledGithub(
   return { points: [], current: null }
 }
 
-async function buildPackageSeries(
+async function fetchPackageTrendsSource(
   packageName: string,
   range: TrendsRange,
-  groupBy: TrendsGroupBy,
 ): Promise<TrendsPackageSeries> {
   const from = getTrendsRangeStart(range)
+
+  // npm downloads do not depend on the package's release history or repository.
+  // Attach a rejection handler immediately while the history request is pending.
+  const downloadsResults = Promise.allSettled([
+    fetchDownloads(packageName, range),
+  ])
 
   const history = await fetchPackageHistory(packageName, {
     from,
@@ -263,11 +275,13 @@ async function buildPackageSeries(
 
   const warnings: string[] = []
 
-  const [downloadsResult, githubResult] = await Promise.allSettled([
-    fetchDownloads(packageName, range),
-    history.repository
-      ? fetchGithubStars(history.repository, from)
-      : Promise.resolve({ points: [], current: null }),
+  const [[downloadsResult], [githubResult]] = await Promise.all([
+    downloadsResults,
+    Promise.allSettled([
+      history.repository
+        ? fetchGithubStars(history.repository, from)
+        : Promise.resolve({ points: [], current: null }),
+    ]),
   ])
 
   const downloads = getSettledDownloads(downloadsResult, warnings)
@@ -279,9 +293,9 @@ async function buildPackageSeries(
   return {
     name: packageName,
     repository: history.repository,
-    downloads: rollupTrendsPoints(downloads, groupBy, 'sum'),
-    stars: rollupTrendsPoints(github.points, groupBy, 'sum'),
-    size: rollupTrendsPoints(size, groupBy, 'last'),
+    downloads,
+    stars: github.points,
+    size,
     releases: history.releases.map(release => ({
       version: release.version,
       date: release.publishedAt,
@@ -301,29 +315,50 @@ async function buildPackageSeries(
   }
 }
 
+function getPackageTrendsSource(
+  packageName: string,
+  range: TrendsRange,
+): Promise<TrendsPackageSeries> {
+  const key = `${packageName}|${range}`
+  const cached = packageTrendsCache.get(key)
+
+  if (cached) return Promise.resolve(cached)
+
+  const pending = packageTrendsRequests.get(key)
+
+  if (pending) return pending
+
+  const request = fetchPackageTrendsSource(packageName, range)
+    .then(source => {
+      const ttl =
+        source.warnings.length > 0
+          ? DEGRADED_CACHE_TTL_MS
+          : COMPLETE_CACHE_TTL_MS
+
+      packageTrendsCache.set(key, source, ttl)
+
+      return source
+    })
+    .finally(() => packageTrendsRequests.delete(key))
+
+  packageTrendsRequests.set(key, request)
+
+  return request
+}
+
 export async function buildTrendsResponse(
   packageNames: string[],
   range: TrendsRange,
-  groupBy: TrendsGroupBy,
 ): Promise<TrendsResponse> {
   const packages = parsePackages(packageNames)
-  const key = `${packages.join(',')}|${range}|${groupBy}`
-  const cached = cache.get(key)
 
-  if (cached && cached.expiresAt > Date.now()) return cached.value
+  const sources = await Promise.all(
+    packages.map(packageName => getPackageTrendsSource(packageName, range)),
+  )
 
-  const response: TrendsResponse = {
-    packages: await Promise.all(
-      packages.map(packageName =>
-        buildPackageSeries(packageName, range, groupBy),
-      ),
-    ),
+  return {
+    packages: sources,
     range,
-    groupBy,
     generatedAt: new Date().toISOString(),
   }
-
-  cache.set(key, { expiresAt: Date.now() + cacheTtlMs, value: response })
-
-  return response
 }
