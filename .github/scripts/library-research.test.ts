@@ -7,6 +7,7 @@ import {
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
+import { request } from '@octokit/request'
 import {
   branch,
   catalogPath,
@@ -49,6 +50,45 @@ const baseline = {
     similar: ['original'],
   },
 }
+
+test('first-run publication preserves the branch filter through the real GitHub transport', async () => {
+  const { api: fixture } = github()
+  const client = request.defaults({
+    request: {
+      fetch: async (
+        input: Parameters<typeof fetch>[0],
+        options?: RequestInit,
+      ) => {
+        const url = new URL(
+          input instanceof Request ? input.url : String(input),
+        )
+        assert.equal(url.hostname, 'api.github.com')
+        assert.equal(options?.method, 'GET')
+        if (url.pathname.endsWith('/pulls')) {
+          assert.equal(url.searchParams.get('head'), `owner:${branch}`)
+          assert.equal(url.searchParams.get('state'), 'all')
+        }
+        return Response.json(
+          await fixture(
+            url.pathname.replace('/repos/owner/repo', '') + url.search,
+          ),
+        )
+      },
+    },
+  })
+  const result = await publishResearch({
+    api: async path =>
+      (
+        await client({
+          method: 'GET',
+          url: `/repos/owner/repo${path}`,
+          data: undefined,
+        })
+      ).data,
+    proposal: [],
+  })
+  assert.deepEqual(result, { status: 'no changes' })
+})
 
 test('cumulative proposals preserve approved and pending packages; repeated discovery is a no-op', () => {
   const first = mergeProposal(baseline, proposal('candidate'))

@@ -371,7 +371,7 @@ export async function publishResearch({
     .array(prSchema)
     .parse(
       await api(
-        `/pulls?state=all&head=${repository.owner.login}:${branch}&sort=created&direction=desc&per_page=100`,
+        `/pulls?state=all&head=${encodeURIComponent(`${repository.owner.login}:${branch}`)}&sort=created&direction=desc&per_page=100`,
       ),
     )
 
