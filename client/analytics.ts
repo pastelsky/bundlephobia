@@ -1,4 +1,31 @@
 import { trackAmplitudeEvent } from './amplitude'
+import type {
+  TrendsGroupBy,
+  TrendsMetric,
+  TrendsRange,
+} from '@bundlephobia/service-contracts/trends'
+
+type TrendsContext = {
+  packageCount: number
+  metric: TrendsMetric
+  range: TrendsRange
+  groupBy: TrendsGroupBy
+}
+
+type TrendsSelection =
+  | 'package_added'
+  | 'package_removed'
+  | 'metric'
+  | 'range'
+  | 'group_by'
+  | 'major_releases'
+  | 'minor_releases'
+
+type TrendsLoadContext = {
+  packageCount: number
+  range: TrendsRange
+  timeTaken: number
+}
 
 type AnalyticsValue = string | number | boolean | null | undefined
 
@@ -47,6 +74,38 @@ export default class Analytics {
     Analytics.logEvent('page_context_viewed', {
       page_type: pageType,
     })
+  }
+
+  static trendsDataLoaded(
+    data: TrendsLoadContext & {
+      downloadPackageCount: number
+      starsPackageCount: number
+      sizePackageCount: number
+      warningPackageCount: number
+    },
+  ) {
+    Analytics.logEvent('trends_data_loaded', data)
+  }
+
+  static trendsDataFailed(data: TrendsLoadContext) {
+    Analytics.logEvent('trends_data_failed', data)
+  }
+
+  static trendsSelectionChanged(
+    data: TrendsContext & {
+      selection: TrendsSelection
+      enabled?: boolean
+    },
+  ) {
+    Analytics.logEvent('trends_selection_changed', data)
+  }
+
+  static trendsLinkCopied(data: TrendsContext) {
+    Analytics.logEvent('trends_link_copied', data)
+  }
+
+  static trendsLinkCopyFailed(data: TrendsContext) {
+    Analytics.logEvent('trends_link_copy_failed', data)
   }
 
   static performedSearch(packageName: string) {
