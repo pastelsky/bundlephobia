@@ -13,6 +13,8 @@ concurrency:
 engine:
   id: copilot
   model: gpt-6-luna
+  env:
+    COPILOT_PROVIDER_WIRE_API: responses
 sandbox:
   agent:
     version: v0.28.27
