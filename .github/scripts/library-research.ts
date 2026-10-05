@@ -124,6 +124,15 @@ const proposalSchema = z
 
 export type Proposal = z.infer<typeof proposalSchema>
 
+const submissionSchema = z.object({
+  proposal: proposalSchema,
+  catalog: catalogSchema.optional(),
+  summary: z.string().trim().min(1).max(60000),
+  expectedHead: z.string().min(1).nullable(),
+})
+
+type Submission = z.infer<typeof submissionSchema>
+
 // Raw agent JSON is deliberately unknown until this schema establishes its contract.
 // oxlint-disable-next-line anti-slop/no-unknown-parameters
 export function validateProposal(proposal: unknown): Proposal {
@@ -278,93 +287,20 @@ export async function verifyPackages(
   )
 }
 
-const markdown = (value: string) => value.replace(/[\\`*_[\]#@|]/g, '\\$&')
-
-export function researchBody(
-  base: Catalog,
-  catalog: Catalog,
-  proposal: Proposal,
-  runUrl: string,
-) {
-  const lines = [
-    '## Weekly library research',
-    '',
-    'Human review required. These are use-case alternatives, not popularity rankings. No automatic merge.',
-    '',
-  ]
-
-  for (const [slug, category] of Object.entries(catalog)) {
-    const additions = category.similar.filter(
-      name => !base[slug]?.similar.includes(name),
-    )
-
-    if (!additions.length) continue
-
-    const research = proposal.find(item => item.slug === slug)
-
-    lines.push(
-      `### ${markdown(category.name)}${base[slug] ? '' : ' (new category)'}`,
-      '',
-      markdown(
-        research?.reason ??
-          'Maintainer-edited category; please review its intended scope.',
-      ),
-      '',
-    )
-
-    for (const name of additions) {
-      const item = research?.recommendations.find(item => item.package === name)
-      lines.push(
-        `#### ${markdown(name)}`,
-        '',
-        `Compared with: ${category.similar
-          .filter(other => other !== name)
-          .map(markdown)
-          .join(', ')}`,
-        '',
-      )
-
-      if (item)
-        lines.push(
-          `Why considered: ${markdown(item.discovery.reason)}`,
-          ...(item.discovery.source
-            ? [`Discovery source: [Source](<${item.discovery.source}>)`]
-            : []),
-          '',
-          `Why: ${markdown(item.reason)}`,
-          '',
-          `Trade-offs: ${markdown(item.tradeoffs)}`,
-          '',
-          ...item.sources.map(url => `- [Source](<${url}>)`),
-          '',
-        )
-      else
-        lines.push(
-          'Maintainer-added recommendation; rationale needs review.',
-          '',
-        )
-    }
-  }
-
-  lines.push(
-    `Research run: ${runUrl}`,
-    '',
-    'The automated checks verify package identity and catalog constraints, not the truth of every research claim. Review the cited documentation before merging.',
-  )
-
-  return lines.join('\n')
-}
-
 export async function publishResearch({
   api,
   proposal: rawProposal,
+  catalog: rawCatalog,
+  summary: agentSummary,
+  expectedHead,
   verify = verifyPackages,
-  runUrl = 'Manual research run',
 }: {
   api: GitHubApi
   proposal: unknown
+  catalog?: Catalog
+  summary: string
+  expectedHead: string | null
   verify?: (proposal: Proposal) => Promise<void>
-  runUrl?: string
 }) {
   const proposal = validateProposal(rawProposal)
 
@@ -411,6 +347,7 @@ export async function publishResearch({
 
   const base = await readCatalog(baseRef.object.sha)
   let current = base
+  let snapshot = base
 
   if (headRef && !prs[0]?.merged_at) {
     const comparison = z
@@ -434,15 +371,40 @@ export async function publishResearch({
     ])
 
     current = carryPending(base, ancestor, pending)
+    snapshot = pending
   }
 
-  const catalog = mergeProposal(current, proposal)
+  if (expectedHead !== (headRef?.object.sha ?? null))
+    fail('Research branch changed since the agent read it; reread and retry')
+
+  const catalog = rawCatalog
+    ? carryPending(current, snapshot, catalogSchema.parse(rawCatalog))
+    : mergeProposal(current, proposal)
+
+  const known = new Set(
+    Object.values(current).flatMap(category => category.similar),
+  )
+
+  const researched = new Set(
+    proposal.flatMap(category =>
+      category.recommendations.map(item => item.package),
+    ),
+  )
+
+  for (const [slug, category] of Object.entries(catalog)) {
+    if (!base[slug] && category.similar.length < 2)
+      fail('New categories need at least two alternatives')
+
+    for (const name of category.similar)
+      if (!known.has(name) && !researched.has(name))
+        fail(`New package requires research evidence: ${name}`)
+  }
+
   await verify(proposal)
   const changed = !same(current, catalog)
 
-  if (!changed && open[0]) return { status: 'unchanged', url: open[0].html_url }
-
-  if (!changed && same(base, catalog)) return { status: 'no changes' }
+  if (!changed && !open[0] && same(base, catalog))
+    return { status: 'no changes' }
 
   const start = '<!-- library-research:start -->'
   const end = '<!-- library-research:end -->'
@@ -452,17 +414,7 @@ export async function publishResearch({
   const from = previousBody.indexOf(start),
     to = previousBody.indexOf(end)
 
-  const previousSummary =
-    from >= 0 && to > from
-      ? previousBody.slice(from + start.length, to).trim()
-      : ''
-
-  const summary = [
-    previousSummary,
-    researchBody(pr ? current : base, catalog, proposal, runUrl),
-  ]
-    .filter(Boolean)
-    .join('\n\n---\n\n')
+  const summary = submissionSchema.shape.summary.parse(agentSummary)
 
   const section = `${start}\n${summary}\n${end}`
 
@@ -472,6 +424,9 @@ export async function publishResearch({
         section +
         previousBody.slice(to + end.length)
       : [previousBody, section].filter(Boolean).join('\n\n')
+
+  if (!changed && body === previousBody)
+    return { status: 'unchanged', url: pr?.html_url }
 
   if (body.length > 60000)
     fail(
@@ -572,13 +527,13 @@ export async function publishResearch({
       body: { ref: branch },
     })
 
-  return { status: changed ? 'published' : 'unchanged', url: pr.html_url }
+  return { status: changed ? 'published' : 'updated', url: pr.html_url }
 }
 
-export async function readResearchProposal(
+export async function readResearchSubmission(
   outputPath: string,
   proposalPath: string,
-): Promise<Proposal> {
+): Promise<Submission> {
   const output = z
     .object({
       items: z.array(
@@ -599,7 +554,9 @@ export async function readResearchProposal(
 
   z.literal('proposal.json').parse(items[0].proposal)
 
-  return proposalSchema.parse(JSON.parse(await readFile(proposalPath, 'utf8')))
+  return submissionSchema.parse(
+    JSON.parse(await readFile(proposalPath, 'utf8')),
+  )
 }
 
 if (
@@ -612,11 +569,10 @@ if (
       LIBRARY_RESEARCH_PROPOSAL: z.string().min(1),
       GITHUB_REPOSITORY: z.string().regex(/^[\w.-]+\/[\w.-]+$/),
       GITHUB_TOKEN: z.string().min(1),
-      GITHUB_RUN_ID: z.string().regex(/^\d+$/),
     })
     .parse(process.env)
 
-  const proposal = await readResearchProposal(
+  const submission = await readResearchSubmission(
     env.GH_AW_AGENT_OUTPUT,
     env.LIBRARY_RESEARCH_PROPOSAL,
   )
@@ -655,8 +611,7 @@ if (
   console.log(
     await publishResearch({
       api,
-      proposal,
-      runUrl: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
+      ...submission,
     }),
   )
 }
