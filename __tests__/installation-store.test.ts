@@ -2,9 +2,9 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-const InstallationStore = require('../installation-service/InstallationStore.cjs')
+import InstallationStore from '../installation-service/InstallationStore.js'
 
-const createInstallQueue = require('../installation-service/createInstallQueue.cjs')
+import createInstallQueue from '../installation-service/createInstallQueue.js'
 
 const roots: string[] = []
 

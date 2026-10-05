@@ -1,7 +1,7 @@
-const {
+import {
   resolveRegistryPackageSpec,
   UnsupportedRegistryPackageSpecError,
-} = require('../installation-service/resolveRegistryPackageSpec.cjs')
+} from '../installation-service/resolveRegistryPackageSpec.js'
 
 describe('installation service package spec resolution', () => {
   it.each([

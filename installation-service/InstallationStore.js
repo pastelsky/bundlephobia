@@ -1,10 +1,10 @@
-const { createHash, randomUUID } = require('node:crypto')
+import { createHash, randomUUID } from 'node:crypto'
 
-const fs = require('node:fs/promises')
+import fs from 'node:fs/promises'
 
-const path = require('node:path')
+import path from 'node:path'
 
-const { z } = require('zod')
+import { z } from 'zod'
 
 const METADATA_FILE = '.bundlephobia-installation.json'
 
@@ -327,4 +327,4 @@ class InstallationStore {
   }
 }
 
-module.exports = InstallationStore
+export default InstallationStore
