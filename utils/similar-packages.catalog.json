@@ -23,7 +23,12 @@
         "weight": 3
       }
     ],
-    "similar": ["clsx", "classnames", "classcat", "classix"]
+    "similar": [
+      "clsx",
+      "classnames",
+      "classcat",
+      "classix"
+    ]
   },
   "clipboard": {
     "name": "Clipboard Utilities",
@@ -69,7 +74,12 @@
         "weight": 3
       }
     ],
-    "similar": ["styled-components", "@emotion/css", "jss", "linaria"]
+    "similar": [
+      "styled-components",
+      "@emotion/css",
+      "jss",
+      "linaria"
+    ]
   },
   "color-manipulation": {
     "name": "Color parsing and manipulation",
@@ -79,7 +89,13 @@
         "weight": 5
       }
     ],
-    "similar": ["chroma-js", "color", "tinycolor2", "colors.js", "color2k"]
+    "similar": [
+      "chroma-js",
+      "color",
+      "tinycolor2",
+      "colors.js",
+      "color2k"
+    ]
   },
   "cookie-browser": {
     "name": "Cookie Manipulation for Node.js",
@@ -141,7 +157,11 @@
         "weight": 1
       }
     ],
-    "similar": ["js-cookie", "browser-cookies", "universal-cookie"]
+    "similar": [
+      "js-cookie",
+      "browser-cookies",
+      "universal-cookie"
+    ]
   },
   "browser-2d-game-engine": {
     "name": "Browser 2D game engines",
@@ -167,7 +187,11 @@
         "weight": 5
       }
     ],
-    "similar": ["melonjs", "excalibur", "phaser"]
+    "similar": [
+      "melonjs",
+      "excalibur",
+      "phaser"
+    ]
   },
   "date-nlp": {
     "name": "Natural language date-time utilities",
@@ -205,7 +229,11 @@
         "weight": 3
       }
     ],
-    "similar": ["chrono-node", "its-a-date", "parse-messy-time"]
+    "similar": [
+      "chrono-node",
+      "its-a-date",
+      "parse-messy-time"
+    ]
   },
   "deep-equality": {
     "name": "Deep Equality Check",
@@ -311,7 +339,11 @@
         "weight": 3
       }
     ],
-    "similar": ["read-excel-file", "xlsx", "exceljs"]
+    "similar": [
+      "read-excel-file",
+      "xlsx",
+      "exceljs"
+    ]
   },
   "excel-export-browser": {
     "name": "Browser spreadsheet export",
@@ -345,7 +377,11 @@
         "weight": 5
       }
     ],
-    "similar": ["excellentexport", "write-excel-file", "export-from-json"]
+    "similar": [
+      "excellentexport",
+      "write-excel-file",
+      "export-from-json"
+    ]
   },
   "finite-state-machine": {
     "name": "Finite state machine libraries",
@@ -371,7 +407,11 @@
         "weight": 3
       }
     ],
-    "similar": ["robot3", "xstate", "@zag-js/core"]
+    "similar": [
+      "robot3",
+      "xstate",
+      "@zag-js/core"
+    ]
   },
   "full-text-search": {
     "name": "Text search",
@@ -393,7 +433,30 @@
         "weight": 5
       }
     ],
-    "similar": ["minisearch", "flexsearch", "fuse.js", "lunr"]
+    "similar": [
+      "minisearch",
+      "flexsearch",
+      "fuse.js",
+      "lunr",
+      "@orama/orama"
+    ],
+    "research": {
+      "reason": "MiniSearch, FlexSearch, Fuse.js, Lunr, and Orama solve local text-to-document search in JavaScript, so users can compare in-memory indexes with different matching, ranking, and query complexity without switching to hosted search.",
+      "recommendations": {
+        "@orama/orama": {
+          "package": "@orama/orama",
+          "repository": "oramasearch/orama",
+          "reason": "Choose Orama when a browser, Node (20+), or edge app needs a schema-based local full-text index with filtering and typo tolerance; it is a more capable alternative to MiniSearch, FlexSearch, Fuse.js, or Lunr, while remaining an in-process rather than hosted search engine.",
+          "tradeoffs": "The schema-first API takes more setup than simpler term-search libraries. npm latest is 3.1.18 while the repository changelog documents 3.2.0 (2026-06-27), and no commits appeared in Sep 21–Oct 5; confirm npm release parity and near-term maintenance before adopting.",
+          "sources": [
+            "https://github.com/oramasearch/orama",
+            "https://github.com/oramasearch/orama/blob/main/README.md",
+            "https://registry.npmjs.org/%40orama%2Forama/latest",
+            "https://github.com/oramasearch/orama/blob/main/CHANGELOG.md"
+          ]
+        }
+      }
+    }
   },
   "fetch-polyfill": {
     "name": "Fetch polyfills",
@@ -419,7 +482,12 @@
         "weight": 3
       }
     ],
-    "similar": ["whatwg-fetch", "node-fetch", "unfetch", "make-fetch-happen"]
+    "similar": [
+      "whatwg-fetch",
+      "node-fetch",
+      "unfetch",
+      "make-fetch-happen"
+    ]
   },
   "general-purpose-date-time": {
     "name": "General purpose date-time utilities",
@@ -445,7 +513,13 @@
         "weight": 3
       }
     ],
-    "similar": ["@formkit/tempo", "moment", "luxon", "dayjs", "date-fns"]
+    "similar": [
+      "@formkit/tempo",
+      "moment",
+      "luxon",
+      "dayjs",
+      "date-fns"
+    ]
   },
   "general-purpose-3d": {
     "name": "General purpose 3D libraries",
@@ -463,7 +537,12 @@
         "weight": 7
       }
     ],
-    "similar": ["ogl", "playcanvas", "three", "babylonjs"]
+    "similar": [
+      "ogl",
+      "playcanvas",
+      "three",
+      "babylonjs"
+    ]
   },
   "general-purpose-animation": {
     "name": "General purpose animation libraries",
@@ -505,7 +584,12 @@
         "weight": 3
       }
     ],
-    "similar": ["gsap", "animejs", "velocity-animate", "popmotion"]
+    "similar": [
+      "gsap",
+      "animejs",
+      "velocity-animate",
+      "popmotion"
+    ]
   },
   "general-purpose-charting": {
     "name": "General purpose Charting libraries",
@@ -568,7 +652,12 @@
         "weight": 3
       }
     ],
-    "similar": ["@apollo/client", "graphql-request", "relay-runtime", "urql"]
+    "similar": [
+      "@apollo/client",
+      "graphql-request",
+      "relay-runtime",
+      "urql"
+    ]
   },
   "html-sanitization": {
     "name": "HTML Sanitization",
@@ -606,7 +695,12 @@
         "weight": 1
       }
     ],
-    "similar": ["sanitize-html", "xss", "dompurify", "sanitizer"]
+    "similar": [
+      "sanitize-html",
+      "xss",
+      "dompurify",
+      "sanitizer"
+    ]
   },
   "input-masking": {
     "name": "Input masking and formatting",
@@ -628,7 +722,12 @@
         "weight": 3
       }
     ],
-    "similar": ["maska", "@maskito/core", "imask", "inputmask"]
+    "similar": [
+      "maska",
+      "@maskito/core",
+      "imask",
+      "inputmask"
+    ]
   },
   "i18n": {
     "name": "Internationalization",
@@ -650,7 +749,13 @@
         "weight": 3
       }
     ],
-    "similar": ["fbt", "globalize", "i18next", "node-polyglot", "@lingui/core"]
+    "similar": [
+      "fbt",
+      "globalize",
+      "i18next",
+      "node-polyglot",
+      "@lingui/core"
+    ]
   },
   "node-http-request": {
     "name": "HTTP client libraries for Node.js",
@@ -692,7 +797,12 @@
         "weight": 5
       }
     ],
-    "similar": ["wretch", "ofetch", "axios", "got"]
+    "similar": [
+      "wretch",
+      "ofetch",
+      "axios",
+      "got"
+    ]
   },
   "browser-http-request": {
     "name": "HTTP client libraries for Browser",
@@ -734,7 +844,13 @@
         "weight": 5
       }
     ],
-    "similar": ["axios", "ky", "xior", "superagent", "redaxios"]
+    "similar": [
+      "axios",
+      "ky",
+      "xior",
+      "superagent",
+      "redaxios"
+    ]
   },
   "icu-message-fromatter": {
     "name": "ICU message string formatters",
@@ -764,7 +880,10 @@
         "weight": 1
       }
     ],
-    "similar": ["messageformat", "intl-messageformat"]
+    "similar": [
+      "messageformat",
+      "intl-messageformat"
+    ]
   },
   "image-color-extraction": {
     "name": "Image color extraction",
@@ -794,7 +913,10 @@
         "weight": 3
       }
     ],
-    "similar": ["extract-colors", "node-vibrant"]
+    "similar": [
+      "extract-colors",
+      "node-vibrant"
+    ]
   },
   "immutable-data-structures": {
     "name": "Immutable Data",
@@ -832,7 +954,11 @@
         "weight": 3
       }
     ],
-    "similar": ["immer", "immutable", "immutability-helper"]
+    "similar": [
+      "immer",
+      "immutable",
+      "immutability-helper"
+    ]
   },
   "lazy-load-content": {
     "name": "Lazy Loading Content",
@@ -862,7 +988,11 @@
         "weight": 3
       }
     ],
-    "similar": ["lazysizes", "lozad", "vanilla-lazyload"]
+    "similar": [
+      "lazysizes",
+      "lozad",
+      "vanilla-lazyload"
+    ]
   },
   "markdown-parser": {
     "name": "Markdown parsers",
@@ -892,7 +1022,11 @@
         "weight": 7
       }
     ],
-    "similar": ["marked", "markdown-it", "showdown"]
+    "similar": [
+      "marked",
+      "markdown-it",
+      "showdown"
+    ]
   },
   "memoization": {
     "name": "Memoization",
@@ -942,7 +1076,13 @@
         "weight": 7
       }
     ],
-    "similar": ["numeral", "numbro", "accounting", "currency.js", "dinero.js"]
+    "similar": [
+      "numeral",
+      "numbro",
+      "accounting",
+      "currency.js",
+      "dinero.js"
+    ]
   },
   "pdf-generator": {
     "name": "Client-side PDF Creation",
@@ -1062,7 +1202,10 @@
         "weight": 5
       }
     ],
-    "similar": ["react-spring", "framer-motion"]
+    "similar": [
+      "react-spring",
+      "framer-motion"
+    ]
   },
   "react-autocomplete": {
     "name": "React based autocomplete components",
@@ -1084,7 +1227,11 @@
         "weight": 5
       }
     ],
-    "similar": ["react-autosuggest", "downshift", "react-select"]
+    "similar": [
+      "react-autosuggest",
+      "downshift",
+      "react-select"
+    ]
   },
   "react-head-meta": {
     "name": "React based meta tags management",
@@ -1110,7 +1257,11 @@
         "weight": 3
       }
     ],
-    "similar": ["react-helmet-async", "react-meta-tags", "react-document-title"]
+    "similar": [
+      "react-helmet-async",
+      "react-meta-tags",
+      "react-document-title"
+    ]
   },
   "react-hooks": {
     "name": "React hook collections",
@@ -1132,7 +1283,12 @@
         "weight": 5
       }
     ],
-    "similar": ["@react-hookz/web", "react-use", "ahooks", "usehooks-ts"]
+    "similar": [
+      "@react-hookz/web",
+      "react-use",
+      "ahooks",
+      "usehooks-ts"
+    ]
   },
   "react-i18n": {
     "name": "React based internationalization",
@@ -1215,7 +1371,11 @@
         "weight": 3
       }
     ],
-    "similar": ["recharts", "react-chartjs-2", "victory"]
+    "similar": [
+      "recharts",
+      "react-chartjs-2",
+      "victory"
+    ]
   },
   "react-inline-svg": {
     "name": "React inline SVG loaders",
@@ -1241,7 +1401,10 @@
         "weight": 5
       }
     ],
-    "similar": ["react-inlinesvg", "react-svg"]
+    "similar": [
+      "react-inlinesvg",
+      "react-svg"
+    ]
   },
   "react-native-charting": {
     "name": "React Native charting components",
@@ -1293,7 +1456,11 @@
         "weight": 3
       }
     ],
-    "similar": ["rc-slider", "react-range", "react-slider"]
+    "similar": [
+      "rc-slider",
+      "react-range",
+      "react-slider"
+    ]
   },
   "react-tooltip": {
     "name": "React tooltip components",
@@ -1315,7 +1482,11 @@
         "weight": 5
       }
     ],
-    "similar": ["react-tooltip", "@radix-ui/react-tooltip", "rc-tooltip"]
+    "similar": [
+      "react-tooltip",
+      "@radix-ui/react-tooltip",
+      "rc-tooltip"
+    ]
   },
   "schema-validation": {
     "name": "Runtime schema validation",
@@ -1353,7 +1524,13 @@
         "weight": 3
       }
     ],
-    "similar": ["@sinclair/typebox", "valibot", "ajv", "yup", "zod"]
+    "similar": [
+      "@sinclair/typebox",
+      "valibot",
+      "ajv",
+      "yup",
+      "zod"
+    ]
   },
   "querystring-parser": {
     "name": "Query String Parsers",
@@ -1395,7 +1572,12 @@
         "weight": 5
       }
     ],
-    "similar": ["qs", "query-string", "querystringify", "querystring"]
+    "similar": [
+      "qs",
+      "query-string",
+      "querystringify",
+      "querystring"
+    ]
   },
   "rich-text-editors": {
     "name": "Rich Text Editors",
@@ -1434,7 +1616,11 @@
         "weight": 5
       }
     ],
-    "similar": ["intro.js", "hopscotch", "driver.js"]
+    "similar": [
+      "intro.js",
+      "hopscotch",
+      "driver.js"
+    ]
   },
   "state-management": {
     "name": "State management libraries",
@@ -1464,7 +1650,13 @@
         "weight": 3
       }
     ],
-    "similar": ["valtio", "zustand", "jotai", "mobx", "@reduxjs/toolkit"]
+    "similar": [
+      "valtio",
+      "zustand",
+      "jotai",
+      "mobx",
+      "@reduxjs/toolkit"
+    ]
   },
   "slider": {
     "name": "General purpose sliders & carousels",
@@ -1510,7 +1702,12 @@
         "weight": 1
       }
     ],
-    "similar": ["mustache", "handlebars", "pug", "nunjucks"]
+    "similar": [
+      "mustache",
+      "handlebars",
+      "pug",
+      "nunjucks"
+    ]
   },
   "tree-data-structures": {
     "name": "Tree data structures",
@@ -1532,7 +1729,11 @@
         "weight": 3
       }
     ],
-    "similar": ["functional-red-black-tree", "suffix-tree", "bin-tree"]
+    "similar": [
+      "functional-red-black-tree",
+      "suffix-tree",
+      "bin-tree"
+    ]
   },
   "url-manipulation": {
     "name": "URL parsing and manipulation",
@@ -1570,7 +1771,11 @@
         "weight": 1
       }
     ],
-    "similar": ["url-parse", "normalize-url", "normalize-path"]
+    "similar": [
+      "url-parse",
+      "normalize-url",
+      "normalize-path"
+    ]
   },
   "virtual-dom": {
     "name": "Virtual DOM libraries",
@@ -1588,7 +1793,11 @@
         "weight": 5
       }
     ],
-    "similar": ["hyperhtml", "snabbdom", "virtual-dom"]
+    "similar": [
+      "hyperhtml",
+      "snabbdom",
+      "virtual-dom"
+    ]
   },
   "vue-carousel": {
     "name": "Vue JS Sliders & Carousels",
