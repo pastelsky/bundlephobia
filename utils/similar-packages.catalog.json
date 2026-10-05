@@ -571,7 +571,8 @@
       "gsap",
       "animejs",
       "velocity-animate",
-      "popmotion"
+      "popmotion",
+      "motion"
     ]
   },
   "general-purpose-charting": {

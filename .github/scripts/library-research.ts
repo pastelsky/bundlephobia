@@ -10,6 +10,7 @@ import {
 import {
   extractGitHubRepository,
   isPlausiblePackageName,
+  normalizePackageName,
   type FetchJson,
 } from './recommendation-quality.ts'
 
@@ -69,20 +70,24 @@ const proposalSchema = z
           }),
         )
         .min(1)
-        .max(10),
+        .max(10)
+        .optional(),
       reason: researchText(60),
       recommendations: z
         .array(
           z
             .object({
-              package: researchText().refine(
-                isPlausiblePackageName,
-                'Invalid npm package',
-              ),
+              package: researchText()
+                .transform(normalizePackageName)
+                .refine(isPlausiblePackageName, 'Invalid npm package'),
               repository: researchText().regex(
                 /^[A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/,
               ),
               reason: researchText(60),
+              discovery: z.object({
+                reason: researchText(40),
+                source: sourceSchema.nullable(),
+              }),
               tradeoffs: researchText(40),
               sources: z
                 .array(sourceSchema)
@@ -162,6 +167,9 @@ export function mergeProposal(catalog: Catalog, proposal: Proposal): Catalog {
 
   for (const category of validateProposal(proposal)) {
     const existing = result[category.slug]
+    const tags = existing?.tags ?? category.tags
+
+    if (!tags) fail('New categories require matching tags')
 
     const similar = [
       ...new Set([
@@ -174,23 +182,12 @@ export function mergeProposal(catalog: Catalog, proposal: Proposal): Catalog {
       fail(
         'Categories need two to six alternatives; do not remove existing recommendations automatically',
       )
-    const recommendations = { ...existing?.research?.recommendations }
-
-    for (const item of category.recommendations) {
-      // Repeated discovery is a no-op; maintainers own existing rationale.
-      if (!existing?.similar.includes(item.package))
-        recommendations[item.package] = item
-    }
 
     if (existing && same(similar, existing.similar)) continue
     result[category.slug] = {
       name: existing?.name ?? category.name,
-      tags: existing?.tags ?? category.tags,
+      tags,
       similar,
-      research: {
-        reason: existing?.research?.reason ?? category.reason,
-        recommendations,
-      },
     }
   }
 
@@ -226,59 +223,69 @@ export async function verifyPackages(
   fetchImpl: FetchJson = fetch,
   githubToken = process.env.GITHUB_TOKEN,
 ) {
-  for (const category of validateProposal(proposal)) {
-    for (const item of category.recommendations) {
-      const response = await fetchImpl(
-        `https://registry.npmjs.org/${encodeURIComponent(item.package)}/latest`,
-        { signal: AbortSignal.timeout(15000), redirect: 'error' },
-      )
+  // The proposal contract caps this fan-out at twelve candidates.
+  await Promise.all(
+    validateProposal(proposal).flatMap(category =>
+      category.recommendations.map(async item => {
+        const response = await fetchImpl(
+          `https://registry.npmjs.org/${encodeURIComponent(item.package)}/latest`,
+          { signal: AbortSignal.timeout(15000), redirect: 'error' },
+        )
 
-      if (!response.ok)
-        fail(`Cannot verify npm package ${item.package}: ${response.status}`)
+        if (!response.ok)
+          fail(`Cannot verify npm package ${item.package}: ${response.status}`)
 
-      const manifest = z
-        .object({
-          name: z.string(),
-          deprecated: z.string().optional(),
-          repository: z.unknown().optional(),
+        const manifest = z
+          .object({
+            name: z.string(),
+            deprecated: z.string().optional(),
+            repository: z.unknown().optional(),
+          })
+          .parse(await response.json())
+
+        if (
+          manifest.name !== item.package ||
+          manifest.deprecated ||
+          extractGitHubRepository(manifest.repository) !== item.repository
+        )
+          fail(`Invalid, deprecated, or mismatched package ${item.package}`)
+
+        // Never fetch agent-provided URLs with credentials. Only verify its registry-linked GitHub repository.
+        const headers = new Headers({
+          Accept: 'application/vnd.github+json',
         })
-        .parse(await response.json())
 
-      if (
-        manifest.name !== item.package ||
-        manifest.deprecated ||
-        extractGitHubRepository(manifest.repository) !== item.repository
-      )
-        fail(`Invalid, deprecated, or mismatched package ${item.package}`)
+        if (githubToken) headers.set('Authorization', `Bearer ${githubToken}`)
 
-      // Never fetch agent-provided URLs with credentials. Only verify its registry-linked GitHub repository.
-      const headers = new Headers({
-        Accept: 'application/vnd.github+json',
-      })
+        const repo = await fetchImpl(
+          `https://api.github.com/repos/${item.repository}`,
+          {
+            signal: AbortSignal.timeout(15000),
+            redirect: 'error',
+            headers,
+          },
+        )
 
-      if (githubToken) headers.set('Authorization', `Bearer ${githubToken}`)
+        if (!repo.ok)
+          fail(`Cannot verify repository ${item.repository}: ${repo.status}`)
 
-      const repo = await fetchImpl(
-        `https://api.github.com/repos/${item.repository}`,
-        {
-          signal: AbortSignal.timeout(15000),
-          redirect: 'error',
-          headers,
-        },
-      )
-
-      if (!repo.ok)
-        fail(`Cannot verify repository ${item.repository}: ${repo.status}`)
-
-      if (z.object({ archived: z.boolean() }).parse(await repo.json()).archived)
-        fail(`Repository archived: ${item.repository}`)
-    }
-  }
+        if (
+          z.object({ archived: z.boolean() }).parse(await repo.json()).archived
+        )
+          fail(`Repository archived: ${item.repository}`)
+      }),
+    ),
+  )
 }
 
 const markdown = (value: string) => value.replace(/[\\`*_[\]#@|]/g, '\\$&')
 
-export function researchBody(base: Catalog, catalog: Catalog, runUrl: string) {
+export function researchBody(
+  base: Catalog,
+  catalog: Catalog,
+  proposal: Proposal,
+  runUrl: string,
+) {
   const lines = [
     '## Weekly library research',
     '',
@@ -292,18 +299,21 @@ export function researchBody(base: Catalog, catalog: Catalog, runUrl: string) {
     )
 
     if (!additions.length) continue
+
+    const research = proposal.find(item => item.slug === slug)
+
     lines.push(
       `### ${markdown(category.name)}${base[slug] ? '' : ' (new category)'}`,
       '',
       markdown(
-        category.research?.reason ??
+        research?.reason ??
           'Maintainer-edited category; please review its intended scope.',
       ),
       '',
     )
 
     for (const name of additions) {
-      const item = category.research?.recommendations[name]
+      const item = research?.recommendations.find(item => item.package === name)
       lines.push(
         `#### ${markdown(name)}`,
         '',
@@ -316,6 +326,11 @@ export function researchBody(base: Catalog, catalog: Catalog, runUrl: string) {
 
       if (item)
         lines.push(
+          `Why considered: ${markdown(item.discovery.reason)}`,
+          ...(item.discovery.source
+            ? [`Discovery source: [Source](<${item.discovery.source}>)`]
+            : []),
+          '',
           `Why: ${markdown(item.reason)}`,
           '',
           `Trade-offs: ${markdown(item.tradeoffs)}`,
@@ -361,19 +376,18 @@ export async function publishResearch({
     .parse(await api(''))
 
   const baseBranch = repository.default_branch
-  const baseRef = refSchema.parse(await api(`/git/ref/heads/${baseBranch}`))
 
-  const headRef = refSchema
-    .nullable()
-    .parse(await api(`/git/ref/heads/${branch}`, { optional: true }))
+  const [baseRefData, headRefData, prData] = await Promise.all([
+    api(`/git/ref/heads/${baseBranch}`),
+    api(`/git/ref/heads/${branch}`, { optional: true }),
+    api(
+      `/pulls?state=all&head=${encodeURIComponent(`${repository.owner.login}:${branch}`)}&sort=created&direction=desc&per_page=100`,
+    ),
+  ])
 
-  const prs = z
-    .array(prSchema)
-    .parse(
-      await api(
-        `/pulls?state=all&head=${repository.owner.login}:${branch}&sort=created&direction=desc&per_page=100`,
-      ),
-    )
+  const baseRef = refSchema.parse(baseRefData)
+  const headRef = refSchema.nullable().parse(headRefData)
+  const prs = z.array(prSchema).parse(prData)
 
   const open = prs.filter(pr => pr.state === 'open')
 
@@ -413,24 +427,56 @@ export async function publishResearch({
       comparison.files?.some(file => file.filename !== catalogPath)
     )
       fail('Research branch contains non-catalog changes')
-    current = carryPending(
-      base,
-      await readCatalog(comparison.merge_base_commit.sha),
-      await readCatalog(headRef.object.sha),
-    )
+
+    const [ancestor, pending] = await Promise.all([
+      readCatalog(comparison.merge_base_commit.sha),
+      readCatalog(headRef.object.sha),
+    ])
+
+    current = carryPending(base, ancestor, pending)
   }
 
-  await verify(proposal)
   const catalog = mergeProposal(current, proposal)
+  await verify(proposal)
   const changed = !same(current, catalog)
-  const summary = researchBody(base, catalog, runUrl)
 
-  if (summary.length > 60000)
+  if (!changed && open[0]) return { status: 'unchanged', url: open[0].html_url }
+
+  if (!changed && same(base, catalog)) return { status: 'no changes' }
+
+  const start = '<!-- library-research:start -->'
+  const end = '<!-- library-research:end -->'
+  let pr = open[0]
+  const previousBody = pr?.body ?? ''
+
+  const from = previousBody.indexOf(start),
+    to = previousBody.indexOf(end)
+
+  const previousSummary =
+    from >= 0 && to > from
+      ? previousBody.slice(from + start.length, to).trim()
+      : ''
+
+  const summary = [
+    previousSummary,
+    researchBody(pr ? current : base, catalog, proposal, runUrl),
+  ]
+    .filter(Boolean)
+    .join('\n\n---\n\n')
+
+  const section = `${start}\n${summary}\n${end}`
+
+  const body =
+    from >= 0 && to > from
+      ? previousBody.slice(0, from) +
+        section +
+        previousBody.slice(to + end.length)
+      : [previousBody, section].filter(Boolean).join('\n\n')
+
+  if (body.length > 60000)
     fail(
       'Review or merge the pending research PR before accumulating more recommendations',
     )
-
-  if (!changed && same(base, catalog)) return { status: 'no changes' }
 
   if (changed) {
     const baseCommit = z
@@ -499,25 +545,10 @@ export async function publishResearch({
       })
   }
 
-  const start = '<!-- library-research:start -->'
-  const end = '<!-- library-research:end -->'
-  const section = `${start}\n${summary}\n${end}`
-  let pr = open[0]
-
   if (pr) {
-    const body = pr.body ?? ''
-
-    const from = body.indexOf(start),
-      to = body.indexOf(end)
-
     await api(`/pulls/${pr.number}`, {
       method: 'PATCH',
-      body: {
-        body:
-          from >= 0 && to > from
-            ? body.slice(0, from) + section + body.slice(to + end.length)
-            : `${body}\n\n${section}`,
-      },
+      body: { body },
     })
   } else {
     pr = prSchema.parse(
@@ -527,7 +558,7 @@ export async function publishResearch({
           title: 'Refresh similar-library recommendations',
           head: branch,
           base: baseBranch,
-          body: section,
+          body,
           draft: true,
         },
       }),
@@ -544,23 +575,10 @@ export async function publishResearch({
   return { status: changed ? 'published' : 'unchanged', url: pr.html_url }
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
-  if (process.env.GH_AW_DETECTION_SUCCESS !== 'true') {
-    fail('Research threat detection did not approve publication')
-  }
-
-  const env = z
-    .object({
-      GH_AW_AGENT_OUTPUT: z.string().min(1),
-      GITHUB_REPOSITORY: z.string().regex(/^[\w.-]+\/[\w.-]+$/),
-      GITHUB_TOKEN: z.string().min(1),
-      GITHUB_RUN_ID: z.string().regex(/^\d+$/),
-    })
-    .parse(process.env)
-
+export async function readResearchProposal(
+  outputPath: string,
+  proposalPath: string,
+): Promise<Proposal> {
   const output = z
     .object({
       items: z.array(
@@ -570,7 +588,7 @@ if (
         }),
       ),
     })
-    .parse(JSON.parse(await readFile(env.GH_AW_AGENT_OUTPUT, 'utf8')))
+    .parse(JSON.parse(await readFile(outputPath, 'utf8')))
 
   const items = output.items.filter(
     item => item.type === 'publish_library_research',
@@ -578,6 +596,30 @@ if (
 
   if (items.length !== 1 || !items[0].proposal)
     fail('Expected exactly one research proposal')
+
+  z.literal('proposal.json').parse(items[0].proposal)
+
+  return proposalSchema.parse(JSON.parse(await readFile(proposalPath, 'utf8')))
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  const env = z
+    .object({
+      GH_AW_AGENT_OUTPUT: z.string().min(1),
+      LIBRARY_RESEARCH_PROPOSAL: z.string().min(1),
+      GITHUB_REPOSITORY: z.string().regex(/^[\w.-]+\/[\w.-]+$/),
+      GITHUB_TOKEN: z.string().min(1),
+      GITHUB_RUN_ID: z.string().regex(/^\d+$/),
+    })
+    .parse(process.env)
+
+  const proposal = await readResearchProposal(
+    env.GH_AW_AGENT_OUTPUT,
+    env.LIBRARY_RESEARCH_PROPOSAL,
+  )
 
   const github = request.defaults({
     headers: { authorization: `Bearer ${env.GITHUB_TOKEN}` },
@@ -613,7 +655,7 @@ if (
   console.log(
     await publishResearch({
       api,
-      proposal: JSON.parse(z.string().parse(items[0].proposal)),
+      proposal,
       runUrl: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
     }),
   )
