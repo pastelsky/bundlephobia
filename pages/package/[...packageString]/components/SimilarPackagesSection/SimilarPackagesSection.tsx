@@ -1,9 +1,11 @@
 import React, { Component } from 'react'
+import Link from 'next/link'
 
 import { type PackageBuildInfo } from '../../../../../client/api'
 import SimilarPackageCard from '../../../../../client/components/SimilarPackageCard/SimilarPackageCard'
 
 type SimilarPackagesSectionProps = {
+  packageName: string
   packs: PackageBuildInfo[]
   category: string
   comparisonGzip: number
@@ -11,7 +13,13 @@ type SimilarPackagesSectionProps = {
 
 class SimilarPackagesSection extends Component<SimilarPackagesSectionProps> {
   render() {
-    const { packs, category, comparisonGzip } = this.props
+    const { packs, category, comparisonGzip, packageName } = this.props
+
+    const comparisonPackages = [
+      ...new Set([packageName, ...packs.map(pack => pack.name)]),
+    ].slice(0, 5)
+
+    const comparisonPath = `/trends?packages=${comparisonPackages.map(encodeURIComponent).join('~vs~')}`
 
     return (
       <div className="similar-packages-section">
@@ -20,6 +28,15 @@ class SimilarPackagesSection extends Component<SimilarPackagesSectionProps> {
           Similar Packages{' '}
         </h2>
         <h5 className="similar-packages-section__subheading"> {category} </h5>
+        <div className="similar-packages-section__actions">
+          <Link
+            href={comparisonPath}
+            className="similar-packages-section__compare"
+            title="Compare downloads, GitHub stars, and size history"
+          >
+            Compare trends
+          </Link>
+        </div>
 
         <div className="similar-packages-section__list">
           {packs.map(pack => (

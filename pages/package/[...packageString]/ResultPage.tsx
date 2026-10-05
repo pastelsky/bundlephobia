@@ -606,6 +606,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     return (
       <div className="content-container">
         <SimilarPackagesSection
+          packageName={results.name}
           category={similarPackagesCategory}
           packs={similarPackages}
           comparisonGzip={results.gzip}

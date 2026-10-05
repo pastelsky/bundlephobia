@@ -17,3 +17,27 @@
   text-align: center;
   margin-top: $global-spacing;
 }
+
+.similar-packages-section__actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: $global-spacing * 2;
+}
+
+.similar-packages-section__compare {
+  @include font-size-sm;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 6px;
+  padding: $global-spacing ($global-spacing * 2);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--color-bg-secondary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-icon-hover);
+    outline-offset: 2px;
+  }
+}
