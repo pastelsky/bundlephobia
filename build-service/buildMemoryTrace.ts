@@ -1,5 +1,8 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { performance } from 'node:perf_hooks'
+import { z } from 'zod'
+
+const phaseDetails = z.object({ duration: z.number() })
 
 type PhaseMark = {
   event: string
@@ -61,7 +64,9 @@ export function activeBuilds() {
 // samples without adding a second profiler to the library.
 export function recordBuildPhase(
   event: string | symbol,
-  details: { duration: number },
+  // mitt exposes an untyped payload; validate once at the library boundary.
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters
+  details: unknown,
 ) {
   const trace = storage.getStore()
   const phase = String(event)
@@ -70,11 +75,15 @@ export function recordBuildPhase(
     return
   }
 
+  const parsed = phaseDetails.safeParse(details)
+
+  if (!parsed.success) return
+
   const memory = process.memoryUsage()
   trace.phases.push({
     event: phase,
     elapsedMs: Math.round(performance.now() - trace.startedAt),
-    durationMs: Math.round(details.duration),
+    durationMs: Math.round(parsed.data.duration),
     rssBytes: memory.rss,
     heapUsedBytes: memory.heapUsed,
     externalBytes: memory.external,
