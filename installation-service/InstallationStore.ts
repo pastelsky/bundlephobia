@@ -21,16 +21,67 @@ const metadataSchema = z.object({
     .passthrough(),
 })
 
+type Metadata = z.infer<typeof metadataSchema>
+
+type Installation = Metadata['installation']
+
+export interface InstallOptions {
+  client?: string | string[]
+  additionalPackages?: string[]
+  installTimeout?: number
+  limitConcurrency?: boolean
+  networkConcurrency?: number
+  debug?: boolean
+  isLocal?: boolean
+}
+
+export interface InstallationApi {
+  installPackage(
+    packageString: string,
+    options: InstallOptions,
+  ): Promise<Installation>
+  disposePackage(installation: { installPath: string }): Promise<void>
+}
+
+export interface InstallQueue {
+  run<T>(task: () => Promise<T>): Promise<T>
+  diagnostics(): { ready: number; running: number }
+}
+
+interface Subscription {
+  id: string
+  key: string
+  directory: string
+  activeUntil: number
+}
+
 class InstallationStore {
+  private readonly installationApi: InstallationApi
+  private readonly queue: InstallQueue
+  private readonly rootPath: string
+  private readonly retentionMs: number
+  private readonly leaseMs: number
+  private readonly onError: (error: Error) => void
+  private sweepTimer?: NodeJS.Timeout
+  private readonly keyLocks = new Map<string, Promise<unknown>>()
+  private readonly subscriptions = new Map<string, Subscription>()
+  private readonly activeCounts = new Map<string, number>()
+
   constructor(
-    installationApi,
+    installationApi: InstallationApi,
     {
       queue,
       rootPath = '/tmp/tmp-build/installations',
       retentionMs = 5 * 60_000,
       leaseMs = 15 * 60_000,
       onError = console.error,
-    } = {},
+    }: {
+      queue: InstallQueue
+      rootPath?: string
+      retentionMs?: number
+      leaseMs?: number
+      onError?: (error: Error) => void
+    },
   ) {
     this.installationApi = installationApi
     this.queue = queue
@@ -38,13 +89,9 @@ class InstallationStore {
     this.retentionMs = retentionMs
     this.leaseMs = leaseMs
     this.onError = onError
-    this.sweepTimer = undefined
-    this.keyLocks = new Map()
-    this.subscriptions = new Map()
-    this.activeCounts = new Map()
   }
 
-  key(exactPackageString, options) {
+  key(exactPackageString: string, options: InstallOptions): string {
     return JSON.stringify([
       exactPackageString,
       options.client,
@@ -55,13 +102,13 @@ class InstallationStore {
     ])
   }
 
-  directory(key) {
+  directory(key: string): string {
     const hash = createHash('sha256').update(key).digest('hex').slice(0, 24)
 
     return path.join(this.rootPath, hash)
   }
 
-  async withKeyLock(key, task) {
+  async withKeyLock<T>(key: string, task: () => Promise<T>): Promise<T> {
     const previous = this.keyLocks.get(key) || Promise.resolve()
     const current = previous.catch(() => {}).then(task)
     this.keyLocks.set(key, current)
@@ -73,7 +120,7 @@ class InstallationStore {
     }
   }
 
-  async read(directory) {
+  async read(directory: string): Promise<Metadata | undefined> {
     try {
       const metadata = metadataSchema.parse(
         JSON.parse(
@@ -98,7 +145,10 @@ class InstallationStore {
     }
   }
 
-  async write(entry, location = entry.installation.installPath) {
+  async write(
+    entry: Metadata,
+    location = entry.installation.installPath,
+  ): Promise<void> {
     const metadataPath = path.join(location, METADATA_FILE)
 
     const temporaryPath = `${metadataPath}.tmp`
@@ -106,7 +156,11 @@ class InstallationStore {
     await fs.rename(temporaryPath, metadataPath)
   }
 
-  async install(key, exactPackageString, options) {
+  async install(
+    key: string,
+    exactPackageString: string,
+    options: InstallOptions,
+  ): Promise<Installation> {
     const installed = await this.installationApi.installPackage(
       exactPackageString,
       options,
@@ -149,7 +203,7 @@ class InstallationStore {
     }
   }
 
-  async subscribe(exactPackageString, options = {}) {
+  async subscribe(exactPackageString: string, options: InstallOptions = {}) {
     const key = this.key(exactPackageString, options)
 
     return this.withKeyLock(key, async () => {
@@ -197,7 +251,7 @@ class InstallationStore {
     })
   }
 
-  async unsubscribe(id) {
+  async unsubscribe(id: string): Promise<boolean> {
     const subscription = this.subscriptions.get(id)
 
     if (!subscription) return false
@@ -230,7 +284,7 @@ class InstallationStore {
     })
   }
 
-  async entries() {
+  async entries(): Promise<(Metadata | undefined)[]> {
     return Promise.all(
       (await fs.readdir(this.rootPath, { withFileTypes: true }))
         .filter(entry => entry.isDirectory())
@@ -238,7 +292,7 @@ class InstallationStore {
     )
   }
 
-  async sweep() {
+  async sweep(): Promise<void> {
     const directories = await fs.readdir(this.rootPath, { withFileTypes: true })
     await Promise.all(
       directories
@@ -280,7 +334,7 @@ class InstallationStore {
     )
   }
 
-  expireSubscriptions(directory, now) {
+  expireSubscriptions(directory: string, now: number): void {
     for (const [id, subscription] of this.subscriptions) {
       if (
         subscription.directory !== directory ||
@@ -297,17 +351,21 @@ class InstallationStore {
     }
   }
 
-  async start() {
+  async start(): Promise<void> {
     await fs.mkdir(this.rootPath, { recursive: true })
     await this.sweep()
     this.sweepTimer = setInterval(() => {
-      void this.sweep().catch(this.onError)
+      void this.sweep().catch(error =>
+        this.onError(error instanceof Error ? error : new Error(String(error))),
+      )
     }, this.retentionMs)
     this.sweepTimer.unref?.()
   }
 
   async diagnostics() {
-    const entries = (await this.entries()).filter(Boolean)
+    const entries = (await this.entries()).filter((entry): entry is Metadata =>
+      Boolean(entry),
+    )
 
     return {
       queue: this.queue.diagnostics(),
@@ -322,7 +380,7 @@ class InstallationStore {
     }
   }
 
-  async close() {
+  async close(): Promise<void> {
     clearInterval(this.sweepTimer)
   }
 }
