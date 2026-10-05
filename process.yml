@@ -46,6 +46,7 @@ apps:
 
   - script: ./installation-service/index.ts
     name: installation-service
+    interpreter: node
     node_args:
       - --experimental-strip-types
     instances: 1
@@ -66,6 +67,7 @@ apps:
 
   - script: ./cache-service/index.ts
     name: cache-service
+    interpreter: node
     node_args:
       - --require=./scripts/memory-diagnostics.cjs
       - --experimental-strip-types
