@@ -1825,5 +1825,69 @@
       "vue-slick",
       "vue-tiny-slider"
     ]
+  },
+  "javascript-bundlers": {
+    "name": "JavaScript and TypeScript bundlers",
+    "tags": [
+      {
+        "tag": "bundler",
+        "weight": 15
+      },
+      {
+        "tag": "bundle",
+        "weight": 12
+      },
+      {
+        "tag": "javascript",
+        "weight": 7
+      },
+      {
+        "tag": "typescript",
+        "weight": 7
+      },
+      {
+        "tag": "build",
+        "weight": 5
+      },
+      {
+        "tag": "web",
+        "weight": 5
+      }
+    ],
+    "similar": [
+      "rolldown",
+      "@rspack/core"
+    ],
+    "research": {
+      "reason": "Both bundle JavaScript and TypeScript module graphs for web output, addressing the same build step as webpack, Rollup, esbuild, and Parcel while providing distinct Rollup- and webpack-oriented migration paths.",
+      "recommendations": {
+        "rolldown": {
+          "package": "rolldown",
+          "repository": "rolldown/rolldown",
+          "reason": "A direct bundler choice for web applications and libraries that want a Rollup-compatible API and plugin interface. It is most compelling when a project already uses Rollup conventions or wants a standalone bundler aligned with the direction of Vite.",
+          "tradeoffs": "Rollup compatibility does not make every existing plugin/config interchangeable, so migration needs validation. Its native binding package requires a supported Node version and platform; it is not a browser runtime library.",
+          "sources": [
+            "https://github.com/rolldown/rolldown",
+            "https://github.com/rolldown/rolldown/blob/main/README.md",
+            "https://github.com/rolldown/rolldown/blob/main/examples/basic-typescript/rolldown.config.js",
+            "https://github.com/rolldown/rolldown/releases/tag/v1.2.12",
+            "https://registry.npmjs.org/rolldown/latest"
+          ]
+        },
+        "@rspack/core": {
+          "package": "@rspack/core",
+          "repository": "web-infra-dev/rspack",
+          "reason": "A framework-agnostic web bundler whose modernized webpack API is a particularly relevant option for existing webpack applications that depend on webpack-style configuration, loaders, plugins, or Module Federation.",
+          "tradeoffs": "Webpack configs and ecosystem extensions still need compatibility testing. The documented config workflow also uses `@rspack/cli` alongside the core package, and webpack-shaped configuration is less direct for Rollup-first projects.",
+          "sources": [
+            "https://github.com/web-infra-dev/rspack",
+            "https://github.com/web-infra-dev/rspack/blob/main/README.md",
+            "https://github.com/web-infra-dev/rspack/blob/main/examples/basic/rspack.config.mjs",
+            "https://github.com/web-infra-dev/rspack/releases/tag/v2.2.8",
+            "https://registry.npmjs.org/%60@rspack%60%2fcore/latest"
+          ]
+        }
+      }
+    }
   }
 }
