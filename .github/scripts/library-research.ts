@@ -563,23 +563,10 @@ export async function publishResearch({
   return { status: changed ? 'published' : 'unchanged', url: pr.html_url }
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
-  if (process.env.GH_AW_DETECTION_SUCCESS !== 'true') {
-    fail('Research threat detection did not approve publication')
-  }
-
-  const env = z
-    .object({
-      GH_AW_AGENT_OUTPUT: z.string().min(1),
-      GITHUB_REPOSITORY: z.string().regex(/^[\w.-]+\/[\w.-]+$/),
-      GITHUB_TOKEN: z.string().min(1),
-      GITHUB_RUN_ID: z.string().regex(/^\d+$/),
-    })
-    .parse(process.env)
-
+export async function readResearchProposal(
+  outputPath: string,
+  proposalPath: string,
+): Promise<Proposal> {
   const output = z
     .object({
       items: z.array(
@@ -589,7 +576,7 @@ if (
         }),
       ),
     })
-    .parse(JSON.parse(await readFile(env.GH_AW_AGENT_OUTPUT, 'utf8')))
+    .parse(JSON.parse(await readFile(outputPath, 'utf8')))
 
   const items = output.items.filter(
     item => item.type === 'publish_library_research',
@@ -597,6 +584,30 @@ if (
 
   if (items.length !== 1 || !items[0].proposal)
     fail('Expected exactly one research proposal')
+
+  z.literal('proposal.json').parse(items[0].proposal)
+
+  return proposalSchema.parse(JSON.parse(await readFile(proposalPath, 'utf8')))
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  const env = z
+    .object({
+      GH_AW_AGENT_OUTPUT: z.string().min(1),
+      LIBRARY_RESEARCH_PROPOSAL: z.string().min(1),
+      GITHUB_REPOSITORY: z.string().regex(/^[\w.-]+\/[\w.-]+$/),
+      GITHUB_TOKEN: z.string().min(1),
+      GITHUB_RUN_ID: z.string().regex(/^\d+$/),
+    })
+    .parse(process.env)
+
+  const proposal = await readResearchProposal(
+    env.GH_AW_AGENT_OUTPUT,
+    env.LIBRARY_RESEARCH_PROPOSAL,
+  )
 
   const github = request.defaults({
     headers: { authorization: `Bearer ${env.GITHUB_TOKEN}` },
@@ -632,7 +643,7 @@ if (
   console.log(
     await publishResearch({
       api,
-      proposal: JSON.parse(z.string().parse(items[0].proposal)),
+      proposal,
       runUrl: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
     }),
   )

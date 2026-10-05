@@ -5,7 +5,9 @@ import {
   type Catalog,
 } from '@bundlephobia/service-contracts/recommendations'
 import test from 'node:test'
-import { readFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 import { execFileSync } from 'node:child_process'
 import { request } from '@octokit/request'
 import {
@@ -14,6 +16,7 @@ import {
   carryPending,
   mergeProposal,
   publishResearch,
+  readResearchProposal,
   verifyPackages,
   type GitHubApi,
   type Proposal,
@@ -55,6 +58,64 @@ const baseline = {
     similar: ['original'],
   },
 }
+
+test('artifact handoff preserves scoped names and evidence URLs; rejects missing, malformed or duplicate submissions', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'library-research-'))
+
+  const outputPath = join(directory, 'agent_output.json')
+  const proposalPath = join(directory, 'proposal.json')
+
+  const submission = {
+    type: 'publish_library_research',
+    proposal: 'proposal.json',
+  }
+
+  const expected = proposal('@tabler/icons')
+
+  expected[0].recommendations[0].repository = 'tabler/tabler-icons'
+  expected[0].recommendations[0].sources[0] =
+    'https://github.com/tabler/tabler-icons'
+
+  expected[0].recommendations[0].sources.push(
+    'https://www.npmjs.com/package/@tabler/icons',
+  )
+
+  try {
+    await writeFile(outputPath, JSON.stringify({ items: [submission] }))
+    await assert.rejects(
+      readResearchProposal(outputPath, proposalPath),
+      /ENOENT/,
+    )
+    await writeFile(proposalPath, JSON.stringify(expected))
+    assert.deepEqual(
+      await readResearchProposal(outputPath, proposalPath),
+      expected,
+    )
+    await writeFile(proposalPath, '{')
+    await assert.rejects(
+      readResearchProposal(outputPath, proposalPath),
+      SyntaxError,
+    )
+    await writeFile(
+      outputPath,
+      JSON.stringify({ items: [submission, submission] }),
+    )
+    await assert.rejects(
+      readResearchProposal(outputPath, proposalPath),
+      /exactly one/,
+    )
+    await writeFile(
+      outputPath,
+      JSON.stringify({ items: [{ ...submission, proposal: '../other.json' }] }),
+    )
+    await assert.rejects(
+      readResearchProposal(outputPath, proposalPath),
+      z.ZodError,
+    )
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+})
 
 test('first-run publication preserves the branch filter through the real GitHub transport', async () => {
   const { api: fixture } = github()

@@ -16,6 +16,7 @@ engine:
   env:
     COPILOT_PROVIDER_WIRE_API: responses
   args:
+    - --excluded-tools=task,list_agents,read_agent,write_agent
     - --allow-url=github.com
     - --allow-url=api.github.com
     - --allow-url=raw.githubusercontent.com
@@ -43,10 +44,19 @@ tools:
     toolsets: [repos, pull_requests]
   web-fetch:
   bash: ['*']
+post-steps:
+  - name: Preserve research proposal
+    uses: actions/upload-artifact@v7
+    with:
+      name: library-research-proposal
+      path: /tmp/gh-aw/agent/proposal.json
+      if-no-files-found: error
 safe-outputs:
+  threat-detection: false
   jobs:
     publish-library-research:
       description: Validate recommendations and cumulatively update the single review PR.
+      if: needs.agent.result == 'success'
       runs-on: ubuntu-latest
       permissions:
         contents: write
@@ -54,10 +64,15 @@ safe-outputs:
         actions: write
       inputs:
         proposal:
-          description: JSON array of category proposals following the schema in the prompt.
+          description: Request publication of the prepared proposal.json artifact.
           required: true
-          type: string
+          type: choice
+          options: [proposal.json]
       steps:
+        - uses: actions/download-artifact@v8
+          with:
+            name: library-research-proposal
+            path: ${{ runner.temp }}/library-research-proposal
         - uses: actions/checkout@v7
           with:
             persist-credentials: false
@@ -72,9 +87,12 @@ safe-outputs:
         - name: Validate and publish catalog only
           env:
             GITHUB_TOKEN: ${{ github.token }}
-            GH_AW_DETECTION_SUCCESS: ${{ needs.detection.outputs.detection_success }}
+            LIBRARY_RESEARCH_PROPOSAL: ${{ runner.temp }}/library-research-proposal/proposal.json
           run: node .github/scripts/library-research.ts
 ---
+
+Work as a single research agent: parallelize independent source reads, not
+delegation to other agents. All validation and publication is deterministic.
 
 Find genuine JavaScript/TypeScript alternatives for Bundlephobia. Read
 utils/similar-packages.catalog.json and comparisonGroups in utils/similarPackages.ts.
@@ -121,11 +139,11 @@ post, a release/announcement (date), or a deliberate gap in the existing catalog
 Do not claim a package was trending merely because Trending was scanned. Cite
 the actual trigger; established alternatives with no recent signal must say so.
 
-Submit exactly once through the safeoutputs CLI. In a temporary native TypeScript
-script, construct the proposal array and write
-`JSON.stringify({proposal: JSON.stringify(proposal)})`. Pipe it directly:
-`node /tmp/gh-aw/agent/proposal.ts | safeoutputs publish_library_research .`.
-Do not retype escaped JSON into a tool call. Submit [] only after completed
+In a temporary native TypeScript script, write the proposal array as JSON to
+/tmp/gh-aw/agent/proposal.json. Submit exactly once through safeoutputs with
+`{"proposal":"proposal.json"}`; do not put proposal contents in the tool call,
+where text sanitization can alter JSON and scoped npm names/URLs.
+Write [] only after completed
 research finds no useful candidates; report_incomplete if core npm/repository
 evidence is inaccessible. Note optional-source limitations in your summary.
 Do not edit repository code or create branches/PRs; publication requires human review.
