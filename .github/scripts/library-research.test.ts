@@ -584,10 +584,20 @@ test('addresses conversation, inline and review feedback; pending removals, edit
       remove: [{ slug: 'example', package: 'candidate' }],
     }
 
+    const repeatedRequest = {
+      ...feedback,
+      source: 'https://github.com/owner/repo/pull/1#issuecomment-124',
+    }
+
     const comments = [
       {
         html_url: feedback.source,
         body: feedback.comment,
+        user: { login: 'owner' },
+      },
+      {
+        html_url: repeatedRequest.source,
+        body: repeatedRequest.comment,
         user: { login: 'owner' },
       },
     ]
@@ -605,7 +615,7 @@ test('addresses conversation, inline and review feedback; pending removals, edit
       publishResearch({
         api: feedbackApi,
         proposal: [],
-        feedback: [feedback],
+        feedback: [feedback, repeatedRequest],
         verify,
       })
 

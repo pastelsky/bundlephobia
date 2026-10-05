@@ -534,10 +534,13 @@ export async function publishResearch({
       for (const removal of item.remove) {
         if (base[removal.slug]?.similar.includes(removal.package))
           fail('Feedback cannot remove approved recommendations')
+
+        if (!current[removal.slug]?.similar.includes(removal.package))
+          fail('Feedback removal is not a pending recommendation')
+
         const category = revised[removal.slug]
 
-        if (!category?.similar.includes(removal.package))
-          fail('Feedback removal is not a pending recommendation')
+        if (!category?.similar.includes(removal.package)) continue
 
         if (
           proposal.some(
