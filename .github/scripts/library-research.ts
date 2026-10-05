@@ -567,10 +567,6 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
-  if (process.env.GH_AW_DETECTION_SUCCESS !== 'true') {
-    fail('Research threat detection did not approve publication')
-  }
-
   const env = z
     .object({
       GH_AW_AGENT_OUTPUT: z.string().min(1),

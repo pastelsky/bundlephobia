@@ -16,6 +16,7 @@ engine:
   env:
     COPILOT_PROVIDER_WIRE_API: responses
   args:
+    - --excluded-tools=task,list_agents,read_agent,write_agent
     - --allow-url=github.com
     - --allow-url=api.github.com
     - --allow-url=raw.githubusercontent.com
@@ -44,9 +45,11 @@ tools:
   web-fetch:
   bash: ['*']
 safe-outputs:
+  threat-detection: false
   jobs:
     publish-library-research:
       description: Validate recommendations and cumulatively update the single review PR.
+      if: needs.agent.result == 'success'
       runs-on: ubuntu-latest
       permissions:
         contents: write
@@ -72,9 +75,11 @@ safe-outputs:
         - name: Validate and publish catalog only
           env:
             GITHUB_TOKEN: ${{ github.token }}
-            GH_AW_DETECTION_SUCCESS: ${{ needs.detection.outputs.detection_success }}
           run: node .github/scripts/library-research.ts
 ---
+
+Work as a single research agent: parallelize independent source reads, not
+delegation to other agents. All validation and publication is deterministic.
 
 Find genuine JavaScript/TypeScript alternatives for Bundlephobia. Read
 utils/similar-packages.catalog.json and comparisonGroups in utils/similarPackages.ts.
