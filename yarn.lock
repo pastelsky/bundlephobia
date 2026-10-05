@@ -8928,9 +8928,10 @@ __metadata:
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^4.25.2"
     now-logs: "npm:^0.0.7"
-    package-build-stats: "npm:9.2.3"
+    package-build-stats: "npm:9.3.0"
     safe-stable-stringify: "npm:^2.5.0"
     truncate: "npm:^3.0.0"
+    zod: "npm:^4.4.2"
   languageName: unknown
   linkType: soft
 
@@ -9068,7 +9069,7 @@ __metadata:
     oxlint: "npm:^1.78.0"
     oxlint-tsgolint: "npm:7.0.2001"
     p-queue: "npm:^3.2.0"
-    package-build-stats: "npm:9.2.3"
+    package-build-stats: "npm:9.3.0"
     pacote: "npm:^11.3.5"
     performance-now: "npm:^2.1.0"
     postcss: "npm:^8.4.33"
@@ -9102,6 +9103,7 @@ __metadata:
     webpack: "npm:^4.47.0"
     winston: "npm:^3.11.0"
     workerpool: "npm:^6.5.1"
+    xml-formatter: "npm:^3.7.0"
     zod: "npm:^4.4.2"
   languageName: unknown
   linkType: soft
@@ -19056,9 +19058,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-build-stats@npm:9.2.3":
-  version: 9.2.3
-  resolution: "package-build-stats@npm:9.2.3"
+"package-build-stats@npm:9.3.0":
+  version: 9.3.0
+  resolution: "package-build-stats@npm:9.3.0"
   dependencies:
     "@babel/core": "npm:^7.28.5"
     "@rspack/core": "npm:^2.1.4"
@@ -19095,7 +19097,7 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     package-stats: bin/cli.js
-  checksum: 17eb9f9b64d2af9b416ff003407c630a3a9af62a53ca4ef106ab8b0e6cbb345cedc5f65ca600db26bab632877bbc1f0aebab40b21c3565e7c139e320bfc93969
+  checksum: 0cba3f11778d37c0f8349461cf76f880093d6641669f3b9da5912caf188420c54fe7a5a9cdb6ff57f5a288a74330468cb34c38c4df292e21a8ac95c95e3cebcf
   languageName: node
   linkType: hard
 
@@ -25084,6 +25086,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"xml-formatter@npm:^3.7.0":
+  version: 3.7.0
+  resolution: "xml-formatter@npm:3.7.0"
+  dependencies:
+    xml-parser-xo: "npm:^4.1.5"
+  checksum: 9558493c1146d02476b5ca562d8116d56e8aa029c10c943eb8393feccd3da8c6f770274db6fa4bedfd06bc26bcfdfed82f90e2f8f8f3d9e9c5f0fb9b1bb07a0e
+  languageName: node
+  linkType: hard
+
 "xml-name-validator@npm:^4.0.0":
   version: 4.0.0
   resolution: "xml-name-validator@npm:4.0.0"
@@ -25095,6 +25106,13 @@ __metadata:
   version: 5.0.0
   resolution: "xml-name-validator@npm:5.0.0"
   checksum: 3fcf44e7b73fb18be917fdd4ccffff3639373c7cb83f8fc35df6001fecba7942f1dbead29d91ebb8315e2f2ff786b508f0c9dc0215b6353f9983c6b7d62cb1f5
+  languageName: node
+  linkType: hard
+
+"xml-parser-xo@npm:^4.1.5":
+  version: 4.1.6
+  resolution: "xml-parser-xo@npm:4.1.6"
+  checksum: 78966a8b310f545274d5a99cfd6d03f7d2a63544b6bc983a324e1e86dfaf2d2d6f5114c0d6bba8ebf5659efd47c033eab16fce72c8f34512a100eb9e562da39a
   languageName: node
   linkType: hard
 

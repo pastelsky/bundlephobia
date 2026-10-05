@@ -5,7 +5,7 @@ import strip from 'strip-markdown'
 import { parsePackageString } from '../../../utils/common.utils'
 import config from '../../config'
 import logger from '../../infrastructure/logger.service'
-import { categories } from './similar-packages.fixtures'
+import { categories } from '../../../utils/similarPackages'
 
 interface GotResponse<TBody> {
   body: TBody

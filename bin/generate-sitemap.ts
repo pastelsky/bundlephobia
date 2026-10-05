@@ -2,6 +2,8 @@ import { writeFileSync } from 'fs'
 import path from 'path'
 import { Readable } from 'stream'
 import { SitemapStream, streamToPromise } from 'sitemap'
+import formatXML from 'xml-formatter'
+import { trendsComparisons, trendsComparisonPath } from '../seo/trends-comparisons'
 
 const popularPackages = [
   'react',
@@ -182,7 +184,7 @@ const popularPackages = [
   'polished',
 ] as const
 
-const otherPages = ['', '/scan']
+const otherPages = ['', '/scan', '/trends']
 
 const links = [
   ...otherPages.map(page => ({
@@ -190,8 +192,13 @@ const links = [
     changefreq: 'weekly' as const,
     priority: 1,
   })),
-  ...popularPackages.map(packageName => ({
+  ...[...new Set([...popularPackages, ...trendsComparisons.flat()])].map(packageName => ({
     url: `/package/${packageName}`,
+    changefreq: 'weekly' as const,
+    priority: 0.7,
+  })),
+  ...trendsComparisons.map(packages => ({
+    url: trendsComparisonPath(packages),
     changefreq: 'weekly' as const,
     priority: 0.7,
   })),
@@ -200,7 +207,13 @@ const links = [
 const stream = new SitemapStream({ hostname: 'https://bundlephobia.com' })
 
 streamToPromise(Readable.from(links).pipe(stream))
-  .then(data => data.toString())
+  .then(data =>
+    formatXML(data.toString(), {
+      indentation: '    ',
+      collapseContent: true,
+      lineSeparator: '\n',
+    }) + '\n'
+  )
   .then(sitemap => {
     writeFileSync(
       path.join(__dirname, '..', 'client', 'assets', 'public', 'sitemap.xml'),

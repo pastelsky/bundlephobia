@@ -13,7 +13,30 @@
 }
 
 .similar-packages-section__subheading {
+  @include font-size-sm;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: $global-spacing * 1.5;
   color: var(--color-text-muted);
-  text-align: center;
-  margin-top: $global-spacing;
+  margin: $global-spacing 0 ($global-spacing * 2);
+  line-height: 1.5;
+}
+
+.similar-packages-section__compare {
+  color: inherit;
+  border-left: 1px solid var(--color-border-primary);
+  padding-left: $global-spacing * 1.5;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-icon-hover);
+    outline-offset: 2px;
+  }
 }

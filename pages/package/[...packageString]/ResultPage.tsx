@@ -17,7 +17,9 @@ import CarbonAd from '../../../client/components/CarbonAd'
 import MetaTags, {
   DEFAULT_DESCRIPTION_START,
 } from '../../../client/components/MetaTags'
-import QuickStatsBar from '../../../client/components/QuickStatsBar/QuickStatsBar'
+import QuickStatsBar, {
+  PackageLinks,
+} from '../../../client/components/QuickStatsBar/QuickStatsBar'
 import ResultLayout from '../../../client/components/ResultLayout'
 import Stat from '../../../client/components/Stat'
 import Warning from '../../../client/components/Warning/Warning'
@@ -397,7 +399,17 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   renderQuickStatsBar() {
     const { resultsPromiseState, results } = this.state
 
-    if (resultsPromiseState !== 'fulfilled' || !results) return null
+    if (resultsPromiseState !== 'fulfilled' || !results) {
+      const name = parsePackageString(
+        getPackageStringFromRouter(this.props.router),
+      ).name
+
+      return name ? (
+        <div className="quick-stats-bar">
+          <PackageLinks name={name} />
+        </div>
+      ) : null
+    }
 
     return (
       <QuickStatsBar
@@ -594,6 +606,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     return (
       <div className="content-container">
         <SimilarPackagesSection
+          packageName={results.name}
           category={similarPackagesCategory}
           packs={similarPackages}
           comparisonGzip={results.gzip}

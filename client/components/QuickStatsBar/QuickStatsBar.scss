@@ -75,10 +75,12 @@
 }
 
 .quick-stats-bar__logo-icon {
-  vertical-align: middle;
+  display: block;
+  flex-shrink: 0;
 
   &.quick-stats-bar__logo-icon--npm {
     width: 36px;
+    height: auto;
   }
 
   &.quick-stats-bar__logo-icon--github {
@@ -93,20 +95,33 @@
 }
 
 .quick-stats-bar__link {
-  margin: auto $global-spacing * 0.5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 32px;
+  flex-shrink: 0;
+  color: inherit;
+  border-radius: 4px;
 
-  &:hover {
-    .quick-stats-bar__logo-icon--github {
-      path {
-        fill: var(--color-icon-hover);
-      }
-    }
-    .quick-stats-bar__logo-icon--npm {
-      path {
-        fill: #cb3837;
-      }
+  &:hover,
+  &:focus-visible {
+    .quick-stats-bar__logo-icon path {
+      fill: var(--color-icon-hover);
     }
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-icon-hover);
+    outline-offset: 2px;
+  }
+}
+
+.quick-stats-bar__package-links {
+  align-items: center;
+  gap: $global-spacing;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 // ── Icon dark mode overrides ──────────────────────────────────────────────────

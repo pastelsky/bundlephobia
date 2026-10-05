@@ -86,7 +86,7 @@
     "npm-package-arg": "^8.1.5",
     "npm-registry-fetch": "^11.0.0",
     "p-queue": "^3.2.0",
-    "package-build-stats": "9.2.3",
+    "package-build-stats": "9.3.0",
     "pacote": "^11.3.5",
     "performance-now": "^2.1.0",
     "progress-stream": "^2.0.0",
@@ -117,8 +117,8 @@
   },
   "scripts": {
     "dev": "DEBUG='bp:*' NODE_ENV=development nodemon --watch ./server --watch ./utils --watch ./index.ts",
-    "build": "NODE_ENV=production next build",
-    "prebuild": "node -r ts-node/register bin/generate-sitemap.ts",
+    "build": "yarn sitemap && NODE_ENV=production next build",
+    "sitemap": "node -r esbuild-register bin/generate-sitemap.ts",
     "prestart": "yarn build",
     "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
     "prod": "yarn run build && yarn start",
@@ -194,7 +194,8 @@
     "sass-loader": "^10.5.2",
     "sitemap": "^7.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "xml-formatter": "^3.7.0"
   },
   "packageManager": "yarn@4.0.2"
 }
