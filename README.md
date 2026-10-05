@@ -40,6 +40,8 @@
 - [npmcharts.com](https://npmcharts.com/compare/bundle-phobia-cli) - bundle size stats at top of page
 - [Rollpkg](https://github.com/rafgraph/rollpkg) - A build tool to create packages with Rollup and TypeScript
 
+- [dep-bundle-size](https://github.com/await-ovo/dep-bundle-size) - Yet another CLI client for bundlephobia
+
 ## Support
 
 Liked bundlephobia? Used it's API to build something cool? Let us know!
