@@ -8,9 +8,11 @@ on:
     paths:
       - utils/similar-packages.catalog.json
       - utils/similarPackages.ts
-      - .github/scripts/recommendation-quality.mjs
-      - .github/scripts/check-recommendation-changes.mjs
+      - .github/scripts/recommendation-quality.ts
+      - .github/scripts/check-recommendation-changes.ts
       - .github/workflows/package-recommendations.yml
+      - .github/package.json
+      - packages/service-contracts/src/recommendations.contract.ts
 
 permissions:
   contents: read
@@ -26,10 +28,18 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+          package-manager-cache: false
+      - name: Install automation dependencies
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 'true'
+        run: corepack yarn workspaces focus @bundlephobia/recommendation-automation --production
       - name: Check recommendation quality
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node .github/scripts/triage-package-recommendation.mjs
+        run: node .github/scripts/triage-package-recommendation.ts
 
   check-curated-data:
     if: github.event_name == 'pull_request'
@@ -38,9 +48,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+          package-manager-cache: false
+      - name: Install automation dependencies
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 'true'
+        run: corepack yarn workspaces focus @bundlephobia/recommendation-automation --production
       - name: Check newly curated packages
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
-          node .github/scripts/check-recommendation-changes.mjs
+          node .github/scripts/check-recommendation-changes.ts
           ${{ github.event.pull_request.base.sha }}

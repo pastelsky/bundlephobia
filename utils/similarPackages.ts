@@ -1,4 +1,5 @@
 import catalog from './similar-packages.catalog.json'
+import type { Catalog } from '@bundlephobia/service-contracts/recommendations'
 
 // Broad packages need purpose-level peers rather than plugins matched by tags.
 export const comparisonGroups = [
@@ -20,10 +21,6 @@ export const comparisonGroups = [
   { packages: ['date-fns', 'dayjs', 'luxon', 'moment'] },
 ]
 
-export interface CategoryDefinition {
-  name: string
-  tags: Array<{ tag: string; weight: number }>
-  similar: string[]
-}
+export type CategoryDefinition = Catalog[string]
 
-export const categories: Record<string, CategoryDefinition> = catalog
+export const categories: Catalog = catalog

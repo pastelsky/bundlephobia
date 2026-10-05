@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 engine:
   id: copilot
-  model: kimi-k3
+  model: gpt-6-luna
 timeout-minutes: 30
 max-turns: 40
 network:
@@ -52,11 +52,15 @@ safe-outputs:
           with:
             node-version: '26'
             package-manager-cache: false
+        - name: Install automation dependencies
+          env:
+            YARN_ENABLE_IMMUTABLE_INSTALLS: 'true'
+          run: corepack yarn workspaces focus @bundlephobia/recommendation-automation --production
         - name: Validate and publish catalog only
           env:
             GITHUB_TOKEN: ${{ github.token }}
             GH_AW_DETECTION_SUCCESS: ${{ needs.detection.outputs.detection_success }}
-          run: node .github/scripts/library-research.mjs
+          run: node .github/scripts/library-research.ts
 ---
 
 Research JavaScript/TypeScript npm libraries worth recommending as genuine

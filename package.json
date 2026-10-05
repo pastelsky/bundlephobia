@@ -7,6 +7,7 @@
   "license": "MIT",
   "private": true,
   "workspaces": [
+    ".github",
     "build-service",
     "cache-service",
     "jvm-package-build-stats",
@@ -132,7 +133,8 @@
     "jvm:check": "yarn workspace jvm-package-build-stats check",
     "jvm:format": "yarn workspace jvm-package-build-stats format",
     "jvm:test": "yarn workspace jvm-package-build-stats test",
-    "test:recommendations": "node --test .github/scripts/*.test.mjs",
+    "test:recommendations": "node --test .github/scripts/*.test.ts",
+    "typecheck:recommendations": "yarn workspace @bundlephobia/recommendation-automation check",
     "test:watch": "jest --watch",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

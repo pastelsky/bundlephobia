@@ -6,7 +6,8 @@ import {
   evaluateRecommendation,
   extractCuratedCategories,
   maxRecommendationsPerCategory,
-} from './recommendation-quality.mjs'
+} from './recommendation-quality.ts'
+import { catalogSchema } from '@bundlephobia/service-contracts/recommendations'
 
 const fixturePath = 'utils/similar-packages.catalog.json'
 
@@ -16,7 +17,10 @@ if (!baseSha) {
   throw new Error('Pass the pull request base SHA as the first argument.')
 }
 
-const currentSource = await readFile(fixturePath, 'utf8')
+const currentSource = await readFile(
+  new URL(`../../${fixturePath}`, import.meta.url),
+  'utf8',
+)
 
 let baseSource
 
@@ -30,12 +34,14 @@ try {
   baseSource = null
 }
 
-function parseCatalog(source) {
+function parseCatalog(source: string) {
   return new Map(
-    Object.entries(JSON.parse(source)).map(([slug, category]) => [
-      slug,
-      { slug, name: category.name, packages: new Set(category.similar) },
-    ]),
+    Object.entries(catalogSchema.parse(JSON.parse(source))).map(
+      ([slug, category]) => [
+        slug,
+        { slug, name: category.name, packages: new Set(category.similar) },
+      ],
+    ),
   )
 }
 

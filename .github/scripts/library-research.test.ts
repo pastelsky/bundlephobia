@@ -1,4 +1,9 @@
 import assert from 'node:assert/strict'
+import { z } from 'zod'
+import {
+  catalogSchema,
+  type Catalog,
+} from '@bundlephobia/service-contracts/recommendations'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
@@ -9,9 +14,11 @@ import {
   mergeProposal,
   publishResearch,
   verifyPackages,
-} from './library-research.mjs'
+  type GitHubApi,
+  type Proposal,
+} from './library-research.ts'
 
-const item = name => ({
+const item = (name: string) => ({
   package: name,
   repository: `owner/${name}`,
   reason:
@@ -24,7 +31,7 @@ const item = name => ({
   ],
 })
 
-const proposal = (...names) => [
+const proposal = (...names: string[]): Proposal => [
   {
     slug: 'example',
     name: 'Example utilities',
@@ -49,7 +56,7 @@ test('cumulative proposals preserve approved and pending packages; repeated disc
   assert.deepEqual(second.example.similar, ['original', 'candidate', 'another'])
   assert.deepEqual(mergeProposal(second, proposal('candidate')), second)
   assert.equal(
-    second.example.research.recommendations.candidate.reason,
+    second.example.research!.recommendations.candidate.reason,
     item('candidate').reason,
   )
   assert.deepEqual(mergeProposal({}, proposal('one', 'two')).example.similar, [
@@ -78,21 +85,30 @@ test('rejects unsupported groups, weak evidence, invalid identities and oversize
 })
 
 test('fails closed on npm identity/deprecation, registry failure or archived source; never calls size APIs', async () => {
-  const urls = []
-  await verifyPackages(proposal('candidate'), async url => {
-    urls.push(url)
+  const urls: string[] = []
+  await verifyPackages(
+    proposal('candidate'),
+    async (url, options) => {
+      urls.push(url)
 
-    return {
-      ok: true,
-      json: async () =>
-        url.includes('registry.npmjs.org')
-          ? {
-              name: 'candidate',
-              repository: 'https://github.com/owner/candidate',
-            }
-          : { archived: false },
-    }
-  })
+      assert.equal(
+        new Headers(options?.headers).get('Authorization'),
+        url.includes('api.github.com') ? 'Bearer test-token' : null,
+      )
+
+      return {
+        ok: true,
+        json: async () =>
+          url.includes('registry.npmjs.org')
+            ? {
+                name: 'candidate',
+                repository: 'https://github.com/owner/candidate',
+              }
+            : { archived: false },
+      }
+    },
+    'test-token',
+  )
   assert.equal(urls.length, 2)
   assert.ok(urls.every(url => !url.includes('bundlephobia')))
 
@@ -113,6 +129,7 @@ test('fails closed on npm identity/deprecation, registry failure or archived sou
     verifyPackages(proposal('candidate'), async () => ({
       ok: false,
       status: 503,
+      json: async () => null,
     })),
   )
   await assert.rejects(
@@ -154,7 +171,26 @@ test('three-way carry retains new approved categories and stops on overlapping m
 })
 
 function github() {
-  const state = {
+  type PullRequest = {
+    number: number
+    state: 'open' | 'closed'
+    merged_at?: string | null
+    base: { ref: string }
+    html_url: string
+    body: string
+  }
+
+  type MockState = {
+    head: string | null
+    catalogs: Record<string, Catalog>
+    prs: PullRequest[]
+    writes: Array<{ path: string; method: string; body: unknown }>
+    blobs: Record<string, Catalog>
+    trees: Record<string, Catalog>
+    next: number
+  }
+
+  const state: MockState = {
     head: null,
     catalogs: { base: baseline },
     prs: [],
@@ -164,7 +200,7 @@ function github() {
     next: 0,
   }
 
-  const api = async (path, options = {}) => {
+  const api: GitHubApi = async (path, options = {}) => {
     const { body, method = 'GET' } = options
 
     if (method !== 'GET') state.writes.push({ path, method, body })
@@ -197,42 +233,50 @@ function github() {
 
     if (path === '/git/blobs') {
       const sha = `blob${++state.next}`
-      state.blobs[sha] = JSON.parse(body.content)
+      state.blobs[sha] = catalogSchema.parse(
+        JSON.parse(z.string().parse(body?.content)),
+      )
 
       return { sha }
     }
 
     if (path === '/git/trees') {
       assert.deepEqual(
-        body.tree.map(file => file.path),
+        z
+          .array(z.object({ path: z.string(), sha: z.string() }))
+          .parse(body?.tree)
+          .map(file => file.path),
         [catalogPath],
       )
       const sha = `tree${++state.next}`
-      state.trees[sha] = state.blobs[body.tree[0].sha]
+      state.trees[sha] =
+        state.blobs[
+          z.array(z.object({ sha: z.string() })).parse(body?.tree)[0].sha
+        ]
 
       return { sha }
     }
 
     if (path === '/git/commits') {
       const sha = `commit${++state.next}`
-      state.catalogs[sha] = state.trees[body.tree]
+      state.catalogs[sha] = state.trees[z.string().parse(body?.tree)]
 
       return { sha }
     }
 
     if (path === '/git/refs' || path.startsWith('/git/refs/heads/')) {
-      assert.notEqual(body.force, true)
-      state.head = body.sha
+      assert.notEqual(body?.force, true)
+      state.head = z.string().parse(body?.sha)
 
       return {}
     }
 
     if (path === '/pulls') {
-      const pr = {
-        ...body,
+      const pr: PullRequest = {
+        body: z.string().parse(body?.body),
         number: 1,
         state: 'open',
-        base: { ref: body.base },
+        base: { ref: z.string().parse(body?.base) },
         html_url: 'https://github.com/owner/repo/pull/1',
       }
 
@@ -257,7 +301,7 @@ function github() {
 test('publishes only one branch/PR, accumulates evidence, preserves human PR text and dispatches CI', async () => {
   const { state, api } = github()
 
-  const run = p =>
+  const run = (p: Proposal) =>
     publishResearch({
       api,
       proposal: p,
@@ -273,7 +317,7 @@ test('publishes only one branch/PR, accumulates evidence, preserves human PR tex
     1,
   )
   assert.equal(state.writes.filter(write => write.path === '/pulls').length, 1)
-  assert.deepEqual(state.catalogs[state.head].example.similar, [
+  assert.deepEqual(state.catalogs[state.head!].example.similar, [
     'original',
     'candidate',
     'another',
@@ -292,7 +336,16 @@ test('publishes only one branch/PR, accumulates evidence, preserves human PR tex
 
 test('a rejected PR blocks publication, and failed identity checks create no branch', async () => {
   const { state, api } = github()
-  state.prs = [{ state: 'closed', merged_at: null }]
+  state.prs = [
+    {
+      number: 1,
+      state: 'closed',
+      merged_at: null,
+      base: { ref: 'bundlephobia' },
+      html_url: 'https://github.com/owner/repo/pull/1',
+      body: '',
+    },
+  ]
   await assert.rejects(
     publishResearch({ api, proposal: proposal('candidate') }),
     /rejected/,
@@ -315,7 +368,7 @@ test('a rejected PR blocks publication, and failed identity checks create no bra
 test('reuses the same branch after merge, without losing approved recommendations', async () => {
   const { state, api } = github()
 
-  const run = p =>
+  const run = (p: Proposal) =>
     publishResearch({
       api,
       proposal: p,
@@ -324,11 +377,11 @@ test('reuses the same branch after merge, without losing approved recommendation
     })
 
   await run(proposal('candidate'))
-  state.catalogs.base = state.catalogs[state.head]
+  state.catalogs.base = state.catalogs[state.head!]
   state.prs[0].state = 'closed'
   state.prs[0].merged_at = '2026-10-05T00:00:00Z'
   await run(proposal('another'))
-  assert.deepEqual(state.catalogs[state.head].example.similar, [
+  assert.deepEqual(state.catalogs[state.head!].example.similar, [
     'original',
     'candidate',
     'another',
@@ -356,9 +409,12 @@ test('refuses a branch containing code changes and never overwrites concurrent e
     publishResearch({
       ...options,
       proposal: proposal('another'),
-      api: (path, params) =>
+      api: async (path, params) =>
         path.startsWith('/compare/')
-          ? { files: [{ filename: 'package.json' }] }
+          ? {
+              files: [{ filename: 'package.json' }],
+              merge_base_commit: { sha: 'base' },
+            }
           : api(path, params),
     }),
     /non-catalog/,
@@ -369,7 +425,7 @@ test('refuses a branch containing code changes and never overwrites concurrent e
     publishResearch({
       ...options,
       proposal: proposal('another'),
-      api: (path, params) => {
+      api: async (path, params) => {
         if (path === `/git/ref/heads/${branch}` && ++reads === 2)
           return { object: { sha: 'maintainer-edit' } }
 
@@ -387,10 +443,12 @@ test('refuses a branch containing code changes and never overwrites concurrent e
 })
 
 test('the shared catalog retains the existing category contract', async () => {
-  const catalog = JSON.parse(
-    await readFile(
-      new URL('../../utils/similar-packages.catalog.json', import.meta.url),
-      'utf8',
+  const catalog = catalogSchema.parse(
+    JSON.parse(
+      await readFile(
+        new URL('../../utils/similar-packages.catalog.json', import.meta.url),
+        'utf8',
+      ),
     ),
   )
 
@@ -405,7 +463,7 @@ test('the shared catalog retains the existing category contract', async () => {
         '-e',
         'console.log(JSON.stringify(require("./utils/similarPackages")))',
       ],
-      { encoding: 'utf8' },
+      { encoding: 'utf8', cwd: new URL('../../', import.meta.url) },
     ),
   )
 

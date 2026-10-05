@@ -11,6 +11,7 @@
     ".": "./src/index.ts",
     "./cache": "./src/cache/index.ts",
     "./package": "./src/package.contract.ts",
-    "./trends": "./src/trends.contract.ts"
+    "./trends": "./src/trends.contract.ts",
+    "./recommendations": "./src/recommendations.contract.ts"
   }
 }
