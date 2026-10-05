@@ -230,54 +230,59 @@ export async function verifyPackages(
   fetchImpl: FetchJson = fetch,
   githubToken = process.env.GITHUB_TOKEN,
 ) {
-  for (const category of validateProposal(proposal)) {
-    for (const item of category.recommendations) {
-      const response = await fetchImpl(
-        `https://registry.npmjs.org/${encodeURIComponent(item.package)}/latest`,
-        { signal: AbortSignal.timeout(15000), redirect: 'error' },
-      )
+  // The proposal contract caps this fan-out at twelve candidates.
+  await Promise.all(
+    validateProposal(proposal).flatMap(category =>
+      category.recommendations.map(async item => {
+        const response = await fetchImpl(
+          `https://registry.npmjs.org/${encodeURIComponent(item.package)}/latest`,
+          { signal: AbortSignal.timeout(15000), redirect: 'error' },
+        )
 
-      if (!response.ok)
-        fail(`Cannot verify npm package ${item.package}: ${response.status}`)
+        if (!response.ok)
+          fail(`Cannot verify npm package ${item.package}: ${response.status}`)
 
-      const manifest = z
-        .object({
-          name: z.string(),
-          deprecated: z.string().optional(),
-          repository: z.unknown().optional(),
+        const manifest = z
+          .object({
+            name: z.string(),
+            deprecated: z.string().optional(),
+            repository: z.unknown().optional(),
+          })
+          .parse(await response.json())
+
+        if (
+          manifest.name !== item.package ||
+          manifest.deprecated ||
+          extractGitHubRepository(manifest.repository) !== item.repository
+        )
+          fail(`Invalid, deprecated, or mismatched package ${item.package}`)
+
+        // Never fetch agent-provided URLs with credentials. Only verify its registry-linked GitHub repository.
+        const headers = new Headers({
+          Accept: 'application/vnd.github+json',
         })
-        .parse(await response.json())
 
-      if (
-        manifest.name !== item.package ||
-        manifest.deprecated ||
-        extractGitHubRepository(manifest.repository) !== item.repository
-      )
-        fail(`Invalid, deprecated, or mismatched package ${item.package}`)
+        if (githubToken) headers.set('Authorization', `Bearer ${githubToken}`)
 
-      // Never fetch agent-provided URLs with credentials. Only verify its registry-linked GitHub repository.
-      const headers = new Headers({
-        Accept: 'application/vnd.github+json',
-      })
+        const repo = await fetchImpl(
+          `https://api.github.com/repos/${item.repository}`,
+          {
+            signal: AbortSignal.timeout(15000),
+            redirect: 'error',
+            headers,
+          },
+        )
 
-      if (githubToken) headers.set('Authorization', `Bearer ${githubToken}`)
+        if (!repo.ok)
+          fail(`Cannot verify repository ${item.repository}: ${repo.status}`)
 
-      const repo = await fetchImpl(
-        `https://api.github.com/repos/${item.repository}`,
-        {
-          signal: AbortSignal.timeout(15000),
-          redirect: 'error',
-          headers,
-        },
-      )
-
-      if (!repo.ok)
-        fail(`Cannot verify repository ${item.repository}: ${repo.status}`)
-
-      if (z.object({ archived: z.boolean() }).parse(await repo.json()).archived)
-        fail(`Repository archived: ${item.repository}`)
-    }
-  }
+        if (
+          z.object({ archived: z.boolean() }).parse(await repo.json()).archived
+        )
+          fail(`Repository archived: ${item.repository}`)
+      }),
+    ),
+  )
 }
 
 const markdown = (value: string) => value.replace(/[\\`*_[\]#@|]/g, '\\$&')
@@ -365,19 +370,18 @@ export async function publishResearch({
     .parse(await api(''))
 
   const baseBranch = repository.default_branch
-  const baseRef = refSchema.parse(await api(`/git/ref/heads/${baseBranch}`))
 
-  const headRef = refSchema
-    .nullable()
-    .parse(await api(`/git/ref/heads/${branch}`, { optional: true }))
+  const [baseRefData, headRefData, prData] = await Promise.all([
+    api(`/git/ref/heads/${baseBranch}`),
+    api(`/git/ref/heads/${branch}`, { optional: true }),
+    api(
+      `/pulls?state=all&head=${encodeURIComponent(`${repository.owner.login}:${branch}`)}&sort=created&direction=desc&per_page=100`,
+    ),
+  ])
 
-  const prs = z
-    .array(prSchema)
-    .parse(
-      await api(
-        `/pulls?state=all&head=${encodeURIComponent(`${repository.owner.login}:${branch}`)}&sort=created&direction=desc&per_page=100`,
-      ),
-    )
+  const baseRef = refSchema.parse(baseRefData)
+  const headRef = refSchema.nullable().parse(headRefData)
+  const prs = z.array(prSchema).parse(prData)
 
   const open = prs.filter(pr => pr.state === 'open')
 
@@ -417,15 +421,17 @@ export async function publishResearch({
       comparison.files?.some(file => file.filename !== catalogPath)
     )
       fail('Research branch contains non-catalog changes')
-    current = carryPending(
-      base,
-      await readCatalog(comparison.merge_base_commit.sha),
-      await readCatalog(headRef.object.sha),
-    )
+
+    const [ancestor, pending] = await Promise.all([
+      readCatalog(comparison.merge_base_commit.sha),
+      readCatalog(headRef.object.sha),
+    ])
+
+    current = carryPending(base, ancestor, pending)
   }
 
-  await verify(proposal)
   const catalog = mergeProposal(current, proposal)
+  await verify(proposal)
   const changed = !same(current, catalog)
   const summary = researchBody(base, catalog, runUrl)
 

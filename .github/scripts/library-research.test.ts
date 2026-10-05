@@ -214,6 +214,50 @@ test('fails closed on npm identity/deprecation, registry failure or archived sou
   )
 })
 
+test('verifies candidates concurrently but checks npm identity before authenticated repository reads', async () => {
+  const registryReads: string[] = []
+  const repositoryReads: string[] = []
+  let release!: () => void
+
+  const gate = new Promise<void>(resolve => {
+    release = resolve
+  })
+
+  const verification = verifyPackages(
+    proposal('one', 'two', 'three'),
+    async url => {
+      const name = url.split('/').at(-2)!
+
+      if (url.includes('registry.npmjs.org')) {
+        registryReads.push(name)
+        await gate
+
+        return {
+          ok: true,
+          json: async () => ({
+            name,
+            repository: `https://github.com/owner/${name}`,
+          }),
+        }
+      }
+
+      repositoryReads.push(url)
+
+      return { ok: true, json: async () => ({ archived: false }) }
+    },
+  )
+
+  try {
+    assert.deepEqual(registryReads, ['one', 'two', 'three'])
+    assert.deepEqual(repositoryReads, [])
+  } finally {
+    release()
+    await verification
+  }
+
+  assert.equal(repositoryReads.length, 3)
+})
+
 test('three-way carry retains new approved categories and stops on overlapping maintainer edits', () => {
   const pending = mergeProposal(baseline, proposal('candidate'))
 
