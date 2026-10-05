@@ -15,6 +15,14 @@ engine:
   model: gpt-6-luna
   env:
     COPILOT_PROVIDER_WIRE_API: responses
+  args:
+    - --allow-url=github.com
+    - --allow-url=api.github.com
+    - --allow-url=raw.githubusercontent.com
+    - --allow-url=registry.npmjs.org
+    - --allow-url=api.npmjs.org
+    - --allow-url=news.ycombinator.com
+    - --allow-url=hn.algolia.com
 sandbox:
   agent:
     version: v0.28.27
