@@ -10,7 +10,10 @@ export class ScanResultsPage extends AppPage {
     super(page)
     this.heading = page.getByRole('heading', { name: 'Results' })
     this.total = page.getByText('Total')
+    this.totalItem = page.locator('.scan-results__item--total')
   }
+
+  readonly totalItem: Locator
 
   packageLink(name: string, version: string) {
     return this.page.getByRole('link', { name: `${name} v${version}` })

@@ -382,16 +382,16 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
               />
               <Stat
                 className="scan-results__stat-item"
-                value={totalGZIPSize / 1024 / 30}
+                value={getTimeFromSize(totalGZIPSize).threeG}
                 type={Stat.type.TIME}
-                label="2G Edge"
+                label="Slow 3G"
                 compact
               />
               <Stat
                 className="scan-results__stat-item"
-                value={totalGZIPSize / 1024 / 50}
+                value={getTimeFromSize(totalGZIPSize).fourG}
                 type={Stat.type.TIME}
-                label="Slow 3G"
+                label="Emerging 4G"
                 compact
               />
             </div>
