@@ -12,15 +12,17 @@ export class UnsupportedRegistryPackageSpecError extends Error {}
 
 /** Resolves an npm tag or range to the exact package version used for installation. */
 export async function resolveRegistryPackageSpec(
-  packageString,
-  manifest = pacote.manifest,
-) {
+  packageString: string,
+  manifest: typeof pacote.manifest = pacote.manifest,
+): Promise<string> {
   let spec
 
   try {
     spec = npa(packageString)
   } catch (error) {
-    throw new UnsupportedRegistryPackageSpecError(error.message)
+    throw new UnsupportedRegistryPackageSpecError(
+      error instanceof Error ? error.message : String(error),
+    )
   }
 
   if (!spec.registry || !['tag', 'range', 'version'].includes(spec.type)) {
@@ -30,7 +32,13 @@ export async function resolveRegistryPackageSpec(
   }
 
   if (spec.type === 'version') {
-    return `${spec.name}@${semver.clean(spec.fetchSpec)}`
+    const version = semver.clean(z.string().parse(spec.fetchSpec))
+
+    if (!version) {
+      throw new UnsupportedRegistryPackageSpecError('Invalid package version')
+    }
+
+    return `${spec.name}@${version}`
   }
 
   const resolved = manifestSchema.parse(

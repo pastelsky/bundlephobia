@@ -2,9 +2,9 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-import InstallationStore from '../installation-service/InstallationStore.js'
+import InstallationStore from '../installation-service/InstallationStore.ts'
 
-import createInstallQueue from '../installation-service/createInstallQueue.js'
+import createInstallQueue from '../installation-service/createInstallQueue.ts'
 
 const roots: string[] = []
 

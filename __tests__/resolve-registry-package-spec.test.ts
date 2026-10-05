@@ -1,7 +1,7 @@
 import {
   resolveRegistryPackageSpec,
   UnsupportedRegistryPackageSpecError,
-} from '../installation-service/resolveRegistryPackageSpec.js'
+} from '../installation-service/resolveRegistryPackageSpec.ts'
 
 describe('installation service package spec resolution', () => {
   it.each([
