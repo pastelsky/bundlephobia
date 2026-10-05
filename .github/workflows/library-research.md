@@ -13,6 +13,9 @@ concurrency:
 engine:
   id: copilot
   model: gpt-6-luna
+sandbox:
+  agent:
+    version: v0.28.27
 timeout-minutes: 30
 max-turns: 40
 network:
