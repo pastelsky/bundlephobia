@@ -115,10 +115,13 @@ or exceed six recommendations in a category. Propose at most twelve packages in
 five categories, prioritize evidence quality, and skip weak candidates.
 
 Call publish-library-research exactly once with proposal as a JSON string of an
-array. Do not hand-write escaped JSON into the tool call. Construct the proposal
-as a JavaScript array in a local Node script, serialize it with JSON.stringify,
-and parse the serialized result with JSON.parse to verify it before submitting
-that exact string. Do not publish a partial or truncated payload.
+array, using the safeoutputs CLI transport. Construct the proposal as an array in
+a temporary TypeScript script (Node native type stripping). Serialize it with
+JSON.stringify and verify it with JSON.parse. Have the script write the entire
+tool argument envelope using JSON.stringify({proposal: serialized}). Submit it
+directly with `node /tmp/gh-aw/agent/proposal.ts | safeoutputs publish_library_research .`.
+Do not copy the printed JSON into an MCP tool call: retyping can truncate nested
+JSON even after local validation. Do not publish a partial or truncated payload.
 Each category object must contain:
 
 - slug: existing category key, or a descriptive kebab-case key
