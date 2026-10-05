@@ -25,8 +25,10 @@ type Metadata = z.infer<typeof metadataSchema>
 
 type Installation = Metadata['installation']
 
+type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun'
+
 export interface InstallOptions {
-  client?: string | string[]
+  client?: PackageManager | PackageManager[]
   additionalPackages?: string[]
   installTimeout?: number
   limitConcurrency?: boolean

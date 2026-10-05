@@ -132,7 +132,11 @@ export default class BuildService {
     try {
       const response = await axios.get(
         `${process.env.BUILD_SERVICE_ENDPOINT}${operation.endpoint}?p=${encodeURIComponent(packageString)}`,
-        { signal, maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES },
+        {
+          signal,
+          timeout: config.WORKER_TIMEOUT,
+          maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES,
+        },
       )
 
       return response.data
