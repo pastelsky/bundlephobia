@@ -53,6 +53,7 @@ const baseline = {
 
 test('first-run publication preserves the branch filter through the real GitHub transport', async () => {
   const { api: fixture } = github()
+
   const client = request.defaults({
     request: {
       fetch: async (
@@ -62,12 +63,15 @@ test('first-run publication preserves the branch filter through the real GitHub 
         const url = new URL(
           input instanceof Request ? input.url : String(input),
         )
+
         assert.equal(url.hostname, 'api.github.com')
         assert.equal(options?.method, 'GET')
+
         if (url.pathname.endsWith('/pulls')) {
           assert.equal(url.searchParams.get('head'), `owner:${branch}`)
           assert.equal(url.searchParams.get('state'), 'all')
         }
+
         return Response.json(
           await fixture(
             url.pathname.replace('/repos/owner/repo', '') + url.search,
@@ -76,6 +80,7 @@ test('first-run publication preserves the branch filter through the real GitHub 
       },
     },
   })
+
   const result = await publishResearch({
     api: async path =>
       (
@@ -87,6 +92,7 @@ test('first-run publication preserves the branch filter through the real GitHub 
       ).data,
     proposal: [],
   })
+
   assert.deepEqual(result, { status: 'no changes' })
 })
 
