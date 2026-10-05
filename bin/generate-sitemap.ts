@@ -2,6 +2,7 @@ import { writeFileSync } from 'fs'
 import path from 'path'
 import { Readable } from 'stream'
 import { SitemapStream, streamToPromise } from 'sitemap'
+import formatXML from 'xml-formatter'
 import { trendsComparisons, trendsComparisonPath } from '../seo/trends-comparisons'
 
 const popularPackages = [
@@ -206,7 +207,13 @@ const links = [
 const stream = new SitemapStream({ hostname: 'https://bundlephobia.com' })
 
 streamToPromise(Readable.from(links).pipe(stream))
-  .then(data => data.toString())
+  .then(data =>
+    formatXML(data.toString(), {
+      indentation: '    ',
+      collapseContent: true,
+      lineSeparator: '\n',
+    }) + '\n'
+  )
   .then(sitemap => {
     writeFileSync(
       path.join(__dirname, '..', 'client', 'assets', 'public', 'sitemap.xml'),

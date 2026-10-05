@@ -194,7 +194,8 @@
     "sass-loader": "^10.5.2",
     "sitemap": "^7.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "xml-formatter": "^3.7.0"
   },
   "packageManager": "yarn@4.0.2"
 }
