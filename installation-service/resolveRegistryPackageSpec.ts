@@ -32,7 +32,7 @@ export async function resolveRegistryPackageSpec(
   }
 
   if (spec.type === 'version') {
-    const version = semver.clean(spec.fetchSpec)
+    const version = semver.clean(z.string().parse(spec.fetchSpec))
 
     if (!version) {
       throw new UnsupportedRegistryPackageSpecError('Invalid package version')
