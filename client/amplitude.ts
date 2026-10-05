@@ -60,6 +60,12 @@ export function trackAmplitudeEvent(
   eventData?: AnalyticsEventData,
 ) {
   loadAmplitude()
-    ?.then(amplitude => amplitude.track(eventName, eventData))
+    ?.then(amplitude =>
+      amplitude.track(eventName, {
+        ...eventData,
+        page_domain: window.location.hostname,
+        environment: process.env.NODE_ENV,
+      }),
+    )
     .catch(() => undefined)
 }
