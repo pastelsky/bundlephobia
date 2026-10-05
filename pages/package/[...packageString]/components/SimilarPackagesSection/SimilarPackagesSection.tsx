@@ -27,8 +27,8 @@ class SimilarPackagesSection extends Component<SimilarPackagesSectionProps> {
           {' '}
           Similar Packages{' '}
         </h2>
-        <h5 className="similar-packages-section__subheading"> {category} </h5>
-        <div className="similar-packages-section__actions">
+        <p className="similar-packages-section__subheading">
+          <span>{category}</span>
           <Link
             href={comparisonPath}
             className="similar-packages-section__compare"
@@ -36,7 +36,7 @@ class SimilarPackagesSection extends Component<SimilarPackagesSectionProps> {
           >
             Compare trends
           </Link>
-        </div>
+        </p>
 
         <div className="similar-packages-section__list">
           {packs.map(pack => (

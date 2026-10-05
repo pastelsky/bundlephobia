@@ -228,6 +228,18 @@ for (const packageName of ['react', '@reduxjs/toolkit']) {
 
     await expect(compare).toHaveAttribute('href', comparisonPath)
 
+    const footerLogoColor = await links
+      .locator('svg path')
+      .last()
+      .evaluate(element => getComputedStyle(element).fill)
+
+    const cardLogoColor = await section
+      .locator('.similar-package-card__github-icon path')
+      .first()
+      .evaluate(element => getComputedStyle(element).fill)
+
+    expect(cardLogoColor).toBe(footerLogoColor)
+
     for (const width of [1280, 375]) {
       await page.setViewportSize({ width, height: 812 })
 
