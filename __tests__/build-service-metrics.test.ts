@@ -25,11 +25,11 @@ it('attributes interleaved library phase events to the right build', async () =>
     await Promise.all([
       first.run(async () => {
         await Promise.resolve()
-        recordBuildPhase('TASK_PACKAGE_COMPILE')
+        recordBuildPhase('TASK_PACKAGE_COMPILE', { duration: 12 })
       }),
       second.run(async () => {
         await Promise.resolve()
-        recordBuildPhase('TASK_PACKAGE_EXPORTS_SIZES')
+        recordBuildPhase('TASK_PACKAGE_EXPORTS_SIZES', { duration: 20 })
       }),
     ])
 
@@ -91,7 +91,7 @@ describe('build-service metrics thresholds', () => {
                 operation: 'size',
               }),
             ])
-            recordBuildPhase('TASK_PACKAGE_COMPILE')
+            recordBuildPhase('TASK_PACKAGE_COMPILE', { duration: 12 })
             throw error
           },
         }),
@@ -120,6 +120,7 @@ describe('build-service metrics thresholds', () => {
       expect(artifact.phaseMarks).toEqual([
         expect.objectContaining({
           event: 'TASK_PACKAGE_COMPILE',
+          durationMs: 12,
           concurrentBuilds: 1,
           rssBytes: expect.any(Number),
         }),

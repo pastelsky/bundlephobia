@@ -4,6 +4,7 @@ import { performance } from 'node:perf_hooks'
 type PhaseMark = {
   event: string
   elapsedMs: number
+  durationMs: number
   rssBytes: number
   heapUsedBytes: number
   externalBytes: number
@@ -58,7 +59,10 @@ export function activeBuilds() {
 // package-build-stats already emits terminal events for compile, stats parsing,
 // dependency sizing, and other phases. Correlate those with the existing RSS
 // samples without adding a second profiler to the library.
-export function recordBuildPhase(event: string | symbol) {
+export function recordBuildPhase(
+  event: string | symbol,
+  details: { duration: number },
+) {
   const trace = storage.getStore()
   const phase = String(event)
 
@@ -70,6 +74,7 @@ export function recordBuildPhase(event: string | symbol) {
   trace.phases.push({
     event: phase,
     elapsedMs: Math.round(performance.now() - trace.startedAt),
+    durationMs: Math.round(details.duration),
     rssBytes: memory.rss,
     heapUsedBytes: memory.heapUsed,
     externalBytes: memory.external,
