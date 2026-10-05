@@ -109,6 +109,25 @@
   }
 }
 
+.quick-stats-bar__trends-icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.quick-stats-bar__link:has(.quick-stats-bar__trends-icon) {
+  color: var(--color-stats-bar-text);
+
+  &:hover {
+    color: var(--color-icon-hover);
+  }
+}
+
 // ── Icon dark mode overrides ──────────────────────────────────────────────────
 [data-theme='dark'] {
   .dep-icon__node {

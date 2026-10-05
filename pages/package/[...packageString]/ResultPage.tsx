@@ -1,5 +1,4 @@
 import Router, { withRouter, type NextRouter } from 'next/router'
-import Link from 'next/link'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
 
@@ -18,7 +17,9 @@ import CarbonAd from '../../../client/components/CarbonAd'
 import MetaTags, {
   DEFAULT_DESCRIPTION_START,
 } from '../../../client/components/MetaTags'
-import QuickStatsBar from '../../../client/components/QuickStatsBar/QuickStatsBar'
+import QuickStatsBar, {
+  PackageLinks,
+} from '../../../client/components/QuickStatsBar/QuickStatsBar'
 import ResultLayout from '../../../client/components/ResultLayout'
 import Stat from '../../../client/components/Stat'
 import Warning from '../../../client/components/Warning/Warning'
@@ -398,7 +399,17 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   renderQuickStatsBar() {
     const { resultsPromiseState, results } = this.state
 
-    if (resultsPromiseState !== 'fulfilled' || !results) return null
+    if (resultsPromiseState !== 'fulfilled' || !results) {
+      const name = parsePackageString(
+        getPackageStringFromRouter(this.props.router),
+      ).name
+
+      return name ? (
+        <div className="quick-stats-bar">
+          <PackageLinks name={name} />
+        </div>
+      ) : null
+    }
 
     return (
       <QuickStatsBar
@@ -626,10 +637,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   render() {
-    const packageName = parsePackageString(
-      getPackageStringFromRouter(this.props.router),
-    ).name
-
     return (
       <ResultLayout>
         {this.getMetaTags()}
@@ -644,15 +651,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
                 renderAsH1
               />
             </AutocompleteInputBox>
-            {packageName && (
-              <p className="result-page__trends-link">
-                <Link
-                  href={`/trends?packages=${encodeURIComponent(packageName)}`}
-                >
-                  View {packageName} downloads, stars, and size history
-                </Link>
-              </p>
-            )}
             {this.renderPendingResult()}
             {this.renderMissingDependencyWarning()}
             {this.renderStats()}

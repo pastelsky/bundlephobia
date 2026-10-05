@@ -7,7 +7,10 @@ import DigitalOceanLogo from '../../assets/digital-ocean-logo.svg'
 import { AnnouncementBanner } from '../AnnouncementBanner'
 import { WithClassName } from '../../../types'
 
-type LayoutProps = React.PropsWithChildren & WithClassName
+type LayoutProps = React.PropsWithChildren &
+  WithClassName & {
+    bottomContent?: React.ReactNode
+  }
 
 type LayoutState = {
   recentSearches: string[]
@@ -29,7 +32,7 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
   }
 
   render() {
-    const { children, className } = this.props
+    const { children, className, bottomContent } = this.props
     const { recentSearches } = this.state
 
     return (
@@ -101,6 +104,7 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
             </div>
           </section>
         </footer>
+        {bottomContent}
       </section>
     )
   }

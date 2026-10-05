@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import Link from 'next/link'
 
 import { sanitizeHTML } from '../../../utils/common.utils'
 import TreeShakeIcon from '../../assets/tree-shake.svg'
@@ -59,10 +60,11 @@ function DependencyStat({
   )
 }
 
-function PackageLinks({
+export function PackageLinks({
   name,
   repository,
-}: Pick<QuickStatsBarProps, 'name' | 'repository'>) {
+}: Pick<QuickStatsBarProps, 'name'> &
+  Partial<Pick<QuickStatsBarProps, 'repository'>>) {
   return (
     <div className="quick-stats-bar__stat">
       <a
@@ -85,6 +87,20 @@ function PackageLinks({
           <GithubIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon quick-stats-bar__logo-icon--github" />
         </a>
       )}
+      <Link
+        className="quick-stats-bar__link"
+        href={`/trends?packages=${encodeURIComponent(name)}`}
+        aria-label={`View ${name} trends`}
+        title="Downloads, stars, and size history"
+      >
+        <svg
+          className="quick-stats-bar__trends-icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path d="M3 3v18h18M6 16l5-6 4 3 6-8" />
+        </svg>
+      </Link>
     </div>
   )
 }

@@ -43,38 +43,22 @@
 }
 
 .trends-guide {
-  margin-top: $global-spacing * 5;
+  margin-top: $global-spacing * 2;
   padding-top: $global-spacing * 3;
   border-top: 1px solid var(--color-border-primary);
   color: var(--color-text-secondary);
   line-height: 1.7;
 
-  h2,
-  h3,
-  dt {
+  h2 {
     color: var(--color-text-primary);
   }
 
   h2 {
-    @include font-size-lg;
-  }
-
-  h3 {
     @include font-size-reg;
-    margin-top: $global-spacing * 3;
   }
 
-  p,
-  dl {
+  p {
     max-width: 800px;
-  }
-
-  dt {
-    font-weight: $font-weight-bold;
-  }
-
-  dd {
-    margin: ($global-spacing * 0.5) 0 ($global-spacing * 2);
   }
 
   a {

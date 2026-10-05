@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
+import type { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { Button } from '@base-ui/react/button'
 import { Checkbox } from '@base-ui/react/checkbox'
@@ -25,6 +26,11 @@ import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
 import { groupTrendsPackage } from '../../utils/trends'
+import {
+  trendsComparisons,
+  trendsComparisonPath,
+  findTrendsComparison,
+} from '../../seo/trends-comparisons'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 
@@ -116,9 +122,48 @@ function MetricValue({
   )
 }
 
-export default function TrendsPage() {
+function TrendsGuide() {
+  return (
+    <section
+      className="trends-page__container trends-guide"
+      aria-labelledby="trends-guide-heading"
+    >
+      <h2 id="trends-guide-heading">About these comparisons</h2>
+      <p>
+        Downloads include automated installs and CI jobs. Stars are repository
+        totals and may include estimated history. Sizes come from previously
+        analyzed versions; coverage can be sparse.
+      </p>
+      <ul className="trends-guide__comparisons">
+        {trendsComparisons.map(packages => (
+          <li key={packages.join('~vs~')}>
+            <Link href={trendsComparisonPath(packages)}>
+              {packages.join(' vs ')}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+export const getServerSideProps: GetServerSideProps<{
+  initialPackages: string[]
+}> = async ({ query }) => ({
+  props: {
+    initialPackages: query.packages
+      ? [...new Set(parsePackageParam(query.packages))].slice(0, MAX_PACKAGES)
+      : DEFAULT_PACKAGES,
+  },
+})
+
+export default function TrendsPage({
+  initialPackages,
+}: {
+  initialPackages: string[]
+}) {
   const router = useRouter()
-  const [packages, setPackages] = useState<string[]>(DEFAULT_PACKAGES)
+  const [packages, setPackages] = useState<string[]>(initialPackages)
   const [metric, setMetric] = useState<TrendsMetric>('downloads')
   const [range, setRange] = useState<TrendsRange>('last-year')
   const [groupBy, setGroupBy] = useState<TrendsGroupBy>('day')
@@ -346,19 +391,37 @@ export default function TrendsPage() {
       ),
   )
 
+  const comparison = router.query.packages
+    ? findTrendsComparison(packages)
+    : undefined
+
+  const pageTitle = comparison
+    ? `${comparison.join(' vs ')} — downloads, stars & size | Bundlephobia`
+    : 'npm package trends & comparisons | Bundlephobia'
+
+  const description = comparison
+    ? `Compare ${comparison.join(' vs ')} npm downloads, GitHub stars, and bundle size history.`
+    : 'Compare downloads, GitHub stars, and size history across packages.'
+
   return (
-    <Layout className="trends-page">
+    <Layout className="trends-page" bottomContent={<TrendsGuide />}>
       <MetaTags
-        title="npm package trends & comparisons | Bundlephobia"
-        description="Compare downloads, GitHub stars, and size history across packages."
-        twitterDescription="Compare npm downloads, GitHub stars, and bundle size history."
-        canonicalPath="/trends"
+        title={pageTitle}
+        description={description}
+        twitterDescription={description}
+        canonicalPath={
+          comparison ? trendsComparisonPath(comparison) : '/trends'
+        }
       />
       <div className="trends-page__container">
         <PageNav />
 
         <header className="trends-page__header">
-          <h1>Package trends</h1>
+          <h1>
+            {comparison
+              ? `${comparison.join(' vs ')} trends`
+              : 'Package trends'}
+          </h1>
           <p className="trends-page__subtitle">
             Compare downloads, GitHub stars, and size history across packages.
           </p>
@@ -702,70 +765,6 @@ export default function TrendsPage() {
             </div>
           </section>
         )}
-
-        <section
-          className="trends-guide"
-          aria-labelledby="trends-guide-heading"
-        >
-          <h2 id="trends-guide-heading">Compare npm packages over time</h2>
-          <p>
-            Choosing a JavaScript dependency involves more than its size today.
-            Compare up to five packages to see how npm downloads, GitHub stars,
-            and bundle size have changed, alongside major and minor releases.
-            Choose a two-month, one-year, or three-year window, then group the
-            chart by day, week, or month.
-          </p>
-          <h3>Start with a comparison</h3>
-          <ul className="trends-guide__comparisons">
-            <li>
-              <Link href="/trends?packages=react~vs~vue">react vs vue</Link>
-            </li>
-            <li>
-              <Link href="/trends?packages=lodash~vs~ramda">
-                lodash vs ramda
-              </Link>
-            </li>
-            <li>
-              <Link href="/trends?packages=date-fns~vs~dayjs">
-                date-fns vs dayjs
-              </Link>
-            </li>
-            <li>
-              <Link href="/trends?packages=axios~vs~ky">axios vs ky</Link>
-            </li>
-          </ul>
-          <h3>What do the metrics mean?</h3>
-          <dl>
-            <dt>npm downloads</dt>
-            <dd>
-              Downloads reported by npm, summed for each day, week, or month.
-              Downloads include automated installs and CI jobs; they are not a
-              count of individual developers or production applications.
-            </dd>
-            <dt>GitHub stars</dt>
-            <dd>
-              Total stars on the associated GitHub repository, not new stars per
-              day. Packages in the same repository can share a star count.
-              Historical values may be reconstructed or estimated, rather than a
-              complete record of people starring and unstarring a repository.
-            </dd>
-            <dt>Bundle size history</dt>
-            <dd>
-              Minified and gzip sizes from package versions previously analyzed
-              by Bundlephobia. Historical coverage can be sparse and is not a
-              measurement of your application&apos;s final bundle. Open a
-              package from the snapshot to inspect its dependencies and exports.
-            </dd>
-          </dl>
-          <h3>Share a comparison</h3>
-          <p>
-            Add packages using the search box, select a metric and time window,
-            then use Copy link to share those selections. Release overlays help
-            you explore timing, but a change near a release does not establish
-            that the release caused it. Popularity alone is not a measure of
-            quality, maintenance, or security.
-          </p>
-        </section>
       </div>
     </Layout>
   )

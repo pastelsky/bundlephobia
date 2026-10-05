@@ -2,6 +2,7 @@ import { writeFileSync } from 'fs'
 import path from 'path'
 import { Readable } from 'stream'
 import { SitemapStream, streamToPromise } from 'sitemap'
+import { trendsComparisons, trendsComparisonPath } from '../seo/trends-comparisons'
 
 const popularPackages = [
   'react',
@@ -190,8 +191,13 @@ const links = [
     changefreq: 'weekly' as const,
     priority: 1,
   })),
-  ...popularPackages.map(packageName => ({
+  ...[...new Set([...popularPackages, ...trendsComparisons.flat()])].map(packageName => ({
     url: `/package/${packageName}`,
+    changefreq: 'weekly' as const,
+    priority: 0.7,
+  })),
+  ...trendsComparisons.map(packages => ({
+    url: trendsComparisonPath(packages),
     changefreq: 'weekly' as const,
     priority: 0.7,
   })),
