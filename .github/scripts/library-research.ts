@@ -84,6 +84,10 @@ const proposalSchema = z
                 /^[A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/,
               ),
               reason: researchText(60),
+              discovery: z.object({
+                reason: researchText(40),
+                source: sourceSchema.nullable(),
+              }),
               tradeoffs: researchText(40),
               sources: z
                 .array(sourceSchema)
@@ -325,6 +329,11 @@ export function researchBody(base: Catalog, catalog: Catalog, runUrl: string) {
 
       if (item)
         lines.push(
+          `Why considered: ${markdown(item.discovery?.reason ?? 'Discovery trigger was not recorded by the original research run; no trending or recent-release claim is established.')}`,
+          ...(item.discovery?.source
+            ? [`Discovery source: [Source](<${item.discovery.source}>)`]
+            : []),
+          '',
           `Why: ${markdown(item.reason)}`,
           '',
           `Trade-offs: ${markdown(item.tradeoffs)}`,

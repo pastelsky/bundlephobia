@@ -24,6 +24,11 @@ const item = (name: string) => ({
   repository: `owner/${name}`,
   reason:
     'A compatible alternative for the same concrete task, with a simpler API for applications that do not need plugins.',
+  discovery: {
+    reason:
+      'Investigated after a maintainer announcement about this library on Hacker News during the research window.',
+    source: `https://news.ycombinator.com/item?id=${name}`,
+  },
   tradeoffs:
     'Fewer integrations; consumers still need to verify the runtime and migration costs.',
   sources: [
@@ -144,6 +149,8 @@ test('rejects unsupported groups, weak evidence, invalid identities and oversize
     { sources: ['https://github.com/owner/one', 'http://localhost/'] },
     { reason: 'hype' },
     { repository: 'different/repo' },
+    { discovery: undefined },
+    { discovery: { reason: 'hype', source: null } },
   ]) {
     const p = proposal('one', 'two')
     Object.assign(p[0].recommendations[0], patch)
@@ -436,6 +443,19 @@ test('publishes only one branch/PR, accumulates evidence, preserves human PR tex
   assert.match(state.prs[0].body, /Human review notes/)
   assert.match(state.prs[0].body, /candidate/)
   assert.match(state.prs[0].body, /another/)
+  assert.match(
+    state.prs[0].body,
+    /Why considered: Investigated after a maintainer announcement/,
+  )
+  assert.match(
+    state.prs[0].body,
+    /Discovery source:.*news.ycombinator.com\/item\?id=candidate/,
+  )
+  assert.deepEqual(
+    state.catalogs[state.head!].example.research!.recommendations.candidate
+      .discovery,
+    item('candidate').discovery,
+  )
   assert.equal(
     state.writes.filter(write => write.path.includes('/dispatches')).length,
     2,

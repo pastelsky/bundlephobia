@@ -109,9 +109,17 @@ run. Each category proposal contains:
 - reason: why these are interchangeable for a concrete task (at least 60 characters)
 - recommendations: array of {package: exact npm name, repository: owner/repo,
   reason: at least 60 characters on relative value/use case,
+  discovery: {reason: at least 40 characters explaining the actual selection
+  trigger, source: exact discovery URL or null for a catalog-gap investigation},
   tradeoffs: at least 40 characters on constraints and maintenance,
   sources: 2..5 distinct public HTTPS URLs, including https://github.com/owner/repo
   or a file under it, plus discovery/corroborating evidence you actually read}
+
+Discovery is distinct from recommendation rationale: say whether the candidate
+was observed on Trending (language, period and observation date), a specific HN
+post, a release/announcement (date), or a deliberate gap in the existing catalog.
+Do not claim a package was trending merely because Trending was scanned. Cite
+the actual trigger; established alternatives with no recent signal must say so.
 
 Submit exactly once through the safeoutputs CLI. In a temporary native TypeScript
 script, construct the proposal array and write

@@ -3,6 +3,9 @@ import { z } from 'zod'
 export const recommendationSchema = z.object({
   package: z.string(),
   repository: z.string(),
+  discovery: z
+    .object({ reason: z.string(), source: z.string().nullable() })
+    .optional(),
   reason: z.string(),
   tradeoffs: z.string(),
   sources: z.array(z.string()),
