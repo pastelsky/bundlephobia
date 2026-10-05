@@ -7,6 +7,7 @@ import {
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
+import { request } from '@octokit/request'
 import {
   branch,
   catalogPath,
@@ -23,6 +24,11 @@ const item = (name: string) => ({
   repository: `owner/${name}`,
   reason:
     'A compatible alternative for the same concrete task, with a simpler API for applications that do not need plugins.',
+  discovery: {
+    reason:
+      'Investigated after a maintainer announcement about this library on Hacker News during the research window.',
+    source: `https://news.ycombinator.com/item?id=${name}`,
+  },
   tradeoffs:
     'Fewer integrations; consumers still need to verify the runtime and migration costs.',
   sources: [
@@ -50,8 +56,74 @@ const baseline = {
   },
 }
 
+test('first-run publication preserves the branch filter through the real GitHub transport', async () => {
+  const { api: fixture } = github()
+
+  const client = request.defaults({
+    request: {
+      fetch: async (
+        input: Parameters<typeof fetch>[0],
+        options?: RequestInit,
+      ) => {
+        const url = new URL(
+          input instanceof Request ? input.url : String(input),
+        )
+
+        assert.equal(url.hostname, 'api.github.com')
+        assert.equal(options?.method, 'GET')
+
+        if (url.pathname.endsWith('/pulls')) {
+          assert.equal(url.searchParams.get('head'), `owner:${branch}`)
+          assert.equal(url.searchParams.get('state'), 'all')
+        }
+
+        return Response.json(
+          await fixture(
+            url.pathname.replace('/repos/owner/repo', '') + url.search,
+          ),
+        )
+      },
+    },
+  })
+
+  const result = await publishResearch({
+    api: async path =>
+      (
+        await client({
+          method: 'GET',
+          url: `/repos/owner/repo${path}`,
+          data: undefined,
+        })
+      ).data,
+    proposal: [],
+  })
+
+  assert.deepEqual(result, { status: 'no changes' })
+})
+
 test('cumulative proposals preserve approved and pending packages; repeated discovery is a no-op', () => {
-  const first = mergeProposal(baseline, proposal('candidate'))
+  const existingCategory = proposal('candidate')
+  delete existingCategory[0].tags
+
+  const first = mergeProposal(baseline, existingCategory)
+
+  assert.deepEqual(first.example.tags, baseline.example.tags)
+  assert.throws(
+    () => mergeProposal({}, existingCategory),
+    /require matching tags/,
+  )
+
+  const scoped = proposal('package')
+  scoped[0].recommendations[0].package = '`@scope/package`'
+
+  const scopedResult = mergeProposal(baseline, scoped)
+
+  assert.equal(scopedResult.example.similar.at(-1), '@scope/package')
+  assert.equal(
+    scopedResult.example.research!.recommendations['@scope/package'].package,
+    '@scope/package',
+  )
+
   const second = mergeProposal(first, proposal('another'))
   assert.deepEqual(second.example.similar, ['original', 'candidate', 'another'])
   assert.deepEqual(mergeProposal(second, proposal('candidate')), second)
@@ -77,6 +149,8 @@ test('rejects unsupported groups, weak evidence, invalid identities and oversize
     { sources: ['https://github.com/owner/one', 'http://localhost/'] },
     { reason: 'hype' },
     { repository: 'different/repo' },
+    { discovery: undefined },
+    { discovery: { reason: 'hype', source: null } },
   ]) {
     const p = proposal('one', 'two')
     Object.assign(p[0].recommendations[0], patch)
@@ -145,6 +219,50 @@ test('fails closed on npm identity/deprecation, registry failure or archived sou
     })),
     /archived/,
   )
+})
+
+test('verifies candidates concurrently but checks npm identity before authenticated repository reads', async () => {
+  const registryReads: string[] = []
+  const repositoryReads: string[] = []
+  let release!: () => void
+
+  const gate = new Promise<void>(resolve => {
+    release = resolve
+  })
+
+  const verification = verifyPackages(
+    proposal('one', 'two', 'three'),
+    async url => {
+      const name = url.split('/').at(-2)!
+
+      if (url.includes('registry.npmjs.org')) {
+        registryReads.push(name)
+        await gate
+
+        return {
+          ok: true,
+          json: async () => ({
+            name,
+            repository: `https://github.com/owner/${name}`,
+          }),
+        }
+      }
+
+      repositoryReads.push(url)
+
+      return { ok: true, json: async () => ({ archived: false }) }
+    },
+  )
+
+  try {
+    assert.deepEqual(registryReads, ['one', 'two', 'three'])
+    assert.deepEqual(repositoryReads, [])
+  } finally {
+    release()
+    await verification
+  }
+
+  assert.equal(repositoryReads.length, 3)
 })
 
 test('three-way carry retains new approved categories and stops on overlapping maintainer edits', () => {
@@ -325,6 +443,19 @@ test('publishes only one branch/PR, accumulates evidence, preserves human PR tex
   assert.match(state.prs[0].body, /Human review notes/)
   assert.match(state.prs[0].body, /candidate/)
   assert.match(state.prs[0].body, /another/)
+  assert.match(
+    state.prs[0].body,
+    /Why considered: Investigated after a maintainer announcement/,
+  )
+  assert.match(
+    state.prs[0].body,
+    /Discovery source:.*news.ycombinator.com\/item\?id=candidate/,
+  )
+  assert.deepEqual(
+    state.catalogs[state.head!].example.research!.recommendations.candidate
+      .discovery,
+    item('candidate').discovery,
+  )
   assert.equal(
     state.writes.filter(write => write.path.includes('/dispatches')).length,
     2,
