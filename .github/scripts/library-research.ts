@@ -10,6 +10,7 @@ import {
 import {
   extractGitHubRepository,
   isPlausiblePackageName,
+  normalizePackageName,
   type FetchJson,
 } from './recommendation-quality.ts'
 
@@ -76,10 +77,9 @@ const proposalSchema = z
         .array(
           z
             .object({
-              package: researchText().refine(
-                isPlausiblePackageName,
-                'Invalid npm package',
-              ),
+              package: researchText()
+                .transform(normalizePackageName)
+                .refine(isPlausiblePackageName, 'Invalid npm package'),
               repository: researchText().regex(
                 /^[A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/,
               ),

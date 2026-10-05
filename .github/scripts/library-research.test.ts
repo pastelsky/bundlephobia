@@ -108,6 +108,17 @@ test('cumulative proposals preserve approved and pending packages; repeated disc
     /require matching tags/,
   )
 
+  const scoped = proposal('package')
+  scoped[0].recommendations[0].package = '`@scope/package`'
+
+  const scopedResult = mergeProposal(baseline, scoped)
+
+  assert.equal(scopedResult.example.similar.at(-1), '@scope/package')
+  assert.equal(
+    scopedResult.example.research!.recommendations['@scope/package'].package,
+    '@scope/package',
+  )
+
   const second = mergeProposal(first, proposal('another'))
   assert.deepEqual(second.example.similar, ['original', 'candidate', 'another'])
   assert.deepEqual(mergeProposal(second, proposal('candidate')), second)
