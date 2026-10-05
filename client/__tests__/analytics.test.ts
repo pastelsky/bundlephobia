@@ -17,7 +17,7 @@ describe('Analytics', () => {
     restoreAmplitude = setAmplitudeLoader(async () => amplitude)
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
-      value: {},
+      value: { location: { hostname: 'localhost' } },
     })
   })
 
@@ -49,6 +49,8 @@ describe('Analytics', () => {
 
     expect(track).toHaveBeenCalledWith('page_context_viewed', {
       page_type: 'scan',
+      page_domain: 'localhost',
+      environment: 'test',
     })
   })
 
@@ -61,13 +63,15 @@ describe('Analytics', () => {
     expect(track).toHaveBeenCalledWith('search_succeeded', {
       package: 'react',
       timeTaken: 123,
+      page_domain: 'localhost',
+      environment: 'test',
     })
   })
 
   it('does not throw when the browser tracker is unavailable', () => {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
-      value: {},
+      value: { location: { hostname: 'localhost' } },
     })
 
     expect(() => Analytics.performedScan()).not.toThrow()

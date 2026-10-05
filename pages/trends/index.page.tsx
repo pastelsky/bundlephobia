@@ -8,6 +8,7 @@ import { Button } from '@base-ui/react/button'
 import { Checkbox } from '@base-ui/react/checkbox'
 import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
+import Analytics from '../../client/analytics'
 
 import API, {
   type TrendsGroupBy,
@@ -121,6 +122,29 @@ function MetricValue({
   )
 }
 
+function trackTrendsLoad(
+  response: TrendsResponse,
+  packageCount: number,
+  range: TrendsRange,
+  startedAt: number,
+) {
+  Analytics.trendsDataLoaded({
+    packageCount,
+    range,
+    timeTaken: Math.round(performance.now() - startedAt),
+    downloadPackageCount: response.packages.filter(
+      pack => pack.downloads.length > 0,
+    ).length,
+    starsPackageCount: response.packages.filter(pack => pack.stars.length > 0)
+      .length,
+    sizePackageCount: response.packages.filter(pack => pack.size.length > 0)
+      .length,
+    warningPackageCount: response.packages.filter(
+      pack => pack.warnings.length > 0,
+    ).length,
+  })
+}
+
 export const getServerSideProps: GetServerSideProps<{
   initialPackages: string[]
 }> = async ({ query }) => ({
@@ -151,6 +175,17 @@ export default function TrendsPage({
   const [copied, setCopied] = useState(false)
   const [relatedPackageNames, setRelatedPackageNames] = useState<string[]>([])
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
+
+  const analyticsContext = {
+    packageCount: packages.length,
+    metric,
+    range,
+    groupBy,
+  }
+
+  useEffect(() => {
+    Analytics.pageView('trends')
+  }, [])
 
   const chartPackages = useMemo(
     () =>
@@ -270,6 +305,7 @@ export default function TrendsPage({
 
     let isMounted = true
     let completed = false
+    const startedAt = performance.now()
     // An indicator that flashes for a quick cache or network response is more
     // distracting than helpful. Keep the current chart visible until a request
     // has genuinely taken long enough to need a loading state.
@@ -290,6 +326,7 @@ export default function TrendsPage({
           setTrendsData(res)
           setLoading(false)
           setFetchingRange(null)
+          trackTrendsLoad(res, packages.length, range, startedAt)
         }
       })
       .catch(err => {
@@ -300,6 +337,11 @@ export default function TrendsPage({
           setError(err?.message || 'Failed to fetch trends data')
           setLoading(false)
           setFetchingRange(null)
+          Analytics.trendsDataFailed({
+            packageCount: packages.length,
+            range,
+            timeTaken: Math.round(performance.now() - startedAt),
+          })
         }
       })
 
@@ -326,36 +368,87 @@ export default function TrendsPage({
     )
     setInputKey(k => k + 1)
     updateUrl(updated, metric, range, groupBy)
+    Analytics.trendsSelectionChanged({
+      ...analyticsContext,
+      selection: 'package_added',
+      packageCount: updated.length,
+    })
   }
 
   const handleRemovePackage = (pkgName: string) => {
     const updated = packages.filter(p => p !== pkgName)
     setPackages(updated)
     updateUrl(updated, metric, range, groupBy)
+    Analytics.trendsSelectionChanged({
+      ...analyticsContext,
+      selection: 'package_removed',
+      packageCount: updated.length,
+    })
   }
 
   const handleMetricChange = (newMetric: TrendsMetric) => {
+    if (newMetric === metric) return
     setMetric(newMetric)
     updateUrl(packages, newMetric, range, groupBy)
+    Analytics.trendsSelectionChanged({
+      ...analyticsContext,
+      selection: 'metric',
+      metric: newMetric,
+    })
   }
 
   const handleRangeChange = (newRange: TrendsRange) => {
+    if (newRange === range) return
     setRange(newRange)
     setFetchingRange(newRange)
     updateUrl(packages, metric, newRange, groupBy)
+    Analytics.trendsSelectionChanged({
+      ...analyticsContext,
+      selection: 'range',
+      range: newRange,
+    })
   }
 
   const handleGroupByChange = (newGroupBy: TrendsGroupBy) => {
+    if (newGroupBy === groupBy) return
     setGroupBy(newGroupBy)
     updateUrl(packages, metric, range, newGroupBy)
+    Analytics.trendsSelectionChanged({
+      ...analyticsContext,
+      selection: 'group_by',
+      groupBy: newGroupBy,
+    })
+  }
+
+  const handleReleaseOverlayChange = (
+    selection: 'major_releases' | 'minor_releases',
+    enabled: boolean,
+  ) => {
+    const setVisible =
+      selection === 'major_releases'
+        ? setShowMajorReleases
+        : setShowMinorReleases
+
+    setVisible(enabled)
+    Analytics.trendsSelectionChanged({
+      ...analyticsContext,
+      selection,
+      enabled,
+    })
   }
 
   const handleCopyLink = () => {
     if (typeof window === 'undefined') return
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+    navigator.clipboard
+      .writeText(window.location.href)
+      .then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+        Analytics.trendsLinkCopied(analyticsContext)
+      })
+      .catch(() => {
+        Analytics.trendsLinkCopyFailed(analyticsContext)
+      })
   }
 
   const visibleSuggestedPackages = suggestedPackages.filter(
@@ -557,7 +650,9 @@ export default function TrendsPage({
               <label className="trends-toggle">
                 <Checkbox.Root
                   checked={showMajorReleases}
-                  onCheckedChange={setShowMajorReleases}
+                  onCheckedChange={enabled =>
+                    handleReleaseOverlayChange('major_releases', enabled)
+                  }
                   className="trends-toggle__control"
                 >
                   <Checkbox.Indicator
@@ -574,7 +669,9 @@ export default function TrendsPage({
               <label className="trends-toggle">
                 <Checkbox.Root
                   checked={showMinorReleases}
-                  onCheckedChange={setShowMinorReleases}
+                  onCheckedChange={enabled =>
+                    handleReleaseOverlayChange('minor_releases', enabled)
+                  }
                   className="trends-toggle__control"
                 >
                   <Checkbox.Indicator
