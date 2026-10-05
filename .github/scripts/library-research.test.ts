@@ -16,7 +16,7 @@ import {
   carryPending,
   mergeProposal,
   publishResearch,
-  readResearchProposal,
+  readResearchSubmission,
   verifyPackages,
   type GitHubApi,
   type Proposal,
@@ -70,30 +70,34 @@ test('artifact handoff preserves scoped names and evidence URLs; rejects missing
     proposal: 'proposal.json',
   }
 
-  const expected = proposal('@tabler/icons')
+  const expected = {
+    proposal: proposal('@tabler/icons'),
+    summary: 'Verified scoped package with primary-source evidence.',
+    expectedHead: null,
+  }
 
-  expected[0].recommendations[0].repository = 'tabler/tabler-icons'
-  expected[0].recommendations[0].sources[0] =
+  expected.proposal[0].recommendations[0].repository = 'tabler/tabler-icons'
+  expected.proposal[0].recommendations[0].sources[0] =
     'https://github.com/tabler/tabler-icons'
 
-  expected[0].recommendations[0].sources.push(
+  expected.proposal[0].recommendations[0].sources.push(
     'https://www.npmjs.com/package/@tabler/icons',
   )
 
   try {
     await writeFile(outputPath, JSON.stringify({ items: [submission] }))
     await assert.rejects(
-      readResearchProposal(outputPath, proposalPath),
+      readResearchSubmission(outputPath, proposalPath),
       /ENOENT/,
     )
     await writeFile(proposalPath, JSON.stringify(expected))
     assert.deepEqual(
-      await readResearchProposal(outputPath, proposalPath),
+      await readResearchSubmission(outputPath, proposalPath),
       expected,
     )
     await writeFile(proposalPath, '{')
     await assert.rejects(
-      readResearchProposal(outputPath, proposalPath),
+      readResearchSubmission(outputPath, proposalPath),
       SyntaxError,
     )
     await writeFile(
@@ -101,7 +105,7 @@ test('artifact handoff preserves scoped names and evidence URLs; rejects missing
       JSON.stringify({ items: [submission, submission] }),
     )
     await assert.rejects(
-      readResearchProposal(outputPath, proposalPath),
+      readResearchSubmission(outputPath, proposalPath),
       /exactly one/,
     )
     await writeFile(
@@ -109,7 +113,7 @@ test('artifact handoff preserves scoped names and evidence URLs; rejects missing
       JSON.stringify({ items: [{ ...submission, proposal: '../other.json' }] }),
     )
     await assert.rejects(
-      readResearchProposal(outputPath, proposalPath),
+      readResearchSubmission(outputPath, proposalPath),
       z.ZodError,
     )
   } finally {
@@ -157,6 +161,8 @@ test('first-run publication preserves the branch filter through the real GitHub 
         })
       ).data,
     proposal: [],
+    summary: 'No useful candidates found.',
+    expectedHead: null,
   })
 
   assert.deepEqual(result, { status: 'no changes' })
@@ -479,20 +485,28 @@ function github() {
   return { state, api }
 }
 
-test('publishes only one branch/PR, accumulates evidence, preserves human PR text and dispatches CI', async () => {
+test('publishes one branch/PR, preserves agent evidence and human notes, and dispatches CI only for catalog changes', async () => {
   const { state, api } = github()
 
-  const run = (p: Proposal) =>
+  const run = (p: Proposal, summary: string) =>
     publishResearch({
       api,
       proposal: p,
       verify: async () => {},
-      runUrl: 'https://github.com/owner/repo/actions/runs/1',
+      summary,
+      expectedHead: state.head,
     })
 
-  await run(proposal('candidate'))
+  await run(
+    proposal('candidate'),
+    'Candidate rationale with discovery evidence.',
+  )
   state.prs[0].body = `Human review notes\n${state.prs[0].body}`
-  await run(proposal('another'))
+
+  const summary =
+    'Revised candidate rationale and another recommendation. [Discovery](<https://news.ycombinator.com/item?id=candidate>)'
+
+  await run(proposal('another'), summary)
   assert.equal(
     state.writes.filter(write => write.path === '/git/refs').length,
     1,
@@ -506,21 +520,13 @@ test('publishes only one branch/PR, accumulates evidence, preserves human PR tex
   assert.match(state.prs[0].body, /Human review notes/)
   assert.match(state.prs[0].body, /candidate/)
   assert.match(state.prs[0].body, /another/)
-  assert.match(
-    state.prs[0].body,
-    /Why considered: Investigated after a maintainer announcement/,
-  )
-  assert.match(
-    state.prs[0].body,
-    /Discovery source:.*news.ycombinator.com\/item\?id=candidate/,
-  )
+  assert.ok(state.prs[0].body.includes(summary))
+  assert.doesNotMatch(state.prs[0].body, /Candidate rationale with/)
   assert.deepEqual(Object.keys(state.catalogs[state.head!].example).sort(), [
     'name',
     'similar',
     'tags',
   ])
-  assert.equal(state.prs[0].body.match(/#### candidate/g)?.length, 1)
-  assert.equal(state.prs[0].body.match(/#### another/g)?.length, 1)
   assert.equal(
     state.writes.filter(write => write.path.includes('/dispatches')).length,
     2,
@@ -528,7 +534,7 @@ test('publishes only one branch/PR, accumulates evidence, preserves human PR tex
   const count = state.writes.length
   const previousBody = state.prs[0].body
 
-  await run(proposal('candidate'))
+  await run(proposal('candidate'), summary)
   assert.equal(state.writes.length, count)
   assert.equal(state.prs[0].body, previousBody)
 })
@@ -546,7 +552,12 @@ test('a rejected PR blocks publication, and failed identity checks create no bra
     },
   ]
   await assert.rejects(
-    publishResearch({ api, proposal: proposal('candidate') }),
+    publishResearch({
+      api,
+      proposal: proposal('candidate'),
+      summary: 'Candidate rationale.',
+      expectedHead: null,
+    }),
     /rejected/,
   )
   assert.equal(state.writes.length, 0)
@@ -555,6 +566,8 @@ test('a rejected PR blocks publication, and failed identity checks create no bra
     publishResearch({
       api,
       proposal: proposal('candidate'),
+      summary: 'Candidate rationale.',
+      expectedHead: null,
       verify: async () => {
         throw new Error('invalid identity')
       },
@@ -564,22 +577,110 @@ test('a rejected PR blocks publication, and failed identity checks create no bra
   assert.equal(state.writes.length, 0)
 })
 
+test('agent revisions can edit the pending catalog and summary without overwriting newer data or bypassing evidence checks', async () => {
+  const { state, api } = github()
+  const verify = async () => {}
+
+  await publishResearch({
+    api,
+    proposal: proposal('candidate'),
+    summary: '#### candidate',
+    expectedHead: null,
+    verify,
+  })
+  state.prs[0].body = `Human notes\n${state.prs[0].body}`
+  const expectedHead = state.head
+  const desired = structuredClone(state.catalogs[state.head!])
+
+  desired.example.name = 'Corrected category'
+  desired.example.similar = ['original']
+  state.catalogs.ancestor = structuredClone(state.catalogs.base)
+  state.catalogs.base.newApproved = {
+    name: 'New approved data',
+    tags: [],
+    similar: ['approved'],
+  }
+
+  const revisionApi: GitHubApi = async (path, options) =>
+    path.startsWith('/compare/')
+      ? {
+          merge_base_commit: { sha: 'ancestor' },
+          files: [{ filename: catalogPath }],
+        }
+      : api(path, options)
+
+  const revision = {
+    api: revisionApi,
+    proposal: [],
+    catalog: desired,
+    expectedHead,
+    summary:
+      'Updated rationale and addressed [maintainer feedback](<https://github.com/owner/repo/pull/1#issuecomment-123>).',
+    verify,
+  }
+
+  await publishResearch(revision)
+  assert.deepEqual(state.catalogs[state.head!].example.similar, ['original'])
+  assert.equal(state.catalogs[state.head!].example.name, 'Corrected category')
+  assert.deepEqual(
+    state.catalogs[state.head!].newApproved,
+    state.catalogs.base.newApproved,
+  )
+  assert.match(state.prs[0].body, /Human notes/)
+  assert.match(state.prs[0].body, /Updated rationale/)
+  assert.doesNotMatch(state.prs[0].body, /#### candidate/)
+
+  const count = state.writes.length
+  const head = state.head
+
+  await assert.rejects(
+    publishResearch(revision),
+    /changed since the agent read/,
+  )
+  assert.equal(state.writes.length, count)
+
+  const summaryOnly = {
+    api: revisionApi,
+    proposal: [],
+    expectedHead: head,
+    summary:
+      'Clarified the answer to the maintainer without changing any catalog entries.',
+    verify,
+  }
+
+  await publishResearch(summaryOnly)
+  assert.equal(state.head, head)
+  assert.equal(state.writes.length, count + 1)
+  await publishResearch(summaryOnly)
+  assert.equal(state.writes.length, count + 1)
+
+  const unresearched = structuredClone(state.catalogs[state.head!])
+
+  unresearched.example.similar.push('unresearched')
+  await assert.rejects(
+    publishResearch({ ...revision, expectedHead: head, catalog: unresearched }),
+    /requires research evidence/,
+  )
+  assert.equal(state.writes.length, count + 1)
+})
+
 test('reuses the same branch after merge, without losing approved recommendations', async () => {
   const { state, api } = github()
 
-  const run = (p: Proposal) =>
+  const run = (p: Proposal, summary: string) =>
     publishResearch({
       api,
       proposal: p,
       verify: async () => {},
-      runUrl: 'https://github.com/owner/repo/actions/runs/1',
+      summary,
+      expectedHead: state.head,
     })
 
-  await run(proposal('candidate'))
+  await run(proposal('candidate'), '#### candidate')
   state.catalogs.base = state.catalogs[state.head!]
   state.prs[0].state = 'closed'
   state.prs[0].merged_at = '2026-10-05T00:00:00Z'
-  await run(proposal('another'))
+  await run(proposal('another'), '#### another')
   assert.deepEqual(state.catalogs[state.head!].example.similar, [
     'original',
     'candidate',
@@ -599,10 +700,12 @@ test('refuses a branch containing code changes and never overwrites concurrent e
 
   const options = {
     verify: async () => {},
-    runUrl: 'https://github.com/owner/repo/actions/runs/1',
+    summary: 'Verified recommendations.',
+    expectedHead: state.head,
   }
 
   await publishResearch({ ...options, api, proposal: proposal('candidate') })
+  options.expectedHead = state.head
   state.writes = []
   await assert.rejects(
     publishResearch({
