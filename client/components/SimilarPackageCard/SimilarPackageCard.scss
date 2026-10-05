@@ -145,12 +145,12 @@
 .similar-package-card__github-icon {
   height: $global-spacing * 2;
   width: auto;
-  opacity: 0.5;
-  transition: all 0.2s;
+  color: var(--color-stats-bar-text);
+  transition: color 0.2s;
   vertical-align: middle;
 
   &:hover {
-    opacity: 1;
+    color: var(--color-icon-hover);
   }
 }
 

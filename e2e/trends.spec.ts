@@ -69,7 +69,7 @@ test('renders package trends and chart controls', async ({ page }) => {
   )
 
   await expect(
-    page.getByRole('heading', { name: 'Package trends' }),
+    page.getByRole('heading', { name: 'react vs vue trends' }),
   ).toBeVisible()
   await expect(page.getByText('1.44', { exact: true })).toBeVisible()
   await expect(

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
+import type { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { Button } from '@base-ui/react/button'
 import { Checkbox } from '@base-ui/react/checkbox'
@@ -25,6 +26,10 @@ import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
 import { groupTrendsPackage } from '../../utils/trends'
+import {
+  trendsComparisonPath,
+  findTrendsComparison,
+} from '../../seo/trends-comparisons'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 
@@ -116,9 +121,23 @@ function MetricValue({
   )
 }
 
-export default function TrendsPage() {
+export const getServerSideProps: GetServerSideProps<{
+  initialPackages: string[]
+}> = async ({ query }) => ({
+  props: {
+    initialPackages: query.packages
+      ? [...new Set(parsePackageParam(query.packages))].slice(0, MAX_PACKAGES)
+      : DEFAULT_PACKAGES,
+  },
+})
+
+export default function TrendsPage({
+  initialPackages,
+}: {
+  initialPackages: string[]
+}) {
   const router = useRouter()
-  const [packages, setPackages] = useState<string[]>(DEFAULT_PACKAGES)
+  const [packages, setPackages] = useState<string[]>(initialPackages)
   const [metric, setMetric] = useState<TrendsMetric>('downloads')
   const [range, setRange] = useState<TrendsRange>('last-year')
   const [groupBy, setGroupBy] = useState<TrendsGroupBy>('day')
@@ -346,23 +365,37 @@ export default function TrendsPage() {
       ),
   )
 
-  const pageTitle =
-    packages.length > 0
-      ? `${packages.join(' vs ')} trends | Bundlephobia`
-      : 'Package trends | Bundlephobia'
+  const comparison = router.query.packages
+    ? findTrendsComparison(packages)
+    : undefined
+
+  const pageTitle = comparison
+    ? `${comparison.join(' vs ')} — downloads, stars & size | Bundlephobia`
+    : 'npm package trends & comparisons | Bundlephobia'
+
+  const description = comparison
+    ? `Compare ${comparison.join(' vs ')} npm downloads, GitHub stars, and bundle size history.`
+    : 'Compare downloads, GitHub stars, and size history across packages.'
 
   return (
     <Layout className="trends-page">
       <MetaTags
         title={pageTitle}
-        description="Compare downloads, GitHub stars, and size history across packages."
-        canonicalPath="/trends"
+        description={description}
+        twitterDescription={description}
+        canonicalPath={
+          comparison ? trendsComparisonPath(comparison) : '/trends'
+        }
       />
       <div className="trends-page__container">
         <PageNav />
 
         <header className="trends-page__header">
-          <h1>Package trends</h1>
+          <h1>
+            {comparison
+              ? `${comparison.join(' vs ')} trends`
+              : 'Package trends'}
+          </h1>
           <p className="trends-page__subtitle">
             Compare downloads, GitHub stars, and size history across packages.
           </p>

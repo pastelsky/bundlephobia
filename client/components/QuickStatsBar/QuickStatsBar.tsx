@@ -59,12 +59,13 @@ function DependencyStat({
   )
 }
 
-function PackageLinks({
+export function PackageLinks({
   name,
   repository,
-}: Pick<QuickStatsBarProps, 'name' | 'repository'>) {
+}: Pick<QuickStatsBarProps, 'name'> &
+  Partial<Pick<QuickStatsBarProps, 'repository'>>) {
   return (
-    <div className="quick-stats-bar__stat">
+    <div className="quick-stats-bar__stat quick-stats-bar__package-links">
       <a
         className="quick-stats-bar__link"
         href={'https://npmjs.com/package/' + name}
@@ -82,7 +83,7 @@ function PackageLinks({
           rel="noopener noreferrer"
           aria-label={`View ${name} repository`}
         >
-          <GithubIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon quick-stats-bar__logo-icon--github" />
+          <GithubIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon--github" />
         </a>
       )}
     </div>
