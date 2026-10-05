@@ -42,6 +42,56 @@
   line-height: 1.6;
 }
 
+.trends-guide {
+  margin-top: $global-spacing * 5;
+  padding-top: $global-spacing * 3;
+  border-top: 1px solid var(--color-border-primary);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+
+  h2,
+  h3,
+  dt {
+    color: var(--color-text-primary);
+  }
+
+  h2 {
+    @include font-size-lg;
+  }
+
+  h3 {
+    @include font-size-reg;
+    margin-top: $global-spacing * 3;
+  }
+
+  p,
+  dl {
+    max-width: 800px;
+  }
+
+  dt {
+    font-weight: $font-weight-bold;
+  }
+
+  dd {
+    margin: ($global-spacing * 0.5) 0 ($global-spacing * 2);
+  }
+
+  a {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  &__comparisons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $global-spacing ($global-spacing * 3);
+    list-style: none;
+    padding: 0;
+  }
+}
+
 // ─── Search & Chips ────────────────────────────────────────
 .trends-search {
   background: transparent;

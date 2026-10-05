@@ -1,4 +1,5 @@
 import Router, { withRouter, type NextRouter } from 'next/router'
+import Link from 'next/link'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
 
@@ -625,6 +626,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   render() {
+    const packageName = parsePackageString(
+      getPackageStringFromRouter(this.props.router),
+    ).name
+
     return (
       <ResultLayout>
         {this.getMetaTags()}
@@ -639,6 +644,15 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
                 renderAsH1
               />
             </AutocompleteInputBox>
+            {packageName && (
+              <p className="result-page__trends-link">
+                <Link
+                  href={`/trends?packages=${encodeURIComponent(packageName)}`}
+                >
+                  View {packageName} downloads, stars, and size history
+                </Link>
+              </p>
+            )}
             {this.renderPendingResult()}
             {this.renderMissingDependencyWarning()}
             {this.renderStats()}

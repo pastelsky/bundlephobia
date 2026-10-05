@@ -7,6 +7,20 @@
   width: 100%;
 }
 
+.result-page__trends-link {
+  margin: $global-spacing 0 0;
+  text-align: center;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  @include font-size-sm;
+
+  a {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
 .flash-message {
   @include font-size-sm;
   padding: math.div($global-spacing, 3) $global-spacing * 2;

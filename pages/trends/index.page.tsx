@@ -346,16 +346,12 @@ export default function TrendsPage() {
       ),
   )
 
-  const pageTitle =
-    packages.length > 0
-      ? `${packages.join(' vs ')} trends | Bundlephobia`
-      : 'Package trends | Bundlephobia'
-
   return (
     <Layout className="trends-page">
       <MetaTags
-        title={pageTitle}
+        title="npm package trends & comparisons | Bundlephobia"
         description="Compare downloads, GitHub stars, and size history across packages."
+        twitterDescription="Compare npm downloads, GitHub stars, and bundle size history."
         canonicalPath="/trends"
       />
       <div className="trends-page__container">
@@ -706,6 +702,70 @@ export default function TrendsPage() {
             </div>
           </section>
         )}
+
+        <section
+          className="trends-guide"
+          aria-labelledby="trends-guide-heading"
+        >
+          <h2 id="trends-guide-heading">Compare npm packages over time</h2>
+          <p>
+            Choosing a JavaScript dependency involves more than its size today.
+            Compare up to five packages to see how npm downloads, GitHub stars,
+            and bundle size have changed, alongside major and minor releases.
+            Choose a two-month, one-year, or three-year window, then group the
+            chart by day, week, or month.
+          </p>
+          <h3>Start with a comparison</h3>
+          <ul className="trends-guide__comparisons">
+            <li>
+              <Link href="/trends?packages=react~vs~vue">react vs vue</Link>
+            </li>
+            <li>
+              <Link href="/trends?packages=lodash~vs~ramda">
+                lodash vs ramda
+              </Link>
+            </li>
+            <li>
+              <Link href="/trends?packages=date-fns~vs~dayjs">
+                date-fns vs dayjs
+              </Link>
+            </li>
+            <li>
+              <Link href="/trends?packages=axios~vs~ky">axios vs ky</Link>
+            </li>
+          </ul>
+          <h3>What do the metrics mean?</h3>
+          <dl>
+            <dt>npm downloads</dt>
+            <dd>
+              Downloads reported by npm, summed for each day, week, or month.
+              Downloads include automated installs and CI jobs; they are not a
+              count of individual developers or production applications.
+            </dd>
+            <dt>GitHub stars</dt>
+            <dd>
+              Total stars on the associated GitHub repository, not new stars per
+              day. Packages in the same repository can share a star count.
+              Historical values may be reconstructed or estimated, rather than a
+              complete record of people starring and unstarring a repository.
+            </dd>
+            <dt>Bundle size history</dt>
+            <dd>
+              Minified and gzip sizes from package versions previously analyzed
+              by Bundlephobia. Historical coverage can be sparse and is not a
+              measurement of your application&apos;s final bundle. Open a
+              package from the snapshot to inspect its dependencies and exports.
+            </dd>
+          </dl>
+          <h3>Share a comparison</h3>
+          <p>
+            Add packages using the search box, select a metric and time window,
+            then use Copy link to share those selections. Release overlays help
+            you explore timing, but a change near a release does not establish
+            that the release caused it. Popularity alone is not a measure of
+            quality, maintenance, or security.
+          </p>
+        </section>
       </div>
     </Layout>
   )

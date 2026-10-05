@@ -182,7 +182,7 @@ const popularPackages = [
   'polished',
 ] as const
 
-const otherPages = ['', '/scan']
+const otherPages = ['', '/scan', '/trends']
 
 const links = [
   ...otherPages.map(page => ({
