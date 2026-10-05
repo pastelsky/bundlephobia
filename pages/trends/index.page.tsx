@@ -117,6 +117,29 @@ function MetricValue({
   )
 }
 
+function trackTrendsLoad(
+  response: TrendsResponse,
+  packageCount: number,
+  range: TrendsRange,
+  startedAt: number,
+) {
+  Analytics.trendsDataLoaded({
+    packageCount,
+    range,
+    timeTaken: Math.round(performance.now() - startedAt),
+    downloadPackageCount: response.packages.filter(
+      pack => pack.downloads.length > 0,
+    ).length,
+    starsPackageCount: response.packages.filter(pack => pack.stars.length > 0)
+      .length,
+    sizePackageCount: response.packages.filter(pack => pack.size.length > 0)
+      .length,
+    warningPackageCount: response.packages.filter(
+      pack => pack.warnings.length > 0,
+    ).length,
+  })
+}
+
 export default function TrendsPage() {
   const router = useRouter()
   const [packages, setPackages] = useState<string[]>(DEFAULT_PACKAGES)
@@ -284,22 +307,7 @@ export default function TrendsPage() {
           setTrendsData(res)
           setLoading(false)
           setFetchingRange(null)
-          Analytics.trendsDataLoaded({
-            packageCount: packages.length,
-            range,
-            timeTaken: Math.round(performance.now() - startedAt),
-            downloadPackageCount: res.packages.filter(
-              pack => pack.downloads.length > 0,
-            ).length,
-            starsPackageCount: res.packages.filter(
-              pack => pack.stars.length > 0,
-            ).length,
-            sizePackageCount: res.packages.filter(pack => pack.size.length > 0)
-              .length,
-            warningPackageCount: res.packages.filter(
-              pack => pack.warnings.length > 0,
-            ).length,
-          })
+          trackTrendsLoad(res, packages.length, range, startedAt)
         }
       })
       .catch(err => {
