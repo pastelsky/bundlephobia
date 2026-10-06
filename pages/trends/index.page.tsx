@@ -38,6 +38,12 @@ const MAX_PACKAGES = 5
 
 const PACKAGE_URL_SEPARATOR = '~vs~'
 
+type TrendsLoadState =
+  | { status: 'empty'; data: null }
+  | { status: 'pending'; data: TrendsResponse | null; showLoading: boolean }
+  | { status: 'ready'; data: TrendsResponse; requestKey: string }
+  | { status: 'error'; data: TrendsResponse | null; message: string }
+
 function decodePackageParam(value: string) {
   try {
     return decodeURIComponent(value)
@@ -168,13 +174,26 @@ export default function TrendsPage({
   const [showMajorReleases, setShowMajorReleases] = useState(true)
   const [showMinorReleases, setShowMinorReleases] = useState(false)
 
-  const [loading, setLoading] = useState(true)
-  const [fetchingRange, setFetchingRange] = useState<TrendsRange | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [trendsData, setTrendsData] = useState<TrendsResponse | null>(null)
+  const [loadState, setLoadState] = useState<TrendsLoadState>({
+    status: 'pending',
+    data: null,
+    showLoading: true,
+  })
+
   const [copied, setCopied] = useState(false)
   const [relatedPackageNames, setRelatedPackageNames] = useState<string[]>([])
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
+
+  const requestKey = JSON.stringify([packages, range])
+  const trendsData = loadState.data
+  const loading = loadState.status === 'pending' && loadState.showLoading
+  const error = loadState.status === 'error' ? loadState.message : null
+
+  const loadedPackageNames = new Set(
+    trendsData?.range === range
+      ? trendsData.packages.map(pack => pack.name)
+      : [],
+  )
 
   const analyticsContext = {
     packageCount: packages.length,
@@ -182,6 +201,14 @@ export default function TrendsPage({
     range,
     groupBy,
   }
+
+  const startLoading = useCallback(() => {
+    setLoadState(current => ({
+      status: 'pending',
+      data: current.data,
+      showLoading: false,
+    }))
+  }, [])
 
   useEffect(() => {
     Analytics.pageView('trends')
@@ -194,15 +221,7 @@ export default function TrendsPage({
   )
 
   useEffect(() => {
-    if (
-      !trendsData ||
-      error ||
-      loading ||
-      fetchingRange ||
-      trendsData.range !== range ||
-      trendsData.packages.length !== packages.length ||
-      !trendsData.packages.every(pack => packages.includes(pack.name))
-    )
+    if (loadState.status !== 'ready' || loadState.requestKey !== requestKey)
       return
 
     Analytics.trendsComparisonViewed({
@@ -210,23 +229,14 @@ export default function TrendsPage({
       metric,
       range,
       groupBy,
-      dataPackageCount: chartPackages.filter(pack => pack[metric].length > 0)
-        .length,
-      warningPackageCount: chartPackages.filter(
+      dataPackageCount: loadState.data.packages.filter(
+        pack => pack[metric].length > 0,
+      ).length,
+      warningPackageCount: loadState.data.packages.filter(
         pack => pack.warnings.length > 0,
       ).length,
     })
-  }, [
-    trendsData,
-    chartPackages,
-    packages,
-    metric,
-    range,
-    groupBy,
-    error,
-    loading,
-    fetchingRange,
-  ])
+  }, [loadState, requestKey, packages, metric, range, groupBy])
 
   // Sync state with URL params on mount / router change
   useEffect(() => {
@@ -331,47 +341,46 @@ export default function TrendsPage({
   // Fetch trends data
   useEffect(() => {
     if (packages.length === 0) {
-      setTrendsData(null)
-      setLoading(false)
-      setFetchingRange(null)
+      setLoadState({ status: 'empty', data: null })
 
       return
     }
 
     let isMounted = true
-    let completed = false
     const startedAt = performance.now()
     // An indicator that flashes for a quick cache or network response is more
     // distracting than helpful. Keep the current chart visible until a request
     // has genuinely taken long enough to need a loading state.
-    setLoading(false)
-    setFetchingRange(range)
-    setError(null)
+    startLoading()
 
     const loadingTimer = window.setTimeout(() => {
-      if (isMounted && !completed) setLoading(true)
+      if (isMounted) {
+        setLoadState(current => ({
+          status: 'pending',
+          data: current.data,
+          showLoading: true,
+        }))
+      }
     }, 400)
 
     API.getTrends(packages, range)
       .then(res => {
-        completed = true
         window.clearTimeout(loadingTimer)
 
         if (isMounted) {
-          setTrendsData(res)
-          setLoading(false)
-          setFetchingRange(null)
+          setLoadState({ status: 'ready', data: res, requestKey })
           trackTrendsLoad(res, packages.length, range, startedAt)
         }
       })
       .catch(err => {
-        completed = true
         window.clearTimeout(loadingTimer)
 
         if (isMounted) {
-          setError(err?.message || 'Failed to fetch trends data')
-          setLoading(false)
-          setFetchingRange(null)
+          setLoadState(current => ({
+            status: 'error',
+            data: current.data,
+            message: err?.message || 'Failed to fetch trends data',
+          }))
           Analytics.trendsDataFailed({
             packageCount: packages.length,
             range,
@@ -384,7 +393,7 @@ export default function TrendsPage({
       isMounted = false
       window.clearTimeout(loadingTimer)
     }
-  }, [packages, range])
+  }, [packages, range, requestKey, startLoading])
 
   const [inputKey, setInputKey] = useState(0)
 
@@ -397,7 +406,7 @@ export default function TrendsPage({
     if (packages.length >= MAX_PACKAGES) return
     const updated = [...packages, clean]
     setPackages(updated)
-    setFetchingRange(range)
+    startLoading()
     setSuggestedPackages(current =>
       current.filter(packageName => packageName.toLowerCase() !== clean),
     )
@@ -413,6 +422,7 @@ export default function TrendsPage({
   const handleRemovePackage = (pkgName: string) => {
     const updated = packages.filter(p => p !== pkgName)
     setPackages(updated)
+    startLoading()
     updateUrl(updated, metric, range, groupBy)
     Analytics.trendsSelectionChanged({
       ...analyticsContext,
@@ -435,7 +445,7 @@ export default function TrendsPage({
   const handleRangeChange = (newRange: TrendsRange) => {
     if (newRange === range) return
     setRange(newRange)
-    setFetchingRange(newRange)
+    startLoading()
     updateUrl(packages, metric, newRange, groupBy)
     Analytics.trendsSelectionChanged({
       ...analyticsContext,
@@ -547,9 +557,8 @@ export default function TrendsPage({
                   }}
                 />
                 <span className="trends-chip__name">{pkg}</span>
-                {fetchingRange === range &&
-                  (trendsData?.range !== range ||
-                    !trendsData.packages.some(pack => pack.name === pkg)) && (
+                {loadState.status === 'pending' &&
+                  !loadedPackageNames.has(pkg) && (
                     <output
                       className="trends-chip__spinner"
                       aria-label={`Loading ${pkg} trends`}

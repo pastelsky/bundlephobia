@@ -108,18 +108,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     }
   }
 
-  componentDidUpdate(prevProps: ResultPageProps, prevState: ResultPageState) {
-    if (
-      this.state.results &&
-      this.state.resultsPromiseState === 'fulfilled' &&
-      prevState.resultsPromiseState !== 'fulfilled'
-    ) {
-      Analytics.packageResultViewed(
-        `${this.state.results.name}@${this.state.results.version}`,
-        this.loadSource,
-      )
-    }
-
+  componentDidUpdate(prevProps: ResultPageProps) {
     const packageString = getPackageStringFromRouter(prevProps.router)
     const nextPackageString = getPackageStringFromRouter(this.props.router)
 
@@ -293,8 +282,16 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   handleProgressDone = () => {
-    this.setState({
-      resultsPromiseState: 'fulfilled',
+    const { results } = this.state
+    const source = this.loadSource
+
+    if (!results) return
+
+    this.setState({ resultsPromiseState: 'fulfilled' }, () => {
+      Analytics.packageResultViewed(
+        `${results.name}@${results.version}`,
+        source,
+      )
     })
   }
 
