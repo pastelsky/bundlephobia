@@ -163,25 +163,6 @@ export default class Analytics {
     })
   }
 
-  static adLoaded(placement: 'home' | 'package') {
-    Analytics.logEvent('ad_loaded', { placement })
-  }
-
-  static adRequested(placement: 'home' | 'package') {
-    Analytics.logEvent('ad_requested', { placement })
-  }
-
-  static adViewable(placement: 'home' | 'package') {
-    Analytics.logEvent('ad_viewable', { placement })
-  }
-
-  static adLoadFailed(
-    placement: 'home' | 'package',
-    reason: 'script_error' | 'creative_timeout',
-  ) {
-    Analytics.logEvent('ad_load_failed', { placement, reason })
-  }
-
   static trendsComparisonViewed(
     data: TrendsContext & {
       dataPackageCount: number

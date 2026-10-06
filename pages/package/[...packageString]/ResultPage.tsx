@@ -654,7 +654,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       return null
     }
 
-    return <CarbonAd placement="package" className="result-page__carbon-ad" />
+    return <CarbonAd className="result-page__carbon-ad" />
   }
 
   render() {
