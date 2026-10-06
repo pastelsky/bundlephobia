@@ -103,10 +103,11 @@ const Home = () => {
   }, [])
 
   const handleSearchSubmit = (value: string) => {
-    Analytics.performedSearch(value.trim())
+    const query = value.trim()
 
-    if (value ?? '') {
-      router.push(`/package/${value.trim()}`)
+    if (query) {
+      Analytics.performedSearch(query, 'home')
+      router.push(`/package/${query}`)
     }
   }
 
@@ -134,7 +135,7 @@ const Home = () => {
               autoFocus={true}
             />
           </AutocompleteInputBox>
-          <CarbonAd className="homepage__carbon-ad" />
+          <CarbonAd placement="home" className="homepage__carbon-ad" />
           <div className="homepage__or-divider">or</div>
           <div className="homepage__scan-link">
             <Link href="/scan">

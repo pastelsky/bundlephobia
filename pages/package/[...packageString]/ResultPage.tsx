@@ -2,7 +2,7 @@ import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
 
-import Analytics from '../../../client/analytics'
+import Analytics, { type PackageLoadSource } from '../../../client/analytics'
 import API, {
   type PackageBuildInfo,
   type PackageHistoryResponse,
@@ -95,21 +95,31 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   private activeQuery: string | null = null
   private searchRequestId = 0
+  private loadSource: PackageLoadSource = 'page_load'
 
   private isActiveSearch = (requestId: number) =>
     requestId === this.searchRequestId
 
   componentDidMount() {
-    Analytics.pageView('package result')
-
     const packageString = getPackageStringFromRouter(this.props.router)
 
     if (packageString) {
-      this.handleSearchSubmit(packageString)
+      this.loadPackage(packageString, 'page_load')
     }
   }
 
-  componentDidUpdate(prevProps: ResultPageProps) {
+  componentDidUpdate(prevProps: ResultPageProps, prevState: ResultPageState) {
+    if (
+      this.state.results &&
+      this.state.resultsPromiseState === 'fulfilled' &&
+      prevState.resultsPromiseState !== 'fulfilled'
+    ) {
+      Analytics.packageResultViewed(
+        `${this.state.results.name}@${this.state.results.version}`,
+        this.loadSource,
+      )
+    }
+
     const packageString = getPackageStringFromRouter(prevProps.router)
     const nextPackageString = getPackageStringFromRouter(this.props.router)
 
@@ -127,12 +137,13 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const isSelfInitiatedNavigation = this.activeQuery === nextPackageString
 
     if (isPackageDifferent && !isSelfInitiatedNavigation) {
-      this.handleSearchSubmit(nextPackageString)
+      this.loadPackage(nextPackageString, 'navigation')
     }
   }
 
   fetchResults = (packageString: string, requestId: number) => {
     const startTime = Date.now()
+    const source = this.loadSource
 
     API.getInfo(packageString)
       .then(results => {
@@ -160,6 +171,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         Analytics.searchSuccess({
           packageName: packageString,
           timeTaken: Date.now() - startTime,
+          source,
         })
       })
       .catch(err => {
@@ -174,6 +186,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         Analytics.searchFailure({
           packageName: packageString,
           timeTaken: Date.now() - startTime,
+          source,
         })
       })
   }
@@ -236,8 +249,15 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   handleSearchSubmit = (packageString: string) => {
-    Analytics.performedSearch(packageString)
+    if (!packageString.trim()) return
+    Analytics.performedSearch(packageString.trim(), 'package')
+    this.loadPackage(packageString, 'search')
+  }
+
+  loadPackage = (packageString: string, source: PackageLoadSource) => {
     const normalizedQuery = packageString.trim()
+    this.loadSource = source
+    Analytics.packageLoadStarted(normalizedQuery, source)
     const requestId = ++this.searchRequestId
 
     this.setState(
@@ -331,7 +351,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
     const packageString = `${results.name}@${reading.version}`
     this.setState({ inputInitialValue: packageString })
-    this.handleSearchSubmit(packageString)
+    this.loadPackage(packageString, 'history')
 
     Analytics.graphBarClicked({
       packageName: packageString,
@@ -634,7 +654,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       return null
     }
 
-    return <CarbonAd className="result-page__carbon-ad" />
+    return <CarbonAd placement="package" className="result-page__carbon-ad" />
   }
 
   render() {

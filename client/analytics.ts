@@ -49,6 +49,17 @@ type HasSuccessRatio = {
 
 type HasPackageNameAndTimeTaken = HasPackageName & HasTimeTaken
 
+export type PackageLoadSource =
+  | 'page_load'
+  | 'navigation'
+  | 'search'
+  | 'history'
+  | 'scan'
+
+type PackageLoadOutcome = HasPackageNameAndTimeTaken & {
+  source: PackageLoadSource
+}
+
 type HasOpen = {
   open: boolean
 }
@@ -108,23 +119,37 @@ export default class Analytics {
     Analytics.logEvent('trends_link_copy_failed', data)
   }
 
-  static performedSearch(packageName: string) {
+  static performedSearch(packageName: string, source: 'home' | 'package') {
     Analytics.logEvent('search_performed', {
       package: packageName,
+      source,
     })
   }
 
-  static searchSuccess({ packageName, timeTaken }: HasPackageNameAndTimeTaken) {
+  static packageLoadStarted(packageName: string, source: PackageLoadSource) {
+    Analytics.logEvent('package_load_started', { package: packageName, source })
+  }
+
+  static packageResultViewed(packageName: string, source: PackageLoadSource) {
+    Analytics.logEvent('package_result_viewed', {
+      package: packageName,
+      source,
+    })
+  }
+
+  static searchSuccess({ packageName, timeTaken, source }: PackageLoadOutcome) {
     Analytics.logEvent('search_succeeded', {
       package: packageName,
       timeTaken,
+      source,
     })
   }
 
-  static searchFailure({ packageName, timeTaken }: HasPackageNameAndTimeTaken) {
+  static searchFailure({ packageName, timeTaken, source }: PackageLoadOutcome) {
     Analytics.logEvent('search_failed', {
       package: packageName,
       timeTaken,
+      source,
     })
   }
 
@@ -136,6 +161,34 @@ export default class Analytics {
       package: packageName,
       isDisabled,
     })
+  }
+
+  static adLoaded(placement: 'home' | 'package') {
+    Analytics.logEvent('ad_loaded', { placement })
+  }
+
+  static adRequested(placement: 'home' | 'package') {
+    Analytics.logEvent('ad_requested', { placement })
+  }
+
+  static adViewable(placement: 'home' | 'package') {
+    Analytics.logEvent('ad_viewable', { placement })
+  }
+
+  static adLoadFailed(
+    placement: 'home' | 'package',
+    reason: 'script_error' | 'creative_timeout',
+  ) {
+    Analytics.logEvent('ad_load_failed', { placement, reason })
+  }
+
+  static trendsComparisonViewed(
+    data: TrendsContext & {
+      dataPackageCount: number
+      warningPackageCount: number
+    },
+  ) {
+    Analytics.logEvent('trends_comparison_viewed', data)
   }
 
   static scanPackageJsonDropped(itemCount: number) {

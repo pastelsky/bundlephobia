@@ -193,6 +193,41 @@ export default function TrendsPage({
     [groupBy, trendsData],
   )
 
+  useEffect(() => {
+    if (
+      !trendsData ||
+      error ||
+      loading ||
+      fetchingRange ||
+      trendsData.range !== range ||
+      trendsData.packages.length !== packages.length ||
+      !trendsData.packages.every(pack => packages.includes(pack.name))
+    )
+      return
+
+    Analytics.trendsComparisonViewed({
+      packageCount: packages.length,
+      metric,
+      range,
+      groupBy,
+      dataPackageCount: chartPackages.filter(pack => pack[metric].length > 0)
+        .length,
+      warningPackageCount: chartPackages.filter(
+        pack => pack.warnings.length > 0,
+      ).length,
+    })
+  }, [
+    trendsData,
+    chartPackages,
+    packages,
+    metric,
+    range,
+    groupBy,
+    error,
+    loading,
+    fetchingRange,
+  ])
+
   // Sync state with URL params on mount / router change
   useEffect(() => {
     if (!router.isReady) return

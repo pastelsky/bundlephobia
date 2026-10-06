@@ -11,19 +11,24 @@ describe('Analytics', () => {
   // SAFETY: the test module factory replaces the browser track function with a Jest spy.
 
   beforeEach(() => {
+    jest.replaceProperty(process, 'env', {
+      ...process.env,
+      NODE_ENV: 'production',
+    })
     init.mockReset()
     track.mockReset()
     restoreAmplitude?.()
     restoreAmplitude = setAmplitudeLoader(async () => amplitude)
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
-      value: { location: { hostname: 'localhost' } },
+      value: { location: { hostname: 'bundlephobia.com' } },
     })
   })
 
   afterEach(() => {
     restoreAmplitude()
     Reflect.deleteProperty(globalThis, 'window')
+    jest.restoreAllMocks()
   })
 
   it('initializes Amplitude only once in the browser', async () => {
@@ -35,7 +40,14 @@ describe('Analytics', () => {
 
     expect(init).toHaveBeenCalledTimes(1)
     expect(init).toHaveBeenCalledWith('93638c7d7bac8785dca060653e104732', {
-      autocapture: true,
+      autocapture: {
+        attribution: true,
+        pageViews: true,
+        sessions: true,
+        elementInteractions: false,
+        formInteractions: false,
+        fileDownloads: false,
+      },
       serverUrl: '/_events',
       enableRequestBodyCompression: true,
     })
@@ -49,13 +61,18 @@ describe('Analytics', () => {
 
     expect(track).toHaveBeenCalledWith('page_context_viewed', {
       page_type: 'scan',
-      page_domain: 'localhost',
-      environment: 'test',
+      page_domain: 'bundlephobia.com',
+      environment: 'production',
+      tracking_version: 2,
     })
   })
 
   it('preserves typed event data for package searches', async () => {
-    Analytics.searchSuccess({ packageName: 'react', timeTaken: 123 })
+    Analytics.searchSuccess({
+      packageName: 'react',
+      timeTaken: 123,
+      source: 'page_load',
+    })
     await new Promise(resolve => {
       setTimeout(resolve, 0)
     })
@@ -63,17 +80,33 @@ describe('Analytics', () => {
     expect(track).toHaveBeenCalledWith('search_succeeded', {
       package: 'react',
       timeTaken: 123,
-      page_domain: 'localhost',
-      environment: 'test',
+      source: 'page_load',
+      page_domain: 'bundlephobia.com',
+      environment: 'production',
+      tracking_version: 2,
     })
   })
 
-  it('does not throw when the browser tracker is unavailable', () => {
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: { location: { hostname: 'localhost' } },
-    })
-
-    expect(() => Analytics.performedScan()).not.toThrow()
-  })
+  it.each([
+    ['localhost', 'production'],
+    ['bundlephobia.com', 'development'],
+    ['preview.example.com', 'production'],
+  ] as const)(
+    'does not initialize or send analytics on %s in %s',
+    async (hostname, environment) => {
+      jest.replaceProperty(process, 'env', {
+        ...process.env,
+        NODE_ENV: environment,
+      })
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: { location: { hostname } },
+      })
+      initializeAmplitude()
+      Analytics.performedScan()
+      await new Promise(resolve => setTimeout(resolve, 0))
+      expect(init).not.toHaveBeenCalled()
+      expect(track).not.toHaveBeenCalled()
+    },
+  )
 })

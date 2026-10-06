@@ -6,6 +6,10 @@ successful HTTP response means the feature worked.
 
 ## Collection principles
 
+- Website tracking runs only on production Bundlephobia hosts. Custom events
+  include a tracking version so instrumentation changes can be separated from
+  changes in usage. Automatic page/session events are separate from custom
+  events; generic form and element interaction collection is disabled.
 - Keep event data limited to the context needed to understand an action.
 - Trends-specific measurements use package counts and filter selections, not
   package names, search input, clipboard contents, or arbitrary error text.
@@ -37,3 +41,25 @@ report measures.
 Use acquisition reports and search performance to understand discovery; data-load
 outcomes alone cannot explain where visitors came from. Historical reports may
 lack newly introduced measurements, so compare periods with compatible coverage.
+
+## Package journeys
+
+Search submissions represent deliberate input, not opening a result page or
+selecting a historical version. Package loading and its outcomes identify the
+source: initial page load, navigation, search, history, or manifest scan.
+Retrieved results and displayed results are separate observations. Search
+success/failure events retain their historical names, but should not be compared
+with search submissions without accounting for source and tracking version.
+
+Trends comparison views describe the selected metric's displayed data coverage,
+including selections that show no data. A useful comparison needs at least two
+packages with data; a successful fetch alone does not establish this.
+
+## Advertising diagnostics
+
+Ad requests, loaded creatives, load failures, and viewability are separate
+observations. Viewability means at least half of the ad was in the viewport for
+one continuous second while the document was visible. Script errors and creative
+timeouts do not establish whether a blocker, lack of demand, or a network failure
+was responsible. These browser diagnostics are not billable impressions or
+earnings; publisher reports remain authoritative for revenue.

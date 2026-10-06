@@ -29,13 +29,27 @@ export function setAmplitudeLoader(loader: AmplitudeLoader): () => void {
 }
 
 function loadAmplitude() {
-  if (typeof window === 'undefined') return undefined
+  if (
+    typeof window === 'undefined' ||
+    process.env.NODE_ENV !== 'production' ||
+    !['bundlephobia.com', 'www.bundlephobia.com'].includes(
+      window.location.hostname,
+    )
+  )
+    return undefined
 
   if (!amplitudeModule) {
     amplitudeModule = amplitudeLoader()
       .then(amplitude => {
         amplitude.init(AMPLITUDE_API_KEY, {
-          autocapture: true,
+          autocapture: {
+            attribution: true,
+            pageViews: true,
+            sessions: true,
+            elementInteractions: false,
+            formInteractions: false,
+            fileDownloads: false,
+          },
           serverUrl: '/_events',
           enableRequestBodyCompression: true,
         })
@@ -65,6 +79,7 @@ export function trackAmplitudeEvent(
         ...eventData,
         page_domain: window.location.hostname,
         environment: process.env.NODE_ENV,
+        tracking_version: 2,
       }),
     )
     .catch(() => undefined)
