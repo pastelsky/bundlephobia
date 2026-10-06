@@ -2,7 +2,7 @@ import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
 
-import Analytics from '../../../client/analytics'
+import Analytics, { type PackageLoadSource } from '../../../client/analytics'
 import API, {
   type PackageBuildInfo,
   type PackageHistoryResponse,
@@ -95,17 +95,16 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   private activeQuery: string | null = null
   private searchRequestId = 0
+  private loadSource: PackageLoadSource = 'page_load'
 
   private isActiveSearch = (requestId: number) =>
     requestId === this.searchRequestId
 
   componentDidMount() {
-    Analytics.pageView('package result')
-
     const packageString = getPackageStringFromRouter(this.props.router)
 
     if (packageString) {
-      this.handleSearchSubmit(packageString)
+      this.loadPackage(packageString, 'page_load')
     }
   }
 
@@ -127,12 +126,13 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const isSelfInitiatedNavigation = this.activeQuery === nextPackageString
 
     if (isPackageDifferent && !isSelfInitiatedNavigation) {
-      this.handleSearchSubmit(nextPackageString)
+      this.loadPackage(nextPackageString, 'navigation')
     }
   }
 
   fetchResults = (packageString: string, requestId: number) => {
     const startTime = Date.now()
+    const source = this.loadSource
 
     API.getInfo(packageString)
       .then(results => {
@@ -160,6 +160,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         Analytics.searchSuccess({
           packageName: packageString,
           timeTaken: Date.now() - startTime,
+          source,
         })
       })
       .catch(err => {
@@ -174,6 +175,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         Analytics.searchFailure({
           packageName: packageString,
           timeTaken: Date.now() - startTime,
+          source,
         })
       })
   }
@@ -236,8 +238,15 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   handleSearchSubmit = (packageString: string) => {
-    Analytics.performedSearch(packageString)
+    if (!packageString.trim()) return
+    Analytics.performedSearch(packageString.trim())
+    this.loadPackage(packageString, 'search')
+  }
+
+  loadPackage = (packageString: string, source: PackageLoadSource) => {
     const normalizedQuery = packageString.trim()
+    this.loadSource = source
+    Analytics.packageLoadStarted(normalizedQuery, source)
     const requestId = ++this.searchRequestId
 
     this.setState(
@@ -264,7 +273,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         navigation.then(() => {
           if (!this.isActiveSearch(requestId)) return
 
-          Analytics.pageView('package result')
           this.fetchResults(normalizedQuery, requestId)
           this.fetchHistory(normalizedQuery, requestId)
         })
@@ -273,8 +281,16 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   handleProgressDone = () => {
-    this.setState({
-      resultsPromiseState: 'fulfilled',
+    const { results } = this.state
+    const source = this.loadSource
+
+    if (!results) return
+
+    this.setState({ resultsPromiseState: 'fulfilled' }, () => {
+      Analytics.packageResultViewed(
+        `${results.name}@${results.version}`,
+        source,
+      )
     })
   }
 
@@ -331,7 +347,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
     const packageString = `${results.name}@${reading.version}`
     this.setState({ inputInitialValue: packageString })
-    this.handleSearchSubmit(packageString)
+    this.loadPackage(packageString, 'history')
 
     Analytics.graphBarClicked({
       packageName: packageString,

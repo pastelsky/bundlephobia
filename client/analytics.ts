@@ -49,6 +49,17 @@ type HasSuccessRatio = {
 
 type HasPackageNameAndTimeTaken = HasPackageName & HasTimeTaken
 
+export type PackageLoadSource =
+  | 'page_load'
+  | 'navigation'
+  | 'search'
+  | 'history'
+  | 'scan'
+
+type PackageLoadOutcome = HasPackageNameAndTimeTaken & {
+  source: PackageLoadSource
+}
+
 type HasOpen = {
   open: boolean
 }
@@ -70,10 +81,8 @@ export default class Analytics {
     trackAmplitudeEvent(eventName, eventData)
   }
 
-  static pageView(pageType: string) {
-    Analytics.logEvent('page_context_viewed', {
-      page_type: pageType,
-    })
+  static pageView() {
+    Analytics.logEvent('page_context_viewed')
   }
 
   static trendsDataLoaded(
@@ -114,17 +123,30 @@ export default class Analytics {
     })
   }
 
-  static searchSuccess({ packageName, timeTaken }: HasPackageNameAndTimeTaken) {
-    Analytics.logEvent('search_succeeded', {
+  static packageLoadStarted(packageName: string, source: PackageLoadSource) {
+    Analytics.logEvent('package_load_started', { package: packageName, source })
+  }
+
+  static packageResultViewed(packageName: string, source: PackageLoadSource) {
+    Analytics.logEvent('package_result_viewed', {
       package: packageName,
-      timeTaken,
+      source,
     })
   }
 
-  static searchFailure({ packageName, timeTaken }: HasPackageNameAndTimeTaken) {
+  static searchSuccess({ packageName, timeTaken, source }: PackageLoadOutcome) {
+    Analytics.logEvent('search_succeeded', {
+      package: packageName,
+      timeTaken,
+      source,
+    })
+  }
+
+  static searchFailure({ packageName, timeTaken, source }: PackageLoadOutcome) {
     Analytics.logEvent('search_failed', {
       package: packageName,
       timeTaken,
+      source,
     })
   }
 
@@ -136,6 +158,15 @@ export default class Analytics {
       package: packageName,
       isDisabled,
     })
+  }
+
+  static trendsComparisonViewed(
+    data: TrendsContext & {
+      dataPackageCount: number
+      warningPackageCount: number
+    },
+  ) {
+    Analytics.logEvent('trends_comparison_viewed', data)
   }
 
   static scanPackageJsonDropped(itemCount: number) {
