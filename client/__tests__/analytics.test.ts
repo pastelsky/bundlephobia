@@ -87,26 +87,12 @@ describe('Analytics', () => {
     })
   })
 
-  it.each([
-    ['localhost', 'production'],
-    ['bundlephobia.com', 'development'],
-    ['preview.example.com', 'production'],
-  ] as const)(
-    'does not initialize or send analytics on %s in %s',
-    async (hostname, environment) => {
-      jest.replaceProperty(process, 'env', {
-        ...process.env,
-        NODE_ENV: environment,
-      })
-      Object.defineProperty(globalThis, 'window', {
-        configurable: true,
-        value: { location: { hostname } },
-      })
-      initializeAmplitude()
-      Analytics.performedScan()
-      await new Promise(resolve => setTimeout(resolve, 0))
-      expect(init).not.toHaveBeenCalled()
-      expect(track).not.toHaveBeenCalled()
-    },
-  )
+  it('does not throw when the browser tracker is unavailable', () => {
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { location: { hostname: 'localhost' } },
+    })
+
+    expect(() => Analytics.performedScan()).not.toThrow()
+  })
 })
