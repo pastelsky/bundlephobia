@@ -123,6 +123,46 @@ test('renders package trends and chart controls', async ({ page }) => {
   await page.screenshot({ path: 'artifacts/trends-mobile.png', fullPage: true })
 })
 
+test('restores URL defaults on Back and preserves explicit empty selections on reload', async ({
+  page,
+}) => {
+  await page.route('**/api/trends?*', route =>
+    route.fulfill({
+      json: {
+        ...trendsResponse,
+        range: new URL(route.request().url()).searchParams.get('range'),
+      },
+    }),
+  )
+  await page.goto('/trends')
+  await page.getByRole('button', { name: 'Stars', exact: true }).click()
+  await expect(page).toHaveURL(/metric=stars/)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/trends$/)
+  await expect(
+    page.getByRole('button', { name: 'Downloads', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+
+  for (const name of ['react', 'vue']) {
+    await page
+      .getByRole('group', { name: `${name} selected package` })
+      .getByRole('button', { name: `Remove ${name}` })
+      .click()
+    await expect(
+      page.getByRole('group', { name: `${name} selected package` }),
+    ).toHaveCount(0)
+  }
+
+  await expect(
+    page.getByText('Add at least one package above to compare trends.'),
+  ).toBeVisible()
+  await page.reload()
+  await expect(
+    page.getByText('Add at least one package above to compare trends.'),
+  ).toBeVisible()
+  await expect(page.locator('.trends-chip')).toHaveCount(0)
+})
+
 test('shows progress on a newly added package until its data arrives', async ({
   page,
 }) => {

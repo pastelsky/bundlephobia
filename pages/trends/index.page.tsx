@@ -65,6 +65,12 @@ function parsePackageParam(value: string | string[]) {
   )
 }
 
+function getSelectedPackages(value: string | string[] | undefined) {
+  if (value === undefined) return DEFAULT_PACKAGES
+
+  return [...new Set(parsePackageParam(value))].slice(0, MAX_PACKAGES)
+}
+
 const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
   [
     { id: 'downloads', label: 'Downloads', description: 'Daily npm downloads' },
@@ -155,9 +161,7 @@ export const getServerSideProps: GetServerSideProps<{
   initialPackages: string[]
 }> = async ({ query }) => ({
   props: {
-    initialPackages: query.packages
-      ? [...new Set(parsePackageParam(query.packages))].slice(0, MAX_PACKAGES)
-      : DEFAULT_PACKAGES,
+    initialPackages: getSelectedPackages(query.packages),
   },
 })
 
@@ -210,10 +214,6 @@ export default function TrendsPage({
     }))
   }, [])
 
-  useEffect(() => {
-    Analytics.pageView('trends')
-  }, [])
-
   const chartPackages = useMemo(
     () =>
       trendsData?.packages.map(pack => groupTrendsPackage(pack, groupBy)) ?? [],
@@ -249,36 +249,16 @@ export default function TrendsPage({
       groupBy: queryGroupBy,
     } = router.query
 
-    if (queryPackages) {
-      const parsed = parsePackageParam(queryPackages).slice(0, MAX_PACKAGES)
+    const nextPackages = getSelectedPackages(queryPackages)
 
-      if (parsed.length > 0) {
-        setPackages(current =>
-          current.join(',') === parsed.join(',') ? current : parsed,
-        )
-      }
-    }
-
-    if (
-      typeof queryMetric === 'string' &&
-      METRICS.some(m => m.id === queryMetric)
-    ) {
-      setMetric(queryMetric as TrendsMetric)
-    }
-
-    if (
-      typeof queryRange === 'string' &&
-      RANGES.some(r => r.id === queryRange)
-    ) {
-      setRange(queryRange as TrendsRange)
-    }
-
-    if (
-      typeof queryGroupBy === 'string' &&
-      GROUP_BY.some(option => option.id === queryGroupBy)
-    ) {
-      setGroupBy(queryGroupBy as TrendsGroupBy)
-    }
+    setPackages(current =>
+      current.join(',') === nextPackages.join(',') ? current : nextPackages,
+    )
+    setMetric(
+      METRICS.find(option => option.id === queryMetric)?.id ?? 'downloads',
+    )
+    setRange(RANGES.find(option => option.id === queryRange)?.id ?? 'last-year')
+    setGroupBy(GROUP_BY.find(option => option.id === queryGroupBy)?.id ?? 'day')
   }, [router.isReady, router.query])
 
   // Curated similarity is useful only when the classifier is confident. Broad

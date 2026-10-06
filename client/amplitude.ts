@@ -1,5 +1,15 @@
 const AMPLITUDE_API_KEY = '93638c7d7bac8785dca060653e104732'
 
+const PAGE_TYPES = new Map([
+  ['', 'home'],
+  ['package', 'package result'],
+  ['trends', 'trends'],
+  ['scan', 'scan'],
+  ['scan-results', 'scan results'],
+  ['blog', 'blog'],
+  ['__ui', 'embed'],
+])
+
 type AmplitudeBrowser = Pick<
   typeof import('@amplitude/analytics-browser'),
   'init' | 'track'
@@ -73,14 +83,21 @@ export function trackAmplitudeEvent(
   eventName: string,
   eventData?: AnalyticsEventData,
 ) {
-  loadAmplitude()
-    ?.then(amplitude =>
-      amplitude.track(eventName, {
-        ...eventData,
-        page_domain: window.location.hostname,
-        environment: process.env.NODE_ENV,
-        tracking_version: 2,
-      }),
-    )
+  const amplitude = loadAmplitude()
+
+  if (!amplitude) return
+
+  // Snapshot context before the SDK import resolves; navigation may occur meanwhile.
+  const properties = {
+    ...eventData,
+    page_type:
+      PAGE_TYPES.get(window.location.pathname.split('/')[1]) ?? 'other',
+    page_domain: window.location.hostname,
+    environment: process.env.NODE_ENV,
+    tracking_version: 2,
+  }
+
+  amplitude
+    .then(module => module.track(eventName, properties))
     .catch(() => undefined)
 }

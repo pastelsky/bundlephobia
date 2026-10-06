@@ -151,8 +151,6 @@ class Scan extends Component<ScanProps, ScanState> {
   private dropzoneRef = createRef<Dropzone>()
 
   componentDidMount() {
-    Analytics.pageView('scan')
-
     const persistedScanState = this.readPersistedScanState()
 
     if (persistedScanState) {

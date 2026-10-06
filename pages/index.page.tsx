@@ -98,15 +98,11 @@ const Logo = () => (
 const Home = () => {
   const router = useRouter()
 
-  React.useEffect(() => {
-    Analytics.pageView('home')
-  }, [])
-
   const handleSearchSubmit = (value: string) => {
     const query = value.trim()
 
     if (query) {
-      Analytics.performedSearch(query, 'home')
+      Analytics.performedSearch(query)
       router.push(`/package/${query}`)
     }
   }

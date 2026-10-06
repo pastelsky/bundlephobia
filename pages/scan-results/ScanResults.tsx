@@ -191,8 +191,6 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
     const queue = new PQueue({ concurrency: 3 })
     const startTime = Date.now()
 
-    Analytics.pageView('scan results')
-
     packages.forEach(pack => {
       queue.add(() => {
         const packageStartTime = Date.now()

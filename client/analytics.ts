@@ -81,10 +81,8 @@ export default class Analytics {
     trackAmplitudeEvent(eventName, eventData)
   }
 
-  static pageView(pageType: string) {
-    Analytics.logEvent('page_context_viewed', {
-      page_type: pageType,
-    })
+  static pageView() {
+    Analytics.logEvent('page_context_viewed')
   }
 
   static trendsDataLoaded(
@@ -119,10 +117,9 @@ export default class Analytics {
     Analytics.logEvent('trends_link_copy_failed', data)
   }
 
-  static performedSearch(packageName: string, source: 'home' | 'package') {
+  static performedSearch(packageName: string) {
     Analytics.logEvent('search_performed', {
       package: packageName,
-      source,
     })
   }
 

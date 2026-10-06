@@ -239,7 +239,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   handleSearchSubmit = (packageString: string) => {
     if (!packageString.trim()) return
-    Analytics.performedSearch(packageString.trim(), 'package')
+    Analytics.performedSearch(packageString.trim())
     this.loadPackage(packageString, 'search')
   }
 
@@ -273,7 +273,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         navigation.then(() => {
           if (!this.isActiveSearch(requestId)) return
 
-          Analytics.pageView('package result')
           this.fetchResults(normalizedQuery, requestId)
           this.fetchHistory(normalizedQuery, requestId)
         })

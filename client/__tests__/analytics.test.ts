@@ -21,7 +21,7 @@ describe('Analytics', () => {
     restoreAmplitude = setAmplitudeLoader(async () => amplitude)
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
-      value: { location: { hostname: 'bundlephobia.com' } },
+      value: { location: { hostname: 'bundlephobia.com', pathname: '/scan' } },
     })
   })
 
@@ -33,7 +33,7 @@ describe('Analytics', () => {
 
   it('initializes Amplitude only once in the browser', async () => {
     initializeAmplitude()
-    Analytics.pageView('scan')
+    Analytics.pageView()
     await new Promise(resolve => {
       setTimeout(resolve, 0)
     })
@@ -54,7 +54,7 @@ describe('Analytics', () => {
   })
 
   it('sends page context through Amplitude', async () => {
-    Analytics.pageView('scan')
+    Analytics.pageView()
     await new Promise(resolve => {
       setTimeout(resolve, 0)
     })
@@ -81,6 +81,7 @@ describe('Analytics', () => {
       package: 'react',
       timeTaken: 123,
       source: 'page_load',
+      page_type: 'scan',
       page_domain: 'bundlephobia.com',
       environment: 'production',
       tracking_version: 2,
