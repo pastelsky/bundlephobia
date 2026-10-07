@@ -6,6 +6,7 @@ import CacheServiceClient from '../server/clients/cache-service.client'
 import { createCachedAnalysisMiddleware } from '../server/middlewares/cached-analysis.middleware'
 import buildMissRateLimit from '../server/middlewares/build-miss-rate-limit.middleware'
 import { createCachedAnalysisReader } from '../server/services/cached-analysis.service'
+import { latestBuiltVersion } from '../cache-service/cache.utils.ts'
 
 const result = {
   name: 'cached-library',
@@ -28,6 +29,8 @@ const build = jest.fn()
 let server: Server
 
 let baseURL: string
+
+let clientNumber = 10
 
 beforeAll(async () => {
   const app = new Koa()
@@ -70,6 +73,7 @@ beforeAll(async () => {
 afterAll(() => new Promise<void>(resolve => server.close(() => resolve())))
 
 beforeEach(() => {
+  clientNumber += 1
   jest.restoreAllMocks()
   build.mockClear()
   jest
@@ -87,7 +91,11 @@ function request(
   headers: Record<string, string> = {},
 ) {
   return fetch(`${baseURL}${path}`, {
-    headers: { 'User-Agent': userAgent, ...headers },
+    headers: {
+      'User-Agent': userAgent,
+      'CF-Connecting-IP': `192.0.2.${clientNumber}`,
+      ...headers,
+    },
   })
 }
 
@@ -109,8 +117,7 @@ it.each(['size', 'exports-sizes'])(
   },
 )
 
-const failedStatuses: Array<'miss' | 'unavailable' | 'invalid'> = [
-  'miss',
+const failedStatuses: Array<'unavailable' | 'invalid'> = [
   'unavailable',
   'invalid',
 ]
@@ -120,28 +127,25 @@ it.each(failedStatuses)(
   async status => {
     jest
       .spyOn(CacheServiceClient.prototype, 'getPackageSize')
-      .mockResolvedValue(
-        status === 'miss'
-          ? { status }
-          : {
-              status,
-              error: new Error('cache failure'),
-            },
-      )
+      .mockResolvedValue({
+        status,
+        error: new Error('cache failure'),
+      })
 
     const response = await request(
       '/api/size?package=cached-library@1.2.3&force=true',
     )
 
     expect(response.status).toBe(503)
-    expect(response.headers.get('retry-after')).toBe('3600')
+    expect(response.headers.get('retry-after')).toBe('60')
     expect(build).not.toHaveBeenCalled()
   },
 )
 
-it('never starts uncached export discovery for a crawler', async () => {
+it('keeps explicit cache-only export discovery read-only', async () => {
   expect(
-    (await request('/api/exports?package=cached-library@1.2.3')).status,
+    (await request('/api/exports?package=cached-library@1.2.3&peep=true'))
+      .status,
   ).toBe(503)
   expect(build).not.toHaveBeenCalled()
 })
@@ -184,25 +188,83 @@ it('still admits a visitor build and rate-limits subsequent misses', async () =>
   expect(build).toHaveBeenCalledTimes(1)
 })
 
-it('shares latest-version resolution without fetching npm for exact cached versions', async () => {
+it('returns older built releases only to crawlers and honors explicit versions', async () => {
   const registry = {
     fetchPackageManifest: jest.fn(),
     fetchPackageVersionManifest: jest
       .fn()
-      .mockResolvedValue({ name: result.name, version: result.version }),
+      .mockResolvedValue({ name: result.name, version: '2.0.0' }),
   }
 
-  const { readPackage } = createCachedAnalysisReader(cache, registry)
+  const client = {
+    getPackageSize: jest.fn(
+      async ({ version }: { name: string; version: string }) => ({
+        status: 'hit' as const,
+        value: {
+          ...result,
+          version: version === 'latest-built' ? result.version : version,
+        },
+      }),
+    ),
+    getExportsSize: cache.getExportsSize.bind(cache),
+  }
+
+  const { readPackage } = createCachedAnalysisReader(client, registry)
   await expect(readPackage('cached-library@1.2.3')).resolves.toEqual(result)
   expect(registry.fetchPackageVersionManifest).not.toHaveBeenCalled()
 
   const results = await Promise.all([
-    readPackage('cached-library'),
-    readPackage('cached-library@latest'),
+    readPackage('cached-library', true),
+    readPackage('cached-library@latest', true),
   ])
 
   expect(results).toEqual([result, result])
+  expect(registry.fetchPackageVersionManifest).not.toHaveBeenCalled()
+  await expect(readPackage('cached-library')).resolves.toMatchObject({
+    version: '2.0.0',
+  })
+  await expect(
+    readPackage('cached-library@2.0.0', true),
+  ).resolves.toMatchObject({ version: '2.0.0' })
   expect(registry.fetchPackageVersionManifest).toHaveBeenCalledTimes(1)
+  registry.fetchPackageVersionManifest.mockResolvedValue({
+    name: result.name,
+    version: '3.0.0',
+  })
+  await expect(readPackage('cached-library')).resolves.toMatchObject({
+    version: '3.0.0',
+  })
+  expect(registry.fetchPackageVersionManifest).toHaveBeenCalledTimes(2)
+})
+
+it('serves an older built release to an unversioned crawler request without allowing shared response caching', async () => {
+  const response = await request('/api/size?package=cached-library')
+  expect(response.status).toBe(200)
+  expect(await response.json()).toMatchObject({ version: result.version })
+  expect(response.headers.get('cache-control')).toBe('private, no-store')
+  expect(build).not.toHaveBeenCalled()
+})
+
+it('allows a first crawler build, ignores force, and returns 429 once its allowance is exhausted', async () => {
+  jest
+    .spyOn(CacheServiceClient.prototype, 'getPackageSize')
+    .mockResolvedValue({ status: 'miss' })
+  const path = '/api/size?package=cached-library@1.2.3&force=true'
+  expect((await request(path)).status).toBe(200)
+  expect((await request(path)).status).toBe(429)
+  expect(build).toHaveBeenCalledTimes(1)
+})
+
+it('selects the newest stable cached version semantically, not lexicographically or by write order', () => {
+  expect(
+    latestBuiltVersion({
+      '9,0,0': {},
+      '20,0,0-beta,1': {},
+      '10,0,0': {},
+      '2,0,0': {},
+    }),
+  ).toBe('10.0.0')
+  expect(latestBuiltVersion({ '20,0,0-beta,1': {} })).toBeNull()
 })
 
 it('keeps one visitor’s exhausted build allowance separate from another visitor', async () => {
