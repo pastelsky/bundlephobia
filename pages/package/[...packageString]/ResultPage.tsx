@@ -1,6 +1,7 @@
 import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
+import type { GetServerSidePropsContext } from 'next'
 
 import Analytics, { type PackageLoadSource } from '../../../client/analytics'
 import API, {
@@ -42,6 +43,7 @@ type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
 type ResultPageProps = {
   router: NextRouter
+  initialResult: PackageBuildInfo | null
 }
 
 type ResultPageState = {
@@ -83,8 +85,8 @@ function getPackageStringFromRouter(router: NextRouter) {
 
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   state: ResultPageState = {
-    results: null,
-    resultsPromiseState: null,
+    results: this.props.initialResult,
+    resultsPromiseState: this.props.initialResult ? 'fulfilled' : null,
     resultsError: null,
     historicalResultsPromiseState: null,
     inputInitialValue: getPackageStringFromRouter(this.props.router),
@@ -104,6 +106,16 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const packageString = getPackageStringFromRouter(this.props.router)
 
     if (packageString) {
+      if (this.props.initialResult) {
+        this.activeQuery = packageString
+        Analytics.packageLoadStarted(packageString, 'page_load')
+        Analytics.packageResultViewed(packageString, 'page_load')
+        this.fetchHistory(packageString, this.searchRequestId)
+        this.fetchSimilarPackages(packageString, this.searchRequestId)
+
+        return
+      }
+
       this.loadPackage(packageString, 'page_load')
     }
   }
@@ -684,8 +696,43 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 }
 
-export const getServerSideProps = () => {
-  return { props: {} }
+export const getServerSideProps = async ({
+  params,
+  req,
+  res,
+}: GetServerSidePropsContext) => {
+  const { readCachedPackage } =
+    await import('../../../server/services/cached-analysis.service')
+
+  const { isAutomatedClient } =
+    await import('../../../server/middlewares/cached-analysis.middleware')
+
+  const packageString = params?.packageString
+
+  const specifier = Array.isArray(packageString)
+    ? packageString.join('/')
+    : packageString
+
+  let initialResult: PackageBuildInfo | null = null
+
+  try {
+    if (specifier) initialResult = await readCachedPackage(specifier)
+  } catch {
+    // Cache/registry failure must never turn SSR into a package build.
+  }
+
+  if (!initialResult && isAutomatedClient(String(req.headers['user-agent']))) {
+    res.statusCode = 503
+    res.setHeader('Retry-After', '3600')
+  }
+
+  res.setHeader('Vary', 'User-Agent')
+  res.setHeader(
+    'Cache-Control',
+    initialResult ? 'public, max-age=0, s-maxage=300' : 'no-store',
+  )
+
+  return { props: { initialResult } }
 }
 
 export default withRouter(ResultPage)

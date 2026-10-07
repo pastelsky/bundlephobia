@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 
-import { sanitizeHTML } from '../../../utils/common.utils'
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import SideEffectIcon from '../../assets/side-effect.svg'
 import DependencyIcon from '../../assets/dependency.svg'
@@ -139,11 +138,12 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
           {statItemCount < 2 && (
             <span
               className="quick-stats-bar__stat--description-content"
-              dangerouslySetInnerHTML={{ __html: sanitizeHTML(description) }}
               style={{
                 maxWidth: `${500 - statItemCount * 280}px`,
               }}
-            />
+            >
+              {description}
+            </span>
           )}
         </div>
 
