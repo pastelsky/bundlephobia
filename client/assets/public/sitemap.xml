@@ -1041,16 +1041,6 @@
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://bundlephobia.com/package/cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
-        <loc>https://bundlephobia.com/package/tough-cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
         <loc>https://bundlephobia.com/package/tiny-cookie</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -1062,6 +1052,16 @@
     </url>
     <url>
         <loc>https://bundlephobia.com/package/browser-cookies</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/cookie</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/tough-cookie</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -1326,6 +1326,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/package/undici</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/package/ky</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -1387,6 +1392,11 @@
     </url>
     <url>
         <loc>https://bundlephobia.com/package/showdown</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/micromark</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -1556,6 +1566,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/package/@tanstack/react-form</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/package/react-inlinesvg</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -1612,6 +1627,11 @@
     </url>
     <url>
         <loc>https://bundlephobia.com/package/valibot</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/arktype</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -1757,6 +1777,171 @@
     </url>
     <url>
         <loc>https://bundlephobia.com/package/vue-tiny-slider</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/remeda</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/es-toolkit</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/ulid</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@paralleldrive/cuid2</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@tanstack/react-query</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@tanstack/react-router</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/wouter</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@tanstack/react-virtual</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/react-virtuoso</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/virtua</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/lucide-react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@phosphor-icons/react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@heroicons/react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@tabler/icons-react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/sonner</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/react-hot-toast</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/notistack</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@dnd-kit/core</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@hello-pangea/dnd</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/ag-grid-react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/react-data-grid</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@mui/x-data-grid</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/localforage</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/idb-keyval</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/jszip</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/fflate</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@zip.js/zip.js</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/mitt</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/eventemitter3</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/nanoevents</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/@base-ui/react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/radix-ui</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/package/pinia</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -2236,41 +2421,6 @@
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://bundlephobia.com/trends?packages=cookie~vs~tough-cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
-        <loc>https://bundlephobia.com/trends?packages=cookie~vs~js-cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
-        <loc>https://bundlephobia.com/trends?packages=cookie~vs~tiny-cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
-        <loc>https://bundlephobia.com/trends?packages=cookie~vs~universal-cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
-        <loc>https://bundlephobia.com/trends?packages=tough-cookie~vs~js-cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
-        <loc>https://bundlephobia.com/trends?packages=tough-cookie~vs~tiny-cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
-        <loc>https://bundlephobia.com/trends?packages=tough-cookie~vs~universal-cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
         <loc>https://bundlephobia.com/trends?packages=js-cookie~vs~tiny-cookie</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -2281,17 +2431,27 @@
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://bundlephobia.com/trends?packages=tiny-cookie~vs~universal-cookie</loc>
-        <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
         <loc>https://bundlephobia.com/trends?packages=js-cookie~vs~browser-cookies</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
-        <loc>https://bundlephobia.com/trends?packages=browser-cookies~vs~universal-cookie</loc>
+        <loc>https://bundlephobia.com/trends?packages=tiny-cookie~vs~universal-cookie</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=tiny-cookie~vs~browser-cookies</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=universal-cookie~vs~browser-cookies</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=cookie~vs~tough-cookie</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -2896,6 +3056,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=wretch~vs~undici</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=ofetch~vs~axios</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -2906,7 +3071,22 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=ofetch~vs~undici</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=axios~vs~got</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=axios~vs~undici</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=got~vs~undici</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -2946,6 +3126,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=ky~vs~ofetch</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=xior~vs~superagent</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -2956,7 +3141,22 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=xior~vs~ofetch</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=superagent~vs~redaxios</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=superagent~vs~ofetch</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=redaxios~vs~ofetch</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -3011,7 +3211,22 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=marked~vs~micromark</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=markdown-it~vs~showdown</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=markdown-it~vs~micromark</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=showdown~vs~micromark</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -3386,6 +3601,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=formik~vs~%40tanstack%2Freact-form</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=react-final-form~vs~informed</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -3401,6 +3621,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=react-final-form~vs~%40tanstack%2Freact-form</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=informed~vs~formsy-react</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -3411,7 +3636,22 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=informed~vs~%40tanstack%2Freact-form</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=formsy-react~vs~react-hook-form</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=formsy-react~vs~%40tanstack%2Freact-form</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-hook-form~vs~%40tanstack%2Freact-form</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -3501,6 +3741,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=%40sinclair%2Ftypebox~vs~arktype</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=valibot~vs~ajv</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -3516,6 +3761,11 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=valibot~vs~arktype</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=ajv~vs~yup</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
@@ -3526,7 +3776,22 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=ajv~vs~arktype</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=yup~vs~zod</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=yup~vs~arktype</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=zod~vs~arktype</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -3671,7 +3936,17 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=valtio~vs~effector</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=zustand~vs~%40reduxjs%2Ftoolkit</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=zustand~vs~effector</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -3681,7 +3956,22 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://bundlephobia.com/trends?packages=jotai~vs~effector</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://bundlephobia.com/trends?packages=mobx~vs~%40reduxjs%2Ftoolkit</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=mobx~vs~effector</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40reduxjs%2Ftoolkit~vs~effector</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -3837,6 +4127,346 @@
     </url>
     <url>
         <loc>https://bundlephobia.com/trends?packages=vue-slick~vs~vue-tiny-slider</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lodash~vs~lodash-es</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lodash~vs~underscore</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lodash~vs~ramda</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lodash~vs~remeda</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lodash~vs~es-toolkit</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lodash-es~vs~underscore</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lodash-es~vs~ramda</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lodash-es~vs~remeda</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lodash-es~vs~es-toolkit</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=underscore~vs~ramda</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=underscore~vs~remeda</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=underscore~vs~es-toolkit</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=ramda~vs~remeda</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=ramda~vs~es-toolkit</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=remeda~vs~es-toolkit</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=uuid~vs~nanoid</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=uuid~vs~ulid</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=uuid~vs~%40paralleldrive%2Fcuid2</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=nanoid~vs~ulid</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=nanoid~vs~%40paralleldrive%2Fcuid2</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=ulid~vs~%40paralleldrive%2Fcuid2</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40tanstack%2Freact-query~vs~swr</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-router-dom~vs~%40tanstack%2Freact-router</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-router-dom~vs~wouter</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40tanstack%2Freact-router~vs~wouter</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40tanstack%2Freact-virtual~vs~react-window</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40tanstack%2Freact-virtual~vs~react-virtualized</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40tanstack%2Freact-virtual~vs~react-virtuoso</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40tanstack%2Freact-virtual~vs~virtua</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-window~vs~react-virtualized</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-window~vs~react-virtuoso</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-window~vs~virtua</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-virtualized~vs~react-virtuoso</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-virtualized~vs~virtua</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-virtuoso~vs~virtua</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lucide-react~vs~%40phosphor-icons%2Freact</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lucide-react~vs~react-icons</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lucide-react~vs~%40heroicons%2Freact</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=lucide-react~vs~%40tabler%2Ficons-react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40phosphor-icons%2Freact~vs~react-icons</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40phosphor-icons%2Freact~vs~%40heroicons%2Freact</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40phosphor-icons%2Freact~vs~%40tabler%2Ficons-react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-icons~vs~%40heroicons%2Freact</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-icons~vs~%40tabler%2Ficons-react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40heroicons%2Freact~vs~%40tabler%2Ficons-react</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=sonner~vs~react-hot-toast</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=sonner~vs~react-toastify</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=sonner~vs~notistack</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-hot-toast~vs~react-toastify</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-hot-toast~vs~notistack</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-toastify~vs~notistack</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40dnd-kit%2Fcore~vs~%40hello-pangea%2Fdnd</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40dnd-kit%2Fcore~vs~react-dnd</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40hello-pangea%2Fdnd~vs~react-dnd</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=ag-grid-react~vs~react-data-grid</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=ag-grid-react~vs~%40mui%2Fx-data-grid</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=react-data-grid~vs~%40mui%2Fx-data-grid</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=localforage~vs~idb-keyval</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=jszip~vs~fflate</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=jszip~vs~%40zip.js%2Fzip.js</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=fflate~vs~%40zip.js%2Fzip.js</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=mitt~vs~eventemitter3</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=mitt~vs~nanoevents</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=eventemitter3~vs~nanoevents</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40base-ui%2Freact~vs~%40headlessui%2Freact</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40base-ui%2Freact~vs~radix-ui</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=%40headlessui%2Freact~vs~radix-ui</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://bundlephobia.com/trends?packages=pinia~vs~vuex</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
