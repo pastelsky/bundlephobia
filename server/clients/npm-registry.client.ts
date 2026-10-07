@@ -26,7 +26,7 @@ function registryManifestPath(name: string, version: string): string {
 
 export function fetchPackageManifest(
   spec: string,
-  options: { fullMetadata: boolean },
+  options: { fullMetadata: boolean; timeout?: number; fetchRetries?: number },
 ): Promise<NpmPackageManifest> {
   return pacote.manifest<NpmPackageManifest>(spec, options)
 }
@@ -34,10 +34,13 @@ export function fetchPackageManifest(
 export function fetchPackageVersionManifest(
   name: string,
   version: string,
+  options?: { timeout?: number; fetchRetries?: number },
 ): Promise<NpmPackageManifest> {
-  return registryFetch.json<NpmPackageManifest>(
-    registryManifestPath(name, version),
-  )
+  const path = registryManifestPath(name, version)
+
+  if (!options) return registryFetch.json<NpmPackageManifest>(path)
+
+  return registryFetch.json<NpmPackageManifest>(path, options)
 }
 
 /** Fetches full registry metadata, including release dates and manifests. */
