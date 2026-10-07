@@ -26,10 +26,7 @@ declare module 'pacote' {
 
 declare module 'npm-registry-fetch' {
   interface NpmRegistryFetch {
-    json<T>(
-      path: string,
-      options?: { timeout?: number; fetchRetries?: number },
-    ): Promise<T>
+    json<T>(path: string): Promise<T>
   }
 
   const registryFetch: NpmRegistryFetch

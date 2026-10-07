@@ -14,17 +14,6 @@ interface McpController {
   callTool: Middleware
 }
 
-function localRequestHeaders(ctx: Context) {
-  return {
-    'X-Bundlephobia-User': 'bundlephobia mcp tool',
-    'User-Agent': ctx.get('User-Agent'),
-    'CF-Connecting-IP': ctx.get('CF-Connecting-IP') || ctx.ip,
-    'X-Bundlephobia-Build-Budget-Exceeded': ctx.get(
-      'X-Bundlephobia-Build-Budget-Exceeded',
-    ),
-  }
-}
-
 function isStringJsonValue(value: JsonValue | undefined): value is string {
   return Object.prototype.toString.call(value) === '[object String]'
 }
@@ -220,7 +209,9 @@ export function createMcpController(port: number): McpController {
           const response = await fetch(
             `http://127.0.0.1:${port}${localRequest.path}`,
             {
-              headers: localRequestHeaders(ctx),
+              headers: {
+                'X-Bundlephobia-User': 'bundlephobia mcp tool',
+              },
             },
           )
 

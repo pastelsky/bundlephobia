@@ -1,8 +1,6 @@
 import createDebug from 'debug'
 import firebase from 'firebase'
 import { LRUCache } from 'lru-cache'
-import semver from 'semver'
-import { z } from 'zod'
 
 import {
   isCacheEntry,
@@ -39,19 +37,6 @@ export function createCacheRepository(
     return firebase.database().ref().child(root).child(encodeFirebaseKey(name))
   }
 
-  async function rememberLatest(root: string, name: string, version: string) {
-    if (!semver.valid(version) || semver.prerelease(version)) return
-    await packageRef(`${root}-latest-built`, name).transaction(current => {
-      const parsed = z.string().safeParse(current)
-
-      return parsed.success &&
-        semver.valid(parsed.data) &&
-        semver.gte(parsed.data, version)
-        ? parsed.data
-        : version
-    })
-  }
-
   function latestBuilt(root: string, name: string): Promise<CacheEntry | null> {
     const key = `${root}/${name}`
     let pending = latestRequests.get(key)
@@ -70,30 +55,18 @@ export function createCacheRepository(
     root: string,
     name: string,
   ): Promise<CacheEntry | null> {
-    const pointer = await packageRef(`${root}-latest-built`, name)
-      .once('value')
-      .catch(error => {
-        debug('latest-built index read failed: %O', error)
-
-        return null
-      })
-
-    const parsed = z.string().safeParse(pointer?.val())
-
-    if (parsed.success && semver.valid(parsed.data)) {
-      return getFromFirebase(root, { name, version: parsed.data })
-    }
-
-    // Bootstrap old packages once; subsequent reads use the tiny durable index.
+    // Existing histories are small; avoid a second persistent index/write path.
     const snapshot = await packageRef(root, name).once('value')
     const newest = latestBuiltVersion(snapshot.val())
 
     if (!newest) return null
-    await rememberLatest(root, name, newest).catch(error => {
-      debug('latest-built index update failed: %O', error)
-    })
 
-    return getFromFirebase(root, { name, version: newest })
+    const value = snapshot.child(encodeFirebaseKey(newest)).val()
+
+    if (!isCacheEntry(value))
+      throw new Error(`Invalid cache entry in Firebase root ${root}`)
+
+    return value
   }
 
   async function getFromFirebase(
@@ -174,11 +147,6 @@ export function createCacheRepository(
       // Keep memory and durable storage write-through consistent.
       memoryCache.set(cacheKey(key), result)
       memoryCache.delete(cacheKey({ name: key.name, version: 'latest-built' }))
-      await rememberLatest(config.writeKey, key.name, key.version).catch(
-        error => {
-          debug('latest-built index update failed: %O', error)
-        },
-      )
     },
   }
 }

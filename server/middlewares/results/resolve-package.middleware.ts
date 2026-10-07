@@ -1,4 +1,4 @@
-import type { Middleware } from 'koa'
+import type { Context, Middleware } from 'koa'
 import now from 'performance-now'
 
 import {
@@ -7,10 +7,45 @@ import {
 } from '../../../languages/javascript'
 import { packageAnalysisGateway } from '../../analysis'
 import type { AnalysisOperation } from '../../analysis/contracts'
+import type CacheServiceClient from '../../clients/cache-service.client'
 import { debug, logger } from '../../infrastructure/runtime'
+
+function prefersBuiltRelease(ctx: Context, version: string | null) {
+  return (
+    ctx.get('X-Bundlephobia-Prefer-Cached') === 'true' &&
+    !ctx.query.force &&
+    [null, 'latest'].includes(version)
+  )
+}
+
+async function serveBuiltRelease(
+  ctx: Context,
+  cache: Pick<CacheServiceClient, 'getPackageSize'>,
+  name: string,
+) {
+  const cached = await cache.getPackageSize({ name, version: 'latest-built' })
+
+  if (cached.status === 'miss') return false
+  ctx.cacheControl = { private: true, noStore: true }
+  ctx.status = cached.status === 'hit' ? 200 : 503
+  ctx.body =
+    cached.status === 'hit'
+      ? cached.value
+      : {
+          error: {
+            code: 'CacheUnavailable',
+            message: 'Cached analysis is temporarily unavailable.',
+          },
+        }
+
+  if (cached.status !== 'hit') ctx.set('Retry-After', '60')
+
+  return true
+}
 
 export function createResolvePackageMiddleware(
   operation: AnalysisOperation,
+  cache?: Pick<CacheServiceClient, 'getPackageSize'>,
 ): Middleware {
   return async (ctx, next) => {
     ctx.state.analysis = { language: 'javascript', operation }
@@ -40,6 +75,13 @@ export function createResolvePackageMiddleware(
       repository: '',
       packageString: `${parsedPackage.name}@${parsedPackage.version}`,
     }
+
+    if (
+      cache &&
+      prefersBuiltRelease(ctx, parsedPackage.version) &&
+      (await serveBuiltRelease(ctx, cache, parsedPackage.name))
+    )
+      return
 
     const resolveStart = now()
 

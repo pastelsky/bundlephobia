@@ -7,7 +7,6 @@ import type {
 } from '@bundlephobia/service-contracts/cache'
 
 import CacheServiceClient from '../clients/cache-service.client'
-import { createCachedAnalysisMiddleware } from '../middlewares/cached-analysis.middleware'
 import { createAnalysisContextMiddleware } from '../middlewares/analysis-context.middleware'
 import buildMissRateLimit from '../middlewares/build-miss-rate-limit.middleware'
 import { createExportSizesMiddleware } from '../middlewares/exports-sizes.middleware'
@@ -38,7 +37,6 @@ export function registerApiRoutes(
 
   router.get(
     '/api/size',
-    createCachedAnalysisMiddleware('size', cache),
     jsonCacheMiddleware({
       get: (key: CacheKey) => cache.getPackageSize(key),
       set: (key: CacheKey, value: PackageCacheResult) =>
@@ -51,7 +49,7 @@ export function registerApiRoutes(
     createAnalysisContextMiddleware('package-analysis'),
     errorMiddleware,
     blockBlacklistMiddleware,
-    createResolvePackageMiddleware('package-analysis'),
+    createResolvePackageMiddleware('package-analysis', cache),
     failureBackoffMiddleware,
     createCachedResponseMiddleware,
     buildMissRateLimit({
@@ -64,19 +62,16 @@ export function registerApiRoutes(
 
   router.get(
     '/api/exports',
-    createCachedAnalysisMiddleware('exports', cache),
     createAnalysisContextMiddleware('package-exports'),
     errorMiddleware,
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-exports'),
     failureBackoffMiddleware,
-    buildMissRateLimit(),
     exportsMiddleware,
   )
 
   router.get(
     '/api/exports-sizes',
-    createCachedAnalysisMiddleware('exports-sizes', cache),
     jsonCacheMiddleware({
       get: (key: CacheKey) => cache.getExportsSize(key),
       set: (key: CacheKey, value: ExportsCacheResult) =>
