@@ -716,21 +716,17 @@ export const getServerSideProps = async ({
   let initialResult: PackageBuildInfo | null = null
 
   try {
-    if (specifier) initialResult = await readCachedPackage(specifier)
+    if (specifier)
+      initialResult = await readCachedPackage(
+        specifier,
+        isAutomatedClient(String(req.headers['user-agent'])),
+      )
   } catch {
     // Cache/registry failure must never turn SSR into a package build.
   }
 
-  if (!initialResult && isAutomatedClient(String(req.headers['user-agent']))) {
-    res.statusCode = 503
-    res.setHeader('Retry-After', '3600')
-  }
-
   res.setHeader('Vary', 'User-Agent')
-  res.setHeader(
-    'Cache-Control',
-    initialResult ? 'public, max-age=0, s-maxage=300' : 'no-store',
-  )
+  res.setHeader('Cache-Control', 'private, no-store')
 
   return { props: { initialResult } }
 }

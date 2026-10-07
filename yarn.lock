@@ -9350,6 +9350,8 @@ __metadata:
     fastify: "npm:^4.25.2"
     firebase: "npm:^8.10.1"
     lru-cache: "npm:^11.5.2"
+    semver: "npm:^7.6.3"
+    zod: "npm:^4.4.2"
   languageName: unknown
   linkType: soft
 

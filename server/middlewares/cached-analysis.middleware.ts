@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type CacheServiceClient from '../clients/cache-service.client'
 import { createCachedAnalysisReader } from '../services/cached-analysis.service'
 
-// Classification only removes permission to build; spoofing cannot grant privileges.
+// This selects stale-cache preference, never a rate-limit exemption.
 export function isAutomatedClient(userAgent: string): boolean {
   return /curl|bot|spider|crawler|headlesschrome|prerender|shields\.io|badgen|depscope|ahrefs|\bgot\b/i.test(
     userAgent,
@@ -20,33 +20,39 @@ export function createCachedAnalysisMiddleware(
     ctx: Context,
     specifier: string,
   ): Promise<boolean> {
-    // Export discovery has no durable cache. Never invoke its builder here.
+    // Export discovery has no durable cache; normal build admission handles it.
     if (operation === 'exports') return false
 
     try {
-      const result = await read(specifier, operation)
-
-      if (result.status !== 'hit') return false
-      ctx.set(
-        'Cache-Control',
-        ctx.query.force === undefined ? 'public, max-age=300' : 'no-store',
+      const result = await read(
+        specifier,
+        operation,
+        isAutomatedClient(ctx.get('User-Agent')),
       )
+
+      if (result.status === 'miss') return false
+
+      if (result.status !== 'hit') ctx.throw(503, 'Cache backend unavailable')
+      ctx.set('Cache-Control', 'private, no-store')
       ctx.body = result.value
 
       return true
     } catch (error) {
       if (error instanceof TypeError)
         ctx.throw(400, 'Expected an npm registry package')
+      ctx.throw(503, 'Cached analysis lookup failed', {
+        headers: { 'Retry-After': '60', 'Cache-Control': 'no-store' },
+      })
 
       return false
     }
   }
 
   return async (ctx, next) => {
-    const cacheOnly =
+    const preferCache =
       isAutomatedClient(ctx.get('User-Agent')) || ctx.query.peep !== undefined
 
-    if (!cacheOnly) {
+    if (!preferCache) {
       await next()
 
       return
@@ -63,6 +69,14 @@ export function createCachedAnalysisMiddleware(
     ctx.vary('User-Agent')
 
     if (await serveCached(ctx, specifier.data)) return
+
+    if (ctx.query.peep === undefined) {
+      // An actual miss may build, but cannot force a rebuild of a cached release.
+      ctx.query = { ...ctx.query, force: '' }
+      await next()
+
+      return
+    }
 
     ctx.status = 503
     ctx.set('Cache-Control', 'no-store')

@@ -1,6 +1,8 @@
 import createDebug from 'debug'
 import firebase from 'firebase'
 import { LRUCache } from 'lru-cache'
+import semver from 'semver'
+import { z } from 'zod'
 
 import {
   isCacheEntry,
@@ -8,7 +10,7 @@ import {
   type CacheKey,
 } from '@bundlephobia/service-contracts/cache'
 
-import { encodeFirebaseKey } from './cache.utils.ts'
+import { encodeFirebaseKey, latestBuiltVersion } from './cache.utils.ts'
 import type { CacheRepositoryConfig } from './cache.config.ts'
 
 const debug = createDebug('bp:cache')
@@ -29,10 +31,78 @@ export function createCacheRepository(
     max: config.memoryMax,
   })
 
+  const latestRequests = new LRUCache<string, Promise<CacheEntry | null>>({
+    max: config.memoryMax,
+  })
+
+  function packageRef(root: string, name: string) {
+    return firebase.database().ref().child(root).child(encodeFirebaseKey(name))
+  }
+
+  async function rememberLatest(root: string, name: string, version: string) {
+    if (!semver.valid(version) || semver.prerelease(version)) return
+    await packageRef(`${root}-latest-built`, name).transaction(current => {
+      const parsed = z.string().safeParse(current)
+
+      return parsed.success &&
+        semver.valid(parsed.data) &&
+        semver.gte(parsed.data, version)
+        ? parsed.data
+        : version
+    })
+  }
+
+  function latestBuilt(root: string, name: string): Promise<CacheEntry | null> {
+    const key = `${root}/${name}`
+    let pending = latestRequests.get(key)
+
+    if (!pending) {
+      pending = loadLatestBuilt(root, name).finally(() => {
+        latestRequests.delete(key)
+      })
+      latestRequests.set(key, pending)
+    }
+
+    return pending
+  }
+
+  async function loadLatestBuilt(
+    root: string,
+    name: string,
+  ): Promise<CacheEntry | null> {
+    const pointer = await packageRef(`${root}-latest-built`, name)
+      .once('value')
+      .catch(error => {
+        debug('latest-built index read failed: %O', error)
+
+        return null
+      })
+
+    const parsed = z.string().safeParse(pointer?.val())
+
+    if (parsed.success && semver.valid(parsed.data)) {
+      return getFromFirebase(root, { name, version: parsed.data })
+    }
+
+    // Bootstrap old packages once; subsequent reads use the tiny durable index.
+    const snapshot = await packageRef(root, name).once('value')
+    const newest = latestBuiltVersion(snapshot.val())
+
+    if (!newest) return null
+    await rememberLatest(root, name, newest).catch(error => {
+      debug('latest-built index update failed: %O', error)
+    })
+
+    return getFromFirebase(root, { name, version: newest })
+  }
+
   async function getFromFirebase(
     root: string,
     key: CacheKey,
   ): Promise<CacheEntry | null> {
+    // Internal cache query: newest built stable release, not npm latest.
+    if (key.version === 'latest-built') return latestBuilt(root, key.name)
+
     const snapshot = await firebase
       .database()
       .ref()
@@ -66,7 +136,9 @@ export function createCacheRepository(
 
       if (result !== null) {
         debug('cache hit: firebase (%s)', config.readKey)
-        memoryCache.set(cacheKey(key), result)
+        memoryCache.set(cacheKey(key), result, {
+          ttl: key.version === 'latest-built' ? 60000 : 0,
+        })
 
         return result
       }
@@ -79,7 +151,9 @@ export function createCacheRepository(
 
         if (fallbackResult !== null) {
           debug('cache hit: firebase fallback (%s)', config.fallbackReadKey)
-          memoryCache.set(cacheKey(key), fallbackResult)
+          memoryCache.set(cacheKey(key), fallbackResult, {
+            ttl: key.version === 'latest-built' ? 60000 : 0,
+          })
         }
 
         return fallbackResult
@@ -99,6 +173,12 @@ export function createCacheRepository(
 
       // Keep memory and durable storage write-through consistent.
       memoryCache.set(cacheKey(key), result)
+      memoryCache.delete(cacheKey({ name: key.name, version: 'latest-built' }))
+      await rememberLatest(config.writeKey, key.name, key.version).catch(
+        error => {
+          debug('latest-built index update failed: %O', error)
+        },
+      )
     },
   }
 }

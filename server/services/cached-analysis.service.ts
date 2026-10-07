@@ -43,6 +43,12 @@ const pageResultSchema = z.object({
     .optional(),
 })
 
+function isUnversioned(
+  spec: NpmRegistryPackageSpec | null,
+): spec is NpmRegistryPackageSpec {
+  return Boolean(spec && ['*', 'latest'].includes(spec.fetchSpec))
+}
+
 export function createCachedAnalysisReader(
   client: Pick<
     CacheServiceClient,
@@ -70,7 +76,7 @@ export function createCachedAnalysisReader(
     ).then(manifest => manifest.version)
   }
 
-  async function resolveKey(specifier: string) {
+  async function resolveKey(specifier: string, fresh: boolean) {
     const spec = parseNpmRegistryPackageSpec(specifier)
 
     if (!spec) throw new TypeError('Expected an npm registry package')
@@ -81,7 +87,7 @@ export function createCachedAnalysisReader(
 
     const requestedVersion = spec.fetchSpec === '*' ? 'latest' : spec.fetchSpec
     const key = `${spec.name}@${requestedVersion}`
-    let pending = versions.get(key)
+    let pending = fresh ? undefined : versions.get(key)
 
     if (!pending) {
       pending = fetchVersion(specifier, spec, requestedVersion)
@@ -97,8 +103,22 @@ export function createCachedAnalysisReader(
   async function read(
     specifier: string,
     operation: 'size' | 'exports-sizes' = 'size',
+    allowOlder = false,
   ) {
-    const key = await resolveKey(specifier)
+    const spec = parseNpmRegistryPackageSpec(specifier)
+
+    if (allowOlder && isUnversioned(spec)) {
+      const key = { name: spec.name, version: 'latest-built' }
+
+      const older =
+        operation === 'size'
+          ? await client.getPackageSize(key)
+          : await client.getExportsSize(key)
+
+      if (older.status !== 'miss') return older
+    }
+
+    const key = await resolveKey(specifier, !allowOlder)
 
     return operation === 'size'
       ? client.getPackageSize(key)
@@ -107,8 +127,9 @@ export function createCachedAnalysisReader(
 
   async function readPackage(
     specifier: string,
+    allowOlder = false,
   ): Promise<PackageBuildInfo | null> {
-    const result = await read(specifier)
+    const result = await read(specifier, 'size', allowOlder)
 
     if (result.status !== 'hit') return null
     const parsed = pageResultSchema.safeParse(result.value)

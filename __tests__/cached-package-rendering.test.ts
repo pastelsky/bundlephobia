@@ -84,14 +84,13 @@ it('renders cached sizes and escaped npm description in the initial HTML without
   expect(html).not.toContain('result-pending')
 })
 
-it('returns temporary unavailability to a crawler on a miss, without turning it into a nonexistent package', async () => {
+it('keeps the loader available on a miss so the normal API can admit a bounded first build', async () => {
   jest
     .spyOn(CacheServiceClient.prototype, 'getPackageSize')
     .mockResolvedValue({ status: 'miss' })
   const request = context()
   expect((await getServerSideProps(request)).props.initialResult).toBeNull()
-  expect(request.res.statusCode).toBe(503)
-  expect(request.res.getHeader('Retry-After')).toBe('3600')
+  expect(request.res.statusCode).toBe(200)
   const visitor = context('Mozilla/5.0')
   expect((await getServerSideProps(visitor)).props.initialResult).toBeNull()
   expect(visitor.res.statusCode).toBe(200)

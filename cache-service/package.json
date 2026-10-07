@@ -11,7 +11,9 @@
     "dotenv-defaults": "^2.0.2",
     "fastify": "^4.25.2",
     "firebase": "^8.10.1",
-    "lru-cache": "^11.5.2"
+    "lru-cache": "^11.5.2",
+    "semver": "^7.6.3",
+    "zod": "^4.4.2"
   },
   "scripts": {
     "start": "DEBUG=bp* node --experimental-strip-types index.ts",
