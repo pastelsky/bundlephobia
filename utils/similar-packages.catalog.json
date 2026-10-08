@@ -504,7 +504,7 @@
         "weight": 3
       }
     ],
-    "similar": ["gsap", "animejs", "velocity-animate", "popmotion"]
+    "similar": ["gsap", "animejs", "velocity-animate", "popmotion", "motion"]
   },
   "general-purpose-charting": {
     "name": "General purpose Charting libraries",
@@ -976,7 +976,8 @@
       "jspdf",
       "pdfkit",
       "pdfmake",
-      "@react-pdf/renderer"
+      "@react-pdf/renderer",
+      "pdf-lib"
     ]
   },
   "phone-number": {
@@ -1673,7 +1674,12 @@
       { "tag": "navigation", "weight": 5 },
       { "tag": "route", "weight": 7 }
     ],
-    "similar": ["react-router-dom", "@tanstack/react-router", "wouter"]
+    "similar": [
+      "react-router-dom",
+      "@tanstack/react-router",
+      "wouter",
+      "react-router"
+    ]
   },
   "react-virtualization": {
     "name": "React list and grid virtualization",
@@ -1794,5 +1800,45 @@
       { "tag": "management", "weight": 7 }
     ],
     "similar": ["pinia", "vuex"]
+  },
+  "protocol-buffers": {
+    "name": "Protocol Buffers serialization",
+    "tags": [
+      { "tag": "protobuf", "weight": 20 },
+      { "tag": "protocol buffers", "weight": 15 },
+      { "tag": "serialization", "weight": 5 }
+    ],
+    "similar": ["@bufbuild/protobuf", "protobufjs"]
+  },
+  "react-component-libraries": {
+    "name": "React component libraries",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "components", "weight": 10 },
+      { "tag": "ui", "weight": 15 },
+      { "tag": "design system", "weight": 7 }
+    ],
+    "similar": ["@mui/material", "antd", "@mantine/core", "@chakra-ui/react"]
+  },
+  "code-editors": {
+    "name": "Browser code editors",
+    "tags": [
+      { "tag": "editor", "weight": 15 },
+      { "tag": "code", "weight": 10 },
+      { "tag": "syntax", "weight": 7 },
+      { "tag": "monaco", "weight": 20 },
+      { "tag": "codemirror", "weight": 20 }
+    ],
+    "similar": ["monaco-editor", "codemirror", "ace-builds"]
+  },
+  "generative-ai-sdks": {
+    "name": "Generative AI API clients",
+    "tags": [
+      { "tag": "generative ai", "weight": 15 },
+      { "tag": "llm", "weight": 15 },
+      { "tag": "genai", "weight": 15 },
+      { "tag": "sdk", "weight": 5 }
+    ],
+    "similar": ["@google/genai", "openai", "@anthropic-ai/sdk"]
   }
 }
