@@ -82,42 +82,6 @@
     "similar": ["chroma-js", "color", "tinycolor2", "colors.js", "color2k"]
   },
   "cookie-browser": {
-    "name": "Cookie Manipulation for Node.js",
-    "tags": [
-      {
-        "tag": "cookie",
-        "weight": 15
-      },
-      {
-        "tag": "manipulate",
-        "weight": 5
-      },
-      {
-        "tag": "parse",
-        "weight": 3
-      },
-      {
-        "tag": "parser",
-        "weight": 3
-      },
-      {
-        "tag": "jar",
-        "weight": 5
-      },
-      {
-        "tag": "node",
-        "weight": 5
-      }
-    ],
-    "similar": [
-      "cookie",
-      "tough-cookie",
-      "js-cookie",
-      "tiny-cookie",
-      "universal-cookie"
-    ]
-  },
-  "cookie-node": {
     "name": "Cookie Manipulation for Browsers",
     "tags": [
       {
@@ -138,10 +102,45 @@
       },
       {
         "tag": "browser",
-        "weight": 1
+        "weight": 5
+      },
+      {
+        "tag": "document",
+        "weight": 5
       }
     ],
-    "similar": ["js-cookie", "browser-cookies", "universal-cookie"]
+    "similar": [
+      "js-cookie",
+      "tiny-cookie",
+      "universal-cookie",
+      "browser-cookies"
+    ]
+  },
+  "cookie-node": {
+    "name": "Cookie parsing and jars for Node.js",
+    "tags": [
+      {
+        "tag": "cookie",
+        "weight": 15
+      },
+      {
+        "tag": "manipulate",
+        "weight": 5
+      },
+      {
+        "tag": "parse",
+        "weight": 3
+      },
+      {
+        "tag": "parser",
+        "weight": 3
+      },
+      {
+        "tag": "node",
+        "weight": 5
+      }
+    ],
+    "similar": ["cookie", "tough-cookie"]
   },
   "browser-2d-game-engine": {
     "name": "Browser 2D game engines",
@@ -505,7 +504,7 @@
         "weight": 3
       }
     ],
-    "similar": ["gsap", "animejs", "velocity-animate", "popmotion"]
+    "similar": ["gsap", "animejs", "velocity-animate", "popmotion", "motion"]
   },
   "general-purpose-charting": {
     "name": "General purpose Charting libraries",
@@ -692,7 +691,7 @@
         "weight": 5
       }
     ],
-    "similar": ["wretch", "ofetch", "axios", "got"]
+    "similar": ["wretch", "ofetch", "axios", "got", "undici"]
   },
   "browser-http-request": {
     "name": "HTTP client libraries for Browser",
@@ -734,7 +733,7 @@
         "weight": 5
       }
     ],
-    "similar": ["axios", "ky", "xior", "superagent", "redaxios"]
+    "similar": ["axios", "ky", "xior", "superagent", "redaxios", "ofetch"]
   },
   "icu-message-fromatter": {
     "name": "ICU message string formatters",
@@ -892,7 +891,7 @@
         "weight": 7
       }
     ],
-    "similar": ["marked", "markdown-it", "showdown"]
+    "similar": ["marked", "markdown-it", "showdown", "micromark"]
   },
   "memoization": {
     "name": "Memoization",
@@ -977,7 +976,8 @@
       "jspdf",
       "pdfkit",
       "pdfmake",
-      "@react-pdf/renderer"
+      "@react-pdf/renderer",
+      "pdf-lib"
     ]
   },
   "phone-number": {
@@ -1188,7 +1188,8 @@
       "react-final-form",
       "informed",
       "formsy-react",
-      "react-hook-form"
+      "react-hook-form",
+      "@tanstack/react-form"
     ]
   },
   "react-charting": {
@@ -1353,7 +1354,7 @@
         "weight": 3
       }
     ],
-    "similar": ["@sinclair/typebox", "valibot", "ajv", "yup", "zod"]
+    "similar": ["@sinclair/typebox", "valibot", "ajv", "yup", "zod", "arktype"]
   },
   "querystring-parser": {
     "name": "Query String Parsers",
@@ -1464,7 +1465,14 @@
         "weight": 3
       }
     ],
-    "similar": ["valtio", "zustand", "jotai", "mobx", "@reduxjs/toolkit"]
+    "similar": [
+      "valtio",
+      "zustand",
+      "jotai",
+      "mobx",
+      "@reduxjs/toolkit",
+      "effector"
+    ]
   },
   "slider": {
     "name": "General purpose sliders & carousels",
@@ -1616,5 +1624,221 @@
       "vue-slick",
       "vue-tiny-slider"
     ]
+  },
+  "general-purpose-utilities": {
+    "name": "General purpose JavaScript utilities",
+    "tags": [
+      { "tag": "utility", "weight": 15 },
+      { "tag": "utilities", "weight": 15 },
+      { "tag": "lodash", "weight": 7 },
+      { "tag": "functional", "weight": 5 },
+      { "tag": "collection", "weight": 5 }
+    ],
+    "similar": [
+      "lodash",
+      "lodash-es",
+      "underscore",
+      "ramda",
+      "remeda",
+      "es-toolkit"
+    ]
+  },
+  "unique-id": {
+    "name": "Unique identifier generation",
+    "tags": [
+      { "tag": "uuid", "weight": 15 },
+      { "tag": "identifier", "weight": 7 },
+      { "tag": "unique", "weight": 7 },
+      { "tag": "id", "weight": 5 },
+      { "tag": "random", "weight": 3 }
+    ],
+    "similar": ["uuid", "nanoid", "ulid", "@paralleldrive/cuid2"]
+  },
+  "react-server-state": {
+    "name": "React server-state fetching and caching",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "query", "weight": 7 },
+      { "tag": "fetch", "weight": 7 },
+      { "tag": "cache", "weight": 7 },
+      { "tag": "server state", "weight": 15 }
+    ],
+    "similar": ["@tanstack/react-query", "swr"]
+  },
+  "react-routing": {
+    "name": "React client-side routing",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "router", "weight": 15 },
+      { "tag": "routing", "weight": 15 },
+      { "tag": "navigation", "weight": 5 },
+      { "tag": "route", "weight": 7 }
+    ],
+    "similar": [
+      "react-router-dom",
+      "@tanstack/react-router",
+      "wouter",
+      "react-router"
+    ]
+  },
+  "react-virtualization": {
+    "name": "React list and grid virtualization",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "virtual", "weight": 15 },
+      { "tag": "virtualization", "weight": 15 },
+      { "tag": "window", "weight": 5 },
+      { "tag": "list", "weight": 5 },
+      { "tag": "scroll", "weight": 5 }
+    ],
+    "similar": [
+      "@tanstack/react-virtual",
+      "react-window",
+      "react-virtualized",
+      "react-virtuoso",
+      "virtua"
+    ]
+  },
+  "react-icons": {
+    "name": "React SVG icon libraries",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "icon", "weight": 15 },
+      { "tag": "icons", "weight": 15 },
+      { "tag": "svg", "weight": 7 }
+    ],
+    "similar": [
+      "lucide-react",
+      "@phosphor-icons/react",
+      "react-icons",
+      "@heroicons/react",
+      "@tabler/icons-react"
+    ]
+  },
+  "react-toast": {
+    "name": "React toast notifications",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "toast", "weight": 15 },
+      { "tag": "notification", "weight": 7 },
+      { "tag": "snackbar", "weight": 15 }
+    ],
+    "similar": ["sonner", "react-hot-toast", "react-toastify", "notistack"]
+  },
+  "react-drag-and-drop": {
+    "name": "React drag and drop",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "drag drop", "weight": 15 },
+      { "tag": "dnd", "weight": 15 },
+      { "tag": "sortable", "weight": 7 },
+      { "tag": "draggable", "weight": 5 }
+    ],
+    "similar": ["@dnd-kit/core", "@hello-pangea/dnd", "react-dnd"]
+  },
+  "react-data-grid": {
+    "name": "React data grid components",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "data grid", "weight": 15 },
+      { "tag": "datagrid", "weight": 15 },
+      { "tag": "table", "weight": 7 },
+      { "tag": "spreadsheet", "weight": 5 }
+    ],
+    "similar": ["ag-grid-react", "react-data-grid", "@mui/x-data-grid"]
+  },
+  "browser-key-value-storage": {
+    "name": "Browser asynchronous key-value storage",
+    "tags": [
+      { "tag": "indexeddb", "weight": 15 },
+      { "tag": "storage", "weight": 7 },
+      { "tag": "key value", "weight": 7 },
+      { "tag": "offline", "weight": 5 },
+      { "tag": "async", "weight": 3 }
+    ],
+    "similar": ["localforage", "idb-keyval"]
+  },
+  "zip-archives": {
+    "name": "ZIP archive creation and extraction",
+    "tags": [
+      { "tag": "zip", "weight": 15 },
+      { "tag": "unzip", "weight": 15 },
+      { "tag": "archive", "weight": 7 },
+      { "tag": "compress", "weight": 5 },
+      { "tag": "extract", "weight": 5 }
+    ],
+    "similar": ["jszip", "fflate", "@zip.js/zip.js"]
+  },
+  "event-emitter": {
+    "name": "JavaScript event emitters",
+    "tags": [
+      { "tag": "event", "weight": 7 },
+      { "tag": "emitter", "weight": 15 },
+      { "tag": "eventemitter", "weight": 15 },
+      { "tag": "pubsub", "weight": 7 },
+      { "tag": "listener", "weight": 5 }
+    ],
+    "similar": ["mitt", "eventemitter3", "nanoevents"]
+  },
+  "react-headless-ui": {
+    "name": "React headless UI component libraries",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "headless", "weight": 15 },
+      { "tag": "unstyled", "weight": 7 },
+      { "tag": "accessible", "weight": 5 },
+      { "tag": "component", "weight": 3 }
+    ],
+    "similar": ["@base-ui/react", "@headlessui/react", "radix-ui"]
+  },
+  "vue-state-management": {
+    "name": "Vue state management",
+    "tags": [
+      { "tag": "vue", "weight": 7 },
+      { "tag": "state", "weight": 7 },
+      { "tag": "store", "weight": 7 },
+      { "tag": "management", "weight": 7 }
+    ],
+    "similar": ["pinia", "vuex"]
+  },
+  "protocol-buffers": {
+    "name": "Protocol Buffers serialization",
+    "tags": [
+      { "tag": "protobuf", "weight": 20 },
+      { "tag": "protocol buffers", "weight": 15 },
+      { "tag": "serialization", "weight": 5 }
+    ],
+    "similar": ["@bufbuild/protobuf", "protobufjs"]
+  },
+  "react-component-libraries": {
+    "name": "React component libraries",
+    "tags": [
+      { "tag": "react", "weight": 7 },
+      { "tag": "components", "weight": 10 },
+      { "tag": "ui", "weight": 15 },
+      { "tag": "design system", "weight": 7 }
+    ],
+    "similar": ["@mui/material", "antd", "@mantine/core", "@chakra-ui/react"]
+  },
+  "code-editors": {
+    "name": "Browser code editors",
+    "tags": [
+      { "tag": "editor", "weight": 15 },
+      { "tag": "code", "weight": 10 },
+      { "tag": "syntax", "weight": 7 },
+      { "tag": "monaco", "weight": 20 },
+      { "tag": "codemirror", "weight": 20 }
+    ],
+    "similar": ["monaco-editor", "codemirror", "ace-builds"]
+  },
+  "generative-ai-sdks": {
+    "name": "Generative AI API clients",
+    "tags": [
+      { "tag": "generative ai", "weight": 15 },
+      { "tag": "llm", "weight": 15 },
+      { "tag": "genai", "weight": 15 },
+      { "tag": "sdk", "weight": 5 }
+    ],
+    "similar": ["@google/genai", "openai", "@anthropic-ai/sdk"]
   }
 }
