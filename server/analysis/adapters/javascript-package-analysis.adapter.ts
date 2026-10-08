@@ -202,6 +202,17 @@ export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<
     )
   }
 
+  listPackageEntryPoints(
+    resolved: ResolvedAnalysisPackage,
+    options: AnalysisRequestOptions,
+  ): Promise<string[]> {
+    return this.buildService.getPackageEntryPoints(
+      resolved.canonicalSpecifier,
+      options.priority,
+      options,
+    )
+  }
+
   analyzePackageExports(
     resolved: ResolvedAnalysisPackage,
     options: AnalysisRequestOptions,

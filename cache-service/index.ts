@@ -2,19 +2,21 @@ import 'dotenv-defaults/config.js'
 
 import type { AddressInfo } from 'node:net'
 
-import { CACHE_ROUTE } from '@bundlephobia/service-contracts/cache'
+import {
+  CACHE_ROUTE,
+  parsePackageCacheResult,
+  parseExportsCacheResult,
+  parseNamedExportsCacheResult,
+  parseEntryPointsCacheResult,
+  type CacheKey,
+} from '@bundlephobia/service-contracts/cache'
 
 import createFastify from 'fastify'
 import firebase from 'firebase'
 
-import {
-  getExportsSizeMiddleware,
-  postExportsSizeMiddleware,
-} from './middlewares/exports-size.middleware.ts'
-import {
-  getPackageSizeMiddleware,
-  postPackageSizeMiddleware,
-} from './middlewares/package-size.middleware.ts'
+import { cacheConfig } from './cache.config.ts'
+import { createCacheHandlers } from './cache.handlers.ts'
+import { createCacheRepository } from './cache.repository.ts'
 
 const fastify = createFastify()
 
@@ -26,13 +28,24 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig)
 
-fastify.get(CACHE_ROUTE.package, getPackageSizeMiddleware)
+const parsers = {
+  package: parsePackageCacheResult,
+  exports: parseExportsCacheResult,
+  namedExports: parseNamedExportsCacheResult,
+  entryPoints: parseEntryPointsCacheResult,
+}
 
-fastify.post(CACHE_ROUTE.package, postPackageSizeMiddleware)
+// SAFETY: CACHE_ROUTE is a closed shared-contract object with these exact keys.
+for (const label of Object.keys(CACHE_ROUTE) as (keyof typeof CACHE_ROUTE)[]) {
+  const handlers = createCacheHandlers<CacheKey>({
+    label,
+    repository: createCacheRepository(cacheConfig[label]),
+    parseResult: parsers[label],
+  })
 
-fastify.get(CACHE_ROUTE.exports, getExportsSizeMiddleware)
-
-fastify.post(CACHE_ROUTE.exports, postExportsSizeMiddleware)
+  fastify.get(CACHE_ROUTE[label], handlers.get)
+  fastify.post(CACHE_ROUTE[label], handlers.post)
+}
 
 fastify
   .listen({ port: 7001 })

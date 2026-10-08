@@ -2080,6 +2080,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@bundlephobia/service-contracts@link:../packages/service-contracts::locator=build-service%40workspace%3Abuild-service":
+  version: 0.0.0-use.local
+  resolution: "@bundlephobia/service-contracts@link:../packages/service-contracts::locator=build-service%40workspace%3Abuild-service"
+  languageName: node
+  linkType: soft
+
 "@bundlephobia/service-contracts@workspace:*, @bundlephobia/service-contracts@workspace:packages/service-contracts":
   version: 0.0.0-use.local
   resolution: "@bundlephobia/service-contracts@workspace:packages/service-contracts"
@@ -9046,6 +9052,7 @@ __metadata:
   resolution: "build-service@workspace:build-service"
   dependencies:
     "@amplitude/node": "npm:^1.10.2"
+    "@bundlephobia/service-contracts": "link:../packages/service-contracts"
     "@rspack/core": "npm:2.2.8"
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^4.25.2"

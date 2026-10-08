@@ -88,10 +88,12 @@ describe('package history', () => {
     expect(mockGetPackageHistory).toHaveBeenCalledWith(
       'example',
       40,
-      expect.any(Function),
+      expect.objectContaining({ includeVersion: expect.any(Function) }),
     )
 
-    const includeVersion = mockGetPackageHistory.mock.calls[0][2]
+    const includeVersion =
+      mockGetPackageHistory.mock.calls[0][2]?.includeVersion
+
     expect(includeVersion?.('1.0.0')).toBe(true)
     expect(includeVersion?.('2.1.1')).toBe(false)
   })
@@ -113,5 +115,26 @@ describe('package history', () => {
         },
       ],
     })
+  })
+
+  it('requests only the selected import history, including an empty never-built path', async () => {
+    mockFetchPackagePackument.mockResolvedValue({
+      time: { '1.0.0': '2024-01-02T00:00:00.000Z' },
+    })
+    mockGetPackageHistory.mockResolvedValue({})
+    await expect(
+      getHistory({ limit: 40, entryPoint: './map.js' }),
+    ).resolves.toMatchObject({
+      entryPoint: './map.js',
+      versions: [],
+    })
+    expect(mockGetPackageHistory).toHaveBeenCalledWith(
+      'example',
+      40,
+      expect.objectContaining({
+        includeVersion: expect.any(Function),
+        entryPoint: './map.js',
+      }),
+    )
   })
 })

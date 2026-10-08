@@ -46,6 +46,7 @@ export function createExportSizesMiddleware(
   return async ctx => {
     const priority = getRequestPriority(ctx)
     const { name, version, packageString } = ctx.state.resolved
+    const { entryPoint, signal } = ctx.state.analysis
     const { force, peek, package: packageQuery } = ctx.query
 
     if (peek) {
@@ -62,6 +63,8 @@ export function createExportSizesMiddleware(
       ctx.state.resolved,
       {
         priority,
+        entryPoint,
+        signal,
         onComplete: durationMs => {
           ctx.set(BUILD_DURATION_HEADER, String(durationMs))
         },
@@ -72,7 +75,13 @@ export function createExportSizesMiddleware(
 
     ctx.cacheControl = { maxAge: getCacheMaxAge(force, requestedPackage) }
 
-    const body = { name, version, ...result }
+    const body = {
+      ...result,
+      name,
+      version,
+      entryPoint,
+    }
+
     ctx.body = body
     const time = buildEnd - buildStart
 
@@ -90,7 +99,7 @@ export function createExportSizesMiddleware(
     )
 
     if (force === 'true') {
-      void cache.setExportsSize({ name, version }, body)
+      await cache.setExportsSize({ name, version, entryPoint }, body)
     }
   }
 }

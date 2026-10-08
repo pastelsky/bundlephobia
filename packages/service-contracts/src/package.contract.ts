@@ -1,3 +1,26 @@
+import { z } from 'zod'
+
+export const ENTRY_POINT_HEADER = 'x-bundlephobia-entry-point'
+
+/** Canonical public import paths, not filesystem paths or wildcard patterns. */
+export const packageEntryPointSchema = z
+  .string()
+  .max(1024)
+  .refine(
+    value =>
+      value === '.' ||
+      (value.startsWith('./') &&
+        !/[\\*?#\p{Cc}]/u.test(value) &&
+        value
+          .slice(2)
+          .split('/')
+          .every(part => part && part !== '.' && part !== '..')),
+  )
+
+export function normalizeEntryPoint(entryPoint?: string): string | undefined {
+  return entryPoint === '.' ? undefined : entryPoint
+}
+
 export interface PackageIdentity {
   name: string
   version: string
@@ -14,6 +37,7 @@ export interface PackageDependencySize {
 }
 
 export interface PackageBuildBase extends PackageMetadata {
+  entryPoint?: string
   size: number
   gzip: number
   dependencyCount: number
@@ -43,4 +67,8 @@ export type PackageExportsResult = Record<string, string>
 
 export interface PackageExportSizesResult {
   assets: PackageExportAsset[]
+}
+
+export interface PackageEntryPointsResult extends PackageIdentity {
+  entryPoints: string[]
 }

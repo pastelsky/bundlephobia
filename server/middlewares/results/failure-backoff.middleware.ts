@@ -55,13 +55,14 @@ export function isFailureBlocked(
 
 const failureBackoffMiddleware: Middleware = async (ctx, next) => {
   const { force } = ctx.query
-  const { language, operation } = ctx.state.analysis
+  const { language, operation, entryPoint } = ctx.state.analysis
   const { packageString } = ctx.state.resolved
 
   const failureCacheKey = createAnalysisKey({
     language,
     operation,
     packageSpecifier: packageString,
+    entryPoint,
   })
 
   if (!force) {

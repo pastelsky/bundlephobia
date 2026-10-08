@@ -10,6 +10,7 @@ export const LANGUAGE_CAPABILITIES = [
   'similar-packages',
   'exports',
   'export-sizes',
+  'entry-points',
   'stats-image',
   'compare',
   'dependency-graph',

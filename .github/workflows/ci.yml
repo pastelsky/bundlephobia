@@ -53,6 +53,8 @@ jobs:
         run: yarn typecheck:recommendations
       - name: Type check
         run: yarn typecheck
+      - name: Test entry-point API and history boundaries
+        run: yarn test --watchman=false --runInBand __tests__/entry-points.test.ts __tests__/package-history.test.ts __tests__/build-service-unavailable.test.ts __tests__/build-cancellation.test.ts
       - run: yarn build
         env:
           CI: true

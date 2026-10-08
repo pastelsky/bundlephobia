@@ -7,11 +7,16 @@ import {
   CACHE_ROUTE,
   parseExportsCacheResult,
   parsePackageCacheResult,
+  parseNamedExportsCacheResult,
+  parseEntryPointsCacheResult,
+  matchesCacheKey,
   type CacheKey,
   type CacheReadResult,
   type CacheValue,
   type ExportsCacheResult,
   type PackageCacheResult,
+  type NamedExportsCacheResult,
+  type EntryPointsCacheResult,
 } from '@bundlephobia/service-contracts/cache'
 
 import logger from '../infrastructure/logger.service'
@@ -51,6 +56,49 @@ export default class CacheServiceClient {
     })
   }
 
+  getNamedExports(
+    key: CacheKey,
+  ): Promise<CacheReadResult<NamedExportsCacheResult>> {
+    return this.read({
+      route: CACHE_ROUTE.namedExports,
+      key,
+      parse: parseNamedExportsCacheResult,
+      label: 'named exports',
+    })
+  }
+
+  setNamedExports(
+    key: CacheKey,
+    result: NamedExportsCacheResult,
+  ): Promise<void> {
+    return this.write({
+      route: CACHE_ROUTE.namedExports,
+      key,
+      result,
+      label: 'named exports',
+    })
+  }
+
+  getEntryPoints(
+    key: CacheKey,
+  ): Promise<CacheReadResult<EntryPointsCacheResult>> {
+    return this.read({
+      route: CACHE_ROUTE.entryPoints,
+      key,
+      parse: parseEntryPointsCacheResult,
+      label: 'entry points',
+    })
+  }
+
+  setEntryPoints(key: CacheKey, result: EntryPointsCacheResult): Promise<void> {
+    return this.write({
+      route: CACHE_ROUTE.entryPoints,
+      key,
+      result,
+      label: 'entry points',
+    })
+  }
+
   async setPackageSize(
     key: CacheKey,
     result: PackageCacheResult,
@@ -86,7 +134,7 @@ export default class CacheServiceClient {
     })
   }
 
-  private async read<T>(options: {
+  private async read<T extends CacheKey>(options: {
     route: string
     key: CacheKey
     parse: (value: CacheValue) => T | null
@@ -99,7 +147,7 @@ export default class CacheServiceClient {
 
       const value = parse(response.data)
 
-      if (value === null) {
+      if (value === null || !matchesCacheKey(value, key)) {
         const error = new Error(`Invalid ${label} cache response`)
         this.logReadError(key, error, label)
 
@@ -126,7 +174,11 @@ export default class CacheServiceClient {
   }
 
   private async write<
-    T extends PackageCacheResult | ExportsCacheResult,
+    T extends
+      | PackageCacheResult
+      | ExportsCacheResult
+      | NamedExportsCacheResult
+      | EntryPointsCacheResult,
   >(options: {
     route: string
     key: CacheKey

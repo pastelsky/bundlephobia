@@ -1,5 +1,9 @@
 import invariant from 'ts-invariant'
 import type { Middleware } from 'koa'
+import {
+  normalizeEntryPoint,
+  packageEntryPointSchema,
+} from '@bundlephobia/service-contracts/package'
 
 import { parsePackageString } from '../../utils/common.utils'
 import config from '../config'
@@ -53,6 +57,13 @@ export function createPackageHistoryController(): Middleware {
     const limit = getPackageHistoryLimit(ctx.query.limit)
     const dateError = getPackageHistoryDateError(from, to)
 
+    const parsedEntryPoint = packageEntryPointSchema
+      .optional()
+      .safeParse(ctx.query.entryPoint)
+
+    if (!parsedEntryPoint.success) ctx.throw(400, 'Invalid entryPoint')
+    const entryPoint = normalizeEntryPoint(parsedEntryPoint.data)
+
     if (dateError) {
       ctx.throw(400, dateError)
     }
@@ -61,7 +72,12 @@ export function createPackageHistoryController(): Middleware {
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
       }
-      ctx.body = await fetchPackageHistory(name, { from, to, limit })
+      ctx.body = await fetchPackageHistory(name, {
+        from,
+        to,
+        limit,
+        entryPoint,
+      })
     } catch (error) {
       console.error(error)
       const message = error instanceof Error ? error.message : String(error)

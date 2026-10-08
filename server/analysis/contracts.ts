@@ -13,12 +13,14 @@ const ANALYSIS_OPERATIONS = [
   'package-analysis',
   'package-exports',
   'package-export-sizes',
+  'package-entry-points',
 ] as const
 
 export type AnalysisOperation = (typeof ANALYSIS_OPERATIONS)[number]
 
 export interface AnalysisRequestOptions {
   priority: number
+  entryPoint?: string
   signal?: AbortSignal
   onComplete?: (durationMs: number) => void
 }
@@ -59,10 +61,18 @@ interface PackageExportSizesAnalysisAdapter {
   ): Promise<PackageExportSizesResult>
 }
 
+interface PackageEntryPointsAnalysisAdapter {
+  listPackageEntryPoints(
+    resolved: ResolvedAnalysisPackage,
+    options: AnalysisRequestOptions,
+  ): Promise<string[]>
+}
+
 export type PackageAnalysisAdapter<L extends LanguageId = LanguageId> =
   PackageResolutionAdapter<L> &
     Partial<
       PackageBuildAnalysisAdapter &
         PackageExportsAnalysisAdapter &
-        PackageExportSizesAnalysisAdapter
+        PackageExportSizesAnalysisAdapter &
+        PackageEntryPointsAnalysisAdapter
     >
