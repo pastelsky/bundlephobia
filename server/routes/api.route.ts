@@ -10,7 +10,8 @@ import CacheServiceClient from '../clients/cache-service.client'
 import { createAnalysisContextMiddleware } from '../middlewares/analysis-context.middleware'
 import buildMissRateLimit from '../middlewares/build-miss-rate-limit.middleware'
 import { createExportSizesMiddleware } from '../middlewares/exports-sizes.middleware'
-import exportsMiddleware from '../middlewares/exports.middleware'
+import { createExportsMiddleware } from '../middlewares/exports.middleware'
+import { createEntryPointsController } from '../controllers/entry-points.controller'
 import { createGenerateImgMiddleware } from '../middlewares/generate-image.middleware'
 import jsonCacheMiddleware from '../middlewares/json-cache.middleware'
 import errorMiddleware from '../middlewares/results/error.middleware'
@@ -44,6 +45,7 @@ export function registerApiRoutes(
       hash: ctx => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
+        entryPoint: ctx.state.analysis.entryPoint,
       }),
     }),
     createAnalysisContextMiddleware('package-analysis'),
@@ -62,12 +64,27 @@ export function registerApiRoutes(
 
   router.get(
     '/api/exports',
+    jsonCacheMiddleware({
+      get: (key: CacheKey) => cache.getNamedExports(key),
+      set: (key, value) => cache.setNamedExports(key, value),
+      hash: ctx => ({
+        name: ctx.state.resolved.name,
+        version: ctx.state.resolved.version,
+        entryPoint: ctx.state.analysis.entryPoint,
+      }),
+    }),
     createAnalysisContextMiddleware('package-exports'),
     errorMiddleware,
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-exports'),
     failureBackoffMiddleware,
-    exportsMiddleware,
+    createCachedResponseMiddleware,
+    buildMissRateLimit({
+      durationMs: 1000 * 60 * 5,
+      maxRequests: 10,
+      whiteList: ['127.0.0.1', '::1'],
+    }),
+    createExportsMiddleware(cache),
   )
 
   router.get(
@@ -79,6 +96,7 @@ export function registerApiRoutes(
       hash: ctx => ({
         name: ctx.state.resolved.name,
         version: ctx.state.resolved.version,
+        entryPoint: ctx.state.analysis.entryPoint,
       }),
     }),
     createAnalysisContextMiddleware('package-export-sizes'),
@@ -93,6 +111,30 @@ export function registerApiRoutes(
       whiteList: ['127.0.0.1', '::1'],
     }),
     exportSizesMiddleware,
+  )
+
+  router.get(
+    '/api/entry-points',
+    jsonCacheMiddleware({
+      get: (key: CacheKey) => cache.getEntryPoints(key),
+      set: (key, value) => cache.setEntryPoints(key, value),
+      hash: ctx => ({
+        name: ctx.state.resolved.name,
+        version: ctx.state.resolved.version,
+      }),
+    }),
+    createAnalysisContextMiddleware('package-entry-points'),
+    errorMiddleware,
+    blockBlacklistMiddleware,
+    createResolvePackageMiddleware('package-entry-points'),
+    failureBackoffMiddleware,
+    createCachedResponseMiddleware,
+    buildMissRateLimit({
+      durationMs: 1000 * 60 * 5,
+      maxRequests: 10,
+      whiteList: ['127.0.0.1', '::1'],
+    }),
+    createEntryPointsController(cache),
   )
 
   router.get('/api/recent', createRecentSearchesController())

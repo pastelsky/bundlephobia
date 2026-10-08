@@ -3,13 +3,14 @@ import {
   type CacheValue,
   parseCacheKey,
   parseCacheRequestBody,
+  matchesCacheKey,
   type CacheKey,
 } from '@bundlephobia/service-contracts/cache'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import type { CacheRepository } from './cache.repository.ts'
 
-interface CacheRouteDefinition<T> {
+interface CacheRouteDefinition<T extends CacheKey> {
   label: string
   repository: CacheRepository
   parseResult(value: CacheValue): T | null
@@ -19,7 +20,7 @@ type CacheReadRequest = FastifyRequest<{ Querystring: CacheObject }>
 
 type CacheWriteRequest = FastifyRequest<{ Body: CacheObject }>
 
-export function createCacheHandlers<T>({
+export function createCacheHandlers<T extends CacheKey>({
   label,
   repository,
   parseResult,
@@ -50,6 +51,12 @@ export function createCacheHandlers<T>({
         })
       }
 
+      if (!matchesCacheKey(parsedResult, key)) {
+        return reply
+          .code(500)
+          .send({ error: { code: 'CACHE_IDENTITY_MISMATCH' } })
+      }
+
       return reply.code(200).send(parsedResult)
     } catch (error) {
       request.log.error({ err: error, label, key }, 'Cache read failed')
@@ -63,13 +70,19 @@ export function createCacheHandlers<T>({
   async function post(request: CacheWriteRequest, reply: FastifyReply) {
     const body = parseCacheRequestBody(request.body)
 
-    if (!body || parseResult(body.result) === null) {
+    const result = body ? parseResult(body.result) : null
+
+    if (!body || !result || !matchesCacheKey(result, body)) {
       return reply.code(422).send({
         error: { code: 'INVALID_CACHE_REQUEST' },
       })
     }
 
-    const key: CacheKey = { name: body.name, version: body.version }
+    const key: CacheKey = {
+      name: body.name,
+      version: body.version,
+      entryPoint: body.entryPoint,
+    }
 
     try {
       await repository.set(key, body.result)

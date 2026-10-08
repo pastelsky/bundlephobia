@@ -6,6 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "@amplitude/node": "^1.10.2",
+    "@bundlephobia/service-contracts": "link:../packages/service-contracts",
     "@rspack/core": "2.2.8",
     "dotenv-defaults": "^2.0.2",
     "fastify": "^4.25.2",

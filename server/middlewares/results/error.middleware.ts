@@ -222,9 +222,10 @@ const handleEntryPointError: BuildErrorHandler = context => {
   const body = {
     error: {
       code: 'EntryPointError',
-      message:
-        'We could not guess a valid entry point for this package. ' +
-        "Perhaps the author hasn't specified one in its package.json ?",
+      message: context.ctx.state.analysis?.entryPoint
+        ? 'The selected entry point is not exported or cannot be resolved for this package version.'
+        : 'We could not guess a valid entry point for this package. ' +
+          "Perhaps the author hasn't specified one in its package.json ?",
     },
   }
 
@@ -414,6 +415,7 @@ const errorHandler: Middleware = async (ctx, next) => {
       language,
       operation,
       packageSpecifier: packageString,
+      entryPoint: analysis?.entryPoint,
     })
 
     failureCache.set(

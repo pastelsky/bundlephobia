@@ -7,13 +7,39 @@ import {
 } from '../../../languages/javascript'
 import { packageAnalysisGateway } from '../../analysis'
 import type { AnalysisOperation } from '../../analysis/contracts'
+import {
+  normalizeEntryPoint,
+  packageEntryPointSchema,
+} from '@bundlephobia/service-contracts/package'
 import { debug, logger } from '../../infrastructure/runtime'
 
 export function createResolvePackageMiddleware(
   operation: AnalysisOperation,
 ): Middleware {
   return async (ctx, next) => {
-    ctx.state.analysis = { language: 'javascript', operation }
+    const parsedEntryPoint = packageEntryPointSchema
+      .optional()
+      .safeParse(ctx.query.entryPoint)
+
+    if (!parsedEntryPoint.success) {
+      ctx.throw(400, 'entryPoint must be . or a concrete public ./subpath')
+    }
+
+    const entryPoint = normalizeEntryPoint(parsedEntryPoint.data)
+
+    if (operation === 'package-entry-points' && entryPoint) {
+      ctx.throw(
+        400,
+        'entry-point discovery does not accept a selected entryPoint',
+      )
+    }
+
+    ctx.state.analysis = {
+      ...ctx.state.analysis,
+      language: 'javascript',
+      operation,
+      entryPoint,
+    }
     const packageQuery = ctx.query.package
 
     const packageString = Array.isArray(packageQuery)

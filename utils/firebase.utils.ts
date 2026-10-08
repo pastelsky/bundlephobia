@@ -4,6 +4,8 @@ import firebaseSDK from 'firebase'
 import semver from 'semver'
 
 import type { PackageBuildInfoSnapshot } from '@bundlephobia/service-contracts/package'
+import { normalizeEntryPoint } from '@bundlephobia/service-contracts/package'
+import { cacheStoragePath } from '@bundlephobia/service-contracts/cache'
 import { decodeFirebaseKey, encodeFirebaseKey } from './index'
 
 const debug = createDebug('bp:firebase-util')
@@ -34,6 +36,7 @@ interface AlgoliaPackageResponse {
 
 async function readPackageHistoryWithFallback(
   getHistoryFromKey: (key: string) => Promise<PackageHistory | null>,
+  entryPoint?: string,
 ): Promise<PackageHistory | null> {
   const result = await getHistoryFromKey(FIREBASE_READ_KEY)
 
@@ -44,6 +47,7 @@ async function readPackageHistoryWithFallback(
   }
 
   if (
+    entryPoint ||
     FIREBASE_READ_KEY !== 'modules-v3' ||
     process.env.DISABLE_FIREBASE_V2_FALLBACK
   ) {
@@ -81,6 +85,21 @@ function selectPackageHistoryVersions(
   }
 
   return limitedVersions
+}
+
+function selectBuiltHistory(
+  history: PackageHistory | null,
+  limit: number,
+  includeVersion: (version: string) => boolean,
+): PackageHistory {
+  const snapshots = history ?? {}
+  const versions = Object.keys(snapshots).map(decodeFirebaseKey)
+
+  return Object.fromEntries(
+    selectPackageHistoryVersions(versions, limit, includeVersion).map(
+      version => [version, snapshots[encodeFirebaseKey(version)]],
+    ),
+  )
 }
 
 class FirebaseUtils {
@@ -130,7 +149,13 @@ class FirebaseUtils {
   async getPackageHistory(
     name: string,
     limit = 15,
-    includeVersion: (version: string) => boolean = () => true,
+    {
+      includeVersion = () => true,
+      entryPoint: selectedEntryPoint,
+    }: {
+      includeVersion?: (version: string) => boolean
+      entryPoint?: string
+    } = {},
   ): Promise<PackageHistory> {
     if (!this.firebase) {
       return {}
@@ -139,13 +164,13 @@ class FirebaseUtils {
     debug('package history %s', name)
     const packageHistory: PackageHistory = {}
     const firebase = this.firebase
+    const entryPoint = normalizeEntryPoint(selectedEntryPoint)
 
     const getHistoryFromKey = async (key: string) => {
       const ref = firebase
         .database()
         .ref()
-        .child(key)
-        .child(encodeFirebaseKey(name))
+        .child(cacheStoragePath(key, { name, entryPoint }).join('/'))
 
       return ref.once('value').then(snapshot => {
         // SAFETY: modules-v2 and modules-v3 history values are package snapshots.
@@ -153,7 +178,17 @@ class FirebaseUtils {
       })
     }
 
-    const firebasePromise = readPackageHistoryWithFallback(getHistoryFromKey)
+    const firebasePromise = readPackageHistoryWithFallback(
+      getHistoryFromKey,
+      entryPoint,
+    )
+
+    // Entry-point histories contain only measurements we actually built.
+    if (entryPoint) {
+      const history = await firebasePromise
+
+      return selectBuiltHistory(history, limit, includeVersion)
+    }
 
     const yarnPromise = axios.get<AlgoliaPackageResponse>(
       `https://${
@@ -185,10 +220,8 @@ class FirebaseUtils {
       versions = Object.keys(yarnInfo.data.versions)
     } catch (error) {
       console.error(error)
-      firebaseHistory = await firebasePromise
-      versions = Object.keys(firebaseHistory || {}).map(version =>
-        decodeFirebaseKey(version),
-      )
+
+      return selectBuiltHistory(await firebasePromise, limit, includeVersion)
     }
 
     const limitedVersions = selectPackageHistoryVersions(

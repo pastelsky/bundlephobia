@@ -4,11 +4,12 @@ import { LRUCache } from 'lru-cache'
 
 import {
   isCacheEntry,
+  cacheStoragePath,
   type CacheEntry,
   type CacheKey,
 } from '@bundlephobia/service-contracts/cache'
 
-import { encodeFirebaseKey } from './cache.utils.ts'
+import { normalizeEntryPoint } from '@bundlephobia/service-contracts/package'
 import type { CacheRepositoryConfig } from './cache.config.ts'
 
 const debug = createDebug('bp:cache')
@@ -18,8 +19,8 @@ export interface CacheRepository {
   set(key: CacheKey, result: CacheEntry): Promise<void>
 }
 
-function cacheKey({ name, version }: CacheKey): string {
-  return `${name}@${version}`
+function cacheKey({ name, version, entryPoint }: CacheKey): string {
+  return JSON.stringify([name, version, normalizeEntryPoint(entryPoint)])
 }
 
 export function createCacheRepository(
@@ -36,9 +37,7 @@ export function createCacheRepository(
     const snapshot = await firebase
       .database()
       .ref()
-      .child(root)
-      .child(encodeFirebaseKey(key.name))
-      .child(encodeFirebaseKey(key.version))
+      .child(cacheStoragePath(root, key).join('/'))
       .once('value')
 
     const value = snapshot.val()
@@ -71,7 +70,7 @@ export function createCacheRepository(
         return result
       }
 
-      if (config.fallbackReadKey) {
+      if (config.fallbackReadKey && !normalizeEntryPoint(key.entryPoint)) {
         const fallbackResult = await getFromFirebase(
           config.fallbackReadKey,
           key,
@@ -92,9 +91,7 @@ export function createCacheRepository(
       await firebase
         .database()
         .ref()
-        .child(config.writeKey)
-        .child(encodeFirebaseKey(key.name))
-        .child(encodeFirebaseKey(key.version))
+        .child(cacheStoragePath(config.writeKey, key).join('/'))
         .set(result)
 
       // Keep memory and durable storage write-through consistent.

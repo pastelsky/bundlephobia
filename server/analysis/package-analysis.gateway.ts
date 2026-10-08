@@ -96,6 +96,23 @@ export class PackageAnalysisGateway {
     return adapter.analyzePackage(resolved, options)
   }
 
+  listPackageEntryPoints(
+    resolved: ResolvedAnalysisPackage,
+    options: AnalysisRequestOptions,
+  ): Promise<string[]> {
+    const adapter = this.adapterFor(resolved.language, 'entry-points')
+
+    if (!adapter.listPackageEntryPoints) {
+      throw new PackageAnalysisGatewayError(
+        'LanguageAdapterNotFound',
+        resolved.language,
+        'entry-points',
+      )
+    }
+
+    return adapter.listPackageEntryPoints(resolved, options)
+  }
+
   analyzePackageExports(
     resolved: ResolvedAnalysisPackage,
     options: AnalysisRequestOptions,

@@ -17,6 +17,7 @@ export type PackageHistoryOptions = {
   from?: string
   to?: string
   limit: number
+  entryPoint?: string
 }
 
 function inRange(date: string, options: PackageHistoryOptions): boolean {
@@ -150,13 +151,18 @@ export async function fetchPackageHistory(
   const packument = await fetchPackagePackument(packageName)
   const publishDates = getPublishDates(packument.time)
 
+  const includeVersion = (version: string) => {
+    const publishedAt = publishDates[version]
+
+    return publishedAt ? inRange(publishedAt, options) : false
+  }
+
   const history = await firebaseUtils.getPackageHistory(
     packageName,
     options.limit,
-    version => {
-      const publishedAt = publishDates[version]
-
-      return publishedAt ? inRange(publishedAt, options) : false
+    {
+      includeVersion,
+      entryPoint: options.entryPoint,
     },
   )
 
@@ -172,6 +178,7 @@ export async function fetchPackageHistory(
 
   return {
     name: packageName,
+    entryPoint: options.entryPoint,
     repository,
     versions,
     ...releaseMetadata(packument.time, options),

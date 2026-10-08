@@ -1,4 +1,8 @@
 import { z } from 'zod'
+import {
+  normalizeEntryPoint,
+  packageEntryPointSchema,
+} from '../package.contract.ts'
 
 import type {
   CacheEntry,
@@ -7,6 +11,8 @@ import type {
   CacheRequestBody,
   ExportsCacheResult,
   PackageCacheResult,
+  NamedExportsCacheResult,
+  EntryPointsCacheResult,
 } from './cache.type.ts'
 
 export const cacheValueSchema: z.ZodType<CacheValue> = z.lazy(() =>
@@ -28,6 +34,9 @@ const cacheKeySchema = z
   .object({
     name: z.string().min(1),
     version: z.string().min(1),
+    entryPoint: packageEntryPointSchema
+      .transform(normalizeEntryPoint)
+      .optional(),
   })
   .strict()
 
@@ -55,6 +64,31 @@ const exportsCacheResultSchema = cacheKeySchema
 const cacheRequestBodySchema = cacheKeySchema
   .extend({ result: cacheEntrySchema })
   .strict()
+
+const namedExportsCacheResultSchema = cacheKeySchema.extend({
+  exports: z.record(z.string(), z.string()),
+})
+
+const entryPointsCacheResultSchema = cacheKeySchema.extend({
+  entryPoint: z.undefined().optional(),
+  entryPoints: z.array(packageEntryPointSchema),
+})
+
+export function parseNamedExportsCacheResult(
+  value: CacheValue,
+): NamedExportsCacheResult | null {
+  const result = namedExportsCacheResultSchema.safeParse(value)
+
+  return result.success ? result.data : null
+}
+
+export function parseEntryPointsCacheResult(
+  value: CacheValue,
+): EntryPointsCacheResult | null {
+  const result = entryPointsCacheResultSchema.safeParse(value)
+
+  return result.success ? result.data : null
+}
 
 export function isCacheValue(value: CacheValue): value is CacheValue {
   return cacheValueSchema.safeParse(value).success

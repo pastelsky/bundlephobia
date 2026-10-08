@@ -50,42 +50,22 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
       ctx.state.resolved
 
     const { force, record, package: packageQuery } = ctx.query
+    const { entryPoint, signal } = ctx.state.analysis
     const requestedPackage = getRequestedPackage(packageQuery)
 
     const buildStart = now()
-    const abortController = new AbortController()
 
-    const onAborted = () => {
-      if (ctx.res.writableEnded) return
-
-      logger.info(
-        'BUILD_ABORTED',
-        {
-          requestId: ctx.state.id,
-          packageString,
-          language: ctx.state.analysis.language,
-          operation: ctx.state.analysis.operation,
-        },
-        `BUILD_ABORTED: client closed connection for package ${packageString}`,
-      )
-      abortController.abort()
-    }
-
-    ctx.res.on('close', onAborted)
-
-    let result: PackageBuildResult
-
-    try {
-      result = await packageAnalysisGateway.analyzePackage(ctx.state.resolved, {
+    const result = await packageAnalysisGateway.analyzePackage(
+      ctx.state.resolved,
+      {
         priority,
-        signal: abortController.signal,
+        entryPoint,
+        signal,
         onComplete: durationMs => {
           ctx.set(BUILD_DURATION_HEADER, String(durationMs))
         },
-      })
-    } finally {
-      ctx.res.off('close', onAborted)
-    }
+      },
+    )
 
     const buildEnd = now()
 
@@ -98,6 +78,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
       version,
       description,
       repository,
+      entryPoint,
     }
 
     ctx.body = body
@@ -124,7 +105,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
     }
 
     if (force === 'true') {
-      void cache.setPackageSize({ name, version }, body)
+      await cache.setPackageSize({ name, version, entryPoint }, body)
     }
   }
 }

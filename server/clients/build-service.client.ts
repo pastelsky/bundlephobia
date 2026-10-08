@@ -5,6 +5,10 @@ import CustomError from '../custom-error'
 import { JobCancelledError } from '../infrastructure/queue.service'
 import type { AnalysisOperation } from '../analysis/contracts'
 import type { RuntimeValue } from '../../types/json'
+import {
+  normalizeEntryPoint,
+  ENTRY_POINT_HEADER,
+} from '@bundlephobia/service-contracts/package'
 import { createAnalysisKey, createQueueType } from '../analysis/keys'
 import config from '../config'
 import { logger, pool, requestQueue } from '../infrastructure/runtime'
@@ -26,6 +30,10 @@ const OperationType = {
     legacyName: 'PACKAGE_EXPORTS_SIZES',
     operation: 'package-export-sizes',
   },
+  PACKAGE_ENTRY_POINTS: {
+    legacyName: 'PACKAGE_ENTRY_POINTS',
+    operation: 'package-entry-points',
+  },
 } as const
 
 interface OperationDefinition {
@@ -37,10 +45,12 @@ interface OperationDefinition {
 
 interface BuildServiceJobParams {
   packageString: string
+  entryPoint?: string
   onComplete?: (durationMs: number) => void
 }
 
 interface BuildRequestOptions {
+  entryPoint?: string
   signal?: AbortSignal
   onComplete?: (durationMs: number) => void
 }
@@ -48,6 +58,7 @@ interface BuildRequestOptions {
 interface BuildExecutionOptions {
   operation: OperationDefinition
   packageString: string
+  entryPoint?: string
   signal: AbortSignal
   onComplete?: (durationMs: number) => void
   startedAt: number
@@ -79,18 +90,24 @@ export default class BuildService {
         endpoint: '/exports-sizes',
         methodName: 'getPackageExportSizes',
       },
+      {
+        ...OperationType.PACKAGE_ENTRY_POINTS,
+        endpoint: '/entry-points',
+        methodName: 'getPackageEntryPoints',
+      },
     ] as const
 
     operations.forEach(operation => {
       requestQueue.addExecutor<BuildServiceJobParams, RuntimeValue>(
         createQueueType('javascript', operation.operation),
-        async ({ packageString, onComplete }, { signal }) => {
+        async ({ packageString, entryPoint, onComplete }, { signal }) => {
           const startedAt = performance.now()
 
           if (process.env.BUILD_SERVICE_ENDPOINT) {
             return this.executeRemoteBuild({
               operation,
               packageString,
+              entryPoint,
               signal,
               onComplete,
               startedAt,
@@ -100,6 +117,7 @@ export default class BuildService {
           return this.executeLocalBuild({
             operation,
             packageString,
+            entryPoint,
             signal,
             onComplete,
             startedAt,
@@ -125,19 +143,31 @@ export default class BuildService {
   private async executeRemoteBuild({
     operation,
     packageString,
+    entryPoint,
     signal,
     onComplete,
     startedAt,
   }: BuildExecutionOptions) {
     try {
       const response = await axios.get(
-        `${process.env.BUILD_SERVICE_ENDPOINT}${operation.endpoint}?p=${encodeURIComponent(packageString)}`,
+        `${process.env.BUILD_SERVICE_ENDPOINT}${operation.endpoint}?p=${encodeURIComponent(packageString)}${entryPoint ? `&entryPoint=${encodeURIComponent(entryPoint)}` : ''}`,
         {
           signal,
           timeout: config.WORKER_TIMEOUT,
           maxContentLength: MAX_BUILD_SERVICE_RESPONSE_BYTES,
         },
       )
+
+      if (
+        entryPoint &&
+        response.headers[ENTRY_POINT_HEADER] !== encodeURIComponent(entryPoint)
+      ) {
+        throw new CustomError(
+          'BuildServiceUnavailableError',
+          { reason: 'ENTRY_POINT_PROTOCOL_MISMATCH' },
+          undefined,
+        )
+      }
 
       return response.data
     } catch (error) {
@@ -157,12 +187,13 @@ export default class BuildService {
   private async executeLocalBuild({
     operation,
     packageString,
+    entryPoint,
     signal,
     onComplete,
     startedAt,
   }: BuildExecutionOptions) {
     const execution = pool
-      .exec(operation.methodName, [packageString])
+      .exec(operation.methodName, [packageString, { entryPoint }])
       .timeout(config.WORKER_TIMEOUT)
 
     let rejectCancellation: (error: JobCancelledError) => void = () => {}
@@ -200,6 +231,8 @@ export default class BuildService {
   }
 
   private handleError<T>(error: T, operation: OperationDefinition): never {
+    if (error instanceof CustomError) throw error
+
     if (axios.isAxiosError(error) && error.response) {
       // SAFETY: the build service error endpoint returns this documented payload.
       const contents = error.response.data as BuildServerErrorPayload
@@ -245,6 +278,7 @@ export default class BuildService {
         language: 'javascript',
         operation: OperationType.PACKAGE_BUILD_STATS.operation,
         packageSpecifier: packageString,
+        entryPoint: options.entryPoint,
       }),
       type: createQueueType(
         'javascript',
@@ -252,6 +286,7 @@ export default class BuildService {
       ),
       jobParams: {
         packageString,
+        entryPoint: normalizeEntryPoint(options.entryPoint),
         onComplete: options.onComplete,
       },
       options: { priority, signal: options.signal },
@@ -270,6 +305,7 @@ export default class BuildService {
         language: 'javascript',
         operation: OperationType.PACKAGE_EXPORTS.operation,
         packageSpecifier: packageString,
+        entryPoint: options.entryPoint,
       }),
       type: createQueueType(
         'javascript',
@@ -277,6 +313,7 @@ export default class BuildService {
       ),
       jobParams: {
         packageString,
+        entryPoint: normalizeEntryPoint(options.entryPoint),
         onComplete: options.onComplete,
       },
       options: { priority, signal: options.signal },
@@ -295,6 +332,7 @@ export default class BuildService {
         language: 'javascript',
         operation: OperationType.PACKAGE_EXPORTS_SIZES.operation,
         packageSpecifier: packageString,
+        entryPoint: options.entryPoint,
       }),
       type: createQueueType(
         'javascript',
@@ -302,8 +340,26 @@ export default class BuildService {
       ),
       jobParams: {
         packageString,
+        entryPoint: normalizeEntryPoint(options.entryPoint),
         onComplete: options.onComplete,
       },
+      options: { priority, signal: options.signal },
+    })
+  }
+
+  getPackageEntryPoints(
+    packageString: string,
+    priority: number,
+    options: BuildRequestOptions = {},
+  ): Promise<string[]> {
+    return requestQueue.process<string[], BuildServiceJobParams>({
+      id: createAnalysisKey({
+        language: 'javascript',
+        operation: 'package-entry-points',
+        packageSpecifier: packageString,
+      }),
+      type: createQueueType('javascript', 'package-entry-points'),
+      jobParams: { packageString, onComplete: options.onComplete },
       options: { priority, signal: options.signal },
     })
   }

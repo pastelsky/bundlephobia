@@ -20,6 +20,8 @@ export interface ResolvedPackageState
 export interface PackageAnalysisRequestState {
   language: LanguageId
   operation: AnalysisOperation
+  entryPoint?: string
+  signal?: AbortSignal
 }
 
 export interface FailureCacheEntry {

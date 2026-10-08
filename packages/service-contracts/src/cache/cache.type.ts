@@ -11,6 +11,7 @@ export type CacheEntry = Exclude<CacheValue, null>
 export interface CacheKey {
   name: string
   version: string
+  entryPoint?: string
 }
 
 export interface CacheRequestBody extends CacheKey {
@@ -32,15 +33,25 @@ export interface ExportsCacheResult extends CacheKey {
   assets: CachedExportAsset[]
 }
 
+export interface NamedExportsCacheResult extends CacheKey {
+  exports: Record<string, string>
+}
+
+export interface EntryPointsCacheResult extends CacheKey {
+  entryPoints: string[]
+}
+
 export type CacheReadResult<T> =
   | { status: 'hit'; value: T }
   | { status: 'miss' }
   | { status: 'unavailable'; error: Error }
   | { status: 'invalid'; error: Error }
 
-export type CacheRoute = 'package' | 'exports'
+export type CacheRoute = 'package' | 'exports' | 'namedExports' | 'entryPoints'
 
 export const CACHE_ROUTE = {
   package: '/package-cache',
   exports: '/exports-cache',
+  namedExports: '/named-exports-cache',
+  entryPoints: '/entry-points-cache',
 } as const satisfies Record<CacheRoute, string>

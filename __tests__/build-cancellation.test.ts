@@ -1,10 +1,12 @@
 import AbortController from 'abort-controller'
 import { EventEmitter } from 'events'
+import type { Middleware } from 'koa'
 
 import logger from '../server/infrastructure/logger.service'
 import { JobCancelledError } from '../server/infrastructure/queue.service'
 import { packageAnalysisGateway } from '../server/analysis'
 import { createBuildMiddleware } from '../server/middlewares/results/build-result.middleware'
+import { createAnalysisContextMiddleware } from '../server/middlewares/analysis-context.middleware'
 
 const mockAnalyzePackage = jest.spyOn(packageAnalysisGateway, 'analyzePackage')
 
@@ -14,7 +16,10 @@ const cache = {
   setPackageSize: jest.fn(),
 }
 
-const buildMiddleware = createBuildMiddleware(cache)
+const buildMiddleware: Middleware = (ctx, next) =>
+  createAnalysisContextMiddleware('package-analysis')(ctx, () =>
+    createBuildMiddleware(cache)(ctx, next),
+  )
 
 function createContext() {
   const request = new EventEmitter()

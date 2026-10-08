@@ -7,57 +7,71 @@ import { packageAnalysisGateway } from '../analysis'
 import { BUILD_DURATION_HEADER } from '../clients/build-service.client'
 import config from '../config'
 import logger from '../infrastructure/logger.service'
+import type CacheServiceClient from '../clients/cache-service.client'
 
-const exportsMiddleware: Middleware = async ctx => {
-  const priority = getRequestPriority(ctx)
-  const { name, version, packageString } = ctx.state.resolved
-  const { force, package: packageQuery } = ctx.query
+export function createExportsMiddleware(cache: CacheServiceClient): Middleware {
+  return async ctx => {
+    const priority = getRequestPriority(ctx)
+    const { name, version, packageString } = ctx.state.resolved
+    const { force, package: packageQuery } = ctx.query
+    const { entryPoint, signal } = ctx.state.analysis
 
-  const requestedPackage = Array.isArray(packageQuery)
-    ? packageQuery.join('/')
-    : packageQuery
+    const requestedPackage = Array.isArray(packageQuery)
+      ? packageQuery.join('/')
+      : packageQuery
 
-  const buildStart = now()
+    const buildStart = now()
 
-  const result = await packageAnalysisGateway.analyzePackageExports(
-    ctx.state.resolved,
-    {
-      priority,
-      onComplete: durationMs => {
-        ctx.set(BUILD_DURATION_HEADER, String(durationMs))
+    const result = await packageAnalysisGateway.analyzePackageExports(
+      ctx.state.resolved,
+      {
+        priority,
+        entryPoint,
+        signal,
+        onComplete: durationMs => {
+          ctx.set(BUILD_DURATION_HEADER, String(durationMs))
+        },
       },
-    },
-  )
+    )
 
-  const buildEnd = now()
+    const buildEnd = now()
 
-  ctx.cacheControl = {
-    maxAge:
-      force === null || force === undefined
-        ? requestedPackage &&
-          packageAnalysisGateway.isExactVersionSpecifier(
-            createJavaScriptPackageReference(requestedPackage),
-          )
-          ? config.CACHE.SIZE_API_HAS_VERSION
-          : config.CACHE.SIZE_API_DEFAULT
-        : 0,
+    ctx.cacheControl = {
+      maxAge:
+        force === null || force === undefined
+          ? requestedPackage &&
+            packageAnalysisGateway.isExactVersionSpecifier(
+              createJavaScriptPackageReference(requestedPackage),
+            )
+            ? config.CACHE.SIZE_API_HAS_VERSION
+            : config.CACHE.SIZE_API_DEFAULT
+          : 0,
+    }
+
+    const body = {
+      name,
+      version,
+      exports: result,
+      entryPoint,
+    }
+
+    ctx.body = body
+
+    if (force === 'true')
+      await cache.setNamedExports({ name, version, entryPoint }, body)
+    const time = buildEnd - buildStart
+
+    logger.info(
+      'BUILD_EXPORTS',
+      {
+        result,
+        requestId: ctx.state.id,
+        packageString,
+        language: ctx.state.analysis.language,
+        operation: ctx.state.analysis.operation,
+        time,
+      },
+      `BUILD EXPORTS: ${packageString} built in ${time.toFixed()}s`,
+    )
   }
-
-  ctx.body = { name, version, exports: result }
-  const time = buildEnd - buildStart
-
-  logger.info(
-    'BUILD_EXPORTS',
-    {
-      result,
-      requestId: ctx.state.id,
-      packageString,
-      language: ctx.state.analysis.language,
-      operation: ctx.state.analysis.operation,
-      time,
-    },
-    `BUILD EXPORTS: ${packageString} built in ${time.toFixed()}s`,
-  )
 }
-
-export default exportsMiddleware

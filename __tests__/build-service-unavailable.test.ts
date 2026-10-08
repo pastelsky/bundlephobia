@@ -127,7 +127,13 @@ describe('build service unavailability', () => {
       extra: undefined,
     }
 
-    expect(serializeError({ toJSON: () => serialized })).toEqual(serialized)
+    expect(
+      serializeError(
+        Object.assign(new Error('EntryPointError'), {
+          toJSON: () => serialized,
+        }),
+      ),
+    ).toEqual(serialized)
   })
 
   it('preserves custom error details containing circular data', () => {

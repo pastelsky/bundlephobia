@@ -271,6 +271,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bundlephobia/service-contracts@link:../packages/service-contracts::locator=build-service%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@bundlephobia/service-contracts@link:../packages/service-contracts::locator=build-service%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "@emnapi/core@npm:1.11.3":
   version: 1.11.3
   resolution: "@emnapi/core@npm:1.11.3"
@@ -2762,6 +2768,7 @@ __metadata:
   resolution: "build-service@workspace:."
   dependencies:
     "@amplitude/node": "npm:^1.10.2"
+    "@bundlephobia/service-contracts": "link:../packages/service-contracts"
     "@rspack/core": "npm:2.2.8"
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^4.25.2"

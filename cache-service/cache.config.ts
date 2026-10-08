@@ -1,4 +1,5 @@
 import 'dotenv-defaults/config.js'
+import type { CacheRoute } from '@bundlephobia/service-contracts/cache'
 
 export interface CacheRepositoryConfig {
   readKey: string
@@ -32,4 +33,14 @@ export const cacheConfig = {
         : undefined,
     memoryMax: 1500,
   },
-} as const satisfies Record<'package' | 'exports', CacheRepositoryConfig>
+  namedExports: {
+    readKey: 'named-exports-v1',
+    writeKey: 'named-exports-v1',
+    memoryMax: 1500,
+  },
+  entryPoints: {
+    readKey: 'entry-points-v1',
+    writeKey: 'entry-points-v1',
+    memoryMax: 1500,
+  },
+} as const satisfies Record<CacheRoute, CacheRepositoryConfig>

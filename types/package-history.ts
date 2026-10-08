@@ -15,6 +15,7 @@ export type PackageHistoryVersion = {
 
 export type PackageHistoryResponse = {
   name: string
+  entryPoint?: string
   repository: string | null
   versions: PackageHistoryVersion[]
   releases: PackageHistoryRelease[]
