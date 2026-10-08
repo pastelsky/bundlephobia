@@ -9050,7 +9050,7 @@ __metadata:
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^4.25.2"
     now-logs: "npm:^0.0.7"
-    package-build-stats: "npm:9.4.0"
+    package-build-stats: "npm:9.5.0"
     safe-stable-stringify: "npm:^2.5.0"
     truncate: "npm:^3.0.0"
     zod: "npm:^4.4.2"
@@ -9191,7 +9191,7 @@ __metadata:
     oxlint: "npm:^1.78.0"
     oxlint-tsgolint: "npm:7.0.2001"
     p-queue: "npm:^3.2.0"
-    package-build-stats: "npm:9.4.0"
+    package-build-stats: "npm:9.5.0"
     pacote: "npm:^11.3.5"
     performance-now: "npm:^2.1.0"
     postcss: "npm:^8.4.33"
@@ -19230,9 +19230,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-build-stats@npm:9.4.0":
-  version: 9.4.0
-  resolution: "package-build-stats@npm:9.4.0"
+"package-build-stats@npm:9.5.0":
+  version: 9.5.0
+  resolution: "package-build-stats@npm:9.5.0"
   dependencies:
     "@babel/core": "npm:^7.28.5"
     "@rspack/core": "npm:^2.2.8"
@@ -19256,6 +19256,7 @@ __metadata:
     oxc-walker: "npm:^0.5.2"
     p-queue: "npm:^9.3.1"
     pify: "npm:^6.1.0"
+    pkg-entry-points: "npm:1.1.2"
     postcss: "npm:^8.4.0"
     postcss-loader: "npm:^8.2.1"
     rimraf: "npm:^6.1.0"
@@ -19269,7 +19270,7 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     package-stats: bin/cli.js
-  checksum: 60becd00100152024534023d65480330e660832f4fd82976a19257bf3bd2fbb693a10d7d755c2142403ead8a6df3db2732b5a79714264ad07b5d6c5fab4ffe36
+  checksum: 619232f26d5115d5cd067ec66898effd7976505c39a9cb4950ccea364c5ebab39ba2ced928e53303beec29cf28111c941a56b8282094a805cba6260797448e21
   languageName: node
   linkType: hard
 
@@ -19854,6 +19855,13 @@ __metadata:
   dependencies:
     find-up-simple: "npm:^1.0.0"
   checksum: 244c6af67540b7eeab823c56f61a6ca414fe48108a484bcb3b0743acc0dfaf106705555c353d65608ccd8ac3d9f696110e9b6bf55ef08f5f6a8d535a72a418e8
+  languageName: node
+  linkType: hard
+
+"pkg-entry-points@npm:1.1.2":
+  version: 1.1.2
+  resolution: "pkg-entry-points@npm:1.1.2"
+  checksum: e796c4beb0a750f37637761f9c398a108280c88c1ab540b9e8a768d07a4ed2d642cafce839d1b31e4b023661e0fd03c7ec3ad4cb6be26dabff0d571afeebe5e3
   languageName: node
   linkType: hard
 
