@@ -37,6 +37,15 @@ export default function buildMissRateLimit(
   const db: Record<string, RateLimitEntry> = {}
 
   return async (ctx, next) => {
+    // HAProxy measures completed work; only cache misses spend this budget.
+    if (ctx.get('X-Bundlephobia-Build-Budget-Exceeded') === 'true') {
+      ctx.set('Retry-After', '300')
+      ctx.status = 429
+      ctx.body = message429
+
+      return
+    }
+
     if (ctx.method === 'OPTIONS') {
       await next()
 

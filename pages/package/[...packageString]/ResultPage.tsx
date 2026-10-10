@@ -1,6 +1,8 @@
 import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
+import type { GetServerSidePropsContext } from 'next'
+import type { AxiosResponse } from 'axios'
 
 import Analytics, { type PackageLoadSource } from '../../../client/analytics'
 import API, {
@@ -42,6 +44,8 @@ type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
 type ResultPageProps = {
   router: NextRouter
+  initialResult: PackageBuildInfo | null
+  initialError?: unknown
 }
 
 type ResultPageState = {
@@ -83,9 +87,13 @@ function getPackageStringFromRouter(router: NextRouter) {
 
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   state: ResultPageState = {
-    results: null,
-    resultsPromiseState: null,
-    resultsError: null,
+    results: this.props.initialResult,
+    resultsPromiseState: this.props.initialError
+      ? 'rejected'
+      : this.props.initialResult
+        ? 'fulfilled'
+        : null,
+    resultsError: this.props.initialError ?? null,
     historicalResultsPromiseState: null,
     inputInitialValue: getPackageStringFromRouter(this.props.router),
     historicalResults: null,
@@ -101,9 +109,20 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     requestId === this.searchRequestId
 
   componentDidMount() {
+    if (this.props.initialError) return
     const packageString = getPackageStringFromRouter(this.props.router)
 
     if (packageString) {
+      if (this.props.initialResult) {
+        this.activeQuery = packageString
+        Analytics.packageLoadStarted(packageString, 'page_load')
+        Analytics.packageResultViewed(packageString, 'page_load')
+        this.fetchHistory(packageString, this.searchRequestId)
+        this.fetchSimilarPackages(packageString, this.searchRequestId)
+
+        return
+      }
+
       this.loadPackage(packageString, 'page_load')
     }
   }
@@ -554,12 +573,16 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       <div className="result-error">
         <EmptyBox className="result-error__img" />
         <h2 className="result-error__code">{errorName}</h2>
-        <p
-          className="result-error__message"
-          dangerouslySetInnerHTML={{
-            __html: sanitizeErrorHTML(errorBody ?? ''),
-          }}
-        />
+        {this.props.initialError ? (
+          <p className="result-error__message">{errorBody}</p>
+        ) : (
+          <p
+            className="result-error__message"
+            dangerouslySetInnerHTML={{
+              __html: sanitizeErrorHTML(errorBody ?? ''),
+            }}
+          />
+        )}
         {errorDetails && (
           <details className="result-error__details">
             <summary>Details</summary>
@@ -684,8 +707,89 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 }
 
-export const getServerSideProps = () => {
-  return { props: {} }
+function analysisRequestHeaders(req: GetServerSidePropsContext['req']) {
+  return {
+    'User-Agent': req.headers['user-agent'],
+    'CF-Connecting-IP':
+      req.headers['cf-connecting-ip'] ?? req.socket.remoteAddress,
+    'X-Bundlephobia-Prefer-Cached': req.headers['x-bundlephobia-prefer-cached'],
+    'X-Bundlephobia-Build-Budget-Exceeded':
+      req.headers['x-bundlephobia-build-budget-exceeded'],
+  }
+}
+
+function forwardAnalysisHeaders(
+  headers: AxiosResponse['headers'],
+  res: GetServerSidePropsContext['res'],
+) {
+  for (const header of ['x-bundlephobia-build-duration-ms', 'retry-after']) {
+    const value = headers[header]
+
+    if (value) res.setHeader(header, String(value))
+  }
+}
+
+export const getServerSideProps = async ({
+  params,
+  query,
+  req,
+  res,
+}: GetServerSidePropsContext) => {
+  const packageString = params?.packageString
+
+  const specifier = Array.isArray(packageString)
+    ? packageString.join('/')
+    : packageString
+
+  res.setHeader('Vary', 'User-Agent')
+  res.setHeader('Cache-Control', 'private, no-store')
+
+  // Visitors keep the existing client lookup; crawlers await the same bounded API.
+  if (
+    !specifier ||
+    (!query.force && req.headers['x-bundlephobia-prefer-cached'] !== 'true')
+  )
+    return { props: { initialResult: null } }
+
+  const { default: axios } = await import('axios')
+  const port = req.socket.localPort
+
+  try {
+    const response = await axios.get<PackageBuildInfo>(
+      `http://127.0.0.1:${port}/api/size`,
+      {
+        params: { package: specifier, force: query.force, peep: query.peep },
+        headers: analysisRequestHeaders(req),
+        timeout: 55000,
+        validateStatus: () => true,
+      },
+    )
+
+    res.statusCode = response.status
+    forwardAnalysisHeaders(response.headers, res)
+
+    return {
+      props:
+        response.status === 200
+          ? { initialResult: response.data }
+          : { initialResult: null, initialError: response.data },
+    }
+  } catch {
+    res.statusCode = 503
+    res.setHeader('Retry-After', '60')
+
+    return {
+      props: {
+        initialResult: null,
+        initialError: {
+          error: {
+            code: 'ServiceUnavailableError',
+            message: 'Analysis is temporarily unavailable.',
+          },
+        },
+      },
+    }
+  }
 }
 
 export default withRouter(ResultPage)

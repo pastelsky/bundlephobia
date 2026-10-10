@@ -89,7 +89,9 @@ export async function startServer(): Promise<void> {
     server.use(
       limit({
         duration: 1000 * 60 * 5,
-        max: 120,
+        // Match the proxy's per-client read allowance. Build admission is
+        // separately limited after cache lookup on the analysis routes.
+        max: 950,
         whiteList: ['127.0.0.1', '::1'],
       }),
     )
