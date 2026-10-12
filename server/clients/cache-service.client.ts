@@ -5,6 +5,7 @@ import createDebug from 'debug'
 
 import {
   CACHE_ROUTE,
+  LATEST_BUILT_CACHE_VERSION,
   parseExportsCacheResult,
   parsePackageCacheResult,
   type CacheKey,
@@ -49,6 +50,12 @@ export default class CacheServiceClient {
       parse: parsePackageCacheResult,
       label: 'package',
     })
+  }
+
+  getLatestBuiltPackageSize(
+    name: string,
+  ): Promise<CacheReadResult<PackageCacheResult>> {
+    return this.getPackageSize({ name, version: LATEST_BUILT_CACHE_VERSION })
   }
 
   async setPackageSize(

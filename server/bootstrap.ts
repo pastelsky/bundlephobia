@@ -86,13 +86,26 @@ export async function startServer(): Promise<void> {
   server.use(apiDiscoveryMiddleware)
 
   if (!dev) {
-    server.use(
+    const createRequestLimit = (max: number) =>
       limit({
         duration: 1000 * 60 * 5,
-        max: 120,
+        max,
         whiteList: ['127.0.0.1', '::1'],
-      }),
-    )
+      })
+
+    const defaultRequestLimit = createRequestLimit(120)
+    const crawlerReadRequestLimit = createRequestLimit(950)
+
+    server.use(async (ctx, nextMiddleware) => {
+      const isCrawlerCacheRead =
+        ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
+
+      const requestLimit = isCrawlerCacheRead
+        ? crawlerReadRequestLimit
+        : defaultRequestLimit
+
+      await requestLimit(ctx, nextMiddleware)
+    })
   }
 
   server.use(async (ctx, nextMiddleware) => {

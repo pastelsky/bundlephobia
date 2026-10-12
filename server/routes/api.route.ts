@@ -49,7 +49,7 @@ export function registerApiRoutes(
     createAnalysisContextMiddleware('package-analysis'),
     errorMiddleware,
     blockBlacklistMiddleware,
-    createResolvePackageMiddleware('package-analysis'),
+    createResolvePackageMiddleware('package-analysis', cache),
     failureBackoffMiddleware,
     createCachedResponseMiddleware,
     buildMissRateLimit({
