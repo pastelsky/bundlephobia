@@ -11,11 +11,13 @@ import type CacheServiceClient from '../../clients/cache-service.client'
 import { debug, logger } from '../../infrastructure/runtime'
 
 function prefersBuiltRelease(ctx: Context, version: string | null) {
-  return (
-    ctx.get('X-Bundlephobia-Prefer-Cached') === 'true' &&
-    !ctx.query.force &&
-    [null, 'latest'].includes(version)
-  )
+  const hasCrawlerCachePreference =
+    ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
+
+  const forceWasRequested = Boolean(ctx.query.force)
+  const isLatestVersion = version === null || version === 'latest'
+
+  return hasCrawlerCachePreference && !forceWasRequested && isLatestVersion
 }
 
 async function serveBuiltRelease(
@@ -23,22 +25,27 @@ async function serveBuiltRelease(
   cache: Pick<CacheServiceClient, 'getLatestBuiltPackageSize'>,
   name: string,
 ) {
-  const cached = await cache.getLatestBuiltPackageSize(name)
+  const cacheResult = await cache.getLatestBuiltPackageSize(name)
 
-  if (cached.status === 'miss') return false
+  if (cacheResult.status === 'miss') return false
+
   ctx.cacheControl = { private: true, noStore: true }
-  ctx.status = cached.status === 'hit' ? 200 : 503
-  ctx.body =
-    cached.status === 'hit'
-      ? cached.value
-      : {
-          error: {
-            code: 'CacheUnavailable',
-            message: 'Cached analysis is temporarily unavailable.',
-          },
-        }
 
-  if (cached.status !== 'hit') ctx.set('Retry-After', '60')
+  if (cacheResult.status === 'hit') {
+    ctx.status = 200
+    ctx.body = cacheResult.value
+
+    return true
+  }
+
+  ctx.status = 503
+  ctx.body = {
+    error: {
+      code: 'CacheUnavailable',
+      message: 'Cached analysis is temporarily unavailable.',
+    },
+  }
+  ctx.set('Retry-After', '60')
 
   return true
 }
@@ -76,12 +83,15 @@ export function createResolvePackageMiddleware(
       packageString: `${parsedPackage.name}@${parsedPackage.version}`,
     }
 
-    if (
-      cache &&
-      prefersBuiltRelease(ctx, parsedPackage.version) &&
-      (await serveBuiltRelease(ctx, cache, parsedPackage.name))
-    )
-      return
+    if (cache && prefersBuiltRelease(ctx, parsedPackage.version)) {
+      const responseWasServed = await serveBuiltRelease(
+        ctx,
+        cache,
+        parsedPackage.name,
+      )
+
+      if (responseWasServed) return
+    }
 
     const resolveStart = now()
 

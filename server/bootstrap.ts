@@ -97,10 +97,12 @@ export async function startServer(): Promise<void> {
     const crawlerReadRequestLimit = createRequestLimit(950)
 
     server.use(async (ctx, nextMiddleware) => {
-      const requestLimit =
+      const isCrawlerCacheRead =
         ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
-          ? crawlerReadRequestLimit
-          : defaultRequestLimit
+
+      const requestLimit = isCrawlerCacheRead
+        ? crawlerReadRequestLimit
+        : defaultRequestLimit
 
       await requestLimit(ctx, nextMiddleware)
     })

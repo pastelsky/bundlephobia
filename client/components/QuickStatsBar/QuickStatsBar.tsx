@@ -9,6 +9,17 @@ import NPMIcon from '../../assets/npm-logo.svg'
 import InfoIcon from '../../assets/info.svg'
 import { PackageInfo } from '../../../types'
 
+function getDescriptionProps(
+  description: string,
+  shouldEscapeDescription: boolean,
+) {
+  if (shouldEscapeDescription) return { children: description }
+
+  return {
+    dangerouslySetInnerHTML: { __html: sanitizeHTML(description) },
+  }
+}
+
 type QuickStatsBarProps = Pick<
   PackageInfo,
   | 'name'
@@ -130,9 +141,7 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
     const statItemCount = this.getStatItemCount()
     const description = this.getTrimmedDescription()
 
-    const descriptionContent = escapeDescription
-      ? { children: description }
-      : { dangerouslySetInnerHTML: { __html: sanitizeHTML(description) } }
+    const descriptionProps = getDescriptionProps(description, escapeDescription)
 
     return (
       <div className="quick-stats-bar">
@@ -147,7 +156,7 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
               style={{
                 maxWidth: `${500 - statItemCount * 280}px`,
               }}
-              {...descriptionContent}
+              {...descriptionProps}
             />
           )}
         </div>
