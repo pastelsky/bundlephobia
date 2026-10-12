@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 
+import { sanitizeHTML } from '../../../utils/common.utils'
 import TreeShakeIcon from '../../assets/tree-shake.svg'
 import SideEffectIcon from '../../assets/side-effect.svg'
 import DependencyIcon from '../../assets/dependency.svg'
@@ -16,7 +17,7 @@ type QuickStatsBarProps = Pick<
   | 'dependencyCount'
   | 'isTreeShakeable'
   | 'hasSideEffects'
->
+> & { escapeDescription?: boolean }
 
 function SideEffectStat({
   hasSideEffects,
@@ -123,10 +124,15 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
       dependencyCount,
       name,
       repository,
+      escapeDescription = false,
     } = this.props
 
     const statItemCount = this.getStatItemCount()
     const description = this.getTrimmedDescription()
+
+    const descriptionContent = escapeDescription
+      ? { children: description }
+      : { dangerouslySetInnerHTML: { __html: sanitizeHTML(description) } }
 
     return (
       <div className="quick-stats-bar">
@@ -141,9 +147,8 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
               style={{
                 maxWidth: `${500 - statItemCount * 280}px`,
               }}
-            >
-              {description}
-            </span>
+              {...descriptionContent}
+            />
           )}
         </div>
 

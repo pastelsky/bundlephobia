@@ -86,15 +86,24 @@ export async function startServer(): Promise<void> {
   server.use(apiDiscoveryMiddleware)
 
   if (!dev) {
-    server.use(
+    const createRequestLimit = (max: number) =>
       limit({
         duration: 1000 * 60 * 5,
-        // Match the proxy's per-client read allowance. Build admission is
-        // separately limited after cache lookup on the analysis routes.
-        max: 950,
+        max,
         whiteList: ['127.0.0.1', '::1'],
-      }),
-    )
+      })
+
+    const defaultRequestLimit = createRequestLimit(120)
+    const crawlerReadRequestLimit = createRequestLimit(950)
+
+    server.use(async (ctx, nextMiddleware) => {
+      const requestLimit =
+        ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
+          ? crawlerReadRequestLimit
+          : defaultRequestLimit
+
+      await requestLimit(ctx, nextMiddleware)
+    })
   }
 
   server.use(async (ctx, nextMiddleware) => {

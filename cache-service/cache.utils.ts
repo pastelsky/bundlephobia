@@ -1,20 +1,18 @@
 import semver from 'semver'
-import { z } from 'zod'
-import type { CacheValue } from '@bundlephobia/service-contracts/cache'
 
 export function encodeFirebaseKey(key: string) {
   return key.replace(/[.]/g, ',').replace(/\//g, '__')
 }
 
-export function latestBuiltVersion(entries: CacheValue): string | null {
-  const parsed = z.record(z.string(), z.unknown()).safeParse(entries)
+export function latestBuiltVersion(versions: string[]): string | null {
+  const stableVersions: string[] = []
 
-  if (!parsed.success) return null
+  for (const key of versions) {
+    const version = key.replaceAll(',', '.')
 
-  return (
-    Object.keys(parsed.data)
-      .map(version => version.replaceAll(',', '.'))
-      .filter(version => semver.valid(version) && !semver.prerelease(version))
-      .sort(semver.rcompare)[0] ?? null
-  )
+    if (semver.valid(version) && !semver.prerelease(version))
+      stableVersions.push(version)
+  }
+
+  return stableVersions.sort(semver.rcompare)[0] ?? null
 }

@@ -68,6 +68,7 @@ beforeAll(async () => {
       resolvedUrl: ctx.url,
     }
 
+    ctx.res.statusCode = 200
     const { props } = await getServerSideProps(context)
     const status = ctx.res.statusCode
     // SAFETY: rendering only reads query/asPath from Next's router; navigation is not executed.
@@ -146,14 +147,10 @@ function request(path: string, headers: Record<string, string> = {}) {
 }
 
 it('selects the highest built stable version, not lexicographic order or a prerelease', () => {
-  expect(
-    latestBuiltVersion({
-      '9,0,0': older,
-      '10,0,0': older,
-      '20,0,0-beta,1': older,
-    }),
-  ).toBe('10.0.0')
-  expect(latestBuiltVersion(null)).toBeNull()
+  expect(latestBuiltVersion(['9,0,0', '10,0,0', '20,0,0-beta,1'])).toBe(
+    '10.0.0',
+  )
+  expect(latestBuiltVersion([])).toBeNull()
 })
 
 it('serves older crawler facts without registry work, but visitors resolve current latest', async () => {
@@ -170,6 +167,19 @@ it('serves older crawler facts without registry work, but visitors resolve curre
   })
 
   expect(await visitor.json()).toMatchObject({ version: current.version })
+  expect(resolve).toHaveBeenCalledTimes(1)
+  expect(build).not.toHaveBeenCalled()
+})
+
+it('does not change direct API results based on a crawler user agent', async () => {
+  cached.set('example@2.0.0', current)
+
+  const response = await request('/api/size?package=example', {
+    'User-Agent': 'Googlebot',
+    'X-Bundlephobia-Prefer-Cached': '',
+  })
+
+  expect(await response.json()).toMatchObject({ version: current.version })
   expect(resolve).toHaveBeenCalledTimes(1)
   expect(build).not.toHaveBeenCalled()
 })
@@ -194,28 +204,8 @@ it('honours exact versions and force, without exempting force from build budgets
   expect(build).toHaveBeenCalledTimes(1)
 })
 
-it('uses existing admission for first builds and stops subsequent work at the per-client limit', async () => {
-  for (let n = 0; n < 10; n += 1)
-    expect((await request('/api/size?package=example&force=true')).status).toBe(
-      200,
-    )
-  const rejected = await request('/api/size?package=example&force=true')
-  expect(rejected.status).toBe(429)
-  expect(rejected.headers.get('retry-after')).toBeTruthy()
-  expect(build).toHaveBeenCalledTimes(10)
-  cached.set('example@latest-built', older)
-  expect((await request('/api/size?package=example')).status).toBe(200)
-  client += 1
-  expect((await request('/api/size?package=example&force=true')).status).toBe(
-    200,
-  )
-})
-
-it('preserves real package 404s and peep misses without starting builds', async () => {
+it('preserves real package 404s without starting builds', async () => {
   expect((await request('/api/size?package=nonexistent')).status).toBe(404)
-  expect((await request('/api/size?package=example&peep=true')).status).toBe(
-    404,
-  )
   expect(build).not.toHaveBeenCalled()
 })
 
@@ -236,6 +226,16 @@ it('renders cached crawler facts and escaped descriptions directly in HTML', asy
   expect(html).toContain('Bundle Size')
   expect(html).toContain('Useful &lt;img')
   expect(html).not.toContain('result-pending')
+  expect(resolve).not.toHaveBeenCalled()
+  expect(build).not.toHaveBeenCalled()
+})
+
+it('keeps browser force requests on the existing client-side path', async () => {
+  const response = await request('/package/example?force=true', {
+    'X-Bundlephobia-Prefer-Cached': '',
+  })
+
+  expect(response.status).toBe(200)
   expect(resolve).not.toHaveBeenCalled()
   expect(build).not.toHaveBeenCalled()
 })

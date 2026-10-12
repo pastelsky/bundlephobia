@@ -20,10 +20,10 @@ function prefersBuiltRelease(ctx: Context, version: string | null) {
 
 async function serveBuiltRelease(
   ctx: Context,
-  cache: Pick<CacheServiceClient, 'getPackageSize'>,
+  cache: Pick<CacheServiceClient, 'getLatestBuiltPackageSize'>,
   name: string,
 ) {
-  const cached = await cache.getPackageSize({ name, version: 'latest-built' })
+  const cached = await cache.getLatestBuiltPackageSize(name)
 
   if (cached.status === 'miss') return false
   ctx.cacheControl = { private: true, noStore: true }
@@ -45,7 +45,7 @@ async function serveBuiltRelease(
 
 export function createResolvePackageMiddleware(
   operation: AnalysisOperation,
-  cache?: Pick<CacheServiceClient, 'getPackageSize'>,
+  cache?: Pick<CacheServiceClient, 'getLatestBuiltPackageSize'>,
 ): Middleware {
   return async (ctx, next) => {
     ctx.state.analysis = { language: 'javascript', operation }

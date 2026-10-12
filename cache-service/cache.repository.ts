@@ -4,6 +4,7 @@ import { LRUCache } from 'lru-cache'
 
 import {
   isCacheEntry,
+  LATEST_BUILT_CACHE_VERSION,
   type CacheEntry,
   type CacheKey,
 } from '@bundlephobia/service-contracts/cache'
@@ -12,6 +13,8 @@ import { encodeFirebaseKey, latestBuiltVersion } from './cache.utils.ts'
 import type { CacheRepositoryConfig } from './cache.config.ts'
 
 const debug = createDebug('bp:cache')
+
+const latestBuiltCacheTtlMs = 60_000
 
 export interface CacheRepository {
   get(key: CacheKey): Promise<CacheEntry | null>
@@ -57,7 +60,13 @@ export function createCacheRepository(
   ): Promise<CacheEntry | null> {
     // Existing histories are small; avoid a second persistent index/write path.
     const snapshot = await packageRef(root, name).once('value')
-    const newest = latestBuiltVersion(snapshot.val())
+    const versions: string[] = []
+
+    snapshot.forEach(child => {
+      if (child.key) versions.push(child.key)
+    })
+
+    const newest = latestBuiltVersion(versions)
 
     if (!newest) return null
 
@@ -74,7 +83,8 @@ export function createCacheRepository(
     key: CacheKey,
   ): Promise<CacheEntry | null> {
     // Internal cache query: newest built stable release, not npm latest.
-    if (key.version === 'latest-built') return latestBuilt(root, key.name)
+    if (key.version === LATEST_BUILT_CACHE_VERSION)
+      return latestBuilt(root, key.name)
 
     const snapshot = await firebase
       .database()
@@ -110,7 +120,10 @@ export function createCacheRepository(
       if (result !== null) {
         debug('cache hit: firebase (%s)', config.readKey)
         memoryCache.set(cacheKey(key), result, {
-          ttl: key.version === 'latest-built' ? 60000 : 0,
+          ttl:
+            key.version === LATEST_BUILT_CACHE_VERSION
+              ? latestBuiltCacheTtlMs
+              : 0,
         })
 
         return result
@@ -125,7 +138,10 @@ export function createCacheRepository(
         if (fallbackResult !== null) {
           debug('cache hit: firebase fallback (%s)', config.fallbackReadKey)
           memoryCache.set(cacheKey(key), fallbackResult, {
-            ttl: key.version === 'latest-built' ? 60000 : 0,
+            ttl:
+              key.version === LATEST_BUILT_CACHE_VERSION
+                ? latestBuiltCacheTtlMs
+                : 0,
           })
         }
 
@@ -146,7 +162,9 @@ export function createCacheRepository(
 
       // Keep memory and durable storage write-through consistent.
       memoryCache.set(cacheKey(key), result)
-      memoryCache.delete(cacheKey({ name: key.name, version: 'latest-built' }))
+      memoryCache.delete(
+        cacheKey({ name: key.name, version: LATEST_BUILT_CACHE_VERSION }),
+      )
     },
   }
 }

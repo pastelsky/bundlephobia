@@ -456,6 +456,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         }
         repository={results.repository}
         name={results.name}
+        escapeDescription={this.props.initialResult !== null}
       />
     )
   }
@@ -741,15 +742,13 @@ export const getServerSideProps = async ({
     ? packageString.join('/')
     : packageString
 
+  // Only proxy-classified crawlers use server-side analysis; visitors retain the
+  // existing client-side lookup, including explicit force requests.
+  if (!specifier || req.headers['x-bundlephobia-prefer-cached'] !== 'true')
+    return { props: { initialResult: null } }
+
   res.setHeader('Vary', 'User-Agent')
   res.setHeader('Cache-Control', 'private, no-store')
-
-  // Visitors keep the existing client lookup; crawlers await the same bounded API.
-  if (
-    !specifier ||
-    (!query.force && req.headers['x-bundlephobia-prefer-cached'] !== 'true')
-  )
-    return { props: { initialResult: null } }
 
   const { default: axios } = await import('axios')
   const port = req.socket.localPort
