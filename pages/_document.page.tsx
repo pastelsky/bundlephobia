@@ -22,6 +22,20 @@ const themeScript = `
 })();
 `
 
+// Source Code Pro is used for code snippets and search input, not the body
+// text that controls first paint. Load it after parsing so Google Fonts cannot
+// hold the initial render behind a cross-origin stylesheet request.
+const codeFontScript = `
+(function() {
+  var stylesheet = document.createElement('link');
+  stylesheet.rel = 'stylesheet';
+  stylesheet.href = 'https://fonts.googleapis.com/css?family=Source+Code+Pro:300,400,600&display=swap';
+  stylesheet.media = 'print';
+  stylesheet.onload = function() { stylesheet.media = 'all'; };
+  document.head.appendChild(stylesheet);
+})();
+`
+
 // Keep the Amplitude SDK out of the application bundle. This small queueing
 // bootstrap loads the browser SDK asynchronously and buffers events until it
 // is ready.
@@ -78,9 +92,10 @@ export default class MyDocument extends Document {
             href="https://fonts.gstatic.com"
             crossOrigin="anonymous"
           />
-          <link
-            href="https://fonts.googleapis.com/css?family=Source+Code+Pro:300,400,600"
-            rel="stylesheet"
+          <script
+            dangerouslySetInnerHTML={{
+              __html: codeFontScript,
+            }}
           />
           <link
             rel="search"

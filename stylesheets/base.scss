@@ -20,7 +20,7 @@ html {
 }
 
 code {
-  font-family: $font-family-code;
+  @include code-font;
 }
 
 // reset svg value received from normalize

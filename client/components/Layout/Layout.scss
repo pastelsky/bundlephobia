@@ -69,7 +69,7 @@ footer {
     position: relative;
     flex-grow: 1;
     text-align: center;
-    font-family: $font-family-code;
+    @include code-font;
     letter-spacing: 0.5px;
 
     a {
@@ -173,7 +173,7 @@ footer {
     }
 
     code {
-      font-family: $font-family-code;
+      @include code-font;
       padding: 0 math.div($global-spacing, 3) 0 $global-spacing;
       opacity: 0.9;
     }

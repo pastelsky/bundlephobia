@@ -101,7 +101,7 @@
 
       input {
         @include font-size-sm;
-        font-family: $font-family-code;
+        @include code-font;
         padding: ($global-spacing * 0.6) ($global-spacing * 1.5);
         border: none;
         border-radius: var(--trends-control-radius) !important;
@@ -172,7 +172,7 @@
   }
 
   &__name {
-    font-family: $font-family-code;
+    @include code-font;
     @include font-size-sm;
     font-weight: $font-weight-light;
     color: var(--color-text-primary);
@@ -605,7 +605,7 @@
   &__axis-label {
     @include font-size-xs;
     fill: var(--color-text-muted);
-    font-family: $font-family-code;
+    @include code-font;
 
     &--x {
       @include font-size-xxs;
@@ -687,7 +687,7 @@
 
     text {
       @include font-size-xs;
-      font-family: $font-family-code;
+      @include code-font;
       font-weight: $font-weight-light;
       paint-order: stroke;
       stroke: var(--color-bg-base);
@@ -756,7 +756,7 @@
 
   &__tooltip-date {
     @include font-size-xxs;
-    font-family: $font-family-code;
+    @include code-font;
     color: var(--color-tooltip-text-muted);
     padding-bottom: $global-spacing * 0.6;
     margin-bottom: $global-spacing * 0.7;
@@ -784,7 +784,7 @@
 
   &__tooltip-name {
     @include font-size-xxs;
-    font-family: $font-family-code;
+    @include code-font;
     font-weight: $font-weight-light;
     color: var(--color-tooltip-text);
     flex: 1;
@@ -792,7 +792,7 @@
 
   &__tooltip-value {
     @include font-size-xxs;
-    font-family: $font-family-code;
+    @include code-font;
     color: var(--color-tooltip-text);
     text-align: right;
   }
@@ -817,7 +817,7 @@
 
   &__tooltip-marker-kind {
     color: var(--color-tooltip-text);
-    font-family: $font-family-code;
+    @include code-font;
   }
 }
 
@@ -1099,7 +1099,7 @@
 
   &__label {
     @include font-size-xs;
-    font-family: $font-family-code;
+    @include code-font;
     color: var(--color-text-primary);
     font-weight: $font-weight-light;
   }

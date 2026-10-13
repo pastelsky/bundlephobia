@@ -54,7 +54,7 @@
 }
 
 .result-error__details {
-  font-family: $font-family-code;
+  @include code-font;
   text-transform: none;
 
   summary {
@@ -87,7 +87,7 @@
 }
 
 .result-error__code {
-  font-family: $font-family-code;
+  @include code-font;
   margin-top: $global-spacing * 3;
   margin-bottom: 0;
 }
@@ -250,7 +250,7 @@
   &::after {
     @include font-size-xs;
     content: 'NEW';
-    font-family: $font-family-code;
+    @include code-font;
     padding: $global-spacing * 0.2 math.div($global-spacing, 1.5);
     position: absolute;
     top: 0;
@@ -286,7 +286,7 @@
 }
 
 .treemap__label {
-  font-family: $font-family-code;
+  @include code-font;
 
   a {
     color: inherit;

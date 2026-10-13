@@ -22,7 +22,7 @@
   @include font-size-lg;
   padding: $global-spacing * 1.5 (25px + $global-spacing * 2)
     $global-spacing * 1.5 $global-spacing * 3;
-  font-family: $font-family-code;
+  @include code-font;
   font-weight: $font-weight-thin;
   width: 100%;
   box-sizing: border-box;
@@ -165,7 +165,7 @@
   color: var(--color-suggestion-text);
   font-size: 15px;
   cursor: pointer;
-  font-family: 'Source Code Pro', monospace;
+  @include code-font;
   font-weight: $font-weight-light;
   letter-spacing: -0.5px;
 

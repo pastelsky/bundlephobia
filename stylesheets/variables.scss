@@ -128,6 +128,12 @@ $font-family-body:
 $font-family-code:
   'Source Code Pro', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier,
   monospace;
+$font-family-code-x-height: 0.478; // Source Code Pro: 478 / 1000 units per em.
+
+@mixin code-font {
+  font-family: $font-family-code;
+  font-size-adjust: $font-family-code-x-height;
+}
 
 // Padding / Spacing
 $global-spacing: 10px;

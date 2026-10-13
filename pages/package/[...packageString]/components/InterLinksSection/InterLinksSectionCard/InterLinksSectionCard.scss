@@ -51,7 +51,7 @@
 
 .interlinks-card__name {
   margin: 0;
-  font-family: $font-family-code;
+  @include code-font;
   font-weight: $font-weight-light;
   flex-grow: 1;
   word-break: break-word;
