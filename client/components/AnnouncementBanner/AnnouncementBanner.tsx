@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { IconButton } from '../ui'
+import { IconButton } from '../ui/IconButton'
 
 const STORAGE_KEY = 'bundlephobia_rspack_banner_dismissed'
 

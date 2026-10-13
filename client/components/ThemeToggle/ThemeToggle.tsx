@@ -1,6 +1,6 @@
 import React from 'react'
 import { useTheme } from '../../hooks/useTheme'
-import { IconButton } from '../ui'
+import { IconButton } from '../ui/IconButton'
 
 const SunIcon = () => (
   <svg

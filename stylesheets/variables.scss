@@ -126,8 +126,8 @@ $font-family-body:
   Helvetica Neue,
   sans-serif;
 $font-family-code:
-  'Source Code Pro', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier,
-  monospace;
+  var(--font-family-code), 'SF Mono', Consolas, 'Liberation Mono', Menlo,
+  Courier, monospace;
 
 // Padding / Spacing
 $global-spacing: 10px;
