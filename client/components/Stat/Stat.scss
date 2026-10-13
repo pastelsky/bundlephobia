@@ -99,7 +99,7 @@
   color: var(--color-text-muted);
   width: 12px;
   height: 13px;
-  @include code-font;
+  font-family: $font-family-code;
   font-size: 12px;
   display: flex;
   align-items: center;

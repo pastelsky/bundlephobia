@@ -20,7 +20,11 @@ html {
 }
 
 code {
-  @include code-font;
+  font-family: $font-family-code;
+}
+
+.carbon-ad--pending {
+  visibility: hidden;
 }
 
 // reset svg value received from normalize

@@ -88,7 +88,7 @@
 
 .export-analysis-section__filter-input {
   @include font-size-sm;
-  @include code-font;
+  font-family: $font-family-code;
   padding-right: $global-spacing * 3;
   width: 15vw;
   transition: all 0.1s ease-in-out;
@@ -168,7 +168,7 @@
 }
 
 .export-analysis-section__pill-name {
-  @include code-font;
+  font-family: $font-family-code;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -212,7 +212,7 @@
   text-align: center;
 
   h4 {
-    @include code-font;
+    font-family: $font-family-code;
     margin-bottom: 0;
   }
 

@@ -161,7 +161,7 @@
 }
 
 .scan-results__error-text {
-  @include code-font;
+  font-family: $font-family-code;
   text-transform: none;
 
   summary {
@@ -214,7 +214,7 @@ $index-width: 4rem;
 
   .scan-results__package-version {
     color: var(--color-text-muted);
-    @include code-font;
+    font-family: $font-family-code;
   }
 
   .scan-results__item--total & {

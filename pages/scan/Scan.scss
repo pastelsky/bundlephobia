@@ -83,7 +83,7 @@
 
 .scan__package-item-version {
   @include font-size-xs;
-  @include code-font;
+  font-family: $font-family-code;
   margin-left: $global-spacing;
   color: var(--color-scan-pkg-version);
 }
@@ -154,7 +154,7 @@
 
 .scan__url-input {
   @include font-size-xs;
-  @include code-font;
+  font-family: $font-family-code;
   flex: 1;
   padding: $global-spacing $global-spacing * 1.5;
   border-radius: 6px;
@@ -213,7 +213,7 @@
 }
 
 .scan__url-error-code {
-  @include code-font;
+  font-family: $font-family-code;
   @include font-size-xs;
   color: var(--color-result-heading);
   margin: 0 0 $global-spacing * 0.5 0;
@@ -232,7 +232,7 @@
   text-align: center;
 
   code {
-    @include code-font;
+    font-family: $font-family-code;
     color: var(--color-text-base);
   }
 }

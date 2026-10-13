@@ -11,7 +11,7 @@
   transition:
     opacity 0.2s,
     color 0.2s;
-  @include code-font;
+  font-family: $font-family-code;
   letter-spacing: -1px;
   line-height: 1;
   cursor: pointer;
