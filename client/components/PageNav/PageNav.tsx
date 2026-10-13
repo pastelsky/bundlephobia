@@ -3,7 +3,8 @@ import React from 'react'
 import GithubLogo from '../../assets/github-logo.svg'
 import ThemeToggle from '../ThemeToggle'
 import McpNavPopup from '../McpNavPopup/McpNavPopup'
-import { BrandLogo, IconButton } from '../ui'
+import { BrandLogo } from '../ui/BrandLogo'
+import { IconButton } from '../ui/IconButton'
 
 type PageNavProps = {
   minimal?: boolean

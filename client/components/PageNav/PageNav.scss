@@ -174,11 +174,13 @@
 }
 
 .mcp-nav {
+  display: inline-block;
   position: relative;
 }
 
 .mcp-nav__trigger {
   @include font-size-xs;
+  list-style: none;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   font-weight: $font-weight-bold;
@@ -189,17 +191,17 @@
   cursor: pointer;
   transition: opacity 0.2s;
 
+  &::-webkit-details-marker {
+    display: none;
+  }
+
   &:hover {
     opacity: 1;
   }
 }
 
-// Popover's neutral trigger composition sets `font: inherit`; keep this text
-// trigger at the exact same type scale and weight as its sibling nav links.
-.mcp-nav__trigger.ui-popover__trigger {
-  @include font-size-xs;
-  color: var(--color-nav-link);
-  font-weight: $font-weight-bold;
+.mcp-nav[open] > .mcp-nav__trigger {
+  opacity: 1;
 }
 
 .mcp-nav__popup {
