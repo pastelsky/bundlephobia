@@ -128,7 +128,6 @@ const Home = () => {
             <AutocompleteInput
               containerClass="homepage__search-input-container"
               onSearchSubmit={handleSearchSubmit}
-              autoFocus={true}
             />
           </AutocompleteInputBox>
           <div className="homepage__or-divider">or</div>

@@ -139,23 +139,28 @@ export default class MyDocument extends Document {
         <script
           src="https://browser.sentry-cdn.com/5.15.0/bundle.min.js"
           crossOrigin="anonymous"
+          defer
         />
         <script
           src="https://browser.sentry-cdn.com/5.15.0/extraerrordata.min.js"
           crossOrigin="anonymous"
+          defer
         />
         <script
           src="https://browser.sentry-cdn.com/5.15.0/captureconsole.min.js"
           crossOrigin="anonymous"
+          defer
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `Sentry.init({ 
-              dsn: 'https://c28864debd5f47b2a89d05c74cd60c1c@sentry.io/5174673',
-              release: "${process.env.RELEASE_DATE}",
-              environment: "${process.env.NODE_ENV}",
-              attachStacktrace: true
-            })`,
+            __html: `document.addEventListener('DOMContentLoaded', function() {
+              Sentry.init({
+                dsn: 'https://c28864debd5f47b2a89d05c74cd60c1c@sentry.io/5174673',
+                release: "${process.env.RELEASE_DATE}",
+                environment: "${process.env.NODE_ENV}",
+                attachStacktrace: true
+              });
+            }, { once: true });`,
           }}
         />
       </Html>
