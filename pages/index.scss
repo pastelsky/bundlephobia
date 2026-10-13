@@ -28,7 +28,7 @@
 
   @media screen and (max-width: 40em) {
     height: auto;
-    min-height: calc(100vh - 90px);
+    min-height: 50vh;
 
     &::after {
       display: none;
@@ -127,7 +127,7 @@
     }
 
     sup {
-      color: $cornflower-blue;
+      color: var(--color-link-contrast);
     }
   }
 
@@ -151,7 +151,6 @@
   @media screen and (max-width: 40em) {
     position: static;
     width: min(calc(100vw - #{$global-spacing * 4}), $global-spacing * 36);
-    min-height: 0;
     margin: clamp(12px, 3vh, 24px) auto 0;
   }
 }

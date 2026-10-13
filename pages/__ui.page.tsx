@@ -27,7 +27,7 @@ export default function UiCatalogPage() {
     <Layout className="ui-catalog">
       <div className="ui-catalog__container">
         <PageNav variant="full" />
-        <main className="ui-catalog__content">
+        <div className="ui-catalog__content">
           <header>
             <p className="ui-catalog__eyebrow">Development only</p>
             <h1>Bundlephobia UI</h1>
@@ -104,7 +104,7 @@ export default function UiCatalogPage() {
               <PageNav variant="focused" />
             </div>
           </section>
-        </main>
+        </div>
       </div>
     </Layout>
   )

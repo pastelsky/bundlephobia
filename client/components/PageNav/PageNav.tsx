@@ -94,7 +94,7 @@ const PageNav = ({ minimal, variant }: PageNavProps) => {
             )
           }
         >
-          <GithubLogo />
+          <GithubLogo aria-hidden="true" />
         </IconButton>
         {resolvedVariant !== 'focused' && <ThemeToggle />}
       </section>

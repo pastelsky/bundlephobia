@@ -35,12 +35,12 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
     return (
       <section className="layout">
         <AnnouncementBanner />
-        <section className={className}>{children}</section>
+        <main className={className}>{children}</main>
 
         <footer>
           <div className="footer__recent-search-bar">
             <div className="footer__recent-search-bar__wrap">
-              <h4>Recent searches</h4>
+              <h2>Recent searches</h2>
               <ul className="footer__recent-search-list">
                 {recentSearches.map(search => (
                   <li key={search}>
@@ -68,16 +68,27 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
               </p>
               <p>
                 Credits to{' '}
-                <a href="https://twitter.com/thekitze" target="_blank">
-                  {' '}
-                  @thekitze{' '}
+                <a
+                  href="https://twitter.com/thekitze"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  @thekitze
                 </a>
                 for the name.
               </p>
               <div className="footer__hosting-credits">
                 Hosted on
-                <a href="https://digitalocean.com" target="_blank">
-                  <DigitalOceanLogo className="footer__sponsor-logo" />
+                <a
+                  href="https://digitalocean.com"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label="DigitalOcean hosting"
+                >
+                  <DigitalOceanLogo
+                    className="footer__sponsor-logo"
+                    aria-hidden="true"
+                  />
                 </a>
               </div>
             </div>
@@ -91,12 +102,12 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
                 @pastelsky
               </a>
               <a
+                className="footer__credits-fork-button"
                 target="_blank"
+                rel="noreferrer noopener"
                 href="https://github.com/pastelsky/bundlephobia"
               >
-                <button className="footer__credits-fork-button">
-                  Star on GitHub
-                </button>
+                Star on GitHub
               </a>
             </div>
           </section>

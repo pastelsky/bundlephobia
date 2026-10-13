@@ -43,7 +43,7 @@ footer {
   justify-content: center;
   margin: auto;
 
-  h4 {
+  h2 {
     @include font-size-xs;
     color: var(--color-footer-text);
     margin: 0;
@@ -170,6 +170,7 @@ footer {
 
     a {
       display: inline;
+      text-decoration: underline;
     }
 
     code {
@@ -222,7 +223,10 @@ footer {
   background: transparent;
   border-radius: 10px;
   padding: math.div($global-spacing, 1.5) $global-spacing;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
   transition: background 0.2s;
   color: var(--color-footer-btn-border);
   text-transform: uppercase;
@@ -259,4 +263,10 @@ footer {
     display: block;
     text-decoration: none;
   }
+}
+
+.footer__credits a {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
 }
