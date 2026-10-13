@@ -16,9 +16,11 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
 
     const revealWhenCreativeIsRendered = () => {
       const carbonAds = Array.from(container.querySelectorAll('#carbonads'))
+
       const renderedAd = carbonAds.find(carbonAd =>
         carbonAd.querySelector('a, img, .carbon-text'),
       )
+
       const carbonAdToKeep = renderedAd ?? carbonAds[0]
       carbonAds
         .filter(carbonAd => carbonAd !== carbonAdToKeep)
@@ -39,6 +41,7 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
     script.onload = () => {
       window.requestAnimationFrame(revealWhenCreativeIsRendered)
     }
+
     container.appendChild(script)
 
     return () => {
