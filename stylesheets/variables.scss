@@ -125,8 +125,9 @@ $font-family-body:
   Droid Sans,
   Helvetica Neue,
   sans-serif;
-$font-family-code: var(--font-family-code), 'SF Mono', Consolas,
-  'Liberation Mono', Menlo, Courier, monospace;
+$font-family-code:
+  var(--font-family-code), 'SF Mono', Consolas, 'Liberation Mono', Menlo,
+  Courier, monospace;
 
 @mixin code-font {
   font-family: $font-family-code;
