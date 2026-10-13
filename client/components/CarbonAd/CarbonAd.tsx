@@ -14,10 +14,12 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
 
     const removeDuplicateAds = () => {
       const carbonAds = Array.from(container.querySelectorAll('#carbonads'))
+
       const carbonAdToKeep =
         carbonAds.find(carbonAd =>
           carbonAd.querySelector('a, img, .carbon-text'),
         ) ?? carbonAds[0]
+
       carbonAds
         .filter(carbonAd => carbonAd !== carbonAdToKeep)
         .forEach(carbonAd => carbonAd.remove())
