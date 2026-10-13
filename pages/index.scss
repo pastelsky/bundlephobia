@@ -84,6 +84,8 @@
 }
 
 .homepage__search-input {
+  position: relative;
+  z-index: 2;
   margin-top: $global-spacing;
   width: 100%;
 
