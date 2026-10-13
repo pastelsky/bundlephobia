@@ -59,6 +59,8 @@ type ResultPageState = {
   similarPackagesCategory: string
 }
 
+const VISITOR_CACHE_LOOKUP_TIMEOUT_MS = 750
+
 function formatSentence(values: string[]) {
   if (values.length === 0) {
     return ''
@@ -750,6 +752,31 @@ function analysisRequestHeaders(req: GetServerSidePropsContext['req']) {
   }
 }
 
+async function loadVisitorCachedResult(
+  specifier: string,
+  req: GetServerSidePropsContext['req'],
+) {
+  const { default: axios } = await import('axios')
+  const headers = analysisRequestHeaders(req)
+  headers['X-Bundlephobia-Prefer-Cached'] = ''
+
+  try {
+    const response = await axios.get<PackageBuildInfo>(
+      `http://127.0.0.1:${req.socket.localPort}/api/size`,
+      {
+        params: { package: specifier, peep: true },
+        headers,
+        timeout: VISITOR_CACHE_LOOKUP_TIMEOUT_MS,
+        validateStatus: () => true,
+      },
+    )
+
+    return response.status === 200 ? response : null
+  } catch {
+    return null
+  }
+}
+
 function forwardAnalysisHeaders(
   headers: AxiosResponse['headers'],
   res: GetServerSidePropsContext['res'],
@@ -776,10 +803,23 @@ export const getServerSideProps = async ({
   const isProxyClassifiedCrawler =
     req.headers['x-bundlephobia-prefer-cached'] === 'true'
 
-  // Only proxy-classified crawlers use server-side analysis; visitors retain the
-  // existing client-side lookup, including explicit force requests.
-  if (!specifier || !isProxyClassifiedCrawler) {
+  if (!specifier) {
     return { props: { initialResult: null } }
+  }
+
+  if (!isProxyClassifiedCrawler) {
+    // Visitors may SSR only the exact current version already in cache. A miss
+    // stays on the normal client build path; peep prevents this lookup building.
+    if (query.force) return { props: { initialResult: null } }
+
+    const cachedResult = await loadVisitorCachedResult(specifier, req)
+
+    if (!cachedResult) return { props: { initialResult: null } }
+
+    res.setHeader('Cache-Control', 'private, no-store')
+    forwardAnalysisHeaders(cachedResult.headers, res)
+
+    return { props: getInitialResultProps(cachedResult) }
   }
 
   res.setHeader('Vary', 'User-Agent')

@@ -123,6 +123,59 @@ test('renders package trends and chart controls', async ({ page }) => {
   await page.screenshot({ path: 'artifacts/trends-mobile.png', fullPage: true })
 })
 
+test('keeps chart controls in place while comparison suggestions load', async ({
+  page,
+}) => {
+  await page.route('**/api/trends?*', route =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(trendsResponse),
+    }),
+  )
+
+  let releaseSuggestions: () => void = () => undefined
+  let markSuggestionsRequested: () => void = () => undefined
+
+  const suggestionsRequested = new Promise<void>(resolve => {
+    markSuggestionsRequested = resolve
+  })
+
+  const waitForRelease = new Promise<void>(resolve => {
+    releaseSuggestions = resolve
+  })
+
+  await page.route('**/api/similar-packages?*', async route => {
+    markSuggestionsRequested()
+    await waitForRelease
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        category: { label: 'framework', score: 60, similar: ['preact'] },
+      }),
+    })
+  })
+
+  await page.goto(
+    '/trends?packages=react,vue&metric=downloads&range=last-year&groupBy=week',
+    { waitUntil: 'domcontentloaded' },
+  )
+  await suggestionsRequested
+
+  const toolbar = page.locator('.trends-toolbar')
+  const initialTop = (await toolbar.boundingBox())?.y
+
+  if (initialTop === undefined) throw new Error('Trends toolbar is missing')
+
+  releaseSuggestions()
+  await expect(page.getByRole('button', { name: 'Add preact' })).toBeVisible()
+
+  const finalTop = (await toolbar.boundingBox())?.y
+
+  if (finalTop === undefined) throw new Error('Trends toolbar is missing')
+
+  expect(Math.abs(finalTop - initialTop)).toBeLessThan(1)
+})
+
 test('restores URL defaults on Back and preserves explicit empty selections on reload', async ({
   page,
 }) => {
