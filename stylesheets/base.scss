@@ -23,10 +23,6 @@ code {
   font-family: $font-family-code;
 }
 
-.carbon-ad--pending {
-  visibility: hidden;
-}
-
 // reset svg value received from normalize
 svg:not(:root) {
   overflow: visible;
