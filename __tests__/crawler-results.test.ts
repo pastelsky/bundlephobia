@@ -184,6 +184,34 @@ it('does not change direct API results based on a crawler user agent', async () 
   expect(build).not.toHaveBeenCalled()
 })
 
+it('renders the exact current visitor cache hit in the initial page response', async () => {
+  cached.set('example@2.0.0', current)
+
+  const response = await request('/package/example', {
+    'X-Bundlephobia-Prefer-Cached': '',
+  })
+
+  const html = await response.text()
+
+  expect(response.status).toBe(200)
+  expect(html).toContain('Bundle Size')
+  expect(html).toContain('data-value="12.1"')
+  expect(html).toContain('data-value="4.5"')
+  expect(html).not.toContain('Resolving version and dependencies')
+  expect(resolve).toHaveBeenCalledTimes(1)
+  expect(build).not.toHaveBeenCalled()
+})
+
+it('leaves visitor cache misses on the client build path without building in SSR', async () => {
+  const response = await request('/package/example', {
+    'X-Bundlephobia-Prefer-Cached': '',
+  })
+
+  expect(response.status).toBe(200)
+  expect(resolve).toHaveBeenCalledTimes(1)
+  expect(build).not.toHaveBeenCalled()
+})
+
 it('honours exact versions and force, without exempting force from build budgets', async () => {
   cached.set('example@latest-built', older)
   cached.set('example@2.0.0', current)
