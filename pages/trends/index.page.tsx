@@ -569,7 +569,7 @@ export default function TrendsPage({
             )}
           </div>
 
-          {visibleSuggestedPackages.length > 0 && (
+          {packages.length > 0 && (
             <div
               className="trends-search__suggestions"
               aria-label="Related packages"

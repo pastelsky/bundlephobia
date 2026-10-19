@@ -127,12 +127,18 @@
   &__suggestions {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: $global-spacing * 0.6;
     margin-top: $global-spacing * 1.5;
+    height: 30px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
   }
 
   &__suggestions-label {
+    flex: 0 0 auto;
+    white-space: nowrap;
     @include font-size-xxs;
     color: var(--color-text-muted);
     font-family: $font-family-body;
@@ -239,6 +245,7 @@
 }
 
 .trends-preset {
+  flex: 0 0 auto;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--trends-control-radius) !important;
