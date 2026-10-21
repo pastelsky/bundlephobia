@@ -40,6 +40,8 @@ apps:
       PM2_APM: 'false'
       PM2_DISABLE_METRICS: 'true'
       INSTALLATION_SERVICE_ENDPOINT: http://127.0.0.1:7003
+      # Return freed native compiler pages instead of retaining them between builds.
+      MIMALLOC_PURGE_DELAY: '0'
       MEMORY_DIAGNOSTICS_SERVICE: build-service
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
       MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics
