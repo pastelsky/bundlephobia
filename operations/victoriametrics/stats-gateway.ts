@@ -347,17 +347,20 @@ export function createStatsGateway({
 
   async function ensureStorage(): Promise<ActiveStorage> {
     if (storage) return storage
+
     if (!starting) {
       starting = startStorage()
         .then(activeStorage => {
           storage = activeStorage
           scheduleIdleShutdown()
+
           return activeStorage
         })
         .finally(() => {
           starting = undefined
         })
     }
+
     return starting
   }
 
@@ -366,10 +369,12 @@ export function createStatsGateway({
     async close() {
       clearTimeout(idleTimer)
       shuttingDown = true
+
       if (storage) {
         await storage.stop()
         storage = undefined
       }
+
       server.close()
     },
   }
@@ -391,6 +396,7 @@ function listenOnSystemdSocket(
 
 async function main(): Promise<void> {
   const config = getConfig()
+
   const gateway = createStatsGateway({
     startStorage: () => startVictoriaMetrics(config),
     idleTimeoutMs: config.idleTimeoutMs,
@@ -402,6 +408,7 @@ async function main(): Promise<void> {
   const shutdown = () => {
     void gateway.close().finally(() => process.exit(0))
   }
+
   process.once('SIGTERM', shutdown)
   process.once('SIGINT', shutdown)
 }
