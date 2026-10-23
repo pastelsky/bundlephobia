@@ -26,17 +26,7 @@ const installationProvider = process.env.INSTALLATION_SERVICE_ENDPOINT
   ? createInstallationProvider(process.env.INSTALLATION_SERVICE_ENDPOINT)
   : undefined
 
-let runningAnalyses = 0
-
 async function analyzePackage(req, res, analyze) {
-  // Three PM2 workers each own one slot until analysis and cleanup settle.
-  if (runningAnalyses >= 1) {
-    throw Object.assign(new Error('This build worker is busy'), {
-      code: 'BUILD_SERVICE_BUSY',
-    })
-  }
-
-  runningAnalyses += 1
   const controller = new AbortController()
   const abort = () => controller.abort()
   const timeout = setTimeout(abort, 10 * 60_000)
@@ -44,9 +34,6 @@ async function analyzePackage(req, res, analyze) {
   res.raw.once('close', abort)
 
   try {
-    if (req.raw.aborted || res.raw.destroyed) abort()
-    controller.signal.throwIfAborted()
-
     return await analyze(decodeURIComponent(req.query.p), {
       installTimeout: 60000,
       installationProvider,
@@ -56,22 +43,10 @@ async function analyzePackage(req, res, analyze) {
     clearTimeout(timeout)
     req.raw.off('aborted', abort)
     res.raw.off('close', abort)
-    runningAnalyses -= 1
   }
 }
 
 function sendBuildError(res, packageString, error) {
-  if (error?.code === 'BUILD_SERVICE_BUSY') {
-    return res
-      .code(503)
-      .header('Retry-After', '1')
-      .send({
-        name: 'BuildServiceBusyError',
-        originalError: error.message,
-        extra: { retryable: true },
-      })
-  }
-
   const serialized = serializeError(error)
   console.error('PACKAGE_BUILD_FAILED', {
     packageString,

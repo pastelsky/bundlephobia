@@ -45,8 +45,7 @@ const failureCache = new LRU<string, FailureCacheEntry>({
 const debug = createDebug('bp:request')
 
 const requestQueue = new Queue({
-  // Match the three build-service workers, each limited to one analysis.
-  concurrency: 3,
+  concurrency: 4,
   maxAge: 60 * 2,
 })
 

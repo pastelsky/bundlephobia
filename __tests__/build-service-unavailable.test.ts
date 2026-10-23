@@ -263,16 +263,11 @@ describe('build service unavailability', () => {
     )
   })
 
-  it('keeps the local executor occupied until an aborted worker actually settles', async () => {
+  it('cancels an in-process worker execution when its job aborts', async () => {
     delete process.env.BUILD_SERVICE_ENDPOINT
     const controller = new AbortController()
-    let finish!: (value: { size?: number }) => void
-
-    // SAFETY: the promise models the workerpool execution handle.
-    const execution = new Promise<{ size?: number }>(resolve => {
-      finish = resolve
-    }) as ReturnType<typeof pool.exec>
-
+    // SAFETY: this pending promise models the workerpool execution handle in this test.
+    const execution = new Promise(() => {}) as ReturnType<typeof pool.exec>
     execution.timeout = jest.fn().mockReturnValue(execution)
     execution.cancel = jest.fn()
     mockedPool.mockReturnValue(execution)
@@ -281,18 +276,18 @@ describe('build service unavailability', () => {
     const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
 
     const result = executor(
-      { packageString: 'example' },
-      { signal: asGlobalAbortSignal(controller.signal) },
+      { packageString: '@example/cancelled@1.0.0' },
+      {
+        signal: asGlobalAbortSignal(controller.signal),
+      },
     )
 
-    const settled = jest.fn()
-
-    void Promise.resolve(result).then(settled, settled)
     controller.abort()
-    await Promise.resolve()
-    expect(settled).not.toHaveBeenCalled()
-    finish({ size: 123 })
-    await expect(result).rejects.toMatchObject({ code: 'JOB_CANCELLED' })
+
+    await expect(result).rejects.toMatchObject({
+      code: 'JOB_CANCELLED',
+      name: 'JobCancelledError',
+    })
     expect(execution.cancel).not.toHaveBeenCalled()
   })
 

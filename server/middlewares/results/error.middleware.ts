@@ -129,15 +129,6 @@ const handleBuildServiceError: BuildErrorHandler = context => {
   context.cacheFailure(503, { error: response })
 }
 
-const handleBuildServiceBusyError: BuildErrorHandler = context => {
-  context.ctx.set('Retry-After', '1')
-  respondTemporaryError(
-    context,
-    'BuildServiceBusyError',
-    'The build service is busy. Please try again shortly.',
-  )
-}
-
 const handleBuildServiceUnavailableError: BuildErrorHandler = context => {
   const response = {
     code: 'BuildServiceUnavailableError',
@@ -303,7 +294,6 @@ const handleBuildError: BuildErrorHandler = (context, error) => {
 
 const buildErrorHandlers = {
   BuildServiceError: handleBuildServiceError,
-  BuildServiceBusyError: handleBuildServiceBusyError,
   BuildServiceUnavailableError: handleBuildServiceUnavailableError,
   BlocklistedPackageError: handleBlocklistedPackageError,
   UnsupportedPackageError: handleUnsupportedPackageError,
