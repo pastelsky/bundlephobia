@@ -1,109 +1,47 @@
-# On-demand VictoriaMetrics stats
+# On-demand stats
 
-The authenticated `/stats` route serves VictoriaMetrics' VMUI. The first
-request activates a localhost-only gateway socket; the gateway starts
-VictoriaMetrics, waits for its readiness endpoint, and proxies the request.
-After 30 minutes without a dashboard request it stops VictoriaMetrics. Its
-data directory remains on disk, with 30 days of retention. HAProxy metrics are
-scraped every 60 seconds only while VictoriaMetrics is running, so time spent
-asleep has no samples.
+The Bundlephobia Node app starts VictoriaMetrics on the first `/stats` UI/API
+request and stops it after 30 minutes without stats traffic. The app itself is
+already managed by PM2; this adds no always-running service. Metrics collection
+pauses while VictoriaMetrics is stopped, and its data stays on disk for up to
+30 days. The default VM cache limit is 256 MiB.
 
-The service is limited to a 384 MiB systemd memory cgroup, and VictoriaMetrics
-is configured to use up to 256 MiB for its caches. The 1 GiB free-space
-threshold prevents collection from filling a nearly full filesystem. These
-defaults can be changed in a systemd drop-in as described below.
+## Server setup
 
-## Install
-
-Run these commands on the Bundlephobia server after deploying the repository
-changes. They create a dedicated unprivileged account, download the pinned
-VictoriaMetrics release directly onto the server, verify its published
-SHA-256 checksum, and install the source-controlled scrape and systemd
-configuration:
+After deploying the code, install the pinned VictoriaMetrics binary on the
+server (Linux amd64 shown; use `arm64` for an ARM host):
 
 ```sh
-sudo useradd --system --home-dir /var/lib/bundlephobia-victoriametrics --shell /usr/sbin/nologin bundlephobia-stats
-sudo install -d -o bundlephobia-stats -g bundlephobia-stats -m 0750 /var/lib/bundlephobia-victoriametrics
-sudo install -d -o root -g root -m 0755 /etc/bundlephobia-victoriametrics
 VERSION=v1.153.0
-ARCH=$(case "$(uname -m)" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo unsupported architecture >&2; exit 1 ;; esac)
+ARCH=amd64
 ASSET="victoria-metrics-linux-$ARCH-$VERSION.tar.gz"
 BASE_URL="https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/$VERSION"
-TEMP_DIR=$(mktemp -d)
-trap 'rm -rf "$TEMP_DIR"' EXIT
-curl --fail --location --silent --show-error "$BASE_URL/$ASSET" --output "$TEMP_DIR/$ASSET"
-curl --fail --location --silent --show-error "$BASE_URL/${ASSET%.tar.gz}_checksums.txt" --output "$TEMP_DIR/checksums.txt"
-EXPECTED=$(awk -v asset="$ASSET" '$2 == asset || $2 == "*" asset { print $1 }' "$TEMP_DIR/checksums.txt")
-test -n "$EXPECTED"
-printf '%s  %s\n' "$EXPECTED" "$TEMP_DIR/$ASSET" | sha256sum --check --status
-tar -xzf "$TEMP_DIR/$ASSET" -C "$TEMP_DIR"
-sudo install -o root -g root -m 0755 "$TEMP_DIR/victoria-metrics-prod" /usr/local/bin/victoria-metrics-prod
-/usr/local/bin/victoria-metrics-prod --version
-sudo install -o root -g root -m 0644 /var/www/bundlephobia/operations/victoriametrics/promscrape.yml /etc/bundlephobia-victoriametrics/promscrape.yml
-sudo install -o root -g root -m 0644 /var/www/bundlephobia/operations/victoriametrics/bundlephobia-stats.service /etc/systemd/system/bundlephobia-stats.service
-sudo install -o root -g root -m 0644 /var/www/bundlephobia/operations/victoriametrics/bundlephobia-stats.socket /etc/systemd/system/bundlephobia-stats.socket
-sudo systemctl daemon-reload
-sudo systemctl enable --now bundlephobia-stats.socket
+TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_DIR"' EXIT
+curl -fsSL "$BASE_URL/$ASSET" -o "$TMP_DIR/$ASSET"
+curl -fsSL "$BASE_URL/${ASSET%.tar.gz}_checksums.txt" -o "$TMP_DIR/checksums.txt"
+HASH=$(awk -v asset="$ASSET" '$2 == asset || $2 == "*" asset { print $1 }' "$TMP_DIR/checksums.txt")
+printf '%s  %s\n' "$HASH" "$TMP_DIR/$ASSET" | sha256sum -c -
+tar -xzf "$TMP_DIR/$ASSET" -C "$TMP_DIR"
+sudo install -o root -g root -m 0755 "$TMP_DIR/victoria-metrics-prod" /usr/local/bin/victoria-metrics-prod
+rm -rf "$TMP_DIR"
 ```
 
-Do not enable or start `bundlephobia-stats.service` directly. Systemd starts it
-when HAProxy connects to `127.0.0.1:8410` and stops it after the gateway's idle
-timer expires.
-
-Install the HAProxy files and reload HAProxy using the instructions in
-[`../haproxy/README.md`](../haproxy/README.md). The password hash remains in
-the server-only `/etc/haproxy/conf.d/00-stats-users.cfg`; no credentials are
-stored in this repository.
-
-## Tune or inspect
-
-Use a systemd drop-in for host-specific paths or resource settings so local
-configuration stays separate from the repository:
+Install the scrape config and make the data directory writable by the PM2
+account (the current production PM2 daemon runs as root):
 
 ```sh
-sudo systemctl edit bundlephobia-stats.service
+sudo install -d -m 0750 /var/lib/bundlephobia-victoriametrics
+sudo chown root:root /var/lib/bundlephobia-victoriametrics
+sudo install -D -o root -g root -m 0644 /var/www/bundlephobia/operations/victoriametrics/promscrape.yml /etc/bundlephobia-victoriametrics/promscrape.yml
 ```
 
-For example, to use a different data path and idle timeout:
+The app loads overrides from its untracked `.env`: `VICTORIAMETRICS_STORAGE_PATH`,
+`VICTORIAMETRICS_SCRAPE_CONFIG`, `VICTORIAMETRICS_RETENTION`,
+`VICTORIAMETRICS_MEMORY_ALLOWED_BYTES`, `VICTORIAMETRICS_MIN_FREE_DISK_SPACE_BYTES`,
+and `STATS_IDLE_TIMEOUT_MS`. Restart with `pm2 restart all --update-env`.
 
-```ini
-[Service]
-Environment=VICTORIAMETRICS_STORAGE_PATH=/srv/metrics/bundlephobia
-Environment=STATS_IDLE_TIMEOUT_MS=900000
-ReadWritePaths=/srv/metrics/bundlephobia
-```
-
-Create the replacement data directory with ownership `bundlephobia-stats` and
-mode `0750`. The unit's `ReadWritePaths` must include the selected path. Other
-supported overrides are `VICTORIAMETRICS_BIN`,
-`VICTORIAMETRICS_SCRAPE_CONFIG`, `VICTORIAMETRICS_LISTEN_ADDR`,
-`VICTORIAMETRICS_RETENTION`, `VICTORIAMETRICS_MEMORY_ALLOWED_BYTES`,
-`VICTORIAMETRICS_MIN_FREE_DISK_SPACE_BYTES`,
-`VICTORIAMETRICS_STARTUP_TIMEOUT_MS`, and `STATS_IDLE_TIMEOUT_MS`.
-
-Apply a drop-in with:
-
-```sh
-sudo systemctl daemon-reload
-sudo systemctl restart bundlephobia-stats.socket
-```
-
-The new values are used on the next service activation. If the service is
-currently active, stopping it lets the still-enabled socket start it again on
-the next `/stats` request:
-
-```sh
-sudo systemctl stop bundlephobia-stats.service
-```
-
-The service itself should be inactive while idle. To inspect an active or
-recent startup:
-
-```sh
-systemctl status bundlephobia-stats.socket bundlephobia-stats.service
-sudo journalctl -u bundlephobia-stats.service -n 100 --no-pager
-curl -sS http://127.0.0.1:8406/metrics | head
-```
-
-`127.0.0.1:8406` is the HAProxy Prometheus exporter and is not exposed publicly.
-The existing HAProxy userlist protects the public `/stats` route.
+Install the tracked HAProxy files and retain the server-only Basic Auth
+userlist as described in [`../haproxy/README.md`](../haproxy/README.md). Check
+the deployed HAProxy config before reloading it. The metrics exporter listens
+only on `127.0.0.1:8406`; the public `/stats` route remains behind HAProxy auth.
