@@ -15,6 +15,7 @@ class BotRateLimits(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix='bundlephobia-haproxy-')
         self.addCleanup(self.temp.cleanup)
         root = Path(self.temp.name)
+        self.admin_socket = root / 'admin'
         networks = root / 'cloudflare.lst'
         networks.write_text('127.0.0.1/32\n')
         with socket.socket() as listener:
@@ -33,7 +34,8 @@ class BotRateLimits(unittest.TestCase):
         upstreams = {line.split()[1] for line in rules.splitlines()
                      if line.strip().startswith(('use_backend ', 'default_backend '))}
         config = root / 'haproxy.cfg'
-        config.write_text('userlist bundlephobia_stats_users\n'
+        config.write_text(f'global\n    stats socket {self.admin_socket} level admin\n'
+                          'userlist bundlephobia_stats_users\n'
                           '    user test insecure-password test\n'
                           'defaults\n    mode http\n    timeout connect 1s\n'
                           '    timeout client 5s\n    timeout server 1s\n' + rules +
@@ -68,8 +70,22 @@ class BotRateLimits(unittest.TestCase):
                 'CF-Connecting-IP': f'198.51.100.{number % 250 + 1}',
             })
             response = conn.getresponse()
+            self.retry_after = response.getheader('Retry-After')
             response.read()
             return response.status
+
+    def set_bot_state(self, fields):
+        # Advance cooldown/rate state through HAProxy's real Runtime API rather
+        # than sleeping fifteen minutes or rewriting production thresholds.
+        with socket.socket(socket.AF_UNIX) as admin:
+            admin.settimeout(3)
+            admin.connect(str(self.admin_socket))
+            admin.sendall(f'set table bot_request_usage key automated-clients {fields}\n'.encode())
+            admin.shutdown(socket.SHUT_WR)
+            reply = b''
+            while chunk := admin.recv(4096):
+                reply += chunk
+            self.assertEqual(reply.strip(), b'')
 
     def test_shared_bot_limit_and_independent_google_budget(self):
         for i in range(190):
@@ -80,7 +96,31 @@ class BotRateLimits(unittest.TestCase):
         self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0 Safari/537.36', 242), 200)
         for i in range(190):
             self.assertEqual(self.request(['Googlebot/2.1', 'GoogleOther'][i % 2], i), 200)
-        self.assertEqual(self.request('Google-InspectionTool', 240), 429)
+        for i in range(120):
+            self.assertEqual(self.request('Google-InspectionTool', i), 429)
+            self.assertEqual(self.retry_after, '60')
+
+    def test_cooldown_escalates_across_ips_and_expires(self):
+        for i in range(190):
+            self.assertEqual(self.request('Bytespider/1', i), 200)
+        for i in range(29):
+            self.assertEqual(self.request('Bytespider/1', i), 429)
+            self.assertEqual(self.retry_after, '60')
+        self.assertEqual(self.request('Bytespider/new-version', 240), 429)
+        self.assertEqual(self.retry_after, '300')
+        # Cooldown still blocks when the normal request rate drops below 190.
+        self.set_bot_state('data.http_req_rate 0')
+        for i in range(89):
+            self.assertEqual(self.request('bingbot/2', i, '/_events'), 429)
+            self.assertTrue(295 <= int(self.retry_after) <= 300)
+        self.assertEqual(self.request('Bytespider/1', 241, '/asset.js'), 429)
+        self.assertEqual(self.retry_after, '900')
+        self.assertEqual(self.request('Googlebot/2.1', 242), 200)
+        self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0 Safari/537.36', 243), 200)
+        # Model time passing: the ban has expired and one-minute rates decayed.
+        self.set_bot_state(f'data.gpt0 {int(time.time()) - 1} '
+                           'data.http_req_rate 0 data.gpc0_rate 0')
+        self.assertEqual(self.request('Bytespider/1', 244), 200)
 
     def test_existing_shared_automated_api_limit(self):
         for i in range(26):
