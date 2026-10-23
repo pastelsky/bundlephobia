@@ -10,6 +10,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { pathToFileURL } from 'node:url'
 
 const PATH_PREFIX = '/stats'
+
 const DEFAULT_DATA_PATH = '/var/lib/bundlephobia-victoriametrics'
 
 interface GatewayConfig {
@@ -32,6 +33,11 @@ interface ActiveStorage {
 interface StatsGatewayOptions {
   startStorage: () => Promise<ActiveStorage>
   idleTimeoutMs?: number
+}
+
+interface StatsGateway {
+  server: Server
+  close: () => Promise<void>
 }
 
 function getEnv(
@@ -202,10 +208,7 @@ const HOP_BY_HOP_HEADERS = new Set([
 export function createStatsGateway({
   startStorage,
   idleTimeoutMs = 30 * 60 * 1000,
-}: StatsGatewayOptions): {
-  server: Server
-  close: () => Promise<void>
-} {
+}: StatsGatewayOptions): StatsGateway {
   let storage: ActiveStorage | undefined
   let starting: Promise<ActiveStorage> | undefined
   let idleTimer: NodeJS.Timeout | undefined
@@ -277,6 +280,7 @@ export function createStatsGateway({
                 name && !HOP_BY_HOP_HEADERS.has(name.toLowerCase()),
             ),
           )
+
           response.writeHead(
             upstreamResponse.statusCode || 502,
             responseHeaders,
@@ -288,6 +292,7 @@ export function createStatsGateway({
       upstream.on('error', error => {
         if (response.headersSent) {
           response.destroy(error)
+
           return
         }
 
@@ -297,6 +302,7 @@ export function createStatsGateway({
       request.pipe(upstream)
     } catch (error) {
       console.error('Unable to start VictoriaMetrics:', error)
+
       if (!response.headersSent) {
         response.writeHead(503, {
           'Content-Type': 'text/plain; charset=utf-8',
@@ -312,23 +318,28 @@ export function createStatsGateway({
 
   function scheduleIdleShutdown(): void {
     clearTimeout(idleTimer)
+
     if (activeRequests > 0 || shuttingDown) return
 
     idleTimer = setTimeout(async () => {
       if (activeRequests > 0) {
         scheduleIdleShutdown()
+
         return
       }
 
       shuttingDown = true
+
       if (storage) {
         try {
           await storage.stop()
         } catch (error) {
           console.error('Unable to stop VictoriaMetrics cleanly:', error)
         }
+
         storage = undefined
       }
+
       server.close()
     }, idleTimeoutMs)
     idleTimer.unref()
