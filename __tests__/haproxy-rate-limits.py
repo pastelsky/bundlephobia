@@ -18,6 +18,9 @@ class BotRateLimits(unittest.TestCase):
         self.admin_socket = root / 'admin'
         networks = root / 'cloudflare.lst'
         networks.write_text('127.0.0.1/32\n')
+        groups = root / 'automation-groups.map'
+        groups.write_text((Path(__file__).resolve().parents[1] /
+                           'operations/haproxy/automation-groups.map').read_text())
         with socket.socket() as listener:
             listener.bind(('127.0.0.1', 0))
             self.port = listener.getsockname()[1]
@@ -31,6 +34,7 @@ class BotRateLimits(unittest.TestCase):
                           if not line.strip().startswith('log-format '))
         rules = rules.replace('bind :80', f'bind 127.0.0.1:{self.port}')
         rules = rules.replace('/etc/haproxy/cloudflare-networks.lst', str(networks))
+        rules = rules.replace('/etc/haproxy/automation-groups.map', str(groups))
         upstreams = {line.split()[1] for line in rules.splitlines()
                      if line.strip().startswith(('use_backend ', 'default_backend '))}
         config = root / 'haproxy.cfg'
@@ -67,73 +71,88 @@ class BotRateLimits(unittest.TestCase):
         with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as conn:
             conn.request('POST' if path == '/_events' else 'GET', path, headers={
                 'User-Agent': ua,
-                'CF-Connecting-IP': f'198.51.100.{number % 250 + 1}',
+                'CF-Connecting-IP': (number if isinstance(number, str)
+                                     else f'198.51.100.{number % 250 + 1}'),
             })
             response = conn.getresponse()
             self.retry_after = response.getheader('Retry-After')
             response.read()
             return response.status
 
-    def set_bot_state(self, fields):
-        # Advance cooldown/rate state through HAProxy's real Runtime API rather
-        # than sleeping fifteen minutes or rewriting production thresholds.
+    def runtime(self, command):
+        # Advance real HAProxy state instead of sleeping fifteen minutes or
+        # rewriting production thresholds. The socket belongs to this fixture.
         with socket.socket(socket.AF_UNIX) as admin:
             admin.settimeout(3)
             admin.connect(str(self.admin_socket))
-            admin.sendall(f'set table bot_request_usage key automated-clients {fields}\n'.encode())
+            admin.sendall(f'{command}\n'.encode())
             admin.shutdown(socket.SHUT_WR)
             reply = b''
             while chunk := admin.recv(4096):
                 reply += chunk
             self.assertEqual(reply.strip(), b'')
 
-    def test_shared_bot_limit_and_independent_google_budget(self):
-        agents = ['Bytespider/1', 'bingbot/2', 'Badgen/1.0',
-                  'Data-Pipeline-Enricher/1.0', 'Shields.io/test',
-                  'depscope/1', 'got/14', 'Ahrefs']
+    def test_families_share_across_ips_but_do_not_penalize_each_other(self):
         for i in range(190):
-            self.assertEqual(self.request(agents[i % len(agents)], i,
+            self.assertEqual(self.request(['Bytespider/1', 'TikTokSpider/2'][i % 2], i,
                              ['/package/example', '/_events', '/asset.js'][i % 3]), 200)
         self.assertEqual(self.request('Bytespider/new-version', 240), 429)
-        self.assertEqual(self.request('bingbot/new-version', 241, '/_events'), 429)
-        self.assertEqual(self.request('Badgen/1.0', 242), 429)
-        self.assertEqual(self.request('Data-Pipeline-Enricher/1.0', 243), 429)
-        self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0 Safari/537.36', 242), 200)
+        self.assertEqual(self.request('TikTokSpider/new-version', 241, '/_events'), 429)
+        for ua in ['Badgen/1.0', 'Data-Pipeline-Enricher/1.0', 'Shields.io/test',
+                   'bingbot/2', 'depscope/1', 'got/14', 'Ahrefs',
+                   'Mozilla/5.0 Chrome/156.0 Safari/537.36']:
+            self.assertEqual(self.request(ua, 242), 200)
         for i in range(190):
             self.assertEqual(self.request(['Googlebot/2.1', 'GoogleOther'][i % 2], i), 200)
-        for i in range(120):
-            self.assertEqual(self.request('Google-InspectionTool', i), 429)
-            self.assertEqual(self.retry_after, '60')
+        self.assertEqual(self.request('Google-InspectionTool', 240), 429)
 
-    def test_cooldown_escalates_across_ips_and_expires(self):
-        for i in range(190):
-            self.assertEqual(self.request('Bytespider/1', i), 200)
-        for i in range(29):
-            self.assertEqual(self.request('Bytespider/1', i), 429)
-            self.assertEqual(self.retry_after, '60')
-        self.assertEqual(self.request('Bytespider/new-version', 240), 429)
-        self.assertEqual(self.retry_after, '300')
-        # Cooldown still blocks when the normal request rate drops below 190.
-        self.set_bot_state('data.http_req_rate 0')
-        for i in range(89):
-            self.assertEqual(self.request(['Badgen/1.0', 'Data-Pipeline-Enricher/1.0',
-                                          'Shields.io/test'][i % 3], i, '/_events'), 429)
-            self.assertTrue(295 <= int(self.retry_after) <= 300)
-        self.assertEqual(self.request('Bytespider/1', 241, '/asset.js'), 429)
-        self.assertEqual(self.retry_after, '900')
-        self.assertEqual(self.request('Googlebot/2.1', 242), 200)
-        self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0 Safari/537.36', 243), 200)
-        # Model time passing: the ban has expired and one-minute rates decayed.
-        self.set_bot_state(f'data.gpt0 {int(time.time()) - 1} '
-                           'data.http_req_rate 0 data.gpc0_rate 0')
-        self.assertEqual(self.request('Bytespider/1', 244), 200)
+    def test_cooldown_escalates_and_expires_for_bots_and_ordinary_clients(self):
+        cases = [(['Bytespider/1', 'TikTokSpider/2'], True, 'bytedance'),
+                 (['Googlebot/2.1', 'GoogleOther'], True, 'google'),
+                 (['Mozilla/5.0 Chrome/156.0', 'Mozilla/5.0 Firefox/140.0'],
+                  False, '198.51.100.201'),
+                 (['Mozilla/5.0 Chrome/156.0', 'Mozilla/5.0 Firefox/140.0'],
+                  False, '2001:db8::1')]
+        for agents, rotating_ips, group in cases:
+            with self.subTest(group=group):
+                for table in ['client_group_usage', 'api_client_usage']:
+                    self.runtime(f'clear table {table}')
 
-    def test_existing_shared_automated_api_limit(self):
-        for i in range(26):
-            self.assertEqual(self.request(['Badgen/1.0', 'Data-Pipeline-Enricher/1.0'][i % 2],
-                                          i, '/api/size'), 200)
-        self.assertEqual(self.request('Bytespider/1', 240, '/api/size'), 429)
-        self.assertEqual(self.request('Bytespider/1', 241), 200)
+                def send(i, path='/package/example'):
+                    return self.request(agents[i % 2], i if rotating_ips else group, path)
+
+                for i in range(190):
+                    self.assertEqual(send(i), 200)
+                for i in range(29):
+                    self.assertEqual(send(i), 429)
+                    self.assertEqual(self.retry_after, '60')
+                self.assertEqual(send(240), 429)
+                self.assertEqual(self.retry_after, '300')
+                # Cooldown persists even when the normal rate drops below 190.
+                self.runtime(f'set table client_group_usage key {group} data.http_req_rate 0')
+                for i in range(89):
+                    self.assertEqual(send(i, '/_events'), 429)
+                    self.assertTrue(295 <= int(self.retry_after) <= 300)
+                self.assertEqual(send(241, '/asset.js'), 429)
+                self.assertEqual(self.retry_after, '900')
+                self.assertEqual(self.request('Badgen/1.0', 242), 200)
+                self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0', 243), 200)
+                # Model expiry and normal one-minute rate decay.
+                self.runtime(f'set table client_group_usage key {group} '
+                             f'data.gpt0 {int(time.time()) - 1} '
+                             'data.http_req_rate 0 data.gpc0_rate 0')
+                self.runtime('clear table api_client_usage')
+                self.assertEqual(send(244), 200)
+
+    def test_api_limits_are_also_isolated_by_family(self):
+        for ua, limit, rotating in [('Bytespider/1', 26, True), ('Badgen/1.0', 26, True),
+                                   ('Data-Pipeline-Enricher/1.0', 26, True),
+                                   ('got/14', 8, False), ('Ahrefs', 8, True)]:
+            with self.subTest(ua=ua):
+                for i in range(limit):
+                    self.assertEqual(self.request(ua, i if rotating else 200, '/api/size'), 200)
+                self.assertEqual(self.request(ua, 240 if rotating else 200, '/api/size'), 429)
+                self.assertEqual(self.request(ua, 241), 200)
 
 
 if __name__ == '__main__':
