@@ -67,5 +67,5 @@ deployed HAProxy config before reloading it. The `/stats` route and exporter
 listener are both loopback-only behind HAProxy authentication.
 
 Caches use a 32 MiB allowance; query concurrency is limited to two with 16 MiB
-per query, leaving headroom below PM2's 128 MiB restart guard. These are internal
-budgets, not a hard RSS limit.
+per query. Response caching is disabled to avoid its minimum allocation. These
+are internal budgets, not a hard RSS limit; PM2 retains its 128 MiB restart guard.
