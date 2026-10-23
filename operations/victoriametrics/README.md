@@ -10,7 +10,7 @@ setting limits caches, not total process memory.
 VictoriaMetrics compresses time-series samples itself. Its disk use still
 depends on scrape volume, series churn, and index data. Retention is a time
 limit, not a byte cap. The disk-clean cron fully resets stored history above
-160 MiB, after gracefully stopping VictoriaMetrics. A dedicated 200 MB
+128 MiB, after gracefully stopping VictoriaMetrics. A dedicated 200 MB
 filesystem is the hard ceiling; the PM2 config leaves 20 MiB free for merges.
 
 ## Install
