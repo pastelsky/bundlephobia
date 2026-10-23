@@ -1,6 +1,7 @@
 # HAProxy statistics
 
-The public `/stats` dashboard is authenticated in HAProxy and proxied directly
+The public `/stats` dashboard is authenticated in HAProxy. Its static frontend is
+served by the existing application; `/stats/api/` and `/stats/vmui/` are proxied directly
 to VictoriaMetrics on localhost port 8428. HAProxy's Prometheus exporter listens
 on localhost port 8406. See [`../victoriametrics/README.md`](../victoriametrics/README.md)
 for setup.

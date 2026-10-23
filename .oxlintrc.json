@@ -77,6 +77,8 @@
     }
   },
   "ignorePatterns": [
+    "stats-app/**",
+    "client/assets/public/stats/dashboard/**",
     ".next/**",
     "out/**",
     "build/**",

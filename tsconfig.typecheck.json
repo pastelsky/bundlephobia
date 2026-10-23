@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "__tests__", "e2e"]
+  "exclude": ["node_modules", "__tests__", "e2e", "stats-app"]
 }

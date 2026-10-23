@@ -27,5 +27,5 @@
     "incremental": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "__tests__", "e2e"]
+  "exclude": ["node_modules", "__tests__", "e2e", "stats-app"]
 }

@@ -11,6 +11,23 @@ on:
     branches: [bundlephobia]
 
 jobs:
+  stats-app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stats-app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          package-manager-cache: false
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn lint
+      - run: yarn test
+      - run: yarn build
+
   build:
     name: build (${{ matrix.node-version }})
     runs-on: ubuntu-latest

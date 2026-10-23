@@ -118,6 +118,8 @@
   },
   "scripts": {
     "dev": "DEBUG='bp:*' NODE_ENV=development nodemon --watch ./server --watch ./utils --watch ./index.ts",
+    "stats:dev": "yarn --cwd stats-app dev",
+    "stats:build": "yarn --cwd stats-app build",
     "build": "yarn sitemap && NODE_ENV=production next build",
     "sitemap": "node -r esbuild-register bin/generate-sitemap.ts",
     "prestart": "yarn build",

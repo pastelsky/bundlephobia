@@ -1,0 +1,12 @@
+{
+  "plugins": ["typescript", "react", "jsx-a11y"],
+  "env": { "browser": true, "node": true },
+  "rules": {
+    "typescript/no-explicit-any": "error",
+    "typescript/no-unsafe-return": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/no-non-null-assertion": "error"
+  },
+  "ignorePatterns": ["node_modules"]
+}

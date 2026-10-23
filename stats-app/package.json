@@ -1,0 +1,40 @@
+{
+  "name": "@bundlephobia/stats-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "yarn@4.0.2",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "check": "tsc --noEmit",
+    "lint": "oxlint --type-aware src vite.config.ts tailwind.config.ts",
+    "test": "vitest run",
+    "format": "oxfmt --config ../.oxfmtrc.json .",
+    "build": "yarn check && vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.2.0",
+    "@tanstack/react-query": "^5.90.0",
+    "@tremor/react": "3.18.7",
+    "lucide-react": "^0.468.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "zod": "^4.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.20",
+    "oxfmt": "^0.74.0",
+    "oxlint": "1.78.0",
+    "oxlint-tsgolint": "7.0.2001",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.9.3",
+    "vite": "^7.0.0",
+    "vitest": "^5.0.5"
+  }
+}
