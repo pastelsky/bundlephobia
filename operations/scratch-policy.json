@@ -1,0 +1,18 @@
+{
+  "packages": {
+    "reclaim": "workspace",
+    "reason": "Per-analysis build output and temporary installs; normal finally cleanup, with host recovery for abandoned workspaces."
+  },
+  "cache": {
+    "reclaim": "cache",
+    "reason": "Package-manager downloads and disposable tool temporary files; evicted under scratch pressure."
+  },
+  "installations": {
+    "reclaim": "service",
+    "reason": "Shared installs protected by InstallationStore leases; its sweeper owns normal expiry."
+  },
+  "build-metrics": {
+    "reclaim": "service",
+    "reason": "Bounded build diagnostics; the metrics writer owns normal pruning."
+  }
+}

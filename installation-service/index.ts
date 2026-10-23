@@ -64,8 +64,7 @@ const store = new InstallationStore(
     queue: createInstallQueue(
       positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
     ),
-    rootPath:
-      process.env.INSTALLATION_ROOT_PATH || '/tmp/tmp-build/installations',
+    rootPath: process.env.INSTALLATION_ROOT_PATH,
     retentionMs: positiveInteger(
       process.env.INSTALLATION_RETENTION_MS,
       5 * 60_000,
