@@ -1,6 +1,6 @@
 import type { FastifyReply } from 'fastify'
 
-/** A completed response hands ownership to the worker; a disconnect does not. */
+/** Fastify 4 has no request.signal. Only disconnects before response completion abort. */
 export default function requestSignal(reply: FastifyReply): AbortSignal {
   const controller = new AbortController()
 

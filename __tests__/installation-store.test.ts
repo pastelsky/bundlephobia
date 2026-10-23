@@ -236,7 +236,6 @@ describe('installation service store', () => {
     const original = await store.subscribe('react@19.1.1')
     const metadata = await store.read(original.installation.installPath)
     delete metadata!.leases
-    delete metadata!.legacyActiveUntil
     await store.write(metadata!)
 
     const restarted = createStore(api, root, {
@@ -303,6 +302,63 @@ describe('installation service store', () => {
 
     expect(metadata?.activeUntil).toBe(0)
   })
+
+  it.each(['expired', 'missing metadata'])(
+    'waits for %s cleanup before reinstalling the same package',
+    async state => {
+      const root = await temporaryRoot()
+      const api = installationApi(root)
+      const store = createStore(api, root)
+      const directory = store.directory(store.key('react@19.1.1', {}))
+
+      if (state === 'expired') {
+        const previous = await store.subscribe('react@19.1.1')
+        await store.unsubscribe(previous.id)
+        const metadata = await store.read(directory)
+        await store.write({ ...metadata!, lastUsedAt: 0 })
+        api.installPackage.mockClear()
+      } else {
+        // An interrupted publication left no metadata. This path must still lock.
+        await fs.mkdir(directory)
+      }
+
+      let finish!: () => void
+      let started!: () => void
+
+      const deleting = new Promise<void>(resolve => {
+        started = resolve
+      })
+
+      const gate = new Promise<void>(resolve => {
+        finish = resolve
+      })
+
+      const dispose = api.disposePackage.getMockImplementation()!
+      api.disposePackage.mockImplementation(async installation => {
+        started()
+        await gate
+        await dispose(installation)
+      })
+      const sweep = store.sweep()
+      await deleting
+      const subscribing = store.subscribe('react@19.1.1')
+
+      try {
+        await new Promise(resolve => setImmediate(resolve))
+        expect(api.installPackage).not.toHaveBeenCalled()
+      } finally {
+        finish()
+        await sweep
+      }
+
+      const owner = await subscribing
+      await store.sweep()
+      expect((await store.read(directory))?.leases).toHaveProperty(owner.id)
+      expect(api.installPackage).toHaveBeenCalledTimes(1)
+      expect(api.disposePackage).toHaveBeenCalledTimes(1)
+      await store.unsubscribe(owner.id)
+    },
+  )
 
   it('serializes disposal and joins overlapping cleanup sweeps', async () => {
     const root = await temporaryRoot()

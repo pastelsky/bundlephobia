@@ -13,7 +13,6 @@ const metadataSchema = z.object({
   lastUsedAt: z.number(),
   activeUntil: z.number().optional(),
   leases: z.record(z.string(), z.number()).optional(),
-  legacyActiveUntil: z.number().optional(),
   installation: z
     .object({
       packageVersion: z.string(),
@@ -104,15 +103,20 @@ class InstallationStore {
     return path.join(this.rootPath, hash)
   }
 
-  async withKeyLock<T>(key: string, task: () => Promise<T>): Promise<T> {
-    const previous = this.keyLocks.get(key) || Promise.resolve()
+  // All build workers use this single daemon; cleanup shares its directory locks.
+  async withDirectoryLock<T>(
+    directory: string,
+    task: () => Promise<T>,
+  ): Promise<T> {
+    const previous = this.keyLocks.get(directory) || Promise.resolve()
     const current = previous.catch(() => {}).then(task)
-    this.keyLocks.set(key, current)
+    this.keyLocks.set(directory, current)
 
     try {
       return await current
     } finally {
-      if (this.keyLocks.get(key) === current) this.keyLocks.delete(key)
+      if (this.keyLocks.get(directory) === current)
+        this.keyLocks.delete(directory)
     }
   }
 
@@ -206,9 +210,10 @@ class InstallationStore {
   ) {
     const key = this.key(exactPackageString, options)
 
-    const subscription = await this.withKeyLock(key, async () => {
+    const directory = this.directory(key)
+
+    const subscription = await this.withDirectoryLock(directory, async () => {
       signal?.throwIfAborted()
-      const directory = this.directory(key)
       const cached = await this.read(directory)
 
       const installation =
@@ -228,16 +233,12 @@ class InstallationStore {
         [id]: now + this.leaseMs,
       }
 
-      // Preserve pre-upgrade owners whose opaque IDs were never persisted.
-      const legacyActiveUntil = this.legacyLeaseUntil(cached)
-
       const entry = {
         key,
         installation,
         lastUsedAt: now,
-        activeUntil: Math.max(legacyActiveUntil, ...Object.values(leases)),
+        activeUntil: Math.max(...Object.values(leases)),
         leases,
-        legacyActiveUntil,
       }
 
       try {
@@ -272,16 +273,10 @@ class InstallationStore {
 
   private liveLeases(metadata: Metadata | undefined, now = Date.now()) {
     return Object.fromEntries(
-      Object.entries(metadata?.leases || {}).filter(
-        ([, expiry]) => expiry > now,
-      ),
-    )
-  }
-
-  private legacyLeaseUntil(metadata: Metadata | undefined): number {
-    return (
-      metadata?.legacyActiveUntil ??
-      (metadata && !metadata.leases ? metadata.activeUntil || 0 : 0)
+      // Existing owners have no persisted IDs; retain only their original expiry.
+      Object.entries(
+        metadata?.leases ?? { unreleased: metadata?.activeUntil ?? 0 },
+      ).filter(([, expiry]) => expiry > now),
     )
   }
 
@@ -295,7 +290,7 @@ class InstallationStore {
 
     if (!metadata) return false
 
-    return this.withKeyLock(metadata.key, async () => {
+    return this.withDirectoryLock(directory, async () => {
       const current = await this.read(directory)
 
       if (!current?.leases || !Object.hasOwn(current.leases, id)) return false
@@ -306,11 +301,7 @@ class InstallationStore {
         ...current,
         leases,
         lastUsedAt: Date.now(),
-        activeUntil: Math.max(
-          current.legacyActiveUntil || 0,
-          0,
-          ...Object.values(leases),
-        ),
+        activeUntil: Math.max(0, ...Object.values(leases)),
       })
 
       return true
@@ -341,18 +332,14 @@ class InstallationStore {
       if (!entry.isDirectory()) continue
 
       const directory = path.join(this.rootPath, entry.name)
-      const metadata = await this.read(directory)
-
-      if (!metadata) {
-        await this.installationApi.disposePackage({ installPath: directory })
-
-        continue
-      }
-
-      await this.withKeyLock(metadata.key, async () => {
+      await this.withDirectoryLock(directory, async () => {
         const current = await this.read(directory)
 
-        if (!current) return
+        if (!current) {
+          await this.installationApi.disposePackage({ installPath: directory })
+
+          return
+        }
 
         const now = Date.now()
 
