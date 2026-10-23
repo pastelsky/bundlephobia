@@ -37,13 +37,6 @@ describe('Queue cancellation', () => {
 
     expect(queue.getReadyJobs().length).toBe(1)
     expect(queue.getRunningJobs().length).toBe(1)
-    expect(queue.getDiagnostics()).toEqual({
-      total: 2,
-      ready: 1,
-      running: 1,
-      successListeners: 2,
-      failureListeners: 2,
-    })
 
     queue.cancel('job-2', 'TEST')
 
@@ -112,6 +105,31 @@ describe('Queue cancellation', () => {
     resolveFirstJob()
     await p2
 
+    expect(executor).toHaveBeenCalledTimes(2)
+  })
+
+  it('clearing waiting jobs does not free a running executor slot', async () => {
+    const queue = new Queue({ concurrency: 1 })
+    let finish!: (value: { size?: number }) => void
+
+    const pending = new Promise<{ size?: number }>(resolve => {
+      finish = resolve
+    })
+
+    const executor = jest
+      .fn()
+      .mockReturnValueOnce(pending)
+      .mockResolvedValue({})
+
+    queue.addExecutor('TEST', executor)
+    const first = queue.process('first', 'TEST', {})
+    const waiting = queue.process('waiting', 'TEST', {})
+    queue.clear()
+    await expect(waiting).rejects.toMatchObject({ code: 'QUEUE_CLEARED' })
+    const next = queue.process('next', 'TEST', {})
+    expect(executor).toHaveBeenCalledTimes(1)
+    finish({})
+    await Promise.all([first, next])
     expect(executor).toHaveBeenCalledTimes(2)
   })
 

@@ -2,8 +2,6 @@ apps:
   - script: './index.js'
     args: '--project tsconfig.server.json ./index.ts'
     name: main
-    node_args:
-      - --require=./scripts/memory-diagnostics.cjs
     instances: 1
     max_memory_restart: 500M
     error_file: logs/index.log
@@ -18,16 +16,12 @@ apps:
       PM2_DISABLE_METRICS: 'true'
       CACHE_SERVICE_ENDPOINT: http://localhost:7001
       BUILD_SERVICE_ENDPOINT: http://localhost:7002
-      MEMORY_DIAGNOSTICS_SERVICE: main
-      MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 425M
-      MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics
-      MEMORY_DIAGNOSTICS_HEAP_SNAPSHOT: 'false'
 
   - script: ./build-service/index.js
     name: build-service
     node_args:
-      - --require=./scripts/memory-diagnostics.cjs
       - --experimental-strip-types
+    # Each worker admits one analysis until compilation and cleanup settle.
     instances: 3
     max_memory_restart: 1000M
     exec_mode: cluster
@@ -40,9 +34,6 @@ apps:
       PM2_APM: 'false'
       PM2_DISABLE_METRICS: 'true'
       INSTALLATION_SERVICE_ENDPOINT: http://127.0.0.1:7003
-      MEMORY_DIAGNOSTICS_SERVICE: build-service
-      MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
-      MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics
 
   - script: ./installation-service/index.ts
     name: installation-service
@@ -69,7 +60,6 @@ apps:
     name: cache-service
     interpreter: node
     node_args:
-      - --require=./scripts/memory-diagnostics.cjs
       - --experimental-strip-types
     instances: 1
     max_memory_restart: 200M
@@ -82,6 +72,3 @@ apps:
       DEBUG: 'bp:*'
       PM2_APM: 'false'
       PM2_DISABLE_METRICS: 'true'
-      MEMORY_DIAGNOSTICS_SERVICE: cache-service
-      MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 170M
-      MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics

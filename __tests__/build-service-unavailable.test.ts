@@ -263,11 +263,16 @@ describe('build service unavailability', () => {
     )
   })
 
-  it('cancels an in-process worker execution when its job aborts', async () => {
+  it('keeps the local executor occupied until an aborted worker actually settles', async () => {
     delete process.env.BUILD_SERVICE_ENDPOINT
     const controller = new AbortController()
-    // SAFETY: this pending promise models the workerpool execution handle in this test.
-    const execution = new Promise(() => {}) as ReturnType<typeof pool.exec>
+    let finish!: (value: { size?: number }) => void
+
+    // SAFETY: the promise models the workerpool execution handle.
+    const execution = new Promise<{ size?: number }>(resolve => {
+      finish = resolve
+    }) as ReturnType<typeof pool.exec>
+
     execution.timeout = jest.fn().mockReturnValue(execution)
     execution.cancel = jest.fn()
     mockedPool.mockReturnValue(execution)
@@ -276,19 +281,41 @@ describe('build service unavailability', () => {
     const executor = mockedRequestQueue.addExecutor.mock.calls[0][1]
 
     const result = executor(
-      { packageString: '@example/cancelled@1.0.0' },
-      {
-        signal: asGlobalAbortSignal(controller.signal),
-      },
+      { packageString: 'example' },
+      { signal: asGlobalAbortSignal(controller.signal) },
     )
 
-    controller.abort()
+    const settled = jest.fn()
 
-    await expect(result).rejects.toMatchObject({
-      code: 'JOB_CANCELLED',
-      name: 'JobCancelledError',
-    })
+    void Promise.resolve(result).then(settled, settled)
+    controller.abort()
+    await Promise.resolve()
+    expect(settled).not.toHaveBeenCalled()
+    finish({ size: 123 })
+    await expect(result).rejects.toMatchObject({ code: 'JOB_CANCELLED' })
     expect(execution.cancel).not.toHaveBeenCalled()
+  })
+
+  it('returns busy responses without caching a package failure', async () => {
+    const set = jest.fn()
+
+    const ctx = {
+      query: {},
+      set,
+      state: { id: 'busy', resolved: { packageString: 'example' } },
+    }
+
+    // SAFETY: the fixture supplies the middleware context fields exercised here.
+    await errorMiddleware(ctx as never, async () => {
+      throw new CustomError('BuildServiceBusyError', 'worker busy', undefined)
+    })
+    expect(ctx).toMatchObject({
+      status: 503,
+      cacheControl: { maxAge: 0 },
+      body: { error: { code: 'BuildServiceBusyError' } },
+    })
+    expect(set).toHaveBeenCalledWith('Retry-After', '1')
+    expect(mockedFailureCache).not.toHaveBeenCalled()
   })
 
   it('returns a retryable response and records the failure', async () => {

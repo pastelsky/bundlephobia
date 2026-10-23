@@ -140,7 +140,8 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint --type-aware .",
-    "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
+    "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . ",
+    "test:build-reliability": "jest --runInBand __tests__/build-admission.test.ts __tests__/build-service-unavailable.test.ts __tests__/queue.test.ts __tests__/validate-process-config.test.ts"
   },
   "husky": {
     "hooks": {

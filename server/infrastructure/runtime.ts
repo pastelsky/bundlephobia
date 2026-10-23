@@ -4,7 +4,6 @@ import logger from './logger.service'
 import Queue from './queue.service'
 import config from '../config'
 import type { FailureCacheEntry } from '../types'
-import { registerMetricsProvider } from './memory-diagnostics.service'
 
 interface WorkerPoolExecution extends Promise<unknown> {
   cancel?: () => void
@@ -45,7 +44,8 @@ const failureCache = new LRU<string, FailureCacheEntry>({
 const debug = createDebug('bp:request')
 
 const requestQueue = new Queue({
-  concurrency: 4,
+  // Match the three build-service workers, each limited to one analysis.
+  concurrency: 3,
   maxAge: 60 * 2,
 })
 
@@ -57,10 +57,5 @@ const pool = workerpool.pool('./server/worker.js', {
 if (process.env.BUILD_SERVICE_ENDPOINT) {
   pool.terminate()
 }
-
-registerMetricsProvider('main', () => ({
-  queue: requestQueue.getDiagnostics(),
-  failureCacheEntries: failureCache.itemCount,
-}))
 
 export { debug, failureCache, logger, pool, requestQueue }
