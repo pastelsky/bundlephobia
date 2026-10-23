@@ -360,6 +360,37 @@ describe('installation service store', () => {
     },
   )
 
+  it('reports silent cleanup failures, continues other entries, and retries later', async () => {
+    const root = await temporaryRoot()
+    const failed = path.join(root, 'first')
+    const removed = path.join(root, 'second')
+    await fs.mkdir(failed)
+    await fs.mkdir(removed)
+    const api = installationApi(root)
+    const dispose = api.disposePackage.getMockImplementation()!
+    api.disposePackage.mockImplementation(async installation => {
+      if (installation.installPath !== failed) await dispose(installation)
+    })
+    const onError = jest.fn()
+
+    const store = new InstallationStore(api, {
+      rootPath: root,
+      queue: createInstallQueue(1),
+      onError,
+    })
+
+    await store.sweep()
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining(failed),
+      }),
+    )
+    expect(await fs.readdir(root)).toEqual(['first'])
+    api.disposePackage.mockImplementation(dispose)
+    await store.sweep()
+    expect(await fs.readdir(root)).toEqual([])
+  })
+
   it('serializes disposal and joins overlapping cleanup sweeps', async () => {
     const root = await temporaryRoot()
     await fs.mkdir(path.join(root, 'first'))

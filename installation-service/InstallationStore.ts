@@ -336,7 +336,7 @@ class InstallationStore {
         const current = await this.read(directory)
 
         if (!current) {
-          await this.installationApi.disposePackage({ installPath: directory })
+          await this.disposeDirectory(directory)
 
           return
         }
@@ -350,8 +350,23 @@ class InstallationStore {
           return
         }
 
-        await this.installationApi.disposePackage({ installPath: directory })
-      })
+        await this.disposeDirectory(directory)
+      }).catch(this.onError)
+    }
+  }
+
+  private async disposeDirectory(directory: string): Promise<void> {
+    // package-build-stats can log a deletion error and resolve without removing files.
+    await this.installationApi.disposePackage({ installPath: directory })
+
+    const remaining = await fs.lstat(directory).catch(error => {
+      if (error.code !== 'ENOENT') throw error
+
+      return undefined
+    })
+
+    if (remaining) {
+      throw new Error(`Installation cleanup did not remove ${directory}`)
     }
   }
 
