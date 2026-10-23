@@ -898,3 +898,7 @@ footer > span {
 .outcome-failure .metric-value {
   color: #be123c !important;
 }
+
+.capacity-table .table-heading th:nth-child(2) {
+  text-align: right;
+}

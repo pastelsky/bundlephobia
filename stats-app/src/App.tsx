@@ -425,7 +425,10 @@ function DiskBreakdown({ data }: { data?: ResourceData }) {
           </p>
         </div>
       </div>
-      <table className="response-table" aria-label="Filesystem capacity">
+      <table
+        className="response-table capacity-table"
+        aria-label="Filesystem capacity"
+      >
         <thead>
           <tr className="response-row table-heading">
             <th scope="col">Filesystem</th>
