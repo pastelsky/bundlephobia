@@ -88,11 +88,16 @@ class BotRateLimits(unittest.TestCase):
             self.assertEqual(reply.strip(), b'')
 
     def test_shared_bot_limit_and_independent_google_budget(self):
+        agents = ['Bytespider/1', 'bingbot/2', 'Badgen/1.0',
+                  'Data-Pipeline-Enricher/1.0', 'Shields.io/test',
+                  'depscope/1', 'got/14', 'Ahrefs']
         for i in range(190):
-            self.assertEqual(self.request(['Bytespider/1', 'bingbot/2'][i % 2], i,
+            self.assertEqual(self.request(agents[i % len(agents)], i,
                              ['/package/example', '/_events', '/asset.js'][i % 3]), 200)
         self.assertEqual(self.request('Bytespider/new-version', 240), 429)
         self.assertEqual(self.request('bingbot/new-version', 241, '/_events'), 429)
+        self.assertEqual(self.request('Badgen/1.0', 242), 429)
+        self.assertEqual(self.request('Data-Pipeline-Enricher/1.0', 243), 429)
         self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0 Safari/537.36', 242), 200)
         for i in range(190):
             self.assertEqual(self.request(['Googlebot/2.1', 'GoogleOther'][i % 2], i), 200)
@@ -111,7 +116,8 @@ class BotRateLimits(unittest.TestCase):
         # Cooldown still blocks when the normal request rate drops below 190.
         self.set_bot_state('data.http_req_rate 0')
         for i in range(89):
-            self.assertEqual(self.request('bingbot/2', i, '/_events'), 429)
+            self.assertEqual(self.request(['Badgen/1.0', 'Data-Pipeline-Enricher/1.0',
+                                          'Shields.io/test'][i % 3], i, '/_events'), 429)
             self.assertTrue(295 <= int(self.retry_after) <= 300)
         self.assertEqual(self.request('Bytespider/1', 241, '/asset.js'), 429)
         self.assertEqual(self.retry_after, '900')
@@ -124,7 +130,8 @@ class BotRateLimits(unittest.TestCase):
 
     def test_existing_shared_automated_api_limit(self):
         for i in range(26):
-            self.assertEqual(self.request('Bytespider/1', i, '/api/size'), 200)
+            self.assertEqual(self.request(['Badgen/1.0', 'Data-Pipeline-Enricher/1.0'][i % 2],
+                                          i, '/api/size'), 200)
         self.assertEqual(self.request('Bytespider/1', 240, '/api/size'), 429)
         self.assertEqual(self.request('Bytespider/1', 241), 200)
 
