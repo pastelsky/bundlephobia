@@ -28,4 +28,7 @@ deployed; they cannot backfill old outcomes. Completed installs exclude cached
 reuse. Build attempts include size/export analysis and installation failures;
 process kills cannot record completion. Ports 8410–8412 map to the three existing
 PM2 build workers (update scrape targets when scaling); installer metrics use
-its existing loopback port 7003. No default runtime metrics or package labels.
+its existing loopback port 7003. That endpoint also reads host CPU, load, memory,
+swap, network, and three filesystem counters once per scrape, without a separate
+agent or disk traversal. Host collection needs Linux `/proc`; memory usage excludes
+reclaimable cache. No default runtime metrics or package labels.

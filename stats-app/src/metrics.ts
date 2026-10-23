@@ -18,6 +18,8 @@ export const compactFormat = new Intl.NumberFormat('en', {
 })
 
 export function formatBytes(value: number) {
+  if (value >= 1073741824)
+    return `${numberFormat.format(value / 1073741824)} GiB`
   if (value >= 1048576) return `${numberFormat.format(value / 1048576)} MiB`
   if (value >= 1024) return `${numberFormat.format(value / 1024)} KiB`
   return `${numberFormat.format(value)} B`
@@ -144,6 +146,97 @@ for (const [id, title, metric, job] of [
       })),
   })
 }
+
+const hostJob = 'job="bundlephobia_installations"'
+const cpuUsage = (window: string) =>
+  `100 * (1 - sum(rate(bundlephobia_host_cpu_ticks_total{${hostJob},mode=~"idle|iowait"}[${window}])) / sum(rate(bundlephobia_host_cpu_ticks_total{${hostJob}}[${window}])))`
+const memoryUsed = `bundlephobia_host_memory_bytes{${hostJob},kind="total"} - ignoring(kind) bundlephobia_host_memory_bytes{${hostJob},kind="available"}`
+
+PANELS.push(
+  {
+    id: 'host-cpu',
+    title: 'CPU usage',
+    description: 'Busy time across all cores · excludes idle and I/O wait',
+    unit: '%',
+    colors: ['orange'],
+    format: value => `${numberFormat.format(value)}%`,
+    queries: window => [{ expression: cpuUsage(window), name: 'CPU' }],
+  },
+  {
+    id: 'host-load',
+    title: 'CPU load',
+    description: 'Runnable and waiting tasks · compare with CPU core count',
+    unit: 'tasks',
+    colors: ['orange', 'sky', 'violet', 'slate'],
+    format: value => numberFormat.format(value),
+    queries: () => [
+      ...['1m', '5m', '15m'].map(period => ({
+        expression: `bundlephobia_host_load{${hostJob},period="${period}"}`,
+        name: period,
+      })),
+      { expression: `bundlephobia_host_cpu_cores{${hostJob}}`, name: 'Cores' },
+    ],
+  },
+  {
+    id: 'host-memory',
+    title: 'Memory usage',
+    description: 'RAM in use · reclaimable filesystem cache is available',
+    unit: 'bytes',
+    colors: ['violet', 'slate'],
+    format: formatBytes,
+    queries: () => [
+      { expression: memoryUsed, name: 'Used' },
+      {
+        expression: `bundlephobia_host_memory_bytes{${hostJob},kind="total"}`,
+        name: 'Total',
+      },
+    ],
+  },
+  {
+    id: 'host-disk',
+    title: 'Disk usage',
+    description: 'Used space on each filesystem · see available capacity below',
+    unit: 'bytes',
+    colors: ['sky', 'orange', 'violet'],
+    format: formatBytes,
+    queries: () =>
+      ['root', 'builds', 'metrics'].map((mount, index) => ({
+        expression: `bundlephobia_host_disk_bytes{${hostJob},mount="${mount}",kind="used"}`,
+        name: ['Main filesystem', 'Temporary builds', 'VictoriaMetrics'][index],
+      })),
+  },
+  {
+    id: 'host-network',
+    title: 'Host network traffic',
+    description: 'Interface traffic · excludes loopback and virtual bridges',
+    unit: 'bytes / sec',
+    colors: ['sky', 'orange'],
+    format: formatBytes,
+    queries: window =>
+      ['receive', 'transmit'].map(direction => ({
+        expression: `sum(rate(bundlephobia_host_network_bytes_total{${hostJob},direction="${direction}"}[${window}]))`,
+        name: direction === 'receive' ? 'Received' : 'Sent',
+      })),
+  },
+  {
+    id: 'host-swap',
+    title: 'Swap usage',
+    description: 'Swap space in use and total swap capacity',
+    unit: 'bytes',
+    colors: ['rose', 'slate'],
+    format: formatBytes,
+    queries: () => [
+      {
+        expression: `bundlephobia_host_memory_bytes{${hostJob},kind="swap_total"} - ignoring(kind) bundlephobia_host_memory_bytes{${hostJob},kind="swap_free"}`,
+        name: 'Used',
+      },
+      {
+        expression: `bundlephobia_host_memory_bytes{${hostJob},kind="swap_total"}`,
+        name: 'Total',
+      },
+    ],
+  },
+)
 
 export interface ChartRow {
   timestamp: number
@@ -275,5 +368,42 @@ export async function loadPipelineSummary(
         ? 1
         : null,
     configured: buildHealth.length > 0 && installHealth.length > 0,
+  }
+}
+
+export async function loadResourceSummary(signal: AbortSignal) {
+  const [cpu, cores, load, used, total, disks, health] = await Promise.all(
+    [
+      cpuUsage('5m'),
+      `bundlephobia_host_cpu_cores{${hostJob}}`,
+      `bundlephobia_host_load{${hostJob},period="1m"}`,
+      memoryUsed,
+      `bundlephobia_host_memory_bytes{${hostJob},kind="total"}`,
+      `bundlephobia_host_disk_bytes{${hostJob}}`,
+      `min(bundlephobia_host_collection_success{${hostJob}})`,
+    ].map(expression => queryInstant(expression, signal)),
+  )
+  const scalar = (rows: typeof cpu) =>
+    rows[0] ? finiteValue(rows[0].value[1]) : null
+  const diskValue = (mount: string, kind: string) => {
+    const row = disks.find(
+      row => row.metric.mount === mount && row.metric.kind === kind,
+    )
+    return row ? finiteValue(row.value[1]) : null
+  }
+  return {
+    cpu: scalar(cpu),
+    cores: scalar(cores),
+    load: scalar(load),
+    memoryUsed: scalar(used),
+    memoryTotal: scalar(total),
+    health: scalar(health),
+    configured: health.length > 0,
+    disks: ['root', 'builds', 'metrics'].map(mount => ({
+      mount,
+      total: diskValue(mount, 'total'),
+      used: diskValue(mount, 'used'),
+      available: diskValue(mount, 'available'),
+    })),
   }
 }

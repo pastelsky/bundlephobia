@@ -24,6 +24,8 @@ import {
   loadPanel,
   loadSummary,
   loadPipelineSummary,
+  loadResourceSummary,
+  formatBytes,
   numberFormat,
   PANELS,
   STATUS_LABELS,
@@ -324,20 +326,130 @@ function PipelineCards({
     },
     { title: 'Failed installs', value: data?.installFailure, kind: 'failure' },
   ]
+  return <ValueCards cards={cards} loading={loading} />
+}
+
+interface ValueCard {
+  title: string
+  value?: number | null
+  kind?: string
+  format?: (value: number) => string
+  detail?: string
+}
+
+function ValueCards({
+  cards,
+  loading,
+}: {
+  cards: ValueCard[]
+  loading: boolean
+}) {
   return (
     <div className="summary-grid">
       {cards.map(card => (
-        <Card key={card.title} className={`summary-card outcome-${card.kind}`}>
+        <Card
+          key={card.title}
+          className={`summary-card outcome-${card.kind ?? 'neutral'}`}
+        >
           <Text>{card.title}</Text>
           <Metric
             className={loading ? 'metric-loading shimmer' : 'metric-value'}
           >
-            {card.value == null ? '—' : compactFormat.format(card.value)}
+            {card.value == null
+              ? '—'
+              : (card.format ?? (value => compactFormat.format(value)))(
+                  card.value,
+                )}
           </Metric>
-          <p className="stat-detail">In the selected time range</p>
+          <p className="stat-detail">
+            {card.detail ?? 'In the selected time range'}
+          </p>
         </Card>
       ))}
     </div>
+  )
+}
+
+type ResourceData = Awaited<ReturnType<typeof loadResourceSummary>>
+const diskLabels: Record<string, string> = {
+  root: 'Main filesystem',
+  builds: 'Temporary builds',
+  metrics: 'VictoriaMetrics',
+}
+
+function ResourceCards({
+  data,
+  loading,
+}: {
+  data?: ResourceData
+  loading: boolean
+}) {
+  const root = data?.disks.find(disk => disk.mount === 'root')
+  const cards = [
+    {
+      title: 'CPU usage',
+      value: data?.cpu,
+      format: (value: number) => `${numberFormat.format(value)}%`,
+      detail: 'Average over the last 5 minutes',
+    },
+    {
+      title: 'CPU load',
+      value: data?.load,
+      detail: `1-minute load · ${data?.cores ?? '—'} CPU cores`,
+    },
+    {
+      title: 'Memory used',
+      value: data?.memoryUsed,
+      format: formatBytes,
+      detail: `${data?.memoryTotal == null ? '—' : formatBytes(data.memoryTotal)} total RAM · cache excluded`,
+    },
+    {
+      title: 'Main disk available',
+      value: root?.available,
+      format: formatBytes,
+      detail: `${root?.total == null ? '—' : formatBytes(root.total)} total capacity`,
+    },
+  ]
+  return <ValueCards cards={cards} loading={loading} />
+}
+
+function DiskBreakdown({ data }: { data?: ResourceData }) {
+  return (
+    <Card className="breakdown-card">
+      <div className="panel-heading">
+        <div>
+          <h2>Filesystem capacity</h2>
+          <p>
+            Separate mounts for the website, temporary builds, and metrics
+            storage
+          </p>
+        </div>
+      </div>
+      <table className="response-table" aria-label="Filesystem capacity">
+        <thead>
+          <tr className="response-row table-heading">
+            <th scope="col">Filesystem</th>
+            <th scope="col">Used</th>
+            <th scope="col">Available</th>
+            <th scope="col">Capacity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data?.disks.map(disk => (
+            <tr key={disk.mount} className="response-row">
+              <td className="response-label">
+                <strong>{diskLabels[disk.mount]}</strong>
+              </td>
+              {[disk.used, disk.available, disk.total].map((value, index) => (
+                <td key={index} className="numeric">
+                  {value == null ? '—' : formatBytes(value)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
   )
 }
 
@@ -350,6 +462,7 @@ export function App() {
     page.tabs.find(tab => tab.id === params.get('tab')) ?? page.tabs[0]
   const panelIds = tab?.panels ?? page.panels
   const pipeline = page.source === 'pipeline'
+  const resources = page.source === 'resources'
   const [range, setRange] = useState(TIME_RANGES[0])
   const [live, setLive] = useState(true)
   const client = useQueryClient()
@@ -358,7 +471,7 @@ export function App() {
     queryKey: ['summary', range.label],
     queryFn: ({ signal }) => loadSummary(range, signal),
     refetchInterval: live ? 60000 : false,
-    enabled: !pipeline,
+    enabled: !pipeline && !resources,
   })
   const pipelineSummary = useQuery({
     queryKey: ['pipeline-summary', range.label],
@@ -366,7 +479,17 @@ export function App() {
     refetchInterval: live ? 60000 : false,
     enabled: pipeline,
   })
-  const activeSummary = pipeline ? pipelineSummary : summary
+  const resourceSummary = useQuery({
+    queryKey: ['resource-summary'],
+    queryFn: ({ signal }) => loadResourceSummary(signal),
+    refetchInterval: live ? 60000 : false,
+    enabled: resources,
+  })
+  const activeSummary = resources
+    ? resourceSummary
+    : pipeline
+      ? pipelineSummary
+      : summary
   const healthy = activeSummary.data?.health === 1 && !activeSummary.isError
   const summaryData = summary.isError ? undefined : summary.data
   const updated = activeSummary.dataUpdatedAt
@@ -397,7 +520,11 @@ export function App() {
           <div className="page-heading">
             <div>
               <div className="eyebrow">
-                {pipeline ? 'APPLICATION SERVICES' : 'WEBSITE ANALYTICS'}
+                {resources
+                  ? 'HOST MONITORING'
+                  : pipeline
+                    ? 'APPLICATION SERVICES'
+                    : 'WEBSITE ANALYTICS'}
               </div>
               <h1>{page.heading}</h1>
               <p>{page.description}</p>
@@ -407,10 +534,13 @@ export function App() {
               {activeSummary.isPending
                 ? 'Connecting'
                 : healthy
-                  ? pipeline
-                    ? 'Services collecting'
-                    : 'HAProxy scrape healthy'
-                  : pipeline && pipelineSummary.data?.configured === false
+                  ? resources
+                    ? 'Host metrics collecting'
+                    : pipeline
+                      ? 'Services collecting'
+                      : 'HAProxy scrape healthy'
+                  : (resources && resourceSummary.data?.configured === false) ||
+                      (pipeline && pipelineSummary.data?.configured === false)
                     ? 'Collection not enabled'
                     : 'Scrape unavailable'}
             </span>
@@ -458,7 +588,12 @@ export function App() {
               <span>{activeSummary.error?.message}</span>
             </div>
           )}
-          {pipeline ? (
+          {resources ? (
+            <ResourceCards
+              data={resourceSummary.isError ? undefined : resourceSummary.data}
+              loading={resourceSummary.isPending}
+            />
+          ) : pipeline ? (
             <PipelineCards
               data={pipelineSummary.isError ? undefined : pipelineSummary.data}
               loading={pipelineSummary.isPending}
@@ -496,12 +631,18 @@ export function App() {
           )}
           <div className="section-label">
             <span>
-              {pipeline ? 'APPLICATION OUTCOMES' : 'TRAFFIC & RELIABILITY'}
+              {resources
+                ? 'HOST RESOURCE USAGE'
+                : pipeline
+                  ? 'APPLICATION OUTCOMES'
+                  : 'TRAFFIC & RELIABILITY'}
             </span>
             <span>
-              {pipeline
-                ? 'Success and failure · per completed attempt'
-                : 'Website frontend · background health checks excluded'}
+              {resources
+                ? 'Whole server · sampled once per minute'
+                : pipeline
+                  ? 'Success and failure · per completed attempt'
+                  : 'Website frontend · background health checks excluded'}
             </span>
           </div>
           <div className="charts-grid">
@@ -515,11 +656,20 @@ export function App() {
             ))}
           </div>
           {page.breakdown && <ResponseBreakdown data={summaryData} />}
+          {resources && (
+            <DiskBreakdown
+              data={resourceSummary.isError ? undefined : resourceSummary.data}
+            />
+          )}
           <footer>
             <span>
               <span className="footer-dot" />
-              {pipeline ? 'Application counters' : 'HAProxy metrics'} · stored
-              in VictoriaMetrics
+              {resources
+                ? 'Host resource counters'
+                : pipeline
+                  ? 'Application counters'
+                  : 'HAProxy metrics'}{' '}
+              · stored in VictoriaMetrics
             </span>
             <span>
               Gaps indicate unavailable history ·{' '}

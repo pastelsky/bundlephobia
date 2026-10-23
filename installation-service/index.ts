@@ -16,10 +16,13 @@ import {
 } from './resolveRegistryPackageSpec.ts'
 import serializeError from '../build-service/serializeError.js'
 import { createOutcomeMetrics } from '../observability/outcomeMetrics.ts'
+import { createHostMetrics } from '../observability/hostMetrics.ts'
 
 const outcomes = createOutcomeMetrics('bundlephobia_installs_total', [
   'install',
 ])
+
+const collectHostMetrics = createHostMetrics(outcomes.registry)
 
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value)
@@ -164,11 +167,13 @@ fastify.delete<{ Params: { id: string } }>(
 )
 
 // This service already listens on loopback; VictoriaMetrics scrapes it directly.
-fastify.get('/metrics', async (_request, reply) =>
-  reply
+fastify.get('/metrics', async (_request, reply) => {
+  await collectHostMetrics()
+
+  return reply
     .type(outcomes.registry.contentType)
-    .send(await outcomes.registry.metrics()),
-)
+    .send(await outcomes.registry.metrics())
+})
 
 fastify.get('/diagnostics', async () => store.diagnostics())
 

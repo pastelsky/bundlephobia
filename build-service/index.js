@@ -29,7 +29,8 @@ function measureBuild(options) {
 }
 
 // PM2 workers share the job port. Scraping it would randomly switch counters
-// between workers, so each existing worker exposes a private, exclusive port.
+// between workers, so each existing worker exposes a private port. During a rolling reload, old/new workers
+// for the same instance can temporarily share that port through Node cluster.
 if (process.env.BUILD_METRICS_BASE_PORT) {
   const metrics = Fastify()
   metrics.get('/metrics', async (_request, reply) =>
@@ -42,11 +43,9 @@ if (process.env.BUILD_METRICS_BASE_PORT) {
     Number(process.env.BUILD_METRICS_BASE_PORT) +
     Number(process.env.NODE_APP_INSTANCE ?? 0)
 
-  await metrics
-    .listen({ host: '127.0.0.1', port, exclusive: true })
-    .catch(error => {
-      console.error('Build metrics endpoint unavailable', error)
-    })
+  await metrics.listen({ host: '127.0.0.1', port }).catch(error => {
+    console.error('Build metrics endpoint unavailable', error)
+  })
   fastify.addHook('onClose', async () => metrics.close())
 }
 
