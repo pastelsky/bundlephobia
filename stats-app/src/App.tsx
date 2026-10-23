@@ -410,7 +410,9 @@ export function App() {
                   ? pipeline
                     ? 'Services collecting'
                     : 'HAProxy scrape healthy'
-                  : 'Scrape unavailable'}
+                  : pipeline && pipelineSummary.data?.configured === false
+                    ? 'Collection not enabled'
+                    : 'Scrape unavailable'}
             </span>
           </div>
           <div className="toolbar">
@@ -482,7 +484,7 @@ export function App() {
             <div className="collection-note">
               <Activity size={16} />
               <span>
-                {pipelineSummary.data?.collecting
+                {pipelineSummary.data?.configured
                   ? 'Counting completed attempts. '
                   : 'Application metrics need to be deployed before these panels collect data. '}
                 Installs exclude cached reuse. Builds include size and export

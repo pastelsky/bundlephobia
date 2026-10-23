@@ -274,6 +274,6 @@ export async function loadPipelineSummary(
       buildHealth[0]?.value[1] === '1' && installHealth[0]?.value[1] === '1'
         ? 1
         : null,
-    collecting: builds.length > 0 || installs.length > 0,
+    configured: buildHealth.length > 0 && installHealth.length > 0,
   }
 }
