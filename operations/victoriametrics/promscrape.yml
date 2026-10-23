@@ -10,3 +10,12 @@ scrape_configs:
     metrics_path: /metrics
     scrape_interval: 60s
     scrape_timeout: 10s
+
+  - job_name: bundlephobia_installations
+    static_configs:
+      - targets: ['127.0.0.1:7003']
+
+  # Match process.yml's three build workers and BUILD_METRICS_BASE_PORT.
+  - job_name: bundlephobia_builds
+    static_configs:
+      - targets: ['127.0.0.1:8410', '127.0.0.1:8411', '127.0.0.1:8412']

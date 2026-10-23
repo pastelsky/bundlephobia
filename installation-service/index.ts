@@ -15,6 +15,11 @@ import {
   UnsupportedRegistryPackageSpecError,
 } from './resolveRegistryPackageSpec.ts'
 import serializeError from '../build-service/serializeError.js'
+import { createOutcomeMetrics } from '../observability/outcomeMetrics.ts'
+
+const outcomes = createOutcomeMetrics('bundlephobia_installs_total', [
+  'install',
+])
 
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value)
@@ -62,6 +67,7 @@ const store = new InstallationStore(
     disposePackage,
   },
   {
+    onInstallComplete: outcome => outcomes.record('install', outcome),
     queue: createInstallQueue(
       positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
     ),
@@ -155,6 +161,13 @@ fastify.delete<{ Params: { id: string } }>(
 
     return reply.code(204).send()
   },
+)
+
+// This service already listens on loopback; VictoriaMetrics scrapes it directly.
+fastify.get('/metrics', async (_request, reply) =>
+  reply
+    .type(outcomes.registry.contentType)
+    .send(await outcomes.registry.metrics()),
 )
 
 fastify.get('/diagnostics', async () => store.diagnostics())

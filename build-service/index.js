@@ -8,12 +8,47 @@ import {
 } from 'package-build-stats'
 import Amplitude from '@amplitude/node'
 import serializeError from './serializeError.js'
-import { measureBuild } from './metrics.js'
+import { measureBuild as measureBuildDiagnostics } from './metrics.js'
+import { createOutcomeMetrics } from '../observability/outcomeMetrics.ts'
 import { createInstallationProvider } from './installationProvider.ts'
 import { activeBuilds, recordBuildPhase } from './buildMemoryTrace.ts'
 import memoryDiagnostics from '../scripts/memory-diagnostics.cjs'
 
 const fastify = Fastify()
+
+const outcomes = createOutcomeMetrics('bundlephobia_builds_total', [
+  'size',
+  'exports-sizes',
+  'exports',
+])
+
+function measureBuild(options) {
+  return outcomes.measure(options.operation, () =>
+    measureBuildDiagnostics(options),
+  )
+}
+
+// PM2 workers share the job port. Scraping it would randomly switch counters
+// between workers, so each existing worker exposes a private, exclusive port.
+if (process.env.BUILD_METRICS_BASE_PORT) {
+  const metrics = Fastify()
+  metrics.get('/metrics', async (_request, reply) =>
+    reply
+      .type(outcomes.registry.contentType)
+      .send(await outcomes.registry.metrics()),
+  )
+
+  const port =
+    Number(process.env.BUILD_METRICS_BASE_PORT) +
+    Number(process.env.NODE_APP_INSTANCE ?? 0)
+
+  await metrics
+    .listen({ host: '127.0.0.1', port, exclusive: true })
+    .catch(error => {
+      console.error('Build metrics endpoint unavailable', error)
+    })
+  fastify.addHook('onClose', async () => metrics.close())
+}
 
 memoryDiagnostics.registerMetricsProvider('builds', () => ({
   active: activeBuilds(),
