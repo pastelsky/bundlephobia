@@ -14,6 +14,7 @@ module.exports = {
         '-retentionPeriod=15d',
         '-httpListenAddr=127.0.0.1:8428',
         '-http.pathPrefix=/stats',
+        '-vmui.customDashboardsPath=/var/www/bundlephobia/operations/victoriametrics/dashboards',
         '-memory.allowedBytes=256MiB',
         '-storage.minFreeDiskSpaceBytes=20MiB',
         '-loggerLevel=WARN',

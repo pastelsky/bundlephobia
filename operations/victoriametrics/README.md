@@ -3,9 +3,10 @@
 HAProxy authenticates `/stats` and proxies it directly to VictoriaMetrics. PM2
 manages one VictoriaMetrics Go binary; no Node stats service or system service is
 added. It scrapes every minute and retains 15 days. Data survives PM2 restarts,
-but collection pauses while VictoriaMetrics or the host is down. HAProxy logs
-are not backfilled. The measured process RSS is about 40 MiB; the 256 MiB
-setting limits caches, not total process memory.
+but collection pauses while VictoriaMetrics or the host is down. The scrape
+stores only metrics exposed by HAProxy's Prometheus endpoint. The
+measured process RSS is about 40 MiB; the 256 MiB setting limits caches, not
+total process memory.
 
 VictoriaMetrics compresses time-series samples itself. Its disk use still
 depends on scrape volume, series churn, and index data. Retention is a time
@@ -52,6 +53,13 @@ sudo install -D -o root -g root -m 0644 /var/www/bundlephobia/operations/victori
 sudo pm2 startOrReload /var/www/bundlephobia/operations/victoriametrics/ecosystem.config.cjs
 sudo pm2 save
 ```
+
+Open `/stats`, choose **Dashboards**, then select **Requests by frontend**,
+**Responses by status class**, or **Traffic and sessions**.
+
+HAProxy's existing exporter provides frontend request/response counters, byte
+counters, and active sessions. It does not expose user-agent groups, request
+paths, or individual HTTP status codes.
 
 Install the tracked HAProxy files and retain the server-only Basic Auth userlist
 as described in [`../haproxy/README.md`](../haproxy/README.md). Check the

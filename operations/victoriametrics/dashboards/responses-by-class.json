@@ -1,0 +1,16 @@
+{
+  "title": "Responses by status class",
+  "rows": [
+    {
+      "panels": [
+        {
+          "title": "HTTP responses per second",
+          "width": 12,
+          "unit": "responses/second",
+          "expr": ["sum by (code) (rate(haproxy_frontend_http_responses_total[5m]))"],
+          "alias": ["{{code}}"]
+        }
+      ]
+    }
+  ]
+}
