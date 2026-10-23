@@ -151,36 +151,21 @@ trim_loop_device() {
 }
 
 cleanup_victoriametrics_data() {
-    local data_kib data_bytes pid was_running=false
+    local data_kib pid was_running=false
 
-    [ -d "$VICTORIAMETRICS_DATA_DIR" ] || return
+    [ -d "$VICTORIAMETRICS_DATA_DIR" ] || return 0
 
     data_kib=$(du -sk "$VICTORIAMETRICS_DATA_DIR" 2>/dev/null | awk 'NR==1 {print $1}')
-    if ! [[ "$data_kib" =~ ^[0-9]+$ ]]; then
-        log "WARNING: Could not determine VictoriaMetrics data size — skipping cleanup"
-        return
+    [[ "$data_kib" =~ ^[0-9]+$ ]] || { log "WARNING: Could not read VictoriaMetrics data size"; return; }
+    if (( data_kib * 1024 <= VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES )); then
+        return 0
     fi
-    data_bytes=$((data_kib * 1024))
-
-    if [ "$data_bytes" -le "$VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES" ]; then
-        return
-    fi
-
-    log "VictoriaMetrics data exceeds its cleanup threshold (${data_bytes} bytes) — resetting stored history"
-
-    if [ ! -x "$PM2" ]; then
-        log "WARNING: PM2 is unavailable — skipping VictoriaMetrics cleanup"
-        return
-    fi
+    [ -x "$PM2" ] || { log "WARNING: PM2 is unavailable — skipping VictoriaMetrics cleanup"; return; }
 
     pid=$("$PM2" pid "$VICTORIAMETRICS_PM2_APP" 2>/dev/null | tail -n 1)
-    if ! [[ "$pid" =~ ^[0-9]+$ ]]; then
-        log "WARNING: Could not determine the VictoriaMetrics PM2 process — skipping cleanup"
-        return
-    fi
+    [[ "$pid" =~ ^[0-9]+$ ]] || { log "WARNING: Could not read the VictoriaMetrics PM2 process"; return; }
 
     if [ "$pid" -gt 0 ]; then
-        log "Stopping VictoriaMetrics gracefully before clearing its database"
         if ! "$PM2" stop "$VICTORIAMETRICS_PM2_APP" >/dev/null 2>&1; then
             log "WARNING: Could not stop VictoriaMetrics with PM2 — skipping cleanup"
             return
@@ -188,21 +173,17 @@ cleanup_victoriametrics_data() {
         was_running=true
     fi
 
-    # Reset the full database only after PM2 has stopped the process cleanly.
+    # The full reset is safe only while VictoriaMetrics is stopped.
     if ! find "$VICTORIAMETRICS_DATA_DIR" -mindepth 1 -maxdepth 1 \
         ! -name lost+found -exec rm -rf -- {} + 2>/dev/null; then
-        log "WARNING: Could not clear the complete VictoriaMetrics database; leaving the service stopped"
+        log "WARNING: Could not clear VictoriaMetrics data; leaving the service stopped"
         return
     fi
 
-    log "Cleared VictoriaMetrics database after the storage threshold was exceeded"
+    log "Reset VictoriaMetrics history after storage exceeded 160 MiB (${data_kib} KiB)"
 
-    if [ "$was_running" = "true" ]; then
-        if "$PM2" restart "$VICTORIAMETRICS_PM2_APP" >/dev/null 2>&1; then
-            log "Restarted VictoriaMetrics with an empty database"
-        else
-            log "WARNING: VictoriaMetrics database was cleared but PM2 could not restart the service"
-        fi
+    if [ "$was_running" = "true" ] && ! "$PM2" restart "$VICTORIAMETRICS_PM2_APP" >/dev/null 2>&1; then
+        log "WARNING: VictoriaMetrics history was cleared but PM2 could not restart the service"
     fi
 }
 
