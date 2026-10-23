@@ -194,6 +194,172 @@ describe('installation service store', () => {
     await store.close()
   })
 
+  it('releases persisted owners after restart without removing another owner', async () => {
+    jest.useFakeTimers()
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+
+    const first = createStore(api, root, {
+      retentionMs: 1_000,
+      leaseMs: 10_000,
+    })
+
+    const owner = await first.subscribe('react@19.1.1')
+    const other = await first.subscribe('react@19.1.1')
+
+    const restarted = createStore(api, root, {
+      retentionMs: 1_000,
+      leaseMs: 10_000,
+    })
+
+    expect(await restarted.unsubscribe(owner.id)).toBe(true)
+    await jest.advanceTimersByTimeAsync(2_000)
+    await restarted.sweep()
+    expect((await restarted.diagnostics()).subscriptions).toBe(1)
+    expect(api.disposePackage).not.toHaveBeenCalled()
+    expect(await restarted.unsubscribe(other.id)).toBe(true)
+    await jest.advanceTimersByTimeAsync(1_100)
+    await restarted.sweep()
+    expect(await fs.readdir(root)).toEqual([])
+  })
+
+  it('preserves pre-upgrade leases when a new owner releases', async () => {
+    jest.useFakeTimers()
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+
+    const store = createStore(api, root, {
+      retentionMs: 1_000,
+      leaseMs: 10_000,
+    })
+
+    const original = await store.subscribe('react@19.1.1')
+    const metadata = await store.read(original.installation.installPath)
+    delete metadata!.leases
+    await store.write(metadata!)
+
+    const restarted = createStore(api, root, {
+      retentionMs: 1_000,
+      leaseMs: 10_000,
+    })
+
+    const current = await restarted.subscribe('react@19.1.1')
+    await restarted.unsubscribe(current.id)
+    await jest.advanceTimersByTimeAsync(2_000)
+    await restarted.sweep()
+    expect(api.disposePackage).not.toHaveBeenCalled()
+    await jest.advanceTimersByTimeAsync(8_100)
+    await restarted.sweep()
+    expect(await fs.readdir(root)).toEqual([])
+  })
+
+  it('skips cancelled queued installs and releases a cancelled running result', async () => {
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    let finish!: () => void
+    let start!: () => void
+
+    const started = new Promise<void>(resolve => {
+      start = resolve
+    })
+
+    const gate = new Promise<void>(resolve => {
+      finish = resolve
+    })
+
+    const install = api.installPackage.getMockImplementation()!
+    api.installPackage.mockImplementation(async packageString => {
+      start()
+      await gate
+
+      return install(packageString)
+    })
+
+    const store = new InstallationStore(api, {
+      rootPath: root,
+      queue: createInstallQueue(1),
+    })
+
+    const running = new AbortController()
+    const queued = new AbortController()
+    const first = store.subscribe('react@19.1.1', {}, running.signal)
+    await started
+    const second = store.subscribe('lodash@4.17.21', {}, queued.signal)
+    const results = Promise.allSettled([first, second])
+    running.abort()
+    queued.abort()
+    finish()
+
+    expect((await results).every(result => result.status === 'rejected')).toBe(
+      true,
+    )
+    expect(api.installPackage).toHaveBeenCalledTimes(1)
+    expect((await store.diagnostics()).subscriptions).toBe(0)
+
+    const metadata = await store.read(
+      store.directory(store.key('react@19.1.1', {})),
+    )
+
+    expect(metadata?.activeUntil).toBe(0)
+  })
+
+  it.each(['expired', 'missing metadata'])(
+    'waits for %s cleanup before reinstalling the same package',
+    async state => {
+      const root = await temporaryRoot()
+      const api = installationApi(root)
+      const store = createStore(api, root)
+      const directory = store.directory(store.key('react@19.1.1', {}))
+
+      if (state === 'expired') {
+        const previous = await store.subscribe('react@19.1.1')
+        await store.unsubscribe(previous.id)
+        const metadata = await store.read(directory)
+        await store.write({ ...metadata!, lastUsedAt: 0 })
+        api.installPackage.mockClear()
+      } else {
+        // An interrupted publication left no metadata. This path must still lock.
+        await fs.mkdir(directory)
+      }
+
+      let finish!: () => void
+      let started!: () => void
+
+      const deleting = new Promise<void>(resolve => {
+        started = resolve
+      })
+
+      const gate = new Promise<void>(resolve => {
+        finish = resolve
+      })
+
+      const dispose = api.disposePackage.getMockImplementation()!
+      api.disposePackage.mockImplementation(async installation => {
+        started()
+        await gate
+        await dispose(installation)
+      })
+      const sweep = store.sweep()
+      await deleting
+      const subscribing = store.subscribe('react@19.1.1')
+
+      try {
+        await new Promise(resolve => setImmediate(resolve))
+        expect(api.installPackage).not.toHaveBeenCalled()
+      } finally {
+        finish()
+        await sweep
+      }
+
+      const owner = await subscribing
+      await store.sweep()
+      expect((await store.read(directory))?.leases).toHaveProperty(owner.id)
+      expect(api.installPackage).toHaveBeenCalledTimes(1)
+      expect(api.disposePackage).toHaveBeenCalledTimes(1)
+      await store.unsubscribe(owner.id)
+    },
+  )
+
   it('reports silent cleanup failures, continues other entries, and retries later', async () => {
     const root = await temporaryRoot()
     const failed = path.join(root, 'first')

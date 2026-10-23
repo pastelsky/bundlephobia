@@ -9,6 +9,7 @@ import {
 } from 'package-build-stats/installation'
 import InstallationStore, { type InstallOptions } from './InstallationStore.ts'
 import createInstallQueue from './createInstallQueue.ts'
+import requestSignal from './requestSignal.ts'
 import {
   resolveRegistryPackageSpec,
   UnsupportedRegistryPackageSpecError,
@@ -101,6 +102,8 @@ function sendInstallationError(error: Error, reply: FastifyReply) {
 }
 
 fastify.post('/installations', async (request, reply) => {
+  const signal = requestSignal(reply)
+
   const parsed = z
     .object({ packageString: z.string(), options: z.unknown().optional() })
     .safeParse(request.body)
@@ -124,14 +127,20 @@ fastify.post('/installations', async (request, reply) => {
       ),
     )
 
-    const { id, installation } = await store.subscribe(exactPackageString, {
-      ...options,
-      additionalPackages: exactAdditionalPackages,
-      isLocal: false,
-    })
+    const { id, installation } = await store.subscribe(
+      exactPackageString,
+      {
+        ...options,
+        additionalPackages: exactAdditionalPackages,
+        isLocal: false,
+      },
+      signal,
+    )
 
     return { ...installation, subscriptionId: id }
   } catch (error) {
+    if (signal.aborted) return reply
+
     return sendInstallationError(
       error instanceof Error ? error : new Error(String(error)),
       reply,
