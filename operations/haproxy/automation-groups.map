@@ -1,0 +1,34 @@
+# Case-insensitive UA substrings (the caller lowercases before lookup).
+# Aliases map to stable families; this is classification, not authentication.
+googlebot google
+googleother google
+google-inspectiontool google
+adsbot-google google
+mediapartners-google google
+storebot-google google
+feedfetcher-google google
+bytespider bytedance
+tiktokspider bytedance
+bytedance bytedance
+baidu baidu
+bingbot bing
+bingpreview bing
+adidxbot bing
+amazonbot amazon
+applebot apple
+yandex yandex
+gptbot openai
+oai-searchbot openai
+chatgpt-user openai
+claudebot anthropic
+claude-user anthropic
+claude-searchbot anthropic
+shields.io shields
+badgen badgen
+data-pipeline-enricher data-pipeline-enricher
+depscope depscope
+ahrefs ahrefs
+semrush semrush
+dotbot dotbot
+petalbot petal
+awariobot awario

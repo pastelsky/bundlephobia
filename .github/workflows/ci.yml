@@ -47,6 +47,12 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
       - name: Run lint
         run: yarn lint
+      - name: Test HAProxy request limits
+        if: matrix.node-version == '24.x'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y haproxy
+          yarn test:haproxy
       - name: Test package recommendation automation
         run: yarn test:recommendations
       - name: Type check recommendation automation
