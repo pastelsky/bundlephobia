@@ -50,7 +50,7 @@ apps:
     node_args:
       - --experimental-strip-types
     instances: 1
-    max_memory_restart: 500M
+    max_memory_restart: 700M
     exec_mode: fork
     error_file: logs/installation-service.log
     out_file: logs/installation-service.log
