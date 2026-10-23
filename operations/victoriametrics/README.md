@@ -65,3 +65,7 @@ Install the tracked HAProxy files and retain the server-only Basic Auth userlist
 as described in [`../haproxy/README.md`](../haproxy/README.md). Check the
 deployed HAProxy config before reloading it. The `/stats` route and exporter
 listener are both loopback-only behind HAProxy authentication.
+
+Caches use a 32 MiB allowance; query concurrency is limited to two with 16 MiB
+per query, leaving headroom below PM2's 128 MiB restart guard. These are internal
+budgets, not a hard RSS limit.
