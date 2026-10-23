@@ -65,6 +65,7 @@ class InstallationStore {
   private readonly leaseMs: number
   private readonly onError: (error: Error) => void
   private sweepTimer?: NodeJS.Timeout
+  private sweepInProgress?: Promise<void>
   private readonly keyLocks = new Map<string, Promise<unknown>>()
   private readonly subscriptions = new Map<string, Subscription>()
   private readonly activeCounts = new Map<string, number>()
@@ -294,46 +295,50 @@ class InstallationStore {
     )
   }
 
-  async sweep(): Promise<void> {
+  sweep(): Promise<void> {
+    this.sweepInProgress ??= this.sweepDirectories().finally(() => {
+      this.sweepInProgress = undefined
+    })
+
+    return this.sweepInProgress
+  }
+
+  private async sweepDirectories(): Promise<void> {
     const directories = await fs.readdir(this.rootPath, { withFileTypes: true })
-    await Promise.all(
-      directories
-        .filter(entry => entry.isDirectory())
-        .map(async entry => {
-          const directory = path.join(this.rootPath, entry.name)
-          const metadata = await this.read(directory)
 
-          if (!metadata) {
-            await this.installationApi.disposePackage({
-              installPath: directory,
-            })
+    // Recursive deletion can allocate heavily; process one workspace at a time.
+    for (const entry of directories) {
+      if (!entry.isDirectory()) continue
 
-            return
-          }
+      const directory = path.join(this.rootPath, entry.name)
+      const metadata = await this.read(directory)
 
-          await this.withKeyLock(metadata.key, async () => {
-            const current = await this.read(directory)
+      if (!metadata) {
+        await this.installationApi.disposePackage({ installPath: directory })
 
-            if (!current) return
+        continue
+      }
 
-            const now = Date.now()
+      await this.withKeyLock(metadata.key, async () => {
+        const current = await this.read(directory)
 
-            this.expireSubscriptions(directory, now)
+        if (!current) return
 
-            if (
-              this.activeCounts.get(directory) ||
-              (current.activeUntil || 0) > now ||
-              current.lastUsedAt + this.retentionMs > now
-            ) {
-              return
-            }
+        const now = Date.now()
 
-            await this.installationApi.disposePackage({
-              installPath: directory,
-            })
-          })
-        }),
-    )
+        this.expireSubscriptions(directory, now)
+
+        if (
+          this.activeCounts.get(directory) ||
+          (current.activeUntil || 0) > now ||
+          current.lastUsedAt + this.retentionMs > now
+        ) {
+          return
+        }
+
+        await this.installationApi.disposePackage({ installPath: directory })
+      })
+    }
   }
 
   expireSubscriptions(directory: string, now: number): void {

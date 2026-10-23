@@ -193,4 +193,47 @@ describe('installation service store', () => {
     })
     await store.close()
   })
+
+  it('serializes disposal and joins overlapping cleanup sweeps', async () => {
+    const root = await temporaryRoot()
+    await fs.mkdir(path.join(root, 'first'))
+    await fs.mkdir(path.join(root, 'second'))
+    const api = installationApi(root)
+    let releaseDeletion!: () => void
+    let deletionStarted!: () => void
+
+    const started = new Promise<void>(resolve => {
+      deletionStarted = resolve
+    })
+
+    const gate = new Promise<void>(resolve => {
+      releaseDeletion = resolve
+    })
+
+    const dispose = api.disposePackage.getMockImplementation()!
+    let activeDeletions = 0
+    let peakDeletions = 0
+    api.disposePackage.mockImplementation(async installation => {
+      activeDeletions += 1
+      peakDeletions = Math.max(peakDeletions, activeDeletions)
+      deletionStarted()
+      await gate
+      await dispose(installation)
+      activeDeletions -= 1
+    })
+    const store = createStore(api, root)
+    const sweeps = [store.sweep(), store.sweep()]
+
+    try {
+      await started
+      expect(api.disposePackage).toHaveBeenCalledTimes(1)
+    } finally {
+      releaseDeletion()
+      await Promise.all(sweeps)
+    }
+
+    expect(api.disposePackage).toHaveBeenCalledTimes(2)
+    expect(peakDeletions).toBe(1)
+    expect(await fs.readdir(root)).toEqual([])
+  })
 })
