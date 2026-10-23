@@ -102,7 +102,7 @@ if (process.argv[2] !== '--sandboxed') {
       '-c',
       'log() { :; }; source "$1"; cleanup_stale_package_dirs false',
       'cleanup',
-      new URL('./cleanup-workspaces.sh', import.meta.url).pathname,
+      new URL('../operations/cleanup-workspaces.sh', import.meta.url).pathname,
     ],
     { stdio: 'inherit' },
   )

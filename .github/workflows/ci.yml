@@ -5,11 +5,6 @@ name: CI
 
 on:
   workflow_dispatch:
-    inputs:
-      build_stats_ref:
-        description: Optional upstream candidate ref for the scratch check
-        type: string
-        default: ''
   push:
     branches: [bundlephobia]
   pull_request:
@@ -168,19 +163,4 @@ jobs:
           corepack yarn install --immutable
           sudo apt-get update
           sudo apt-get install -y bubblewrap
-      - uses: actions/checkout@v7
-        if: github.event_name == 'workflow_dispatch' && inputs.build_stats_ref != ''
-        with:
-          repository: pastelsky/package-build-stats
-          ref: ${{ inputs.build_stats_ref }}
-          path: upstream-build-stats
-          persist-credentials: false
-      - name: Use optional upstream candidate in this disposable runner
-        if: github.event_name == 'workflow_dispatch' && inputs.build_stats_ref != ''
-        run: |
-          cd upstream-build-stats
-          corepack yarn install --immutable
-          corepack yarn build
-          cp -R build/. ../node_modules/package-build-stats/build/
-          cp package.json ../node_modules/package-build-stats/package.json
-      - run: node operations/scratch-cleanup-check.mjs
+      - run: node __tests__/scratch-cleanup.mjs
