@@ -135,6 +135,11 @@ class VictoriaMetricsService {
     )
 
     this.child = child
+    child.once('exit', () => {
+      if (this.running?.child === child) this.running = undefined
+
+      if (this.child === child) this.child = undefined
+    })
 
     try {
       await waitUntilReady(child, this.config)
