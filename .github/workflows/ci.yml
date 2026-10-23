@@ -11,6 +11,15 @@ on:
     branches: [bundlephobia]
 
 jobs:
+  haproxy-rate-limits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y haproxy
+      - run: python3 __tests__/haproxy-rate-limits.py
+
   build:
     name: build (${{ matrix.node-version }})
     runs-on: ubuntu-latest
