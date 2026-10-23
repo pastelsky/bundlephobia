@@ -10,6 +10,9 @@ LOOP_SOFT_THRESHOLD=60     # % loop usage before oldest cache entries are evicte
 LOOP_HARD_THRESHOLD=80     # % loop usage before the complete bun cache is cleared
 LOOP_TARGET_USAGE=$((LOOP_SOFT_THRESHOLD * 2 / 3))
 ORPHAN_MIN_AGE_SECONDS=600
+VICTORIAMETRICS_DATA_DIR="/var/lib/bundlephobia-victoriametrics"
+VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES=$((160 * 1024 * 1024))
+VICTORIAMETRICS_PM2_APP="bundlephobia-victoriametrics"
 
 PM2="/usr/local/bin/pm2"
 export HOME="/root"
@@ -147,6 +150,62 @@ trim_loop_device() {
     fi
 }
 
+cleanup_victoriametrics_data() {
+    local data_kib data_bytes pid was_running=false
+
+    [ -d "$VICTORIAMETRICS_DATA_DIR" ] || return
+
+    data_kib=$(du -sk "$VICTORIAMETRICS_DATA_DIR" 2>/dev/null | awk 'NR==1 {print $1}')
+    if ! [[ "$data_kib" =~ ^[0-9]+$ ]]; then
+        log "WARNING: Could not determine VictoriaMetrics data size — skipping cleanup"
+        return
+    fi
+    data_bytes=$((data_kib * 1024))
+
+    if [ "$data_bytes" -le "$VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES" ]; then
+        return
+    fi
+
+    log "VictoriaMetrics data exceeds its cleanup threshold (${data_bytes} bytes) — resetting stored history"
+
+    if [ ! -x "$PM2" ]; then
+        log "WARNING: PM2 is unavailable — skipping VictoriaMetrics cleanup"
+        return
+    fi
+
+    pid=$("$PM2" pid "$VICTORIAMETRICS_PM2_APP" 2>/dev/null | tail -n 1)
+    if ! [[ "$pid" =~ ^[0-9]+$ ]]; then
+        log "WARNING: Could not determine the VictoriaMetrics PM2 process — skipping cleanup"
+        return
+    fi
+
+    if [ "$pid" -gt 0 ]; then
+        log "Stopping VictoriaMetrics gracefully before clearing its database"
+        if ! "$PM2" stop "$VICTORIAMETRICS_PM2_APP" >/dev/null 2>&1; then
+            log "WARNING: Could not stop VictoriaMetrics with PM2 — skipping cleanup"
+            return
+        fi
+        was_running=true
+    fi
+
+    # Reset the full database only after PM2 has stopped the process cleanly.
+    if ! find "$VICTORIAMETRICS_DATA_DIR" -mindepth 1 -maxdepth 1 \
+        ! -name lost+found -exec rm -rf -- {} + 2>/dev/null; then
+        log "WARNING: Could not clear the complete VictoriaMetrics database; leaving the service stopped"
+        return
+    fi
+
+    log "Cleared VictoriaMetrics database after the storage threshold was exceeded"
+
+    if [ "$was_running" = "true" ]; then
+        if "$PM2" restart "$VICTORIAMETRICS_PM2_APP" >/dev/null 2>&1; then
+            log "Restarted VictoriaMetrics with an empty database"
+        else
+            log "WARNING: VictoriaMetrics database was cleared but PM2 could not restart the service"
+        fi
+    fi
+}
+
 cleanup_loop_device() {
     local loop_usage
     loop_usage=$(get_loop_usage)
@@ -229,6 +288,7 @@ main() {
 
     # Always check loop device regardless of main disk
     cleanup_loop_device
+    cleanup_victoriametrics_data
 
     if [ "$usage" -gt "$MAIN_THRESHOLD" ]; then
         log "Main disk above ${MAIN_THRESHOLD}% — running full cleanup"
