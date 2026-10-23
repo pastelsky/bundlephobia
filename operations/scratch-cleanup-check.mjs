@@ -19,18 +19,15 @@ const root =
   (await fs.mkdtemp(path.join(os.tmpdir(), 'bp-scratch-')))
 
 if (process.argv[2] !== '--sandboxed') {
-  await fs.chmod(root, 0o755)
   const binds = []
 
   for (const name of Object.keys(writable)) {
     const directory = path.join(root, name)
-    await fs.mkdir(directory, { recursive: true, mode: 0o777 })
-    await fs.chmod(directory, 0o777)
+    await fs.mkdir(directory, { recursive: true })
     binds.push('--bind', directory, directory)
   }
 
-  await fs.mkdir(path.join(root, 'cache/tmp'), { mode: 0o777 })
-  await fs.chmod(path.join(root, 'cache/tmp'), 0o777)
+  await fs.mkdir(path.join(root, 'cache/tmp'))
   execFileSync(
     'sudo',
     [
@@ -43,8 +40,6 @@ if (process.argv[2] !== '--sandboxed') {
       '/dev',
       '--proc',
       '/proc',
-      '--cap-drop',
-      'ALL',
       '--die-with-parent',
       '--setenv',
       'PATH',
@@ -55,6 +50,13 @@ if (process.argv[2] !== '--sandboxed') {
       '--setenv',
       'TMPDIR',
       path.join(root, 'cache/tmp'),
+      // Mount setup needs root; builds run as the ordinary runner user.
+      'setpriv',
+      `--reuid=${process.getuid()}`,
+      `--regid=${process.getgid()}`,
+      '--clear-groups',
+      '--bounding-set=-all',
+      '--no-new-privs',
       process.execPath,
       new URL(import.meta.url).pathname,
       '--sandboxed',
