@@ -9,9 +9,9 @@ setting limits caches, not total process memory.
 
 VictoriaMetrics compresses time-series samples itself. Its disk use still
 depends on scrape volume, series churn, and index data. Retention is a time
-limit, not a byte cap. For a strict 100 MB ceiling, keep its data directory on a
-dedicated 100 MB filesystem and leave 20 MiB free for merges; the PM2 config
-sets `-storage.minFreeDiskSpaceBytes=20MiB` for this purpose.
+limit, not a byte cap. The disk-clean cron fully resets stored history above
+160 MiB, after gracefully stopping VictoriaMetrics. A dedicated 200 MB
+filesystem is the hard ceiling; the PM2 config leaves 20 MiB free for merges.
 
 ## Install
 
@@ -33,13 +33,13 @@ tar -xzf "$TMP_DIR/$ASSET" -C "$TMP_DIR"
 sudo install -o root -g root -m 0755 "$TMP_DIR/victoria-metrics-prod" /usr/local/bin/victoria-metrics-prod
 ```
 
-For the 100 MB disk ceiling, create a 100 MB loop-backed filesystem once. Add
+For the 200 MB disk ceiling, create a loop-backed filesystem once. Add
 the final line to `/etc/fstab` so it is mounted before PM2 starts after reboot:
 
 ```sh
 sudo install -d -m 0750 /var/lib/bundlephobia-victoriametrics
-sudo truncate -s 100000000 /var/lib/bundlephobia-victoriametrics.img
-sudo mkfs.ext4 -F /var/lib/bundlephobia-victoriametrics.img
+sudo truncate -s 200000000 /var/lib/bundlephobia-victoriametrics.img
+sudo mkfs.ext4 -m 0 -F /var/lib/bundlephobia-victoriametrics.img
 sudo mount -o loop /var/lib/bundlephobia-victoriametrics.img /var/lib/bundlephobia-victoriametrics
 echo '/var/lib/bundlephobia-victoriametrics.img /var/lib/bundlephobia-victoriametrics ext4 loop,nofail 0 0' | sudo tee -a /etc/fstab
 sudo chown root:root /var/lib/bundlephobia-victoriametrics
