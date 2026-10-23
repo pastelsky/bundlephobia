@@ -11,15 +11,6 @@ on:
     branches: [bundlephobia]
 
 jobs:
-  haproxy-rate-limits:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y haproxy
-      - run: python3 __tests__/haproxy-rate-limits.py
-
   build:
     name: build (${{ matrix.node-version }})
     runs-on: ubuntu-latest
@@ -56,6 +47,12 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
       - name: Run lint
         run: yarn lint
+      - name: Test HAProxy request limits
+        if: matrix.node-version == '24.x'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y haproxy
+          yarn test:haproxy
       - name: Test package recommendation automation
         run: yarn test:recommendations
       - name: Type check recommendation automation
