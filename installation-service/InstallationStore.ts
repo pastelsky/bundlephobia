@@ -73,10 +73,7 @@ class InstallationStore {
     installationApi: InstallationApi,
     {
       queue,
-      rootPath = path.join(
-        process.env.BUILD_TMP_DIR || '/tmp/tmp-build',
-        'installations',
-      ),
+      rootPath = '/tmp/tmp-build/installations',
       retentionMs = 5 * 60_000,
       leaseMs = 15 * 60_000,
       onError = console.error,

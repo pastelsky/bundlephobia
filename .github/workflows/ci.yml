@@ -6,12 +6,8 @@ name: CI
 on:
   workflow_dispatch:
     inputs:
-      scratch_only:
-        description: Run only the scratch filesystem contract
-        type: boolean
-        default: false
       build_stats_ref:
-        description: Optional package-build-stats candidate ref for scratch testing before release
+        description: Optional upstream candidate ref for the scratch check
         type: string
         default: ''
   push:
@@ -21,7 +17,6 @@ on:
 
 jobs:
   build:
-    if: github.event_name != 'workflow_dispatch' || !inputs.scratch_only
     name: build (${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
@@ -68,7 +63,6 @@ jobs:
           CI: true
 
   integration:
-    if: github.event_name != 'workflow_dispatch' || !inputs.scratch_only
     name: integration (${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
@@ -128,7 +122,6 @@ jobs:
           retention-days: 14
 
   jvm-build:
-    if: github.event_name != 'workflow_dispatch' || !inputs.scratch_only
     runs-on: ubuntu-latest
 
     steps:
@@ -160,7 +153,6 @@ jobs:
           ! grep -q '<dependencies>' "$CORE_POM"
 
   scratch-cleanup:
-    name: Scratch filesystem and cleanup contract
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -171,36 +163,24 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.9
-      - name: Install syscall tracing
-        run: |
+      - run: |
+          corepack enable
+          corepack yarn install --immutable
           sudo apt-get update
-          sudo apt-get install -y strace
-      - name: Check out optional upstream candidate
+          sudo apt-get install -y bubblewrap
+      - uses: actions/checkout@v7
         if: github.event_name == 'workflow_dispatch' && inputs.build_stats_ref != ''
-        uses: actions/checkout@v7
         with:
           repository: pastelsky/package-build-stats
           ref: ${{ inputs.build_stats_ref }}
           path: upstream-build-stats
           persist-credentials: false
-      - name: Pack optional upstream candidate
+      - name: Use optional upstream candidate in this disposable runner
         if: github.event_name == 'workflow_dispatch' && inputs.build_stats_ref != ''
-        id: candidate
-        working-directory: upstream-build-stats
         run: |
-          corepack enable
+          cd upstream-build-stats
           corepack yarn install --immutable
-          corepack yarn pack --out "$RUNNER_TEMP/package-build-stats-candidate.tgz"
-          echo "tarball=$RUNNER_TEMP/package-build-stats-candidate.tgz" >> "$GITHUB_OUTPUT"
-      - name: Build, trace and reclaim scratch output
-        id: scratch
-        env:
-          PBS_PACKAGE_TARBALL: ${{ steps.candidate.outputs.tarball }}
-        run: bash operations/tests/scratch-contract.sh
-      - name: Retain trace evidence
-        if: always() && steps.scratch.outputs.output != ''
-        uses: actions/upload-artifact@v7
-        with:
-          name: scratch-filesystem-evidence
-          path: ${{ steps.scratch.outputs.output }}/trace
-          retention-days: 7
+          corepack yarn build
+          cp -R build/. ../node_modules/package-build-stats/build/
+          cp package.json ../node_modules/package-build-stats/package.json
+      - run: node operations/scratch-cleanup-check.mjs
