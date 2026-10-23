@@ -4,6 +4,7 @@ import logger from './logger.service'
 import Queue from './queue.service'
 import config from '../config'
 import type { FailureCacheEntry } from '../types'
+import { registerMetricsProvider } from './memory-diagnostics.service'
 
 interface WorkerPoolExecution extends Promise<unknown> {
   cancel?: () => void
@@ -57,5 +58,10 @@ const pool = workerpool.pool('./server/worker.js', {
 if (process.env.BUILD_SERVICE_ENDPOINT) {
   pool.terminate()
 }
+
+registerMetricsProvider('main', () => ({
+  queue: requestQueue.getDiagnostics(),
+  failureCacheEntries: failureCache.itemCount,
+}))
 
 export { debug, failureCache, logger, pool, requestQueue }

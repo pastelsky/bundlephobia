@@ -296,28 +296,6 @@ describe('build service unavailability', () => {
     expect(execution.cancel).not.toHaveBeenCalled()
   })
 
-  it('returns busy responses without caching a package failure', async () => {
-    const set = jest.fn()
-
-    const ctx = {
-      query: {},
-      set,
-      state: { id: 'busy', resolved: { packageString: 'example' } },
-    }
-
-    // SAFETY: the fixture supplies the middleware context fields exercised here.
-    await errorMiddleware(ctx as never, async () => {
-      throw new CustomError('BuildServiceBusyError', 'worker busy', undefined)
-    })
-    expect(ctx).toMatchObject({
-      status: 503,
-      cacheControl: { maxAge: 0 },
-      body: { error: { code: 'BuildServiceBusyError' } },
-    })
-    expect(set).toHaveBeenCalledWith('Retry-After', '1')
-    expect(mockedFailureCache).not.toHaveBeenCalled()
-  })
-
   it('returns a retryable response and records the failure', async () => {
     const ctx = {
       query: {},

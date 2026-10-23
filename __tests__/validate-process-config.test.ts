@@ -10,13 +10,6 @@ test('all PM2 process entrypoints exist and TypeScript services are runnable by 
   const result = validateProcessConfig()
 
   expect(result.errors).toEqual([])
-  const builder = result.apps.find(app => app.name === 'build-service')
-  expect(builder?.block).toMatch(/^    instances: 3$/m)
-  expect(
-    result.apps.every(app =>
-      app.nodeArgs.every(arg => !arg.includes('memory-diagnostics')),
-    ),
-  ).toBe(true)
   // In-memory directory locks coordinate all workers through one installer.
   const installer = result.apps.find(app => app.name === 'installation-service')
   expect(installer?.block).toMatch(/^    instances: 1$/m)

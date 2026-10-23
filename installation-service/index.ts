@@ -157,6 +157,10 @@ fastify.delete<{ Params: { id: string } }>(
   },
 )
 
+if (process.env.ENABLE_DIAGNOSTICS === 'true') {
+  fastify.get('/diagnostics', async () => store.diagnostics())
+}
+
 fastify.addHook('onClose', async () => store.close())
 
 const port = positiveInteger(process.env.PORT, 7003)
