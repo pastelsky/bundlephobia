@@ -157,7 +157,9 @@ fastify.delete<{ Params: { id: string } }>(
   },
 )
 
-fastify.get('/diagnostics', async () => store.diagnostics())
+if (process.env.ENABLE_DIAGNOSTICS === 'true') {
+  fastify.get('/diagnostics', async () => store.diagnostics())
+}
 
 fastify.addHook('onClose', async () => store.close())
 

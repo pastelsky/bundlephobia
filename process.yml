@@ -12,6 +12,7 @@ apps:
     exec_mode: cluster
     env:
       NODE_ENV: production
+      ENABLE_DIAGNOSTICS: 'false'
       DEBUG: 'bp:*'
       PORT: 5400
       PM2_APM: 'false'
@@ -36,6 +37,7 @@ apps:
     kill_timeout: 20000
     env:
       NODE_ENV: production
+      ENABLE_DIAGNOSTICS: 'false'
       DEBUG: 'bp:*'
       PM2_APM: 'false'
       PM2_DISABLE_METRICS: 'true'
@@ -57,6 +59,7 @@ apps:
     kill_timeout: 20000
     env:
       NODE_ENV: production
+      ENABLE_DIAGNOSTICS: 'false'
       DEBUG: 'bp:*'
       PORT: 7003
       PM2_APM: 'false'
@@ -79,6 +82,7 @@ apps:
     out_file: logs/cache-service.log
     env:
       NODE_ENV: production
+      ENABLE_DIAGNOSTICS: 'false'
       DEBUG: 'bp:*'
       PM2_APM: 'false'
       PM2_DISABLE_METRICS: 'true'

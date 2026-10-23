@@ -15,11 +15,12 @@ import memoryDiagnostics from '../scripts/memory-diagnostics.cjs'
 
 const fastify = Fastify()
 
-memoryDiagnostics.registerMetricsProvider('builds', () => ({
-  active: activeBuilds(),
-}))
-
-eventQueue.on('*', recordBuildPhase)
+if (memoryDiagnostics.enabled) {
+  memoryDiagnostics.registerMetricsProvider('builds', () => ({
+    active: activeBuilds(),
+  }))
+  eventQueue.on('*', recordBuildPhase)
+}
 
 const installationProvider = process.env.INSTALLATION_SERVICE_ENDPOINT
   ? createInstallationProvider(process.env.INSTALLATION_SERVICE_ENDPOINT)
