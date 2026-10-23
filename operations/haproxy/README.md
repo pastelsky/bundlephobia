@@ -1,8 +1,9 @@
 # HAProxy statistics
 
-The public `/stats` dashboard is authenticated in HAProxy and served by the
-Bundlephobia app. HAProxy's Prometheus exporter listens on localhost port 8406.
-See [`../victoriametrics/README.md`](../victoriametrics/README.md) for setup.
+The public `/stats` dashboard is authenticated in HAProxy and proxied directly
+to VictoriaMetrics on localhost port 8428. HAProxy's Prometheus exporter listens
+on localhost port 8406. See [`../victoriametrics/README.md`](../victoriametrics/README.md)
+for setup.
 
 The userlist belongs in `/etc/haproxy/conf.d/00-stats-users.cfg`, outside this
 repository. Store only a crypt hash in that server-only file; never commit the

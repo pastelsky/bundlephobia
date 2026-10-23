@@ -18,7 +18,6 @@ import logger from './infrastructure/logger.service'
 import { apiDiscoveryMiddleware } from './middlewares/api-discovery.middleware'
 import { registerAdminRoutes } from './routes/admin.route'
 import { registerApiRoutes } from './routes/api.route'
-import { registerStatsRoutes } from './routes/stats.route'
 import { registerSystemRoutes } from './routes/system.route'
 import requestLoggerMiddleware from './middlewares/request-logger.middleware'
 import limit from './middlewares/rate-limit.middleware'
@@ -79,13 +78,10 @@ export async function startServer(): Promise<void> {
 
   const server = new Koa()
   const router = new Router()
-  const statsRouter = new Router()
 
   server.use(requestId())
   server.use(requestLoggerMiddleware)
   server.use(cacheControl())
-  registerStatsRoutes(statsRouter)
-  server.use(statsRouter.routes())
   server.use(bodyParser())
   server.use(apiDiscoveryMiddleware)
 
