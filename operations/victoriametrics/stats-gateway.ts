@@ -1,21 +1,58 @@
 import { spawn } from 'node:child_process'
+import type { ChildProcess } from 'node:child_process'
 import { mkdir } from 'node:fs/promises'
-import http from 'node:http'
+import http, {
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from 'node:http'
 import { setTimeout as delay } from 'node:timers/promises'
 import { pathToFileURL } from 'node:url'
 
 const PATH_PREFIX = '/stats'
 const DEFAULT_DATA_PATH = '/var/lib/bundlephobia-victoriametrics'
 
-function getEnv(environment, name, fallback) {
+interface GatewayConfig {
+  binary: string
+  storagePath: string
+  scrapeConfig: string
+  listenAddr: string
+  retention: string
+  memoryAllowedBytes: string
+  minFreeDiskSpaceBytes: string
+  startupTimeoutMs: number
+  idleTimeoutMs: number
+}
+
+interface ActiveStorage {
+  origin: string
+  stop: () => Promise<void>
+}
+
+interface StatsGatewayOptions {
+  startStorage: () => Promise<ActiveStorage>
+  idleTimeoutMs?: number
+}
+
+function getEnv(
+  environment: NodeJS.ProcessEnv,
+  name: string,
+  fallback: string,
+): string {
   return environment[name] || fallback
 }
 
-function getNumericEnv(environment, name, fallback) {
+function getNumericEnv(
+  environment: NodeJS.ProcessEnv,
+  name: string,
+  fallback: number,
+): number {
   return Number(environment[name]) || fallback
 }
 
-export function getConfig(environment = process.env) {
+export function getConfig(
+  environment: NodeJS.ProcessEnv = process.env,
+): GatewayConfig {
   return {
     binary: getEnv(
       environment,
@@ -61,13 +98,16 @@ export function getConfig(environment = process.env) {
   }
 }
 
-function getReadinessUrl(config) {
+function getReadinessUrl(config: GatewayConfig): string {
   return 'http://' + config.listenAddr + PATH_PREFIX + '/-/ready'
 }
 
-async function waitUntilReady(child, config) {
+async function waitUntilReady(
+  child: ChildProcess,
+  config: GatewayConfig,
+): Promise<void> {
   const deadline = Date.now() + config.startupTimeoutMs
-  let spawnError
+  let spawnError: Error | undefined
 
   child.once('error', error => {
     spawnError = error
@@ -96,7 +136,7 @@ async function waitUntilReady(child, config) {
   throw new Error('VictoriaMetrics did not become ready before the timeout')
 }
 
-async function stopChild(child) {
+async function stopChild(child: ChildProcess): Promise<void> {
   if (!child.pid || child.exitCode !== null || child.signalCode !== null) return
 
   const exited = new Promise(resolve => child.once('exit', resolve))
@@ -113,7 +153,9 @@ async function stopChild(child) {
   }
 }
 
-export async function startVictoriaMetrics(config) {
+export async function startVictoriaMetrics(
+  config: GatewayConfig,
+): Promise<ActiveStorage> {
   await mkdir(config.storagePath, { recursive: true })
 
   const child = spawn(
@@ -160,14 +202,20 @@ const HOP_BY_HOP_HEADERS = new Set([
 export function createStatsGateway({
   startStorage,
   idleTimeoutMs = 30 * 60 * 1000,
-}) {
-  let storage
-  let starting
-  let idleTimer
+}: StatsGatewayOptions): {
+  server: Server
+  close: () => Promise<void>
+} {
+  let storage: ActiveStorage | undefined
+  let starting: Promise<ActiveStorage> | undefined
+  let idleTimer: NodeJS.Timeout | undefined
   let activeRequests = 0
   let shuttingDown = false
 
-  const server = http.createServer(async (request, response) => {
+  const server = http.createServer(async (
+    request: IncomingMessage,
+    response: ServerResponse,
+  ) => {
     const requestUrl = new URL(request.url || '/', 'http://stats.local')
     const requestPath = requestUrl.pathname
 
@@ -262,7 +310,7 @@ export function createStatsGateway({
   server.keepAliveTimeout = 5000
   server.headersTimeout = 10000
 
-  function scheduleIdleShutdown() {
+  function scheduleIdleShutdown(): void {
     clearTimeout(idleTimer)
     if (activeRequests > 0 || shuttingDown) return
 
@@ -286,7 +334,7 @@ export function createStatsGateway({
     idleTimer.unref()
   }
 
-  async function ensureStorage() {
+  async function ensureStorage(): Promise<ActiveStorage> {
     if (storage) return storage
     if (!starting) {
       starting = startStorage()
@@ -316,7 +364,10 @@ export function createStatsGateway({
   }
 }
 
-function listenOnSystemdSocket(server, environment = process.env) {
+function listenOnSystemdSocket(
+  server: Server,
+  environment: NodeJS.ProcessEnv = process.env,
+): void {
   const inheritedFdCount = Number(environment.LISTEN_FDS)
   const inheritedPid = Number(environment.LISTEN_PID)
 
@@ -327,7 +378,7 @@ function listenOnSystemdSocket(server, environment = process.env) {
   server.listen({ fd: 3 })
 }
 
-async function main() {
+async function main(): Promise<void> {
   const config = getConfig()
   const gateway = createStatsGateway({
     startStorage: () => startVictoriaMetrics(config),

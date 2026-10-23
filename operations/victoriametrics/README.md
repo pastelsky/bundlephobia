@@ -16,15 +16,29 @@ defaults can be changed in a systemd drop-in as described below.
 ## Install
 
 Run these commands on the Bundlephobia server after deploying the repository
-changes. They create a dedicated unprivileged account, install the pinned
-VictoriaMetrics binary with its published SHA-256 checksum verified, and
-install the source-controlled scrape and systemd configuration:
+changes. They create a dedicated unprivileged account, download the pinned
+VictoriaMetrics release directly onto the server, verify its published
+SHA-256 checksum, and install the source-controlled scrape and systemd
+configuration:
 
 ```sh
 sudo useradd --system --home-dir /var/lib/bundlephobia-victoriametrics --shell /usr/sbin/nologin bundlephobia-stats
 sudo install -d -o bundlephobia-stats -g bundlephobia-stats -m 0750 /var/lib/bundlephobia-victoriametrics
 sudo install -d -o root -g root -m 0755 /etc/bundlephobia-victoriametrics
-sudo /var/www/bundlephobia/operations/victoriametrics/install-victoriametrics.sh
+VERSION=v1.153.0
+ARCH=$(case "$(uname -m)" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo unsupported architecture >&2; exit 1 ;; esac)
+ASSET="victoria-metrics-linux-$ARCH-$VERSION.tar.gz"
+BASE_URL="https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/$VERSION"
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+curl --fail --location --silent --show-error "$BASE_URL/$ASSET" --output "$TEMP_DIR/$ASSET"
+curl --fail --location --silent --show-error "$BASE_URL/${ASSET%.tar.gz}_checksums.txt" --output "$TEMP_DIR/checksums.txt"
+EXPECTED=$(awk -v asset="$ASSET" '$2 == asset || $2 == "*" asset { print $1 }' "$TEMP_DIR/checksums.txt")
+test -n "$EXPECTED"
+printf '%s  %s\n' "$EXPECTED" "$TEMP_DIR/$ASSET" | sha256sum --check --status
+tar -xzf "$TEMP_DIR/$ASSET" -C "$TEMP_DIR"
+sudo install -o root -g root -m 0755 "$TEMP_DIR/victoria-metrics-prod" /usr/local/bin/victoria-metrics-prod
+/usr/local/bin/victoria-metrics-prod --version
 sudo install -o root -g root -m 0644 /var/www/bundlephobia/operations/victoriametrics/promscrape.yml /etc/bundlephobia-victoriametrics/promscrape.yml
 sudo install -o root -g root -m 0644 /var/www/bundlephobia/operations/victoriametrics/bundlephobia-stats.service /etc/systemd/system/bundlephobia-stats.service
 sudo install -o root -g root -m 0644 /var/www/bundlephobia/operations/victoriametrics/bundlephobia-stats.socket /etc/systemd/system/bundlephobia-stats.socket

@@ -13,7 +13,7 @@ Environment=VICTORIAMETRICS_STORAGE_PATH=/var/lib/bundlephobia-victoriametrics
 Environment=VICTORIAMETRICS_LISTEN_ADDR=127.0.0.1:8428
 Environment=VICTORIAMETRICS_RETENTION=30d
 Environment=STATS_IDLE_TIMEOUT_MS=1800000
-ExecStart=/usr/bin/node /var/www/bundlephobia/operations/victoriametrics/stats-gateway.mjs
+ExecStart=/usr/bin/node --experimental-strip-types /var/www/bundlephobia/operations/victoriametrics/stats-gateway.ts
 Restart=no
 KillMode=control-group
 TimeoutStopSec=15s
