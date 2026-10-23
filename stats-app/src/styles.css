@@ -50,7 +50,7 @@ html {
 }
 .sidebar {
   position: fixed;
-  width: 224px;
+  width: 204px;
   inset: 0 auto 0 0;
   background: #171c20;
   color: #9da7ae;
@@ -193,17 +193,17 @@ nav .nav-primary {
   color: #77848d;
 }
 .main-content {
-  margin-left: 224px;
+  margin-left: 204px;
   min-height: 100vh;
 }
 .topbar {
-  height: 65px;
+  height: 52px;
   border-bottom: 1px solid #e7e9eb;
   background: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 36px;
+  padding: 0 24px;
   font-size: 11px;
   color: #858b92;
 }
@@ -225,14 +225,14 @@ nav .nav-primary {
 }
 .dashboard-content {
   max-width: 1600px;
-  padding: 34px 36px 20px;
+  padding: 22px 24px 16px;
   margin: auto;
 }
 .page-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 .eyebrow {
   font-size: 9px;
@@ -242,7 +242,7 @@ nav .nav-primary {
   margin-bottom: 10px;
 }
 h1 {
-  font-size: 29px;
+  font-size: 25px;
   letter-spacing: -1.2px;
   line-height: 1.2;
   font-weight: 620;
@@ -280,7 +280,7 @@ h1 {
 .toolbar {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   margin: 28px 0 22px;
 }
@@ -308,7 +308,7 @@ h1 {
 }
 .refresh-controls {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
 }
 .live-toggle {
@@ -349,10 +349,10 @@ h1 {
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 .summary-card {
-  padding: 19px 20px !important;
+  padding: 14px 16px !important;
   border-color: #e7e9eb !important;
   border-radius: 10px !important;
 }
@@ -391,7 +391,7 @@ h1 {
   background: #f4f0fa;
 }
 .metric-value {
-  font-size: 31px !important;
+  font-size: 27px !important;
   font-weight: 570 !important;
   letter-spacing: -1.1px;
   color: #26313a !important;
@@ -413,7 +413,7 @@ h1 {
 .section-label {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   margin: 31px 0 14px;
   font-size: 9px;
   color: #949ca3;
@@ -426,12 +426,12 @@ h1 {
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 12px;
 }
 .chart-card,
 .breakdown-card {
   border-color: #e7e9eb !important;
-  padding: 22px 22px 14px !important;
+  padding: 16px 16px 10px !important;
   border-radius: 10px !important;
   min-width: 0;
 }
@@ -439,7 +439,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
+  gap: 12px;
 }
 .panel-heading h2 {
   font-size: 14px;
@@ -461,7 +461,7 @@ h1 {
   padding: 3px 5px;
 }
 .traffic-chart {
-  height: 245px;
+  height: 205px;
   margin-top: 24px;
 }
 .recharts-text {
@@ -475,7 +475,7 @@ h1 {
   stroke-dasharray: 3 4;
 }
 .chart-placeholder {
-  height: 245px;
+  height: 205px;
   margin-top: 24px;
   border-radius: 5px;
 }
@@ -759,7 +759,7 @@ footer > span {
   .page-heading {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 12px;
   }
   h1 {
     font-size: 27px;
@@ -857,4 +857,44 @@ footer > span {
   .shimmer {
     animation: none;
   }
+}
+
+.page-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 18px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.page-tabs button {
+  padding: 9px 14px;
+  font-size: 12px;
+  color: #64748b;
+  border-bottom: 2px solid transparent;
+}
+.page-tabs button[aria-pressed='true'] {
+  color: #c2410c;
+  border-color: #f97316;
+}
+.collection-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px;
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.collection-note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.outcome-success .metric-value {
+  color: #047857 !important;
+}
+.outcome-failure .metric-value {
+  color: #be123c !important;
 }

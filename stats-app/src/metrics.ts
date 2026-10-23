@@ -49,8 +49,8 @@ export interface PanelDefinition {
   queries: (window: string) => MetricQuery[]
 }
 
-// These panels use only HAProxy's existing scrape. Add future panels here,
-// keeping data collection and retention in VictoriaMetrics.
+// Panel definitions own queries and presentation. Collection and retention
+// stay in VictoriaMetrics; pages.ts controls where each panel appears.
 export const PANELS: PanelDefinition[] = [
   {
     id: 'requests',
@@ -115,6 +115,35 @@ export const PANELS: PanelDefinition[] = [
     ],
   },
 ]
+
+for (const [id, title, metric, job] of [
+  [
+    'build-outcomes',
+    'Build outcomes',
+    'bundlephobia_builds_total',
+    'bundlephobia_builds',
+  ],
+  [
+    'install-outcomes',
+    'Installation outcomes',
+    'bundlephobia_installs_total',
+    'bundlephobia_installations',
+  ],
+]) {
+  PANELS.push({
+    id,
+    title,
+    description: 'Completed attempts · success versus failure',
+    unit: 'attempts / min',
+    colors: ['emerald', 'rose'],
+    format: value => numberFormat.format(value),
+    queries: window =>
+      ['success', 'failure'].map(outcome => ({
+        expression: `sum(rate(${metric}{job="${job}",outcome="${outcome}"}[${window}])) * 60`,
+        name: outcome === 'success' ? 'Success' : 'Failure',
+      })),
+  })
+}
 
 export interface ChartRow {
   timestamp: number
@@ -210,5 +239,41 @@ export async function loadSummary(range: TimeRange, signal: AbortSignal) {
       code: row.metric.code ?? 'other',
       count: finiteValue(row.value[1]),
     })),
+  }
+}
+
+// Sum increases per worker, never increase a sum of counters: each PM2 worker
+// resets independently. No package labels, log import, or browser-side storage.
+export async function loadPipelineSummary(
+  range: TimeRange,
+  signal: AbortSignal,
+) {
+  const duration = `${range.seconds}s`
+  const [builds, installs, buildHealth, installHealth] = await Promise.all([
+    queryInstant(
+      `sum by (outcome) (increase(bundlephobia_builds_total{job="bundlephobia_builds"}[${duration}]))`,
+      signal,
+    ),
+    queryInstant(
+      `sum by (outcome) (increase(bundlephobia_installs_total{job="bundlephobia_installations"}[${duration}]))`,
+      signal,
+    ),
+    queryInstant('min(up{job="bundlephobia_builds"})', signal),
+    queryInstant('min(up{job="bundlephobia_installations"})', signal),
+  ])
+  const outcome = (rows: typeof builds, value: string) => {
+    const row = rows.find(row => row.metric.outcome === value)
+    return row ? finiteValue(row.value[1]) : null
+  }
+  return {
+    buildSuccess: outcome(builds, 'success'),
+    buildFailure: outcome(builds, 'failure'),
+    installSuccess: outcome(installs, 'success'),
+    installFailure: outcome(installs, 'failure'),
+    health:
+      buildHealth[0]?.value[1] === '1' && installHealth[0]?.value[1] === '1'
+        ? 1
+        : null,
+    collecting: builds.length > 0 || installs.length > 0,
   }
 }

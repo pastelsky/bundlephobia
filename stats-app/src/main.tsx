@@ -1,4 +1,5 @@
 import React from 'react'
+import { HashRouter } from 'react-router-dom'
 import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './styles.css'
@@ -15,7 +16,9 @@ if (!root) throw new Error('Missing dashboard root')
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <HashRouter>
+        <App />
+      </HashRouter>
     </QueryClientProvider>
   </React.StrictMode>,
 )

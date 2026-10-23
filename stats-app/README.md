@@ -15,10 +15,17 @@ For local development, forward the existing database with
 `corepack yarn --cwd stats-app dev` and open
 `http://localhost:5174/stats/dashboard/`. The dev proxy uses that forwarded port.
 
-Panel definitions and summary queries live in `src/metrics.ts`. Only existing
-HAProxy metrics are queried. API results stay in browser memory; refreshing
+Pages and tabs are declared in `src/pages.ts`; panel queries live in
+`src/metrics.ts`. HAProxy and application counters are queried. API results stay in browser memory; refreshing
 pauses in background tabs. Missing history is displayed as gaps.
 
 The isolated dependency tree uses React 18, supported by Tremor's npm package;
 the main Bundlephobia application keeps its own React version. Run `lint`,
 `test`, and `build` in this directory before publishing new static assets.
+
+Application counters start collecting after the services and scrape config are
+deployed; they cannot backfill old outcomes. Completed installs exclude cached
+reuse. Build attempts include size/export analysis and installation failures;
+process kills cannot record completion. Ports 8410–8412 map to the three existing
+PM2 build workers (update scrape targets when scaling); installer metrics use
+its existing loopback port 7003. No default runtime metrics or package labels.

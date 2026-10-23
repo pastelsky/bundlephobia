@@ -1,14 +1,19 @@
 import { useState } from 'react'
+import {
+  Navigate,
+  NavLink,
+  useLocation,
+  useSearchParams,
+} from 'react-router-dom'
+import { PAGES } from './pages'
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AreaChart, Card, Metric, Text } from '@tremor/react'
 import {
   Activity,
   ArrowDownLeft,
-  ArrowUpRight,
   Cable,
   ChevronRight,
   ExternalLink,
-  LayoutDashboard,
   Radio,
   RefreshCw,
   ShieldAlert,
@@ -18,6 +23,7 @@ import {
   compactFormat,
   loadPanel,
   loadSummary,
+  loadPipelineSummary,
   numberFormat,
   PANELS,
   STATUS_LABELS,
@@ -109,7 +115,7 @@ function ChartPanel({ panel, range, live }: PanelProps) {
           <div className="chart-placeholder panel-message">
             <Activity size={20} />
             <p>No samples in this time range.</p>
-            <span>Try a shorter range or check the HAProxy scrape.</span>
+            <span>No history yet, or the service is not being scraped.</span>
           </div>
         ))}
     </Card>
@@ -272,28 +278,17 @@ function Sidebar() {
         </span>
       </div>
       <span className="nav-label">MONITORING</span>
-      <nav aria-label="Dashboard sections">
-        <a className="nav-primary" href="#overview">
-          <LayoutDashboard size={17} />
-          Overview
-          <span className="nav-live" />
-        </a>
-        <a href="#requests">
-          <Activity size={17} />
-          Request traffic
-        </a>
-        <a href="#responses">
-          <ShieldAlert size={17} />
-          Response health
-        </a>
-        <a href="#bandwidth">
-          <ArrowUpRight size={17} />
-          Network traffic
-        </a>
-        <a href="#sessions">
-          <Cable size={17} />
-          Connections
-        </a>
+      <nav aria-label="Dashboard pages">
+        {PAGES.map(page => (
+          <NavLink
+            key={page.id}
+            to={`/${page.id}`}
+            className={({ isActive }) => (isActive ? 'nav-primary' : undefined)}
+          >
+            <page.icon size={17} />
+            {page.title}
+          </NavLink>
+        ))}
       </nav>
       <div className="sidebar-bottom">
         <a href="/stats/vmui/">
@@ -312,7 +307,49 @@ function Sidebar() {
   )
 }
 
+function PipelineCards({
+  data,
+  loading,
+}: {
+  data?: Awaited<ReturnType<typeof loadPipelineSummary>>
+  loading: boolean
+}) {
+  const cards = [
+    { title: 'Successful builds', value: data?.buildSuccess, kind: 'success' },
+    { title: 'Failed builds', value: data?.buildFailure, kind: 'failure' },
+    {
+      title: 'Successful installs',
+      value: data?.installSuccess,
+      kind: 'success',
+    },
+    { title: 'Failed installs', value: data?.installFailure, kind: 'failure' },
+  ]
+  return (
+    <div className="summary-grid">
+      {cards.map(card => (
+        <Card key={card.title} className={`summary-card outcome-${card.kind}`}>
+          <Text>{card.title}</Text>
+          <Metric
+            className={loading ? 'metric-loading shimmer' : 'metric-value'}
+          >
+            {card.value == null ? '—' : compactFormat.format(card.value)}
+          </Metric>
+          <p className="stat-detail">In the selected time range</p>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
 export function App() {
+  const location = useLocation()
+  const [params, setParams] = useSearchParams()
+  const page =
+    PAGES.find(page => location.pathname === `/${page.id}`) ?? PAGES[0]
+  const tab =
+    page.tabs.find(tab => tab.id === params.get('tab')) ?? page.tabs[0]
+  const panelIds = tab?.panels ?? page.panels
+  const pipeline = page.source === 'pipeline'
   const [range, setRange] = useState(TIME_RANGES[0])
   const [live, setLive] = useState(true)
   const client = useQueryClient()
@@ -321,15 +358,25 @@ export function App() {
     queryKey: ['summary', range.label],
     queryFn: ({ signal }) => loadSummary(range, signal),
     refetchInterval: live ? 60000 : false,
+    enabled: !pipeline,
   })
-  const healthy = summary.data?.health === 1 && !summary.isError
+  const pipelineSummary = useQuery({
+    queryKey: ['pipeline-summary', range.label],
+    queryFn: ({ signal }) => loadPipelineSummary(range, signal),
+    refetchInterval: live ? 60000 : false,
+    enabled: pipeline,
+  })
+  const activeSummary = pipeline ? pipelineSummary : summary
+  const healthy = activeSummary.data?.health === 1 && !activeSummary.isError
   const summaryData = summary.isError ? undefined : summary.data
-  const updated = summary.dataUpdatedAt
-    ? new Date(summary.dataUpdatedAt).toLocaleTimeString([], {
+  const updated = activeSummary.dataUpdatedAt
+    ? new Date(activeSummary.dataUpdatedAt).toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
       })
     : '—'
+
+  if (location.pathname === '/') return <Navigate to="/overview" replace />
 
   return (
     <div className="app-shell">
@@ -339,7 +386,7 @@ export function App() {
           <span>
             Infrastructure
             <ChevronRight size={13} />
-            <strong>Traffic overview</strong>
+            <strong>{page.heading}</strong>
           </span>
           <span className="topbar-environment">
             <span className="environment-dot" />
@@ -349,16 +396,20 @@ export function App() {
         <div className="dashboard-content">
           <div className="page-heading">
             <div>
-              <div className="eyebrow">WEBSITE ANALYTICS</div>
-              <h1>Traffic overview</h1>
-              <p>A live view of requests, response health, and connections.</p>
+              <div className="eyebrow">
+                {pipeline ? 'APPLICATION SERVICES' : 'WEBSITE ANALYTICS'}
+              </div>
+              <h1>{page.heading}</h1>
+              <p>{page.description}</p>
             </div>
             <span className={`health-badge ${healthy ? 'healthy' : ''}`}>
               <span />
-              {summary.isPending
+              {activeSummary.isPending
                 ? 'Connecting'
                 : healthy
-                  ? 'HAProxy scrape healthy'
+                  ? pipeline
+                    ? 'Services collecting'
+                    : 'HAProxy scrape healthy'
                   : 'Scrape unavailable'}
             </span>
           </div>
@@ -399,19 +450,60 @@ export function App() {
               </button>
             </div>
           </div>
-          {summary.isError && (
+          {activeSummary.isError && (
             <div className="error-banner" role="alert">
               <ShieldAlert size={17} />
-              <span>{summary.error.message}</span>
+              <span>{activeSummary.error?.message}</span>
             </div>
           )}
-          <SummaryCards data={summaryData} loading={summary.isPending} />
+          {pipeline ? (
+            <PipelineCards
+              data={pipelineSummary.isError ? undefined : pipelineSummary.data}
+              loading={pipelineSummary.isPending}
+            />
+          ) : (
+            <SummaryCards data={summaryData} loading={summary.isPending} />
+          )}
+          {page.tabs.length > 0 && (
+            <fieldset className="page-tabs" aria-label="Activity view">
+              {page.tabs.map(option => (
+                <button
+                  key={option.id}
+                  type="button"
+                  aria-pressed={tab?.id === option.id}
+                  onClick={() => setParams({ tab: option.id })}
+                >
+                  {option.title}
+                </button>
+              ))}
+            </fieldset>
+          )}
+          {pipeline && (
+            <div className="collection-note">
+              <Activity size={16} />
+              <span>
+                {pipelineSummary.data?.collecting
+                  ? 'Counting completed attempts. '
+                  : 'Application metrics need to be deployed before these panels collect data. '}
+                Installs exclude cached reuse. Builds include size and export
+                analysis; an install error can also fail a build. History starts
+                when collection is enabled. Process kills cannot report an
+                outcome.
+              </span>
+            </div>
+          )}
           <div className="section-label">
-            <span>TRAFFIC & RELIABILITY</span>
-            <span>Website frontend · background health checks excluded</span>
+            <span>
+              {pipeline ? 'APPLICATION OUTCOMES' : 'TRAFFIC & RELIABILITY'}
+            </span>
+            <span>
+              {pipeline
+                ? 'Success and failure · per completed attempt'
+                : 'Website frontend · background health checks excluded'}
+            </span>
           </div>
           <div className="charts-grid">
-            {PANELS.map(panel => (
+            {PANELS.filter(panel => panelIds.includes(panel.id)).map(panel => (
               <ChartPanel
                 key={panel.id}
                 panel={panel}
@@ -420,11 +512,12 @@ export function App() {
               />
             ))}
           </div>
-          <ResponseBreakdown data={summaryData} />
+          {page.breakdown && <ResponseBreakdown data={summaryData} />}
           <footer>
             <span>
               <span className="footer-dot" />
-              Existing HAProxy metrics · stored in VictoriaMetrics
+              {pipeline ? 'Application counters' : 'HAProxy metrics'} · stored
+              in VictoriaMetrics
             </span>
             <span>
               Gaps indicate unavailable history ·{' '}
