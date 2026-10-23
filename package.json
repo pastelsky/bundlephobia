@@ -142,12 +142,12 @@
     "test:watch": "jest --watch",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "lint": "oxlint --type-aware .",
+    "lint": "oxlint --type-aware --ignore-pattern 'stats-app/**' .",
     "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
   },
   "husky": {
     "hooks": {
-      "pre-commit": "oxlint --type-aware --fix . && oxfmt"
+      "pre-commit": "oxlint --type-aware --ignore-pattern 'stats-app/**' --fix . && oxfmt"
     }
   },
   "resolutions": {

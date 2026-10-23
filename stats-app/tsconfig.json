@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "types": ["vite/client", "node"]
+    "types": ["node"]
   },
   "include": ["src", "vite.config.ts", "tailwind.config.ts"]
 }
