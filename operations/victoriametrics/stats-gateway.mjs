@@ -7,25 +7,57 @@ import { pathToFileURL } from 'node:url'
 const PATH_PREFIX = '/stats'
 const DEFAULT_DATA_PATH = '/var/lib/bundlephobia-victoriametrics'
 
+function getEnv(environment, name, fallback) {
+  return environment[name] || fallback
+}
+
+function getNumericEnv(environment, name, fallback) {
+  return Number(environment[name]) || fallback
+}
+
 export function getConfig(environment = process.env) {
   return {
-    binary:
-      environment.VICTORIAMETRICS_BIN ||
+    binary: getEnv(
+      environment,
+      'VICTORIAMETRICS_BIN',
       '/usr/local/bin/victoria-metrics-prod',
-    storagePath:
-      environment.VICTORIAMETRICS_STORAGE_PATH || DEFAULT_DATA_PATH,
-    scrapeConfig:
-      environment.VICTORIAMETRICS_SCRAPE_CONFIG ||
+    ),
+    storagePath: getEnv(
+      environment,
+      'VICTORIAMETRICS_STORAGE_PATH',
+      DEFAULT_DATA_PATH,
+    ),
+    scrapeConfig: getEnv(
+      environment,
+      'VICTORIAMETRICS_SCRAPE_CONFIG',
       '/etc/bundlephobia-victoriametrics/promscrape.yml',
-    listenAddr:
-      environment.VICTORIAMETRICS_LISTEN_ADDR || '127.0.0.1:8428',
-    retention: environment.VICTORIAMETRICS_RETENTION || '30d',
-    memoryAllowedBytes:
-      environment.VICTORIAMETRICS_MEMORY_ALLOWED_BYTES || '256MiB',
-    minFreeDiskSpaceBytes:
-      environment.VICTORIAMETRICS_MIN_FREE_DISK_SPACE_BYTES || '1GiB',
-    startupTimeoutMs: Number(environment.VICTORIAMETRICS_STARTUP_TIMEOUT_MS) || 30000,
-    idleTimeoutMs: Number(environment.STATS_IDLE_TIMEOUT_MS) || 30 * 60 * 1000,
+    ),
+    listenAddr: getEnv(
+      environment,
+      'VICTORIAMETRICS_LISTEN_ADDR',
+      '127.0.0.1:8428',
+    ),
+    retention: getEnv(environment, 'VICTORIAMETRICS_RETENTION', '30d'),
+    memoryAllowedBytes: getEnv(
+      environment,
+      'VICTORIAMETRICS_MEMORY_ALLOWED_BYTES',
+      '256MiB',
+    ),
+    minFreeDiskSpaceBytes: getEnv(
+      environment,
+      'VICTORIAMETRICS_MIN_FREE_DISK_SPACE_BYTES',
+      '1GiB',
+    ),
+    startupTimeoutMs: getNumericEnv(
+      environment,
+      'VICTORIAMETRICS_STARTUP_TIMEOUT_MS',
+      30000,
+    ),
+    idleTimeoutMs: getNumericEnv(
+      environment,
+      'STATS_IDLE_TIMEOUT_MS',
+      30 * 60 * 1000,
+    ),
   }
 }
 
@@ -43,6 +75,7 @@ async function waitUntilReady(child, config) {
 
   while (Date.now() < deadline) {
     if (spawnError) throw spawnError
+
     if (child.exitCode !== null) {
       throw new Error('VictoriaMetrics exited before becoming ready')
     }
@@ -51,6 +84,7 @@ async function waitUntilReady(child, config) {
       const response = await fetch(getReadinessUrl(config), {
         signal: AbortSignal.timeout(500),
       })
+
       if (response.ok) return
     } catch {
       // The service is still starting or its readiness endpoint is not open.
@@ -140,18 +174,21 @@ export function createStatsGateway({
     if (requestPath === PATH_PREFIX || requestPath === PATH_PREFIX + '/') {
       response.writeHead(302, { Location: PATH_PREFIX + '/vmui/' })
       response.end()
+
       return
     }
 
     if (!requestPath.startsWith(PATH_PREFIX + '/')) {
       response.writeHead(404)
       response.end('Not found')
+
       return
     }
 
     if (shuttingDown) {
       response.writeHead(503, { 'Retry-After': '2' })
       response.end('Stats service is stopping. Retry shortly.')
+
       return
     }
 
@@ -159,6 +196,7 @@ export function createStatsGateway({
     activeRequests += 1
 
     let finished = false
+
     const finishRequest = () => {
       if (finished) return
       finished = true
@@ -171,11 +209,13 @@ export function createStatsGateway({
 
     try {
       const activeStorage = await ensureStorage()
+
       const headers = Object.fromEntries(
         Object.entries(request.headers).filter(
           ([name]) => !HOP_BY_HOP_HEADERS.has(name.toLowerCase()),
         ),
       )
+
       const upstream = http.request(
         activeStorage.origin + request.url,
         {
