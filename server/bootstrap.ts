@@ -80,9 +80,9 @@ export async function startServer(): Promise<void> {
   const router = new Router()
 
   server.use(requestId())
+  server.use(bodyParser())
   server.use(requestLoggerMiddleware)
   server.use(cacheControl())
-  server.use(bodyParser())
   server.use(apiDiscoveryMiddleware)
 
   if (!dev) {
