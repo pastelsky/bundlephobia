@@ -1,0 +1,10 @@
+[Unit]
+Description=On-demand Bundlephobia VictoriaMetrics stats socket
+
+[Socket]
+ListenStream=127.0.0.1:8410
+NoDelay=true
+Service=bundlephobia-stats.service
+
+[Install]
+WantedBy=sockets.target
