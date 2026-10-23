@@ -11,7 +11,7 @@ LOOP_HARD_THRESHOLD=80     # % loop usage before the complete bun cache is clear
 LOOP_TARGET_USAGE=$((LOOP_SOFT_THRESHOLD * 2 / 3))
 ORPHAN_MIN_AGE_SECONDS=600
 VICTORIAMETRICS_DATA_DIR="/var/lib/bundlephobia-victoriametrics"
-VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES=$((160 * 1024 * 1024))
+VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES=$((128 * 1024 * 1024))
 VICTORIAMETRICS_PM2_APP="bundlephobia-victoriametrics"
 
 PM2="/usr/local/bin/pm2"
@@ -180,7 +180,7 @@ cleanup_victoriametrics_data() {
         return
     fi
 
-    log "Reset VictoriaMetrics history after storage exceeded 160 MiB (${data_kib} KiB)"
+    log "Reset VictoriaMetrics history after storage exceeded 128 MiB (${data_kib} KiB)"
 
     if [ "$was_running" = "true" ] && ! "$PM2" restart "$VICTORIAMETRICS_PM2_APP" >/dev/null 2>&1; then
         log "WARNING: VictoriaMetrics history was cleared but PM2 could not restart the service"
