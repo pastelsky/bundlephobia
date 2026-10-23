@@ -60,6 +60,12 @@ function getConfig(environment: NodeJS.ProcessEnv): VictoriaMetricsConfig {
   }
 }
 
+/**
+ * Run the stats process only while requests are active. The stable storage path
+ * preserves earlier samples across stops, but scraping pauses too, so history
+ * has gaps and the 30-day retention is measured in wall-clock time. CPU is not
+ * quota-limited while the child is running.
+ */
 class VictoriaMetricsService {
   private readonly config = getConfig(process.env)
   private running: RunningVictoriaMetrics | undefined
@@ -127,6 +133,7 @@ class VictoriaMetricsService {
         '-retentionPeriod=' + this.config.retention,
         '-httpListenAddr=' + this.config.listenAddr,
         '-http.pathPrefix=' + PATH_PREFIX,
+        // This limits caches, not total RSS; query execution adds memory too.
         '-memory.allowedBytes=' + this.config.memoryAllowedBytes,
         '-storage.minFreeDiskSpaceBytes=' + this.config.minFreeDiskSpaceBytes,
         '-loggerLevel=WARN',
