@@ -4,6 +4,7 @@ import now from 'performance-now'
 import logger, { withRequestLogContext } from '../infrastructure/logger.service'
 import {
   getAnalysisClientType,
+  getAnalysisClientFamily,
   recordAnalysisRequest,
 } from '../infrastructure/request-metrics'
 import {
@@ -85,6 +86,9 @@ export function createRequestLoggerMiddleware(
               clientType: getAnalysisClientType(
                 ctx.get('X-Bundlephobia-Client-Type'),
               ),
+              clientFamily: getAnalysisClientFamily(
+                ctx.get('X-Bundlephobia-Client-Family'),
+              ),
               status: ctx.response.status,
               probe: Boolean(ctx.query.peek || ctx.query.peep),
             })
@@ -125,6 +129,9 @@ export function createRequestLoggerMiddleware(
         userAgent: ctx.get('User-Agent').slice(0, 512),
         clientType: getAnalysisClientType(
           ctx.get('X-Bundlephobia-Client-Type'),
+        ),
+        clientFamily: getAnalysisClientFamily(
+          ctx.get('X-Bundlephobia-Client-Family'),
         ),
         source:
           ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'

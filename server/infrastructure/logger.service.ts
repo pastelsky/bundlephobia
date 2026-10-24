@@ -7,6 +7,7 @@ interface RequestLogContext {
   requestId?: string
   userAgent: string
   clientType: string
+  clientFamily: string
   source: string
 }
 
@@ -55,6 +56,7 @@ const logFormat = winston.format.printf(info => {
     requestId: metadata.requestId,
     userAgent: metadata.userAgent,
     clientType: metadata.clientType,
+    clientFamily: metadata.clientFamily,
     source: metadata.source,
     operation: metadata.operation,
     packageString: metadata.packageString,
