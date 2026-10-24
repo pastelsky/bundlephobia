@@ -73,18 +73,52 @@ export function PipelineCards({
   data?: Awaited<ReturnType<typeof loadPipelineSummary>>
   loading: boolean
 }) {
+  const { buildSuccess, buildFailure, installSuccess, installFailure } =
+    data ?? {}
+
+  const builds = [buildSuccess, buildFailure]
+  const installs = [installSuccess, installFailure]
+
   const cards: SummaryCard[] = [
-    { title: 'Successful builds', value: data?.buildSuccess, tone: 'positive' },
-    { title: 'Failed builds', value: data?.buildFailure, tone: 'negative' },
+    {
+      title: 'Successful builds',
+      value: buildSuccess,
+      tone: 'positive',
+      detail: outcomeShare(buildSuccess, builds),
+    },
+    {
+      title: 'Failed builds',
+      value: buildFailure,
+      tone: 'negative',
+      detail: outcomeShare(buildFailure, builds),
+    },
     {
       title: 'Successful installs',
-      value: data?.installSuccess,
+      value: installSuccess,
       tone: 'positive',
+      detail: outcomeShare(installSuccess, installs),
     },
-    { title: 'Failed installs', value: data?.installFailure, tone: 'negative' },
+    {
+      title: 'Failed installs',
+      value: installFailure,
+      tone: 'negative',
+      detail: outcomeShare(installFailure, installs),
+    },
   ]
 
   return <ValueCards cards={cards} loading={loading} />
+}
+
+function outcomeShare(
+  value: number | null | undefined,
+  values: (number | null | undefined)[],
+) {
+  if (value == null || values.some(item => item == null)) return '—'
+  const total = values.reduce<number>((sum, item) => sum + (item ?? 0), 0)
+
+  return total > 0
+    ? `${numberFormat.format((100 * value) / total)}% in selected period`
+    : '—'
 }
 
 function ValueCards({

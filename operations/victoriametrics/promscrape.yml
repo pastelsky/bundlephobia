@@ -28,3 +28,8 @@ scrape_configs:
       - source_labels: [__name__]
         action: keep
         regex: 'node_(cpu_seconds_total|load(1|5|15)|memory_(MemTotal|MemAvailable|SwapTotal|SwapFree)_bytes|filesystem_(size|avail|free)_bytes|network_(receive|transmit)_bytes_total|scrape_collector_success)'
+
+  - job_name: bundlephobia_application
+    metrics_path: /stats/application-metrics
+    static_configs:
+      - targets: ['127.0.0.1:5400']

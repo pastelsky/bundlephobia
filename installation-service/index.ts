@@ -17,9 +17,11 @@ import {
 import serializeError from '../build-service/serializeError.js'
 import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
 
-const outcomes = createOutcomeMetrics('bundlephobia_installs_total', [
-  'install',
-])
+const outcomes = createOutcomeMetrics(
+  'bundlephobia_installs_total',
+  ['install'],
+  'bundlephobia_install_duration_seconds',
+)
 
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value)
@@ -70,7 +72,8 @@ const store = new InstallationStore(
     // TASK_PACKAGE_INSTALL reports each package-manager fallback, before
     // version validation and metadata publication. Count the store completion
     // once so a Bun failure followed by npm success is one successful install.
-    onInstallComplete: outcome => outcomes.record('install', outcome),
+    onInstallComplete: (outcome, seconds) =>
+      outcomes.record('install', outcome, seconds),
     queue: createInstallQueue(
       positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
     ),

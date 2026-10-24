@@ -17,6 +17,7 @@ import {
   queryRange,
   stepSeconds,
   type TimeRange,
+  type ChartRange,
 } from '../lib/api'
 
 const frontend = '{job="haproxy",proxy="bundlephobia_http"}'
@@ -31,10 +32,10 @@ export interface ChartRow {
 
 export async function loadPanel(
   panel: ChartDefinition,
-  range: TimeRange,
+  range: ChartRange,
   signal: AbortSignal,
 ) {
-  const resolution = chartResolution(range.seconds)
+  const resolution = chartResolution(range.seconds, range.step)
 
   // Counter increases cover exactly one display interval. CPU rates retain a
   // wider minimum window to avoid noisy single-scrape rate calculations.
@@ -49,7 +50,12 @@ export async function loadPanel(
   const results = await Promise.all(
     queries.map(query =>
       queryRange(
-        { expression: query.expression, seconds: range.seconds, end },
+        {
+          expression: query.expression,
+          seconds: range.seconds,
+          end,
+          step: resolution.step,
+        },
         signal,
       ),
     ),
@@ -156,7 +162,7 @@ function chartRow(accumulator: ChartAccumulator, timestamp: number): ChartRow {
 
 function chartTimeline(
   accumulator: ChartAccumulator,
-  range: TimeRange,
+  range: ChartRange,
   end: number,
 ) {
   const data: ChartRow[] = []
@@ -165,7 +171,7 @@ function chartTimeline(
   for (
     let timestamp = end - range.seconds;
     timestamp <= end;
-    timestamp += stepSeconds(range.seconds)
+    timestamp += stepSeconds(range.seconds, range.step)
   ) {
     const row =
       accumulator.rows.get(timestamp) ?? chartRow(accumulator, timestamp)
@@ -215,18 +221,20 @@ export async function loadPipelineSummary(
 ) {
   const duration = `${range.seconds}s`
 
-  const [builds, installs, buildHealth, installHealth] = await Promise.all([
-    queryInstant(
-      `sum by (outcome) (increase(bundlephobia_builds_total{job="bundlephobia_builds"}[${duration}]))`,
-      signal,
-    ),
-    queryInstant(
-      `sum by (outcome) (increase(bundlephobia_installs_total{job="bundlephobia_installations"}[${duration}]))`,
-      signal,
-    ),
-    queryInstant('min(up{job="bundlephobia_builds"})', signal),
-    queryInstant('min(up{job="bundlephobia_installations"})', signal),
-  ])
+  const [builds, installs, buildHealth, installHealth, applicationHealth] =
+    await Promise.all([
+      queryInstant(
+        `sum by (outcome) (increase(bundlephobia_builds_total{job="bundlephobia_builds"}[${duration}]))`,
+        signal,
+      ),
+      queryInstant(
+        `sum by (outcome) (increase(bundlephobia_installs_total{job="bundlephobia_installations"}[${duration}]))`,
+        signal,
+      ),
+      queryInstant('min(up{job="bundlephobia_builds"})', signal),
+      queryInstant('min(up{job="bundlephobia_installations"})', signal),
+      queryInstant('min(up{job="bundlephobia_application"})', signal),
+    ])
 
   const outcome = (rows: typeof builds, value: string) => {
     const row = rows.find(row => row.metric.outcome === value)
@@ -234,16 +242,15 @@ export async function loadPipelineSummary(
     return row ? finiteValue(row.value[1]) : null
   }
 
+  const sources = [buildHealth, installHealth, applicationHealth]
+
   return {
     buildSuccess: outcome(builds, 'success'),
     buildFailure: outcome(builds, 'failure'),
     installSuccess: outcome(installs, 'success'),
     installFailure: outcome(installs, 'failure'),
-    health:
-      buildHealth[0]?.value[1] === '1' && installHealth[0]?.value[1] === '1'
-        ? 1
-        : null,
-    configured: buildHealth.length > 0 && installHealth.length > 0,
+    health: sources.every(rows => rows[0]?.value[1] === '1') ? 1 : null,
+    configured: sources.every(rows => rows.length > 0),
   }
 }
 

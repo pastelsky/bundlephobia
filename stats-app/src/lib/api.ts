@@ -25,6 +25,10 @@ export interface TimeRange {
   seconds: number
 }
 
+export interface ChartRange extends TimeRange {
+  step?: number
+}
+
 export const TIME_RANGES: TimeRange[] = [
   { label: '1h', seconds: 3600 },
   { label: '6h', seconds: 21600 },
@@ -37,6 +41,7 @@ export interface RangeRequest {
   expression: string
   seconds: number
   end: number
+  step?: number
 }
 
 async function request(
@@ -68,8 +73,12 @@ const CHART_INTERVALS = [
   60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400,
 ]
 
-export function stepSeconds(seconds: number) {
-  const minimum = seconds / 240
+export function stepSeconds(seconds: number, requested?: number) {
+  // Explicit resolution permits more detail, bounded to 1,000 points per series.
+  const minimum =
+    requested == null
+      ? seconds / 240
+      : Math.max(60, seconds / 1000, Math.min(seconds, requested))
 
   return (
     CHART_INTERVALS.find(interval => interval >= minimum) ??
@@ -77,10 +86,10 @@ export function stepSeconds(seconds: number) {
   )
 }
 
-export function chartResolution(seconds: number) {
-  const step = stepSeconds(seconds)
-  const divisor = step >= 3600 ? 3600 : 60
-  const unit = step >= 3600 ? 'hour' : 'minute'
+export function chartResolution(seconds: number, requested?: number) {
+  const step = stepSeconds(seconds, requested)
+  const divisor = step >= 86400 ? 86400 : step >= 3600 ? 3600 : 60
+  const unit = step >= 86400 ? 'day' : step >= 3600 ? 'hour' : 'minute'
   const count = step / divisor
 
   return {
@@ -90,12 +99,18 @@ export function chartResolution(seconds: number) {
   }
 }
 
+export function availableSteps(seconds: number) {
+  return CHART_INTERVALS.filter(
+    step => step >= seconds / 1000 && step <= seconds,
+  )
+}
+
 export async function queryRange(query: RangeRequest, signal: AbortSignal) {
   const params = new URLSearchParams({
     query: query.expression,
     start: String(query.end - query.seconds),
     end: String(query.end),
-    step: String(stepSeconds(query.seconds)),
+    step: String(stepSeconds(query.seconds, query.step)),
   })
 
   const parsed = rangeResponse.safeParse(
