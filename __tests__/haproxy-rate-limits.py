@@ -121,7 +121,7 @@ class BotRateLimits(unittest.TestCase):
                 def send(i, path='/asset.js'):
                     return self.request(agents[i % 2], i if rotating_ips else group, path)
 
-                for i in range(190):
+                for i in range(190 if rotating_ips else 120):
                     self.assertEqual(send(i), 200)
                 for i in range(29):
                     self.assertEqual(send(i), 429)
@@ -140,7 +140,7 @@ class BotRateLimits(unittest.TestCase):
                 # Model expiry and normal one-minute rate decay.
                 self.runtime(f'set table client_group_usage key {group} '
                              f'data.gpt0 {int(time.time()) - 1} '
-                             'data.http_req_rate 0 data.gpc0_rate 0')
+                             'data.http_req_rate 0 data.gpc0_rate 0 data.gpc1_rate 0')
                 self.runtime('clear table api_client_usage')
                 self.assertEqual(send(244), 200)
 

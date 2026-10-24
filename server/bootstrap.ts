@@ -20,7 +20,6 @@ import { registerAdminRoutes } from './routes/admin.route'
 import { registerApiRoutes } from './routes/api.route'
 import { registerSystemRoutes } from './routes/system.route'
 import requestLoggerMiddleware from './middlewares/request-logger.middleware'
-import limit from './middlewares/rate-limit.middleware'
 import statsPathMiddleware from './middlewares/stats-path.middleware'
 
 interface ServerEnvironment {
@@ -85,26 +84,6 @@ export async function startServer(): Promise<void> {
   server.use(requestLoggerMiddleware)
   server.use(cacheControl())
   server.use(apiDiscoveryMiddleware)
-
-  if (!dev) {
-    const requestLimit = limit({
-      duration: 1000 * 60 * 5,
-      max: 120,
-      whiteList: ['127.0.0.1', '::1'],
-    })
-
-    server.use(async (ctx, nextMiddleware) => {
-      // HAProxy limits bots across IPs and page/API entry points. Recounting
-      // their local API calls here would add a second, inconsistent allowance.
-      if (ctx.get('X-Bundlephobia-Client-Type') === 'bot') {
-        await nextMiddleware()
-
-        return
-      }
-
-      await requestLimit(ctx, nextMiddleware)
-    })
-  }
 
   server.use(async (ctx, nextMiddleware) => {
     try {
