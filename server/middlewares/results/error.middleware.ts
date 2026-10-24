@@ -16,6 +16,22 @@ const debug = createDebug('bp:error')
 
 const MAX_ERROR_LIST_ITEMS = 20
 
+// Coalesced callers share one rejection: count the failed attempt once per key.
+const recordedFailures = new WeakMap<Error, Set<string>>()
+
+function recordFailedAttempt(error: Error | undefined, key: string): boolean {
+  if (!error) return true
+
+  const keys = recordedFailures.get(error) ?? new Set<string>()
+
+  if (keys.has(key)) return false
+
+  keys.add(key)
+  recordedFailures.set(error, keys)
+
+  return true
+}
+
 interface ErrorResponseBody {
   error: {
     code: string
@@ -94,7 +110,7 @@ interface ErrorHandlerContext {
   force: RuntimeValue
   start: number
   packageString?: string
-  cacheFailure: (status: number, body: RuntimeValue) => void
+  cacheFailure: (status: number) => void
   respondWithError: (status: number, response: ErrorResponse) => void
 }
 
@@ -126,7 +142,7 @@ const handleBuildServiceError: BuildErrorHandler = context => {
   }
 
   respondTemporaryError(context, response.code, response.message)
-  context.cacheFailure(503, { error: response })
+  context.cacheFailure(503)
 }
 
 const handleBuildServiceUnavailableError: BuildErrorHandler = context => {
@@ -137,7 +153,7 @@ const handleBuildServiceUnavailableError: BuildErrorHandler = context => {
   }
 
   respondTemporaryError(context, response.code, response.message)
-  context.cacheFailure(503, { error: response })
+  context.cacheFailure(503)
 }
 
 const handleBlocklistedPackageError: BuildErrorHandler = context => {
@@ -169,7 +185,7 @@ const handlePackageNotFoundError: BuildErrorHandler = context => {
   }
 
   context.respondWithError(404, response)
-  context.cacheFailure(404, { error: response })
+  context.cacheFailure(404)
 }
 
 const handlePackageVersionMismatchError: BuildErrorHandler = (
@@ -185,7 +201,7 @@ const handlePackageVersionMismatchError: BuildErrorHandler = (
     }
 
     context.respondWithError(404, response)
-    context.cacheFailure(404, { error: response })
+    context.cacheFailure(404)
 
     return
   }
@@ -202,7 +218,7 @@ const handlePackageVersionMismatchError: BuildErrorHandler = (
   }
 
   context.respondWithError(404, response)
-  context.cacheFailure(404, { error: response })
+  context.cacheFailure(404)
 }
 
 const handleInstallError: BuildErrorHandler = context => {
@@ -212,7 +228,7 @@ const handleInstallError: BuildErrorHandler = context => {
   }
 
   context.respondWithError(500, response)
-  context.cacheFailure(500, { error: response })
+  context.cacheFailure(500)
   context.ctx.cacheControl = { maxAge: 0 }
 }
 
@@ -230,7 +246,7 @@ const handleEntryPointError: BuildErrorHandler = context => {
 
   setFatalCache(context)
   context.respondWithError(status, body.error)
-  context.cacheFailure(status, body)
+  context.cacheFailure(status)
 }
 
 const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
@@ -255,7 +271,7 @@ const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
 
   setFatalCache(context)
   context.respondWithError(status, body.error)
-  context.cacheFailure(status, body)
+  context.cacheFailure(status)
 }
 
 const handleMinifyError: BuildErrorHandler = (context, error) => {
@@ -275,7 +291,7 @@ const handleMinifyError: BuildErrorHandler = (context, error) => {
 
   setFatalCache(context)
   context.respondWithError(status, body.error)
-  context.cacheFailure(status, body)
+  context.cacheFailure(status)
 }
 
 const handleBuildError: BuildErrorHandler = (context, error) => {
@@ -289,7 +305,7 @@ const handleBuildError: BuildErrorHandler = (context, error) => {
   }
 
   context.respondWithError(status, errorJSON)
-  context.cacheFailure(status, { error: errorJSON })
+  context.cacheFailure(status)
 }
 
 const buildErrorHandlers = {
@@ -399,13 +415,13 @@ const errorHandler: Middleware = async (ctx, next) => {
   const { force } = ctx.query
   const start = now()
   let packageString = ctx.state.resolved?.packageString
+  let failedAttempt: Error | undefined
 
-  const cacheFailure = (status: number, body: RuntimeValue) => {
+  const cacheFailure = (status: number) => {
     if (!packageString) {
       return
     }
 
-    debug('saved %s to failure cache', packageString)
     const analysis = ctx.state.analysis
     const language = analysis?.language ?? 'javascript'
     const operation = analysis?.operation ?? 'package-analysis'
@@ -416,9 +432,12 @@ const errorHandler: Middleware = async (ctx, next) => {
       packageSpecifier: packageString,
     })
 
+    if (!recordFailedAttempt(failedAttempt, failureCacheKey)) return
+
+    debug('saved %s to failure cache', packageString)
     failureCache.set(
       failureCacheKey,
-      recordFailure(failureCache.get(failureCacheKey), { status, body }),
+      recordFailure(failureCache.get(failureCacheKey), { status }),
     )
   }
 
@@ -456,6 +475,7 @@ const errorHandler: Middleware = async (ctx, next) => {
   try {
     await next()
   } catch (caughtError) {
+    failedAttempt = caughtError instanceof Error ? caughtError : undefined
     const error = toLegacyJavaScriptError(caughtError)
     packageString = ctx.state.resolved?.packageString
     ctx.cacheControl = {

@@ -47,8 +47,8 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
       - name: Run lint
         run: yarn lint
-      - name: Test stats dashboard queries
-        run: yarn workspace @bundlephobia/stats-app test
+      - name: Run unit tests
+        run: yarn test:unit --runInBand
       - name: Test HAProxy request limits
         if: matrix.node-version == '24.x'
         run: |

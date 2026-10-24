@@ -3,6 +3,8 @@ import type { Middleware } from 'koa'
 import { createJavaScriptPackageReference } from '../../../languages/javascript'
 import { packageAnalysisGateway } from '../../analysis'
 import config from '../../config'
+import { createAnalysisKey } from '../../analysis/keys'
+import { failureCache } from '../../infrastructure/runtime'
 import logger from '../../infrastructure/logger.service'
 
 const cachedResponse: Middleware = async (ctx, next) => {
@@ -10,7 +12,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
   const { name, version, packageString, language } = ctx.state.resolved
   const { operation } = ctx.state.analysis
 
-  if (force) {
+  if (force === 'true') {
     await next()
 
     return
@@ -43,6 +45,13 @@ const cachedResponse: Middleware = async (ctx, next) => {
   const cached = await ctx.cashed()
 
   if (cached) {
+    failureCache.del(
+      createAnalysisKey({
+        language,
+        operation,
+        packageSpecifier: packageString,
+      }),
+    )
     ctx.cacheControl = {
       maxAge:
         force === null || force === undefined
