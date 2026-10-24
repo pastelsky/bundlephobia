@@ -67,6 +67,7 @@ export function registerApiRoutes(
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-exports'),
     failureBackoffMiddleware,
+    buildMissRateLimit(),
     exportsMiddleware,
   )
 

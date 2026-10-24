@@ -95,15 +95,15 @@ class BotRateLimits(unittest.TestCase):
     def test_families_share_across_ips_but_do_not_penalize_each_other(self):
         for i in range(190):
             self.assertEqual(self.request(['Bytespider/1', 'TikTokSpider/2'][i % 2], i,
-                             ['/package/example', '/_events', '/asset.js'][i % 3]), 200)
+                             ['/_events', '/asset.js'][i % 2]), 200)
         self.assertEqual(self.request('Bytespider/new-version', 240), 429)
         self.assertEqual(self.request('TikTokSpider/new-version', 241, '/_events'), 429)
         for ua in ['Badgen/1.0', 'Data-Pipeline-Enricher/1.0', 'Shields.io/test',
                    'bingbot/2', 'depscope/1', 'got/14', 'Ahrefs',
                    'Mozilla/5.0 Chrome/156.0 Safari/537.36']:
-            self.assertEqual(self.request(ua, 242), 200)
+            self.assertEqual(self.request(ua, 242, '/asset.js'), 200)
         for i in range(190):
-            self.assertEqual(self.request(['Googlebot/2.1', 'GoogleOther'][i % 2], i), 200)
+            self.assertEqual(self.request(['Googlebot/2.1', 'GoogleOther'][i % 2], i, '/asset.js'), 200)
         self.assertEqual(self.request('Google-InspectionTool', 240), 429)
 
     def test_cooldown_escalates_and_expires_for_bots_and_ordinary_clients(self):
@@ -118,7 +118,7 @@ class BotRateLimits(unittest.TestCase):
                 for table in ['client_group_usage', 'api_client_usage']:
                     self.runtime(f'clear table {table}')
 
-                def send(i, path='/package/example'):
+                def send(i, path='/asset.js'):
                     return self.request(agents[i % 2], i if rotating_ips else group, path)
 
                 for i in range(190):
@@ -135,7 +135,7 @@ class BotRateLimits(unittest.TestCase):
                     self.assertTrue(295 <= int(self.retry_after) <= 300)
                 self.assertEqual(send(241, '/asset.js'), 429)
                 self.assertEqual(self.retry_after, '900')
-                self.assertEqual(self.request('Badgen/1.0', 242), 200)
+                self.assertEqual(self.request('Badgen/1.0', 242, '/asset.js'), 200)
                 self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0', 243), 200)
                 # Model expiry and normal one-minute rate decay.
                 self.runtime(f'set table client_group_usage key {group} '
@@ -144,15 +144,25 @@ class BotRateLimits(unittest.TestCase):
                 self.runtime('clear table api_client_usage')
                 self.assertEqual(send(244), 200)
 
-    def test_api_limits_are_also_isolated_by_family(self):
-        for ua, limit, rotating in [('Bytespider/1', 26, True), ('Badgen/1.0', 26, True),
-                                   ('Data-Pipeline-Enricher/1.0', 26, True),
-                                   ('got/14', 8, False), ('Ahrefs', 8, True)]:
+    def test_api_and_page_limits_share_the_non_google_budget(self):
+        agents = ['Bytespider/1', 'Baiduspider/2', 'Badgen/1.0',
+                  'Data-Pipeline-Enricher/1.0', 'SomeCrawler/1']
+        paths = ['/api/size', '/package/example']
+        for i in range(26):
+            self.assertEqual(self.request(agents[i % len(agents)], i, paths[i % 2]), 200)
+        for i, ua in enumerate(agents):
+            for path in paths:
+                self.assertEqual(self.request(ua, 240 + i, path), 429)
+        for i in range(26):
+            self.assertEqual(self.request('Googlebot/2.1', i, paths[i % 2]), 200)
+        self.assertEqual(self.request('GoogleOther', 240), 429)
+        for ua, rotating in [('got/14', False), ('Ahrefs', True)]:
             with self.subTest(ua=ua):
-                for i in range(limit):
-                    self.assertEqual(self.request(ua, i if rotating else 200, '/api/size'), 200)
+                self.runtime('clear table automated_client_usage')
+                for i in range(8):
+                    self.assertEqual(self.request(ua, i if rotating else 200, paths[i % 2]), 200)
                 self.assertEqual(self.request(ua, 240 if rotating else 200, '/api/size'), 429)
-                self.assertEqual(self.request(ua, 241), 200)
+                self.assertEqual(self.request(ua, 241 if rotating else 200), 429)
 
 
 if __name__ == '__main__':
