@@ -381,6 +381,24 @@ const resources = {
       { expression: cpuUsage(window), name: 'CPU', color: 'orange' },
     ],
   },
+  ioWait: {
+    id: 'host-io-wait',
+    title: 'I/O wait',
+    description: 'CPU time waiting for I/O across all cores',
+    unit: '%',
+    chart: { minValue: 0, maxValue: 100 },
+    format: value => `${numberFormat.format(value)}%`,
+    series: window => [
+      {
+        expression: hostHistory(
+          `100 * sum(rate(node_cpu_seconds_total{${hostJob},mode="iowait"}[${window}])) / sum(rate(node_cpu_seconds_total{${hostJob}}[${window}]))`,
+          `100 * sum(rate(bundlephobia_host_cpu_ticks_total{${legacyHostJob},mode="iowait"}[${window}])) / sum(rate(bundlephobia_host_cpu_ticks_total{${legacyHostJob}}[${window}]))`,
+        ),
+        name: 'I/O wait',
+        color: 'amber',
+      },
+    ],
+  },
   load: {
     id: 'host-load',
     title: 'CPU load',

@@ -70,6 +70,7 @@ export const PAGES: DashboardPage[] = [
       CHARTS.load,
       CHARTS.memory,
       CHARTS.disk,
+      CHARTS.ioWait,
       CHARTS.network,
       CHARTS.swap,
     ],
@@ -87,7 +88,7 @@ export const PAGES: DashboardPage[] = [
       {
         id: 'storage',
         title: 'Disk & network',
-        panels: [CHARTS.disk, CHARTS.network],
+        panels: [CHARTS.disk, CHARTS.ioWait, CHARTS.network],
       },
     ],
   },
