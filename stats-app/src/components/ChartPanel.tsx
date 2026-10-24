@@ -1,49 +1,21 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { AreaChart, Card } from '@tremor/react'
 import { Activity, ShieldAlert } from 'lucide-react'
-import { loadPanel, type PanelDefinition } from '../metrics'
+import { loadPanel } from '../metrics'
+import type { ChartDefinition } from '../charts'
 import type { TimeRange } from '../api'
 
 type PanelData = Awaited<ReturnType<typeof loadPanel>>
 
 interface PanelProps {
-  panel: PanelDefinition
+  panel: ChartDefinition
   range: TimeRange
   live: boolean
 }
 
 interface ContentProps {
-  panel: PanelDefinition
+  panel: ChartDefinition
   query: UseQueryResult<PanelData, Error>
-}
-
-const statusColors = new Map([
-  ['1xx', 'slate'],
-  ['2xx', 'emerald'],
-  ['3xx', 'sky'],
-  ['4xx', 'amber'],
-  ['5xx', 'rose'],
-  ['other', 'stone'],
-])
-
-const statusOrder = ['2xx', '3xx', '4xx', '5xx', '1xx', 'other']
-
-function chartSeries(panel: PanelDefinition, data: PanelData) {
-  if (panel.id !== 'responses')
-    return { categories: data.categories, colors: panel.colors }
-
-  const categories = statusOrder.filter(code => {
-    if (!data.categories.includes(code)) return false
-
-    if (!['1xx', 'other'].includes(code)) return true
-
-    return data.data.some(row => Number(row[code] ?? 0) > 0)
-  })
-
-  return {
-    categories,
-    colors: categories.map(code => statusColors.get(code) ?? 'stone'),
-  }
 }
 
 function ChartContent({ panel, query }: ContentProps) {
@@ -74,7 +46,7 @@ function ChartContent({ panel, query }: ContentProps) {
         <span>No history yet, or the service is not being scraped.</span>
       </div>
     )
-  const series = chartSeries(panel, query.data)
+  const series = query.data
 
   return (
     <AreaChart

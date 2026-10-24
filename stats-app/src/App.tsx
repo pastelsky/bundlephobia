@@ -3,7 +3,7 @@ import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
 import { resolvePage, type DashboardSource } from './pages'
 import { TIME_RANGES } from './api'
-import { loadPageSummary, PANELS, type PageSummary } from './metrics'
+import { loadPageSummary, type PageSummary } from './metrics'
 import { Sidebar } from './components/Sidebar'
 import { ChartPanel } from './components/ChartPanel'
 import {
@@ -73,7 +73,7 @@ export function App() {
   const location = useLocation()
   const [params, setParams] = useSearchParams()
 
-  const { page, tabId, panelIds } = resolvePage(
+  const { page, tabId, panels } = resolvePage(
     location.pathname,
     params.get('tab'),
   )
@@ -127,7 +127,7 @@ export function App() {
             <span>{details.scope}</span>
           </div>
           <div className="charts-grid">
-            {PANELS.filter(panel => panelIds.includes(panel.id)).map(panel => (
+            {panels.map(panel => (
               <ChartPanel
                 key={panel.id}
                 panel={panel}

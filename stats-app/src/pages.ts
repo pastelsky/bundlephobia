@@ -1,3 +1,4 @@
+import { CHARTS, type ChartDefinition } from './charts'
 import {
   Activity,
   Cpu,
@@ -16,14 +17,13 @@ export interface DashboardPage {
   description: string
   icon: LucideIcon
   source: DashboardSource
-  panels: string[]
+  panels: ChartDefinition[]
   breakdown: boolean
-  tabs: { id: string; title: string; panels: string[] }[]
+  tabs: { id: string; title: string; panels?: ChartDefinition[] }[]
 }
 
-// Navigation and panel placement live here. Panels and their MetricsQL queries
-// live in metrics.ts, so adding a page does not require another renderer.
-export const PAGES = [
+// Pages reference chart objects directly; tabs may inherit the full page.
+export const PAGES: DashboardPage[] = [
   {
     id: 'overview',
     title: 'Overview',
@@ -31,7 +31,7 @@ export const PAGES = [
     description: 'Requests, response health, and connections at a glance.',
     icon: LayoutDashboard,
     source: 'haproxy',
-    panels: ['requests', 'responses'],
+    panels: [CHARTS.requests, CHARTS.responses],
     breakdown: false,
     tabs: [],
   },
@@ -42,7 +42,7 @@ export const PAGES = [
     description: 'Request volume, network traffic, and active connections.',
     icon: Activity,
     source: 'haproxy',
-    panels: ['requests', 'bandwidth', 'sessions'],
+    panels: [CHARTS.requests, CHARTS.bandwidth, CHARTS.sessions],
     breakdown: false,
     tabs: [],
   },
@@ -53,7 +53,7 @@ export const PAGES = [
     description: 'HTTP status classes across the public website.',
     icon: ShieldAlert,
     source: 'haproxy',
-    panels: ['responses'],
+    panels: [CHARTS.responses],
     breakdown: true,
     tabs: [],
   },
@@ -66,36 +66,28 @@ export const PAGES = [
     icon: Cpu,
     source: 'resources',
     panels: [
-      'host-cpu',
-      'host-load',
-      'host-memory',
-      'host-disk',
-      'host-network',
-      'host-swap',
+      CHARTS.cpu,
+      CHARTS.load,
+      CHARTS.memory,
+      CHARTS.disk,
+      CHARTS.network,
+      CHARTS.swap,
     ],
     breakdown: false,
     tabs: [
       {
         id: 'all',
         title: 'All resources',
-        panels: [
-          'host-cpu',
-          'host-load',
-          'host-memory',
-          'host-disk',
-          'host-network',
-          'host-swap',
-        ],
       },
       {
         id: 'compute',
         title: 'CPU & memory',
-        panels: ['host-cpu', 'host-load', 'host-memory', 'host-swap'],
+        panels: [CHARTS.cpu, CHARTS.load, CHARTS.memory, CHARTS.swap],
       },
       {
         id: 'storage',
         title: 'Disk & network',
-        panels: ['host-disk', 'host-network'],
+        panels: [CHARTS.disk, CHARTS.network],
       },
     ],
   },
@@ -107,23 +99,22 @@ export const PAGES = [
       'Completed attempts in the application services, excluding cache hits.',
     icon: Hammer,
     source: 'pipeline',
-    panels: ['build-outcomes', 'install-outcomes'],
+    panels: [CHARTS.builds, CHARTS.installs],
     breakdown: false,
     tabs: [
       {
         id: 'all',
         title: 'All activity',
-        panels: ['build-outcomes', 'install-outcomes'],
       },
-      { id: 'builds', title: 'Builds', panels: ['build-outcomes'] },
-      { id: 'installs', title: 'Installations', panels: ['install-outcomes'] },
+      { id: 'builds', title: 'Builds', panels: [CHARTS.builds] },
+      { id: 'installs', title: 'Installations', panels: [CHARTS.installs] },
     ],
   },
-] satisfies DashboardPage[]
+]
 
 export function resolvePage(pathname: string, requestedTab: string | null) {
   const page = PAGES.find(page => pathname === `/${page.id}`) ?? PAGES[0]
   const tab = page.tabs.find(tab => tab.id === requestedTab) ?? page.tabs[0]
 
-  return { page, tabId: tab?.id, panelIds: tab?.panels ?? page.panels }
+  return { page, tabId: tab?.id, panels: tab?.panels ?? page.panels }
 }

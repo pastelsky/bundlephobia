@@ -1,3 +1,6 @@
+import type { ChartCategory, ChartDefinition, ChartSeries } from './charts'
+import { cpuUsage, memoryUsed, hostJob } from './charts'
+
 import type { DashboardSource } from './pages'
 import {
   finiteValue,
@@ -11,241 +14,6 @@ const frontend = '{job="haproxy",proxy="bundlephobia_http"}'
 
 const responseFrontend = '{job="haproxy",proxy="bundlephobia_http"}'
 
-export const numberFormat = new Intl.NumberFormat('en', {
-  maximumFractionDigits: 1,
-})
-
-export const compactFormat = new Intl.NumberFormat('en', {
-  notation: 'compact',
-  maximumFractionDigits: 1,
-})
-
-export function formatBytes(value: number) {
-  if (value >= 1073741824)
-    return `${numberFormat.format(value / 1073741824)} GiB`
-
-  if (value >= 1048576) return `${numberFormat.format(value / 1048576)} MiB`
-
-  if (value >= 1024) return `${numberFormat.format(value / 1024)} KiB`
-
-  return `${numberFormat.format(value)} B`
-}
-
-export const STATUS_LABELS = new Map([
-  ['1xx', 'Informational'],
-  ['2xx', 'Success'],
-  ['3xx', 'Redirects'],
-  ['4xx', 'Client errors'],
-  ['5xx', 'Server errors'],
-  ['other', 'Other'],
-])
-
-interface MetricQuery {
-  expression: string
-  name: string
-  label?: string
-}
-
-export interface PanelDefinition {
-  id: string
-  title: string
-  description: string
-  unit: string
-  colors: string[]
-  stacked?: boolean
-  format: (value: number) => string
-  queries: (window: string) => MetricQuery[]
-}
-
-// Panel definitions own queries and presentation. Collection and retention
-// stay in VictoriaMetrics; pages.ts controls where each panel appears.
-export const PANELS: PanelDefinition[] = [
-  {
-    id: 'requests',
-    title: 'Request traffic',
-    description: 'Requests reaching the website',
-    unit: 'requests / sec',
-    colors: ['orange'],
-    format: value => numberFormat.format(value),
-    queries: window => [
-      {
-        expression: `sum(rate(haproxy_frontend_http_requests_total${frontend}[${window}]))`,
-        name: 'Requests',
-      },
-    ],
-  },
-  {
-    id: 'responses',
-    title: 'Response health',
-    description: 'Responses grouped by HTTP status class',
-    unit: 'responses / sec',
-    colors: ['emerald', 'sky', 'amber', 'rose', 'slate', 'stone'],
-    stacked: true,
-    format: value => numberFormat.format(value),
-    queries: window => [
-      {
-        expression: `sum by (code) (rate(haproxy_frontend_http_responses_total${responseFrontend}[${window}]))`,
-        name: 'Responses',
-        label: 'code',
-      },
-    ],
-  },
-  {
-    id: 'bandwidth',
-    title: 'Network traffic',
-    description: 'Data sent to and received from visitors',
-    unit: 'bytes / sec',
-    colors: ['sky', 'slate'],
-    format: formatBytes,
-    queries: window => [
-      {
-        expression: `sum(rate(haproxy_frontend_bytes_out_total${frontend}[${window}]))`,
-        name: 'Sent',
-      },
-      {
-        expression: `sum(rate(haproxy_frontend_bytes_in_total${frontend}[${window}]))`,
-        name: 'Received',
-      },
-    ],
-  },
-  {
-    id: 'sessions',
-    title: 'Open connections',
-    description: 'Concurrent sessions at the public frontend',
-    unit: 'sessions',
-    colors: ['slate'],
-    format: value => numberFormat.format(value),
-    queries: () => [
-      {
-        expression: `sum(haproxy_frontend_current_sessions${frontend})`,
-        name: 'Sessions',
-      },
-    ],
-  },
-]
-
-for (const [id, title, metric, job] of [
-  [
-    'build-outcomes',
-    'Build outcomes',
-    'bundlephobia_builds_total',
-    'bundlephobia_builds',
-  ],
-  [
-    'install-outcomes',
-    'Installation outcomes',
-    'bundlephobia_installs_total',
-    'bundlephobia_installations',
-  ],
-]) {
-  PANELS.push({
-    id,
-    title,
-    description: 'Completed attempts · success versus failure',
-    unit: 'attempts / min',
-    colors: ['emerald', 'rose'],
-    format: value => numberFormat.format(value),
-    queries: window =>
-      ['success', 'failure'].map(outcome => ({
-        expression: `sum(rate(${metric}{job="${job}",outcome="${outcome}"}[${window}])) * 60`,
-        name: outcome === 'success' ? 'Success' : 'Failure',
-      })),
-  })
-}
-
-const hostJob = 'job="bundlephobia_installations"'
-
-const cpuUsage = (window: string) =>
-  `100 * (1 - sum(rate(bundlephobia_host_cpu_ticks_total{${hostJob},mode=~"idle|iowait"}[${window}])) / sum(rate(bundlephobia_host_cpu_ticks_total{${hostJob}}[${window}])))`
-
-const memoryUsed = `bundlephobia_host_memory_bytes{${hostJob},kind="total"} - ignoring(kind) bundlephobia_host_memory_bytes{${hostJob},kind="available"}`
-
-PANELS.push(
-  {
-    id: 'host-cpu',
-    title: 'CPU usage',
-    description: 'Busy time across all cores · excludes idle and I/O wait',
-    unit: '%',
-    colors: ['orange'],
-    format: value => `${numberFormat.format(value)}%`,
-    queries: window => [{ expression: cpuUsage(window), name: 'CPU' }],
-  },
-  {
-    id: 'host-load',
-    title: 'CPU load',
-    description: 'Runnable and waiting tasks · compare with CPU core count',
-    unit: 'tasks',
-    colors: ['orange', 'sky', 'violet', 'slate'],
-    format: value => numberFormat.format(value),
-    queries: () => [
-      ...['1m', '5m', '15m'].map(period => ({
-        expression: `bundlephobia_host_load{${hostJob},period="${period}"}`,
-        name: period,
-      })),
-      { expression: `bundlephobia_host_cpu_cores{${hostJob}}`, name: 'Cores' },
-    ],
-  },
-  {
-    id: 'host-memory',
-    title: 'Memory usage',
-    description: 'RAM in use · reclaimable filesystem cache is available',
-    unit: 'bytes',
-    colors: ['violet', 'slate'],
-    format: formatBytes,
-    queries: () => [
-      { expression: memoryUsed, name: 'Used' },
-      {
-        expression: `bundlephobia_host_memory_bytes{${hostJob},kind="total"}`,
-        name: 'Total',
-      },
-    ],
-  },
-  {
-    id: 'host-disk',
-    title: 'Disk usage',
-    description: 'Used space on each filesystem · see available capacity below',
-    unit: 'bytes',
-    colors: ['sky', 'orange', 'violet'],
-    format: formatBytes,
-    queries: () =>
-      ['root', 'builds', 'metrics'].map((mount, index) => ({
-        expression: `bundlephobia_host_disk_bytes{${hostJob},mount="${mount}",kind="used"}`,
-        name: ['Main filesystem', 'Temporary builds', 'VictoriaMetrics'][index],
-      })),
-  },
-  {
-    id: 'host-network',
-    title: 'Host network traffic',
-    description: 'Interface traffic · excludes loopback and virtual bridges',
-    unit: 'bytes / sec',
-    colors: ['sky', 'orange'],
-    format: formatBytes,
-    queries: window =>
-      ['receive', 'transmit'].map(direction => ({
-        expression: `sum(rate(bundlephobia_host_network_bytes_total{${hostJob},direction="${direction}"}[${window}]))`,
-        name: direction === 'receive' ? 'Received' : 'Sent',
-      })),
-  },
-  {
-    id: 'host-swap',
-    title: 'Swap usage',
-    description: 'Swap space in use and total swap capacity',
-    unit: 'bytes',
-    colors: ['rose', 'slate'],
-    format: formatBytes,
-    queries: () => [
-      {
-        expression: `bundlephobia_host_memory_bytes{${hostJob},kind="swap_total"} - ignoring(kind) bundlephobia_host_memory_bytes{${hostJob},kind="swap_free"}`,
-        name: 'Used',
-      },
-      {
-        expression: `bundlephobia_host_memory_bytes{${hostJob},kind="swap_total"}`,
-        name: 'Total',
-      },
-    ],
-  },
-)
-
 export interface ChartRow {
   timestamp: number
   time: string
@@ -253,7 +21,7 @@ export interface ChartRow {
 }
 
 export async function loadPanel(
-  panel: PanelDefinition,
+  panel: ChartDefinition,
   range: TimeRange,
   signal: AbortSignal,
 ) {
@@ -261,7 +29,7 @@ export async function loadPanel(
   // interval, rather than sampling isolated five-minute fragments of 15 days.
   const window = `${Math.max(300, stepSeconds(range.seconds))}s`
   const end = Math.floor(Date.now() / 60000) * 60
-  const queries = panel.queries(window)
+  const queries = panel.series(window)
 
   const results = await Promise.all(
     queries.map(query =>
@@ -291,7 +59,7 @@ export async function loadPanel(
 
   return {
     data: chartTimeline(accumulator, range, end),
-    categories: accumulator.categories,
+    ...visibleSeries(accumulator, queries),
     hasData: accumulator.hasData,
   }
 }
@@ -307,14 +75,14 @@ type MetricSeries = Awaited<ReturnType<typeof queryRange>>[number]
 
 function appendSeries(
   accumulator: ChartAccumulator,
-  query: MetricQuery,
+  query: ChartSeries,
   series: MetricSeries,
 ) {
-  const name = query.label
-    ? (series.metric[query.label] ?? query.name)
+  const name = query.groupBy
+    ? (series.metric[query.groupBy.label] ?? 'other')
     : query.name
 
-  accumulator.categories.push(name)
+  if (!accumulator.categories.includes(name)) accumulator.categories.push(name)
 
   for (const [timestamp, value] of series.values) {
     const row =
@@ -326,6 +94,41 @@ function appendSeries(
     row[name] = numeric
     accumulator.rows.set(timestamp, row)
   }
+}
+
+// Grouped queries declare ordering and optional empty-series visibility alongside
+// their expression. The renderer does not need to know which chart is loaded.
+function categoryVisible(
+  category: ChartCategory,
+  accumulator: ChartAccumulator,
+) {
+  if (!accumulator.categories.includes(category.name)) return false
+
+  if (!category.hideWhenZero) return true
+
+  return [...accumulator.rows.values()].some(
+    row => Number(row[category.name] ?? 0) > 0,
+  )
+}
+
+function visibleSeries(accumulator: ChartAccumulator, queries: ChartSeries[]) {
+  const categories: string[] = []
+  const colors: string[] = []
+
+  for (const query of queries) {
+    for (const category of query.groupBy ? query.groupBy.categories : [query]) {
+      if (
+        !categoryVisible(category, accumulator) ||
+        categories.includes(category.name)
+      )
+        continue
+
+      categories.push(category.name)
+      colors.push(category.color)
+    }
+  }
+
+  return { categories, colors }
 }
 
 function chartRow(accumulator: ChartAccumulator, timestamp: number): ChartRow {

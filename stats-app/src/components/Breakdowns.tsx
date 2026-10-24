@@ -4,9 +4,8 @@ import {
   numberFormat,
   formatBytes,
   STATUS_LABELS,
-  type SummaryData,
-  type ResourceData,
-} from '../metrics'
+} from '../format'
+import type { SummaryData, ResourceData } from '../metrics'
 
 const diskLabels = new Map([
   ['root', 'Main filesystem'],

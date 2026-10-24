@@ -1,13 +1,7 @@
 import { Card, Metric, Text } from '@tremor/react'
 import { Activity, ArrowDownLeft, Cable, ShieldAlert } from 'lucide-react'
-import {
-  compactFormat,
-  numberFormat,
-  formatBytes,
-  type SummaryData,
-  type ResourceData,
-  type loadPipelineSummary,
-} from '../metrics'
+import { compactFormat, numberFormat, formatBytes } from '../format'
+import type { SummaryData, ResourceData, loadPipelineSummary } from '../metrics'
 
 function responseErrorShare(data?: SummaryData) {
   const total =

@@ -1,5 +1,7 @@
 import { queryInstant, stepSeconds, TIME_RANGES } from '../stats-app/src/api'
-import { loadPanel, loadSummary, PANELS } from '../stats-app/src/metrics'
+import { loadPanel, loadSummary } from '../stats-app/src/metrics'
+
+import { CHARTS } from '../stats-app/src/charts'
 
 const end = Date.parse('2026-10-24T06:00:00Z') / 1000
 
@@ -33,7 +35,7 @@ describe('history from the VictoriaMetrics API', () => {
     ])
 
     const chart = await loadPanel(
-      PANELS[0],
+      CHARTS.requests,
       TIME_RANGES[0],
       new AbortController().signal,
     )
@@ -50,7 +52,7 @@ describe('history from the VictoriaMetrics API', () => {
     serveMatrix([])
 
     const chart = await loadPanel(
-      PANELS[0],
+      CHARTS.requests,
       TIME_RANGES[0],
       new AbortController().signal,
     )
@@ -62,7 +64,7 @@ describe('history from the VictoriaMetrics API', () => {
   it('bounds long-range payloads and averages across each complete chart interval', async () => {
     serveMatrix([[end, '4']])
     const signal = new AbortController().signal
-    const chart = await loadPanel(PANELS[0], TIME_RANGES[4], signal)
+    const chart = await loadPanel(CHARTS.requests, TIME_RANGES[4], signal)
     const fetchCall = jest.mocked(fetch).mock.calls[0]
 
     const request = new URL(
