@@ -39,6 +39,7 @@ class BotRateLimits(unittest.TestCase):
                      if line.strip().startswith(('use_backend ', 'default_backend '))}
         config = root / 'haproxy.cfg'
         config.write_text(f'global\n    stats socket {self.admin_socket} level admin\n'
+                          '    tune.stick-counters 4\n'
                           'userlist bundlephobia_stats_users\n'
                           '    user test insecure-password test\n'
                           'defaults\n    mode http\n    timeout connect 1s\n'
@@ -144,18 +145,45 @@ class BotRateLimits(unittest.TestCase):
                 self.runtime('clear table api_client_usage')
                 self.assertEqual(send(244), 200)
 
-    def test_api_and_page_limits_share_the_non_google_budget(self):
-        agents = ['Bytespider/1', 'Baiduspider/2', 'Badgen/1.0',
-                  'Data-Pipeline-Enricher/1.0', 'SomeCrawler/1', 'got/14', 'Ahrefs']
+    def test_api_and_page_limits_share_pools_but_keep_family_cooldowns(self):
         paths = ['/api/size', '/package/example']
-        for i in range(26):
-            self.assertEqual(self.request(agents[i % len(agents)], i, paths[i % 2]), 200)
-        for i, ua in enumerate(agents):
-            for path in paths:
-                self.assertEqual(self.request(ua, 240 + i, path), 429)
-        for i in range(26):
-            self.assertEqual(self.request('Googlebot/2.1', i, paths[i % 2]), 200)
-        self.assertEqual(self.request('GoogleOther', 240), 429)
+        pools = [
+            ('google', ['Googlebot/2.1', 'GoogleOther']),
+            ('aggressive', ['Bytespider/1', 'TikTokSpider/2',
+                                  'Baiduspider/1', 'PetalBot/1']),
+            ('search', ['bingbot/2', 'Applebot/1', 'YandexBot/1']),
+            ('ai', ['GPTBot/1', 'OAI-SearchBot/1', 'ClaudeBot/1', 'Amazonbot/1']),
+            ('developer_tools', ['Shields.io/1', 'Badgen/1',
+                                 'Data-Pipeline-Enricher/1', 'Depscope/1']),
+            ('seo', ['Ahrefs/1', 'Semrush/1', 'Dotbot/1', 'AwarioBot/1']),
+        ]
+        for pool, agents in pools:
+            self.runtime('clear table named_bot_usage')
+            for i in range(26):
+                self.assertEqual(self.request(agents[i % len(agents)], i,
+                                              paths[i % 2]), 200)
+            for ua in agents:
+                self.assertEqual(self.request(ua, 240), 429)
+            # Only the first family enters cooldown; the next pool stays available.
+            for i in range(30):
+                self.assertEqual(self.request(agents[0], i, paths[i % 2]), 429)
+            self.assertEqual(self.retry_after, '300')
+            self.assertEqual(self.request(agents[0], 240, '/asset.js'), 429)
+            if pool != 'google':
+                self.assertEqual(self.request(agents[-1], 240, '/asset.js'), 200)
+        # Every pool is below 26/min, but together they stop at the global ceiling.
+        for table in ['client_group_usage', 'automated_client_usage', 'named_bot_usage']:
+            self.runtime(f'clear table {table}')
+        for i in range(100):
+            self.assertEqual(self.request(pools[i % len(pools)][1][0], i,
+                                          paths[i % 2]), 200)
+        for _, agents in pools:
+            self.assertEqual(self.request(agents[0], 240), 429)
+        # Unrecognized automation uses trusted IPs instead of one catch-all group.
+        for ip in ['198.51.100.240', '198.51.100.241']:
+            for i in range(26):
+                self.assertEqual(self.request('SomeCrawler/1', ip, paths[i % 2]), 200)
+            self.assertEqual(self.request('SomeCrawler/2', ip), 429)
 
 
 if __name__ == '__main__':
