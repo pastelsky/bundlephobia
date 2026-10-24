@@ -19,7 +19,7 @@ import {
 import { Activity, ShieldAlert } from 'lucide-react'
 import { loadPanel, type ChartRow } from '../../dashboard/metrics'
 import type { ChartCapacity, ChartDefinition } from '../../dashboard/charts'
-import type { TimeRange } from '../../lib/api'
+import { chartResolution, type TimeRange } from '../../lib/api'
 
 type PanelData = Awaited<ReturnType<typeof loadPanel>>
 
@@ -76,6 +76,10 @@ function ChartContent({ panel, query }: ContentProps) {
         />
       )}
       <TimeSeriesChart panel={panel} data={query.data} />
+      <p className={styles.resolutionNote}>
+        {panel.measurement === 'counter' ? 'Totals per' : 'Sampled every'}{' '}
+        {query.data.resolution.label}
+      </p>
     </>
   )
 }
@@ -212,7 +216,11 @@ export function ChartPanel({ panel, range, live }: PanelProps) {
       <PanelHeader
         title={panel.title}
         description={panel.description}
-        unit={panel.unit}
+        unit={
+          panel.measurement === 'counter'
+            ? `${panel.unit} / ${chartResolution(range.seconds).label}`
+            : panel.unit
+        }
       />
       {panel.views && (
         <TabGroup

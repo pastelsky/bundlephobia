@@ -62,10 +62,32 @@ async function request(
   return payload
 }
 
+// One policy for every chart: readable intervals, about 240 samples at most,
+// and no resolution finer than the one-minute scrape interval.
+const CHART_INTERVALS = [
+  60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400,
+]
+
 export function stepSeconds(seconds: number) {
-  // Bound the browser payload to about 240 points per series; never ask for
-  // higher resolution than HAProxy's one-minute scrape interval.
-  return Math.max(60, Math.ceil(seconds / 240 / 60) * 60)
+  const minimum = seconds / 240
+
+  return (
+    CHART_INTERVALS.find(interval => interval >= minimum) ??
+    Math.ceil(minimum / 86400) * 86400
+  )
+}
+
+export function chartResolution(seconds: number) {
+  const step = stepSeconds(seconds)
+  const divisor = step >= 3600 ? 3600 : 60
+  const unit = step >= 3600 ? 'hour' : 'minute'
+  const count = step / divisor
+
+  return {
+    step,
+    window: `${step}s`,
+    label: `${count} ${unit}${count === 1 ? '' : 's'}`,
+  }
 }
 
 export async function queryRange(query: RangeRequest, signal: AbortSignal) {

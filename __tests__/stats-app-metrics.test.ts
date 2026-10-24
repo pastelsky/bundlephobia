@@ -65,7 +65,7 @@ describe('history from the VictoriaMetrics API', () => {
     expect(chart.data.every(row => row.Requests === null)).toBe(true)
   })
 
-  it('bounds long-range payloads and averages across each complete chart interval', async () => {
+  it('bounds long-range payloads and aggregates each complete chart interval', async () => {
     serveMatrix([[end, '4']])
     const signal = new AbortController().signal
     const chart = await loadPanel(CHARTS.requests, TIME_RANGES[4], signal)
@@ -76,10 +76,12 @@ describe('history from the VictoriaMetrics API', () => {
       'http://localhost',
     )
 
-    expect(stepSeconds(TIME_RANGES[4].seconds)).toBe(5400)
-    expect(chart.data).toHaveLength(241)
-    expect(request.searchParams.get('step')).toBe('5400')
-    expect(request.searchParams.get('query')).toContain('[5400s]')
+    expect(stepSeconds(TIME_RANGES[4].seconds)).toBe(7200)
+    expect(chart.data).toHaveLength(181)
+    expect(request.searchParams.get('step')).toBe('7200')
+    expect(request.searchParams.get('query')).toContain('[7200s]')
+    expect(request.searchParams.get('query')).toContain('increase(')
+    expect(chart.resolution.label).toBe('2 hours')
     expect(request.searchParams.get('query')).toContain(
       'proxy="bundlephobia_http"',
     )

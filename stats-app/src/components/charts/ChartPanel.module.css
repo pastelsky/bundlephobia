@@ -100,3 +100,9 @@
   font-size: 10px;
   color: var(--stats-muted);
 }
+
+.resolution-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--stats-muted);
+}

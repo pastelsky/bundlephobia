@@ -35,6 +35,7 @@ export interface ChartDefinition {
   title: string
   description: string
   unit: string
+  measurement?: 'counter'
   stacked?: boolean
   format: (value: number) => string
   series: SeriesFactory
@@ -51,11 +52,12 @@ const traffic = {
     id: 'requests',
     title: 'Request traffic',
     description: 'Requests reaching the website',
-    unit: 'requests / sec',
+    unit: 'requests',
+    measurement: 'counter',
     format: value => numberFormat.format(value),
     series: window => [
       {
-        expression: `sum(rate(haproxy_frontend_http_requests_total${frontend}[${window}]))`,
+        expression: `sum(increase(haproxy_frontend_http_requests_total${frontend}[${window}]))`,
         name: 'Requests',
         color: 'orange',
       },
@@ -65,12 +67,13 @@ const traffic = {
     id: 'responses',
     title: 'Response health',
     description: 'Responses grouped by HTTP status class',
-    unit: 'responses / sec',
+    unit: 'responses',
+    measurement: 'counter',
     stacked: true,
     format: value => numberFormat.format(value),
     series: window => [
       {
-        expression: `sum by (code) (rate(haproxy_frontend_http_responses_total${frontend}[${window}]))`,
+        expression: `sum by (code) (increase(haproxy_frontend_http_responses_total${frontend}[${window}]))`,
         groupBy: {
           label: 'code',
           categories: [
@@ -89,16 +92,17 @@ const traffic = {
     id: 'bandwidth',
     title: 'Network traffic',
     description: 'Data sent to and received from visitors',
-    unit: 'bytes / sec',
+    unit: 'bytes',
+    measurement: 'counter',
     format: formatBytes,
     series: window => [
       {
-        expression: `sum(rate(haproxy_frontend_bytes_out_total${frontend}[${window}]))`,
+        expression: `sum(increase(haproxy_frontend_bytes_out_total${frontend}[${window}]))`,
         name: 'Sent',
         color: 'sky',
       },
       {
-        expression: `sum(rate(haproxy_frontend_bytes_in_total${frontend}[${window}]))`,
+        expression: `sum(increase(haproxy_frontend_bytes_in_total${frontend}[${window}]))`,
         name: 'Received',
         color: 'slate',
       },
@@ -132,11 +136,12 @@ function outcomeChart(
     id,
     title,
     description: 'Completed attempts · success versus failure',
-    unit: 'attempts / min',
+    unit: 'attempts',
+    measurement: 'counter',
     format: value => numberFormat.format(value),
     series: window =>
       ['success', 'failure'].map(outcome => ({
-        expression: `sum(rate(${metric}{job="${job}",outcome="${outcome}"}[${window}])) * 60`,
+        expression: `sum(increase(${metric}{job="${job}",outcome="${outcome}"}[${window}]))`,
         name: outcome === 'success' ? 'Success' : 'Failure',
         color: outcome === 'success' ? 'emerald' : 'rose',
       })),
@@ -251,11 +256,12 @@ const resources = {
     id: 'host-network',
     title: 'Host network traffic',
     description: 'Interface traffic · excludes loopback and virtual bridges',
-    unit: 'bytes / sec',
+    unit: 'bytes',
+    measurement: 'counter',
     format: formatBytes,
     series: window =>
       ['receive', 'transmit'].map(direction => ({
-        expression: `sum(rate(bundlephobia_host_network_bytes_total{${hostJob},direction="${direction}"}[${window}]))`,
+        expression: `sum(increase(bundlephobia_host_network_bytes_total{${hostJob},direction="${direction}"}[${window}]))`,
         name: direction === 'receive' ? 'Received' : 'Sent',
         color: direction === 'receive' ? 'sky' : 'orange',
       })),

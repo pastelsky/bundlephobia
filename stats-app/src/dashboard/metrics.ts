@@ -3,6 +3,7 @@ import { cpuUsage, memoryUsed, hostJob } from './charts'
 
 import type { DashboardSource } from './sources'
 import {
+  chartResolution,
   finiteValue,
   queryInstant,
   queryRange,
@@ -25,9 +26,15 @@ export async function loadPanel(
   range: TimeRange,
   signal: AbortSignal,
 ) {
-  // Larger views need wider rate windows so every bucket represents its full
-  // interval, rather than sampling isolated five-minute fragments of 15 days.
-  const window = `${Math.max(300, stepSeconds(range.seconds))}s`
+  const resolution = chartResolution(range.seconds)
+
+  // Counter increases cover exactly one display interval. CPU rates retain a
+  // wider minimum window to avoid noisy single-scrape rate calculations.
+  const window =
+    panel.measurement === 'counter'
+      ? resolution.window
+      : `${Math.max(300, resolution.step)}s`
+
   const end = Math.floor(Date.now() / 60000) * 60
   const queries = panel.series(window)
 
@@ -61,6 +68,7 @@ export async function loadPanel(
     data: chartTimeline(accumulator, range, end),
     ...visibleSeries(accumulator, queries),
     hasData: accumulator.hasData,
+    resolution,
   }
 }
 
