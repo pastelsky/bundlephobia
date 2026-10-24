@@ -316,7 +316,8 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
         exit 0
     fi
 
-    # The cron process and all cleanup children yield I/O to serving traffic.
+    # The cron process and all cleanup children yield CPU and I/O to serving traffic.
+    chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; exit 1; }
     ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; exit 1; }
     main
 fi

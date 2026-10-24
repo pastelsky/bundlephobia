@@ -14,20 +14,20 @@ function removalArgs(paths: string[]) {
     }
   }
 
-  return ['-c', '3', 'rm', '-rf', '--', ...paths]
+  return ['--idle', '0', 'ionice', '-c', '3', 'rm', '-rf', '--', ...paths]
 }
 
 function missingExecutable(error: Error) {
   return 'code' in error && error.code === 'ENOENT'
 }
 
-// Isolate deletion so active application work keeps its normal I/O priority.
+// Isolate deletion so active application work keeps its normal CPU and I/O priority.
 export async function removePaths(paths: string[]) {
   if (paths.length === 0) return
 
   if (process.platform === 'linux') {
     try {
-      await executeFile('ionice', removalArgs(paths))
+      await executeFile('chrt', removalArgs(paths))
 
       return
     } catch (error) {
@@ -48,7 +48,7 @@ export async function removePaths(paths: string[]) {
 export function removePathSync(filename: string, filesystem = fs) {
   if (process.platform === 'linux' && filesystem === fs) {
     try {
-      execFileSync('ionice', removalArgs([filename]), { stdio: 'pipe' })
+      execFileSync('chrt', removalArgs([filename]), { stdio: 'pipe' })
 
       return
     } catch (error) {
