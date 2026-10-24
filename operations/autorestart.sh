@@ -63,7 +63,7 @@ check_services() {
 import sys, json
 data = json.load(sys.stdin)
 match = [p for p in data if p.get('name') == '$service']
-print(match[0]['pm2_env']['status'] if match else 'missing')
+print('online' if match and all(p['pm2_env']['status'] == 'online' for p in match) else 'unhealthy')
 " 2>/dev/null || echo "error")
 
         if [ "$status" = "online" ]; then
@@ -76,33 +76,30 @@ print(match[0]['pm2_env']['status'] if match else 'missing')
     return $failed
 }
 
-# ── Full restart sequence ─────────────────────────────────────────────────────
+# ── Targeted service recovery ─────────────────────────────────────────────────────
 restart_all() {
-    log "Starting full PM2 restart sequence"
+    log "Starting targeted PM2 recovery"
 
-    # Graceful kill
-    "$PM2" kill 2>/dev/null || true
-    sleep 3
-
-    # Force-kill any surviving node/pm2 processes (but NOT this script's bash)
-    pkill -9 -f "PM2" 2>/dev/null || true
-    sleep 1
-
-    # Start fresh from process file
-    cd "$PM2_WORKING_DIR" || { log "ERROR: cannot cd to $PM2_WORKING_DIR"; return 1; }
-
-    if [ ! -f "$PROCESS_FILE" ]; then
-        log "ERROR: $PROCESS_FILE not found in $PM2_WORKING_DIR"
-        return 1
+    # A planned restart may spend up to kill_timeout=20s stopping an installer.
+    # Recheck before touching PM2; never destroy its daemon or unrelated apps.
+    sleep 30
+    if check_services; then
+        log "Services recovered during restart grace period"
+        return 0
     fi
 
-    # Restore the saved list, including optional collectors, before falling back
-    # to the required application config on an empty or incomplete dump.
-    "$PM2" resurrect 2>/dev/null || true
-    if ! check_services; then
-        "$PM2" startOrReload "$PROCESS_FILE" --env production
-    fi
-    sleep 5
+    cd "$PM2_WORKING_DIR" || return 1
+    [ -f "$PROCESS_FILE" ] || { log "ERROR: missing $PROCESS_FILE"; return 1; }
+
+    for service in "${REQUIRED_SERVICES[@]}"; do
+        if ! "$PM2" jlist | python3 -c '
+import json, sys
+matches = [p for p in json.load(sys.stdin) if p.get("name") == sys.argv[1]]
+sys.exit(0 if matches and all(p["pm2_env"]["status"] == "online" for p in matches) else 1)
+' "$service"; then
+            "$PM2" startOrRestart "$PROCESS_FILE" --only "$service" --update-env || return 1
+        fi
+    done
     "$PM2" save
 
     if check_services; then
@@ -127,13 +124,7 @@ main() {
         exit 0
     fi
 
-    # PM2 may spend 20 seconds gracefully stopping an installer during a reload.
-    sleep 25
-    if check_services; then
-        exit 0
-    fi
-
-    log "=== Service check failed — initiating restart ==="
+    log "=== Service check failed — initiating recovery ==="
     log "Node: $($NODE --version 2>/dev/null)"
     log "PM2:  $($PM2 --version 2>/dev/null)"
 

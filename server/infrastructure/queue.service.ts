@@ -61,6 +61,7 @@ interface QueueJob<
   failureListeners: Array<(error: RuntimeValue) => void>
   abortController: AbortController
   cancel?: () => void
+  expiryTimer?: NodeJS.Timeout
 }
 
 interface QueueOptions {
@@ -178,6 +179,7 @@ class Queue {
         job.addedTime.getTime() + job.maxAge * 1000 < Date.now()
 
       if (isJobExpired) {
+        clearTimeout(job.expiryTimer)
         job.failureListeners.forEach(listener => {
           listener({
             code: 'JOB_EXPIRED',
@@ -225,6 +227,10 @@ class Queue {
   }
 
   removeJob(id: string, type: JobType): void {
+    for (const job of this.jobs) {
+      if (job.id === id && job.type === type) clearTimeout(job.expiryTimer)
+    }
+
     this.jobs = this.jobs.filter(job => job.id !== id || job.type !== type)
   }
 
@@ -269,12 +275,14 @@ class Queue {
         })
       })
 
+    for (const job of this.jobs) clearTimeout(job.expiryTimer)
     this.jobs = []
   }
 
   setJobToProcessing(id: string, type: JobType): void {
     this.jobs.forEach(job => {
       if (job.id === id && job.type === type) {
+        clearTimeout(job.expiryTimer)
         job.status = JobStatus.PROCESSING
       }
     })
@@ -473,7 +481,7 @@ class Queue {
         return
       }
 
-      this.jobs.push({
+      const job: QueueJob = {
         id,
         type,
         maxAge,
@@ -484,7 +492,14 @@ class Queue {
         successListeners: [successListener],
         failureListeners: [failureListener],
         abortController: new AbortController(),
-      })
+      }
+
+      this.jobs.push(job)
+
+      if (Number.isFinite(maxAge)) {
+        job.expiryTimer = setTimeout(() => this.pruneQueue(), maxAge * 1000 + 1)
+        job.expiryTimer.unref()
+      }
 
       this.executeNextJobIfPossible()
     })

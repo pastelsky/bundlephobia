@@ -300,7 +300,7 @@ describe('installation service store', () => {
       store.directory(store.key('react@19.1.1', {})),
     )
 
-    expect(metadata?.activeUntil).toBe(0)
+    expect(metadata?.activeUntil ?? 0).toBe(0)
   })
 
   it.each(['expired', 'missing metadata'])(
@@ -508,5 +508,110 @@ describe('installation service store', () => {
     ).toHaveProperty(owner.id)
     await store.unsubscribe(owner.id)
     await store.close()
+  })
+  it('keeps a shared install running until its final caller leaves', async () => {
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    const realInstall = api.installPackage.getMockImplementation()!
+    const started = Promise.withResolvers<AbortSignal>()
+    const finish = Promise.withResolvers<void>()
+    api.installPackage.mockImplementation(async (spec, options) => {
+      started.resolve(options.signal)
+      await finish.promise
+
+      return realInstall(spec)
+    })
+    const store = createStore(api, root)
+    const firstCaller = new AbortController()
+    const first = store.subscribe('react@19.1.1', {}, firstCaller.signal)
+    const firstResult = Promise.allSettled([first])
+    const signal = await started.promise
+    const second = store.subscribe('react@19.1.1')
+    firstCaller.abort()
+    expect(signal.aborted).toBe(false)
+    finish.resolve()
+    const owner = await second
+    expect((await firstResult)[0].status).toBe('rejected')
+    expect(api.installPackage).toHaveBeenCalledTimes(1)
+    expect((await store.diagnostics()).subscriptions).toBe(1)
+    await store.unsubscribe(owner.id)
+  })
+
+  it('aborts unneeded work but holds the directory lock until it actually stops', async () => {
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    const realInstall = api.installPackage.getMockImplementation()!
+    const started = Promise.withResolvers<AbortSignal>()
+    const stopped = Promise.withResolvers<void>()
+    api.installPackage.mockImplementationOnce(async (_spec, options) => {
+      started.resolve(options.signal)
+      await stopped.promise
+      options.signal.throwIfAborted()
+
+      return realInstall(_spec)
+    })
+    const store = createStore(api, root)
+    const caller = new AbortController()
+    const first = store.subscribe('react@19.1.1', {}, caller.signal)
+    const result = Promise.allSettled([first])
+    const signal = await started.promise
+    caller.abort()
+    expect(signal.aborted).toBe(true)
+    const next = store.subscribe('react@19.1.1')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(api.installPackage).toHaveBeenCalledTimes(1)
+    stopped.resolve()
+    expect((await result)[0].status).toBe('rejected')
+    const owner = await next
+    expect(api.installPackage).toHaveBeenCalledTimes(2)
+    await store.unsubscribe(owner.id)
+  })
+
+  it('passes one abortable deadline to the underlying installation', async () => {
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    api.installPackage.mockImplementation(
+      (_spec, options) =>
+        new Promise((_resolve, reject) => {
+          options.signal.addEventListener(
+            'abort',
+            () => reject(options.signal.reason),
+            { once: true },
+          )
+        }),
+    )
+    const store = createStore(api, root)
+    await expect(
+      store.subscribe('slow@1.0.0', { installTimeout: 20 }),
+    ).rejects.toMatchObject({ name: 'TimeoutError' })
+  })
+  it('aborts and drains installation work before shutdown completes', async () => {
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+    const started = Promise.withResolvers<AbortSignal>()
+    const cleanup = Promise.withResolvers<void>()
+    api.installPackage.mockImplementation(async (_spec, options) => {
+      started.resolve(options.signal)
+      await cleanup.promise
+      options.signal.throwIfAborted()
+      throw new Error('must abort')
+    })
+    const store = createStore(api, root)
+    const request = store.subscribe('slow@1.0.0')
+    const result = Promise.allSettled([request])
+    const signal = await started.promise
+    let closed = false
+
+    const stopping = store.close().then(() => {
+      closed = true
+    })
+
+    await new Promise(resolve => setImmediate(resolve))
+    expect(signal.aborted).toBe(true)
+    expect(closed).toBe(false)
+    cleanup.resolve()
+    await stopping
+    expect((await result)[0].status).toBe('rejected')
+    await expect(store.subscribe('new@1.0.0')).rejects.toThrow('closing')
   })
 })

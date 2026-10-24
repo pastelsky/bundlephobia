@@ -37,7 +37,7 @@ const installOptionsSchema = z.object({
   limitConcurrency: z.boolean().optional(),
   networkConcurrency: z.number().optional(),
   additionalPackages: z.array(z.string()).default([]),
-  installTimeout: z.number().optional(),
+  installTimeout: z.number().int().positive().max(600_000).optional(),
   debug: z.boolean().optional(),
 })
 
@@ -113,7 +113,10 @@ function sendInstallationError(error: Error, reply: FastifyReply) {
 
   const code = 'code' in error ? error.code : undefined
 
-  const packageNotFound = code === 'E404' || code === 'ETARGET'
+  const packageNotFound =
+    serialized.name === 'PackageNotFoundError' ||
+    code === 'E404' ||
+    code === 'ETARGET'
 
   if (packageNotFound) serialized.name = 'PackageNotFoundError'
 
@@ -187,7 +190,8 @@ if (process.env.ENABLE_DIAGNOSTICS === 'true') {
   fastify.get('/diagnostics', async () => store.diagnostics())
 }
 
-fastify.addHook('onClose', async () => store.close())
+// Stop physical installs before Fastify drains outstanding HTTP handlers.
+fastify.addHook('preClose', async () => store.close())
 
 const port = positiveInteger(process.env.PORT, 7003)
 
