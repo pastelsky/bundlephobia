@@ -102,6 +102,7 @@ cleanup_npm_cache() {
 }
 
 evict_oldest_bun_cache_entries() {
+    local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
     local entry path loop_usage
     local evicted_count=0
     local first_path=""
@@ -109,7 +110,7 @@ evict_oldest_bun_cache_entries() {
     local batch_size=100
     local -a batch=()
 
-    [ -d /tmp/tmp-build/cache/bun ] || return
+    [ -d "$cache_root" ] || return
 
     while IFS= read -r -d '' entry; do
         path="${entry#* }"
@@ -126,7 +127,7 @@ evict_oldest_bun_cache_entries() {
         loop_usage=$(get_loop_usage)
         [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ] || break
     done < <(
-        find /tmp/tmp-build/cache/bun -mindepth 1 -maxdepth 1 -type d \
+        find "$cache_root" -mindepth 1 -maxdepth 1 \( -type d -o -type f \) \
             ! -name '.tmp' -printf '%T@ %p\0' 2>/dev/null | sort -z -n
     )
 
