@@ -149,7 +149,7 @@ class BotRateLimits(unittest.TestCase):
         paths = ['/api/size', '/package/example']
         pools = [
             ('google', ['Googlebot/2.1', 'GoogleOther']),
-            ('chinese_crawlers', ['Bytespider/1', 'TikTokSpider/2',
+            ('bytedance_baidu_petal', ['Bytespider/1', 'TikTokSpider/2',
                                   'Baiduspider/1', 'PetalBot/1']),
             ('search', ['bingbot/2', 'Applebot/1', 'YandexBot/1']),
             ('ai', ['GPTBot/1', 'OAI-SearchBot/1', 'ClaudeBot/1', 'Amazonbot/1']),

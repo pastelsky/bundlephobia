@@ -38,14 +38,14 @@ sudo systemctl reload haproxy
 
 ## Request limits (in evaluation order)
 
-| Order | Owner                      | Policy                                                                                                                                                                                                                         |
-| ----- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1     | HAProxy                    | Security checks and `/stats` authentication.                                                                                                                                                                                   |
-| 2     | HAProxy                    | Active cooldown blocks the responsible family/IP until expiry.                                                                                                                                                                 |
-| 3     | HAProxy                    | 190/min across origin routes per known family, or trusted IP otherwise. Non-bot application traffic additionally allows 120/5m/IP. Stats and telemetry use their own routing and are excluded from this application allowance. |
-| 4     | HAProxy                    | API and package pages: **26/min per request pool** (Google, Chinese crawlers, search, AI, developer tools, SEO), **100/min admitted across all named bots**; unrecognized bots use their trusted IP. Cache hits count too.     |
-| 5     | Server, after cache lookup | Hits return before the build guard. Misses share **10 build admissions/5m/IP** across analysis endpoints and are rejected when HAProxy signals **60 seconds of completed build time/5m/IP** has been spent.                    |
-| 6     | HAProxy                    | Every returned **429** counts toward the responsible family/IP's cooldown: 30/min gives 5m; 120/min gives 15m. Persistent 429s can renew 15m with at most 5m left. Other 4xx do not count.                                     |
+| Order | Owner                      | Policy                                                                                                                                                                                                                              |
+| ----- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | HAProxy                    | Security checks and `/stats` authentication.                                                                                                                                                                                        |
+| 2     | HAProxy                    | Active cooldown blocks the responsible family/IP until expiry.                                                                                                                                                                      |
+| 3     | HAProxy                    | 190/min across origin routes per known family, or trusted IP otherwise. Non-bot application traffic additionally allows 120/5m/IP. Stats and telemetry use their own routing and are excluded from this application allowance.      |
+| 4     | HAProxy                    | API and package pages: **26/min per request pool** (Google, ByteDance / Baidu / Petal, search, AI, developer tools, SEO), **100/min admitted across all named bots**; unrecognized bots use their trusted IP. Cache hits count too. |
+| 5     | Server, after cache lookup | Hits return before the build guard. Misses share **10 build admissions/5m/IP** across analysis endpoints and are rejected when HAProxy signals **60 seconds of completed build time/5m/IP** has been spent.                         |
+| 6     | HAProxy                    | Every returned **429** counts toward the responsible family/IP's cooldown: 30/min gives 5m; 120/min gives 15m. Persistent 429s can renew 15m with at most 5m left. Other 4xx do not count.                                          |
 
 HAProxy owns traffic counters, classification, completed-build-time accounting
 and cooldowns. The server owns cache lookup and one build-admission guard; it has
@@ -60,7 +60,7 @@ accounting does not reserve queued/in-flight work. Proxy rate windows roll; the
 server admission window resets five minutes after its first admitted miss.
 
 Known families come from `automation-groups.map`; other clients use trusted IPs.
-Request pools: Google; Chinese crawlers (ByteDance, Baidu, Petal); search
+Request pools: Google; ByteDance / Baidu / Petal; search
 (Bing, Apple, Yandex); AI (OpenAI, Anthropic, Amazon); developer tools (Shields, Badgen,
 Data-Pipeline-Enricher, Depscope); SEO (Ahrefs, Semrush, Dotbot, Awario).
 Each pool shares 26/min; named bots also share a 100/min admission ceiling.
