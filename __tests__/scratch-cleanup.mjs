@@ -125,7 +125,7 @@ if (process.argv[2] !== '--sandboxed') {
     'bash',
     [
       '-c',
-      'BUN_BIN="$2"; source "$1"; LOG_FILE=/dev/null; log() { :; }; prune_bun_cache',
+      'BUN_BIN="$2"; source "$1"; LOG_FILE=/dev/stderr; log() { :; }; prune_bun_cache',
       'cleanup',
       new URL('../operations/disk-clean.sh', import.meta.url).pathname,
       execFileSync('which', ['bun'], { encoding: 'utf8' }).trim(),
