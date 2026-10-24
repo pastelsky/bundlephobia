@@ -3,33 +3,6 @@ import type { PackageAnalysisRequestState } from '../types'
 
 export const applicationMetrics = new Registry()
 
-type ClientType = 'bot' | 'non_bot' | 'unknown'
-
-// Bound labels at the application boundary; HAProxy supplies the classification.
-const clientFamilies = new Set([
-  'google',
-  'bytedance',
-  'baidu',
-  'openai',
-  'anthropic',
-  'amazon',
-  'shields',
-  'headed_browser',
-  'headless_browser',
-  'http_client',
-  'other',
-  'other_bot',
-  'unknown',
-])
-
-export function getAnalysisClientFamily(value: string): string {
-  return clientFamilies.has(value) ? value : 'unknown'
-}
-
-export function getAnalysisClientType(value: string): ClientType {
-  return value === 'bot' || value === 'non_bot' ? value : 'unknown'
-}
-
 const cacheResponses = new Counter({
   name: 'bundlephobia_analysis_responses_total',
   help: 'Successful origin analysis responses, served from cache or computed.',
@@ -52,7 +25,7 @@ const analysisRequests = new Counter({
 })
 
 interface AnalysisRequest extends PackageAnalysisRequestState {
-  clientType: ClientType
+  clientType: string
   clientFamily: string
   status: number
   probe: boolean
@@ -77,12 +50,12 @@ function recordSuccessfulCacheResponse(request: AnalysisRequest) {
     operation: request.operation,
     cache: cache === 'hit' ? 'hit' : 'miss',
     client_type: request.clientType,
-    client_family: getAnalysisClientFamily(request.clientFamily),
+    client_family: request.clientFamily,
   })
 }
 
-// Use the existing proxy classification. Raw user agents, packages and IPs stay
-// in logs: they would create unbounded metric series and grow retained storage.
+// HAProxy overwrites classification headers; forward its bounded labels.
+// Raw user agents, packages and IPs stay in logs to avoid unbounded series.
 export function recordAnalysisRequest(request: AnalysisRequest) {
   if (request.probe) return
 
@@ -90,7 +63,7 @@ export function recordAnalysisRequest(request: AnalysisRequest) {
     operation: request.operation,
     cache: request.cache ?? 'unknown',
     client_type: request.clientType,
-    client_family: getAnalysisClientFamily(request.clientFamily),
+    client_family: request.clientFamily,
     build_requested: String(request.buildRequested ?? false),
     outcome: requestOutcome(request.status),
   })
@@ -98,11 +71,9 @@ export function recordAnalysisRequest(request: AnalysisRequest) {
 }
 
 for (const operation of ['package-analysis', 'package-export-sizes']) {
-  for (const cache of ['hit', 'miss']) {
-    for (const client_type of ['bot', 'non_bot', 'unknown'])
-      cacheResponses.inc(
-        { operation, cache, client_type, client_family: 'unknown' },
-        0,
-      )
-  }
+  for (const cache of ['hit', 'miss'])
+    cacheResponses.inc(
+      { operation, cache, client_type: 'unknown', client_family: 'unknown' },
+      0,
+    )
 }

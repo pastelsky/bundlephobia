@@ -3,10 +3,6 @@ import now from 'performance-now'
 
 import logger, { withRequestLogContext } from '../infrastructure/logger.service'
 import {
-  getAnalysisClientType,
-  getAnalysisClientFamily,
-} from '../infrastructure/request-metrics'
-import {
   recordRequestComplete,
   recordRequestStart,
 } from '../infrastructure/memory-diagnostics.service'
@@ -112,12 +108,8 @@ export function createRequestLoggerMiddleware(
       {
         requestId: ctx.state.id,
         userAgent: ctx.get('User-Agent').slice(0, 512),
-        clientType: getAnalysisClientType(
-          ctx.get('X-Bundlephobia-Client-Type'),
-        ),
-        clientFamily: getAnalysisClientFamily(
-          ctx.get('X-Bundlephobia-Client-Family'),
-        ),
+        clientType: ctx.get('X-Bundlephobia-Client-Type') || 'unknown',
+        clientFamily: ctx.get('X-Bundlephobia-Client-Family') || 'unknown',
         source:
           ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
             ? 'crawler-page'

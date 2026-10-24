@@ -1,11 +1,7 @@
 import type { Middleware } from 'koa'
 
 import type { AnalysisOperation } from '../analysis/contracts'
-import {
-  getAnalysisClientFamily,
-  getAnalysisClientType,
-  recordAnalysisRequest,
-} from '../infrastructure/request-metrics'
+import { recordAnalysisRequest } from '../infrastructure/request-metrics'
 
 export function createAnalysisContextMiddleware(
   operation: AnalysisOperation,
@@ -22,12 +18,8 @@ export function createAnalysisContextMiddleware(
       // outcomes. Record directly for scraping, independently of log output.
       recordAnalysisRequest({
         ...ctx.state.analysis,
-        clientType: getAnalysisClientType(
-          ctx.get('X-Bundlephobia-Client-Type'),
-        ),
-        clientFamily: getAnalysisClientFamily(
-          ctx.get('X-Bundlephobia-Client-Family'),
-        ),
+        clientType: ctx.get('X-Bundlephobia-Client-Type') || 'unknown',
+        clientFamily: ctx.get('X-Bundlephobia-Client-Family') || 'unknown',
         status,
         probe: Boolean(ctx.query.peek || ctx.query.peep),
       })
