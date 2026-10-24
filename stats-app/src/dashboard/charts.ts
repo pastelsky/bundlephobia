@@ -10,10 +10,10 @@ export interface ChartCategory {
   hideWhenZero?: boolean
 }
 
-// Grouped expressions must declare the label and its presentation together.
+// Grouped queries can use returned labels and automatic colors.
 export type ChartSeries = { expression: string } & (
   | { name: string; color: string; groupBy?: never }
-  | { groupBy: { label: string; categories: ChartCategory[] } }
+  | { groupBy: { label: string; categories?: ChartCategory[] } }
 )
 
 type SeriesFactory = (window: string) => ChartSeries[]
@@ -310,8 +310,26 @@ const buildRequests: ChartDefinition = {
   ],
 }
 
+const buildFailures: ChartDefinition = {
+  id: 'build-failure-reasons',
+  title: 'Build failure reasons',
+  description: 'Failures grouped by error code',
+  unit: 'failures',
+  measurement: 'counter',
+  stacked: true,
+  showShare: true,
+  format: value => numberFormat.format(value),
+  series: window => [
+    {
+      expression: `sum by (code) (increase(bundlephobia_build_failures_total{job="bundlephobia_builds"}[${window}]))`,
+      groupBy: { label: 'code' },
+    },
+  ],
+}
+
 const pipeline = {
   buildRequests,
+  buildFailures,
   queueBacklog: queueChart('waiting'),
   queueRunning: queueChart('running'),
   cacheShare: cacheChart(true),

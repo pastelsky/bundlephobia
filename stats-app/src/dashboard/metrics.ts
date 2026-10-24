@@ -20,6 +20,8 @@ import {
   type ChartRange,
 } from '../lib/api'
 
+const chartColors = ['orange', 'rose', 'sky', 'emerald', 'amber', 'violet']
+
 const frontend = '{job="haproxy",proxy="bundlephobia_http"}'
 
 const responseFrontend = '{job="haproxy",proxy="bundlephobia_http"}'
@@ -80,7 +82,7 @@ export async function loadPanel(
 
   return {
     data: chartTimeline(accumulator, range, end),
-    ...visibleSeries(accumulator, queries),
+    ...visibleSeries(accumulator, queries, results),
     hasData: accumulator.hasData,
     resolution,
   }
@@ -122,14 +124,13 @@ function seriesName(query: ChartSeries, series: MetricSeries) {
   const value = series.metric[query.groupBy.label] ?? 'other'
 
   return (
-    query.groupBy.categories.find(
+    query.groupBy.categories?.find(
       category => (category.value ?? category.name) === value,
     )?.name ?? value
   )
 }
 
-// Grouped queries declare ordering and optional empty-series visibility alongside
-// their expression. The renderer does not need to know which chart is loaded.
+// Explicit categories control ordering and optional empty-series visibility.
 function categoryVisible(
   category: ChartCategory,
   accumulator: ChartAccumulator,
@@ -143,12 +144,25 @@ function categoryVisible(
   )
 }
 
-function visibleSeries(accumulator: ChartAccumulator, queries: ChartSeries[]) {
+function visibleSeries(
+  accumulator: ChartAccumulator,
+  queries: ChartSeries[],
+  results: MetricSeries[][],
+) {
   const categories: string[] = []
   const colors: string[] = []
 
-  for (const query of queries) {
-    for (const category of query.groupBy ? query.groupBy.categories : [query]) {
+  for (const [index, query] of queries.entries()) {
+    const definitions = query.groupBy
+      ? (query.groupBy.categories ??
+        results[index].map((series, index) => ({
+          name: seriesName(query, series),
+          color: chartColors[index % chartColors.length],
+          hideWhenZero: true,
+        })))
+      : [query]
+
+    for (const category of definitions) {
       if (
         !categoryVisible(category, accumulator) ||
         categories.includes(category.name)

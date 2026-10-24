@@ -4,6 +4,7 @@ import { Counter, Histogram, Registry } from 'prom-client'
 
 const outcomeEvent = z.object({
   isSuccessful: z.boolean(),
+  error: z.object({ name: z.string().optional() }).nullish().catch(null),
   duration: z.number().finite().nonnegative().optional(),
 })
 
@@ -49,18 +50,18 @@ export function createOutcomeMetrics(
     if (seconds != null) duration.observe({ operation }, seconds)
   }
 
-  // Library events carry arbitrary details; validate only outcome and duration
-  // before recording bounded metrics. Event names and operation labels come
-  // from static wiring.
+  // Validate completion metadata once; domain observers receive the error
+  // name without raw messages. Event/operation labels come from static wiring.
   function observe(
     queue: typeof eventQueue,
     operationsByEvent: Record<string, string>,
+    onFailure?: (operation: string, errorName?: string) => void,
   ) {
     for (const [event, operation] of Object.entries(operationsByEvent)) {
       queue.on(event, details => {
         const parsed = outcomeEvent.safeParse(details)
 
-        if (parsed.success)
+        if (parsed.success) {
           record(
             operation,
             parsed.data.isSuccessful ? 'success' : 'failure',
@@ -68,6 +69,10 @@ export function createOutcomeMetrics(
               ? undefined
               : parsed.data.duration / 1000,
           )
+
+          if (!parsed.data.isSuccessful)
+            onFailure?.(operation, parsed.data.error?.name)
+        }
       })
     }
   }
