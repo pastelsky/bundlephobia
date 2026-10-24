@@ -9,6 +9,7 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./build-metrics": "./src/build-metrics.contract.ts",
     "./cache": "./src/cache/index.ts",
     "./package": "./src/package.contract.ts",
     "./trends": "./src/trends.contract.ts",

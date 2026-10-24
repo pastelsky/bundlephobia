@@ -1,4 +1,5 @@
 import type { LineChartProps } from '@tremor/react'
+import { BUILD_FAILURE_CODES } from '@bundlephobia/service-contracts/build-metrics'
 import { formatBytes, numberFormat } from '../lib/format'
 
 const frontend = '{job="haproxy",proxy="bundlephobia_http"}'
@@ -310,8 +311,47 @@ const buildRequests: ChartDefinition = {
   ],
 }
 
+const failureColors = [
+  'orange',
+  'rose',
+  'sky',
+  'violet',
+  'amber',
+  'teal',
+  'pink',
+  'indigo',
+  'lime',
+  'cyan',
+  'slate',
+]
+
+const buildFailures: ChartDefinition = {
+  id: 'build-failure-reasons',
+  title: 'Build failure reasons',
+  description: 'Failures grouped by error code',
+  unit: 'failures',
+  measurement: 'counter',
+  stacked: true,
+  showShare: true,
+  format: value => numberFormat.format(value),
+  series: window => [
+    {
+      expression: `sum by (code) (increase(bundlephobia_build_failures_total{job="bundlephobia_builds"}[${window}]))`,
+      groupBy: {
+        label: 'code',
+        categories: BUILD_FAILURE_CODES.map((code, index) => ({
+          name: code,
+          color: failureColors[index % failureColors.length],
+          hideWhenZero: true,
+        })),
+      },
+    },
+  ],
+}
+
 const pipeline = {
   buildRequests,
+  buildFailures,
   queueBacklog: queueChart('waiting'),
   queueRunning: queueChart('running'),
   cacheShare: cacheChart(true),
