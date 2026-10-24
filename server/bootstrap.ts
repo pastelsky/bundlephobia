@@ -20,7 +20,6 @@ import { registerAdminRoutes } from './routes/admin.route'
 import { registerApiRoutes } from './routes/api.route'
 import { registerSystemRoutes } from './routes/system.route'
 import requestLoggerMiddleware from './middlewares/request-logger.middleware'
-import limit from './middlewares/rate-limit.middleware'
 import statsPathMiddleware from './middlewares/stats-path.middleware'
 
 interface ServerEnvironment {
@@ -85,29 +84,6 @@ export async function startServer(): Promise<void> {
   server.use(requestLoggerMiddleware)
   server.use(cacheControl())
   server.use(apiDiscoveryMiddleware)
-
-  if (!dev) {
-    const createRequestLimit = (max: number) =>
-      limit({
-        duration: 1000 * 60 * 5,
-        max,
-        whiteList: ['127.0.0.1', '::1'],
-      })
-
-    const defaultRequestLimit = createRequestLimit(120)
-    const crawlerReadRequestLimit = createRequestLimit(950)
-
-    server.use(async (ctx, nextMiddleware) => {
-      const isCrawlerCacheRead =
-        ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
-
-      const requestLimit = isCrawlerCacheRead
-        ? crawlerReadRequestLimit
-        : defaultRequestLimit
-
-      await requestLimit(ctx, nextMiddleware)
-    })
-  }
 
   server.use(async (ctx, nextMiddleware) => {
     try {
