@@ -56,6 +56,11 @@ export default {
     },
   },
   safelist: [
+    // Tremor builds selected-tab color classes dynamically.
+    {
+      pattern: /^(text|border)-orange-(500|600)$/,
+      variants: ['data-[selected]'],
+    },
     {
       pattern:
         /^(bg|text|border|ring|stroke|fill)-(orange|rose|sky|emerald|stone|slate|amber|violet)-(50|100|200|300|400|500|600|700|800|900|950)$/,

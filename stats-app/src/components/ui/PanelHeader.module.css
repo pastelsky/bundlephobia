@@ -1,0 +1,14 @@
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.unit-label {
+  flex-shrink: 0;
+}
+@media (max-width: 1200px) {
+  .unit-label {
+    display: none;
+  }
+}

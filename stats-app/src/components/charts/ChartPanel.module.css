@@ -1,0 +1,69 @@
+.chart-card {
+  border-color: #e7e9eb;
+  padding: 16px 16px 10px;
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.traffic-chart {
+  height: 205px;
+  margin-top: 24px;
+}
+
+.traffic-chart :global(.recharts-text) {
+  font-size: 10px;
+}
+
+.stacked :global(.recharts-area-curve) {
+  stroke-width: 0;
+}
+
+.traffic-chart :global(.recharts-cartesian-grid-horizontal) line {
+  stroke: #edf0f2;
+  stroke-dasharray: 3 4;
+}
+
+.chart-placeholder {
+  height: 205px;
+  margin-top: 24px;
+  border-radius: 5px;
+}
+
+.panel-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #a4aab0;
+  font-size: 12px;
+  gap: 12px;
+  text-align: center;
+  padding: 20px;
+}
+
+.panel-message span {
+  font-size: 10px;
+}
+
+@media (min-width: 1600px) {
+  .traffic-chart,
+  .chart-placeholder {
+    height: 280px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .chart-card {
+    padding: 18px 14px 10px;
+  }
+}
+
+@media (max-width: 680px) {
+  .chart-card {
+    padding: 19px 16px 10px;
+  }
+  .traffic-chart {
+    margin-top: 18px;
+    height: 240px;
+  }
+}

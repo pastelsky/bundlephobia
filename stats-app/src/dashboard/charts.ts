@@ -1,4 +1,4 @@
-import { formatBytes, numberFormat } from './format'
+import { formatBytes, numberFormat } from '../lib/format'
 
 const frontend = '{job="haproxy",proxy="bundlephobia_http"}'
 

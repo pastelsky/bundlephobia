@@ -1,7 +1,11 @@
-import { queryInstant, stepSeconds, TIME_RANGES } from '../stats-app/src/api'
-import { loadPanel, loadSummary } from '../stats-app/src/metrics'
+import {
+  queryInstant,
+  stepSeconds,
+  TIME_RANGES,
+} from '../stats-app/src/lib/api'
+import { loadPanel, loadSummary } from '../stats-app/src/dashboard/metrics'
 
-import { CHARTS } from '../stats-app/src/charts'
+import { CHARTS } from '../stats-app/src/dashboard/charts'
 
 const end = Date.parse('2026-10-24T06:00:00Z') / 1000
 

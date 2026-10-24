@@ -1,9 +1,12 @@
+import { PanelHeader } from '../ui/PanelHeader'
+import motion from '../../styles/motion.module.css'
+import styles from './ChartPanel.module.css'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { AreaChart, Card } from '@tremor/react'
+import { AreaChart, Button, Card } from '@tremor/react'
 import { Activity, ShieldAlert } from 'lucide-react'
-import { loadPanel } from '../metrics'
-import type { ChartDefinition } from '../charts'
-import type { TimeRange } from '../api'
+import { loadPanel } from '../../dashboard/metrics'
+import type { ChartDefinition } from '../../dashboard/charts'
+import type { TimeRange } from '../../lib/api'
 
 type PanelData = Awaited<ReturnType<typeof loadPanel>>
 
@@ -22,25 +25,28 @@ function ChartContent({ panel, query }: ContentProps) {
   if (query.isPending)
     return (
       <div
-        className="chart-placeholder shimmer"
+        className={styles.chartPlaceholder + ' ' + motion.shimmer}
         aria-label={`Loading ${panel.title}`}
       />
     )
 
   if (query.isError)
     return (
-      <div className="chart-placeholder panel-message" role="alert">
+      <div
+        className={styles.chartPlaceholder + ' ' + styles.panelMessage}
+        role="alert"
+      >
         <ShieldAlert size={20} />
         <p>{query.error.message}</p>
-        <button type="button" onClick={() => void query.refetch()}>
+        <Button size="xs" variant="light" onClick={() => void query.refetch()}>
           Try again
-        </button>
+        </Button>
       </div>
     )
 
   if (!query.data.hasData)
     return (
-      <div className="chart-placeholder panel-message">
+      <div className={styles.chartPlaceholder + ' ' + styles.panelMessage}>
         <Activity size={20} />
         <p>No samples in this time range.</p>
         <span>No history yet, or the service is not being scraped.</span>
@@ -50,7 +56,7 @@ function ChartContent({ panel, query }: ContentProps) {
 
   return (
     <AreaChart
-      className="traffic-chart"
+      className={`${styles.trafficChart} ${panel.stacked ? styles.stacked : ''}`}
       data={query.data.data}
       index="time"
       categories={series.categories}
@@ -77,14 +83,12 @@ export function ChartPanel({ panel, range, live }: PanelProps) {
   })
 
   return (
-    <Card className="chart-card" id={panel.id}>
-      <div className="panel-heading">
-        <div>
-          <h2>{panel.title}</h2>
-          <p>{panel.description}</p>
-        </div>
-        <span className="unit-label">{panel.unit}</span>
-      </div>
+    <Card className={styles.chartCard} id={panel.id}>
+      <PanelHeader
+        title={panel.title}
+        description={panel.description}
+        unit={panel.unit}
+      />
       <ChartContent panel={panel} query={query} />
     </Card>
   )

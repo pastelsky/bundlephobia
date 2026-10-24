@@ -1,26 +1,30 @@
+import { SOURCE_DETAILS, type DashboardSource } from '../dashboard/sources'
+import { Topbar } from '../components/layout/Topbar'
+import styles from './App.module.css'
 import { useState } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
-import { resolvePage, type DashboardSource } from './pages'
-import { TIME_RANGES } from './api'
-import { loadPageSummary, type PageSummary } from './metrics'
-import { Sidebar } from './components/Sidebar'
-import { ChartPanel } from './components/ChartPanel'
+import { resolvePage } from '../dashboard/pages'
+import { TIME_RANGES } from '../lib/api'
+import { loadPageSummary, type PageSummary } from '../dashboard/metrics'
+import { Sidebar } from '../components/layout/Sidebar'
+import { ChartPanel } from '../components/charts/ChartPanel'
 import {
   SummaryCards,
   PipelineCards,
   ResourceCards,
-} from './components/SummaryCards'
-import { ResponseBreakdown, DiskBreakdown } from './components/Breakdowns'
+} from '../components/summaries/SummaryCards'
 import {
-  SOURCE_DETAILS,
-  Topbar,
+  ResponseBreakdown,
+  DiskBreakdown,
+} from '../components/breakdowns/Breakdowns'
+import {
   PageHeader,
   DashboardToolbar,
   PageTabs,
   CollectionNote,
   SummaryError,
-} from './components/DashboardControls'
+} from '../components/controls/DashboardControls'
 
 interface SummarySectionProps {
   source: DashboardSource
@@ -95,11 +99,11 @@ export function App() {
   if (location.pathname === '/') return <Navigate to="/overview" replace />
 
   return (
-    <div className="app-shell">
+    <div className={styles.appShell}>
       <Sidebar />
-      <main className="main-content" id="overview">
+      <main className={styles.mainContent} id="overview">
         <Topbar title={page.heading} />
-        <div className="dashboard-content">
+        <div className={styles.dashboardContent}>
           <PageHeader page={page} query={query} />
           <DashboardToolbar
             range={range}
@@ -122,11 +126,11 @@ export function App() {
             onChange={tab => setParams({ tab })}
           />
           <CollectionNote source={page.source} summary={summary} />
-          <div className="section-label">
+          <div className={styles.sectionLabel}>
             <span>{details.section}</span>
             <span>{details.scope}</span>
           </div>
-          <div className="charts-grid">
+          <div className={styles.chartsGrid}>
             {panels.map(panel => (
               <ChartPanel
                 key={panel.id}
@@ -137,9 +141,9 @@ export function App() {
             ))}
           </div>
           <PageBreakdown summary={summary} showResponses={page.breakdown} />
-          <footer>
+          <footer className={styles.footer}>
             <span>
-              <span className="footer-dot" />
+              <span className={styles.footerDot} />
               {details.footer} · stored in VictoriaMetrics
             </span>
             <span>

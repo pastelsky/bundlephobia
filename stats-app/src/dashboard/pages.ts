@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-export type DashboardSource = 'haproxy' | 'pipeline' | 'resources'
+import type { DashboardSource } from './sources'
 
 export interface DashboardPage {
   id: string

@@ -1,7 +1,13 @@
-import { Card, Metric, Text } from '@tremor/react'
+import motion from '../../styles/motion.module.css'
+import styles from './SummaryCards.module.css'
+import { Card, Icon, Metric, Text } from '@tremor/react'
 import { Activity, ArrowDownLeft, Cable, ShieldAlert } from 'lucide-react'
-import { compactFormat, numberFormat, formatBytes } from '../format'
-import type { SummaryData, ResourceData, loadPipelineSummary } from '../metrics'
+import { compactFormat, numberFormat, formatBytes } from '../../lib/format'
+import type {
+  SummaryData,
+  ResourceData,
+  loadPipelineSummary,
+} from '../../dashboard/metrics'
 
 function responseErrorShare(data?: SummaryData) {
   const total =
@@ -44,7 +50,7 @@ export function SummaryCards({
       format: (value: number) => `${numberFormat.format(value)}/s`,
       detail: 'Average over the last 5 minutes',
       icon: Activity,
-      kind: 'blue',
+      kind: 'sky',
     },
     {
       title: 'Server error share',
@@ -62,24 +68,31 @@ export function SummaryCards({
       icon: Cable,
       kind: 'violet',
     },
-  ]
+  ] as const
 
   return (
-    <div className="summary-grid">
+    <div className={styles.summaryGrid}>
       {cards.map(card => (
-        <Card key={card.title} className="summary-card">
-          <div className="summary-heading">
+        <Card key={card.title} className={styles.summaryCard}>
+          <div className={styles.summaryHeading}>
             <Text>{card.title}</Text>
-            <span className={`stat-icon ${card.kind}`}>
-              <card.icon size={17} strokeWidth={1.7} />
-            </span>
+            <Icon
+              icon={card.icon}
+              size="sm"
+              variant="light"
+              color={card.kind}
+            />
           </div>
           <Metric
-            className={loading ? 'metric-loading shimmer' : 'metric-value'}
+            className={
+              loading
+                ? `${styles.metricLoading} ${motion.shimmer}`
+                : styles.metricValue
+            }
           >
             {card.value == null ? '—' : card.format(card.value)}
           </Metric>
-          <p className="stat-detail">{card.detail}</p>
+          <p className={styles.statDetail}>{card.detail}</p>
         </Card>
       ))}
     </div>
@@ -123,15 +136,20 @@ function ValueCards({
   loading: boolean
 }) {
   return (
-    <div className="summary-grid">
+    <div className={styles.summaryGrid}>
       {cards.map(card => (
         <Card
           key={card.title}
-          className={`summary-card outcome-${card.kind ?? 'neutral'}`}
+          className={styles.summaryCard}
+          data-outcome={card.kind}
         >
           <Text>{card.title}</Text>
           <Metric
-            className={loading ? 'metric-loading shimmer' : 'metric-value'}
+            className={
+              loading
+                ? `${styles.metricLoading} ${motion.shimmer}`
+                : styles.metricValue
+            }
           >
             {card.value == null
               ? '—'
@@ -139,7 +157,7 @@ function ValueCards({
                   card.value,
                 )}
           </Metric>
-          <p className="stat-detail">
+          <p className={styles.statDetail}>
             {card.detail ?? 'In the selected time range'}
           </p>
         </Card>

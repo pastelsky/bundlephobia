@@ -1,14 +1,14 @@
 import type { ChartCategory, ChartDefinition, ChartSeries } from './charts'
 import { cpuUsage, memoryUsed, hostJob } from './charts'
 
-import type { DashboardSource } from './pages'
+import type { DashboardSource } from './sources'
 import {
   finiteValue,
   queryInstant,
   queryRange,
   stepSeconds,
   type TimeRange,
-} from './api'
+} from '../lib/api'
 
 const frontend = '{job="haproxy",proxy="bundlephobia_http"}'
 
