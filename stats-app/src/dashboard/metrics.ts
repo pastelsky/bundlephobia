@@ -154,12 +154,14 @@ function visibleSeries(
 
   for (const [index, query] of queries.entries()) {
     const definitions = query.groupBy
-      ? (query.groupBy.categories ??
-        results[index].map((series, index) => ({
-          name: seriesName(query, series),
-          color: chartColors[index % chartColors.length],
-          hideWhenZero: true,
-        })))
+      ? [
+          ...(query.groupBy.categories ?? []),
+          ...results[index].map((series, index) => ({
+            name: seriesName(query, series),
+            color: chartColors[index % chartColors.length],
+            hideWhenZero: true,
+          })),
+        ]
       : [query]
 
     for (const category of definitions) {

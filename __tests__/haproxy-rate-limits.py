@@ -179,11 +179,30 @@ class BotRateLimits(unittest.TestCase):
                                           paths[i % 2]), 200)
         for _, agents in pools:
             self.assertEqual(self.request(agents[0], 240), 429)
-        # Unrecognized automation uses trusted IPs instead of one catch-all group.
-        for ip in ['198.51.100.240', '198.51.100.241']:
+        self.assertEqual(self.request('NeverSeenBot/1', 241), 429)
+
+    def test_unmapped_crawlers_share_limits_and_cooldowns_across_ips(self):
+        families = [
+            ('YisouSpider', 'yisouspider/2'),
+            ('MochiImageCrawler/0.1', 'MochiImageCrawler/0.2'),
+            ('Mozilla/5.0 (compatible; ExaSearchBot/1.0; +https://crawler.exa.ai/)',
+             'Mozilla/5.0 Chrome/149.0 (compatible; ExaSearchBot/2.0)'),
+        ]
+        for original, updated in families:
+            for table in ['client_group_usage', 'automated_client_usage', 'named_bot_usage']:
+                self.runtime(f'clear table {table}')
             for i in range(26):
-                self.assertEqual(self.request('SomeCrawler/1', ip, paths[i % 2]), 200)
-            self.assertEqual(self.request('SomeCrawler/2', ip), 429)
+                self.assertEqual(self.request(original, i), 200)
+            self.assertEqual(self.request(updated, 240), 429)
+            for i in range(30):
+                self.assertEqual(self.request(updated, i), 429)
+            self.assertTrue(295 <= int(self.retry_after) <= 300)
+            self.runtime('clear table automated_client_usage')
+            self.assertEqual(self.request(original, 241, '/asset.js'), 429)
+            self.assertTrue(295 <= int(self.retry_after) <= 300)
+            self.assertEqual(self.request('UnrelatedBot/1', 242), 200)
+            self.assertEqual(self.request('Googlebot/2.1', 243), 200)
+            self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0', 244), 200)
 
 
 if __name__ == '__main__':

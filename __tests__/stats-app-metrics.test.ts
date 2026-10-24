@@ -65,6 +65,32 @@ describe('history from the VictoriaMetrics API', () => {
     expect(chart.data.every(row => row.Requests === null)).toBe(true)
   })
 
+  it('shows newly identified bot families alongside the named dashboard categories', async () => {
+    jest.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+      Response.json({
+        status: 'success',
+        data: {
+          resultType: 'matrix',
+          result: ['google', 'crawler:yisouspider', 'bing'].map(
+            client_family => ({
+              metric: { client_family },
+              values: [[end, '4']],
+            }),
+          ),
+        },
+      }),
+    )
+
+    const chart = await loadPanel(
+      CHARTS.buildRequests,
+      TIME_RANGES[0],
+      new AbortController().signal,
+    )
+
+    expect(chart.categories).toEqual(['Google', 'crawler:yisouspider', 'bing'])
+    expect(chart.data.at(-1)?.['crawler:yisouspider']).toBe(4)
+  })
+
   it('bounds long-range payloads and aggregates each complete chart interval', async () => {
     serveMatrix([[end, '4']])
     const signal = new AbortController().signal
