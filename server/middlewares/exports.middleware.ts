@@ -19,6 +19,9 @@ const exportsMiddleware: Middleware = async ctx => {
 
   const buildStart = now()
 
+  ctx.state.analysis.cache = 'bypass'
+  ctx.state.analysis.buildRequested = true
+
   const result = await packageAnalysisGateway.analyzePackageExports(
     ctx.state.resolved,
     {
@@ -52,8 +55,7 @@ const exportsMiddleware: Middleware = async ctx => {
       result,
       requestId: ctx.state.id,
       packageString,
-      language: ctx.state.analysis.language,
-      operation: ctx.state.analysis.operation,
+      ...ctx.state.analysis,
       time,
     },
     `BUILD EXPORTS: ${packageString} built in ${time.toFixed()}s`,

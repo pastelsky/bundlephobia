@@ -5,6 +5,7 @@ const frontend = '{job="haproxy",proxy="bundlephobia_http"}'
 
 export interface ChartCategory {
   name: string
+  value?: string
   color: string
   hideWhenZero?: boolean
 }
@@ -28,6 +29,9 @@ export interface ChartView {
   id: string
   title: string
   series: SeriesFactory
+  presentation?: Partial<
+    Pick<ChartDefinition, 'unit' | 'format' | 'chart' | 'showShare'>
+  >
 }
 
 export interface ChartDefinition {
@@ -237,7 +241,77 @@ function queueChart(state: 'waiting' | 'running'): ChartDefinition {
   }
 }
 
+const buildRequestMetric =
+  'bundlephobia_analysis_requests_total{job="bundlephobia_application",build_requested="true"}'
+
+function buildRequestSeries(percentage: boolean): SeriesFactory {
+  return window => {
+    const count = `sum by (client_family) (increase(${buildRequestMetric}[${window}]))`
+
+    return [
+      {
+        expression: percentage
+          ? `100 * (${count}) / ignoring(client_family) group_left sum(${count})`
+          : count,
+        groupBy: {
+          label: 'client_family',
+          categories: [
+            { value: 'google', name: 'Google', color: 'orange' },
+            { value: 'bytedance', name: 'ByteDance', color: 'sky' },
+            { value: 'baidu', name: 'Baidu', color: 'emerald' },
+            { value: 'openai', name: 'OpenAI', color: 'violet' },
+            { value: 'anthropic', name: 'Anthropic', color: 'rose' },
+            { value: 'amazon', name: 'Amazon', color: 'amber' },
+            { value: 'shields', name: 'Shields', color: 'teal' },
+            {
+              value: 'headed_browser',
+              name: 'Headed browsers',
+              color: 'indigo',
+            },
+            {
+              value: 'headless_browser',
+              name: 'Headless browsers',
+              color: 'pink',
+            },
+            { value: 'http_client', name: 'HTTP clients', color: 'lime' },
+            { value: 'other_bot', name: 'Other bots', color: 'slate' },
+            { value: 'other', name: 'Other', color: 'stone' },
+            { value: 'unknown', name: 'Unknown', color: 'zinc' },
+          ].map(category => ({ ...category, hideWhenZero: true })),
+        },
+      },
+    ]
+  }
+}
+
+const buildRequests: ChartDefinition = {
+  id: 'build-requests-by-client',
+  title: 'Build requests by client',
+  description: 'Uncached analysis requests · grouped by client family',
+  unit: 'requests',
+  measurement: 'counter',
+  stacked: true,
+  showShare: true,
+  format: value => numberFormat.format(value),
+  series: buildRequestSeries(false),
+  views: [
+    { id: 'counts', title: 'Requests', series: buildRequestSeries(false) },
+    {
+      id: 'share',
+      title: 'Percentage',
+      presentation: {
+        unit: '%',
+        format: value => `${numberFormat.format(value)}%`,
+        chart: { maxValue: 100 },
+        showShare: false,
+      },
+      series: buildRequestSeries(true),
+    },
+  ],
+}
+
 const pipeline = {
+  buildRequests,
   queueBacklog: queueChart('waiting'),
   queueRunning: queueChart('running'),
   cacheShare: cacheChart(true),

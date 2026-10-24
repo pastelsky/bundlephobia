@@ -32,12 +32,19 @@ async function serveBuiltRelease(
   ctx.cacheControl = { private: true, noStore: true }
 
   if (cacheResult.status === 'hit') {
+    ctx.state.analysis.cache = 'hit'
+    logger.info(
+      'CACHE',
+      { ...ctx.state.analysis, name, version: cacheResult.value.version },
+      `CACHE HIT: ${name}@${cacheResult.value.version} (latest built)`,
+    )
     ctx.status = 200
     ctx.body = cacheResult.value
 
     return true
   }
 
+  ctx.state.analysis.cache = 'unavailable'
   ctx.status = 503
   ctx.body = {
     error: {

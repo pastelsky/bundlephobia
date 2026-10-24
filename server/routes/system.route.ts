@@ -6,7 +6,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { UrlWithParsedQuery } from 'node:url'
 
 import config from '../config'
-import { applicationMetrics } from '../infrastructure/request-metrics'
+import { applicationMetrics } from '../infrastructure/application-metrics'
 import {
   buildApiCatalog,
   CATALOG_CONTENT_TYPE,
