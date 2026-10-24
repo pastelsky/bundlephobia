@@ -3,10 +3,10 @@
 HAProxy authenticates `/stats` and proxies it directly to VictoriaMetrics. PM2
 manages one VictoriaMetrics Go binary; no Node stats service or system service is
 added. It scrapes every minute and retains 15 days. Data survives PM2 restarts,
-but collection pauses while VictoriaMetrics or the host is down. The scrape
-stores only metrics exposed by HAProxy's Prometheus endpoint. The
-measured process RSS is about 40 MiB; the 256 MiB setting limits caches, not
-total process memory.
+but collection pauses while VictoriaMetrics or the host is down. Host metrics
+come from the optional Go [node_exporter](../node-exporter/README.md);
+application processes expose only small outcome counters. The measured VictoriaMetrics RSS was about 40 MiB;
+its 32 MiB cache allowance is not a total process memory limit.
 
 VictoriaMetrics compresses time-series samples itself. Its disk use still
 depends on scrape volume, series churn, and index data. Retention is a time

@@ -1,5 +1,13 @@
 import type { ChartCategory, ChartDefinition, ChartSeries } from './charts'
-import { cpuUsage, memoryUsed, hostJob } from './charts'
+import {
+  cpuUsage,
+  memoryUsed,
+  memoryTotal,
+  hostCores,
+  hostLoad,
+  hostDisks,
+  hostHealth,
+} from './charts'
 
 import type { DashboardSource } from './sources'
 import {
@@ -243,12 +251,12 @@ export async function loadResourceSummary(signal: AbortSignal) {
   const [cpu, cores, load, used, total, disks, health] = await Promise.all(
     [
       cpuUsage('5m'),
-      `bundlephobia_host_cpu_cores{${hostJob}}`,
-      `bundlephobia_host_load{${hostJob},period="1m"}`,
+      hostCores,
+      hostLoad('1m'),
       memoryUsed,
-      `bundlephobia_host_memory_bytes{${hostJob},kind="total"}`,
-      `bundlephobia_host_disk_bytes{${hostJob}}`,
-      `min(bundlephobia_host_collection_success{${hostJob}})`,
+      memoryTotal,
+      hostDisks,
+      hostHealth,
     ].map(expression => queryInstant(expression, signal)),
   )
 

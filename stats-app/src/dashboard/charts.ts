@@ -159,31 +159,104 @@ const pipeline = {
   }),
 }
 
-export const hostJob = 'job="bundlephobia_installations"'
+const hostJob = 'job="bundlephobia_host"'
+
+const legacyHostJob = 'job="bundlephobia_installations"'
+
+// Prefer standard exporter samples while preserving history from the preview's
+// old sampler. Apply fallback after rates: CPU ticks and seconds cannot mix.
+const hostHistory = (current: string, previous: string) =>
+  `(${current}) or on() (${previous})`
 
 export const cpuUsage = (window: string) =>
-  `100 * (1 - sum(rate(bundlephobia_host_cpu_ticks_total{${hostJob},mode=~"idle|iowait"}[${window}])) / sum(rate(bundlephobia_host_cpu_ticks_total{${hostJob}}[${window}])))`
+  hostHistory(
+    `100 * (1 - sum(rate(node_cpu_seconds_total{${hostJob},mode=~"idle|iowait"}[${window}])) / sum(rate(node_cpu_seconds_total{${hostJob}}[${window}])))`,
+    `100 * (1 - sum(rate(bundlephobia_host_cpu_ticks_total{${legacyHostJob},mode=~"idle|iowait"}[${window}])) / sum(rate(bundlephobia_host_cpu_ticks_total{${legacyHostJob}}[${window}])))`,
+  )
 
-export const memoryUsed = `bundlephobia_host_memory_bytes{${hostJob},kind="total"} - ignoring(kind) bundlephobia_host_memory_bytes{${hostJob},kind="available"}`
+export const hostCores = hostHistory(
+  `count(node_cpu_seconds_total{${hostJob},mode="idle"})`,
+  `bundlephobia_host_cpu_cores{${legacyHostJob}}`,
+)
+
+export const hostLoad = (period: string) =>
+  hostHistory(
+    `sum(node_load${period.replace('m', '')}{${hostJob}})`,
+    `bundlephobia_host_load{${legacyHostJob},period="${period}"}`,
+  )
+
+export const hostMemory = (field: string, legacyKind: string) =>
+  hostHistory(
+    `sum(node_memory_${field}_bytes{${hostJob}})`,
+    `sum(bundlephobia_host_memory_bytes{${legacyHostJob},kind="${legacyKind}"})`,
+  )
+
+export const memoryTotal = hostMemory('MemTotal', 'total')
+
+export const memoryUsed = `(${memoryTotal}) - (${hostMemory('MemAvailable', 'available')})`
+
+const swapTotal = hostMemory('SwapTotal', 'swap_total')
+
+const swapUsed = `(${swapTotal}) - (${hostMemory('SwapFree', 'swap_free')})`
+
+const mounts = [
+  { id: 'root', title: 'Main disk', path: '/' },
+  { id: 'builds', title: 'Builds', path: '/tmp/tmp-build' },
+  {
+    id: 'metrics',
+    title: 'Metrics',
+    path: '/var/lib/bundlephobia-victoriametrics',
+  },
+] as const
+
+const diskSeries = [
+  { kind: 'used', field: 'size', name: 'Used', color: 'orange' },
+  { kind: 'total', field: 'size', name: 'Capacity', color: 'slate' },
+  { kind: 'available', field: 'avail', name: 'Available', color: 'emerald' },
+] as const
+
+function hostDisk(
+  mount: (typeof mounts)[number],
+  series: (typeof diskSeries)[number],
+) {
+  const selector = `{${hostJob},mountpoint="${mount.path}"}`
+  const value = `sum(node_filesystem_${series.field}_bytes${selector})`
+
+  const current =
+    series.kind === 'used'
+      ? `${value} - sum(node_filesystem_free_bytes${selector})`
+      : value
+
+  return hostHistory(
+    current,
+    `bundlephobia_host_disk_bytes{${legacyHostJob},mount="${mount.id}",kind="${series.kind}"}`,
+  )
+}
+
+export const hostDisks = mounts
+  .flatMap(mount =>
+    diskSeries.map(
+      series =>
+        `label_set((${hostDisk(mount, series)}), "mount", "${mount.id}", "kind", "${series.kind}")`,
+    ),
+  )
+  .join(' or ')
+
+export const hostHealth = hostHistory(
+  `min(up{${hostJob}}) * (min(node_scrape_collector_success{${hostJob}}) or on() vector(0))`,
+  `min(bundlephobia_host_collection_success{${legacyHostJob}})`,
+)
 
 // Keep capacity as a sampled series: a resized filesystem must not rewrite
 // the capacity shown for older points. Mounts use separate scales.
-const diskViews: ChartView[] = [
-  ['root', 'Main disk'],
-  ['builds', 'Builds'],
-  ['metrics', 'Metrics'],
-].map(([id, title]) => ({
-  id,
-  title,
+const diskViews: ChartView[] = mounts.map(mount => ({
+  id: mount.id,
+  title: mount.title,
   series: () =>
-    [
-      ['used', 'Used', 'orange'],
-      ['total', 'Capacity', 'slate'],
-      ['available', 'Available', 'emerald'],
-    ].map(([kind, name, color]) => ({
-      expression: `bundlephobia_host_disk_bytes{${hostJob},mount="${id}",kind="${kind}"}`,
-      name,
-      color,
+    diskSeries.map(series => ({
+      expression: hostDisk(mount, series),
+      name: series.name,
+      color: series.color,
     })),
 }))
 
@@ -213,11 +286,11 @@ const resources = {
         ['15m', 'violet'],
       ].map(([period, color]) => ({
         color,
-        expression: `bundlephobia_host_load{${hostJob},period="${period}"}`,
+        expression: hostLoad(period),
         name: period,
       })),
       {
-        expression: `bundlephobia_host_cpu_cores{${hostJob}}`,
+        expression: hostCores,
         name: 'Cores',
         color: 'slate',
       },
@@ -234,7 +307,7 @@ const resources = {
     series: () => [
       { expression: memoryUsed, name: 'Used', color: 'violet' },
       {
-        expression: `bundlephobia_host_memory_bytes{${hostJob},kind="total"}`,
+        expression: memoryTotal,
         name: 'Total',
         color: 'slate',
       },
@@ -261,7 +334,10 @@ const resources = {
     format: formatBytes,
     series: window =>
       ['receive', 'transmit'].map(direction => ({
-        expression: `sum(increase(bundlephobia_host_network_bytes_total{${hostJob},direction="${direction}"}[${window}]))`,
+        expression: hostHistory(
+          `sum(increase(node_network_${direction}_bytes_total{${hostJob}}[${window}]))`,
+          `sum(increase(bundlephobia_host_network_bytes_total{${legacyHostJob},direction="${direction}"}[${window}]))`,
+        ),
         name: direction === 'receive' ? 'Received' : 'Sent',
         color: direction === 'receive' ? 'sky' : 'orange',
       })),
@@ -280,12 +356,12 @@ const resources = {
     format: formatBytes,
     series: () => [
       {
-        expression: `bundlephobia_host_memory_bytes{${hostJob},kind="swap_total"} - ignoring(kind) bundlephobia_host_memory_bytes{${hostJob},kind="swap_free"}`,
+        expression: swapUsed,
         name: 'Used',
         color: 'rose',
       },
       {
-        expression: `bundlephobia_host_memory_bytes{${hostJob},kind="swap_total"}`,
+        expression: swapTotal,
         name: 'Total',
         color: 'slate',
       },
