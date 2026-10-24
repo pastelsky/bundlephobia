@@ -95,7 +95,7 @@ export const PAGES: DashboardPage[] = [
     id: 'pipeline',
     title: 'Builds & installs',
     heading: 'Builds & installations',
-    description: 'Cache coverage, outcomes, and processing time.',
+    description: 'Cache coverage, queues, outcomes, and processing time.',
     icon: Hammer,
     source: 'pipeline',
     panels: [
@@ -105,12 +105,19 @@ export const PAGES: DashboardPage[] = [
       CHARTS.installs,
       CHARTS.buildDuration,
       CHARTS.installDuration,
+      CHARTS.queueBacklog,
+      CHARTS.queueRunning,
     ],
     breakdown: false,
     tabs: [
       {
         id: 'all',
         title: 'All activity',
+      },
+      {
+        id: 'queues',
+        title: 'Queues',
+        panels: [CHARTS.queueBacklog, CHARTS.queueRunning],
       },
       {
         id: 'cache',

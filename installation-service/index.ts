@@ -16,6 +16,7 @@ import {
 } from './resolveRegistryPackageSpec.ts'
 import serializeError from '../build-service/serializeError.js'
 import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
+import { registerQueueMetrics } from '../server/infrastructure/queue-metrics.mts'
 
 const outcomes = createOutcomeMetrics(
   'bundlephobia_installs_total',
@@ -63,6 +64,14 @@ async function installPackageWithVersion(
   }
 }
 
+const installQueue = createInstallQueue(
+  positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
+)
+
+registerQueueMetrics(outcomes.registry, 'installations', () =>
+  installQueue.diagnostics(),
+)
+
 const store = new InstallationStore(
   {
     installPackage: installPackageWithVersion,
@@ -74,9 +83,7 @@ const store = new InstallationStore(
     // once so a Bun failure followed by npm success is one successful install.
     onInstallComplete: (outcome, seconds) =>
       outcomes.record('install', outcome, seconds),
-    queue: createInstallQueue(
-      positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
-    ),
+    queue: installQueue,
     rootPath:
       process.env.INSTALLATION_ROOT_PATH || '/tmp/tmp-build/installations',
     retentionMs: positiveInteger(

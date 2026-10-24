@@ -211,7 +211,35 @@ function durationChart(
   }
 }
 
+function queueChart(state: 'waiting' | 'running'): ChartDefinition {
+  return {
+    id: `queue-${state}`,
+    title: state === 'waiting' ? 'Queue backlog' : 'Work in progress',
+    description:
+      state === 'waiting'
+        ? 'Jobs waiting for a worker'
+        : 'Jobs currently running',
+    unit: 'jobs',
+    chart: { type: 'line', allowDecimals: false },
+    format: value => numberFormat.format(value),
+    series: () => [
+      {
+        expression: `sum(bundlephobia_queue_jobs{job="bundlephobia_application",queue="analysis",state="${state}"})`,
+        name: 'Analysis',
+        color: 'orange',
+      },
+      {
+        expression: `sum(bundlephobia_queue_jobs{job="bundlephobia_installations",queue="installations",state="${state}"})`,
+        name: 'Installations',
+        color: 'violet',
+      },
+    ],
+  }
+}
+
 const pipeline = {
+  queueBacklog: queueChart('waiting'),
+  queueRunning: queueChart('running'),
   cacheShare: cacheChart(true),
   cacheResponses: cacheChart(false),
   builds: outcomeChart('build-outcomes', 'Build outcomes', {
