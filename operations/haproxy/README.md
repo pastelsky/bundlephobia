@@ -63,8 +63,8 @@ Known families come from `automation-groups.map`. Unmapped crawlers share their
 bot/spider/crawler name across IPs and versions; other clients use trusted IPs.
 
 Request pools: Google; aggressive crawlers (ByteDance, Baidu, Petal); search
-(Bing, Apple, Yandex); AI (OpenAI, Anthropic, Amazon); developer tools (Shields, Badgen,
-Data-Pipeline-Enricher, Depscope); SEO (Ahrefs, Semrush, Dotbot, Awario).
+(Bing, Apple, Yandex); AI (OpenAI, Anthropic, Amazon, Lightpanda); developer tools
+(Shields, Badgen, Data-Pipeline-Enricher, Depscope); SEO (Ahrefs, Semrush, Dotbot, Awario).
 Each pool or additional crawler family shares 26/min; identified bots also share
 a 100/min admission ceiling.
 The overall counter advances after pool limits and cooldowns pass, so rejected

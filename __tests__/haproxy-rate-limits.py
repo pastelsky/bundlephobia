@@ -110,6 +110,7 @@ class BotRateLimits(unittest.TestCase):
     def test_cooldown_escalates_and_expires_for_bots_and_ordinary_clients(self):
         cases = [(['Bytespider/1', 'TikTokSpider/2'], True, 'bytedance'),
                  (['Googlebot/2.1', 'GoogleOther'], True, 'google'),
+                 (['Lightpanda/1.0', 'LIGHTPANDA/2.0'], True, 'lightpanda'),
                  (['Mozilla/5.0 Chrome/156.0', 'Mozilla/5.0 Firefox/140.0'],
                   False, '198.51.100.201'),
                  (['Mozilla/5.0 Chrome/156.0', 'Mozilla/5.0 Firefox/140.0'],
@@ -152,7 +153,7 @@ class BotRateLimits(unittest.TestCase):
             ('aggressive', ['Bytespider/1', 'TikTokSpider/2',
                                   'Baiduspider/1', 'PetalBot/1']),
             ('search', ['bingbot/2', 'Applebot/1', 'YandexBot/1']),
-            ('ai', ['GPTBot/1', 'OAI-SearchBot/1', 'ClaudeBot/1', 'Amazonbot/1']),
+            ('ai', ['GPTBot/1', 'OAI-SearchBot/1', 'ClaudeBot/1', 'Amazonbot/1', 'Lightpanda/1']),
             ('developer_tools', ['Shields.io/1', 'Badgen/1',
                                  'Data-Pipeline-Enricher/1', 'Depscope/1']),
             ('seo', ['Ahrefs/1', 'Semrush/1', 'Dotbot/1', 'AwarioBot/1']),
