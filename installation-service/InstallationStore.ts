@@ -36,6 +36,7 @@ export interface InstallOptions {
   networkConcurrency?: number
   debug?: boolean
   isLocal?: boolean
+  signal?: AbortSignal
 }
 
 export interface InstallationApi {
@@ -62,9 +63,22 @@ class InstallationStore {
     outcome: 'success' | 'failure',
     durationSeconds: number,
   ) => void
+  private closing = false
   private sweepTimer?: NodeJS.Timeout
   private sweepInProgress?: Promise<void>
   private readonly keyLocks = new Map<string, Promise<unknown>>()
+  private readonly pending = new Map<
+    string,
+    {
+      controller: AbortController
+      signal: AbortSignal
+      callers: Set<symbol>
+    }
+  >()
+  private readonly failures = new Map<
+    string,
+    { error: Error; expires: number }
+  >()
 
   constructor(
     installationApi: InstallationApi,
@@ -189,6 +203,8 @@ class InstallationStore {
     }
 
     try {
+      options.signal?.throwIfAborted()
+
       const installation = {
         ...installed,
         installPath: directory,
@@ -213,18 +229,101 @@ class InstallationStore {
     }
   }
 
+  private installationInterest(directory: string, options: InstallOptions) {
+    let pending = this.pending.get(directory)
+
+    if (!pending || pending.signal.aborted) {
+      const controller = new AbortController()
+      pending = {
+        controller,
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(options.installTimeout ?? 60_000),
+        ]),
+        callers: new Set(),
+      }
+      this.pending.set(directory, pending)
+    }
+
+    const caller = Symbol()
+    pending.callers.add(caller)
+    const shared = pending
+
+    const leave = () => {
+      shared.callers.delete(caller)
+
+      if (shared.callers.size === 0) {
+        shared.controller.abort()
+
+        if (this.pending.get(directory) === shared)
+          this.pending.delete(directory)
+      }
+    }
+
+    return { sharedSignal: shared.signal, leave }
+  }
+
+  private retainFailure(key: string, error: Error) {
+    this.failures.delete(key)
+
+    const compact = Object.assign(
+      new Error('Installation recently failed; retry in one minute'),
+      {
+        name: error.name,
+        toJSON() {
+          return {
+            name: this.name,
+            originalError: 'Installation recently failed; retry in one minute',
+            extra: { retryable: true },
+          }
+        },
+      },
+    )
+
+    this.failures.set(key, {
+      error: compact,
+      expires: Date.now() + 60_000,
+    })
+
+    if (this.failures.size > 2_000) {
+      this.failures.delete(this.failures.keys().next().value!)
+    }
+  }
+
+  private checkFailure(key: string, cached: Metadata | undefined) {
+    const failure = this.failures.get(key)
+
+    if (cached?.key !== key && failure && failure.expires > Date.now()) {
+      throw failure.error
+    }
+
+    this.failures.delete(key)
+  }
+
   async subscribe(
     exactPackageString: string,
     options: InstallOptions = {},
     signal?: AbortSignal,
   ) {
+    if (this.closing) throw new Error('Installation service is closing')
     const key = this.key(exactPackageString, options)
 
     const directory = this.directory(key)
 
+    signal?.throwIfAborted()
+
+    const { sharedSignal, leave } = this.installationInterest(
+      directory,
+      options,
+    )
+
+    signal?.addEventListener('abort', leave, { once: true })
+
     const subscription = await this.withDirectoryLock(directory, async () => {
       signal?.throwIfAborted()
       const cached = await this.read(directory)
+
+      this.checkFailure(key, cached)
 
       const installation =
         (cached?.key === key ? cached.installation : undefined) ??
@@ -237,11 +336,10 @@ class InstallationStore {
           // Count actual installs once, after publishing their metadata. Cache
           // hits and subscriptions sharing an installation do not count again.
           try {
-            const installed = await this.install(
-              key,
-              exactPackageString,
-              options,
-            )
+            const installed = await this.install(key, exactPackageString, {
+              ...options,
+              signal: sharedSignal,
+            })
 
             this.onInstallComplete(
               'success',
@@ -250,6 +348,12 @@ class InstallationStore {
 
             return installed
           } catch (error) {
+            if (!sharedSignal.aborted && error instanceof Error) {
+              // Keep physical failures even if the original HTTP caller is gone.
+              // Bound both retention and cardinality; cancellations are not failures.
+              this.retainFailure(key, error)
+            }
+
             this.onInstallComplete(
               'failure',
               (performance.now() - started) / 1000,
@@ -286,6 +390,9 @@ class InstallationStore {
       }
 
       return { id, installation }
+    }).finally(() => {
+      signal?.removeEventListener('abort', leave)
+      leave()
     })
 
     if (signal) {
@@ -363,6 +470,8 @@ class InstallationStore {
 
     // Recursive deletion can allocate heavily; process one workspace at a time.
     for (const entry of directories) {
+      if (this.closing) break
+
       if (!entry.isDirectory()) continue
 
       const directory = path.join(this.rootPath, entry.name)
@@ -436,7 +545,14 @@ class InstallationStore {
   }
 
   async close(): Promise<void> {
+    this.closing = true
     clearInterval(this.sweepTimer)
+
+    for (const pending of this.pending.values()) pending.controller.abort()
+    await Promise.allSettled([
+      ...this.keyLocks.values(),
+      ...(this.sweepInProgress ? [this.sweepInProgress] : []),
+    ])
   }
 }
 
