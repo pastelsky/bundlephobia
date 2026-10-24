@@ -136,6 +136,9 @@ main() {
     fi
 }
 
+# Deployments can hold this same lock while restarting services.
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    exec 9>/run/lock/bundlephobia-maintenance.lock
+    flock -n 9 || exit 0
     main
 fi

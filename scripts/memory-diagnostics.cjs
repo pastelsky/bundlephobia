@@ -1,5 +1,7 @@
 const fs = require('fs')
 
+const { removePathSync } = require('./cleanup.mts')
+
 const path = require('path')
 
 const v8 = require('v8')
@@ -228,7 +230,7 @@ function createMemoryDiagnostics(options) {
   }
 
   function releaseLock() {
-    fsImpl.rmSync(lockDirectory, { recursive: true, force: true })
+    removePathSync(lockDirectory, fsImpl)
   }
 
   function acquireLock() {
@@ -254,7 +256,7 @@ function createMemoryDiagnostics(options) {
           return false
         }
 
-        fsImpl.rmSync(lockDirectory, { recursive: true, force: true })
+        removePathSync(lockDirectory, fsImpl)
         fsImpl.mkdirSync(lockDirectory)
       }
     }
@@ -267,7 +269,7 @@ function createMemoryDiagnostics(options) {
   function removeIncompleteCaptures() {
     for (const filename of fsImpl.readdirSync(serviceDirectory)) {
       if (filename.startsWith('.latest-')) {
-        fsImpl.rmSync(path.join(serviceDirectory, filename), { force: true })
+        removePathSync(path.join(serviceDirectory, filename), fsImpl)
       }
     }
   }
@@ -410,7 +412,7 @@ function createMemoryDiagnostics(options) {
         temporaryTimeline,
       ]) {
         try {
-          fsImpl.rmSync(filename, { force: true })
+          removePathSync(filename, fsImpl)
         } catch {}
       }
 

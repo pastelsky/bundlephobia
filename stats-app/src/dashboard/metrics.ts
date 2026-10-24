@@ -100,9 +100,7 @@ function appendSeries(
   query: ChartSeries,
   series: MetricSeries,
 ) {
-  const name = query.groupBy
-    ? (series.metric[query.groupBy.label] ?? 'other')
-    : query.name
+  const name = seriesName(query, series)
 
   if (!accumulator.categories.includes(name)) accumulator.categories.push(name)
 
@@ -116,6 +114,18 @@ function appendSeries(
     row[name] = numeric
     accumulator.rows.set(timestamp, row)
   }
+}
+
+function seriesName(query: ChartSeries, series: MetricSeries) {
+  if (!query.groupBy) return query.name
+
+  const value = series.metric[query.groupBy.label] ?? 'other'
+
+  return (
+    query.groupBy.categories.find(
+      category => (category.value ?? category.name) === value,
+    )?.name ?? value
+  )
 }
 
 // Grouped queries declare ordering and optional empty-series visibility alongside

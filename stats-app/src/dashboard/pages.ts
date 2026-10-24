@@ -102,6 +102,7 @@ export const PAGES: DashboardPage[] = [
     panels: [
       CHARTS.cacheShare,
       CHARTS.cacheResponses,
+      CHARTS.buildRequests,
       CHARTS.builds,
       CHARTS.installs,
       CHARTS.buildDuration,
@@ -128,7 +129,7 @@ export const PAGES: DashboardPage[] = [
       {
         id: 'builds',
         title: 'Builds',
-        panels: [CHARTS.builds, CHARTS.buildDuration],
+        panels: [CHARTS.buildRequests, CHARTS.builds, CHARTS.buildDuration],
       },
       {
         id: 'installs',

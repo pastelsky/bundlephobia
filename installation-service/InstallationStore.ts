@@ -1,3 +1,4 @@
+import { removePaths } from '../scripts/cleanup.mts'
 import { createHash, randomUUID } from 'node:crypto'
 
 import fs from 'node:fs/promises'
@@ -215,7 +216,7 @@ class InstallationStore {
         { key, installation, lastUsedAt: now, activeUntil: now + this.leaseMs },
         installed.installPath,
       )
-      await fs.rm(directory, { recursive: true, force: true })
+      await removePaths([directory])
       await fs.rename(installed.installPath, directory)
 
       return installation
