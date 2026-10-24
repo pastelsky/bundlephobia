@@ -433,4 +433,80 @@ describe('installation service store', () => {
     expect(peakDeletions).toBe(1)
     expect(await fs.readdir(root)).toEqual([])
   })
+
+  it('keeps another owner beyond the three-minute idle TTL and retains after final release', async () => {
+    jest.useFakeTimers()
+    const root = await temporaryRoot()
+    const api = installationApi(root)
+
+    const store = new InstallationStore(api, {
+      rootPath: root,
+      queue: createInstallQueue(2),
+    })
+
+    const first = await store.subscribe('react@19.1.1')
+    const other = await store.subscribe('react@19.1.1')
+    await store.unsubscribe(first.id)
+    await jest.advanceTimersByTimeAsync(12 * 60_000)
+    await store.sweep()
+    expect(api.disposePackage).not.toHaveBeenCalled()
+    expect(
+      (await store.read(other.installation.installPath))?.leases,
+    ).toHaveProperty(other.id)
+    await store.unsubscribe(other.id)
+    await jest.advanceTimersByTimeAsync(3 * 60_000 - 1)
+    await store.sweep()
+    expect(api.disposePackage).not.toHaveBeenCalled()
+    await jest.advanceTimersByTimeAsync(2)
+    await store.sweep()
+    expect(await fs.readdir(root)).toEqual([])
+    await store.close()
+  })
+
+  it('does not sweep an installation that takes longer than the idle TTL to publish', async () => {
+    jest.useFakeTimers()
+    const root = await temporaryRoot()
+    const staging = await temporaryRoot()
+    const api = installationApi(staging)
+    const install = api.installPackage.getMockImplementation()!
+    let finish!: () => void
+    let started!: () => void
+
+    const gate = new Promise<void>(resolve => {
+      finish = resolve
+    })
+
+    const ready = new Promise<void>(resolve => {
+      started = resolve
+    })
+
+    api.installPackage.mockImplementation(async packageString => {
+      const installation = await install(packageString)
+      started()
+      await gate
+
+      return installation
+    })
+
+    const store = new InstallationStore(api, {
+      rootPath: root,
+      queue: createInstallQueue(1),
+    })
+
+    const pending = store.subscribe('react@19.1.1')
+    await ready
+    await jest.advanceTimersByTimeAsync(4 * 60_000)
+    await store.sweep()
+    expect(api.disposePackage).not.toHaveBeenCalled()
+    expect(await fs.readdir(staging)).toHaveLength(1)
+    finish()
+    const owner = await pending
+    await store.sweep()
+    expect(api.disposePackage).not.toHaveBeenCalled()
+    expect(
+      (await store.read(owner.installation.installPath))?.leases,
+    ).toHaveProperty(owner.id)
+    await store.unsubscribe(owner.id)
+    await store.close()
+  })
 })

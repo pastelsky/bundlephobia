@@ -67,7 +67,7 @@ class InstallationStore {
     {
       queue,
       rootPath = '/tmp/tmp-build/installations',
-      retentionMs = 5 * 60_000,
+      retentionMs = 3 * 60_000,
       leaseMs = 15 * 60_000,
       onError = console.error,
     }: {
