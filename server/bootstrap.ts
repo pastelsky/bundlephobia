@@ -21,6 +21,7 @@ import { registerApiRoutes } from './routes/api.route'
 import { registerSystemRoutes } from './routes/system.route'
 import requestLoggerMiddleware from './middlewares/request-logger.middleware'
 import limit from './middlewares/rate-limit.middleware'
+import statsPathMiddleware from './middlewares/stats-path.middleware'
 
 interface ServerEnvironment {
   basicAuthPassword: string
@@ -121,6 +122,8 @@ export async function startServer(): Promise<void> {
       }
     }
   })
+
+  server.use(statsPathMiddleware)
 
   server.use(
     serve('./client/assets/public', {
