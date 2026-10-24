@@ -12,7 +12,8 @@
     "cache-service",
     "jvm-package-build-stats",
     "scripts",
-    "packages/*"
+    "packages/*",
+    "stats-app"
   ],
   "engines": {
     "node": ">= 24.0.0",
@@ -119,9 +120,9 @@
   },
   "scripts": {
     "dev": "DEBUG='bp:*' NODE_ENV=development nodemon --watch ./server --watch ./utils --watch ./index.ts",
-    "stats:dev": "yarn --cwd stats-app dev",
-    "stats:build": "yarn --cwd stats-app build",
-    "build": "yarn sitemap && NODE_ENV=production next build",
+    "stats:dev": "yarn workspace @bundlephobia/stats-app dev",
+    "stats:build": "yarn workspace @bundlephobia/stats-app build",
+    "build": "yarn stats:build && yarn sitemap && NODE_ENV=production next build",
     "sitemap": "node -r esbuild-register bin/generate-sitemap.ts",
     "prestart": "yarn build",
     "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
@@ -129,7 +130,7 @@
     "test": "jest",
     "test:haproxy": "python3 __tests__/haproxy-rate-limits.py",
     "test:process-config": "jest --runInBand __tests__/validate-process-config.test.ts",
-    "typecheck": "tsc --project tsconfig.typecheck.json --noEmit",
+    "typecheck": "tsc --project tsconfig.typecheck.json --noEmit && yarn workspace @bundlephobia/stats-app check",
     "test:e2e": "yarn build && playwright test",
     "test:e2e:run": "playwright test",
     "test:e2e:ui": "yarn build && playwright test --ui",
@@ -142,12 +143,12 @@
     "test:watch": "jest --watch",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "lint": "oxlint --type-aware --ignore-pattern 'stats-app/**' .",
+    "lint": "oxlint --type-aware .",
     "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
   },
   "husky": {
     "hooks": {
-      "pre-commit": "oxlint --type-aware --ignore-pattern 'stats-app/**' --fix . && oxfmt"
+      "pre-commit": "oxlint --type-aware --fix . && oxfmt"
     }
   },
   "resolutions": {

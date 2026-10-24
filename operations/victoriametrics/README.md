@@ -54,7 +54,7 @@ sudo pm2 startOrReload /var/www/bundlephobia/operations/victoriametrics/ecosyste
 sudo pm2 save
 ```
 
-The static [stats app](../../stats-app/README.md) is built independently and
+The static [stats app](../../stats-app/README.md) is built by the normal root build and
 served at `/stats/dashboard/`. The query explorer stays at `/stats/vmui/`.
 
 HAProxy's existing exporter provides frontend request/response counters, byte

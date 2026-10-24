@@ -1,7 +1,9 @@
 import { z } from 'zod'
 
 const sample = z.tuple([z.number(), z.string()])
+
 const labels = z.record(z.string(), z.string())
+
 const rangeResponse = z.object({
   status: z.literal('success'),
   data: z.object({
@@ -9,6 +11,7 @@ const rangeResponse = z.object({
     result: z.array(z.object({ metric: labels, values: z.array(sample) })),
   }),
 })
+
 const instantResponse = z.object({
   status: z.literal('success'),
   data: z.object({
@@ -46,13 +49,16 @@ async function request(
     credentials: 'same-origin',
     headers: { Accept: 'application/json' },
   })
+
   if (response.status === 401)
     throw new Error('Your stats session has expired. Reload to sign in again.')
+
   if (!response.ok)
     throw new Error(
       'VictoriaMetrics is unavailable. Try refreshing in a moment.',
     )
   const payload: unknown = await response.json()
+
   return payload
 }
 
@@ -69,25 +75,32 @@ export async function queryRange(query: RangeRequest, signal: AbortSignal) {
     end: String(query.end),
     step: String(stepSeconds(query.seconds)),
   })
+
   const parsed = rangeResponse.safeParse(
     await request('query_range', params, signal),
   )
+
   if (!parsed.success)
     throw new Error('VictoriaMetrics returned an unexpected chart response.')
+
   return parsed.data.data.result
 }
 
 export async function queryInstant(expression: string, signal: AbortSignal) {
   const params = new URLSearchParams({ query: expression })
+
   const parsed = instantResponse.safeParse(
     await request('query', params, signal),
   )
+
   if (!parsed.success)
     throw new Error('VictoriaMetrics returned an unexpected summary response.')
+
   return parsed.data.data.result
 }
 
 export function finiteValue(value: string) {
   const number = Number(value)
+
   return Number.isFinite(number) ? number : null
 }

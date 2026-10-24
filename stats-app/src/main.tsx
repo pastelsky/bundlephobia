@@ -10,7 +10,9 @@ const queryClient = new QueryClient({
     queries: { staleTime: 60000, retry: 1, refetchIntervalInBackground: false },
   },
 })
+
 const root = document.getElementById('root')
+
 if (!root) throw new Error('Missing dashboard root')
 
 ReactDOM.createRoot(root).render(

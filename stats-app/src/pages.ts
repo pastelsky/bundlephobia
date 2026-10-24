@@ -5,6 +5,21 @@ import {
   LayoutDashboard,
   ShieldAlert,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
+export type DashboardSource = 'haproxy' | 'pipeline' | 'resources'
+
+export interface DashboardPage {
+  id: string
+  title: string
+  heading: string
+  description: string
+  icon: LucideIcon
+  source: DashboardSource
+  panels: string[]
+  breakdown: boolean
+  tabs: { id: string; title: string; panels: string[] }[]
+}
 
 // Navigation and panel placement live here. Panels and their MetricsQL queries
 // live in metrics.ts, so adding a page does not require another renderer.
@@ -104,4 +119,11 @@ export const PAGES = [
       { id: 'installs', title: 'Installations', panels: ['install-outcomes'] },
     ],
   },
-]
+] satisfies DashboardPage[]
+
+export function resolvePage(pathname: string, requestedTab: string | null) {
+  const page = PAGES.find(page => pathname === `/${page.id}`) ?? PAGES[0]
+  const tab = page.tabs.find(tab => tab.id === requestedTab) ?? page.tabs[0]
+
+  return { page, tabId: tab?.id, panelIds: tab?.panels ?? page.panels }
+}

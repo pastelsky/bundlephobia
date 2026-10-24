@@ -3,13 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "yarn@4.0.2",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "check": "tsc --noEmit",
-    "lint": "oxlint --type-aware src vite.config.ts tailwind.config.ts",
-    "test": "vitest run",
-    "format": "oxfmt --config ../.oxfmtrc.json .",
+    "lint": "yarn --cwd .. oxlint --type-aware stats-app",
+    "test": "yarn --cwd .. jest --runInBand __tests__/stats-app-metrics.test.ts",
+    "format": "yarn --cwd .. oxfmt stats-app",
     "build": "yarn check && vite build",
     "preview": "vite preview --host 127.0.0.1"
   },
@@ -25,17 +24,13 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.20",
-    "oxfmt": "^0.74.0",
-    "oxlint": "1.78.0",
-    "oxlint-tsgolint": "7.0.2001",
     "postcss": "^8.5.0",
     "tailwindcss": "^3.4.17",
-    "typescript": "~5.9.3",
-    "vite": "^7.0.0",
-    "vitest": "^5.0.5"
+    "typescript": "^7.0.2",
+    "vite": "^7.0.0"
   }
 }

@@ -5,10 +5,5 @@
   "singleQuote": true,
   "printWidth": 80,
   "sortPackageJson": false,
-  "ignorePatterns": [
-    ".next",
-    "bin",
-    "tools/oxlint/anti-slop",
-    "client/assets/public/stats/dashboard"
-  ]
+  "ignorePatterns": [".next", "bin", "tools/oxlint/anti-slop"]
 }
