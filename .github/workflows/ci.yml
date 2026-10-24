@@ -165,7 +165,7 @@ jobs:
           package-manager-cache: false
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.9
+          bun-version: 1.4.4
       - run: |
           corepack enable
           corepack yarn install --immutable
