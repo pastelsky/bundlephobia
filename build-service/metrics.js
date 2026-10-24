@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises'
+import { removePaths } from '../scripts/cleanup.mts'
 import path from 'node:path'
 import { monitorEventLoopDelay, performance } from 'node:perf_hooks'
 import { activeBuildCount, startBuildTrace } from './buildMemoryTrace.ts'
@@ -363,11 +364,9 @@ async function pruneMetricArtifacts(directory) {
     artifact => !retainedNames.has(artifact.name),
   )
 
-  await Promise.all(
-    staleArtifacts.map(artifact =>
-      fs.unlink(path.join(directory, artifact.name)).catch(() => {}),
-    ),
-  )
+  await removePaths(
+    staleArtifacts.map(artifact => path.join(directory, artifact.name)),
+  ).catch(() => {})
 
   return retainedNames
 }
@@ -392,7 +391,7 @@ async function writeMetricsArtifact(metrics) {
 
     return retainedArtifacts.has(filename) ? artifactPath : undefined
   } catch (error) {
-    await fs.unlink(temporaryPath).catch(() => {})
+    await removePaths([temporaryPath]).catch(() => {})
 
     return `write-failed:${error?.code || error?.name || 'unknown'}`
   }
