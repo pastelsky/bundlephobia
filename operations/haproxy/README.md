@@ -38,20 +38,22 @@ sudo systemctl reload haproxy
 
 ## Request limits (in evaluation order)
 
-| Order | Scope                               | Policy                                                                                                                                                                                                         |
-| ----- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | Security                            | Block sensitive paths; authenticate `/stats`; validate telemetry method.                                                                                                                                       |
-| 2     | Active cooldown                     | Reject all routes for the responsible family/IP until expiry.                                                                                                                                                  |
-| 3     | Origin traffic                      | 190/min per known family, or trusted IP for other clients; also 190/min per IP across API, package pages and telemetry.                                                                                        |
-| 4     | Automated API **and package pages** | All non-Google automation shares **26/min** across families and IPs. Google has a separate 26/min. Cached responses also spend this allowance. `got`/Ahrefs additionally allow 8/min per family/IP.            |
-| 5     | Application                         | Per IP: 120 requests/5m (950 for crawler cache preference); 10 build admissions/5m per analysis endpoint; 60 seconds of completed build time/5m. Cache hits bypass the build limits, not request limits.       |
-| 6     | Response accounting                 | Every returned **429**, from any limiter, counts toward the responsible family/IP's cooldown: 30/min gives 5m; 120/min gives 15m. Continued 429s can renew 15m when at most 5m remain. Other 4xx do not count. |
+| Order | Scope                           | Policy                                                                                                                                                                                  |
+| ----- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Security                        | Block sensitive paths; authenticate `/stats`; validate telemetry method.                                                                                                                |
+| 2     | Active cooldown                 | Reject the responsible family/IP until expiry.                                                                                                                                          |
+| 3     | Origin traffic                  | 190/min across all routes per known family, or trusted IP for other clients.                                                                                                            |
+| 4     | Automated API and package pages | **26/min for Google**; a separate **26/min shared by every non-Google bot**, across families and IPs. Cache hits count too.                                                             |
+| 5     | Application                     | Non-bots: 120 requests/5m/IP. Everyone: 10 build admissions/5m/IP shared across analysis endpoints, plus 60 seconds of completed build time/5m/IP. Cache hits bypass build limits.      |
+| 6     | Response accounting             | Any returned **429** counts toward the responsible family/IP's cooldown: 30/min gives 5m; 120/min gives 15m. Continued 429s can renew 15m with at most 5m left. Other 4xx do not count. |
 
 Crawler pages prefer an already-built release but may build on a miss. Their
 local API calls inherit the caller's identity and build budget; the outer page
 spends the shared request allowance once. MCP calls do the same and propagate
 429s and build duration. Build admissions can coalesce; they are not unique jobs.
-Completed-time limits do not reserve queued/in-flight work.
+The admission count limits new work; the completed-time budget limits expensive
+work. Neither reserves time for queued/in-flight jobs. The non-bot 5m allowance
+limits sustained traffic; the 190/min origin ceiling limits bursts.
 
 Known families come from `automation-groups.map`; other clients use trusted IPs.
 Cooldowns remain independent even when families share the non-Google allowance.

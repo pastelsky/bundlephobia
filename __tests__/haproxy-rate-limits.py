@@ -146,7 +146,7 @@ class BotRateLimits(unittest.TestCase):
 
     def test_api_and_page_limits_share_the_non_google_budget(self):
         agents = ['Bytespider/1', 'Baiduspider/2', 'Badgen/1.0',
-                  'Data-Pipeline-Enricher/1.0', 'SomeCrawler/1']
+                  'Data-Pipeline-Enricher/1.0', 'SomeCrawler/1', 'got/14', 'Ahrefs']
         paths = ['/api/size', '/package/example']
         for i in range(26):
             self.assertEqual(self.request(agents[i % len(agents)], i, paths[i % 2]), 200)
@@ -156,13 +156,6 @@ class BotRateLimits(unittest.TestCase):
         for i in range(26):
             self.assertEqual(self.request('Googlebot/2.1', i, paths[i % 2]), 200)
         self.assertEqual(self.request('GoogleOther', 240), 429)
-        for ua, rotating in [('got/14', False), ('Ahrefs', True)]:
-            with self.subTest(ua=ua):
-                self.runtime('clear table automated_client_usage')
-                for i in range(8):
-                    self.assertEqual(self.request(ua, i if rotating else 200, paths[i % 2]), 200)
-                self.assertEqual(self.request(ua, 240 if rotating else 200, '/api/size'), 429)
-                self.assertEqual(self.request(ua, 241 if rotating else 200), 429)
 
 
 if __name__ == '__main__':

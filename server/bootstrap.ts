@@ -87,23 +87,20 @@ export async function startServer(): Promise<void> {
   server.use(apiDiscoveryMiddleware)
 
   if (!dev) {
-    const createRequestLimit = (max: number) =>
-      limit({
-        duration: 1000 * 60 * 5,
-        max,
-        whiteList: ['127.0.0.1', '::1'],
-      })
-
-    const defaultRequestLimit = createRequestLimit(120)
-    const crawlerReadRequestLimit = createRequestLimit(950)
+    const requestLimit = limit({
+      duration: 1000 * 60 * 5,
+      max: 120,
+      whiteList: ['127.0.0.1', '::1'],
+    })
 
     server.use(async (ctx, nextMiddleware) => {
-      const isCrawlerCacheRead =
-        ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
+      // HAProxy limits bots across IPs and page/API entry points. Recounting
+      // their local API calls here would add a second, inconsistent allowance.
+      if (ctx.get('X-Bundlephobia-Client-Type') === 'bot') {
+        await nextMiddleware()
 
-      const requestLimit = isCrawlerCacheRead
-        ? crawlerReadRequestLimit
-        : defaultRequestLimit
+        return
+      }
 
       await requestLimit(ctx, nextMiddleware)
     })

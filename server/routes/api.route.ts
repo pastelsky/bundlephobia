@@ -34,6 +34,8 @@ export function registerApiRoutes(
   const exportSizesMiddleware = createExportSizesMiddleware(cache)
   const generateImgMiddleware = createGenerateImgMiddleware(cache)
   const mcpController = createMcpController(port)
+  // One admission allowance per IP, shared by all analysis operations.
+  const buildRequestLimit = buildMissRateLimit()
 
   router.get(
     '/api/size',
@@ -52,11 +54,7 @@ export function registerApiRoutes(
     createResolvePackageMiddleware('package-analysis', cache),
     createCachedResponseMiddleware,
     failureBackoffMiddleware,
-    buildMissRateLimit({
-      durationMs: 1000 * 60 * 5,
-      maxRequests: 10,
-      whiteList: ['127.0.0.1', '::1'],
-    }),
+    buildRequestLimit,
     buildMiddleware,
   )
 
@@ -67,7 +65,7 @@ export function registerApiRoutes(
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-exports'),
     failureBackoffMiddleware,
-    buildMissRateLimit(),
+    buildRequestLimit,
     exportsMiddleware,
   )
 
@@ -88,11 +86,7 @@ export function registerApiRoutes(
     createResolvePackageMiddleware('package-export-sizes'),
     createCachedResponseMiddleware,
     failureBackoffMiddleware,
-    buildMissRateLimit({
-      durationMs: 1000 * 60 * 5,
-      maxRequests: 10,
-      whiteList: ['127.0.0.1', '::1'],
-    }),
+    buildRequestLimit,
     exportSizesMiddleware,
   )
 
