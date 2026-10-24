@@ -179,9 +179,15 @@ export const hostCores = hostHistory(
   `bundlephobia_host_cpu_cores{${legacyHostJob}}`,
 )
 
-export const hostLoad = (period: string) =>
+const loadMetrics = {
+  '1m': 'node_load1',
+  '5m': 'node_load5',
+  '15m': 'node_load15',
+} as const
+
+export const hostLoad = (period: keyof typeof loadMetrics) =>
   hostHistory(
-    `sum(node_load${period.replace('m', '')}{${hostJob}})`,
+    `sum(${loadMetrics[period]}{${hostJob}})`,
     `bundlephobia_host_load{${legacyHostJob},period="${period}"}`,
   )
 
@@ -280,11 +286,13 @@ const resources = {
     unit: 'tasks',
     format: value => numberFormat.format(value),
     series: () => [
-      ...[
-        ['1m', 'orange'],
-        ['5m', 'sky'],
-        ['15m', 'violet'],
-      ].map(([period, color]) => ({
+      ...(
+        [
+          ['1m', 'orange'],
+          ['5m', 'sky'],
+          ['15m', 'violet'],
+        ] as const
+      ).map(([period, color]) => ({
         color,
         expression: hostLoad(period),
         name: period,

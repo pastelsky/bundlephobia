@@ -9,7 +9,7 @@ import {
 import Amplitude from '@amplitude/node'
 import serializeError from './serializeError.js'
 import { measureBuild } from './metrics.js'
-import { createOutcomeMetrics } from '../observability/outcomeMetrics.ts'
+import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
 import { createInstallationProvider } from './installationProvider.ts'
 import { activeBuilds, recordBuildPhase } from './buildMemoryTrace.ts'
 import memoryDiagnostics from '../scripts/memory-diagnostics.cjs'

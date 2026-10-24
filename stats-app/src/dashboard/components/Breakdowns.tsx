@@ -1,7 +1,6 @@
 import {
   type Color,
   Badge,
-  Card,
   ProgressBar,
   Table,
   TableBody,
@@ -16,9 +15,8 @@ import {
   formatBytes,
   STATUS_LABELS,
 } from '../../lib/format'
-import type { SummaryData, ResourceData } from '../../dashboard/metrics'
-import { PanelHeader } from '../ui/PanelHeader'
-import styles from './Breakdowns.module.css'
+import type { SummaryData, ResourceData } from '../metrics'
+import { Panel, PanelHeader } from '../../components/ui/Panel'
 
 const diskLabels = new Map([
   ['root', 'Main filesystem'],
@@ -45,13 +43,13 @@ export function ResponseBreakdown({ data }: { data?: SummaryData }) {
       .sort((a, b) => (b.count ?? 0) - (a.count ?? 0)) ?? []
 
   return (
-    <Card className={styles.card}>
+    <Panel className="mt-5">
       <PanelHeader
         title="Response breakdown"
         description="Count and share in the selected time range"
         unit={`${compactFormat.format(total)} responses`}
       />
-      <Table className={styles.table} aria-label="Responses by status class">
+      <Table className="mt-5" aria-label="Responses by status class">
         <TableHead>
           <TableRow>
             <TableHeaderCell>Status class</TableHeaderCell>
@@ -64,7 +62,7 @@ export function ResponseBreakdown({ data }: { data?: SummaryData }) {
           {rows.map(row => (
             <TableRow key={row.code}>
               <TableCell>
-                <div className={styles.status}>
+                <div className="flex items-center gap-2.5">
                   <Badge
                     size="xs"
                     color={statusColors.get(row.code) ?? 'stone'}
@@ -98,18 +96,18 @@ export function ResponseBreakdown({ data }: { data?: SummaryData }) {
           )}
         </TableBody>
       </Table>
-    </Card>
+    </Panel>
   )
 }
 
 export function DiskBreakdown({ data }: { data?: ResourceData }) {
   return (
-    <Card className={styles.card}>
+    <Panel className="mt-5">
       <PanelHeader
         title="Filesystem capacity"
         description="Separate mounts for the website, temporary builds, and metrics storage"
       />
-      <Table className={styles.table} aria-label="Filesystem capacity">
+      <Table className="mt-5" aria-label="Filesystem capacity">
         <TableHead>
           <TableRow>
             <TableHeaderCell>Filesystem</TableHeaderCell>
@@ -135,7 +133,7 @@ export function DiskBreakdown({ data }: { data?: ResourceData }) {
           ))}
         </TableBody>
       </Table>
-    </Card>
+    </Panel>
   )
 }
 
@@ -146,7 +144,7 @@ function DiskUtilization({ disk }: { disk: ResourceData['disks'][number] }) {
   const percent = (disk.used / disk.total) * 100
 
   return (
-    <div className={styles.utilization}>
+    <div className="flex min-w-[100px] items-center gap-2 tabular-nums">
       <span>{numberFormat.format(percent)}%</span>
       <ProgressBar
         value={Math.max(0, Math.min(100, percent))}

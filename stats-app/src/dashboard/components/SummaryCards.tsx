@@ -1,13 +1,10 @@
-import motion from '../../styles/motion.module.css'
-import styles from './SummaryCards.module.css'
-import { Card, Icon, Metric, Text } from '@tremor/react'
+import { MetricCards, type MetricCard } from '../../components/ui/MetricCards'
 import { Activity, ArrowDownLeft, Cable, ShieldAlert } from 'lucide-react'
 import { compactFormat, numberFormat, formatBytes } from '../../lib/format'
-import type {
-  SummaryData,
-  ResourceData,
-  loadPipelineSummary,
-} from '../../dashboard/metrics'
+import type { SummaryData, ResourceData, loadPipelineSummary } from '../metrics'
+
+type SummaryCard = Omit<MetricCard, 'format' | 'detail'> &
+  Partial<Pick<MetricCard, 'format' | 'detail'>>
 
 function responseErrorShare(data?: SummaryData) {
   const total =
@@ -16,10 +13,6 @@ function responseErrorShare(data?: SummaryData) {
   const errors = data?.responses.find(row => row.code === '5xx')?.count ?? 0
 
   return total > 0 ? (errors / total) * 100 : null
-}
-
-function resourceDisks(data?: ResourceData) {
-  return data?.disks ?? []
 }
 
 function optionalBytes(value?: number | null) {
@@ -42,7 +35,7 @@ export function SummaryCards({
       format: (value: number) => compactFormat.format(value),
       detail: 'In the selected time range',
       icon: ArrowDownLeft,
-      kind: 'orange',
+      color: 'orange',
     },
     {
       title: 'Request rate',
@@ -50,7 +43,7 @@ export function SummaryCards({
       format: (value: number) => `${numberFormat.format(value)}/s`,
       detail: 'Average over the last 5 minutes',
       icon: Activity,
-      kind: 'sky',
+      color: 'sky',
     },
     {
       title: 'Server error share',
@@ -58,7 +51,7 @@ export function SummaryCards({
       format: (value: number) => `${numberFormat.format(value)}%`,
       detail: '5xx share of responses in this range',
       icon: ShieldAlert,
-      kind: 'rose',
+      color: 'rose',
     },
     {
       title: 'Open connections',
@@ -66,37 +59,11 @@ export function SummaryCards({
       format: (value: number) => numberFormat.format(value),
       detail: 'Current sessions at the frontend',
       icon: Cable,
-      kind: 'violet',
+      color: 'violet',
     },
   ] as const
 
-  return (
-    <div className={styles.summaryGrid}>
-      {cards.map(card => (
-        <Card key={card.title} className={styles.summaryCard}>
-          <div className={styles.summaryHeading}>
-            <Text>{card.title}</Text>
-            <Icon
-              icon={card.icon}
-              size="sm"
-              variant="light"
-              color={card.kind}
-            />
-          </div>
-          <Metric
-            className={
-              loading
-                ? `${styles.metricLoading} ${motion.shimmer}`
-                : styles.metricValue
-            }
-          >
-            {card.value == null ? '—' : card.format(card.value)}
-          </Metric>
-          <p className={styles.statDetail}>{card.detail}</p>
-        </Card>
-      ))}
-    </div>
-  )
+  return <MetricCards cards={cards} loading={loading} />
 }
 
 export function PipelineCards({
@@ -106,63 +73,36 @@ export function PipelineCards({
   data?: Awaited<ReturnType<typeof loadPipelineSummary>>
   loading: boolean
 }) {
-  const cards = [
-    { title: 'Successful builds', value: data?.buildSuccess, kind: 'success' },
-    { title: 'Failed builds', value: data?.buildFailure, kind: 'failure' },
+  const cards: SummaryCard[] = [
+    { title: 'Successful builds', value: data?.buildSuccess, tone: 'positive' },
+    { title: 'Failed builds', value: data?.buildFailure, tone: 'negative' },
     {
       title: 'Successful installs',
       value: data?.installSuccess,
-      kind: 'success',
+      tone: 'positive',
     },
-    { title: 'Failed installs', value: data?.installFailure, kind: 'failure' },
+    { title: 'Failed installs', value: data?.installFailure, tone: 'negative' },
   ]
 
   return <ValueCards cards={cards} loading={loading} />
-}
-
-interface ValueCard {
-  title: string
-  value?: number | null
-  kind?: string
-  format?: (value: number) => string
-  detail?: string
 }
 
 function ValueCards({
   cards,
   loading,
 }: {
-  cards: ValueCard[]
+  cards: SummaryCard[]
   loading: boolean
 }) {
   return (
-    <div className={styles.summaryGrid}>
-      {cards.map(card => (
-        <Card
-          key={card.title}
-          className={styles.summaryCard}
-          data-outcome={card.kind}
-        >
-          <Text>{card.title}</Text>
-          <Metric
-            className={
-              loading
-                ? `${styles.metricLoading} ${motion.shimmer}`
-                : styles.metricValue
-            }
-          >
-            {card.value == null
-              ? '—'
-              : (card.format ?? (value => compactFormat.format(value)))(
-                  card.value,
-                )}
-          </Metric>
-          <p className={styles.statDetail}>
-            {card.detail ?? 'In the selected time range'}
-          </p>
-        </Card>
-      ))}
-    </div>
+    <MetricCards
+      cards={cards.map(card => ({
+        ...card,
+        format: card.format ?? (value => compactFormat.format(value)),
+        detail: card.detail ?? 'In the selected time range',
+      }))}
+      loading={loading}
+    />
   )
 }
 
@@ -173,7 +113,7 @@ export function ResourceCards({
   data?: ResourceData
   loading: boolean
 }) {
-  const root = resourceDisks(data).find(disk => disk.mount === 'root')
+  const root = data?.disks.find(disk => disk.mount === 'root')
 
   const cards = [
     {

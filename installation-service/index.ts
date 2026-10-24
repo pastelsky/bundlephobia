@@ -15,7 +15,7 @@ import {
   UnsupportedRegistryPackageSpecError,
 } from './resolveRegistryPackageSpec.ts'
 import serializeError from '../build-service/serializeError.js'
-import { createOutcomeMetrics } from '../observability/outcomeMetrics.ts'
+import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
 
 const outcomes = createOutcomeMetrics('bundlephobia_installs_total', [
   'install',

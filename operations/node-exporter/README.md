@@ -25,4 +25,4 @@ sudo pm2 save
 
 Install the [VictoriaMetrics scrape config](../victoriametrics/README.md) too.
 Keep mount paths in the exporter config and dashboard chart definitions aligned.
-`GOMEMLIMIT` is a soft Go memory budget; PM2 has a separate 64 MB restart guard.
+Resource budgets live in the PM2 config; Go’s memory budget is a soft limit.

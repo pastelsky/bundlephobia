@@ -1,30 +1,29 @@
 import { SOURCE_DETAILS, type DashboardSource } from '../dashboard/sources'
-import { Topbar } from '../components/layout/Topbar'
-import styles from './App.module.css'
+import { Topbar } from '../dashboard/components/Topbar'
 import { useState } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
 import { resolvePage } from '../dashboard/pages'
 import { TIME_RANGES } from '../lib/api'
 import { loadPageSummary, type PageSummary } from '../dashboard/metrics'
-import { Sidebar } from '../components/layout/Sidebar'
-import { ChartPanel } from '../components/charts/ChartPanel'
+import { Sidebar } from '../dashboard/components/Sidebar'
+import { ChartPanel } from '../dashboard/components/ChartPanel'
 import {
   SummaryCards,
   PipelineCards,
   ResourceCards,
-} from '../components/summaries/SummaryCards'
+} from '../dashboard/components/SummaryCards'
 import {
   ResponseBreakdown,
   DiskBreakdown,
-} from '../components/breakdowns/Breakdowns'
+} from '../dashboard/components/Breakdowns'
 import {
   PageHeader,
   DashboardToolbar,
   PageTabs,
   CollectionNote,
   SummaryError,
-} from '../components/controls/DashboardControls'
+} from '../dashboard/components/DashboardControls'
 
 interface SummarySectionProps {
   source: DashboardSource
@@ -99,11 +98,11 @@ export function App() {
   if (location.pathname === '/') return <Navigate to="/overview" replace />
 
   return (
-    <div className={styles.appShell}>
+    <div className="[--sidebar-width:204px] narrow:[--sidebar-width:194px] compact:[--sidebar-width:64px] mobile:[--sidebar-width:0px]">
       <Sidebar />
-      <main className={styles.mainContent} id="overview">
+      <main className="ml-[var(--sidebar-width)] min-h-screen" id="overview">
         <Topbar title={page.heading} />
-        <div className={styles.dashboardContent}>
+        <div className="mx-auto max-w-[1600px] px-6 pb-4 pt-[22px] wide:pt-11 narrow:py-[26px] mobile:px-[18px]">
           <PageHeader page={page} query={query} />
           <DashboardToolbar
             range={range}
@@ -126,11 +125,13 @@ export function App() {
             onChange={tab => setParams({ tab })}
           />
           <CollectionNote source={page.source} summary={summary} />
-          <div className={styles.sectionLabel}>
-            <span>{details.section}</span>
-            <span>{details.scope}</span>
+          <div className="mb-3.5 mt-[31px] flex justify-between gap-3 text-[9px] text-slate-400 mobile:mt-6">
+            <span className="font-semibold tracking-[1.2px] text-slate-500">
+              {details.section}
+            </span>
+            <span className="compact:hidden">{details.scope}</span>
           </div>
-          <div className={styles.chartsGrid}>
+          <div className="grid grid-cols-2 gap-3 mobile:grid-cols-1 mobile:gap-3.5">
             {panels.map(panel => (
               <ChartPanel
                 key={panel.id}
@@ -141,12 +142,12 @@ export function App() {
             ))}
           </div>
           <PageBreakdown summary={summary} showResponses={page.breakdown} />
-          <footer className={styles.footer}>
-            <span>
-              <span className={styles.footerDot} />
+          <footer className="flex items-center justify-between gap-5 pb-1 pt-6 text-[9px] text-slate-400 mobile:flex-col mobile:items-start mobile:gap-2.5 mobile:text-[8px]">
+            <span className="flex items-center gap-1.5">
+              <span className="size-[5px] rounded-full bg-slate-300" />
               {details.footer} · stored in VictoriaMetrics
             </span>
-            <span>
+            <span className="flex items-center gap-1.5">
               Gaps indicate unavailable history ·{' '}
               {Intl.DateTimeFormat().resolvedOptions().timeZone}
             </span>
