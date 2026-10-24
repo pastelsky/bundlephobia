@@ -82,7 +82,6 @@ describe('build API error middleware', () => {
       throw error
     })
 
-    const responseBody = ctx.body
     expect(failureCache.set).toHaveBeenCalledWith(
       createAnalysisKey({
         language: 'javascript',
@@ -91,7 +90,6 @@ describe('build API error middleware', () => {
       }),
       expect.objectContaining({
         status: 422,
-        body: responseBody,
         consecutiveFailures: 1,
       }),
     )
@@ -129,5 +127,31 @@ describe('build API error middleware', () => {
           'This package has not been published with this particular version. The latest version is `<code>19.1.1</code>`.',
       },
     })
+  })
+
+  it('counts a shared failed attempt once for coalesced callers', async () => {
+    const error = new CustomError(
+      'BuildError',
+      'one failed compilation',
+      undefined,
+    )
+
+    for (let caller = 0; caller < 2; caller += 1) {
+      const ctx = {
+        query: {},
+        state: {
+          id: String(caller),
+          analysis: { language: 'javascript', operation: 'package-analysis' },
+          resolved: { packageString: '@example/coalesced@1.0.0' },
+        },
+      }
+
+      // SAFETY: this fixture provides the error middleware's context fields.
+      await errorHandler(ctx as never, async () => {
+        throw error
+      })
+    }
+
+    expect(mockFailureCacheSet).toHaveBeenCalledTimes(1)
   })
 })

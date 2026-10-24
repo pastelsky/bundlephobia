@@ -14,7 +14,7 @@ function prefersBuiltRelease(ctx: Context, version: string | null) {
   const hasCrawlerCachePreference =
     ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
 
-  const forceWasRequested = Boolean(ctx.query.force)
+  const forceWasRequested = ctx.query.force === 'true'
   const isLatestVersion = version === null || version === 'latest'
 
   return hasCrawlerCachePreference && !forceWasRequested && isLatestVersion

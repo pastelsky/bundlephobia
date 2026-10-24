@@ -7,7 +7,7 @@ import CustomError from '../../custom-error'
 const blockBlacklistMiddleware: Middleware = async (ctx, next) => {
   const { package: packageQuery, force } = ctx.query
 
-  if (force) {
+  if (force === 'true') {
     await next()
 
     return
