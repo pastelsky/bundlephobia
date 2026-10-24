@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Inter Variable';
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
+    format('woff2');
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth scroll-pt-6 motion-reduce:scroll-auto;
+  }
+  body {
+    @apply m-0 bg-stats-canvas font-sans text-stats-text antialiased;
+  }
+  :focus-visible {
+    @apply outline outline-[3px] outline-offset-[3px] outline-orange-400;
+  }
+  button {
+    @apply cursor-pointer;
+  }
+}

@@ -10,3 +10,21 @@ scrape_configs:
     metrics_path: /metrics
     scrape_interval: 60s
     scrape_timeout: 10s
+
+  - job_name: bundlephobia_installations
+    static_configs:
+      - targets: ['127.0.0.1:7003']
+
+  # Match process.yml's three build workers and BUILD_METRICS_BASE_PORT.
+  - job_name: bundlephobia_builds
+    static_configs:
+      - targets: ['127.0.0.1:8410', '127.0.0.1:8411', '127.0.0.1:8412']
+
+  # Standard Go exporter; retain only dashboard metrics to bound storage.
+  - job_name: bundlephobia_host
+    static_configs:
+      - targets: ['127.0.0.1:9100']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        action: keep
+        regex: 'node_(cpu_seconds_total|load(1|5|15)|memory_(MemTotal|MemAvailable|SwapTotal|SwapFree)_bytes|filesystem_(size|avail|free)_bytes|network_(receive|transmit)_bytes_total|scrape_collector_success)'

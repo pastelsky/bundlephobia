@@ -14,7 +14,12 @@ module.exports = {
         '-retentionPeriod=15d',
         '-httpListenAddr=127.0.0.1:8428',
         '-http.pathPrefix=/stats',
-        '-memory.allowedBytes=256MiB',
+        // Cache allowance is not an RSS cap; leave room below PM2's 128M guard.
+        '-memory.allowedBytes=32MiB',
+        '-search.maxConcurrentRequests=2',
+        '-search.maxMemoryPerQuery=16MiB',
+        // Avoid the response cache's minimum allocation for this small dashboard.
+        '-search.disableCache',
         '-storage.minFreeDiskSpaceBytes=20MiB',
         '-loggerLevel=WARN',
       ],

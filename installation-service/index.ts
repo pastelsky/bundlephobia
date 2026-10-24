@@ -15,6 +15,11 @@ import {
   UnsupportedRegistryPackageSpecError,
 } from './resolveRegistryPackageSpec.ts'
 import serializeError from '../build-service/serializeError.js'
+import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
+
+const outcomes = createOutcomeMetrics('bundlephobia_installs_total', [
+  'install',
+])
 
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value)
@@ -62,6 +67,10 @@ const store = new InstallationStore(
     disposePackage,
   },
   {
+    // TASK_PACKAGE_INSTALL reports each package-manager fallback, before
+    // version validation and metadata publication. Count the store completion
+    // once so a Bun failure followed by npm success is one successful install.
+    onInstallComplete: outcome => outcomes.record('install', outcome),
     queue: createInstallQueue(
       positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
     ),
@@ -156,6 +165,13 @@ fastify.delete<{ Params: { id: string } }>(
     return reply.code(204).send()
   },
 )
+
+// This service already listens on loopback; VictoriaMetrics scrapes it directly.
+fastify.get('/metrics', async (_request, reply) => {
+  return reply
+    .type(outcomes.registry.contentType)
+    .send(await outcomes.registry.metrics())
+})
 
 if (process.env.ENABLE_DIAGNOSTICS === 'true') {
   fastify.get('/diagnostics', async () => store.diagnostics())

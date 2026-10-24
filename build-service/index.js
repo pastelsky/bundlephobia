@@ -9,11 +9,48 @@ import {
 import Amplitude from '@amplitude/node'
 import serializeError from './serializeError.js'
 import { measureBuild } from './metrics.js'
+import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
 import { createInstallationProvider } from './installationProvider.ts'
 import { activeBuilds, recordBuildPhase } from './buildMemoryTrace.ts'
 import memoryDiagnostics from '../scripts/memory-diagnostics.cjs'
 
 const fastify = Fastify()
+
+const outcomes = createOutcomeMetrics('bundlephobia_builds_total', [
+  'size',
+  'exports-sizes',
+  'exports',
+])
+
+// Count terminal analyses, not TASK_PACKAGE_BUILD phases: an export-size
+// analysis can compile multiple chunks. This listener is independent of
+// optional diagnostics and the Amplitude sink already subscribed below.
+outcomes.observe(eventQueue, {
+  TASK_PACKAGE_STATS: 'size',
+  TASK_PACKAGE_EXPORTS_SIZES: 'exports-sizes',
+  TASK_PACKAGE_EXPORTS: 'exports',
+})
+
+// PM2 workers share the job port. Scraping it would randomly switch counters
+// between workers, so each existing worker exposes a private port. During a rolling reload, old/new workers
+// for the same instance can temporarily share that port through Node cluster.
+if (process.env.BUILD_METRICS_BASE_PORT) {
+  const metrics = Fastify()
+  metrics.get('/metrics', async (_request, reply) =>
+    reply
+      .type(outcomes.registry.contentType)
+      .send(await outcomes.registry.metrics()),
+  )
+
+  const port =
+    Number(process.env.BUILD_METRICS_BASE_PORT) +
+    Number(process.env.NODE_APP_INSTANCE ?? 0)
+
+  await metrics.listen({ host: '127.0.0.1', port }).catch(error => {
+    console.error('Build metrics endpoint unavailable', error)
+  })
+  fastify.addHook('onClose', async () => metrics.close())
+}
 
 if (memoryDiagnostics.enabled) {
   memoryDiagnostics.registerMetricsProvider('builds', () => ({

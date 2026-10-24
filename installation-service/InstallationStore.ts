@@ -58,6 +58,7 @@ class InstallationStore {
   private readonly retentionMs: number
   private readonly leaseMs: number
   private readonly onError: (error: Error) => void
+  private readonly onInstallComplete: (outcome: 'success' | 'failure') => void
   private sweepTimer?: NodeJS.Timeout
   private sweepInProgress?: Promise<void>
   private readonly keyLocks = new Map<string, Promise<unknown>>()
@@ -70,12 +71,14 @@ class InstallationStore {
       retentionMs = 3 * 60_000,
       leaseMs = 15 * 60_000,
       onError = console.error,
+      onInstallComplete = () => {},
     }: {
       queue: InstallQueue
       rootPath?: string
       retentionMs?: number
       leaseMs?: number
       onError?: (error: Error) => void
+      onInstallComplete?: (outcome: 'success' | 'failure') => void
     },
   ) {
     this.installationApi = installationApi
@@ -84,6 +87,7 @@ class InstallationStore {
     this.retentionMs = retentionMs
     this.leaseMs = leaseMs
     this.onError = onError
+    this.onInstallComplete = onInstallComplete
   }
 
   key(exactPackageString: string, options: InstallOptions): string {
@@ -218,10 +222,25 @@ class InstallationStore {
 
       const installation =
         (cached?.key === key ? cached.installation : undefined) ??
-        (await this.queue.run(() => {
+        (await this.queue.run(async () => {
           signal?.throwIfAborted()
 
-          return this.install(key, exactPackageString, options)
+          // Count actual installs once, after publishing their metadata. Cache
+          // hits and subscriptions sharing an installation do not count again.
+          try {
+            const installed = await this.install(
+              key,
+              exactPackageString,
+              options,
+            )
+
+            this.onInstallComplete('success')
+
+            return installed
+          } catch (error) {
+            this.onInstallComplete('failure')
+            throw error
+          }
         }))
 
       const now = Date.now()
