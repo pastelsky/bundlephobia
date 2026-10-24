@@ -144,18 +144,29 @@ class BotRateLimits(unittest.TestCase):
                 self.runtime('clear table api_client_usage')
                 self.assertEqual(send(244), 200)
 
-    def test_api_and_page_limits_share_the_non_google_budget(self):
-        agents = ['Bytespider/1', 'Baiduspider/2', 'Badgen/1.0',
-                  'Data-Pipeline-Enricher/1.0', 'SomeCrawler/1', 'got/14', 'Ahrefs']
+    def test_api_and_page_limits_are_independent_per_family(self):
         paths = ['/api/size', '/package/example']
-        for i in range(26):
-            self.assertEqual(self.request(agents[i % len(agents)], i, paths[i % 2]), 200)
-        for i, ua in enumerate(agents):
-            for path in paths:
-                self.assertEqual(self.request(ua, 240 + i, path), 429)
-        for i in range(26):
-            self.assertEqual(self.request('Googlebot/2.1', i, paths[i % 2]), 200)
-        self.assertEqual(self.request('GoogleOther', 240), 429)
+        families = [
+            ['Bytespider/1', 'TikTokSpider/2'],
+            ['Baiduspider/1', 'Baiduspider/2'],
+            ['Googlebot/2.1', 'GoogleOther'],
+            ['GPTBot/1', 'OAI-SearchBot/2'],
+            ['Amazonbot/1', 'Amazonbot/2'],
+            ['Shields.io/1', 'Shields.io/2'],
+        ]
+        for agents in families:
+            for i in range(26):
+                self.assertEqual(self.request(agents[i % 2], i, paths[i % 2]), 200)
+            # Aliases and rotating IPs share this family's allowance. Exhausting
+            # it, then entering cooldown, must not affect the next family.
+            for i in range(30):
+                self.assertEqual(self.request(agents[i % 2], 240 + i, paths[i % 2]), 429)
+            self.assertEqual(self.retry_after, '300')
+        # Unrecognized automation uses trusted IPs instead of one catch-all group.
+        for ip in ['198.51.100.240', '198.51.100.241']:
+            for i in range(26):
+                self.assertEqual(self.request('SomeCrawler/1', ip, paths[i % 2]), 200)
+            self.assertEqual(self.request('SomeCrawler/2', ip), 429)
 
 
 if __name__ == '__main__':
