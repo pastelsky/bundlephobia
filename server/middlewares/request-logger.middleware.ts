@@ -5,7 +5,6 @@ import logger, { withRequestLogContext } from '../infrastructure/logger.service'
 import {
   getAnalysisClientType,
   getAnalysisClientFamily,
-  recordAnalysisRequest,
 } from '../infrastructure/request-metrics'
 import {
   recordRequestComplete,
@@ -80,20 +79,6 @@ export function createRequestLoggerMiddleware(
         })
 
         if (ctx.request.url.includes('/api/')) {
-          if (ctx.state.analysis) {
-            recordAnalysisRequest({
-              ...ctx.state.analysis,
-              clientType: getAnalysisClientType(
-                ctx.get('X-Bundlephobia-Client-Type'),
-              ),
-              clientFamily: getAnalysisClientFamily(
-                ctx.get('X-Bundlephobia-Client-Family'),
-              ),
-              status: ctx.response.status,
-              probe: Boolean(ctx.query.peek || ctx.query.peep),
-            })
-          }
-
           dependencies.logger.info(
             'REQUEST',
             {
