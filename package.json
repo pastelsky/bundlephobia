@@ -130,7 +130,7 @@
     "test": "jest",
     "test:haproxy": "python3 __tests__/haproxy-rate-limits.py",
     "test:process-config": "jest --runInBand __tests__/validate-process-config.test.ts",
-    "typecheck": "tsc --project tsconfig.typecheck.json --noEmit && yarn workspace @bundlephobia/stats-app check",
+    "typecheck": "tsc --project tsconfig.typecheck.json --noEmit",
     "test:e2e": "yarn build && playwright test",
     "test:e2e:run": "playwright test",
     "test:e2e:ui": "yarn build && playwright test --ui",

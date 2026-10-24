@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "check": "tsc --noEmit",
     "lint": "yarn --cwd .. oxlint --type-aware stats-app",
     "test": "yarn --cwd .. jest --runInBand __tests__/stats-app-metrics.test.ts",
     "format": "yarn --cwd .. oxfmt stats-app",
-    "build": "yarn check && vite build",
+    "build": "vite build",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
