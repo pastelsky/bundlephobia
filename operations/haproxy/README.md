@@ -38,14 +38,14 @@ sudo systemctl reload haproxy
 
 ## Request limits (in evaluation order)
 
-| Order | Owner                      | Policy                                                                                                                                                                                                                         |
-| ----- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1     | HAProxy                    | Security checks and `/stats` authentication.                                                                                                                                                                                   |
-| 2     | HAProxy                    | Active cooldown blocks the responsible family/IP until expiry.                                                                                                                                                                 |
+| Order | Owner                      | Policy                                                                                                                                                                                                                       |
+| ----- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | HAProxy                    | Security checks and `/stats` authentication.                                                                                                                                                                                 |
+| 2     | HAProxy                    | Active cooldown blocks the responsible family/IP until expiry.                                                                                                                                                               |
 | 3     | HAProxy                    | 190/min across origin routes per bot family, or trusted IP otherwise. Non-bot application traffic additionally allows 120/5m/IP. Stats and telemetry use their own routing and are excluded from this application allowance. |
-| 4     | HAProxy                    | API and package pages: **26/min per request pool** (Google, aggressive crawlers, search, AI, developer tools, SEO), **100/min admitted across all identified bot families**; other crawlers get their own 26/min family allowance. Cache hits count too.  |
-| 5     | Server, after cache lookup | Hits return before the build guard. Misses share **10 build admissions/5m/IP** across analysis endpoints and are rejected when HAProxy signals **60 seconds of completed build time/5m/IP** has been spent.                    |
-| 6     | HAProxy                    | Every returned **429** counts toward the responsible family/IP's cooldown: 30/min gives 5m; 120/min gives 15m. Persistent 429s can renew 15m with at most 5m left. Other 4xx do not count.                                     |
+| 4     | HAProxy                    | API and package pages: **26/min per pool or additional crawler family**, **100/min admitted across identified bots**. Cache hits count too.                                                                                  |
+| 5     | Server, after cache lookup | Hits return before the build guard. Misses share **10 build admissions/5m/IP** across analysis endpoints and are rejected when HAProxy signals **60 seconds of completed build time/5m/IP** has been spent.                  |
+| 6     | HAProxy                    | Every returned **429** counts toward the responsible family/IP's cooldown: 30/min gives 5m; 120/min gives 15m. Persistent 429s can renew 15m with at most 5m left. Other 4xx do not count.                                   |
 
 HAProxy owns traffic counters, classification, completed-build-time accounting
 and cooldowns. The server owns cache lookup and one build-admission guard; it has
@@ -59,14 +59,9 @@ spends the proxy allowance. Build admissions may coalesce. Completed-time
 accounting does not reserve queued/in-flight work. Proxy rate windows roll; the
 server admission window resets five minutes after its first admitted miss.
 
-Known families and aliases come from `automation-groups.map`. Other crawler
-families use the first user-agent token containing `bot`, `spider`, or `crawler`,
-lowercased and prefixed with `crawler:`. For example, `YisouSpider` and
-`yisouspider/2` share `crawler:yisouspider` across all IPs. Browser prefixes and
-slash-separated versions do not change that identity. Metrics expose each
-identified family instead of folding them into `other_bot`. Generic HTTP clients
-and headless browsers without a crawler token keep their trusted-IP identity.
-User agents can be changed or spoofed; this does not authenticate a crawler.
+Known families come from `automation-groups.map`. Unmapped crawlers share their
+bot/spider/crawler name across IPs and versions; other clients use trusted IPs.
+
 Request pools: Google; aggressive crawlers (ByteDance, Baidu, Petal); search
 (Bing, Apple, Yandex); AI (OpenAI, Anthropic, Amazon); developer tools (Shields, Badgen,
 Data-Pipeline-Enricher, Depscope); SEO (Ahrefs, Semrush, Dotbot, Awario).
