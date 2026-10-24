@@ -1,4 +1,5 @@
 import exec from 'execa'
+import { removePaths } from '../../scripts/cleanup.mts'
 import type { Context, Middleware } from 'koa'
 
 export interface AdminController {
@@ -41,11 +42,12 @@ export function createAdminController(password: string): AdminController {
 
     clearCache: async ctx => {
       try {
-        const { stdout } = await exec.command(
-          'rm -rf /tmp/tmp-build/cache/_cacache /tmp/tmp-build/packages/',
-        )
+        await removePaths([
+          '/tmp/tmp-build/cache/_cacache',
+          '/tmp/tmp-build/packages/',
+        ])
 
-        ctx.body = 'Cache cleared' + stdout
+        ctx.body = 'Cache cleared'
       } catch (error) {
         console.error('Failed to clear cache', error)
         ctx.status = 500
