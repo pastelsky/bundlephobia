@@ -742,6 +742,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 function analysisRequestHeaders(req: GetServerSidePropsContext['req']) {
   return {
     'User-Agent': req.headers['user-agent'],
+    'X-Bundlephobia-Client-Type': req.headers['x-bundlephobia-client-type'],
     'CF-Connecting-IP':
       req.headers['cf-connecting-ip'] ?? req.socket.remoteAddress,
     'X-Bundlephobia-Prefer-Cached': req.headers['x-bundlephobia-prefer-cached'],

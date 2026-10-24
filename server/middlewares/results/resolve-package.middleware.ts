@@ -33,6 +33,11 @@ async function serveBuiltRelease(
 
   if (cacheResult.status === 'hit') {
     ctx.state.analysis.cache = 'hit'
+    logger.info(
+      'CACHE',
+      { ...ctx.state.analysis, name, version: cacheResult.value.version },
+      `CACHE HIT: ${name}@${cacheResult.value.version} (latest built)`,
+    )
     ctx.status = 200
     ctx.body = cacheResult.value
 

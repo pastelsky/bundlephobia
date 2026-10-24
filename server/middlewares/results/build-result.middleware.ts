@@ -1,8 +1,6 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
-import { recordAnalysisBuildRequest } from '../../infrastructure/analysis-attribution'
-
 import type {
   CacheKey,
   PackageCacheResult,
@@ -65,8 +63,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
         {
           requestId: ctx.state.id,
           packageString,
-          language: ctx.state.analysis.language,
-          operation: ctx.state.analysis.operation,
+          ...ctx.state.analysis,
         },
         `BUILD_ABORTED: client closed connection for package ${packageString}`,
       )
@@ -77,7 +74,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
 
     let result: PackageBuildResult
 
-    recordAnalysisBuildRequest(ctx)
+    ctx.state.analysis.buildRequested = true
 
     try {
       result = await packageAnalysisGateway.analyzePackage(ctx.state.resolved, {
@@ -114,8 +111,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
         result,
         requestId: ctx.state.id,
         packageString,
-        language: ctx.state.analysis.language,
-        operation: ctx.state.analysis.operation,
+        ...ctx.state.analysis,
         time,
       },
       `BUILD: ${packageString} built in ${time.toFixed()}s and is ${

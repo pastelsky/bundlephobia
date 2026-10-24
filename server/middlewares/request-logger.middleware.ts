@@ -1,8 +1,11 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
-import logger from '../infrastructure/logger.service'
-import { analysisAttribution } from '../infrastructure/analysis-attribution'
+import logger, { withRequestLogContext } from '../infrastructure/logger.service'
+import {
+  getAnalysisClientType,
+  recordAnalysisRequest,
+} from '../infrastructure/request-metrics'
 import {
   recordRequestComplete,
   recordRequestStart,
@@ -63,48 +66,73 @@ export function createRequestLoggerMiddleware(
     const requestStart = now()
     dependencies.recordRequestStart()
 
-    try {
-      await next()
-    } finally {
-      const requestEnd = now()
-      const time = requestEnd - requestStart
-      dependencies.recordRequestComplete({
-        route: normalizeRoute(ctx.path),
-        status: ctx.response.status,
-        durationMs: time,
-      })
+    const handleRequest = async () => {
+      try {
+        await next()
+      } finally {
+        const requestEnd = now()
+        const time = requestEnd - requestStart
+        dependencies.recordRequestComplete({
+          route: normalizeRoute(ctx.path),
+          status: ctx.response.status,
+          durationMs: time,
+        })
 
-      if (ctx.request.url.includes('/api/')) {
-        const attribution = ctx.state.analysis
-          ? ` analysis=${JSON.stringify(analysisAttribution(ctx))}`
-          : ''
+        if (ctx.request.url.includes('/api/')) {
+          if (ctx.state.analysis) {
+            recordAnalysisRequest({
+              ...ctx.state.analysis,
+              clientType: getAnalysisClientType(
+                ctx.get('X-Bundlephobia-Client-Type'),
+              ),
+              status: ctx.response.status,
+              probe: Boolean(ctx.query.peek || ctx.query.peep),
+            })
+          }
 
-        dependencies.logger.info(
-          'REQUEST',
-          {
-            url: ctx.request.url,
-            type: ctx.request.type,
-            query: ctx.request.query,
-            headers: ctx.request.headers,
-            ip:
-              ctx.request.header['x-koaip'] ||
-              ctx.request.header['cf-connecting-ip'] ||
-              ctx.ip,
-            requestId: ctx.state.id,
-            method: ctx.request.method,
-            origin: ctx.request.origin,
-            hostname: ctx.request.hostname,
-            status: ctx.response.status,
-            time,
-            language: ctx.state.analysis?.language,
-            operation: ctx.state.analysis?.operation,
-          },
-          `REQUEST: ${ctx.response.status} ${(time / 1000).toFixed(2)}s ${
-            ctx.req.method
-          } ${ctx.request.url}${attribution}`,
-        )
+          dependencies.logger.info(
+            'REQUEST',
+            {
+              url: ctx.request.url,
+              type: ctx.request.type,
+              query: ctx.request.query,
+              headers: ctx.request.headers,
+              ip:
+                ctx.request.header['x-koaip'] ||
+                ctx.request.header['cf-connecting-ip'] ||
+                ctx.ip,
+              requestId: ctx.state.id,
+              method: ctx.request.method,
+              origin: ctx.request.origin,
+              hostname: ctx.request.hostname,
+              status: ctx.response.status,
+              time,
+              ...ctx.state.analysis,
+            },
+            `REQUEST: ${ctx.response.status} ${(time / 1000).toFixed(2)}s ${
+              ctx.req.method
+            } ${ctx.request.url}`,
+          )
+        }
       }
     }
+
+    if (!ctx.request.url.includes('/api/')) return handleRequest()
+
+    return withRequestLogContext(
+      {
+        requestId: ctx.state.id,
+        userAgent: ctx.get('User-Agent').slice(0, 512),
+        clientType: getAnalysisClientType(
+          ctx.get('X-Bundlephobia-Client-Type'),
+        ),
+        source:
+          ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
+            ? 'crawler-page'
+            : 'api',
+      },
+      handleRequest,
+    )
   }
 }
 

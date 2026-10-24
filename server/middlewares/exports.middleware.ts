@@ -1,8 +1,6 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
-import { recordAnalysisBuildRequest } from '../infrastructure/analysis-attribution'
-
 import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
@@ -21,7 +19,8 @@ const exportsMiddleware: Middleware = async ctx => {
 
   const buildStart = now()
 
-  recordAnalysisBuildRequest(ctx)
+  ctx.state.analysis.cache = 'bypass'
+  ctx.state.analysis.buildRequested = true
 
   const result = await packageAnalysisGateway.analyzePackageExports(
     ctx.state.resolved,
@@ -56,8 +55,7 @@ const exportsMiddleware: Middleware = async ctx => {
       result,
       requestId: ctx.state.id,
       packageString,
-      language: ctx.state.analysis.language,
-      operation: ctx.state.analysis.operation,
+      ...ctx.state.analysis,
       time,
     },
     `BUILD EXPORTS: ${packageString} built in ${time.toFixed()}s`,
