@@ -2,6 +2,7 @@ import type { Middleware } from 'koa'
 import now from 'performance-now'
 
 import logger from '../infrastructure/logger.service'
+import { analysisAttribution } from '../infrastructure/analysis-attribution'
 import {
   recordRequestComplete,
   recordRequestStart,
@@ -74,6 +75,10 @@ export function createRequestLoggerMiddleware(
       })
 
       if (ctx.request.url.includes('/api/')) {
+        const attribution = ctx.state.analysis
+          ? ` analysis=${JSON.stringify(analysisAttribution(ctx))}`
+          : ''
+
         dependencies.logger.info(
           'REQUEST',
           {
@@ -96,7 +101,7 @@ export function createRequestLoggerMiddleware(
           },
           `REQUEST: ${ctx.response.status} ${(time / 1000).toFixed(2)}s ${
             ctx.req.method
-          } ${ctx.request.url}`,
+          } ${ctx.request.url}${attribution}`,
         )
       }
     }

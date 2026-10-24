@@ -25,6 +25,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
   const { operation } = ctx.state.analysis
 
   if (force === 'true') {
+    ctx.state.analysis.cache = 'bypass'
     await serveUncached(ctx, next)
 
     return
@@ -57,6 +58,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
   const cached = await ctx.cashed()
 
   if (cached) {
+    ctx.state.analysis.cache = 'hit'
     failureCache.del(
       createAnalysisKey({
         language,
@@ -81,6 +83,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
     return
   }
 
+  ctx.state.analysis.cache = 'miss'
   logCache({ hit: false, message: `CACHE MISS: ${packageString}` })
 
   if (peep) {

@@ -30,6 +30,8 @@ function createContext() {
       body: undefined,
       cacheControl: undefined,
       headers,
+      get: jest.fn((name: string) => headers[name] ?? ''),
+      ip: '127.0.0.1',
       query: {},
       req: request,
       res: response,

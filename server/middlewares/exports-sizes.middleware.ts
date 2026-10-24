@@ -1,6 +1,8 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
+import { recordAnalysisBuildRequest } from '../infrastructure/analysis-attribution'
+
 import type {
   CacheKey,
   ExportsCacheResult,
@@ -57,6 +59,8 @@ export function createExportSizesMiddleware(
     const requestedPackage = getRequestedPackage(packageQuery)
 
     const buildStart = now()
+
+    recordAnalysisBuildRequest(ctx)
 
     const result = await packageAnalysisGateway.analyzePackageExportSizes(
       ctx.state.resolved,

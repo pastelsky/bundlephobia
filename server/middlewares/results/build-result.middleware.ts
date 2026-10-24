@@ -1,6 +1,8 @@
 import type { Middleware } from 'koa'
 import now from 'performance-now'
 
+import { recordAnalysisBuildRequest } from '../../infrastructure/analysis-attribution'
+
 import type {
   CacheKey,
   PackageCacheResult,
@@ -74,6 +76,8 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
     ctx.res.on('close', onAborted)
 
     let result: PackageBuildResult
+
+    recordAnalysisBuildRequest(ctx)
 
     try {
       result = await packageAnalysisGateway.analyzePackage(ctx.state.resolved, {
