@@ -96,7 +96,12 @@ restart_all() {
         return 1
     fi
 
-    "$PM2" start "$PROCESS_FILE" --env production
+    # Restore the saved list, including optional collectors, before falling back
+    # to the required application config on an empty or incomplete dump.
+    "$PM2" resurrect 2>/dev/null || true
+    if ! check_services; then
+        "$PM2" startOrReload "$PROCESS_FILE" --env production
+    fi
     sleep 5
     "$PM2" save
 
@@ -122,6 +127,12 @@ main() {
         exit 0
     fi
 
+    # PM2 may spend 20 seconds gracefully stopping an installer during a reload.
+    sleep 25
+    if check_services; then
+        exit 0
+    fi
+
     log "=== Service check failed — initiating restart ==="
     log "Node: $($NODE --version 2>/dev/null)"
     log "PM2:  $($PM2 --version 2>/dev/null)"
@@ -134,4 +145,9 @@ main() {
     fi
 }
 
-main
+# Deployments can hold this same lock while restarting services.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    exec 9>/run/lock/bundlephobia-maintenance.lock
+    flock -n 9 || exit 0
+    main
+fi
