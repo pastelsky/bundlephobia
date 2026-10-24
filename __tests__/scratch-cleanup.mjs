@@ -113,7 +113,9 @@ if (process.argv[2] !== '--sandboxed') {
   )
   const bunCache = path.join(root, 'cache/bun')
   await fs.mkdir(path.join(bunCache, '.tmp'), { recursive: true })
-  await fs.mkdir(path.join(bunCache, 'old package'), { recursive: true })
+  const freshPackage = path.join(bunCache, 'fresh-fixture@1.0.0@@@1')
+  await fs.mkdir(freshPackage)
+  await fs.writeFile(path.join(freshPackage, 'package.json'), '{}')
   await fs.writeFile(path.join(bunCache, 'old manifest.npm'), 'metadata')
   await fs.writeFile(path.join(bunCache, '.tmp/active'), 'in progress')
   const agedPackage = path.join(bunCache, 'cleanup-fixture@1.0.0@@@1')
@@ -133,8 +135,9 @@ if (process.argv[2] !== '--sandboxed') {
     { stdio: 'inherit' },
   )
   await assert.rejects(fs.access(agedPackage), { code: 'ENOENT' })
-  await fs.access(path.join(bunCache, 'old package'))
+  await fs.access(freshPackage)
   await fs.access(path.join(bunCache, 'old manifest.npm'))
+  await fs.mkdir(path.join(bunCache, 'old package'))
   execFileSync(
     'bash',
     [
