@@ -128,7 +128,11 @@ export function ChartPanel({ panel, range, live }: PanelProps) {
   const view = panel.views?.find(option => option.id === viewId)
 
   const configured = useMemo(
-    () => ({ ...panel, series: view?.series ?? panel.series }),
+    () => ({
+      ...panel,
+      ...view?.presentation,
+      series: view?.series ?? panel.series,
+    }),
     [panel, view],
   )
 
@@ -153,9 +157,9 @@ export function ChartPanel({ panel, range, live }: PanelProps) {
         title={panel.title}
         description={panel.description}
         unit={
-          panel.measurement === 'counter' && panel.unit !== '%'
-            ? `${panel.unit} / ${chartResolution(range.seconds, range.step).label}`
-            : panel.unit
+          configured.measurement === 'counter' && configured.unit !== '%'
+            ? `${configured.unit} / ${chartResolution(range.seconds, range.step).label}`
+            : configured.unit
         }
       />
       {panel.views && (
@@ -167,7 +171,7 @@ export function ChartPanel({ panel, range, live }: PanelProps) {
           )}
           onIndexChange={index => setViewId(panel.views?.[index]?.id)}
         >
-          <TabList variant="solid" aria-label={`${panel.title} filesystem`}>
+          <TabList variant="solid" aria-label={`${panel.title} view`}>
             {panel.views.map(option => (
               <Tab className="flex-1" key={option.id}>
                 {option.title}

@@ -24,9 +24,6 @@ class BotRateLimits(unittest.TestCase):
         with socket.socket() as listener:
             listener.bind(('127.0.0.1', 0))
             self.port = listener.getsockname()[1]
-        families = root / 'client-families.map'
-        families.write_text((Path(__file__).resolve().parents[1] /
-                             'operations/haproxy/client-families.map').read_text())
         source = (Path(__file__).resolve().parents[1] /
                   'operations/haproxy/haproxy.cfg').read_text()
         # Keep all production tables and frontend rules; replace host-specific
@@ -38,7 +35,6 @@ class BotRateLimits(unittest.TestCase):
         rules = rules.replace('bind :80', f'bind 127.0.0.1:{self.port}')
         rules = rules.replace('/etc/haproxy/cloudflare-networks.lst', str(networks))
         rules = rules.replace('/etc/haproxy/automation-groups.map', str(groups))
-        rules = rules.replace('/etc/haproxy/client-families.map', str(families))
         upstreams = {line.split()[1] for line in rules.splitlines()
                      if line.strip().startswith(('use_backend ', 'default_backend '))}
         config = root / 'haproxy.cfg'

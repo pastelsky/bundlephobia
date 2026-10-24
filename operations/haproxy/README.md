@@ -25,12 +25,11 @@ sudo chmod 600 /etc/haproxy/conf.d/00-stats-users.cfg
 ```
 
 After creating the server-only userlist, install the tracked files. Install the
-maps before validating the main configuration, which references them
+automation map before validating the main configuration, which references it
 by absolute path:
 
 ```sh
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/automation-groups.map /etc/haproxy/automation-groups.map
-sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/client-families.map /etc/haproxy/client-families.map
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/conf.d/20-victoriametrics-metrics.cfg /etc/haproxy/conf.d/20-victoriametrics-metrics.cfg
 sudo /usr/sbin/haproxy -Ws -f /etc/haproxy/haproxy.cfg -f /etc/haproxy/conf.d -c -S /run/haproxy-master.sock
@@ -46,5 +45,3 @@ abuse can renew the longer cooldown when at most five minutes remain. Other 4xx
 responses do not increment this counter. Denials include `Retry-After`; logs
 include `client_group` and `cooldown_s`. State resets on HAProxy reload/restart.
 User-agent families are classification rather than authenticated identity.
-
-`client-families.map` adds browser/tool families for metrics only; it does not pool rate-limit budgets.

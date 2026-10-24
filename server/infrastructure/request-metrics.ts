@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { Counter, Registry } from 'prom-client'
 import type { PackageAnalysisRequestState } from '../types'
 
@@ -7,23 +5,22 @@ export const applicationMetrics = new Registry()
 
 type ClientType = 'bot' | 'non_bot' | 'unknown'
 
-// Read the same finite family vocabulary as HAProxy once at startup. No user
-// agent parsing or filesystem work happens while recording a request.
-const clientFamilies = new Set(['other', 'other_bot', 'unknown'])
-
-for (const filename of ['automation-groups.map', 'client-families.map']) {
-  const contents = readFileSync(
-    resolve(__dirname, '../../operations/haproxy', filename),
-    'utf8',
-  )
-
-  for (const line of contents.split('\n')) {
-    const [pattern, family] = line.trim().split(/\s+/)
-
-    if (pattern && !pattern.startsWith('#') && family)
-      clientFamilies.add(family)
-  }
-}
+// Bound labels at the application boundary; HAProxy supplies the classification.
+const clientFamilies = new Set([
+  'google',
+  'bytedance',
+  'baidu',
+  'openai',
+  'anthropic',
+  'amazon',
+  'shields',
+  'headed_browser',
+  'headless_browser',
+  'http_client',
+  'other',
+  'other_bot',
+  'unknown',
+])
 
 export function getAnalysisClientFamily(value: string): string {
   return clientFamilies.has(value) ? value : 'unknown'
