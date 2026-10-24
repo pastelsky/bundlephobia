@@ -1,7 +1,6 @@
-import { Counter, Registry } from 'prom-client'
+import { Counter } from 'prom-client'
 import type { PackageAnalysisRequestState } from '../types'
-
-export const applicationMetrics = new Registry()
+import { applicationMetrics } from '../infrastructure/application-metrics'
 
 const cacheResponses = new Counter({
   name: 'bundlephobia_analysis_responses_total',

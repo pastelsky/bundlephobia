@@ -1,7 +1,7 @@
 import type { Middleware } from 'koa'
 
 import type { AnalysisOperation } from '../analysis/contracts'
-import { recordAnalysisRequest } from '../infrastructure/request-metrics'
+import { recordAnalysisRequest } from '../analysis/metrics'
 
 export function createAnalysisContextMiddleware(
   operation: AnalysisOperation,

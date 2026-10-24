@@ -5,7 +5,7 @@ import Queue from './queue.service'
 import config from '../config'
 import type { FailureCacheEntry } from '../types'
 import { registerMetricsProvider } from './memory-diagnostics.service'
-import { applicationMetrics } from './request-metrics'
+import { applicationMetrics } from './application-metrics'
 import { registerQueueMetrics } from './queue-metrics.mts'
 
 interface WorkerPoolExecution extends Promise<unknown> {
