@@ -1,6 +1,10 @@
 module.exports = {
   testEnvironment: 'node',
   transform: {
+    '^.+\\.mts$': [
+      '@swc/jest',
+      { jsc: { target: 'es2022', parser: { syntax: 'typescript' } } },
+    ],
     '^.+\\.(t|j)sx?$': ['@swc/jest', { jsc: { target: 'es2022' } }],
   },
   transformIgnorePatterns: ['/node_modules/(?!d3-|internmap)'],
