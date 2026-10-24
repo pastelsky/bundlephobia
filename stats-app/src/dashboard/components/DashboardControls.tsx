@@ -1,4 +1,4 @@
-import { SOURCE_DETAILS, type DashboardSource } from '../sources'
+import { SOURCE_DETAILS } from '../sources'
 import {
   Badge,
   Button,
