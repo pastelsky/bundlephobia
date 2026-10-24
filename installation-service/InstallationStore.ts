@@ -58,7 +58,10 @@ class InstallationStore {
   private readonly retentionMs: number
   private readonly leaseMs: number
   private readonly onError: (error: Error) => void
-  private readonly onInstallComplete: (outcome: 'success' | 'failure') => void
+  private readonly onInstallComplete: (
+    outcome: 'success' | 'failure',
+    durationSeconds: number,
+  ) => void
   private sweepTimer?: NodeJS.Timeout
   private sweepInProgress?: Promise<void>
   private readonly keyLocks = new Map<string, Promise<unknown>>()
@@ -78,7 +81,10 @@ class InstallationStore {
       retentionMs?: number
       leaseMs?: number
       onError?: (error: Error) => void
-      onInstallComplete?: (outcome: 'success' | 'failure') => void
+      onInstallComplete?: (
+        outcome: 'success' | 'failure',
+        durationSeconds: number,
+      ) => void
     },
   ) {
     this.installationApi = installationApi
@@ -225,6 +231,9 @@ class InstallationStore {
         (await this.queue.run(async () => {
           signal?.throwIfAborted()
 
+          // Queue wait and cached reuse are excluded from installation timing.
+          const started = performance.now()
+
           // Count actual installs once, after publishing their metadata. Cache
           // hits and subscriptions sharing an installation do not count again.
           try {
@@ -234,11 +243,17 @@ class InstallationStore {
               options,
             )
 
-            this.onInstallComplete('success')
+            this.onInstallComplete(
+              'success',
+              (performance.now() - started) / 1000,
+            )
 
             return installed
           } catch (error) {
-            this.onInstallComplete('failure')
+            this.onInstallComplete(
+              'failure',
+              (performance.now() - started) / 1000,
+            )
             throw error
           }
         }))

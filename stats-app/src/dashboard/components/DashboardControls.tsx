@@ -1,16 +1,23 @@
-import { SOURCE_DETAILS, type DashboardSource } from '../sources'
+import { SOURCE_DETAILS } from '../sources'
 import {
   Badge,
   Button,
   Callout,
   Switch,
+  Select,
+  SelectItem,
   Tab,
   TabGroup,
   TabList,
 } from '@tremor/react'
 import type { UseQueryResult } from '@tanstack/react-query'
-import { Activity, RefreshCw, ShieldAlert } from 'lucide-react'
-import { TIME_RANGES, type TimeRange } from '../../lib/api'
+import { RefreshCw, ShieldAlert } from 'lucide-react'
+import {
+  TIME_RANGES,
+  availableSteps,
+  chartResolution,
+  type TimeRange,
+} from '../../lib/api'
 import type { PageSummary } from '../metrics'
 import type { DashboardPage } from '../pages'
 
@@ -60,6 +67,8 @@ export function PageHeader({
 
 interface ToolbarProps {
   range: TimeRange
+  resolution?: number
+  onResolutionChange(resolution?: number): void
   live: boolean
   refreshing: boolean
   updatedAt: number
@@ -77,22 +86,53 @@ export function DashboardToolbar(props: ToolbarProps) {
     : '—'
 
   return (
-    <div className="mb-[22px] mt-7 flex items-center justify-between gap-3 mobile:mb-[18px] mobile:mt-[22px] mobile:flex-wrap">
-      <TabGroup
-        className="w-auto shrink-0 mobile:w-full"
-        index={TIME_RANGES.findIndex(
-          option => option.label === props.range.label,
-        )}
-        onIndexChange={index => props.onRangeChange(TIME_RANGES[index])}
-      >
-        <TabList variant="solid" aria-label="Time range">
-          {TIME_RANGES.map(option => (
-            <Tab className="mobile:flex-1" key={option.label}>
-              {option.label}
-            </Tab>
-          ))}
-        </TabList>
-      </TabGroup>
+    <div className="mb-[22px] mt-7 flex flex-wrap items-center justify-between gap-3 mobile:mb-[18px] mobile:mt-[22px] mobile:flex-wrap">
+      <div className="flex min-w-0 items-center gap-3 mobile:w-full mobile:flex-wrap">
+        <TabGroup
+          className="w-auto shrink-0 mobile:w-full"
+          index={TIME_RANGES.findIndex(
+            option => option.label === props.range.label,
+          )}
+          onIndexChange={index => props.onRangeChange(TIME_RANGES[index])}
+        >
+          <TabList variant="solid" aria-label="Time range">
+            {TIME_RANGES.map(option => (
+              <Tab className="mobile:flex-1" key={option.label}>
+                {option.label}
+              </Tab>
+            ))}
+          </TabList>
+        </TabGroup>
+        <label className="flex items-center gap-2 text-[11px] text-stats-muted mobile:w-full">
+          Resolution
+          <Select
+            className="w-40 mobile:flex-1"
+            aria-label="Chart resolution"
+            value={
+              props.resolution == null
+                ? 'auto'
+                : String(
+                    chartResolution(props.range.seconds, props.resolution).step,
+                  )
+            }
+            onValueChange={value =>
+              props.onResolutionChange(
+                value === 'auto' ? undefined : Number(value),
+              )
+            }
+            enableClear={false}
+          >
+            <SelectItem value="auto">
+              Auto ({chartResolution(props.range.seconds).label})
+            </SelectItem>
+            {availableSteps(props.range.seconds).map(step => (
+              <SelectItem key={step} value={String(step)}>
+                {chartResolution(props.range.seconds, step).label}
+              </SelectItem>
+            ))}
+          </Select>
+        </label>
+      </div>
       <div className="flex items-center gap-3 mobile:w-full mobile:justify-between mobile:gap-2">
         <div className="flex items-center gap-[7px] whitespace-nowrap text-[11px] text-stats-muted">
           <Switch
@@ -147,33 +187,6 @@ export function PageTabs({ page, activeTab, onChange }: TabsProps) {
         ))}
       </TabList>
     </TabGroup>
-  )
-}
-
-export function CollectionNote({
-  source,
-  summary,
-}: {
-  source: DashboardSource
-  summary?: PageSummary
-}) {
-  if (source !== 'pipeline') return null
-  const configured = summary?.source === 'pipeline' && summary.data.configured
-
-  return (
-    <Callout
-      className="mt-3.5"
-      icon={Activity}
-      color="slate"
-      title="About these counters"
-    >
-      {configured
-        ? 'Counting completed attempts. '
-        : 'Application metrics need to be deployed before these panels collect data. '}
-      Installs exclude cached reuse. Builds include size and export analysis; an
-      install error can also fail a build. History starts when collection is
-      enabled. Process kills cannot report an outcome.
-    </Callout>
   )
 }
 

@@ -9,9 +9,9 @@ export const SOURCE_DETAILS = {
   pipeline: {
     eyebrow: 'APPLICATION SERVICES',
     healthy: 'Services collecting',
-    section: 'APPLICATION OUTCOMES',
-    scope: 'Success and failure · per completed attempt',
-    footer: 'Application counters',
+    section: 'CACHE & PROCESSING',
+    scope: 'Cache coverage · outcomes · duration',
+    footer: 'Application metrics',
   },
   resources: {
     eyebrow: 'HOST MONITORING',

@@ -21,7 +21,6 @@ import {
   PageHeader,
   DashboardToolbar,
   PageTabs,
-  CollectionNote,
   SummaryError,
 } from '../dashboard/components/DashboardControls'
 
@@ -83,6 +82,7 @@ export function App() {
 
   const [range, setRange] = useState(TIME_RANGES[0])
   const [live, setLive] = useState(true)
+  const [resolution, setResolution] = useState<number>()
   const client = useQueryClient()
   const refreshing = useIsFetching() > 0
 
@@ -106,6 +106,8 @@ export function App() {
           <PageHeader page={page} query={query} />
           <DashboardToolbar
             range={range}
+            resolution={resolution}
+            onResolutionChange={setResolution}
             live={live}
             refreshing={refreshing}
             updatedAt={query.dataUpdatedAt}
@@ -124,7 +126,6 @@ export function App() {
             activeTab={tabId}
             onChange={tab => setParams({ tab })}
           />
-          <CollectionNote source={page.source} summary={summary} />
           <div className="mb-3.5 mt-[31px] flex justify-between gap-3 text-[9px] text-slate-400 mobile:mt-6">
             <span className="font-semibold tracking-[1.2px] text-slate-500">
               {details.section}
@@ -136,7 +137,7 @@ export function App() {
               <ChartPanel
                 key={panel.id}
                 panel={panel}
-                range={range}
+                range={{ ...range, step: resolution }}
                 live={live}
               />
             ))}

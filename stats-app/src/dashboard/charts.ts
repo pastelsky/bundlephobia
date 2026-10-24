@@ -37,6 +37,7 @@ export interface ChartDefinition {
   unit: string
   measurement?: 'counter'
   stacked?: boolean
+  showShare?: boolean
   format: (value: number) => string
   series: SeriesFactory
   views?: ChartView[]
@@ -135,9 +136,11 @@ function outcomeChart(
   return {
     id,
     title,
-    description: 'Completed attempts · success versus failure',
+    description: 'Success and failure',
     unit: 'attempts',
     measurement: 'counter',
+    stacked: true,
+    showShare: true,
     format: value => numberFormat.format(value),
     series: window =>
       ['success', 'failure'].map(outcome => ({
@@ -148,7 +151,97 @@ function outcomeChart(
   }
 }
 
+const cacheMetric =
+  'bundlephobia_analysis_responses_total{job="bundlephobia_application"}'
+
+function cacheChart(percentage: boolean): ChartDefinition {
+  return {
+    id: percentage ? 'cache-share' : 'cache-responses',
+    title: percentage ? 'Cache coverage' : 'Cache responses',
+    description: 'Successful origin responses',
+    unit: percentage ? '%' : 'responses',
+    measurement: 'counter',
+    stacked: true,
+    showShare: !percentage,
+    format: value =>
+      percentage
+        ? `${numberFormat.format(value)}%`
+        : numberFormat.format(value),
+    chart: percentage ? { maxValue: 100 } : {},
+    series: window =>
+      ['hit', 'miss'].map(cache => {
+        const count = `sum(increase(bundlephobia_analysis_responses_total{job="bundlephobia_application",cache="${cache}"}[${window}]))`
+
+        return {
+          expression: percentage
+            ? `100 * (${count}) / sum(increase(${cacheMetric}[${window}]))`
+            : count,
+          name: cache === 'hit' ? 'Cached' : 'Computed',
+          color: cache === 'hit' ? 'emerald' : 'orange',
+        }
+      }),
+  }
+}
+
+function durationChart(
+  id: string,
+  title: string,
+  metric: string,
+): ChartDefinition {
+  return {
+    id,
+    title,
+    description: 'p50, p95 and p99 · uncached work',
+    unit: 'seconds',
+    chart: { type: 'line' },
+    format: value =>
+      value < 1
+        ? `${numberFormat.format(value * 1000)} ms`
+        : `${numberFormat.format(value)} s`,
+    series: window =>
+      [
+        { quantile: 0.5, name: 'p50', color: 'sky' },
+        { quantile: 0.95, name: 'p95', color: 'orange' },
+        { quantile: 0.99, name: 'p99', color: 'rose' },
+      ].map(({ quantile, name, color }) => ({
+        name,
+        color,
+        expression: `histogram_quantile(${quantile}, sum by (le) (rate(${metric}_bucket[${window}])))`,
+      })),
+  }
+}
+
+function queueChart(state: 'waiting' | 'running'): ChartDefinition {
+  return {
+    id: `queue-${state}`,
+    title: state === 'waiting' ? 'Queue backlog' : 'Work in progress',
+    description:
+      state === 'waiting'
+        ? 'Jobs waiting for a worker'
+        : 'Jobs currently running',
+    unit: 'jobs',
+    chart: { type: 'line', allowDecimals: false },
+    format: value => numberFormat.format(value),
+    series: () => [
+      {
+        expression: `sum(bundlephobia_queue_jobs{job="bundlephobia_application",queue="analysis",state="${state}"})`,
+        name: 'Analysis',
+        color: 'orange',
+      },
+      {
+        expression: `sum(bundlephobia_queue_jobs{job="bundlephobia_installations",queue="installations",state="${state}"})`,
+        name: 'Installations',
+        color: 'violet',
+      },
+    ],
+  }
+}
+
 const pipeline = {
+  queueBacklog: queueChart('waiting'),
+  queueRunning: queueChart('running'),
+  cacheShare: cacheChart(true),
+  cacheResponses: cacheChart(false),
   builds: outcomeChart('build-outcomes', 'Build outcomes', {
     metric: 'bundlephobia_builds_total',
     job: 'bundlephobia_builds',
@@ -157,6 +250,16 @@ const pipeline = {
     metric: 'bundlephobia_installs_total',
     job: 'bundlephobia_installations',
   }),
+  buildDuration: durationChart(
+    'build-duration',
+    'Build duration',
+    'bundlephobia_build_duration_seconds',
+  ),
+  installDuration: durationChart(
+    'install-duration',
+    'Installation duration',
+    'bundlephobia_install_duration_seconds',
+  ),
 }
 
 const hostJob = 'job="bundlephobia_host"'

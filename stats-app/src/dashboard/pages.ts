@@ -95,19 +95,45 @@ export const PAGES: DashboardPage[] = [
     id: 'pipeline',
     title: 'Builds & installs',
     heading: 'Builds & installations',
-    description:
-      'Completed attempts in the application services, excluding cache hits.',
+    description: 'Cache coverage, queues, outcomes, and processing time.',
     icon: Hammer,
     source: 'pipeline',
-    panels: [CHARTS.builds, CHARTS.installs],
+    panels: [
+      CHARTS.cacheShare,
+      CHARTS.cacheResponses,
+      CHARTS.builds,
+      CHARTS.installs,
+      CHARTS.buildDuration,
+      CHARTS.installDuration,
+      CHARTS.queueBacklog,
+      CHARTS.queueRunning,
+    ],
     breakdown: false,
     tabs: [
       {
         id: 'all',
         title: 'All activity',
       },
-      { id: 'builds', title: 'Builds', panels: [CHARTS.builds] },
-      { id: 'installs', title: 'Installations', panels: [CHARTS.installs] },
+      {
+        id: 'queues',
+        title: 'Queues',
+        panels: [CHARTS.queueBacklog, CHARTS.queueRunning],
+      },
+      {
+        id: 'cache',
+        title: 'Cache',
+        panels: [CHARTS.cacheShare, CHARTS.cacheResponses],
+      },
+      {
+        id: 'builds',
+        title: 'Builds',
+        panels: [CHARTS.builds, CHARTS.buildDuration],
+      },
+      {
+        id: 'installs',
+        title: 'Installations',
+        panels: [CHARTS.installs, CHARTS.installDuration],
+      },
     ],
   },
 ]

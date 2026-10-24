@@ -1,4 +1,4 @@
-import type { Middleware } from 'koa'
+import type { Context, Middleware, Next } from 'koa'
 
 import { createJavaScriptPackageReference } from '../../../languages/javascript'
 import { packageAnalysisGateway } from '../../analysis'
@@ -6,6 +6,18 @@ import config from '../../config'
 import { createAnalysisKey } from '../../analysis/keys'
 import { failureCache } from '../../infrastructure/runtime'
 import logger from '../../infrastructure/logger.service'
+import { recordCacheResponse } from '../../infrastructure/request-metrics'
+
+function recordResponse(ctx: Context, cache: 'hit' | 'miss') {
+  if (ctx.status !== 200 || ctx.query.peek || ctx.query.peep) return
+
+  recordCacheResponse(ctx.state.analysis.operation, cache)
+}
+
+async function serveUncached(ctx: Context, next: Next) {
+  await next()
+  recordResponse(ctx, 'miss')
+}
 
 const cachedResponse: Middleware = async (ctx, next) => {
   const { force, peep } = ctx.query
@@ -13,7 +25,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
   const { operation } = ctx.state.analysis
 
   if (force === 'true') {
-    await next()
+    await serveUncached(ctx, next)
 
     return
   }
@@ -63,6 +75,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
           : 0,
     }
 
+    recordResponse(ctx, 'hit')
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })
 
     return
@@ -76,7 +89,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
     return
   }
 
-  await next()
+  await serveUncached(ctx, next)
 }
 
 export default cachedResponse

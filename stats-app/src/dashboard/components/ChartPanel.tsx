@@ -8,13 +8,13 @@ import { LoadingPlaceholder } from '../../components/ui/LoadingPlaceholder'
 import { Activity, ShieldAlert } from 'lucide-react'
 import { loadPanel, type ChartRow } from '../metrics'
 import type { ChartCapacity, ChartDefinition } from '../charts'
-import { chartResolution, type TimeRange } from '../../lib/api'
+import { chartResolution, type ChartRange } from '../../lib/api'
 
 type PanelData = Awaited<ReturnType<typeof loadPanel>>
 
 interface PanelProps {
   panel: ChartDefinition
-  range: TimeRange
+  range: ChartRange
   live: boolean
 }
 
@@ -86,14 +86,11 @@ function ChartResult({
         valueFormatter={panel.format}
         showLegend={data.categories.length > 1}
         stacked={panel.stacked}
+        showShare={panel.showShare}
         variant={type}
         {...options}
         noDataText="No samples in this time range"
       />
-      <p className="mt-2 text-[11px] text-stats-muted">
-        {panel.measurement === 'counter' ? 'Totals per' : 'Sampled every'}{' '}
-        {data.resolution.label}
-      </p>
     </>
   )
 }
@@ -136,7 +133,13 @@ export function ChartPanel({ panel, range, live }: PanelProps) {
   )
 
   const query = useQuery({
-    queryKey: ['panel', panel.id, viewId, range.label],
+    queryKey: [
+      'panel',
+      panel.id,
+      viewId,
+      range.label,
+      chartResolution(range.seconds, range.step).step,
+    ],
     queryFn: ({ signal }) => loadPanel(configured, range, signal),
     refetchInterval: live ? 60000 : false,
   })
@@ -150,8 +153,8 @@ export function ChartPanel({ panel, range, live }: PanelProps) {
         title={panel.title}
         description={panel.description}
         unit={
-          panel.measurement === 'counter'
-            ? `${panel.unit} / ${chartResolution(range.seconds).label}`
+          panel.measurement === 'counter' && panel.unit !== '%'
+            ? `${panel.unit} / ${chartResolution(range.seconds, range.step).label}`
             : panel.unit
         }
       />

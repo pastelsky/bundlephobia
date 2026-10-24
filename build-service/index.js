@@ -16,11 +16,11 @@ import memoryDiagnostics from '../scripts/memory-diagnostics.cjs'
 
 const fastify = Fastify()
 
-const outcomes = createOutcomeMetrics('bundlephobia_builds_total', [
-  'size',
-  'exports-sizes',
-  'exports',
-])
+const outcomes = createOutcomeMetrics(
+  'bundlephobia_builds_total',
+  ['size', 'exports-sizes', 'exports'],
+  'bundlephobia_build_duration_seconds',
+)
 
 // Count terminal analyses, not TASK_PACKAGE_BUILD phases: an export-size
 // analysis can compile multiple chunks. This listener is independent of

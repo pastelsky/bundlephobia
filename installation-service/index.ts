@@ -16,10 +16,13 @@ import {
 } from './resolveRegistryPackageSpec.ts'
 import serializeError from '../build-service/serializeError.js'
 import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
+import { registerQueueMetrics } from '../server/infrastructure/queue-metrics.mts'
 
-const outcomes = createOutcomeMetrics('bundlephobia_installs_total', [
-  'install',
-])
+const outcomes = createOutcomeMetrics(
+  'bundlephobia_installs_total',
+  ['install'],
+  'bundlephobia_install_duration_seconds',
+)
 
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value)
@@ -61,6 +64,14 @@ async function installPackageWithVersion(
   }
 }
 
+const installQueue = createInstallQueue(
+  positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
+)
+
+registerQueueMetrics(outcomes.registry, 'installations', () =>
+  installQueue.diagnostics(),
+)
+
 const store = new InstallationStore(
   {
     installPackage: installPackageWithVersion,
@@ -70,10 +81,9 @@ const store = new InstallationStore(
     // TASK_PACKAGE_INSTALL reports each package-manager fallback, before
     // version validation and metadata publication. Count the store completion
     // once so a Bun failure followed by npm success is one successful install.
-    onInstallComplete: outcome => outcomes.record('install', outcome),
-    queue: createInstallQueue(
-      positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
-    ),
+    onInstallComplete: (outcome, seconds) =>
+      outcomes.record('install', outcome, seconds),
+    queue: installQueue,
     rootPath:
       process.env.INSTALLATION_ROOT_PATH || '/tmp/tmp-build/installations',
     retentionMs: positiveInteger(
