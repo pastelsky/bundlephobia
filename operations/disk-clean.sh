@@ -10,6 +10,7 @@ LOOP_SOFT_THRESHOLD=60     # % loop usage before oldest cache entries are evicte
 LOOP_HARD_THRESHOLD=80     # % loop usage before the complete bun cache is cleared
 LOOP_TARGET_USAGE=$((LOOP_SOFT_THRESHOLD * 2 / 3))
 ORPHAN_MIN_AGE_SECONDS=600
+BUN_CACHE_MAX_AGE_DAYS="${BUN_CACHE_MAX_AGE_DAYS:-1}"
 VICTORIAMETRICS_DATA_DIR="/var/lib/bundlephobia-victoriametrics"
 VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES=$((128 * 1024 * 1024))
 VICTORIAMETRICS_PM2_APP="bundlephobia-victoriametrics"
@@ -99,6 +100,17 @@ cleanup_stale_package_dirs() {
 cleanup_npm_cache() {
     /usr/local/bin/npm cache clean --force --cache=/tmp/tmp-build/cache 2>/dev/null || true
     log "Cleared npm cache from loop device"
+}
+
+prune_bun_cache() {
+    local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
+    [ -d "$cache_root" ] || return
+
+    log "Pruning Bun package downloads older than ${BUN_CACHE_MAX_AGE_DAYS} day(s)"
+    if ! "${BUN_BIN:-/root/.bun/bin/bun}" pm cache prune \
+        --cache-dir="$cache_root" --max-age "$BUN_CACHE_MAX_AGE_DAYS" >>"$LOG_FILE" 2>&1; then
+        log "WARNING: Bun age pruning failed; continuing pressure cleanup"
+    fi
 }
 
 evict_oldest_bun_cache_entries() {
@@ -198,6 +210,16 @@ cleanup_loop_device() {
     fi
 
     log "Loop device (/tmp/tmp-build) usage: ${loop_usage}%"
+
+    if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
+        prune_bun_cache
+        loop_usage=$(get_loop_usage)
+        if [ "$loop_usage" -lt "$LOOP_SOFT_THRESHOLD" ]; then
+            trim_loop_device
+            log "Loop usage after age pruning: ${loop_usage}%"
+            return
+        fi
+    fi
 
     if [ "$loop_usage" -ge "$LOOP_HARD_THRESHOLD" ]; then
         log "Loop usage at or above hard threshold ${LOOP_HARD_THRESHOLD}% — running aggressive cleanup"

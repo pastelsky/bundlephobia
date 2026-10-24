@@ -116,6 +116,25 @@ if (process.argv[2] !== '--sandboxed') {
   await fs.mkdir(path.join(bunCache, 'old package'), { recursive: true })
   await fs.writeFile(path.join(bunCache, 'old manifest.npm'), 'metadata')
   await fs.writeFile(path.join(bunCache, '.tmp/active'), 'in progress')
+  const agedPackage = path.join(bunCache, 'cleanup-fixture@1.0.0@@@1')
+  await fs.mkdir(agedPackage)
+  await fs.writeFile(path.join(agedPackage, 'package.json'), '{}')
+  const yesterday = new Date(Date.now() - 2 * 24 * 60 * 60_000)
+  await fs.utimes(agedPackage, yesterday, yesterday)
+  execFileSync(
+    'bash',
+    [
+      '-c',
+      'BUN_BIN="$2"; source "$1"; LOG_FILE=/dev/null; log() { :; }; prune_bun_cache',
+      'cleanup',
+      new URL('../operations/disk-clean.sh', import.meta.url).pathname,
+      execFileSync('which', ['bun'], { encoding: 'utf8' }).trim(),
+    ],
+    { stdio: 'inherit' },
+  )
+  await assert.rejects(fs.access(agedPackage), { code: 'ENOENT' })
+  await fs.access(path.join(bunCache, 'old package'))
+  await fs.access(path.join(bunCache, 'old manifest.npm'))
   execFileSync(
     'bash',
     [
