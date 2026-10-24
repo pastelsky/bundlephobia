@@ -1,4 +1,8 @@
+import type { eventQueue } from 'package-build-stats'
+import { z } from 'zod'
 import { Counter, Registry } from 'prom-client'
+
+const outcomeEvent = z.object({ isSuccessful: z.boolean() })
 
 // Only bounded operation/outcome labels: package names and error messages would
 // grow the database with every package. Default Node metrics are intentionally off.
@@ -22,20 +26,21 @@ export function createOutcomeMetrics(name: string, operations: string[]) {
     completed.inc({ operation, outcome })
   }
 
-  async function measure<T>(
-    operation: string,
-    run: () => Promise<T>,
-  ): Promise<T> {
-    try {
-      const result = await run()
-      record(operation, 'success')
+  // Library events carry arbitrary details; only the completion flag crosses
+  // into metrics. Event names and operation labels come from static wiring.
+  function observe(
+    queue: typeof eventQueue,
+    operationsByEvent: Record<string, string>,
+  ) {
+    for (const [event, operation] of Object.entries(operationsByEvent)) {
+      queue.on(event, details => {
+        const parsed = outcomeEvent.safeParse(details)
 
-      return result
-    } catch (error) {
-      record(operation, 'failure')
-      throw error
+        if (parsed.success)
+          record(operation, parsed.data.isSuccessful ? 'success' : 'failure')
+      })
     }
   }
 
-  return { registry, record, measure }
+  return { registry, record, observe }
 }

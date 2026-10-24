@@ -8,7 +8,7 @@ import {
 } from 'package-build-stats'
 import Amplitude from '@amplitude/node'
 import serializeError from './serializeError.js'
-import { measureBuild as measureBuildDiagnostics } from './metrics.js'
+import { measureBuild } from './metrics.js'
 import { createOutcomeMetrics } from '../observability/outcomeMetrics.ts'
 import { createInstallationProvider } from './installationProvider.ts'
 import { activeBuilds, recordBuildPhase } from './buildMemoryTrace.ts'
@@ -22,11 +22,14 @@ const outcomes = createOutcomeMetrics('bundlephobia_builds_total', [
   'exports',
 ])
 
-function measureBuild(options) {
-  return outcomes.measure(options.operation, () =>
-    measureBuildDiagnostics(options),
-  )
-}
+// Count terminal analyses, not TASK_PACKAGE_BUILD phases: an export-size
+// analysis can compile multiple chunks. This listener is independent of
+// optional diagnostics and the Amplitude sink already subscribed below.
+outcomes.observe(eventQueue, {
+  TASK_PACKAGE_STATS: 'size',
+  TASK_PACKAGE_EXPORTS_SIZES: 'exports-sizes',
+  TASK_PACKAGE_EXPORTS: 'exports',
+})
 
 // PM2 workers share the job port. Scraping it would randomly switch counters
 // between workers, so each existing worker exposes a private port. During a rolling reload, old/new workers

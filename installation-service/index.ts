@@ -70,6 +70,9 @@ const store = new InstallationStore(
     disposePackage,
   },
   {
+    // TASK_PACKAGE_INSTALL reports each package-manager fallback, before
+    // version validation and metadata publication. Count the store completion
+    // once so a Bun failure followed by npm success is one successful install.
     onInstallComplete: outcome => outcomes.record('install', outcome),
     queue: createInstallQueue(
       positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
