@@ -422,7 +422,6 @@ const errorHandler: Middleware = async (ctx, next) => {
       return
     }
 
-    debug('saved %s to failure cache', packageString)
     const analysis = ctx.state.analysis
     const language = analysis?.language ?? 'javascript'
     const operation = analysis?.operation ?? 'package-analysis'
@@ -435,6 +434,7 @@ const errorHandler: Middleware = async (ctx, next) => {
 
     if (!recordFailedAttempt(failedAttempt, failureCacheKey)) return
 
+    debug('saved %s to failure cache', packageString)
     failureCache.set(
       failureCacheKey,
       recordFailure(failureCache.get(failureCacheKey), { status }),
