@@ -175,7 +175,9 @@ fastify.get('/metrics', async (_request, reply) => {
     .send(await outcomes.registry.metrics())
 })
 
-fastify.get('/diagnostics', async () => store.diagnostics())
+if (process.env.ENABLE_DIAGNOSTICS === 'true') {
+  fastify.get('/diagnostics', async () => store.diagnostics())
+}
 
 fastify.addHook('onClose', async () => store.close())
 

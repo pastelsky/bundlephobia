@@ -49,11 +49,12 @@ if (process.env.BUILD_METRICS_BASE_PORT) {
   fastify.addHook('onClose', async () => metrics.close())
 }
 
-memoryDiagnostics.registerMetricsProvider('builds', () => ({
-  active: activeBuilds(),
-}))
-
-eventQueue.on('*', recordBuildPhase)
+if (memoryDiagnostics.enabled) {
+  memoryDiagnostics.registerMetricsProvider('builds', () => ({
+    active: activeBuilds(),
+  }))
+  eventQueue.on('*', recordBuildPhase)
+}
 
 const installationProvider = process.env.INSTALLATION_SERVICE_ENDPOINT
   ? createInstallationProvider(process.env.INSTALLATION_SERVICE_ENDPOINT)

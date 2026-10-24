@@ -434,6 +434,8 @@ export function isExpensiveBuild(metrics) {
 // consistent lifecycle, including failures during setup and cleanup.
 // oxlint-disable-next-line complexity
 export async function measureBuild({ operation, packageString, run }) {
+  if (process.env.ENABLE_DIAGNOSTICS !== 'true') return run()
+
   const startedAt = performance.now()
   const trace = startBuildTrace(operation, packageString)
 
