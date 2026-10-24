@@ -111,6 +111,27 @@ if (process.argv[2] !== '--sandboxed') {
     [],
     'Production cleanup missed generated output',
   )
+  const bunCache = path.join(root, 'cache/bun')
+  await fs.mkdir(path.join(bunCache, '.tmp'), { recursive: true })
+  await fs.mkdir(path.join(bunCache, 'old package'), { recursive: true })
+  await fs.writeFile(path.join(bunCache, 'old manifest.npm'), 'metadata')
+  await fs.writeFile(path.join(bunCache, '.tmp/active'), 'in progress')
+  execFileSync(
+    'bash',
+    [
+      '-c',
+      'source "$1"; log() { :; }; get_loop_usage() { echo 80; }; evict_oldest_bun_cache_entries',
+      'cleanup',
+      new URL('../operations/disk-clean.sh', import.meta.url).pathname,
+    ],
+    { stdio: 'inherit' },
+  )
+  assert.deepEqual(await fs.readdir(bunCache), ['.tmp'])
+  assert.equal(
+    await fs.readFile(path.join(bunCache, '.tmp/active'), 'utf8'),
+    'in progress',
+  )
+
   console.log(
     'Real builds stayed in approved paths; existing cleanup reclaimed their retained output.',
   )
