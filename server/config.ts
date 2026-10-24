@@ -6,7 +6,7 @@ const dev = false
 const config = {
   tmp: path.join(__dirname, '..', 'tmp-build'),
   MAX_WORKERS: os.cpus().length,
-  MAX_FAILURE_CACHE_ENTRIES: 10_000,
+  MAX_FAILURE_CACHE_ENTRIES: 2_000,
   WORKER_TIMEOUT: 600 * 1000,
   DEFAULT_DEV_PORT: 5000,
   blackList: [

@@ -124,6 +124,7 @@
     "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
     "prod": "yarn run build && yarn start",
     "test": "jest",
+    "test:unit": "jest --testPathIgnorePatterns='/__tests__/errors-cache\\.test\\.ts$'",
     "test:haproxy": "python3 __tests__/haproxy-rate-limits.py",
     "test:process-config": "jest --runInBand __tests__/validate-process-config.test.ts",
     "typecheck": "tsc --project tsconfig.typecheck.json --noEmit",

@@ -47,8 +47,8 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
       - name: Run lint
         run: yarn lint
-      - name: Test build failure backoff
-        run: yarn test --runInBand __tests__/failure-backoff.test.ts __tests__/failure-backoff.middleware.test.ts __tests__/error-middleware.test.ts __tests__/cancellation-error.test.ts
+      - name: Run unit tests
+        run: yarn test:unit --runInBand
       - name: Test HAProxy request limits
         if: matrix.node-version == '24.x'
         run: |
@@ -61,8 +61,6 @@ jobs:
         run: yarn typecheck:recommendations
       - name: Type check
         run: yarn typecheck
-      - name: Test installation lifecycle
-        run: yarn test --runInBand __tests__/installation-store.test.ts
       - run: yarn build
         env:
           CI: true
