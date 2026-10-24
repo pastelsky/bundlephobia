@@ -8,8 +8,6 @@ const outcomeEvent = z.object({
   duration: z.number().finite().nonnegative().optional(),
 })
 
-export type OutcomeError = z.infer<typeof outcomeEvent>['error']
-
 // Only bounded operation/outcome labels: package names and error messages would
 // grow the database with every package. Default Node metrics are intentionally off.
 export function createOutcomeMetrics(
@@ -57,23 +55,24 @@ export function createOutcomeMetrics(
   function observe(
     queue: typeof eventQueue,
     operationsByEvent: Record<string, string>,
-    onFailure?: (operation: string, error: OutcomeError) => void,
+    onFailure?: (operation: string, errorName?: string) => void,
   ) {
     for (const [event, operation] of Object.entries(operationsByEvent)) {
       queue.on(event, details => {
         const parsed = outcomeEvent.safeParse(details)
 
-        if (!parsed.success) return
+        if (parsed.success) {
+          record(
+            operation,
+            parsed.data.isSuccessful ? 'success' : 'failure',
+            parsed.data.duration == null
+              ? undefined
+              : parsed.data.duration / 1000,
+          )
 
-        record(
-          operation,
-          parsed.data.isSuccessful ? 'success' : 'failure',
-          parsed.data.duration == null
-            ? undefined
-            : parsed.data.duration / 1000,
-        )
-
-        if (!parsed.data.isSuccessful) onFailure?.(operation, parsed.data.error)
+          if (!parsed.data.isSuccessful)
+            onFailure?.(operation, parsed.data.error?.name)
+        }
       })
     }
   }

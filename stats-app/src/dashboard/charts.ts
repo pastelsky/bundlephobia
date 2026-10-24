@@ -1,5 +1,4 @@
 import type { LineChartProps } from '@tremor/react'
-import { BUILD_FAILURE_CODES } from '@bundlephobia/service-contracts/build-metrics'
 import { formatBytes, numberFormat } from '../lib/format'
 
 const frontend = '{job="haproxy",proxy="bundlephobia_http"}'
@@ -11,10 +10,10 @@ export interface ChartCategory {
   hideWhenZero?: boolean
 }
 
-// Grouped expressions must declare the label and its presentation together.
+// Grouped queries can use returned labels and automatic colors.
 export type ChartSeries = { expression: string } & (
   | { name: string; color: string; groupBy?: never }
-  | { groupBy: { label: string; categories: ChartCategory[] } }
+  | { groupBy: { label: string; categories?: ChartCategory[] } }
 )
 
 type SeriesFactory = (window: string) => ChartSeries[]
@@ -311,20 +310,6 @@ const buildRequests: ChartDefinition = {
   ],
 }
 
-const failureColors = [
-  'orange',
-  'rose',
-  'sky',
-  'violet',
-  'amber',
-  'teal',
-  'pink',
-  'indigo',
-  'lime',
-  'cyan',
-  'slate',
-]
-
 const buildFailures: ChartDefinition = {
   id: 'build-failure-reasons',
   title: 'Build failure reasons',
@@ -337,14 +322,7 @@ const buildFailures: ChartDefinition = {
   series: window => [
     {
       expression: `sum by (code) (increase(bundlephobia_build_failures_total{job="bundlephobia_builds"}[${window}]))`,
-      groupBy: {
-        label: 'code',
-        categories: BUILD_FAILURE_CODES.map((code, index) => ({
-          name: code,
-          color: failureColors[index % failureColors.length],
-          hideWhenZero: true,
-        })),
-      },
+      groupBy: { label: 'code' },
     },
   ],
 }

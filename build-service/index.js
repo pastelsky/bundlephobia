@@ -7,9 +7,9 @@ import {
   eventQueue,
 } from 'package-build-stats'
 import Amplitude from '@amplitude/node'
+import { Counter } from 'prom-client'
 import serializeError from './serializeError.js'
 import { measureBuild } from './metrics.js'
-import { createBuildFailureRecorder } from './failure-metrics.ts'
 import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
 import { createInstallationProvider } from './installationProvider.ts'
 import { activeBuilds, recordBuildPhase } from './buildMemoryTrace.ts'
@@ -23,6 +23,13 @@ const outcomes = createOutcomeMetrics(
   'bundlephobia_build_duration_seconds',
 )
 
+const buildFailures = new Counter({
+  name: 'bundlephobia_build_failures_total',
+  help: 'Failed terminal build attempts grouped by the SDK error code.',
+  labelNames: ['operation', 'code'],
+  registers: [outcomes.registry],
+})
+
 // Count terminal analyses, not TASK_PACKAGE_BUILD phases: an export-size
 // analysis can compile multiple chunks. This listener is independent of
 // optional diagnostics and the Amplitude sink already subscribed below.
@@ -33,7 +40,8 @@ outcomes.observe(
     TASK_PACKAGE_EXPORTS_SIZES: 'exports-sizes',
     TASK_PACKAGE_EXPORTS: 'exports',
   },
-  createBuildFailureRecorder(outcomes.registry),
+  (operation, code) =>
+    buildFailures.inc({ operation, code: code ?? 'UnknownError' }),
 )
 
 // PM2 workers share the job port. Scraping it would randomly switch counters
