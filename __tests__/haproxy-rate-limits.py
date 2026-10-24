@@ -144,24 +144,31 @@ class BotRateLimits(unittest.TestCase):
                 self.runtime('clear table api_client_usage')
                 self.assertEqual(send(244), 200)
 
-    def test_api_and_page_limits_are_independent_per_family(self):
+    def test_api_and_page_limits_share_pools_but_keep_family_cooldowns(self):
         paths = ['/api/size', '/package/example']
-        families = [
-            ['Bytespider/1', 'TikTokSpider/2'],
-            ['Baiduspider/1', 'Baiduspider/2'],
-            ['Googlebot/2.1', 'GoogleOther'],
-            ['GPTBot/1', 'OAI-SearchBot/2'],
-            ['Amazonbot/1', 'Amazonbot/2'],
-            ['Shields.io/1', 'Shields.io/2'],
+        pools = [
+            ('google', ['Googlebot/2.1', 'GoogleOther']),
+            ('search', ['Baiduspider/1', 'bingbot/2', 'Applebot/1',
+                        'YandexBot/1', 'PetalBot/1']),
+            ('ai', ['Bytespider/1', 'TikTokSpider/2', 'GPTBot/1',
+                    'OAI-SearchBot/1', 'ClaudeBot/1', 'Amazonbot/1']),
+            ('developer_tools', ['Shields.io/1', 'Badgen/1',
+                                 'Data-Pipeline-Enricher/1', 'Depscope/1']),
+            ('seo', ['Ahrefs/1', 'Semrush/1', 'Dotbot/1', 'AwarioBot/1']),
         ]
-        for agents in families:
+        for pool, agents in pools:
             for i in range(26):
-                self.assertEqual(self.request(agents[i % 2], i, paths[i % 2]), 200)
-            # Aliases and rotating IPs share this family's allowance. Exhausting
-            # it, then entering cooldown, must not affect the next family.
+                self.assertEqual(self.request(agents[i % len(agents)], i,
+                                              paths[i % 2]), 200)
+            for ua in agents:
+                self.assertEqual(self.request(ua, 240), 429)
+            # Only the first family enters cooldown; the next pool stays available.
             for i in range(30):
-                self.assertEqual(self.request(agents[i % 2], 240 + i, paths[i % 2]), 429)
+                self.assertEqual(self.request(agents[0], i, paths[i % 2]), 429)
             self.assertEqual(self.retry_after, '300')
+            self.assertEqual(self.request(agents[0], 240, '/asset.js'), 429)
+            if pool != 'google':
+                self.assertEqual(self.request(agents[-1], 240, '/asset.js'), 200)
         # Unrecognized automation uses trusted IPs instead of one catch-all group.
         for ip in ['198.51.100.240', '198.51.100.241']:
             for i in range(26):
