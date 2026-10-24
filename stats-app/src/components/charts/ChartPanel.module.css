@@ -67,3 +67,36 @@
     height: 240px;
   }
 }
+
+.chart-views {
+  margin-top: 16px;
+}
+.chart-views button {
+  flex: 1;
+}
+.capacity-readout {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+.capacity-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--stats-muted);
+}
+.capacity-heading strong {
+  color: var(--stats-text);
+  font-weight: 600;
+}
+.capacity-note {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--stats-muted);
+}

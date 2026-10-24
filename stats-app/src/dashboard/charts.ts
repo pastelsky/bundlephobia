@@ -1,3 +1,4 @@
+import type { LineChartProps } from '@tremor/react'
 import { formatBytes, numberFormat } from '../lib/format'
 
 const frontend = '{job="haproxy",proxy="bundlephobia_http"}'
@@ -14,6 +15,21 @@ export type ChartSeries = { expression: string } & (
   | { groupBy: { label: string; categories: ChartCategory[] } }
 )
 
+type SeriesFactory = (window: string) => ChartSeries[]
+
+export interface ChartCapacity {
+  used: string
+  total: string
+  available?: string
+  emptyLabel?: string
+}
+
+export interface ChartView {
+  id: string
+  title: string
+  series: SeriesFactory
+}
+
 export interface ChartDefinition {
   id: string
   title: string
@@ -21,7 +37,12 @@ export interface ChartDefinition {
   unit: string
   stacked?: boolean
   format: (value: number) => string
-  series: (window: string) => ChartSeries[]
+  series: SeriesFactory
+  views?: ChartView[]
+  capacity?: ChartCapacity
+  chart?: Pick<LineChartProps, 'minValue' | 'maxValue' | 'allowDecimals'> & {
+    type?: 'area' | 'line'
+  }
 }
 
 // Each chart owns its queries, series labels, colors, and display options.
@@ -88,6 +109,7 @@ const traffic = {
     title: 'Open connections',
     description: 'Concurrent sessions at the public frontend',
     unit: 'sessions',
+    chart: { allowDecimals: false },
     format: value => numberFormat.format(value),
     series: () => [
       {
@@ -139,12 +161,34 @@ export const cpuUsage = (window: string) =>
 
 export const memoryUsed = `bundlephobia_host_memory_bytes{${hostJob},kind="total"} - ignoring(kind) bundlephobia_host_memory_bytes{${hostJob},kind="available"}`
 
+// Keep capacity as a sampled series: a resized filesystem must not rewrite
+// the capacity shown for older points. Mounts use separate scales.
+const diskViews: ChartView[] = [
+  ['root', 'Main disk'],
+  ['builds', 'Builds'],
+  ['metrics', 'Metrics'],
+].map(([id, title]) => ({
+  id,
+  title,
+  series: () =>
+    [
+      ['used', 'Used', 'orange'],
+      ['total', 'Capacity', 'slate'],
+      ['available', 'Available', 'emerald'],
+    ].map(([kind, name, color]) => ({
+      expression: `bundlephobia_host_disk_bytes{${hostJob},mount="${id}",kind="${kind}"}`,
+      name,
+      color,
+    })),
+}))
+
 const resources = {
   cpu: {
     id: 'host-cpu',
     title: 'CPU usage',
     description: 'Busy time across all cores · excludes idle and I/O wait',
     unit: '%',
+    chart: { minValue: 0, maxValue: 100 },
     format: value => `${numberFormat.format(value)}%`,
     series: window => [
       { expression: cpuUsage(window), name: 'CPU', color: 'orange' },
@@ -153,6 +197,7 @@ const resources = {
   load: {
     id: 'host-load',
     title: 'CPU load',
+    chart: { type: 'line' },
     description: 'Runnable and waiting tasks · compare with CPU core count',
     unit: 'tasks',
     format: value => numberFormat.format(value),
@@ -176,6 +221,8 @@ const resources = {
   memory: {
     id: 'host-memory',
     title: 'Memory usage',
+    chart: { type: 'line' },
+    capacity: { used: 'Used', total: 'Total' },
     description: 'RAM in use · reclaimable filesystem cache is available',
     unit: 'bytes',
     format: formatBytes,
@@ -191,19 +238,14 @@ const resources = {
   disk: {
     id: 'host-disk',
     title: 'Disk usage',
-    description: 'Used space on each filesystem · see available capacity below',
+    description:
+      'Used, available, and total capacity for the selected filesystem',
     unit: 'bytes',
+    chart: { type: 'line' },
+    capacity: { used: 'Used', total: 'Capacity', available: 'Available' },
     format: formatBytes,
-    series: () =>
-      [
-        ['root', 'Main filesystem', 'sky'],
-        ['builds', 'Temporary builds', 'orange'],
-        ['metrics', 'VictoriaMetrics', 'violet'],
-      ].map(([mount, name, color]) => ({
-        color,
-        expression: `bundlephobia_host_disk_bytes{${hostJob},mount="${mount}",kind="used"}`,
-        name,
-      })),
+    series: diskViews[0].series,
+    views: diskViews,
   },
   network: {
     id: 'host-network',
@@ -221,6 +263,12 @@ const resources = {
   swap: {
     id: 'host-swap',
     title: 'Swap usage',
+    chart: { type: 'line' },
+    capacity: {
+      used: 'Used',
+      total: 'Total',
+      emptyLabel: 'No swap configured',
+    },
     description: 'Swap space in use and total swap capacity',
     unit: 'bytes',
     format: formatBytes,

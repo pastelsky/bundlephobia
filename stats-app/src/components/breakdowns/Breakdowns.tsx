@@ -113,6 +113,7 @@ export function DiskBreakdown({ data }: { data?: ResourceData }) {
         <TableHead>
           <TableRow>
             <TableHeaderCell>Filesystem</TableHeaderCell>
+            <TableHeaderCell>Utilization</TableHeaderCell>
             <TableHeaderCell className="text-right">Used</TableHeaderCell>
             <TableHeaderCell className="text-right">Available</TableHeaderCell>
             <TableHeaderCell className="text-right">Capacity</TableHeaderCell>
@@ -122,6 +123,9 @@ export function DiskBreakdown({ data }: { data?: ResourceData }) {
           {data?.disks.map(disk => (
             <TableRow key={disk.mount}>
               <TableCell>{diskLabels.get(disk.mount)}</TableCell>
+              <TableCell>
+                <DiskUtilization disk={disk} />
+              </TableCell>
               {[disk.used, disk.available, disk.total].map((value, index) => (
                 <TableCell key={index} className="text-right tabular-nums">
                   {value == null ? '—' : formatBytes(value)}
@@ -132,5 +136,24 @@ export function DiskBreakdown({ data }: { data?: ResourceData }) {
         </TableBody>
       </Table>
     </Card>
+  )
+}
+
+function DiskUtilization({ disk }: { disk: ResourceData['disks'][number] }) {
+  if (disk.used == null || disk.total == null || disk.total <= 0)
+    return <span>—</span>
+
+  const percent = (disk.used / disk.total) * 100
+
+  return (
+    <div className={styles.utilization}>
+      <span>{numberFormat.format(percent)}%</span>
+      <ProgressBar
+        value={Math.max(0, Math.min(100, percent))}
+        color="orange"
+        showAnimation={false}
+        aria-label={`${diskLabels.get(disk.mount)} used`}
+      />
+    </div>
   )
 }

@@ -11,3 +11,11 @@
   align-items: center;
   gap: 10px;
 }
+
+.utilization {
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
