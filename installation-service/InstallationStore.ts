@@ -75,10 +75,6 @@ class InstallationStore {
       callers: Set<symbol>
     }
   >()
-  private readonly failures = new Map<
-    string,
-    { error: Error; expires: number }
-  >()
 
   constructor(
     installationApi: InstallationApi,
@@ -263,43 +259,6 @@ class InstallationStore {
     return { sharedSignal: shared.signal, leave }
   }
 
-  private retainFailure(key: string, error: Error) {
-    this.failures.delete(key)
-
-    const compact = Object.assign(
-      new Error('Installation recently failed; retry in one minute'),
-      {
-        name: error.name,
-        toJSON() {
-          return {
-            name: this.name,
-            originalError: 'Installation recently failed; retry in one minute',
-            extra: { retryable: true },
-          }
-        },
-      },
-    )
-
-    this.failures.set(key, {
-      error: compact,
-      expires: Date.now() + 60_000,
-    })
-
-    if (this.failures.size > 2_000) {
-      this.failures.delete(this.failures.keys().next().value!)
-    }
-  }
-
-  private checkFailure(key: string, cached: Metadata | undefined) {
-    const failure = this.failures.get(key)
-
-    if (cached?.key !== key && failure && failure.expires > Date.now()) {
-      throw failure.error
-    }
-
-    this.failures.delete(key)
-  }
-
   async subscribe(
     exactPackageString: string,
     options: InstallOptions = {},
@@ -322,8 +281,6 @@ class InstallationStore {
     const subscription = await this.withDirectoryLock(directory, async () => {
       signal?.throwIfAborted()
       const cached = await this.read(directory)
-
-      this.checkFailure(key, cached)
 
       const installation =
         (cached?.key === key ? cached.installation : undefined) ??
@@ -348,12 +305,6 @@ class InstallationStore {
 
             return installed
           } catch (error) {
-            if (!sharedSignal.aborted && error instanceof Error) {
-              // Keep physical failures even if the original HTTP caller is gone.
-              // Bound both retention and cardinality; cancellations are not failures.
-              this.retainFailure(key, error)
-            }
-
             this.onInstallComplete(
               'failure',
               (performance.now() - started) / 1000,

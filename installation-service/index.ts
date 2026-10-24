@@ -3,8 +3,10 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import Fastify, { type FastifyReply } from 'fastify'
 import { z } from 'zod'
-import { installPackage } from 'package-build-stats/installation'
-import disposePackage from './disposeInstallation.ts'
+import {
+  disposePackage,
+  installPackage,
+} from 'package-build-stats/installation'
 import InstallationStore, { type InstallOptions } from './InstallationStore.ts'
 import createInstallQueue from './createInstallQueue.ts'
 import requestSignal from './requestSignal.ts'

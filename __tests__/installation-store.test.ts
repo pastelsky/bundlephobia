@@ -567,27 +567,6 @@ describe('installation service store', () => {
     await store.unsubscribe(owner.id)
   })
 
-  it('reuses a compact physical failure across callers, then retries after cooldown', async () => {
-    const root = await temporaryRoot()
-    const api = installationApi(root)
-    api.installPackage.mockRejectedValueOnce(new Error('x'.repeat(500_000)))
-    const store = createStore(api, root)
-    await expect(store.subscribe('broken@1.0.0')).rejects.toThrow('xxxx')
-    await expect(store.subscribe('broken@1.0.0')).rejects.toThrow(
-      'retry in one minute',
-    )
-    expect(api.installPackage).toHaveBeenCalledTimes(1)
-    const clock = jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 60_001)
-
-    try {
-      const owner = await store.subscribe('broken@1.0.0')
-      expect(api.installPackage).toHaveBeenCalledTimes(2)
-      await store.unsubscribe(owner.id)
-    } finally {
-      clock.mockRestore()
-    }
-  })
-
   it('passes one abortable deadline to the underlying installation', async () => {
     const root = await temporaryRoot()
     const api = installationApi(root)
