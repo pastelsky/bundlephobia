@@ -38,7 +38,7 @@ export default class S3Fifo {
     const recalled = this.ghost.delete(key)
 
     if (demand && recalled) this.main.set(key, 0)
-    else this.small.set(key, demand ? 1 : 0)
+    else this.small.set(key, 0)
   }
 
   forget(key: string) {

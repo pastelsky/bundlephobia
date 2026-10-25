@@ -41,6 +41,8 @@ test('queue cursors survive empty queues and keep ghost history bounded', () => 
 test('queue proportions follow the observed catalog instead of the metadata guard', () => {
   const policy = new S3Fifo(100_000, 10)
   policy.observe('hot')
+  expect(policy.small.get('hot')).toBe(0)
+  policy.observe('hot')
   policy.observe('hot')
   policy.observe('cold-1', false)
   policy.observe('cold-2', false)
