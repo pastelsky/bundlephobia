@@ -212,6 +212,32 @@ it('leaves visitor cache misses on the client build path without building in SSR
   expect(build).not.toHaveBeenCalled()
 })
 
+it('falls back to client rendering when the visitor cache lookup stalls', async () => {
+  let releaseCacheRead = () => {}
+
+  const cacheRead = new Promise<void>(done => {
+    releaseCacheRead = done
+  })
+
+  jest.spyOn(cache, 'getPackageSize').mockImplementation(async () => {
+    await cacheRead
+
+    return { status: 'miss' }
+  })
+
+  try {
+    const response = await request('/package/example', {
+      'X-Bundlephobia-Prefer-Cached': '',
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).not.toContain('Bundle Size')
+    expect(build).not.toHaveBeenCalled()
+  } finally {
+    releaseCacheRead()
+  }
+})
+
 it('honours exact versions and force, without exempting force from build budgets', async () => {
   cached.set('example@latest-built', older)
   cached.set('example@2.0.0', current)
