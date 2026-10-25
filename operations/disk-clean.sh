@@ -67,15 +67,6 @@ cleanup_orphaned_package_managers() {
     done <<< "$matches"
 }
 
-cleanup_stale_hidden_tmp_dirs() {
-    log "Cleaning stale hidden directories under /tmp"
-    find /tmp -maxdepth 1 -mindepth 1 -type d -name '.*' \
-        ! -name '.X11-unix' ! -name '.ICE-unix' ! -name '.Test-unix' \
-        ! -name '.font-unix' ! -name '.XIM-unix' ! -name '.X0-lock' \
-        -mmin +60 -exec rm -rf {} + 2>/dev/null
-    log "Cleaned stale hidden directories under /tmp"
-}
-
 cleanup_stale_package_dirs() {
     local stop_at_target="${1:-true}"
     local package_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/packages"
@@ -261,7 +252,6 @@ cleanup_main() {
     log "Starting main disk cleanup"
 
     cleanup_orphaned_package_managers
-    cleanup_stale_hidden_tmp_dirs
 
     # Old log files (keep 7 days)
     find /var/log -type f -name "*.log" -mtime +7 \
