@@ -12,7 +12,6 @@ import type {
 import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { drawStatsImg } from '../../utils/draw.utils'
 import { packageAnalysisGateway } from '../analysis'
-import { getAnalysisCacheMaxAge } from '../services/analysis-cache-policy'
 
 interface StatsImageResult {
   name: string
@@ -84,15 +83,7 @@ async function getStatsImage(query: ParsedQuery, cache: StatsImageCache) {
 
   const result: StatsImageResult = cached.value
 
-  return {
-    result,
-    theme,
-    wide,
-    maxAge: getAnalysisCacheMaxAge(
-      undefined,
-      version ? `${parsedName}@${version}` : parsedName,
-    ),
-  }
+  return { result, theme, wide }
 }
 
 export function createGenerateImgMiddleware(
@@ -103,11 +94,11 @@ export function createGenerateImgMiddleware(
     const { query } = queryString.parseUrl(url)
 
     try {
-      const { result, theme, wide, maxAge } = await getStatsImage(query, cache)
+      const { result, theme, wide } = await getStatsImage(query, cache)
 
       ctx.type = 'png'
       ctx.cacheControl = {
-        maxAge,
+        maxAge: 60 * 60 * 60,
       }
       ctx.body = drawStatsImg({
         name: result.name,
@@ -120,7 +111,7 @@ export function createGenerateImgMiddleware(
     } catch (error) {
       console.error(error)
       ctx.cacheControl = {
-        noStore: true,
+        noCache: true,
       }
       await send(
         asSendContext(ctx),
