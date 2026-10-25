@@ -212,8 +212,12 @@ class BotRateLimits(unittest.TestCase):
         self.assertNotEqual(self.request('FreshCrawler/1', 4, '/api/size',
                                          'OPTIONS', {**headers,
                                          'Access-Control-Request-Method': 'POST'}), 204)
-        self.assertNotEqual(self.request('FreshCrawler/1', 5, '/api/unknown',
+        self.assertEqual(self.request('FreshCrawler/1', 5, '/api/unknown',
+                                      'OPTIONS', headers), 204)
+        self.assertNotEqual(self.request('FreshCrawler/1', 6, '/apiary/size',
                                          'OPTIONS', headers), 204)
+        self.assertEqual(self.request('FreshCrawler/1', 7, '/api/backup.sql',
+                                      'OPTIONS', headers), 403)
 
     def test_unmapped_crawlers_share_limits_and_cooldowns_across_ips(self):
         families = [
