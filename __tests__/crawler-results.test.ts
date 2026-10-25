@@ -56,7 +56,7 @@ beforeAll(async () => {
   const routes = new Router()
   app.use(cacheControl())
   registerApiRoutes(routes, { cache, port: 0 })
-  routes.get('/package/(.*)', async ctx => {
+  routes.get(/^\/package\/(.*)/, async ctx => {
     // SAFETY: this real HTTP request supplies the fields used by SSR; cookies are unused.
     const request = ctx.req as GetServerSidePropsContext['req']
     const packageString = ctx.path.slice('/package/'.length).split('/')

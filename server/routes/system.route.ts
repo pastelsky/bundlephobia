@@ -60,5 +60,5 @@ export function registerSystemRoutes(
 
   router.get('/.well-known/api-catalog', apiCatalogRoute)
   router.get('/result', resultRoute)
-  router.get('(.*)', createNextCatchAllRoute(handle))
+  router.get(/.*/, createNextCatchAllRoute(handle))
 }
