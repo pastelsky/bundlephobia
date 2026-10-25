@@ -68,14 +68,16 @@ class BotRateLimits(unittest.TestCase):
         self.proxy.terminate()
         self.proxy.wait(timeout=5)
 
-    def request(self, ua, number, path='/package/example'):
+    def request(self, ua, number, path='/package/example', method=None, headers=None):
         with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as conn:
-            conn.request('POST' if path == '/_events' else 'GET', path, headers={
+            conn.request(method or ('POST' if path == '/_events' else 'GET'), path, headers={
+                **(headers or {}),
                 'User-Agent': ua,
                 'CF-Connecting-IP': (number if isinstance(number, str)
                                      else f'198.51.100.{number % 250 + 1}'),
             })
             response = conn.getresponse()
+            self.response_headers = response.getheaders()
             self.retry_after = response.getheader('Retry-After')
             response.read()
             return response.status
@@ -181,6 +183,37 @@ class BotRateLimits(unittest.TestCase):
         for _, agents in pools:
             self.assertEqual(self.request(agents[0], 240), 429)
         self.assertEqual(self.request('NeverSeenBot/1', 241), 429)
+
+    def test_public_preflights_do_not_spend_budgets_or_bypass_get_cooldowns(self):
+        headers = {'Origin': 'https://example.com',
+                   'Access-Control-Request-Method': 'GET',
+                   'Access-Control-Request-Headers': 'X-Bundlephobia-User'}
+        for i in range(220):
+            self.assertEqual(self.request('Googlebot/2.1', i, '/api/size',
+                                          'OPTIONS', headers), 204)
+        self.assertEqual([v for k, v in self.response_headers
+                          if k.lower() == 'access-control-allow-origin'], ['*'])
+        self.assertIn(('access-control-max-age', '600'),
+                      [(k.lower(), v) for k, v in self.response_headers])
+        for i in range(26):
+            self.assertEqual(self.request('Googlebot/2.1', i, '/api/size'), 200)
+        for i in range(30):
+            self.assertEqual(self.request('Googlebot/2.1', i, '/api/size'), 429)
+        self.assertEqual(self.retry_after, '300')
+        self.assertEqual(self.request('Googlebot/2.1', 240, '/api/size',
+                                      'OPTIONS', headers), 204)
+        self.assertEqual(self.request('Googlebot/2.1', 241, '/api/size'), 429)
+        self.assertEqual(self.request('FreshCrawler/1', 1, '/stats',
+                                      'OPTIONS', headers), 401)
+        self.assertEqual(self.request('FreshCrawler/1', 2, '/.env',
+                                      'OPTIONS', headers), 403)
+        self.assertNotEqual(self.request('FreshCrawler/1', 3, '/api/size',
+                                         'OPTIONS'), 204)
+        self.assertNotEqual(self.request('FreshCrawler/1', 4, '/api/size',
+                                         'OPTIONS', {**headers,
+                                         'Access-Control-Request-Method': 'POST'}), 204)
+        self.assertNotEqual(self.request('FreshCrawler/1', 5, '/api/unknown',
+                                         'OPTIONS', headers), 204)
 
     def test_unmapped_crawlers_share_limits_and_cooldowns_across_ips(self):
         families = [
