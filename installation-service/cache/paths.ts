@@ -22,9 +22,9 @@ export const usageFiles = ['usage.previous.jsonl', 'usage.current.jsonl']
 export const lockFile =
   process.env.BUN_CACHE_LOCK_FILE || '/run/lock/bundlephobia-bun-cache.lock'
 
-export function isS3FifoEnabled(): boolean {
+export function isReusePolicyEnabled(): boolean {
   try {
-    return readFileSync(policyFile, 'utf8').trim() === 's3fifo'
+    return readFileSync(policyFile, 'utf8').trim() === 'reuse'
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
       return false

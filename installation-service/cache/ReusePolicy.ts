@@ -1,7 +1,7 @@
 type QueueName = 'small' | 'main' | 'ghost'
 
-/** S3FIFO victim ranking; filesystem ownership and pressure belong to the caller. */
-export default class S3Fifo {
+/** Cheap reuse ranking, independent of installation leases and physical space. */
+export default class ReusePolicy {
   readonly small = new Map<string, number>()
   readonly main = new Map<string, number>()
   readonly ghost = new Set<string>()
@@ -38,7 +38,7 @@ export default class S3Fifo {
     const recalled = this.ghost.delete(key)
 
     if (demand && recalled) this.main.set(key, 0)
-    else this.small.set(key, 0)
+    else this.small.set(key, demand ? 1 : 0)
   }
 
   forget(key: string) {
@@ -62,6 +62,8 @@ export default class S3Fifo {
       const frequency = queue.get(key)!
       queue.delete(key)
 
+      // Each demand is a distinct materialization, with aliases deduplicated.
+      // A second use is enough to protect a dependency shared across root installs.
       if (fromSmall && frequency >= 2) {
         this.main.set(key, 0)
       } else if (!fromSmall && frequency > 0) {
@@ -75,7 +77,7 @@ export default class S3Fifo {
   }
 
   private rememberVictim(key: string, fromSmall: boolean) {
-    // S3FIFO's ghost queue remembers quick demotions from the small queue.
+    // Ghost history remembers versions evicted before repeated reuse.
     if (fromSmall) {
       this.ghost.add(key)
 
@@ -106,7 +108,7 @@ export default class S3Fifo {
     }
   }
 
-  restore(state: ReturnType<S3Fifo['snapshot']>) {
+  restore(state: ReturnType<ReusePolicy['snapshot']>) {
     if (
       state.small.length + state.main.length > this.capacity ||
       state.ghost.length > this.capacity

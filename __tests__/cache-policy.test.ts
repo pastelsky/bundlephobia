@@ -4,13 +4,14 @@ import path from 'node:path'
 import { execFileSync, spawn, spawnSync } from 'node:child_process'
 import { once } from 'node:events'
 import { pathToFileURL } from 'node:url'
-import S3Fifo from '../installation-service/cache/S3Fifo.ts'
+import ReusePolicy from '../installation-service/cache/ReusePolicy.ts'
 import { createPackageManagerCommand } from '../installation-service/cache/paths.ts'
 
-test('S3FIFO promotes repeated use, retains quick-eviction history and bounds counters', () => {
-  const policy = new S3Fifo(10)
+test('reuse policy promotes a second materialization, retains quick-eviction history and bounds counters', () => {
+  const policy = new ReusePolicy(10)
   policy.observe('shared', false)
   policy.observe('shared')
+  expect(policy.small.get('shared')).toBe(1)
   policy.observe('shared')
 
   for (let index = 0; index < 5; index++) policy.observe(`cold-${index}`, false)
@@ -21,13 +22,13 @@ test('S3FIFO promotes repeated use, retains quick-eviction history and bounds co
 
   for (let index = 0; index < 100; index++) policy.observe('shared')
   expect(policy.main.get('shared')).toBe(3)
-  const restored = new S3Fifo(10)
+  const restored = new ReusePolicy(10)
   restored.restore(policy.snapshot())
   expect(restored.snapshot()).toEqual(policy.snapshot())
 })
 
 test('queue cursors survive empty queues and keep ghost history bounded', () => {
-  const policy = new S3Fifo(20)
+  const policy = new ReusePolicy(20)
 
   for (let index = 0; index < 1000; index++) {
     const key = `cold-${index}`
@@ -39,10 +40,9 @@ test('queue cursors survive empty queues and keep ghost history bounded', () => 
 })
 
 test('queue proportions follow the observed catalog instead of the metadata guard', () => {
-  const policy = new S3Fifo(100_000, 10)
+  const policy = new ReusePolicy(100_000, 10)
   policy.observe('hot')
-  expect(policy.small.get('hot')).toBe(0)
-  policy.observe('hot')
+  expect(policy.small.get('hot')).toBe(1)
   policy.observe('hot')
   policy.observe('cold-1', false)
   policy.observe('cold-2', false)
@@ -108,7 +108,7 @@ test('cron defers eviction when the coordinated cleanup fails', async () => {
 
   try {
     const mode = path.join(root, 'policy')
-    await fs.writeFile(mode, 's3fifo\n')
+    await fs.writeFile(mode, 'reuse\n')
 
     const output = execFileSync(
       'bash',

@@ -46,7 +46,7 @@ async function installPackageWithVersion(
 ) {
   const sdkOptions = {
     ...options,
-    cleanupPath: removePath,
+    cleanup: removePath,
     saveLockfile: cachePolicy.enabled,
     packageManagerCommand: cachePolicy.packageManagerCommand,
   }

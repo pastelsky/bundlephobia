@@ -15,7 +15,7 @@ import { createInstallationProvider } from './installationProvider.ts'
 import { removePath } from '../scripts/cleanup.mts'
 import {
   createPackageManagerCommand,
-  isS3FifoEnabled,
+  isReusePolicyEnabled,
 } from '../installation-service/cache/paths.ts'
 import { activeBuilds, recordBuildPhase } from './buildMemoryTrace.ts'
 import memoryDiagnostics from '../scripts/memory-diagnostics.cjs'
@@ -81,7 +81,9 @@ const installationProvider = process.env.INSTALLATION_SERVICE_ENDPOINT
   ? createInstallationProvider(process.env.INSTALLATION_SERVICE_ENDPOINT)
   : undefined
 
-const packageManagerCommand = createPackageManagerCommand(isS3FifoEnabled())
+const packageManagerCommand = createPackageManagerCommand(
+  isReusePolicyEnabled(),
+)
 
 async function analyzePackage(req, res, analyze) {
   const controller = new AbortController()
@@ -94,7 +96,7 @@ async function analyzePackage(req, res, analyze) {
     return await analyze(decodeURIComponent(req.query.p), {
       installTimeout: 60000,
       installationProvider,
-      cleanupPath: removePath,
+      cleanup: removePath,
       packageManagerCommand,
       signal: controller.signal,
     })

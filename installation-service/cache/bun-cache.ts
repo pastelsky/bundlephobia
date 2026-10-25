@@ -11,7 +11,7 @@ import {
   usageFiles,
   segmentBytes,
   lockFile,
-  isS3FifoEnabled,
+  isReusePolicyEnabled,
   createPackageManagerCommand,
 } from './paths.ts'
 
@@ -79,7 +79,7 @@ export async function installedDependencies(
 export async function createBunCachePolicy(
   onError: (error: Error) => void = console.error,
 ) {
-  const enabled = isS3FifoEnabled()
+  const enabled = isReusePolicyEnabled()
   const writer = new PQueue({ concurrency: 1 })
   let ledgerBytes: number | undefined
   let eviction: Promise<unknown> | undefined
@@ -121,7 +121,7 @@ export async function createBunCachePolicy(
       })
     },
     evict() {
-      if (!enabled) throw new Error('S3FIFO is disabled')
+      if (!enabled) throw new Error('Reuse policy is disabled')
 
       if (process.platform !== 'linux')
         throw new Error('Coordinated cache eviction requires Linux flock')

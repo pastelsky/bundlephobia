@@ -1,18 +1,21 @@
 # Optional Bun retention policy
 
-`bun-policy` defaults to `oldest`. Keep S3FIFO disabled until the SDK cleanup/
+`bun-policy` defaults to `oldest`. Keep the reuse policy disabled until the SDK cleanup/
 lockfile release is published, pinned in both workspaces, and this PR is reviewed.
-Changing it to `s3fifo` and restarting the installer and build workers enables accounting and the
+Changing it to `reuse` and restarting the installer and build workers enables accounting and the
 existing ten-minute cron's loopback cleanup request. Install the reviewed
 `disk-clean.sh` at `/var/www/disk-clean.sh`; no new service or cron entry is needed.
 `yarn build` emits the short-lived JavaScript worker; `yarn cache-policy:build`
 builds only that worker without rebuilding the web app.
 
-S3FIFO uses entry-count queues; real byte/inode pressure controls deletion.
-Only completed Bun materializations are recorded, including transitive dependencies;
-reuse of an already-installed tree does not exercise Bun's download cache.
-The Bun cache filename adapter reports unmatched demand instead of inventing hits.
-No package files are recursively scanned for accounting or candidate discovery.
+The reuse policy adapts FIFO probation/hot/ghost queues to the current catalog.
+A second materialization qualifies for promotion; bounded counters age on eviction.
+Installation leases govern workspace lifetime; reuse counters are not live references.
+The kernel reclaims payloads at their last hardlink; byte/inode pressure after each
+batch governs when eviction stops. Ranking is not yet weighted by per-entry cost.
+Completed Bun installations record transitive version reuse across root packages;
+reusing an installation tree does not count as another Bun cache access.
+Unmatched filenames remain unknown. Accounting never recursively scans payloads.
 
 Metadata lives outside the build volume in `BUN_CACHE_STATE_DIR` (default
 `/var/lib/bundlephobia-cache-policy`): two 8 MiB usage segments and a gzip snapshot

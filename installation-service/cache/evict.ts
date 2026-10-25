@@ -7,7 +7,7 @@ import { gzip, gunzip } from 'node:zlib'
 import { promisify } from 'node:util'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
-import S3Fifo from './S3Fifo.ts'
+import ReusePolicy from './ReusePolicy.ts'
 import {
   buildRoot,
   cacheRoot,
@@ -39,7 +39,7 @@ type PackageIndex = Map<string, string[]>
 type ReplayContext = {
   oldCursors: Record<string, number>
   index: PackageIndex
-  policy: S3Fifo
+  policy: ReusePolicy
 }
 
 function addEntry(result: Catalog, prefix: string, entry: Dirent) {
@@ -69,7 +69,7 @@ async function catalog(directory: string, capacity: number) {
   return result
 }
 
-async function loadPolicy(stateFile: string, policy: S3Fifo) {
+async function loadPolicy(stateFile: string, policy: ReusePolicy) {
   const previous = await fs.readFile(stateFile).catch(error => {
     if (error.code !== 'ENOENT') throw error
 
@@ -94,7 +94,7 @@ async function loadPolicy(stateFile: string, policy: S3Fifo) {
   return restored.cursors
 }
 
-function indexPackages(payloads: Catalog, policy: S3Fifo) {
+function indexPackages(payloads: Catalog, policy: ReusePolicy) {
   const index: PackageIndex = new Map()
 
   for (const [key, canonical] of payloads) {
@@ -130,7 +130,7 @@ async function* usage(file: string, start: number, size: number) {
 }
 
 function recordDemand(
-  policy: S3Fifo,
+  policy: ReusePolicy,
   index: PackageIndex,
   dependencies: string[],
 ) {
@@ -202,6 +202,8 @@ async function replayJournal(stateDirectory: string, context: ReplayContext) {
 }
 
 async function pressure(directory: string) {
+  // Directory sizes double-count shared payloads. The filesystem reports actual
+  // capacity, including space still held by installation hardlinks after eviction.
   const { blocks, bfree, bavail, files, ffree, bsize } =
     await fs.statfs(directory)
 
@@ -217,7 +219,7 @@ async function pressure(directory: string) {
   }
 }
 
-function selectVictims(policy: S3Fifo, payloads: Catalog) {
+function selectVictims(policy: ReusePolicy, payloads: Catalog) {
   const selected: string[] = []
 
   for (let index = 0; index < 100; index++) {
@@ -235,6 +237,7 @@ async function removeEntry(directory: string, trash: string, key: string) {
   const destination = path.join(trash, randomUUID())
 
   // An interrupted rm must never leave a partial entry under Bun's cache name.
+  // Installed hardlinks survive; the kernel frees each payload at its last link.
   const moved = await fs.rename(path.join(directory, key), destination).then(
     () => true,
     error => {
@@ -251,7 +254,7 @@ async function removeEntry(directory: string, trash: string, key: string) {
 }
 
 async function reclaim(
-  policy: S3Fifo,
+  policy: ReusePolicy,
   payloads: Catalog,
   options: {
     directory: string
@@ -295,7 +298,7 @@ async function reclaim(
 
 async function savePolicy(
   stateFile: string,
-  policy: S3Fifo,
+  policy: ReusePolicy,
   cursors: Record<string, number>,
 ) {
   const snapshot = await compress(
@@ -329,7 +332,7 @@ export async function evictCache(options: Partial<typeof defaults> = {}) {
   const started = performance.now()
   const payloads = await catalog(directory, capacity)
   // Queue proportions follow the actual catalog, independently of the metadata guard.
-  const policy = new S3Fifo(capacity, payloads.size)
+  const policy = new ReusePolicy(capacity, payloads.size)
   const stateFile = path.join(stateDirectory, 'policy.json.gz')
   const oldCursors = await loadPolicy(stateFile, policy)
   const index = indexPackages(payloads, policy)
