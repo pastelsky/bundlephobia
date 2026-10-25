@@ -179,13 +179,20 @@ const handleUnsupportedPackageError: BuildErrorHandler = (context, error) => {
 }
 
 const handlePackageNotFoundError: BuildErrorHandler = context => {
+  // Root metadata has already resolved when a build is requested. An install
+  // registry error can name a dependency; do not turn the real package into a 404.
+  const duringBuild = context.ctx.state.analysis?.buildRequested === true
+  const status = duringBuild ? 422 : 404
+
   const response = {
-    code: 'PackageNotFoundError',
-    message: "The package you were looking for doesn't exist.",
+    code: duringBuild ? 'InstallError' : 'PackageNotFoundError',
+    message: duringBuild
+      ? 'A package or version required during installation could not be found.'
+      : "The package you were looking for doesn't exist.",
   }
 
-  context.respondWithError(404, response)
-  context.cacheFailure(404)
+  context.respondWithError(status, response)
+  context.cacheFailure(status)
 }
 
 const handlePackageVersionMismatchError: BuildErrorHandler = (

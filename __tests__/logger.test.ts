@@ -77,3 +77,24 @@ it('does not duplicate ordinary info metadata as an error', () => {
 
   expect(line).not.toContain('"error"')
 })
+
+it('preserves bounded compiler error arrays without arbitrary fields', () => {
+  const messages = Array.from(
+    { length: 10 },
+    (_, i) => `Cannot resolve file ${i}`,
+  )
+
+  const output = fields({
+    error: { name: 'EntryPointError', originalError: messages },
+  })
+
+  expect(output.error.originalError.errors).toEqual(
+    messages.slice(0, 5).map(message => ({ message })),
+  )
+  const cyclic: unknown[] = []
+  cyclic.push(cyclic, {
+    message: 'compile failed',
+    headers: { authorization: 'secret' },
+  })
+  expect(JSON.stringify(fields({ error: cyclic }))).not.toContain('secret')
+})
