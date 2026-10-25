@@ -17,6 +17,9 @@
 # Disk + loop device cleanup — every 10 minutes
 */10 * * * * bash /var/www/disk-clean.sh
 
+# Broad hidden-temp sweep — daily, with the same disk-pressure guard and idle priority
+15 3 * * * bash /var/www/disk-clean.sh --hidden-tmp
+
 # Bundlephobia webpack/build cache — every 12 hours (fast to clear, safe)
 0 */12 * * * chrt --idle 0 ionice -c 3 rm -rf /var/www/bundlephobia/node_modules/.cache
 
