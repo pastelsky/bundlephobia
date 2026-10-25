@@ -1,7 +1,7 @@
 import 'dotenv-defaults/config.js'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import Fastify, { type FastifyReply } from 'fastify'
+import Fastify from 'fastify'
 import { z } from 'zod'
 import {
   disposePackage,
@@ -10,11 +10,8 @@ import {
 import InstallationStore, { type InstallOptions } from './InstallationStore.ts'
 import createInstallQueue from './createInstallQueue.ts'
 import requestSignal from './requestSignal.ts'
-import {
-  resolveRegistryPackageSpec,
-  UnsupportedRegistryPackageSpecError,
-} from './resolveRegistryPackageSpec.ts'
-import serializeError from '../build-service/serializeError.js'
+import { resolveRegistryPackageSpec } from './resolveRegistryPackageSpec.ts'
+import sendInstallationError from './sendInstallationError.ts'
 import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
 import { registerQueueMetrics } from '../server/infrastructure/queue-metrics.mts'
 
@@ -97,31 +94,6 @@ const store = new InstallationStore(
 await store.start()
 
 const fastify = Fastify({ bodyLimit: 64 * 1024 })
-
-function sendInstallationError(error: Error, reply: FastifyReply) {
-  if (
-    error instanceof UnsupportedRegistryPackageSpecError ||
-    error instanceof z.ZodError
-  ) {
-    return reply.code(400).send({
-      name: 'InstallError',
-      originalError: error.message,
-    })
-  }
-
-  const serialized = serializeError(error)
-
-  const code = 'code' in error ? error.code : undefined
-
-  const packageNotFound =
-    serialized.name === 'PackageNotFoundError' ||
-    code === 'E404' ||
-    code === 'ETARGET'
-
-  if (packageNotFound) serialized.name = 'PackageNotFoundError'
-
-  return reply.code(packageNotFound ? 404 : 500).send(serialized)
-}
 
 fastify.post('/installations', async (request, reply) => {
   const signal = requestSignal(reply)

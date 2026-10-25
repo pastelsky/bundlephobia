@@ -113,6 +113,8 @@ describe('build API error middleware', () => {
     }
 
     // SAFETY: this fixture supplies only the context fields exercised by the middleware.
+
+    // SAFETY: the fixture supplies the context fields read by this middleware.
     await errorHandler(ctx as never, async () => {
       throw new CustomError('PackageVersionMismatchError', null, {
         suggestedVersion: '19.1.1',
@@ -155,3 +157,37 @@ describe('build API error middleware', () => {
     expect(mockFailureCacheSet).toHaveBeenCalledTimes(1)
   })
 })
+
+it.each([false, true])(
+  'distinguishes missing root packages from install failures (buildRequested=%s)',
+  async buildRequested => {
+    const ctx = {
+      query: {},
+      state: {
+        id: `missing-package-${buildRequested}`,
+        resolved: { packageString: '@ucdjs/schema-gen@0.2.2' },
+        analysis: {
+          language: 'javascript',
+          operation: 'package-analysis',
+          buildRequested,
+        },
+      },
+      body: undefined,
+      status: undefined,
+      cacheControl: undefined,
+    }
+
+    // SAFETY: the fixture supplies the context fields read by this middleware.
+    await errorHandler(ctx as never, async () => {
+      throw new CustomError(
+        'PackageNotFoundError',
+        'No matching version found for @ucdjs-internal/shared@0.1.0',
+        undefined,
+      )
+    })
+    expect(ctx.status).toBe(buildRequested ? 422 : 404)
+    expect(ctx.body).toMatchObject({
+      error: { code: buildRequested ? 'InstallError' : 'PackageNotFoundError' },
+    })
+  },
+)

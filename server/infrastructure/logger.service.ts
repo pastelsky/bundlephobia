@@ -59,15 +59,40 @@ function textFields(source: LogErrorSource): LogPayload {
   return fields
 }
 
+function arrayErrorFields(
+  causes: unknown[],
+  depth: number,
+): LogPayload | undefined {
+  if (depth >= 2) return undefined
+
+  const errors = causes.slice(0, 5).flatMap(item => {
+    const fields = errorFields(item, depth + 1)
+
+    return fields ? [fields] : []
+  })
+
+  return errors.length ? { errors } : undefined
+}
+
 function errorFields(cause: unknown, depth = 0): LogPayload | undefined {
   const message = errorText(cause)
 
   if (message !== undefined) return { message }
 
+  if (Array.isArray(cause)) return arrayErrorFields(cause, depth)
+
   if (Object(cause) !== cause) return undefined
 
   // SAFETY: cause is an object; each selected diagnostic field is checked before use.
   const source = cause as LogErrorSource
+
+  return objectErrorFields(source, depth)
+}
+
+function objectErrorFields(
+  source: LogErrorSource,
+  depth: number,
+): LogPayload | undefined {
   const fields = textFields(source)
 
   if (depth < 2) {
