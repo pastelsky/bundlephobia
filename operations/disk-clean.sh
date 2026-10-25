@@ -269,13 +269,7 @@ cleanup_main() {
     find /var/log -type f -name "*.gz" -mtime +30 -delete 2>/dev/null
     log "Cleared old log files (kept pm2_monitor.log + disk_cleanup.log)"
 
-    # Truncate here: PM2 flush delegates deletion to its normal-priority daemon.
-    # Keep log files open for writers and leave rotation to logrotate.
-    if [ -x "$PM2" ]; then
-        find /var/www/bundlephobia/logs "$PM2_HOME/logs" "$PM2_HOME/pm2.log" \
-            -maxdepth 1 -type f -name '*.log' -exec truncate -s 0 -- {} + 2>/dev/null
-        log "Flushed PM2 application logs"
-    fi
+    # Application logs are retained by the size-bounded logrotate policy.
 
     # Journal: keep 7 days of history for debugging
     journalctl --vacuum-time=7d 2>/dev/null

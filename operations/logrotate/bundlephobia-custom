@@ -1,0 +1,11 @@
+/var/www/bundlephobia/logs/*.log /root/.pm2/logs/*.log /root/.pm2/pm2.log /var/log/disk_cleanup.log /var/log/pm2_monitor.log {
+    daily
+    maxsize 10M
+    rotate 14
+    missingok
+    compress
+    delaycompress
+    notifempty
+    copytruncate
+    su root root
+}
