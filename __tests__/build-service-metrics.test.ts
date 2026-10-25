@@ -9,6 +9,18 @@ import {
   startBuildTrace,
 } from '../build-service/buildMemoryTrace.ts'
 
+const previousDiagnosticsFlag = process.env.ENABLE_DIAGNOSTICS
+
+beforeAll(() => {
+  process.env.ENABLE_DIAGNOSTICS = 'true'
+})
+
+afterAll(() => {
+  if (previousDiagnosticsFlag === undefined)
+    delete process.env.ENABLE_DIAGNOSTICS
+  else process.env.ENABLE_DIAGNOSTICS = previousDiagnosticsFlag
+})
+
 const baseMetrics = {
   status: 'success',
   durationMs: 100,

@@ -5,6 +5,8 @@ import Queue from './queue.service'
 import config from '../config'
 import type { FailureCacheEntry } from '../types'
 import { registerMetricsProvider } from './memory-diagnostics.service'
+import { applicationMetrics } from './application-metrics'
+import { registerQueueMetrics } from './queue-metrics.mts'
 
 interface WorkerPoolExecution extends Promise<unknown> {
   cancel?: () => void
@@ -48,6 +50,10 @@ const requestQueue = new Queue({
   concurrency: 4,
   maxAge: 60 * 2,
 })
+
+registerQueueMetrics(applicationMetrics, 'analysis', () =>
+  requestQueue.getDiagnostics(),
+)
 
 // SAFETY: workerpool returns the cancellable execution handle used by the server.
 const pool = workerpool.pool('./server/worker.js', {

@@ -3,6 +3,8 @@ import type { Middleware } from 'koa'
 import { createJavaScriptPackageReference } from '../../../languages/javascript'
 import { packageAnalysisGateway } from '../../analysis'
 import config from '../../config'
+import { createAnalysisKey } from '../../analysis/keys'
+import { failureCache } from '../../infrastructure/runtime'
 import logger from '../../infrastructure/logger.service'
 
 const cachedResponse: Middleware = async (ctx, next) => {
@@ -10,7 +12,8 @@ const cachedResponse: Middleware = async (ctx, next) => {
   const { name, version, packageString, language } = ctx.state.resolved
   const { operation } = ctx.state.analysis
 
-  if (force) {
+  if (force === 'true') {
+    ctx.state.analysis.cache = 'bypass'
     await next()
 
     return
@@ -32,6 +35,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
         version,
         packageString,
         hit,
+        cache: hit ? 'hit' : 'miss',
         type,
         language,
         operation,
@@ -43,6 +47,14 @@ const cachedResponse: Middleware = async (ctx, next) => {
   const cached = await ctx.cashed()
 
   if (cached) {
+    ctx.state.analysis.cache = 'hit'
+    failureCache.del(
+      createAnalysisKey({
+        language,
+        operation,
+        packageSpecifier: packageString,
+      }),
+    )
     ctx.cacheControl = {
       maxAge:
         force === null || force === undefined
@@ -59,6 +71,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
     return
   }
 
+  ctx.state.analysis.cache = 'miss'
   logCache({ hit: false, message: `CACHE MISS: ${packageString}` })
 
   if (peep) {

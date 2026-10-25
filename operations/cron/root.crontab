@@ -1,0 +1,28 @@
+# ── bundlephobia server crontab ────────────────────────────────────────────────
+# Managed after sysadmin fix — Apr 2026
+#
+# REMOVED (reasons):
+#   0 */240 * * * rm /var/www/bundlephobia/logs/*
+#     └─ */240 in hour field = every day at midnight (bug). Replaced below.
+#   0 */72 * * *  rm *.gz  — redundant; disk-clean.sh handles old log gz files
+#   0 */5  * * *  npm cache clean  — now inside disk-clean.sh
+#   0 */5  * * *  rm terser-cache  — now inside disk-clean.sh (loop cleanup)
+#   0 */5  * * *  rm packages      — now inside disk-clean.sh (loop cleanup)
+#   */13   * * *  find packages -mmin +60  — now inside disk-clean.sh
+#   */13   * * *  find dist -mmin +60      — now inside disk-clean.sh
+
+# PM2 watchdog — every minute; silent when healthy
+*/1 * * * * bash /var/www/autorestart.sh >> /dev/null 2>&1
+
+# Disk + loop device cleanup — every 10 minutes
+*/10 * * * * bash /var/www/disk-clean.sh
+
+# Bundlephobia webpack/build cache — every 12 hours (fast to clear, safe)
+0 */12 * * * chrt --idle 0 ionice -c 3 rm -rf /var/www/bundlephobia/node_modules/.cache
+
+# App logs — delete all every 10 days (fixed from broken */240 hours syntax)
+0 0 */10 * * chrt --idle 0 ionice -c 3 rm -f /var/www/bundlephobia/logs/*.log /var/www/bundlephobia/logs/*.gz
+
+# Trash cleanup — every 10 days
+0 0 */10 * * chrt --idle 0 ionice -c 3 rm -rf /root/.local/share/Trash/files/* /root/.local/share/Trash/info/*
+

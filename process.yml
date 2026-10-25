@@ -12,6 +12,7 @@ apps:
     exec_mode: cluster
     env:
       NODE_ENV: production
+      ENABLE_DIAGNOSTICS: 'false'
       DEBUG: 'bp:*'
       PORT: 5400
       PM2_APM: 'false'
@@ -36,9 +37,11 @@ apps:
     kill_timeout: 20000
     env:
       NODE_ENV: production
+      ENABLE_DIAGNOSTICS: 'false'
       DEBUG: 'bp:*'
       PM2_APM: 'false'
       PM2_DISABLE_METRICS: 'true'
+      BUILD_METRICS_BASE_PORT: 8410
       INSTALLATION_SERVICE_ENDPOINT: http://127.0.0.1:7003
       MEMORY_DIAGNOSTICS_SERVICE: build-service
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
@@ -50,19 +53,20 @@ apps:
     node_args:
       - --experimental-strip-types
     instances: 1
-    max_memory_restart: 500M
+    max_memory_restart: 700M
     exec_mode: fork
     error_file: logs/installation-service.log
     out_file: logs/installation-service.log
     kill_timeout: 20000
     env:
       NODE_ENV: production
+      ENABLE_DIAGNOSTICS: 'false'
       DEBUG: 'bp:*'
       PORT: 7003
       PM2_APM: 'false'
       PM2_DISABLE_METRICS: 'true'
       INSTALLATION_CONCURRENCY: 2
-      INSTALLATION_RETENTION_MS: 300000
+      INSTALLATION_RETENTION_MS: 180000
       INSTALLATION_LEASE_MS: 900000
 
   - script: ./cache-service/index.ts
@@ -79,6 +83,7 @@ apps:
     out_file: logs/cache-service.log
     env:
       NODE_ENV: production
+      ENABLE_DIAGNOSTICS: 'false'
       DEBUG: 'bp:*'
       PM2_APM: 'false'
       PM2_DISABLE_METRICS: 'true'

@@ -78,7 +78,7 @@ async function releaseInstallation(
   try {
     const result = await fetch(
       `${url}/installations/${encodeURIComponent(subscriptionId)}`,
-      { method: 'DELETE' },
+      { method: 'DELETE', signal: AbortSignal.timeout(5_000) },
     )
 
     if (!result.ok) throw new Error(`Unexpected status ${result.status}`)

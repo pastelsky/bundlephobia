@@ -14,7 +14,7 @@ function prefersBuiltRelease(ctx: Context, version: string | null) {
   const hasCrawlerCachePreference =
     ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
 
-  const forceWasRequested = Boolean(ctx.query.force)
+  const forceWasRequested = ctx.query.force === 'true'
   const isLatestVersion = version === null || version === 'latest'
 
   return hasCrawlerCachePreference && !forceWasRequested && isLatestVersion
@@ -32,12 +32,19 @@ async function serveBuiltRelease(
   ctx.cacheControl = { private: true, noStore: true }
 
   if (cacheResult.status === 'hit') {
+    ctx.state.analysis.cache = 'hit'
+    logger.info(
+      'CACHE',
+      { ...ctx.state.analysis, name, version: cacheResult.value.version },
+      `CACHE HIT: ${name}@${cacheResult.value.version} (latest built)`,
+    )
     ctx.status = 200
     ctx.body = cacheResult.value
 
     return true
   }
 
+  ctx.state.analysis.cache = 'unavailable'
   ctx.status = 503
   ctx.body = {
     error: {

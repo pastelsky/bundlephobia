@@ -6,6 +6,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { UrlWithParsedQuery } from 'node:url'
 
 import config from '../config'
+import { applicationMetrics } from '../infrastructure/application-metrics'
 import {
   buildApiCatalog,
   CATALOG_CONTENT_TYPE,
@@ -50,6 +51,13 @@ export function registerSystemRoutes(
   router: Router,
   handle: NextRequestHandler,
 ): void {
+  // Scraped directly on the firewalled app socket; public /stats goes through HAProxy auth.
+  router.get('/stats/application-metrics', async ctx => {
+    ctx.set('Cache-Control', 'no-store')
+    ctx.type = applicationMetrics.contentType
+    ctx.body = await applicationMetrics.metrics()
+  })
+
   router.get('/.well-known/api-catalog', apiCatalogRoute)
   router.get('/result', resultRoute)
   router.get('(.*)', createNextCatchAllRoute(handle))

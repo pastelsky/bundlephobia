@@ -130,6 +130,21 @@ describe('build service unavailability', () => {
     expect(serializeError({ toJSON: () => serialized })).toEqual(serialized)
   })
 
+  it('preserves toJSON details on Error subclasses', () => {
+    const originalError = Object.assign(new Error('disk full'), {
+      code: 'ENOSPC',
+    })
+
+    const error = Object.assign(new Error('InstallError'), {
+      toJSON: () => ({ name: 'InstallError', originalError }),
+    })
+
+    expect(serializeError(error)).toEqual({
+      name: 'InstallError',
+      originalError: { name: 'Error', message: 'disk full', code: 'ENOSPC' },
+    })
+  })
+
   it('preserves custom error details containing circular data', () => {
     const originalError: CircularErrorDetails = {
       message: 'the useful build error',
