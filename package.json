@@ -63,6 +63,7 @@
     "ipchecker": "^0.0.2",
     "is-empty-object": "^1.1.1",
     "jsdom": "^24.0.0",
+    "jsonc-parser": "^3.3.1",
     "jsonstream": "^1.0.3",
     "koa": "3.2.1",
     "koa-basic-auth": "^4.0.0",
