@@ -63,7 +63,7 @@ export default function jsonCacheMiddleware<TKey, TValue>({
   return async (ctx, next) => {
     await middleware(ctx, next)
 
-    // koa-cash emits identity on hits and misses, preventing edge compression.
+    // koa-cash marks raw bodies as identity; leave wire encoding to Cloudflare.
     if (ctx.response.get('Content-Encoding') === 'identity') {
       ctx.remove('Content-Encoding')
     }
