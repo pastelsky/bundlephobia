@@ -177,6 +177,11 @@
   }
 }
 
+// Match BarGraph’s height so history loading does not move the content below it.
+.result-page__history-chart {
+  min-height: 48vh;
+}
+
 .stats-container {
   display: flex;
   flex-direction: column;

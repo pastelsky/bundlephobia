@@ -589,7 +589,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
             </div>
           </div>
         </div>
-        <div className="chart-container">
+        <div className="chart-container result-page__history-chart">
           {historicalResultsPromiseState === 'fulfilled' && (
             <BarGraph
               onBarClick={this.handleBarClick}
