@@ -3,10 +3,9 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import Fastify, { type FastifyReply } from 'fastify'
 import { z } from 'zod'
-import {
-  disposePackage,
-  installPackage,
-} from 'package-build-stats/installation'
+import { installPackage } from 'package-build-stats/installation'
+import { removePath } from '../scripts/cleanup.mts'
+import { createBunCachePolicy } from './cache/bun-cache.ts'
 import InstallationStore, { type InstallOptions } from './InstallationStore.ts'
 import createInstallQueue from './createInstallQueue.ts'
 import requestSignal from './requestSignal.ts'
@@ -45,7 +44,14 @@ async function installPackageWithVersion(
   packageString: string,
   options: InstallOptions,
 ) {
-  const installation = await installPackage(packageString, options)
+  const sdkOptions = {
+    ...options,
+    cleanupPath: removePath,
+    saveLockfile: cachePolicy.enabled,
+    packageManagerCommand: cachePolicy.packageManagerCommand,
+  }
+
+  const installation = await installPackage(packageString, sdkOptions)
 
   try {
     const packageJSON = JSON.parse(
@@ -57,9 +63,11 @@ async function installPackageWithVersion(
 
     const { version } = z.object({ version: z.string() }).parse(packageJSON)
 
+    await cachePolicy.record(installation)
+
     return { ...installation, packageVersion: version }
   } catch (error) {
-    await disposePackage(installation)
+    await removePath(installation.installPath)
     throw error
   }
 }
@@ -68,6 +76,8 @@ const installQueue = createInstallQueue(
   positiveInteger(process.env.INSTALLATION_CONCURRENCY, 2),
 )
 
+const cachePolicy = await createBunCachePolicy()
+
 registerQueueMetrics(outcomes.registry, 'installations', () =>
   installQueue.diagnostics(),
 )
@@ -75,7 +85,7 @@ registerQueueMetrics(outcomes.registry, 'installations', () =>
 const store = new InstallationStore(
   {
     installPackage: installPackageWithVersion,
-    disposePackage,
+    disposePackage: installation => removePath(installation.installPath),
   },
   {
     // TASK_PACKAGE_INSTALL reports each package-manager fallback, before
@@ -178,6 +188,12 @@ fastify.delete<{ Params: { id: string } }>(
     return reply.code(204).send()
   },
 )
+
+fastify.post('/cache/evict', async (_request, reply) => {
+  if (!cachePolicy.enabled) return reply.code(404).send()
+
+  return cachePolicy.evict()
+})
 
 // This service already listens on loopback; VictoriaMetrics scrapes it directly.
 fastify.get('/metrics', async (_request, reply) => {
