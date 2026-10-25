@@ -6,8 +6,9 @@
 
 LOG_FILE="/var/log/disk_cleanup.log"
 MAIN_THRESHOLD=70          # % main disk usage before cleanup triggers
-LOOP_SOFT_THRESHOLD=60     # % loop usage before oldest cache entries are evicted
-LOOP_HARD_THRESHOLD=80     # % loop usage before the complete bun cache is cleared
+# Thresholds apply to whichever is higher: allocated bytes or used inodes.
+LOOP_SOFT_THRESHOLD=60
+LOOP_HARD_THRESHOLD=80
 LOOP_TARGET_USAGE=$((LOOP_SOFT_THRESHOLD * 2 / 3))
 ORPHAN_MIN_AGE_SECONDS=600
 BUN_CACHE_MAX_AGE_DAYS="${BUN_CACHE_MAX_AGE_DAYS:-1}"
@@ -30,8 +31,8 @@ get_disk_usage() {
 }
 
 get_loop_usage() {
-    # Returns integer percent usage of the /tmp/tmp-build loop device
-    df /tmp/tmp-build 2>/dev/null | awk 'NR==2 {gsub(/%/,"",$5); print $5}'
+    df --output=pcent,ipcent /tmp/tmp-build 2>/dev/null | \
+        awk 'NR==2 {gsub(/%/, ""); print ($1+0 > $2+0 ? $1 : $2)}'
 }
 
 cleanup_orphaned_package_managers() {
@@ -64,15 +65,6 @@ cleanup_orphaned_package_managers() {
             kill -KILL "$pid" 2>/dev/null || true
         fi
     done <<< "$matches"
-}
-
-cleanup_stale_hidden_tmp_dirs() {
-    log "Cleaning stale hidden directories under /tmp"
-    find /tmp -maxdepth 1 -mindepth 1 -type d -name '.*' \
-        ! -name '.X11-unix' ! -name '.ICE-unix' ! -name '.Test-unix' \
-        ! -name '.font-unix' ! -name '.XIM-unix' ! -name '.X0-lock' \
-        -mmin +60 -exec rm -rf {} + 2>/dev/null
-    log "Cleaned stale hidden directories under /tmp"
 }
 
 cleanup_stale_package_dirs() {
@@ -139,8 +131,12 @@ evict_oldest_bun_cache_entries() {
         loop_usage=$(get_loop_usage)
         [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ] || break
     done < <(
-        find "$cache_root" -mindepth 1 -maxdepth 1 \( -type d -o -type f \) \
-            ! -name '.tmp' -printf '%T@ %p\0' 2>/dev/null | sort -z -n
+        # Walk into scope containers, but never into individual package payloads.
+        find "$cache_root" -mindepth 1 -maxdepth 2 \
+            -name '.tmp' -prune -o \
+            \( -type d -path "$cache_root/@*" ! -path "$cache_root/@*/*" \) -o \
+            \( \( -type d -o -type f \) -printf '%T@ %p\0' -prune \) \
+            2>/dev/null | sort -z -n
     )
 
     loop_usage=$(get_loop_usage)
@@ -209,32 +205,20 @@ cleanup_loop_device() {
         return
     fi
 
-    log "Loop device (/tmp/tmp-build) usage: ${loop_usage}%"
+    log "Loop device (/tmp/tmp-build) pressure (higher of bytes/inodes): ${loop_usage}%"
 
     if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
         prune_bun_cache
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -lt "$LOOP_SOFT_THRESHOLD" ]; then
             trim_loop_device
-            log "Loop usage after age pruning: ${loop_usage}%"
+            log "Loop pressure after age pruning: ${loop_usage}%"
             return
         fi
     fi
 
-    if [ "$loop_usage" -ge "$LOOP_HARD_THRESHOLD" ]; then
-        log "Loop usage at or above hard threshold ${LOOP_HARD_THRESHOLD}% — running aggressive cleanup"
-        cleanup_stale_package_dirs false
-        cleanup_npm_cache
-
-        if [ -d /tmp/tmp-build/cache/bun ]; then
-            find /tmp/tmp-build/cache/bun -mindepth 1 -maxdepth 1 -exec rm -rf -- {} + 2>/dev/null
-            log "Cleared complete bun cache"
-        fi
-
-        trim_loop_device
-        log "Loop usage after aggressive cleanup: $(get_loop_usage)%"
-    elif [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
-        log "Loop usage at or above soft threshold ${LOOP_SOFT_THRESHOLD}% — running oldest-first cleanup to ${LOOP_TARGET_USAGE}%"
+    if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
+        log "Loop pressure at or above soft threshold ${LOOP_SOFT_THRESHOLD}% — running oldest-first cleanup to ${LOOP_TARGET_USAGE}%"
         cleanup_stale_package_dirs true
 
         loop_usage=$(get_loop_usage)
@@ -247,11 +231,19 @@ cleanup_loop_device() {
             evict_oldest_bun_cache_entries
         fi
 
+        # Keep the full reset as a fallback only if incremental cleanup cannot
+        # bring either resource below the existing emergency threshold.
+        loop_usage=$(get_loop_usage)
+        if [ "$loop_usage" -ge "$LOOP_HARD_THRESHOLD" ] && [ -d /tmp/tmp-build/cache/bun ]; then
+            find /tmp/tmp-build/cache/bun -mindepth 1 -maxdepth 1 -exec rm -rf -- {} + 2>/dev/null
+            log "Cleared complete bun cache"
+        fi
+
         trim_loop_device
         loop_usage=$(get_loop_usage)
-        log "Loop usage after oldest-first cleanup: ${loop_usage}%"
+        log "Loop pressure after oldest-first cleanup: ${loop_usage}%"
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
-            log "WARNING: Loop remains above cleanup target; no more top-level bun cache directories were available"
+            log "WARNING: Loop remains above cleanup target; no more bun cache entries were available"
         fi
     fi
 }
@@ -260,7 +252,6 @@ cleanup_main() {
     log "Starting main disk cleanup"
 
     cleanup_orphaned_package_managers
-    cleanup_stale_hidden_tmp_dirs
 
     # Old log files (keep 7 days)
     find /var/log -type f -name "*.log" -mtime +7 \
@@ -284,7 +275,7 @@ cleanup_main() {
 main() {
     local usage
     usage=$(get_disk_usage)
-    log "Main disk usage: ${usage}%   Loop device usage: $(get_loop_usage)%"
+    log "Main disk usage: ${usage}%   Loop pressure (higher of bytes/inodes): $(get_loop_usage)%"
 
     # Always check loop device regardless of main disk
     cleanup_loop_device
