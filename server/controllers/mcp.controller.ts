@@ -213,7 +213,7 @@ export function createMcpController(port: number): McpController {
     },
 
     callTool: async ctx => {
-      // SAFETY: koa-bodyparser augments the Koa request with a parsed JSON body.
+      // SAFETY: @koa/bodyparser augments the Koa request with a parsed JSON body.
       const payload = (ctx.request as BodyRequest).body
 
       if (!isMcpPayload(payload)) {

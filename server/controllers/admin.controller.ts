@@ -26,7 +26,7 @@ export function createAdminController(password: string): AdminController {
     },
 
     restartWithBody: async ctx => {
-      // SAFETY: koa-bodyparser augments the Koa request with a parsed JSON body.
+      // SAFETY: @koa/bodyparser augments the Koa request with a parsed JSON body.
       const { name, pass } = (ctx.request as BodyRequest).body ?? {}
 
       if (name !== 'bundlephobia' || pass !== password) {

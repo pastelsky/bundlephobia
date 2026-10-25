@@ -4,10 +4,10 @@ import { monitorEventLoopDelay } from 'node:perf_hooks'
 
 import next from 'next'
 import Koa from 'koa'
-import proxy from 'koa-proxy'
+import proxy from 'koa-proxies'
 import serve from 'koa-static'
 import Router from '@koa/router'
-import bodyParser from 'koa-bodyparser'
+import { bodyParser } from '@koa/bodyparser'
 import cacheControl from 'koa-cache-control'
 import requestId from 'koa-requestid'
 import invariant from 'ts-invariant'
@@ -80,7 +80,6 @@ export async function startServer(): Promise<void> {
   const router = new Router()
 
   server.use(requestId())
-  server.use(bodyParser())
   server.use(requestLoggerMiddleware)
   server.use(cacheControl())
   server.use(apiDiscoveryMiddleware)
@@ -107,12 +106,15 @@ export async function startServer(): Promise<void> {
     }),
   )
 
-  server.use(
-    proxy({
-      match: /^\/-\/search/,
-      host: 'https://www.npmjs.com',
-    }),
-  )
+  const searchProxyOptions = {
+    target: 'https://www.npmjs.com',
+    changeOrigin: true,
+    // Preserve koa-proxy's default of following upstream redirects.
+    followRedirects: true,
+  }
+
+  server.use(proxy(/^\/-\/search/, searchProxyOptions))
+  server.use(bodyParser())
 
   registerApiRoutes(router, { cache, port: environment.port })
   registerAdminRoutes(router, environment.basicAuthPassword)
