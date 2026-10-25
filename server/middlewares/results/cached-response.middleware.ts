@@ -1,14 +1,14 @@
 import type { Middleware } from 'koa'
 
-import { createJavaScriptPackageReference } from '../../../languages/javascript'
-import { packageAnalysisGateway } from '../../analysis'
-import config from '../../config'
+import { getAnalysisCacheMaxAge } from '../../services/analysis-cache-policy'
+
 import { createAnalysisKey } from '../../analysis/keys'
 import { failureCache } from '../../infrastructure/runtime'
 import logger from '../../infrastructure/logger.service'
 
 const cachedResponse: Middleware = async (ctx, next) => {
-  const { force, peep } = ctx.query
+  const { force, peep, package: packageQuery } = ctx.query
+
   const { name, version, packageString, language } = ctx.state.resolved
   const { operation } = ctx.state.analysis
 
@@ -55,16 +55,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
         packageSpecifier: packageString,
       }),
     )
-    ctx.cacheControl = {
-      maxAge:
-        force === null || force === undefined
-          ? packageAnalysisGateway.isExactVersionSpecifier(
-              createJavaScriptPackageReference(`${name}@${version}`),
-            )
-            ? config.CACHE.SIZE_API_HAS_VERSION
-            : config.CACHE.SIZE_API_DEFAULT
-          : 0,
-    }
+    ctx.cacheControl = { maxAge: getAnalysisCacheMaxAge(force, packageQuery) }
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })
 
@@ -75,6 +66,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
   logCache({ hit: false, message: `CACHE MISS: ${packageString}` })
 
   if (peep) {
+    ctx.cacheControl = { noStore: true }
     ctx.status = 404
 
     return

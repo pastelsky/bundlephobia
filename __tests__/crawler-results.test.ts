@@ -16,6 +16,7 @@ import CacheServiceClient from '../server/clients/cache-service.client'
 import { registerApiRoutes } from '../server/routes/api.route'
 import { packageAnalysisGateway } from '../server/analysis'
 import CustomError from '../server/custom-error'
+import firebaseUtils from '../utils/firebase.utils'
 import { parseJavaScriptPackageSpecifier } from '../languages/javascript'
 import type { PackageBuildInfo } from '@bundlephobia/service-contracts/package'
 import { latestBuiltVersion } from '../cache-service/cache.utils.ts'
@@ -255,4 +256,60 @@ it('waits for an admitted crawler page build and propagates duration and rejecti
   expect(rejected.headers.get('retry-after')).toBe('300')
   expect((await request('/package/nonexistent')).status).toBe(404)
   expect(build).toHaveBeenCalledTimes(1)
+})
+
+// Exercise both cold and cached responses through the real HTTP middleware stack.
+it.each([
+  ['example', 30],
+  ['example@latest', 30],
+  ['example@2.0.0', 86400],
+  ['@scope/example@2.0.0', 86400],
+  ['example@2.0.0&force=false', 0],
+])(
+  'preserves request cache lifetime and edge compression for %s',
+  async (specifier, ttl) => {
+    const large = { ...current, description: 'A useful package. '.repeat(1000) }
+
+    build.mockResolvedValue(large)
+
+    for (const hit of [false, true]) {
+      cached.clear()
+
+      if (hit)
+        cached.set(
+          `${specifier.startsWith('@scope/') ? '@scope/example' : 'example'}@2.0.0`,
+          large,
+        )
+
+      const response = await request(`/api/size?package=${specifier}`, {
+        'X-Bundlephobia-Prefer-Cached': '',
+        'Accept-Encoding': 'gzip',
+      })
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('cache-control')).toBe(`max-age=${ttl}`)
+      expect(response.headers.get('content-encoding')).toBeNull()
+      expect(response.headers.get('vary')).toContain('Accept-Encoding')
+      expect(await response.json()).toMatchObject({ version: '2.0.0' })
+    }
+  },
+)
+
+it('does not cache an upstream recent-search failure for the success lifetime', async () => {
+  jest
+    .spyOn(firebaseUtils, 'getRecentSearches')
+    .mockRejectedValue(new Error('temporary upstream failure'))
+
+  const response = await request('/api/recent?limit=5')
+
+  expect(response.status).toBe(422)
+  expect(response.headers.get('cache-control')).toContain('no-store')
+})
+
+it('does not retain a cache-only miss after a result becomes available', async () => {
+  const response = await request('/api/size?package=example@2.0.0&peep=true')
+
+  expect(response.status).toBe(404)
+  expect(response.headers.get('cache-control')).toContain('no-store')
+  expect(build).not.toHaveBeenCalled()
 })

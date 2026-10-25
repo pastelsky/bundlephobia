@@ -45,7 +45,9 @@ class BotRateLimits(unittest.TestCase):
                           'defaults\n    mode http\n    timeout connect 1s\n'
                           '    timeout client 5s\n    timeout server 1s\n' + rules +
                           '\n' + ''.join(f'backend {name}\n'
-                                         '    http-request return status 200\n'
+                                         '    http-request return status 503 hdr Cache-Control max-age=86400 if { path /upstream-unavailable }\n'
+                                         '    http-request return status 429 hdr Cache-Control max-age=86400 if { path /upstream-busy }\n'
+                                         '    http-request return status 200 hdr Cache-Control public,max-age=86400\n'
                                          for name in sorted(upstreams)))
         validation = subprocess.run(['haproxy', '-c', '-f', str(config)],
                                     capture_output=True, text=True)
@@ -94,6 +96,21 @@ class BotRateLimits(unittest.TestCase):
             while chunk := admin.recv(4096):
                 reply += chunk
             self.assertEqual(reply.strip(), b'')
+
+    def test_response_cache_policy_covers_private_paths_and_temporary_errors(self):
+        for path in ['/stats', '/stats/dashboard/index.html',
+                     '/stats/dashboard/assets/test.js', '/admin/restart']:
+            self.request('Mozilla/5.0', 1, path)
+            self.assertEqual(dict(self.response_headers)['cache-control'], 'private, no-store')
+        self.assertEqual(self.request('Mozilla/5.0', 1, '/stats/dashboard/assets/test.js',
+                                     headers={'Authorization': 'Basic dGVzdDp0ZXN0'}), 200)
+        self.assertEqual(dict(self.response_headers)['cache-control'], 'private, no-store')
+        for path, status in [('/upstream-unavailable', 503), ('/upstream-busy', 429)]:
+            self.assertEqual(self.request('Mozilla/5.0', 1, path), status)
+            self.assertEqual(dict(self.response_headers)['cache-control'], 'no-store')
+        self.assertEqual(self.request('Mozilla/5.0', 1, '/_next/static/test.js'), 200)
+        self.assertEqual(dict(self.response_headers)['cache-control'], 'public,max-age=86400')
+        self.assertNotIn('no-transform', dict(self.response_headers)['cache-control'])
 
     def test_families_share_across_ips_but_do_not_penalize_each_other(self):
         for i in range(190):

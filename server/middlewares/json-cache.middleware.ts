@@ -22,8 +22,10 @@ export default function jsonCacheMiddleware<TKey, TValue>({
   hash: hashFn,
   onReadFailure,
 }: JsonCacheConfig<TKey, TValue>): Middleware {
-  // SAFETY: koa-cash returns a middleware compatible with the server's Koa version.
-  return koaCache({
+  // SAFETY: koa-cash uses a duplicate Koa type package but the same runtime context.
+  const middleware = koaCache({
+    // Cloudflare compresses responses; the store only keeps JSON, not gzip bodies.
+    threshold: Infinity,
     async get(key: string) {
       // SAFETY: cache keys are serialized by this middleware's hash function.
       const parsedKey = JSON.parse(key) as TKey
@@ -57,4 +59,13 @@ export default function jsonCacheMiddleware<TKey, TValue>({
       return JSON.stringify(hashFn(cacheContext))
     },
   }) as Middleware & ReturnType<typeof koaCache>
+
+  return async (ctx, next) => {
+    await middleware(ctx, next)
+
+    // koa-cash emits identity on hits and misses, preventing edge compression.
+    if (ctx.response.get('Content-Encoding') === 'identity') {
+      ctx.remove('Content-Encoding')
+    }
+  }
 }

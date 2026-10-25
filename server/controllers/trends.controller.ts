@@ -61,9 +61,10 @@ export function createTrendsController(): Middleware {
     const range = parseRange(rawRange)
 
     try {
-      ctx.cacheControl = { maxAge: config.CACHE.TRENDS_API }
       ctx.body = await buildTrendsResponse(packages, range)
+      ctx.cacheControl = { maxAge: config.CACHE.TRENDS_API }
     } catch (error) {
+      ctx.cacheControl = { noStore: true }
       logger.error('TRENDS', error, `TRENDS FAILED: ${packages.join(',')}`)
       ctx.status = 422
       ctx.body = {
