@@ -42,7 +42,9 @@ function getPackageHistoryDateError(
   return undefined
 }
 
-export function createPackageHistoryController(): Middleware {
+export function createPackageHistoryController(
+  readHistory: typeof fetchPackageHistory = fetchPackageHistory,
+): Middleware {
   return async ctx => {
     const packageString = getQueryValue(ctx.query.package, true)
 
@@ -58,7 +60,7 @@ export function createPackageHistoryController(): Middleware {
     }
 
     try {
-      ctx.body = await fetchPackageHistory(name, { from, to, limit })
+      ctx.body = await readHistory(name, { from, to, limit })
       ctx.cacheControl = {
         maxAge: config.CACHE.PACKAGE_HISTORY_API,
       }

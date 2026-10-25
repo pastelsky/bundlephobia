@@ -1,12 +1,12 @@
 import type { Middleware } from 'koa'
 
-import { getAnalysisCacheMaxAge } from '../services/analysis-cache-policy'
 import now from 'performance-now'
 
 import { getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
 import { BUILD_DURATION_HEADER } from '../clients/build-service.client'
 import logger from '../infrastructure/logger.service'
+import { getBuildCacheMaxAge } from '../services/build-cache-policy'
 
 const exportsMiddleware: Middleware = async ctx => {
   const priority = getRequestPriority(ctx)
@@ -30,7 +30,7 @@ const exportsMiddleware: Middleware = async ctx => {
 
   const buildEnd = now()
 
-  ctx.cacheControl = { maxAge: getAnalysisCacheMaxAge(force, packageQuery) }
+  ctx.cacheControl = { maxAge: getBuildCacheMaxAge(force, packageQuery) }
 
   ctx.body = { name, version, exports: result }
   const time = buildEnd - buildStart

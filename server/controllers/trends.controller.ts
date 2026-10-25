@@ -49,7 +49,9 @@ function validateQuery(
   if (!isRange(range)) throwBadRequest('invalid trends range')
 }
 
-export function createTrendsController(): Middleware {
+export function createTrendsController(
+  readTrends: typeof buildTrendsResponse = buildTrendsResponse,
+): Middleware {
   return async ctx => {
     const packages = packagesFromQuery(ctx.query.packages)
     const rawRange = queryValue(ctx.query.range) ?? 'last-year'
@@ -61,7 +63,7 @@ export function createTrendsController(): Middleware {
     const range = parseRange(rawRange)
 
     try {
-      ctx.body = await buildTrendsResponse(packages, range)
+      ctx.body = await readTrends(packages, range)
       ctx.cacheControl = { maxAge: config.CACHE.TRENDS_API }
     } catch (error) {
       ctx.cacheControl = { noStore: true }

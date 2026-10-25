@@ -1,6 +1,5 @@
 import type { Middleware } from 'koa'
 
-import { getAnalysisCacheMaxAge } from '../../services/analysis-cache-policy'
 import now from 'performance-now'
 
 import type {
@@ -13,6 +12,7 @@ import { getRequestPriority } from '../../../utils/server.utils'
 import { packageAnalysisGateway } from '../../analysis'
 import { BUILD_DURATION_HEADER } from '../../clients/build-service.client'
 import logger from '../../infrastructure/logger.service'
+import { getBuildCacheMaxAge } from '../../services/build-cache-policy'
 import type { PackageBuildResult } from '@bundlephobia/service-contracts/package'
 
 interface BuildCache {
@@ -66,7 +66,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
 
     const buildEnd = now()
 
-    ctx.cacheControl = { maxAge: getAnalysisCacheMaxAge(force, packageQuery) }
+    ctx.cacheControl = { maxAge: getBuildCacheMaxAge(force, packageQuery) }
 
     const body: PackageBuildResult = {
       ...result,

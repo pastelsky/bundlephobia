@@ -2,7 +2,8 @@ import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { packageAnalysisGateway } from '../analysis'
 import config from '../config'
 
-export function getAnalysisCacheMaxAge(
+// HTTP freshness for build results; stored results have independent retention.
+export function getBuildCacheMaxAge(
   force: string | string[] | undefined,
   packageQuery: string | string[] | undefined,
 ): number {

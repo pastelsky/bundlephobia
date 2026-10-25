@@ -1,6 +1,6 @@
 import type { Middleware } from 'koa'
 
-import { getAnalysisCacheMaxAge } from '../../services/analysis-cache-policy'
+import { getBuildCacheMaxAge } from '../../services/build-cache-policy'
 
 import { createAnalysisKey } from '../../analysis/keys'
 import { failureCache } from '../../infrastructure/runtime'
@@ -55,7 +55,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
         packageSpecifier: packageString,
       }),
     )
-    ctx.cacheControl = { maxAge: getAnalysisCacheMaxAge(force, packageQuery) }
+    ctx.cacheControl = { maxAge: getBuildCacheMaxAge(force, packageQuery) }
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })
 

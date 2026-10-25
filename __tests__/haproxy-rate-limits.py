@@ -45,8 +45,13 @@ class BotRateLimits(unittest.TestCase):
                           'defaults\n    mode http\n    timeout connect 1s\n'
                           '    timeout client 5s\n    timeout server 1s\n' + rules +
                           '\n' + ''.join(f'backend {name}\n'
-                                         '    http-request return status 503 hdr Cache-Control max-age=86400 if { path /upstream-unavailable }\n'
-                                         '    http-request return status 429 hdr Cache-Control max-age=86400 if { path /upstream-busy }\n'
+                                         '    http-request return status 503 hdr Cache-Control max-age=86400 if { path_end /upstream-unavailable }\n'
+                                         '    http-request return status 429 hdr Cache-Control max-age=86400 if { path_end /upstream-busy }\n'
+                                         '    http-request return status 500 hdr Cache-Control max-age=86400 if { path /upstream-error }\n'
+                                         '    http-request return status 502 hdr Cache-Control max-age=86400 if { path /upstream-bad-gateway }\n'
+                                         '    http-request return status 504 hdr Cache-Control max-age=86400 if { path /upstream-timeout }\n'
+                                         '    http-request return status 401 hdr Cache-Control max-age=86400 if { path /upstream-unauthorized }\n'
+                                         '    http-request return status 404 hdr Cache-Control max-age=60 if { path /permanent-missing }\n'
                                          '    http-request return status 200 hdr Cache-Control public,max-age=86400\n'
                                          for name in sorted(upstreams)))
         validation = subprocess.run(['haproxy', '-c', '-f', str(config)],
@@ -84,6 +89,10 @@ class BotRateLimits(unittest.TestCase):
             response.read()
             return response.status
 
+    def assert_cache_control(self, expected):
+        self.assertEqual([v for k, v in self.response_headers
+                          if k.lower() == 'cache-control'], [expected])
+
     def runtime(self, command):
         # Advance real HAProxy state instead of sleeping fifteen minutes or
         # rewriting production thresholds. The socket belongs to this fixture.
@@ -101,15 +110,25 @@ class BotRateLimits(unittest.TestCase):
         for path in ['/stats', '/stats/dashboard/index.html',
                      '/stats/dashboard/assets/test.js', '/admin/restart']:
             self.request('Mozilla/5.0', 1, path)
-            self.assertEqual(dict(self.response_headers)['cache-control'], 'private, no-store')
+            self.assert_cache_control('private, no-store')
         self.assertEqual(self.request('Mozilla/5.0', 1, '/stats/dashboard/assets/test.js',
                                      headers={'Authorization': 'Basic dGVzdDp0ZXN0'}), 200)
-        self.assertEqual(dict(self.response_headers)['cache-control'], 'private, no-store')
-        for path, status in [('/upstream-unavailable', 503), ('/upstream-busy', 429)]:
+        self.assert_cache_control('private, no-store')
+        for path, status in [('/upstream-unavailable', 503), ('/upstream-busy', 429),
+                             ('/upstream-error', 500), ('/upstream-bad-gateway', 502),
+                             ('/upstream-timeout', 504)]:
             self.assertEqual(self.request('Mozilla/5.0', 1, path), status)
-            self.assertEqual(dict(self.response_headers)['cache-control'], 'no-store')
+            self.assert_cache_control('no-store')
+        for path in ['/stats/dashboard/assets/upstream-unavailable', '/admin/upstream-unavailable']:
+            self.assertEqual(self.request('Mozilla/5.0', 1, path,
+                                         headers={'Authorization': 'Basic dGVzdDp0ZXN0'}), 503)
+            self.assert_cache_control('private, no-store')
+        self.assertEqual(self.request('Mozilla/5.0', 1, '/upstream-unauthorized'), 401)
+        self.assert_cache_control('private, no-store')
+        self.assertEqual(self.request('Mozilla/5.0', 1, '/permanent-missing'), 404)
+        self.assert_cache_control('max-age=60')
         self.assertEqual(self.request('Mozilla/5.0', 1, '/_next/static/test.js'), 200)
-        self.assertEqual(dict(self.response_headers)['cache-control'], 'public,max-age=86400')
+        self.assert_cache_control('public,max-age=86400')
         self.assertNotIn('no-transform', dict(self.response_headers)['cache-control'])
 
     def test_families_share_across_ips_but_do_not_penalize_each_other(self):
@@ -118,6 +137,7 @@ class BotRateLimits(unittest.TestCase):
                              ['/_events', '/asset.js'][i % 2]), 200)
         self.assertEqual(self.request('Bytespider/new-version', 240), 429)
         self.assertEqual(self.request('TikTokSpider/new-version', 241, '/_events'), 429)
+        self.assert_cache_control('no-store')
         for ua in ['Badgen/1.0', 'Data-Pipeline-Enricher/1.0', 'Shields.io/test',
                    'bingbot/2', 'depscope/1', 'got/14', 'Ahrefs',
                    'Mozilla/5.0 Chrome/156.0 Safari/537.36']:
