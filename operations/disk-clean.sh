@@ -261,6 +261,7 @@ cleanup_main() {
     log "Starting main disk cleanup"
 
     cleanup_orphaned_package_managers
+    cleanup_stale_hidden_tmp_dirs
 
     # Old log files (keep 7 days)
     find /var/log -type f -name "*.log" -mtime +7 \
@@ -284,15 +285,6 @@ cleanup_main() {
 main() {
     local usage
     usage=$(get_disk_usage)
-
-    # Listing a large /tmp can be expensive even when nothing is eligible.
-    if [ "${1:-}" = "--hidden-tmp" ]; then
-        if [ "$usage" -gt "$MAIN_THRESHOLD" ]; then
-            cleanup_stale_hidden_tmp_dirs
-        fi
-        return
-    fi
-
     log "Main disk usage: ${usage}%   Loop pressure (higher of bytes/inodes): $(get_loop_usage)%"
 
     # Always check loop device regardless of main disk
@@ -322,5 +314,5 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     # The cron process and all cleanup children yield CPU and I/O to serving traffic.
     chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; exit 1; }
     ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; exit 1; }
-    main "$@"
+    main
 fi
