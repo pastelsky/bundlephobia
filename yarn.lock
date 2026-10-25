@@ -9868,7 +9868,7 @@ __metadata:
     koa: "npm:3.2.1"
     koa-basic-auth: "npm:^4.0.0"
     koa-cache-control: "npm:^2.0.0"
-    koa-cash: "npm:3.0.4"
+    koa-cash: "npm:5.0.2"
     koa-proxies: "npm:0.12.6"
     koa-requestid: "npm:2.3.0"
     koa-send: "npm:^5.0.1"
@@ -9930,7 +9930,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"bytes@npm:3.1.2, bytes@npm:^3.1.0, bytes@npm:^3.1.2, bytes@npm:~3.1.2":
+"bytes@npm:3.1.2, bytes@npm:^3.1.2, bytes@npm:~3.1.2":
   version: 3.1.2
   resolution: "bytes@npm:3.1.2"
   checksum: 76d1c43cbd602794ad8ad2ae94095cddeb1de78c5dddaa7005c51af10b0176c69971a6d88e805a90c2b6550d76636e43c40d8427a808b8645ede885de4a0358e
@@ -13409,7 +13409,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-safe-stringify@npm:^2.0.7, fast-safe-stringify@npm:^2.1.1":
+"fast-safe-stringify@npm:^2.1.1":
   version: 2.1.1
   resolution: "fast-safe-stringify@npm:2.1.1"
   checksum: d90ec1c963394919828872f21edaa3ad6f1dddd288d2bd4e977027afff09f5db40f94e39536d4646f7e01761d704d72d51dce5af1b93717f3489ef808f5f4e4d
@@ -17200,17 +17200,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"koa-cash@npm:3.0.4":
-  version: 3.0.4
-  resolution: "koa-cash@npm:3.0.4"
+"koa-cash@npm:5.0.2":
+  version: 5.0.2
+  resolution: "koa-cash@npm:5.0.2"
   dependencies:
-    bytes: "npm:^3.1.0"
+    bytes: "npm:^3.1.2"
     compressible: "npm:^2.0.18"
-    fast-safe-stringify: "npm:^2.0.7"
+    fast-safe-stringify: "npm:^2.1.1"
     get-stream: "npm:^5.1.0"
     is-stream: "npm:^2.0.0"
     koa-is-json: "npm:^1.0.0"
-  checksum: 4a04292101a9f1e3f6854a42b2ea561eeb13c1e88c9cf4aaea6cb2aeb5b4be95794e18106290cc5e336dcd2afd43b18cb98f83fd9a335400836022e0aac8e554
+  checksum: 34b470e8717db31f167e9702984a8d0418791b99d1264706527b6962c8a09328f4745f470a26acbbe2c40fceb35a9b4365ef1578a793fb74cdd2fa912e82c650
   languageName: node
   linkType: hard
 

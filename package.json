@@ -67,7 +67,7 @@
     "koa": "3.2.1",
     "koa-basic-auth": "^4.0.0",
     "koa-cache-control": "^2.0.0",
-    "koa-cash": "3.0.4",
+    "koa-cash": "5.0.2",
     "koa-proxies": "0.12.6",
     "koa-requestid": "2.3.0",
     "koa-send": "^5.0.1",

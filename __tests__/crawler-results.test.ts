@@ -18,6 +18,7 @@ import { packageAnalysisGateway } from '../server/analysis'
 import CustomError from '../server/custom-error'
 import { parseJavaScriptPackageSpecifier } from '../languages/javascript'
 import type { PackageBuildInfo } from '@bundlephobia/service-contracts/package'
+import type { ExportsCacheResult } from '@bundlephobia/service-contracts/cache'
 import { latestBuiltVersion } from '../cache-service/cache.utils.ts'
 
 const older: PackageBuildInfo = {
@@ -39,6 +40,8 @@ const current = { ...older, version: '2.0.0' }
 const cache = new CacheServiceClient()
 
 const cached = new Map<string, PackageBuildInfo>()
+
+const cachedExports = new Map<string, ExportsCacheResult>()
 
 let server: Server
 
@@ -94,6 +97,7 @@ afterAll(() => new Promise<void>(done => server.close(() => done())))
 beforeEach(() => {
   jest.restoreAllMocks()
   cached.clear()
+  cachedExports.clear()
   client += 1
   jest.spyOn(cache, 'getPackageSize').mockImplementation(async key => {
     const value = cached.get(`${key.name}@${key.version}`)
@@ -104,6 +108,14 @@ beforeEach(() => {
     // SAFETY: the real API's write boundary receives complete build results.
     cached.set(`${key.name}@${key.version}`, value as PackageBuildInfo)
   })
+  jest.spyOn(cache, 'getExportsSize').mockImplementation(async key => {
+    const value = cachedExports.get(`${key.name}@${key.version}`)
+
+    return value ? { status: 'hit', value } : { status: 'miss' }
+  })
+  jest.spyOn(cache, 'setExportsSize').mockImplementation(async (key, value) => {
+    cachedExports.set(`${key.name}@${key.version}`, value)
+  })
   resolve = jest
     .spyOn(packageAnalysisGateway, 'resolvePackage')
     .mockImplementation(async reference => {
@@ -112,17 +124,20 @@ beforeEach(() => {
       if (spec.name === 'nonexistent')
         throw new CustomError('PackageNotFoundError', null, undefined)
 
+      const version =
+        spec.version &&
+        packageAnalysisGateway.isExactVersionSpecifier(reference)
+          ? spec.version
+          : current.version
+
       return {
         ...current,
         name: spec.name,
-        version:
-          spec.version && spec.version !== 'latest'
-            ? spec.version
-            : current.version,
+        version,
         language: 'javascript',
         specifier: reference.specifier,
         displayName: spec.name,
-        canonicalSpecifier: `${spec.name}@${spec.version ?? current.version}`,
+        canonicalSpecifier: `${spec.name}@${version}`,
       }
     })
   build = jest
@@ -255,4 +270,133 @@ it('waits for an admitted crawler page build and propagates duration and rejecti
   expect(rejected.headers.get('retry-after')).toBe('300')
   expect((await request('/package/nonexistent')).status).toBe(404)
   expect(build).toHaveBeenCalledTimes(1)
+})
+
+describe.each(['size', 'exports-sizes'])(
+  '%s build-response caching',
+  endpoint => {
+    it.each([
+      ['package=example', 30],
+      ['package=example@latest', 30],
+      ['package=example@beta', 30],
+      ['package=example@%5E2.0.0', 30],
+      ['package=example@2.0.0', 86400],
+      ['package=@scope/example@2.0.0', 86400],
+      ['package=@scope&package=example@2.0.0', 86400],
+      ['package=example@2.0.0&force=false', 0],
+    ])(
+      'keeps hit/miss HTTP lifetimes consistent for %s',
+      async (query, ttl) => {
+        const large = {
+          ...current,
+          description: 'A useful package. '.repeat(1000),
+        }
+
+        const exportsResult = {
+          name: 'example',
+          version: '2.0.0',
+          assets: [{ name: 'export'.repeat(300), gzip: 123, type: 'js' }],
+        }
+
+        build.mockResolvedValue(large)
+        jest
+          .spyOn(packageAnalysisGateway, 'analyzePackageExportSizes')
+          .mockResolvedValue(exportsResult)
+
+        for (const [hit, userAgent] of [
+          [false, 'Mozilla/5.0'],
+          [true, 'Mozilla/5.0'],
+          [true, 'Googlebot'],
+        ] as const) {
+          cached.clear()
+          cachedExports.clear()
+
+          if (hit) {
+            const key = `${query.includes('@scope') ? '@scope/example' : 'example'}@2.0.0`
+
+            cached.set(key, large)
+            cachedExports.set(key, exportsResult)
+          }
+
+          const response = await request(`/api/${endpoint}?${query}`, {
+            'X-Bundlephobia-Prefer-Cached': '',
+            'User-Agent': userAgent,
+            'Accept-Encoding': 'gzip, br',
+          })
+
+          expect(response.status).toBe(200)
+          expect(response.headers.get('cache-control')).toBe(`max-age=${ttl}`)
+          expect(response.headers.get('content-encoding')).toBeNull()
+          expect(response.headers.get('content-type')).toContain(
+            'application/json',
+          )
+          expect(response.headers.get('vary')).toContain('Accept-Encoding')
+          expect(await response.json()).toMatchObject({ version: '2.0.0' })
+        }
+      },
+    )
+
+    it('keeps force requests uncached and bypasses stored build results', async () => {
+      cached.set('example@2.0.0', current)
+      cachedExports.set('example@2.0.0', {
+        name: 'example',
+        version: '2.0.0',
+        assets: [],
+      })
+      build.mockResolvedValue({ ...current, size: 777 })
+
+      const exportsBuild = jest
+        .spyOn(packageAnalysisGateway, 'analyzePackageExportSizes')
+        .mockResolvedValue({ assets: [{ name: 'fresh', gzip: 123 }] })
+
+      const response = await request(
+        `/api/${endpoint}?package=example@2.0.0&force=true`,
+      )
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('cache-control')).toBe('max-age=0')
+      expect(await response.json()).toMatchObject(
+        endpoint === 'size' ? { size: 777 } : { assets: [{ name: 'fresh' }] },
+      )
+      expect(endpoint === 'size' ? build : exportsBuild).toHaveBeenCalledTimes(
+        1,
+      )
+    })
+
+    it('does not store a temporary cache-only miss and sees the later result', async () => {
+      const query = `/api/${endpoint}?package=example@2.0.0&peep=true`
+      const missing = await request(query)
+
+      expect(missing.status).toBe(404)
+      expect(missing.headers.get('cache-control')).toContain('no-store')
+      expect(build).not.toHaveBeenCalled()
+      cached.set('example@2.0.0', current)
+      cachedExports.set('example@2.0.0', {
+        name: 'example',
+        version: '2.0.0',
+        assets: [],
+      })
+
+      const available = await request(query)
+
+      expect(available.status).toBe(200)
+      expect(available.headers.get('cache-control')).toBe('max-age=86400')
+    })
+  },
+)
+
+it('does not cache a negative export-size peek or start a build', async () => {
+  const exportsBuild = jest.spyOn(
+    packageAnalysisGateway,
+    'analyzePackageExportSizes',
+  )
+
+  const response = await request(
+    '/api/exports-sizes?package=example@2.0.0&peek=true',
+  )
+
+  expect(response.status).toBe(200)
+  expect(response.headers.get('cache-control')).toContain('no-store')
+  expect(await response.json()).toMatchObject({ peekSuccess: false })
+  expect(exportsBuild).not.toHaveBeenCalled()
 })

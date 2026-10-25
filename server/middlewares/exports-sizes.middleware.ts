@@ -1,4 +1,5 @@
 import type { Middleware } from 'koa'
+
 import now from 'performance-now'
 
 import type {
@@ -6,38 +7,14 @@ import type {
   ExportsCacheResult,
 } from '@bundlephobia/service-contracts/cache'
 
-import { createJavaScriptPackageReference } from '../../languages/javascript'
 import { getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
 import { BUILD_DURATION_HEADER } from '../clients/build-service.client'
-import config from '../config'
 import logger from '../infrastructure/logger.service'
+import { getBuildCacheMaxAge } from '../services/build-cache-policy'
 
 interface ExportSizesCache {
   setExportsSize(key: CacheKey, result: ExportsCacheResult): Promise<void>
-}
-
-function getRequestedPackage(
-  packageQuery: string | string[] | undefined,
-): string | undefined {
-  if (Array.isArray(packageQuery)) return packageQuery.join('/')
-
-  return packageQuery
-}
-
-function getCacheMaxAge(
-  force: string | string[] | undefined,
-  requestedPackage?: string,
-): number {
-  if (force !== null && force !== undefined) return 0
-
-  if (!requestedPackage) return config.CACHE.SIZE_API_DEFAULT
-
-  return packageAnalysisGateway.isExactVersionSpecifier(
-    createJavaScriptPackageReference(requestedPackage),
-  )
-    ? config.CACHE.SIZE_API_HAS_VERSION
-    : config.CACHE.SIZE_API_DEFAULT
 }
 
 export function createExportSizesMiddleware(
@@ -49,12 +26,11 @@ export function createExportSizesMiddleware(
     const { force, peek, package: packageQuery } = ctx.query
 
     if (peek) {
+      ctx.cacheControl = { noStore: true }
       ctx.body = { name, version, peekSuccess: false }
 
       return
     }
-
-    const requestedPackage = getRequestedPackage(packageQuery)
 
     const buildStart = now()
 
@@ -72,7 +48,7 @@ export function createExportSizesMiddleware(
 
     const buildEnd = now()
 
-    ctx.cacheControl = { maxAge: getCacheMaxAge(force, requestedPackage) }
+    ctx.cacheControl = { maxAge: getBuildCacheMaxAge(force, packageQuery) }
 
     const body = { name, version, ...result }
     ctx.body = body
