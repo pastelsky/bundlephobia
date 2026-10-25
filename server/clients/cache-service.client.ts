@@ -25,10 +25,6 @@ export interface CacheServiceClientOptions {
   timeoutMs?: number
 }
 
-function errorPayload(error: Error) {
-  return { name: error.name, message: error.message }
-}
-
 export default class CacheServiceClient {
   private readonly api: Pick<AxiosInstance, 'get' | 'post'>
 
@@ -150,7 +146,7 @@ export default class CacheServiceClient {
 
       logger.error(
         'CACHE_WRITE_ERROR',
-        { ...key, ...errorPayload(normalizedError) },
+        { ...key, error: normalizedError },
         `CACHE WRITE FAILED: ${label}`,
       )
     }
@@ -159,7 +155,7 @@ export default class CacheServiceClient {
   private logReadError(key: CacheKey, error: Error, label: string): void {
     logger.error(
       'CACHE_READ_ERROR',
-      { ...key, ...errorPayload(error) },
+      { ...key, error },
       `CACHE READ FAILED: ${label}`,
     )
   }
