@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import winston from 'winston'
 
-import type { JsonObject } from '../../types/json'
+import type { JsonObject, RuntimeValue } from '../../types/json'
 
 interface RequestLogContext {
   requestId?: string
@@ -23,16 +23,7 @@ export function withRequestLogContext<T>(
 type LogPayload = JsonObject
 
 function toPayload<T>(value: T): LogPayload {
-  if (value instanceof Error) {
-    const payload: LogPayload = {
-      message: value.message,
-      name: value.name,
-    }
-
-    if (value.stack) payload.stack = value.stack
-
-    return payload
-  }
+  if (value instanceof Error) return errorFields(value) ?? {}
 
   if (
     value !== null &&
@@ -45,14 +36,68 @@ function toPayload<T>(value: T): LogPayload {
   return { error: String(value) }
 }
 
-const logFormat = winston.format.printf(info => {
+type LogErrorSource = Partial<Error> & {
+  code?: RuntimeValue
+  originalError?: RuntimeValue
+}
+
+function errorText<T>(value: T): string | undefined {
+  return Object.prototype.toString.call(value) === '[object String]'
+    ? String(value).slice(0, 4000)
+    : undefined
+}
+
+function textFields(source: LogErrorSource): LogPayload {
+  const fields: LogPayload = {}
+
+  for (const key of ['name', 'code', 'message', 'stack'] as const) {
+    const text = errorText(source[key])
+
+    if (text !== undefined) fields[key] = text
+  }
+
+  return fields
+}
+
+function errorFields(cause: unknown, depth = 0): LogPayload | undefined {
+  const message = errorText(cause)
+
+  if (message !== undefined) return { message }
+
+  if (Object(cause) !== cause) return undefined
+
+  // SAFETY: cause is an object; each selected diagnostic field is checked before use.
+  const source = cause as LogErrorSource
+  const fields = textFields(source)
+
+  if (depth < 2) {
+    for (const key of ['cause', 'originalError'] as const) {
+      const nested = errorFields(source[key], depth + 1)
+
+      if (nested) fields[key] = nested
+    }
+  }
+
+  return Object.keys(fields).length ? fields : undefined
+}
+
+export function formatLogMessage(
+  info: winston.Logform.TransformableInfo,
+): string {
   const date = new Date().toISOString()
 
   const metadata = toPayload(info.metadata)
+  const level = info[Symbol.for('level')] ?? info.level
 
   // Keep attribution on existing messages without serializing request headers,
   // authorization, or potentially large result/error payloads.
   const fields = {
+    tag: metadata.tag,
+    type: metadata.type,
+    time: metadata.time,
+    error:
+      level === 'error' ? errorFields(metadata.error ?? metadata) : undefined,
+    details: errorFields(metadata.details),
     requestId: metadata.requestId,
     userAgent: metadata.userAgent,
     clientType: metadata.clientType,
@@ -69,7 +114,9 @@ const logFormat = winston.format.printf(info => {
     : ''
 
   return `${date} ${info.level}: ${info.message}${context}`
-})
+}
+
+const logFormat = winston.format.printf(formatLogMessage)
 
 class Logger {
   private readonly logger: winston.Logger

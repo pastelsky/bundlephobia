@@ -466,6 +466,7 @@ const errorHandler: Middleware = async (ctx, next) => {
         time: now() - start,
         ...ctx.state.resolved,
         ...ctx.state.analysis,
+        error: failedAttempt,
         details,
       },
       packageString ? `${code} ${packageString}` : code,
