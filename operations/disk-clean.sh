@@ -207,6 +207,21 @@ cleanup_loop_device() {
 
     log "Loop device (/tmp/tmp-build) pressure (higher of bytes/inodes): ${loop_usage}%"
 
+    local policy="oldest"
+    local policy_file="${BUN_CACHE_POLICY_FILE:-/var/www/bundlephobia/operations/cache/bun-policy}"
+    if [ -f "$policy_file" ]; then IFS= read -r policy < "$policy_file"; fi
+    if [ "$policy" = "reuse" ] && [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
+        cleanup_stale_package_dirs true
+        # An exclusive OS lock excludes Bun writers during this opt-in cleanup. A failure
+        # must not fall back to deleting entries outside that coordination.
+        if ! curl --silent --show-error --fail --max-time 90 \
+            -X POST http://127.0.0.1:7003/cache/evict >>"$LOG_FILE" 2>&1; then
+            log "WARNING: Reuse cleanup failed; keeping cache entries for safe retry"
+        fi
+        trim_loop_device
+        return
+    fi
+
     if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
         prune_bun_cache
         loop_usage=$(get_loop_usage)

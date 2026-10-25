@@ -63,6 +63,7 @@
     "ipchecker": "^0.0.2",
     "is-empty-object": "^1.1.1",
     "jsdom": "^24.0.0",
+    "jsonc-parser": "^3.3.1",
     "jsonstream": "^1.0.3",
     "koa": "3.2.1",
     "koa-basic-auth": "^4.0.0",
@@ -119,7 +120,7 @@
     "dev": "DEBUG='bp:*' NODE_ENV=development nodemon --watch ./server --watch ./utils --watch ./index.ts",
     "stats:dev": "yarn workspace @bundlephobia/stats-app dev",
     "stats:build": "yarn workspace @bundlephobia/stats-app build",
-    "build": "yarn stats:build && yarn sitemap && NODE_ENV=production next build",
+    "build": "yarn cache-policy:build && yarn stats:build && yarn sitemap && NODE_ENV=production next build",
     "sitemap": "node -r esbuild-register bin/generate-sitemap.ts",
     "prestart": "yarn build",
     "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
@@ -142,7 +143,8 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint --type-aware .",
-    "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . "
+    "deploy": "git branch -D gh-pages && git checkout -b gh-pages && yarn run build && yarn run export && cp -R out/* . ",
+    "cache-policy:build": "esbuild installation-service/cache/evict.ts --bundle --packages=external --platform=node --format=esm --target=node24 --outfile=build/cache-policy.mjs"
   },
   "husky": {
     "hooks": {

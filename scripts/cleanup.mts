@@ -45,6 +45,10 @@ export async function removePaths(paths: string[]) {
   )
 }
 
+export async function removePath(filename: string) {
+  await removePaths([filename])
+}
+
 export function removePathSync(filename: string, filesystem = fs) {
   if (process.platform === 'linux' && filesystem === fs) {
     try {
