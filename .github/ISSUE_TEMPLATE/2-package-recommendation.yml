@@ -24,7 +24,7 @@ body:
     id: category
     attributes:
       label: Package category name
-      description: Use a category name from [the supported package categories](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/server/middlewares/similar-packages/fixtures.ts), or propose a concise name if none fits.
+      description: Use a category name from [the supported package categories](https://github.com/pastelsky/bundlephobia/blob/bundlephobia/utils/similar-packages.catalog.json), or propose a concise name if none fits.
       placeholder: 'For example: General purpose date-time utilities'
     validations:
       required: true

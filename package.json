@@ -116,13 +116,13 @@
     "zod": "^4.4.2"
   },
   "scripts": {
-    "dev": "DEBUG='bp:*' NODE_ENV=development nodemon --watch ./server --watch ./utils --watch ./index.ts",
+    "dev": "node init && DEBUG='bp:*' NODE_ENV=development nodemon --watch ./server --watch ./utils --watch ./index.ts",
     "stats:dev": "yarn workspace @bundlephobia/stats-app dev",
     "stats:build": "yarn workspace @bundlephobia/stats-app build",
-    "build": "yarn stats:build && yarn sitemap && NODE_ENV=production next build",
+    "build": "node init && yarn stats:build && yarn sitemap && NODE_ENV=production next build",
     "sitemap": "node -r esbuild-register bin/generate-sitemap.ts",
     "prestart": "yarn build",
-    "start": "DEBUG='bp:*' NODE_ENV=production node ./index.js",
+    "start": "node init && DEBUG='bp:*' NODE_ENV=production node ./index.js",
     "prod": "yarn run build && yarn start",
     "test": "jest",
     "test:unit": "jest --testPathIgnorePatterns='/__tests__/errors-cache\\.test\\.ts$'",

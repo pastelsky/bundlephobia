@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "node init && vite --host 127.0.0.1",
     "lint": "yarn --cwd .. oxlint --type-aware stats-app",
     "test": "yarn --cwd .. jest --runInBand __tests__/stats-app-metrics.test.ts",
     "format": "yarn --cwd .. oxfmt stats-app",
-    "build": "vite build",
+    "build": "node init && vite build",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {

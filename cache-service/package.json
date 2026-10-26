@@ -15,7 +15,7 @@
     "semver": "^7.6.3"
   },
   "scripts": {
-    "start": "DEBUG=bp* node --experimental-strip-types index.ts",
-    "dev": "DEBUG=bp* node --watch --experimental-strip-types index.ts"
+    "start": "node init && DEBUG=bp* node --experimental-strip-types index.ts",
+    "dev": "node init && DEBUG=bp* node --watch --experimental-strip-types index.ts"
   }
 }
