@@ -1,6 +1,6 @@
 ---
 name: package-recommendation-code-review
-description: Review Bundlephobia pull requests that add, remove, or reorganize similar-package recommendations. Use during Copilot code review when server/middlewares/similar-packages/fixtures.ts, package recommendation automation, or recommendation criteria change; evaluate functional equivalence, bundle-size advantage, package quality, and shortlist discipline.
+description: Review Bundlephobia pull requests that add, remove, or reorganize similar-package recommendations. Use during Copilot code review when utils/similar-packages.catalog.json, package recommendation automation, or recommendation criteria change; evaluate functional equivalence, bundle-size advantage, package quality, and shortlist discipline.
 ---
 
 # Review package recommendations
