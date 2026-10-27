@@ -90,7 +90,7 @@ const store = new InstallationStore(
       process.env.INSTALLATION_RETENTION_MS,
       3 * 60_000,
     ),
-    leaseMs: positiveInteger(process.env.INSTALLATION_LEASE_MS, 15 * 60_000),
+    leaseMs: positiveInteger(process.env.INSTALLATION_LEASE_MS, 10 * 60_000),
   },
 )
 

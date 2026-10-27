@@ -67,7 +67,7 @@ apps:
       PM2_DISABLE_METRICS: 'true'
       INSTALLATION_CONCURRENCY: 2
       INSTALLATION_RETENTION_MS: 180000
-      INSTALLATION_LEASE_MS: 900000
+      INSTALLATION_LEASE_MS: 600000
 
   - script: ./cache-service/index.ts
     name: cache-service
