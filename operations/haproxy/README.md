@@ -78,3 +78,8 @@ allowance, so an exhausted pool can reject them until its rate falls.
 User agents classify callers; they do not authenticate bots. 429s include
 `Retry-After`; logs include `client_group`, `automation_budget` and `cooldown_s`.
 HAProxy table state resets on reload/restart.
+
+An individual trusted IP receiving 200 or more 429s/min enters a fixed six-hour
+cooldown across user agents and routes. This does not extend the ban to other
+IPs in its bot family. Rejected retries do not renew the six-hour deadline;
+other response statuses do not count toward this tier.

@@ -39,7 +39,7 @@ class BotRateLimits(unittest.TestCase):
                      if line.strip().startswith(('use_backend ', 'default_backend '))}
         config = root / 'haproxy.cfg'
         config.write_text(f'global\n    stats socket {self.admin_socket} level admin\n'
-                          '    tune.stick-counters 4\n'
+                          '    tune.stick-counters 5\n'
                           'userlist bundlephobia_stats_users\n'
                           '    user test insecure-password test\n'
                           'defaults\n    mode http\n    timeout connect 1s\n'
@@ -184,6 +184,64 @@ class BotRateLimits(unittest.TestCase):
                              'data.http_req_rate 0 data.gpc0_rate 0 data.gpc1_rate 0')
                 self.runtime('clear table api_client_usage')
                 self.assertEqual(send(244), 200)
+
+    def test_extreme_retries_follow_ip_across_agents_and_routes_until_expiry(self):
+        for ip in ['198.51.100.201', '2001:db8::201']:
+            with self.subTest(ip=ip):
+                for table in ['client_group_usage', 'abusive_client_usage']:
+                    self.runtime(f'clear table {table}')
+                # Real upstream 429s count too; ordinary traffic is not abuse.
+                for i in range(199):
+                    agent = ['ExampleBot/1', 'OtherBot/2', 'Mozilla/5.0'][i % 3]
+                    self.assertEqual(self.request(agent, ip, '/upstream-busy'), 429)
+                    self.assertLessEqual(int(self.retry_after), 900)
+                self.assertEqual(self.request('ExampleBot/1', ip, '/upstream-busy'), 429)
+                self.assertEqual(self.retry_after, '21600')
+                # The old family cooldown remains short for another IP.
+                self.assertEqual(self.request('ExampleBot/1', '198.51.100.202', '/asset.js'), 429)
+                self.assertLessEqual(int(self.retry_after), 900)
+                self.assertEqual(self.request('UnrelatedBot/1', '198.51.100.203', '/asset.js'), 200)
+                # Model an hour passing, including all short family bans expiring.
+                deadline = int(time.time()) + 18000
+                self.runtime(f'set table abusive_client_usage key {ip} data.gpt0 {deadline}')
+                self.runtime('clear table client_group_usage')
+                for agent, path in [('DifferentBot/2', '/api/unknown'),
+                                    ('Mozilla/5.0', '/package/example'),
+                                    ('curl/8', '/asset.js')]:
+                    self.assertEqual(self.request(agent, ip, path), 429)
+                    self.assertTrue(17995 <= int(self.retry_after) <= 18000)
+                    self.assert_cache_control('no-store')
+                # Continued extreme retries cannot reset or shorten the deadline.
+                for _ in range(210):
+                    self.assertEqual(self.request('Mozilla/5.0', ip, '/asset.js'), 429)
+                self.assertTrue(17995 <= int(self.retry_after) <= 18000)
+                # Banned retries must not put a fresh user-agent family in cooldown.
+                for _ in range(35):
+                    self.assertEqual(self.request('NewFamilyBot/1', ip, '/asset.js'), 429)
+                self.assertEqual(self.request('NewFamilyBot/1', '198.51.100.204', '/asset.js'), 200)
+                # A separate family ban may outlast the final seconds of an IP ban.
+                self.runtime(f'set table abusive_client_usage key {ip} '
+                             f'data.gpt0 {int(time.time()) + 60}')
+                self.runtime(f'set table client_group_usage key crawler:newfamilybot '
+                             f'data.gpt0 {int(time.time()) + 900}')
+                self.assertEqual(self.request('NewFamilyBot/1', ip, '/asset.js'), 429)
+                self.assertTrue(895 <= int(self.retry_after) <= 900)
+                self.runtime(f'set table abusive_client_usage key {ip} '
+                             f'data.gpt0 {int(time.time()) - 1} data.gpc0_rate 0')
+                self.runtime('clear table client_group_usage')
+                self.assertEqual(self.request('Mozilla/5.0', ip, '/asset.js'), 200)
+
+    def test_successes_and_other_errors_do_not_trigger_extended_cooldown(self):
+        ip = '198.51.100.205'
+        for _ in range(210):
+            self.assertEqual(self.request('ExampleBot/1', ip, '/.env'), 403)
+        self.runtime('clear table client_group_usage')
+        self.assertEqual(self.request('ExampleBot/1', ip, '/asset.js'), 200)
+        # A small overage can still switch families: no six-hour IP ban yet.
+        for _ in range(30):
+            self.assertEqual(self.request('ExampleBot/1', ip, '/upstream-busy'), 429)
+        self.assertEqual(self.retry_after, '300')
+        self.assertEqual(self.request('DifferentBot/1', ip, '/asset.js'), 200)
 
     def test_api_and_page_limits_share_pools_but_keep_family_cooldowns(self):
         paths = ['/api/size', '/package/example']
