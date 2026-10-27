@@ -25,6 +25,7 @@
 - Can build css and scss packages as well (beta)
 - Reports historical trends
 - See package composition
+- Shows minified and gzipped bundle sizes
 
 ## Badges
 
