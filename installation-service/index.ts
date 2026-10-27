@@ -15,6 +15,7 @@ import {
   UnsupportedRegistryPackageSpecError,
 } from './resolveRegistryPackageSpec.ts'
 import serializeError from '../build-service/serializeError.js'
+import { checkPackageFootprint } from './checkPackageFootprint.ts'
 import { createOutcomeMetrics } from '../server/infrastructure/outcome-metrics.mts'
 import { registerQueueMetrics } from '../server/infrastructure/queue-metrics.mts'
 
@@ -45,6 +46,13 @@ async function installPackageWithVersion(
   packageString: string,
   options: InstallOptions,
 ) {
+  // Only cold installations reach this path; result/installation hits stay cheap.
+  await Promise.all(
+    [packageString, ...(options.additionalPackages ?? [])].map(spec =>
+      checkPackageFootprint(spec, options.signal),
+    ),
+  )
+
   const installation = await installPackage(packageString, options)
 
   try {
@@ -98,6 +106,11 @@ await store.start()
 
 const fastify = Fastify({ bodyLimit: 64 * 1024 })
 
+const installationErrorStatuses = new Map([
+  ['PackageNotFoundError', 404],
+  ['UnsupportedPackageError', 403],
+])
+
 function sendInstallationError(error: Error, reply: FastifyReply) {
   if (
     error instanceof UnsupportedRegistryPackageSpecError ||
@@ -120,7 +133,9 @@ function sendInstallationError(error: Error, reply: FastifyReply) {
 
   if (packageNotFound) serialized.name = 'PackageNotFoundError'
 
-  return reply.code(packageNotFound ? 404 : 500).send(serialized)
+  return reply
+    .code(installationErrorStatuses.get(serialized.name) ?? 500)
+    .send(serialized)
 }
 
 fastify.post('/installations', async (request, reply) => {
