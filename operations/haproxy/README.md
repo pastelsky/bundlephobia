@@ -31,7 +31,7 @@ by absolute path:
 ```sh
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/automation-groups.map /etc/haproxy/automation-groups.map
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
-sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/conf.d/20-victoriametrics-metrics.cfg /etc/haproxy/conf.d/20-victoriametrics-metrics.cfg
+sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/conf.d/*.cfg /etc/haproxy/conf.d/
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/logrotate/bundlephobia-custom /etc/logrotate.d/bundlephobia-custom
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/cron/haproxy-logrotate /etc/cron.d/haproxy-logrotate
 sudo /usr/sbin/haproxy -Ws -f /etc/haproxy/haproxy.cfg -f /etc/haproxy/conf.d -c -S /run/haproxy-master.sock
