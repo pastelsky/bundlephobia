@@ -25,25 +25,27 @@ class BotRateLimits(unittest.TestCase):
             listener.bind(('127.0.0.1', 0))
             self.port = listener.getsockname()[1]
         source = (Path(__file__).resolve().parents[1] /
-                  'operations/haproxy/haproxy.cfg').read_text()
+                  'operations/haproxy/conf.d/30-traffic-policy.cfg').read_text()
         # Keep all production tables and frontend rules; replace host-specific
         # global settings, logging, listeners and external upstreams only.
-        rules = source[source.index('backend api_client_usage'):
-                       source.index('\nbackend event_ingest')]
+        rules = source
         rules = '\n'.join(line for line in rules.splitlines()
-                          if not line.strip().startswith('log-format '))
+                          if not line.strip().startswith('log-format ')) + '\n'
         rules = rules.replace('bind :80', f'bind 127.0.0.1:{self.port}')
         rules = rules.replace('/etc/haproxy/cloudflare-networks.lst', str(networks))
         rules = rules.replace('/etc/haproxy/automation-groups.map', str(groups))
         upstreams = {line.split()[1] for line in rules.splitlines()
                      if line.strip().startswith(('use_backend ', 'default_backend '))}
+        policy_directory = root / 'conf.d'
+        policy_directory.mkdir()
+        (policy_directory / '30-traffic-policy.cfg').write_text(rules)
         config = root / 'haproxy.cfg'
         config.write_text(f'global\n    stats socket {self.admin_socket} level admin\n'
                           '    tune.stick-counters 5\n'
                           'userlist bundlephobia_stats_users\n'
                           '    user test insecure-password test\n'
                           'defaults\n    mode http\n    timeout connect 1s\n'
-                          '    timeout client 5s\n    timeout server 1s\n' + rules +
+                          '    timeout client 5s\n    timeout server 1s\n' +
                           '\n' + ''.join(f'backend {name}\n'
                                          '    http-request return status 503 hdr Cache-Control max-age=86400 if { path_end /upstream-unavailable }\n'
                                          '    http-request return status 429 hdr Cache-Control max-age=86400 if { path_end /upstream-busy }\n'
@@ -54,10 +56,11 @@ class BotRateLimits(unittest.TestCase):
                                          '    http-request return status 404 hdr Cache-Control max-age=60 if { path /permanent-missing }\n'
                                          '    http-request return status 200 hdr Cache-Control public,max-age=86400\n'
                                          for name in sorted(upstreams)))
-        validation = subprocess.run(['haproxy', '-c', '-f', str(config)],
+        config_args = ['-f', str(config), '-f', str(policy_directory)]
+        validation = subprocess.run(['haproxy', '-c', *config_args],
                                     capture_output=True, text=True)
         self.assertEqual(validation.returncode, 0, validation.stderr)
-        self.proxy = subprocess.Popen(['haproxy', '-db', '-f', str(config)],
+        self.proxy = subprocess.Popen(['haproxy', '-db', *config_args],
                                       stdout=subprocess.DEVNULL,
                                       stderr=subprocess.DEVNULL)
         self.addCleanup(self.stop_proxy)
@@ -188,6 +191,8 @@ class BotRateLimits(unittest.TestCase):
     def test_extreme_retries_follow_ip_across_agents_and_routes_until_expiry(self):
         for ip in ['198.51.100.201', '2001:db8::201']:
             with self.subTest(ip=ip):
+                # HAProxy 2.8's admin socket requires IPv6 syntax for this table.
+                table_ip = ip if ':' in ip else f'::ffff:{ip}'
                 for table in ['client_group_usage', 'abusive_client_usage']:
                     self.runtime(f'clear table {table}')
                 # Real upstream 429s count too; ordinary traffic is not abuse.
@@ -203,7 +208,7 @@ class BotRateLimits(unittest.TestCase):
                 self.assertEqual(self.request('UnrelatedBot/1', '198.51.100.203', '/asset.js'), 200)
                 # Model an hour passing, including all short family bans expiring.
                 deadline = int(time.time()) + 18000
-                self.runtime(f'set table abusive_client_usage key {ip} data.gpt0 {deadline}')
+                self.runtime(f'set table abusive_client_usage key {table_ip} data.gpt0 {deadline}')
                 self.runtime('clear table client_group_usage')
                 for agent, path in [('DifferentBot/2', '/api/unknown'),
                                     ('Mozilla/5.0', '/package/example'),
@@ -220,13 +225,13 @@ class BotRateLimits(unittest.TestCase):
                     self.assertEqual(self.request('NewFamilyBot/1', ip, '/asset.js'), 429)
                 self.assertEqual(self.request('NewFamilyBot/1', '198.51.100.204', '/asset.js'), 200)
                 # A separate family ban may outlast the final seconds of an IP ban.
-                self.runtime(f'set table abusive_client_usage key {ip} '
+                self.runtime(f'set table abusive_client_usage key {table_ip} '
                              f'data.gpt0 {int(time.time()) + 60}')
                 self.runtime(f'set table client_group_usage key crawler:newfamilybot '
                              f'data.gpt0 {int(time.time()) + 900}')
                 self.assertEqual(self.request('NewFamilyBot/1', ip, '/asset.js'), 429)
                 self.assertTrue(895 <= int(self.retry_after) <= 900)
-                self.runtime(f'set table abusive_client_usage key {ip} '
+                self.runtime(f'set table abusive_client_usage key {table_ip} '
                              f'data.gpt0 {int(time.time()) - 1} data.gpc0_rate 0')
                 self.runtime('clear table client_group_usage')
                 self.assertEqual(self.request('Mozilla/5.0', ip, '/asset.js'), 200)

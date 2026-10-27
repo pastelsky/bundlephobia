@@ -31,7 +31,7 @@ by absolute path:
 ```sh
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/automation-groups.map /etc/haproxy/automation-groups.map
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
-sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/conf.d/20-victoriametrics-metrics.cfg /etc/haproxy/conf.d/20-victoriametrics-metrics.cfg
+sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/conf.d/*.cfg /etc/haproxy/conf.d/
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/logrotate/bundlephobia-custom /etc/logrotate.d/bundlephobia-custom
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/cron/haproxy-logrotate /etc/cron.d/haproxy-logrotate
 sudo /usr/sbin/haproxy -Ws -f /etc/haproxy/haproxy.cfg -f /etc/haproxy/conf.d -c -S /run/haproxy-master.sock
@@ -78,8 +78,3 @@ allowance, so an exhausted pool can reject them until its rate falls.
 User agents classify callers; they do not authenticate bots. 429s include
 `Retry-After`; logs include `client_group`, `automation_budget` and `cooldown_s`.
 HAProxy table state resets on reload/restart.
-
-An individual trusted IP receiving 200 or more 429s/min enters a fixed six-hour
-cooldown across user agents and routes. This does not extend the ban to other
-IPs in its bot family. Rejected retries do not renew the six-hour deadline;
-other response statuses do not count toward this tier.
