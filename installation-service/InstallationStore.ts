@@ -83,7 +83,7 @@ class InstallationStore {
       queue,
       rootPath = '/tmp/tmp-build/installations',
       retentionMs = 3 * 60_000,
-      leaseMs = 15 * 60_000,
+      leaseMs = 10 * 60_000,
       onError = console.error,
       onInstallComplete = () => {},
     }: {

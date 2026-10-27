@@ -79,7 +79,7 @@ const installationProvider = process.env.INSTALLATION_SERVICE_ENDPOINT
 async function analyzePackage(req, res, analyze) {
   const controller = new AbortController()
   const abort = () => controller.abort()
-  const timeout = setTimeout(abort, 10 * 60_000)
+  const timeout = setTimeout(abort, 5 * 60_000)
   req.raw.once('aborted', abort)
   res.raw.once('close', abort)
 

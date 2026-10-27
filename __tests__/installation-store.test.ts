@@ -181,6 +181,32 @@ describe('installation service store', () => {
     await store.close()
   })
 
+  it('protects default leases during a build but reclaims them after ten minutes', async () => {
+    jest.useFakeTimers()
+
+    const root = await temporaryRoot()
+
+    const api = installationApi(root)
+
+    const store = new InstallationStore(api, {
+      queue: createInstallQueue(2),
+      rootPath: root,
+      retentionMs: 1_000,
+    })
+
+    await store.start()
+    await store.subscribe('react@19.1.1')
+
+    await jest.advanceTimersByTimeAsync(9 * 60_000)
+    await store.sweep()
+    expect(api.disposePackage).not.toHaveBeenCalled()
+
+    await jest.advanceTimersByTimeAsync(61_000)
+    await store.sweep()
+    expect(api.disposePackage).toHaveBeenCalledTimes(1)
+    await store.close()
+  })
+
   it('removes incomplete directories when the service starts', async () => {
     const root = await temporaryRoot()
     const abandonedPath = await fs.mkdtemp(path.join(root, 'abandoned-'))
@@ -447,7 +473,7 @@ describe('installation service store', () => {
     const first = await store.subscribe('react@19.1.1')
     const other = await store.subscribe('react@19.1.1')
     await store.unsubscribe(first.id)
-    await jest.advanceTimersByTimeAsync(12 * 60_000)
+    await jest.advanceTimersByTimeAsync(9 * 60_000)
     await store.sweep()
     expect(api.disposePackage).not.toHaveBeenCalled()
     expect(
