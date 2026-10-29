@@ -235,6 +235,63 @@ export default class API {
     return API.get<PackageSuggestion[]>(
       `https://api.npms.io/v2/search/suggestions?q=${query}`,
       false,
-    ).then(result => result.sort(sortSuggestionsBySearchScore))
+    ).then(result => {
+      const suggestions = result.sort(sortSuggestionsBySearchScore)
+
+      const exactMatch = suggestions.find(
+        suggestion => suggestion.package.name === query,
+      )
+
+      if (exactMatch) {
+        return [
+          exactMatch,
+          ...suggestions.filter(suggestion => suggestion !== exactMatch),
+        ]
+      }
+
+      return getRegistryExactMatch(query).then(registryMatch =>
+        registryMatch ? [registryMatch, ...suggestions] : suggestions,
+      )
+    })
   }
+}
+
+/** Search results returned by the npm registry search API. */
+type RegistrySearchResponse = {
+  objects: Array<{
+    package: { name: string; description?: string; date?: string }
+    searchScore: number
+    score: { detail: { popularity: number } }
+  }>
+}
+
+/**
+ * npms.io sometimes leaves out a package even when the query is its exact
+ * name (e.g. `vaul`), so look the query up in the npm registry search.
+ */
+function getRegistryExactMatch(
+  query: string,
+): Promise<PackageSuggestion | null> {
+  return API.get<RegistrySearchResponse>(
+    `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=1`,
+    false,
+  )
+    .then(({ objects }) => {
+      const match = objects.find(object => object.package.name === query)
+
+      if (!match) {
+        return null
+      }
+
+      return {
+        package: {
+          name: match.package.name,
+          description: match.package.description ?? '',
+          date: match.package.date,
+        },
+        searchScore: match.searchScore,
+        score: match.score,
+      }
+    })
+    .catch(() => null)
 }
