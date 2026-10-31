@@ -5,6 +5,7 @@ import createDebug from 'debug'
 
 import {
   CACHE_ROUTE,
+  LATEST_BUILT_CACHE_VERSION,
   parseExportsCacheResult,
   parsePackageCacheResult,
   type CacheKey,
@@ -22,10 +23,6 @@ export interface CacheServiceClientOptions {
   api?: Pick<AxiosInstance, 'get' | 'post'>
   endpoint?: string
   timeoutMs?: number
-}
-
-function errorPayload(error: Error) {
-  return { name: error.name, message: error.message }
 }
 
 export default class CacheServiceClient {
@@ -49,6 +46,12 @@ export default class CacheServiceClient {
       parse: parsePackageCacheResult,
       label: 'package',
     })
+  }
+
+  getLatestBuiltPackageSize(
+    name: string,
+  ): Promise<CacheReadResult<PackageCacheResult>> {
+    return this.getPackageSize({ name, version: LATEST_BUILT_CACHE_VERSION })
   }
 
   async setPackageSize(
@@ -143,7 +146,7 @@ export default class CacheServiceClient {
 
       logger.error(
         'CACHE_WRITE_ERROR',
-        { ...key, ...errorPayload(normalizedError) },
+        { ...key, error: normalizedError },
         `CACHE WRITE FAILED: ${label}`,
       )
     }
@@ -152,7 +155,7 @@ export default class CacheServiceClient {
   private logReadError(key: CacheKey, error: Error, label: string): void {
     logger.error(
       'CACHE_READ_ERROR',
-      { ...key, ...errorPayload(error) },
+      { ...key, error },
       `CACHE READ FAILED: ${label}`,
     )
   }

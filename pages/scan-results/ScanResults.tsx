@@ -191,13 +191,12 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
     const queue = new PQueue({ concurrency: 3 })
     const startTime = Date.now()
 
-    Analytics.pageView('scan results')
-
     packages.forEach(pack => {
-      const packageStartTime = Date.now()
+      queue.add(() => {
+        const packageStartTime = Date.now()
+        Analytics.packageLoadStarted(pack.packageString, 'scan')
 
-      queue.add(() =>
-        API.getInfo(pack.packageString)
+        return API.getInfo(pack.packageString)
           .then(result => {
             this.updatePackageState(pack.packageString, {
               promiseState: 'fulfilled',
@@ -208,6 +207,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
             Analytics.searchSuccess({
               packageName: pack.packageString,
               timeTaken: Date.now() - packageStartTime,
+              source: 'scan',
             })
           })
           .catch(({ error }: { error: PackageBuildError }) => {
@@ -220,9 +220,10 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
             Analytics.searchFailure({
               packageName: pack.packageString,
               timeTaken: Date.now() - packageStartTime,
+              source: 'scan',
             })
-          }),
-      )
+          })
+      })
     })
 
     queue.onIdle().then(() => {

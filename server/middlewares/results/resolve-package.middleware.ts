@@ -1,4 +1,4 @@
-import type { Middleware } from 'koa'
+import type { Context, Middleware } from 'koa'
 import now from 'performance-now'
 
 import {
@@ -7,10 +7,59 @@ import {
 } from '../../../languages/javascript'
 import { packageAnalysisGateway } from '../../analysis'
 import type { AnalysisOperation } from '../../analysis/contracts'
+import type CacheServiceClient from '../../clients/cache-service.client'
 import { debug, logger } from '../../infrastructure/runtime'
+
+function prefersBuiltRelease(ctx: Context, version: string | null) {
+  const hasCrawlerCachePreference =
+    ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
+
+  const forceWasRequested = ctx.query.force === 'true'
+  const isLatestVersion = version === null || version === 'latest'
+
+  return hasCrawlerCachePreference && !forceWasRequested && isLatestVersion
+}
+
+async function serveBuiltRelease(
+  ctx: Context,
+  cache: Pick<CacheServiceClient, 'getLatestBuiltPackageSize'>,
+  name: string,
+) {
+  const cacheResult = await cache.getLatestBuiltPackageSize(name)
+
+  if (cacheResult.status === 'miss') return false
+
+  ctx.cacheControl = { private: true, noStore: true }
+
+  if (cacheResult.status === 'hit') {
+    ctx.state.analysis.cache = 'hit'
+    logger.info(
+      'CACHE',
+      { ...ctx.state.analysis, name, version: cacheResult.value.version },
+      `CACHE HIT: ${name}@${cacheResult.value.version} (latest built)`,
+    )
+    ctx.status = 200
+    ctx.body = cacheResult.value
+
+    return true
+  }
+
+  ctx.state.analysis.cache = 'unavailable'
+  ctx.status = 503
+  ctx.body = {
+    error: {
+      code: 'CacheUnavailable',
+      message: 'Cached analysis is temporarily unavailable.',
+    },
+  }
+  ctx.set('Retry-After', '60')
+
+  return true
+}
 
 export function createResolvePackageMiddleware(
   operation: AnalysisOperation,
+  cache?: Pick<CacheServiceClient, 'getLatestBuiltPackageSize'>,
 ): Middleware {
   return async (ctx, next) => {
     ctx.state.analysis = { language: 'javascript', operation }
@@ -39,6 +88,16 @@ export function createResolvePackageMiddleware(
       description: '',
       repository: '',
       packageString: `${parsedPackage.name}@${parsedPackage.version}`,
+    }
+
+    if (cache && prefersBuiltRelease(ctx, parsedPackage.version)) {
+      const responseWasServed = await serveBuiltRelease(
+        ctx,
+        cache,
+        parsedPackage.name,
+      )
+
+      if (responseWasServed) return
     }
 
     const resolveStart = now()

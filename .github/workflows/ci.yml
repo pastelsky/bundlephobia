@@ -17,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [26.x]
+        node-version: [24.x, 26.x]
 
     steps:
       - uses: actions/checkout@v7
@@ -47,6 +47,14 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
       - name: Run lint
         run: yarn lint
+      - name: Run unit tests
+        run: yarn test:unit --runInBand
+      - name: Test HAProxy request limits
+        if: matrix.node-version == '24.x'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y haproxy
+          yarn test:haproxy
       - name: Test package recommendation automation
         run: yarn test:recommendations
       - name: Type check recommendation automation
@@ -146,3 +154,21 @@ jobs:
           jar tf "$CLI_JAR" | grep -q 'com/bundlephobia/jvm/cli/MainKt.class'
           java -jar "$CLI_JAR" --help | grep -q 'Analyze published JVM package size'
           ! grep -q '<dependencies>' "$CORE_POM"
+
+  scratch-cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: |
+          corepack enable
+          corepack yarn install --immutable
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+      - run: node __tests__/scratch-cleanup.mjs

@@ -358,3 +358,37 @@ describe('Queue priority', () => {
     expect(executionOrder).toEqual(['blocker', 'shared', 'medium'])
   })
 })
+
+describe('Queue expiry', () => {
+  it('expires waiting work while every worker remains occupied', async () => {
+    jest.useFakeTimers()
+    const gate = Promise.withResolvers<object>()
+    const queue = new Queue({ concurrency: 1, maxAge: 1 })
+    queue.addExecutor('TEST', () => gate.promise)
+
+    try {
+      const running = queue.process({
+        id: 'running',
+        type: 'TEST',
+        jobParams: {},
+      })
+
+      const waiting = queue.process({
+        id: 'waiting',
+        type: 'TEST',
+        jobParams: {},
+      })
+
+      const expired = waiting.catch(error => error)
+
+      await jest.advanceTimersByTimeAsync(1_001)
+      expect(await expired).toMatchObject({ code: 'JOB_EXPIRED' })
+      expect(queue.getDiagnostics()).toMatchObject({ ready: 0, running: 1 })
+      gate.resolve({})
+      await running
+      expect(jest.getTimerCount()).toBe(0)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+})

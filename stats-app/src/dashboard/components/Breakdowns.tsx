@@ -1,0 +1,157 @@
+import {
+  type Color,
+  Badge,
+  ProgressBar,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@tremor/react'
+import {
+  compactFormat,
+  numberFormat,
+  formatBytes,
+  STATUS_LABELS,
+} from '../../lib/format'
+import type { SummaryData, ResourceData } from '../metrics'
+import { Panel, PanelHeader } from '../../components/ui/Panel'
+
+const diskLabels = new Map([
+  ['root', 'Main filesystem'],
+  ['builds', 'Temporary builds'],
+  ['metrics', 'VictoriaMetrics'],
+])
+
+const statusColors = new Map<string, Color>([
+  ['1xx', 'slate'],
+  ['2xx', 'emerald'],
+  ['3xx', 'sky'],
+  ['4xx', 'amber'],
+  ['5xx', 'rose'],
+  ['other', 'stone'],
+])
+
+export function ResponseBreakdown({ data }: { data?: SummaryData }) {
+  const total =
+    data?.responses.reduce((sum, row) => sum + (row.count ?? 0), 0) ?? 0
+
+  const rows =
+    data?.responses
+      .filter(row => row.count != null && row.count > 0)
+      .sort((a, b) => (b.count ?? 0) - (a.count ?? 0)) ?? []
+
+  return (
+    <Panel className="mt-5">
+      <PanelHeader
+        title="Response breakdown"
+        description="Count and share in the selected time range"
+        unit={`${compactFormat.format(total)} responses`}
+      />
+      <Table className="mt-5" aria-label="Responses by status class">
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>Status class</TableHeaderCell>
+            <TableHeaderCell>Distribution</TableHeaderCell>
+            <TableHeaderCell className="text-right">Responses</TableHeaderCell>
+            <TableHeaderCell className="text-right">Share</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.map(row => (
+            <TableRow key={row.code}>
+              <TableCell>
+                <div className="flex items-center gap-2.5">
+                  <Badge
+                    size="xs"
+                    color={statusColors.get(row.code) ?? 'stone'}
+                  >
+                    {row.code}
+                  </Badge>
+                  <span>{STATUS_LABELS.get(row.code) ?? 'Other'}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <ProgressBar
+                  value={((row.count ?? 0) / total) * 100}
+                  color={statusColors.get(row.code) ?? 'stone'}
+                  aria-label={`Distribution for ${row.code}`}
+                />
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {numberFormat.format(Math.round(row.count ?? 0))}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {numberFormat.format(((row.count ?? 0) / total) * 100)}%
+              </TableCell>
+            </TableRow>
+          ))}
+          {rows.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center">
+                No response counts available yet.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </Panel>
+  )
+}
+
+export function DiskBreakdown({ data }: { data?: ResourceData }) {
+  return (
+    <Panel className="mt-5">
+      <PanelHeader
+        title="Filesystem capacity"
+        description="Separate mounts for the website, temporary builds, and metrics storage"
+      />
+      <Table className="mt-5" aria-label="Filesystem capacity">
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>Filesystem</TableHeaderCell>
+            <TableHeaderCell>Utilization</TableHeaderCell>
+            <TableHeaderCell className="text-right">Used</TableHeaderCell>
+            <TableHeaderCell className="text-right">Available</TableHeaderCell>
+            <TableHeaderCell className="text-right">Capacity</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {data?.disks.map(disk => (
+            <TableRow key={disk.mount}>
+              <TableCell>{diskLabels.get(disk.mount)}</TableCell>
+              <TableCell>
+                <DiskUtilization disk={disk} />
+              </TableCell>
+              {[disk.used, disk.available, disk.total].map((value, index) => (
+                <TableCell key={index} className="text-right tabular-nums">
+                  {value == null ? '—' : formatBytes(value)}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Panel>
+  )
+}
+
+function DiskUtilization({ disk }: { disk: ResourceData['disks'][number] }) {
+  if (disk.used == null || disk.total == null || disk.total <= 0)
+    return <span>—</span>
+
+  const percent = (disk.used / disk.total) * 100
+
+  return (
+    <div className="flex min-w-[100px] items-center gap-2 tabular-nums">
+      <span>{numberFormat.format(percent)}%</span>
+      <ProgressBar
+        value={Math.max(0, Math.min(100, percent))}
+        color="orange"
+        showAnimation={false}
+        aria-label={`${diskLabels.get(disk.mount)} used`}
+      />
+    </div>
+  )
+}

@@ -98,15 +98,12 @@ const Logo = () => (
 const Home = () => {
   const router = useRouter()
 
-  React.useEffect(() => {
-    Analytics.pageView('home')
-  }, [])
-
   const handleSearchSubmit = (value: string) => {
-    Analytics.performedSearch(value.trim())
+    const query = value.trim()
 
-    if (value ?? '') {
-      router.push(`/package/${value.trim()}`)
+    if (query) {
+      Analytics.performedSearch(query)
+      router.push(`/package/${query}`)
     }
   }
 
@@ -131,7 +128,6 @@ const Home = () => {
             <AutocompleteInput
               containerClass="homepage__search-input-container"
               onSearchSubmit={handleSearchSubmit}
-              autoFocus={true}
             />
           </AutocompleteInputBox>
           <CarbonAd className="homepage__carbon-ad" />

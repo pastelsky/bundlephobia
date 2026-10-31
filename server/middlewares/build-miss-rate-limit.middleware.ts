@@ -37,6 +37,17 @@ export default function buildMissRateLimit(
   const db: Record<string, RateLimitEntry> = {}
 
   return async (ctx, next) => {
+    // Registered after cache lookup: hits return before reaching this guard.
+    // HAProxy owns completed-time accounting; a miss consumes its budget signal
+    // and the shared admission allowance without reclassifying the caller.
+    if (ctx.get('X-Bundlephobia-Build-Budget-Exceeded') === 'true') {
+      ctx.set('Retry-After', '300')
+      ctx.status = 429
+      ctx.body = message429
+
+      return
+    }
+
     if (ctx.method === 'OPTIONS') {
       await next()
 

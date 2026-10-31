@@ -123,6 +123,46 @@ test('renders package trends and chart controls', async ({ page }) => {
   await page.screenshot({ path: 'artifacts/trends-mobile.png', fullPage: true })
 })
 
+test('restores URL defaults on Back and preserves explicit empty selections on reload', async ({
+  page,
+}) => {
+  await page.route('**/api/trends?*', route =>
+    route.fulfill({
+      json: {
+        ...trendsResponse,
+        range: new URL(route.request().url()).searchParams.get('range'),
+      },
+    }),
+  )
+  await page.goto('/trends')
+  await page.getByRole('button', { name: 'Stars', exact: true }).click()
+  await expect(page).toHaveURL(/metric=stars/)
+  await page.goBack()
+  await expect(page).toHaveURL(/\/trends$/)
+  await expect(
+    page.getByRole('button', { name: 'Downloads', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+
+  for (const name of ['react', 'vue']) {
+    await page
+      .getByRole('group', { name: `${name} selected package` })
+      .getByRole('button', { name: `Remove ${name}` })
+      .click()
+    await expect(
+      page.getByRole('group', { name: `${name} selected package` }),
+    ).toHaveCount(0)
+  }
+
+  await expect(
+    page.getByText('Add at least one package above to compare trends.'),
+  ).toBeVisible()
+  await page.reload()
+  await expect(
+    page.getByText('Add at least one package above to compare trends.'),
+  ).toBeVisible()
+  await expect(page.locator('.trends-chip')).toHaveCount(0)
+})
+
 test('shows progress on a newly added package until its data arrives', async ({
   page,
 }) => {
@@ -410,6 +450,8 @@ async function expectSeriesRevealAfter(
   page: Page,
   changeSelection: () => Promise<void>,
 ): Promise<void> {
+  const previousRevealCount = await getSeriesRevealCount(page)
+
   const previousClip = await page
     .locator('[data-series-clip]')
     .first()
@@ -423,28 +465,23 @@ async function expectSeriesRevealAfter(
       .poll(() => previousClip.evaluate(clip => clip.isConnected))
       .toBe(false)
 
-  await expectActiveSeriesReveal(page)
+  await expectSeriesRevealStarted(page, previousRevealCount)
+  await expectSeriesFullyRevealed(page)
 }
 
-async function expectActiveSeriesReveal(page: Page): Promise<void> {
-  const clip = page.locator('[data-series-clip]').first()
-
-  await clip.waitFor({ state: 'attached' })
-
-  const initialScale = await clip.evaluate(
-    element => new DOMMatrix(getComputedStyle(element).transform).a,
+async function getSeriesRevealCount(page: Page): Promise<number> {
+  return Number(
+    (await page.locator('html').getAttribute('data-series-reveal-count')) ?? 0,
   )
+}
 
-  expect(initialScale).toBeLessThan(0.8)
-  await page.waitForTimeout(180)
-
-  const intermediateScale = await clip.evaluate(
-    element => new DOMMatrix(getComputedStyle(element).transform).a,
-  )
-
-  expect(intermediateScale).toBeGreaterThan(initialScale)
-  expect(intermediateScale).toBeLessThan(1)
-  await expectSeriesFullyRevealed(page)
+async function expectSeriesRevealStarted(
+  page: Page,
+  previousRevealCount: number,
+): Promise<void> {
+  await expect
+    .poll(() => getSeriesRevealCount(page))
+    .toBeGreaterThan(previousRevealCount)
 }
 
 test('keeps every metric, range, and grouping permutation consistent', async ({
@@ -538,6 +575,27 @@ test('keeps every metric, range, and grouping permutation consistent', async ({
 test('restarts the series reveal when a chart selection changes', async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    document.addEventListener(
+      'animationstart',
+      event => {
+        const target = event.target
+
+        if (
+          !(target instanceof Element) ||
+          !target.hasAttribute('data-series-clip')
+        ) {
+          return
+        }
+
+        const root = document.documentElement
+        const currentCount = Number(root.dataset.seriesRevealCount ?? 0)
+        root.dataset.seriesRevealCount = String(currentCount + 1)
+      },
+      true,
+    )
+  })
+
   await page.route('**/api/trends?*', async route => {
     await new Promise(resolve => setTimeout(resolve, 500))
     await route.fulfill({
@@ -550,7 +608,8 @@ test('restarts the series reveal when a chart selection changes', async ({
     '/trends?packages=react~vs~vue&metric=downloads&range=last-year&groupBy=day',
     { waitUntil: 'domcontentloaded' },
   )
-  await expectActiveSeriesReveal(page)
+  await expectSeriesRevealStarted(page, 0)
+  await expectSeriesFullyRevealed(page)
 
   await expectSeriesRevealAfter(page, () =>
     selectControl(page, groupLabels.week),

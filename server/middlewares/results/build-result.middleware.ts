@@ -1,4 +1,5 @@
 import type { Middleware } from 'koa'
+
 import now from 'performance-now'
 
 import type {
@@ -6,40 +7,16 @@ import type {
   PackageCacheResult,
 } from '@bundlephobia/service-contracts/cache'
 
-import { createJavaScriptPackageReference } from '../../../languages/javascript'
 import firebaseUtils from '../../../utils/firebase.utils'
 import { getRequestPriority } from '../../../utils/server.utils'
 import { packageAnalysisGateway } from '../../analysis'
 import { BUILD_DURATION_HEADER } from '../../clients/build-service.client'
-import config from '../../config'
 import logger from '../../infrastructure/logger.service'
+import { getBuildCacheMaxAge } from '../../services/build-cache-policy'
 import type { PackageBuildResult } from '@bundlephobia/service-contracts/package'
 
 interface BuildCache {
   setPackageSize(key: CacheKey, result: PackageCacheResult): Promise<void>
-}
-
-function getRequestedPackage(
-  packageQuery: string | string[] | undefined,
-): string | undefined {
-  if (Array.isArray(packageQuery)) return packageQuery.join('/')
-
-  return packageQuery
-}
-
-function getCacheMaxAge(
-  force: string | string[] | undefined,
-  requestedPackage?: string,
-): number {
-  if (force !== null && force !== undefined) return 0
-
-  if (!requestedPackage) return config.CACHE.SIZE_API_DEFAULT
-
-  return packageAnalysisGateway.isExactVersionSpecifier(
-    createJavaScriptPackageReference(requestedPackage),
-  )
-    ? config.CACHE.SIZE_API_HAS_VERSION
-    : config.CACHE.SIZE_API_DEFAULT
 }
 
 export function createBuildMiddleware(cache: BuildCache): Middleware {
@@ -50,7 +27,6 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
       ctx.state.resolved
 
     const { force, record, package: packageQuery } = ctx.query
-    const requestedPackage = getRequestedPackage(packageQuery)
 
     const buildStart = now()
     const abortController = new AbortController()
@@ -63,8 +39,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
         {
           requestId: ctx.state.id,
           packageString,
-          language: ctx.state.analysis.language,
-          operation: ctx.state.analysis.operation,
+          ...ctx.state.analysis,
         },
         `BUILD_ABORTED: client closed connection for package ${packageString}`,
       )
@@ -74,6 +49,8 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
     ctx.res.on('close', onAborted)
 
     let result: PackageBuildResult
+
+    ctx.state.analysis.buildRequested = true
 
     try {
       result = await packageAnalysisGateway.analyzePackage(ctx.state.resolved, {
@@ -89,7 +66,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
 
     const buildEnd = now()
 
-    ctx.cacheControl = { maxAge: getCacheMaxAge(force, requestedPackage) }
+    ctx.cacheControl = { maxAge: getBuildCacheMaxAge(force, packageQuery) }
 
     const body: PackageBuildResult = {
       ...result,
@@ -110,8 +87,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
         result,
         requestId: ctx.state.id,
         packageString,
-        language: ctx.state.analysis.language,
-        operation: ctx.state.analysis.operation,
+        ...ctx.state.analysis,
         time,
       },
       `BUILD: ${packageString} built in ${time.toFixed()}s and is ${

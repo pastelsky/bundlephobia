@@ -1,8 +1,10 @@
 import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
+import type { GetServerSidePropsContext } from 'next'
+import type { AxiosResponse } from 'axios'
 
-import Analytics from '../../../client/analytics'
+import Analytics, { type PackageLoadSource } from '../../../client/analytics'
 import API, {
   type PackageBuildInfo,
   type PackageHistoryResponse,
@@ -42,6 +44,8 @@ type PromiseState = 'pending' | 'fulfilled' | 'rejected' | null
 
 type ResultPageProps = {
   router: NextRouter
+  initialResult: PackageBuildInfo | null
+  initialError?: unknown
 }
 
 type ResultPageState = {
@@ -81,11 +85,49 @@ function getPackageStringFromRouter(router: NextRouter) {
   return packageString ?? ''
 }
 
+function getInitialPromiseState(
+  hasInitialError: boolean,
+  initialResult: PackageBuildInfo | null,
+): PromiseState {
+  if (hasInitialError) return 'rejected'
+
+  if (initialResult) return 'fulfilled'
+
+  return null
+}
+
+function renderErrorMessage(
+  errorBody: string | null | undefined,
+  shouldEscapeHtml: boolean,
+) {
+  const message = errorBody ?? ''
+
+  if (shouldEscapeHtml) {
+    return <p className="result-error__message">{message}</p>
+  }
+
+  return (
+    <p
+      className="result-error__message"
+      dangerouslySetInnerHTML={{ __html: sanitizeErrorHTML(message) }}
+    />
+  )
+}
+
+function getInitialResultProps(response: AxiosResponse<PackageBuildInfo>) {
+  if (response.status === 200) return { initialResult: response.data }
+
+  return { initialResult: null, initialError: response.data }
+}
+
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   state: ResultPageState = {
-    results: null,
-    resultsPromiseState: null,
-    resultsError: null,
+    results: this.props.initialResult,
+    resultsPromiseState: getInitialPromiseState(
+      Boolean(this.props.initialError),
+      this.props.initialResult,
+    ),
+    resultsError: this.props.initialError ?? null,
     historicalResultsPromiseState: null,
     inputInitialValue: getPackageStringFromRouter(this.props.router),
     historicalResults: null,
@@ -95,18 +137,30 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   private activeQuery: string | null = null
   private searchRequestId = 0
+  private loadSource: PackageLoadSource = 'page_load'
 
   private isActiveSearch = (requestId: number) =>
     requestId === this.searchRequestId
 
   componentDidMount() {
-    Analytics.pageView('package result')
-
+    if (this.props.initialError) return
     const packageString = getPackageStringFromRouter(this.props.router)
 
-    if (packageString) {
-      this.handleSearchSubmit(packageString)
+    if (!packageString) return
+
+    const hasInitialResult = Boolean(this.props.initialResult)
+
+    if (!hasInitialResult) {
+      this.loadPackage(packageString, 'page_load')
+
+      return
     }
+
+    this.activeQuery = packageString
+    Analytics.packageLoadStarted(packageString, 'page_load')
+    Analytics.packageResultViewed(packageString, 'page_load')
+    this.fetchHistory(packageString, this.searchRequestId)
+    this.fetchSimilarPackages(packageString, this.searchRequestId)
   }
 
   componentDidUpdate(prevProps: ResultPageProps) {
@@ -127,12 +181,13 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const isSelfInitiatedNavigation = this.activeQuery === nextPackageString
 
     if (isPackageDifferent && !isSelfInitiatedNavigation) {
-      this.handleSearchSubmit(nextPackageString)
+      this.loadPackage(nextPackageString, 'navigation')
     }
   }
 
   fetchResults = (packageString: string, requestId: number) => {
     const startTime = Date.now()
+    const source = this.loadSource
 
     API.getInfo(packageString)
       .then(results => {
@@ -160,6 +215,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         Analytics.searchSuccess({
           packageName: packageString,
           timeTaken: Date.now() - startTime,
+          source,
         })
       })
       .catch(err => {
@@ -174,6 +230,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         Analytics.searchFailure({
           packageName: packageString,
           timeTaken: Date.now() - startTime,
+          source,
         })
       })
   }
@@ -236,8 +293,15 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   handleSearchSubmit = (packageString: string) => {
-    Analytics.performedSearch(packageString)
+    if (!packageString.trim()) return
+    Analytics.performedSearch(packageString.trim())
+    this.loadPackage(packageString, 'search')
+  }
+
+  loadPackage = (packageString: string, source: PackageLoadSource) => {
     const normalizedQuery = packageString.trim()
+    this.loadSource = source
+    Analytics.packageLoadStarted(normalizedQuery, source)
     const requestId = ++this.searchRequestId
 
     this.setState(
@@ -264,7 +328,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         navigation.then(() => {
           if (!this.isActiveSearch(requestId)) return
 
-          Analytics.pageView('package result')
           this.fetchResults(normalizedQuery, requestId)
           this.fetchHistory(normalizedQuery, requestId)
         })
@@ -273,8 +336,16 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   handleProgressDone = () => {
-    this.setState({
-      resultsPromiseState: 'fulfilled',
+    const { results } = this.state
+    const source = this.loadSource
+
+    if (!results) return
+
+    this.setState({ resultsPromiseState: 'fulfilled' }, () => {
+      Analytics.packageResultViewed(
+        `${results.name}@${results.version}`,
+        source,
+      )
     })
   }
 
@@ -331,7 +402,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
     const packageString = `${results.name}@${reading.version}`
     this.setState({ inputInitialValue: packageString })
-    this.handleSearchSubmit(packageString)
+    this.loadPackage(packageString, 'history')
 
     Analytics.graphBarClicked({
       packageName: packageString,
@@ -411,6 +482,8 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       ) : null
     }
 
+    const shouldEscapeDescription = Boolean(this.props.initialResult)
+
     return (
       <QuickStatsBar
         description={results.description}
@@ -421,6 +494,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         }
         repository={results.repository}
         name={results.name}
+        escapeDescription={shouldEscapeDescription}
       />
     )
   }
@@ -515,7 +589,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
             </div>
           </div>
         </div>
-        <div className="chart-container">
+        <div className="chart-container result-page__history-chart">
           {historicalResultsPromiseState === 'fulfilled' && (
             <BarGraph
               onBarClick={this.handleBarClick}
@@ -534,16 +608,13 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       this.state.resultsError,
     )
 
+    const isInitialServerError = Boolean(this.props.initialError)
+
     return (
       <div className="result-error">
         <EmptyBox className="result-error__img" />
         <h2 className="result-error__code">{errorName}</h2>
-        <p
-          className="result-error__message"
-          dangerouslySetInnerHTML={{
-            __html: sanitizeErrorHTML(errorBody ?? ''),
-          }}
-        />
+        {renderErrorMessage(errorBody, isInitialServerError)}
         {errorDetails && (
           <details className="result-error__details">
             <summary>Details</summary>
@@ -668,8 +739,90 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 }
 
-export const getServerSideProps = () => {
-  return { props: {} }
+function analysisRequestHeaders(req: GetServerSidePropsContext['req']) {
+  return {
+    'User-Agent': req.headers['user-agent'],
+    'X-Bundlephobia-Client-Type': req.headers['x-bundlephobia-client-type'],
+    'X-Bundlephobia-Client-Family': req.headers['x-bundlephobia-client-family'],
+    'CF-Connecting-IP':
+      req.headers['cf-connecting-ip'] ?? req.socket.remoteAddress,
+    'X-Bundlephobia-Prefer-Cached': req.headers['x-bundlephobia-prefer-cached'],
+    'X-Bundlephobia-Build-Budget-Exceeded':
+      req.headers['x-bundlephobia-build-budget-exceeded'],
+  }
+}
+
+function forwardAnalysisHeaders(
+  headers: AxiosResponse['headers'],
+  res: GetServerSidePropsContext['res'],
+) {
+  for (const header of ['x-bundlephobia-build-duration-ms', 'retry-after']) {
+    const value = headers[header]
+
+    if (value) res.setHeader(header, String(value))
+  }
+}
+
+export const getServerSideProps = async ({
+  params,
+  query,
+  req,
+  res,
+}: GetServerSidePropsContext) => {
+  const packageString = params?.packageString
+
+  const specifier = Array.isArray(packageString)
+    ? packageString.join('/')
+    : packageString
+
+  const isProxyClassifiedCrawler =
+    req.headers['x-bundlephobia-prefer-cached'] === 'true'
+
+  // Only proxy-classified crawlers use server-side analysis; visitors retain the
+  // existing client-side lookup, including explicit force requests.
+  if (!specifier || !isProxyClassifiedCrawler) {
+    return { props: { initialResult: null } }
+  }
+
+  res.setHeader('Vary', 'User-Agent')
+  res.setHeader('Cache-Control', 'private, no-store')
+
+  const { default: axios } = await import('axios')
+  const port = req.socket.localPort
+
+  try {
+    const response = await axios.get<PackageBuildInfo>(
+      `http://127.0.0.1:${port}/api/size`,
+      {
+        params: { package: specifier, force: query.force, peep: query.peep },
+        headers: analysisRequestHeaders(req),
+        timeout: 55000,
+        validateStatus: () => true,
+      },
+    )
+
+    res.statusCode = response.status
+    forwardAnalysisHeaders(response.headers, res)
+
+    return {
+      props: getInitialResultProps(response),
+    }
+  } catch {
+    res.statusCode = 503
+    res.setHeader('Retry-After', '60')
+
+    return {
+      props: {
+        initialResult: null,
+        initialError: {
+          error: {
+            code: 'ServiceUnavailableError',
+            message: 'Analysis is temporarily unavailable.',
+          },
+        },
+      },
+    }
+  }
 }
 
 export default withRouter(ResultPage)

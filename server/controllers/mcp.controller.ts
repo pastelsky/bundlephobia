@@ -159,6 +159,37 @@ const localTools = [
   },
 ]
 
+async function respondWithLocalTool(ctx: Context, port: number, path: string) {
+  const response = await fetch(`http://127.0.0.1:${port}${path}`, {
+    headers: {
+      'X-Bundlephobia-User': 'bundlephobia mcp tool',
+      'User-Agent': ctx.get('User-Agent'),
+      'CF-Connecting-IP': ctx.get('CF-Connecting-IP') || ctx.ip,
+      'X-Bundlephobia-Client-Type': ctx.get('X-Bundlephobia-Client-Type'),
+      'X-Bundlephobia-Client-Family': ctx.get('X-Bundlephobia-Client-Family'),
+      'X-Bundlephobia-Build-Budget-Exceeded': ctx.get(
+        'X-Bundlephobia-Build-Budget-Exceeded',
+      ),
+    },
+  })
+
+  // The outer response must expose throttling and completed work to HAProxy.
+  for (const header of ['retry-after', 'x-bundlephobia-build-duration-ms']) {
+    const value = response.headers.get(header)
+
+    if (value) ctx.set(header, value)
+  }
+
+  if (response.status === 429) ctx.status = 429
+
+  ctx.body = {
+    status: response.status,
+    body: response.headers.get('content-type')?.includes('application/json')
+      ? await response.json()
+      : await response.text(),
+  }
+}
+
 export function createMcpController(port: number): McpController {
   return {
     listTools: async ctx => {
@@ -182,7 +213,7 @@ export function createMcpController(port: number): McpController {
     },
 
     callTool: async ctx => {
-      // SAFETY: koa-bodyparser augments the Koa request with a parsed JSON body.
+      // SAFETY: @koa/bodyparser augments the Koa request with a parsed JSON body.
       const payload = (ctx.request as BodyRequest).body
 
       if (!isMcpPayload(payload)) {
@@ -206,19 +237,7 @@ export function createMcpController(port: number): McpController {
         }
 
         if (localRequest) {
-          const response = await fetch(
-            `http://127.0.0.1:${port}${localRequest.path}`,
-            {
-              headers: {
-                'X-Bundlephobia-User': 'bundlephobia mcp tool',
-              },
-            },
-          )
-
-          ctx.body = {
-            status: response.status,
-            body: await response.json(),
-          }
+          await respondWithLocalTool(ctx, port, localRequest.path)
 
           return
         }

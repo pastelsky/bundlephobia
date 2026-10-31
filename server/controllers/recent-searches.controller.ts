@@ -7,11 +7,12 @@ import firebaseUtils from '../../utils/firebase.utils'
 export function createRecentSearchesController(): Middleware {
   return async ctx => {
     try {
+      ctx.body = await firebaseUtils.getRecentSearches(Number(ctx.query.limit))
       ctx.cacheControl = {
         maxAge: config.CACHE.RECENTS_API,
       }
-      ctx.body = await firebaseUtils.getRecentSearches(Number(ctx.query.limit))
     } catch (error) {
+      ctx.cacheControl = { noStore: true }
       console.error('in /api/recent', error)
       const message = error instanceof Error ? error.message : String(error)
       const errorName = error instanceof Error ? error.name : 'Error'

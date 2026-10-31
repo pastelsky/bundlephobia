@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { removePathSync } from './cleanup.mts'
 import path from 'path'
 import admin from 'firebase-admin'
 import semver from 'semver'
@@ -248,7 +249,7 @@ async function main() {
   console.log(`Written to ${OUTPUT_PATH}`)
 
   if (fs.existsSync(PROGRESS_PATH)) {
-    fs.unlinkSync(PROGRESS_PATH)
+    removePathSync(PROGRESS_PATH)
     console.log('Cleaned up progress file')
   }
 

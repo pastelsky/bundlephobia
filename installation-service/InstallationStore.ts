@@ -1,3 +1,4 @@
+import { removePaths } from '../scripts/cleanup.mts'
 import { createHash, randomUUID } from 'node:crypto'
 
 import fs from 'node:fs/promises'
@@ -12,6 +13,7 @@ const metadataSchema = z.object({
   key: z.string(),
   lastUsedAt: z.number(),
   activeUntil: z.number().optional(),
+  leases: z.record(z.string(), z.number()).optional(),
   installation: z
     .object({
       packageVersion: z.string(),
@@ -35,6 +37,7 @@ export interface InstallOptions {
   networkConcurrency?: number
   debug?: boolean
   isLocal?: boolean
+  signal?: AbortSignal
 }
 
 export interface InstallationApi {
@@ -50,13 +53,6 @@ export interface InstallQueue {
   diagnostics(): { ready: number; running: number }
 }
 
-interface Subscription {
-  id: string
-  key: string
-  directory: string
-  activeUntil: number
-}
-
 class InstallationStore {
   private readonly installationApi: InstallationApi
   private readonly queue: InstallQueue
@@ -64,25 +60,42 @@ class InstallationStore {
   private readonly retentionMs: number
   private readonly leaseMs: number
   private readonly onError: (error: Error) => void
+  private readonly onInstallComplete: (
+    outcome: 'success' | 'failure',
+    durationSeconds: number,
+  ) => void
+  private closing = false
   private sweepTimer?: NodeJS.Timeout
+  private sweepInProgress?: Promise<void>
   private readonly keyLocks = new Map<string, Promise<unknown>>()
-  private readonly subscriptions = new Map<string, Subscription>()
-  private readonly activeCounts = new Map<string, number>()
+  private readonly pending = new Map<
+    string,
+    {
+      controller: AbortController
+      signal: AbortSignal
+      callers: Set<symbol>
+    }
+  >()
 
   constructor(
     installationApi: InstallationApi,
     {
       queue,
       rootPath = '/tmp/tmp-build/installations',
-      retentionMs = 5 * 60_000,
-      leaseMs = 15 * 60_000,
+      retentionMs = 3 * 60_000,
+      leaseMs = 10 * 60_000,
       onError = console.error,
+      onInstallComplete = () => {},
     }: {
       queue: InstallQueue
       rootPath?: string
       retentionMs?: number
       leaseMs?: number
       onError?: (error: Error) => void
+      onInstallComplete?: (
+        outcome: 'success' | 'failure',
+        durationSeconds: number,
+      ) => void
     },
   ) {
     this.installationApi = installationApi
@@ -91,6 +104,7 @@ class InstallationStore {
     this.retentionMs = retentionMs
     this.leaseMs = leaseMs
     this.onError = onError
+    this.onInstallComplete = onInstallComplete
   }
 
   key(exactPackageString: string, options: InstallOptions): string {
@@ -110,15 +124,20 @@ class InstallationStore {
     return path.join(this.rootPath, hash)
   }
 
-  async withKeyLock<T>(key: string, task: () => Promise<T>): Promise<T> {
-    const previous = this.keyLocks.get(key) || Promise.resolve()
+  // All build workers use this single daemon; cleanup shares its directory locks.
+  async withDirectoryLock<T>(
+    directory: string,
+    task: () => Promise<T>,
+  ): Promise<T> {
+    const previous = this.keyLocks.get(directory) || Promise.resolve()
     const current = previous.catch(() => {}).then(task)
-    this.keyLocks.set(key, current)
+    this.keyLocks.set(directory, current)
 
     try {
       return await current
     } finally {
-      if (this.keyLocks.get(key) === current) this.keyLocks.delete(key)
+      if (this.keyLocks.get(directory) === current)
+        this.keyLocks.delete(directory)
     }
   }
 
@@ -181,6 +200,8 @@ class InstallationStore {
     }
 
     try {
+      options.signal?.throwIfAborted()
+
       const installation = {
         ...installed,
         installPath: directory,
@@ -195,7 +216,7 @@ class InstallationStore {
         { key, installation, lastUsedAt: now, activeUntil: now + this.leaseMs },
         installed.installPath,
       )
-      await fs.rm(directory, { recursive: true, force: true })
+      await removePaths([directory])
       await fs.rename(installed.installPath, directory)
 
       return installation
@@ -205,26 +226,109 @@ class InstallationStore {
     }
   }
 
-  async subscribe(exactPackageString: string, options: InstallOptions = {}) {
+  private installationInterest(directory: string, options: InstallOptions) {
+    let pending = this.pending.get(directory)
+
+    if (!pending || pending.signal.aborted) {
+      const controller = new AbortController()
+      pending = {
+        controller,
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(options.installTimeout ?? 60_000),
+        ]),
+        callers: new Set(),
+      }
+      this.pending.set(directory, pending)
+    }
+
+    const caller = Symbol()
+    pending.callers.add(caller)
+    const shared = pending
+
+    const leave = () => {
+      shared.callers.delete(caller)
+
+      if (shared.callers.size === 0) {
+        shared.controller.abort()
+
+        if (this.pending.get(directory) === shared)
+          this.pending.delete(directory)
+      }
+    }
+
+    return { sharedSignal: shared.signal, leave }
+  }
+
+  async subscribe(
+    exactPackageString: string,
+    options: InstallOptions = {},
+    signal?: AbortSignal,
+  ) {
+    if (this.closing) throw new Error('Installation service is closing')
     const key = this.key(exactPackageString, options)
 
-    return this.withKeyLock(key, async () => {
-      const directory = this.directory(key)
+    const directory = this.directory(key)
+
+    signal?.throwIfAborted()
+
+    const { sharedSignal, leave } = this.installationInterest(
+      directory,
+      options,
+    )
+
+    signal?.addEventListener('abort', leave, { once: true })
+
+    const subscription = await this.withDirectoryLock(directory, async () => {
+      signal?.throwIfAborted()
       const cached = await this.read(directory)
 
       const installation =
         (cached?.key === key ? cached.installation : undefined) ??
-        (await this.queue.run(() =>
-          this.install(key, exactPackageString, options),
-        ))
+        (await this.queue.run(async () => {
+          signal?.throwIfAborted()
+
+          // Queue wait and cached reuse are excluded from installation timing.
+          const started = performance.now()
+
+          // Count actual installs once, after publishing their metadata. Cache
+          // hits and subscriptions sharing an installation do not count again.
+          try {
+            const installed = await this.install(key, exactPackageString, {
+              ...options,
+              signal: sharedSignal,
+            })
+
+            this.onInstallComplete(
+              'success',
+              (performance.now() - started) / 1000,
+            )
+
+            return installed
+          } catch (error) {
+            this.onInstallComplete(
+              'failure',
+              (performance.now() - started) / 1000,
+            )
+            throw error
+          }
+        }))
 
       const now = Date.now()
+
+      const id = `${path.basename(directory)}-${randomUUID()}`
+
+      const leases = {
+        ...this.liveLeases(cached, now),
+        [id]: now + this.leaseMs,
+      }
 
       const entry = {
         key,
         installation,
         lastUsedAt: now,
-        activeUntil: now + this.leaseMs,
+        activeUntil: Math.max(...Object.values(leases)),
+        leases,
       }
 
       try {
@@ -237,50 +341,61 @@ class InstallationStore {
         throw error
       }
 
-      const id = randomUUID()
-      this.subscriptions.set(id, {
-        id,
-        key,
-        directory,
-        activeUntil: entry.activeUntil,
-      })
-      this.activeCounts.set(
-        directory,
-        (this.activeCounts.get(directory) || 0) + 1,
-      )
-
       return { id, installation }
+    }).finally(() => {
+      signal?.removeEventListener('abort', leave)
+      leave()
     })
+
+    if (signal) {
+      const release = () => {
+        void this.unsubscribe(subscription.id).catch(this.onError)
+      }
+
+      signal.addEventListener('abort', release, { once: true })
+
+      if (signal.aborted) {
+        signal.removeEventListener('abort', release)
+        await this.unsubscribe(subscription.id).catch(this.onError)
+        signal.throwIfAborted()
+      }
+    }
+
+    return subscription
+  }
+
+  private liveLeases(metadata: Metadata | undefined, now = Date.now()) {
+    return Object.fromEntries(
+      // Existing owners have no persisted IDs; retain only their original expiry.
+      Object.entries(
+        metadata?.leases ?? { unreleased: metadata?.activeUntil ?? 0 },
+      ).filter(([, expiry]) => expiry > now),
+    )
   }
 
   async unsubscribe(id: string): Promise<boolean> {
-    const subscription = this.subscriptions.get(id)
+    const match = /^([a-f0-9]{24})-[a-f0-9-]{36}$/.exec(id)
 
-    if (!subscription) return false
+    if (!match) return false
 
-    return this.withKeyLock(subscription.key, async () => {
-      if (!this.subscriptions.delete(id)) return false
+    const directory = path.join(this.rootPath, match[1])
+    const metadata = await this.read(directory)
 
-      const activeCount =
-        (this.activeCounts.get(subscription.directory) || 1) - 1
+    if (!metadata) return false
 
-      if (activeCount > 0) {
-        this.activeCounts.set(subscription.directory, activeCount)
+    return this.withDirectoryLock(directory, async () => {
+      const current = await this.read(directory)
 
-        return true
-      }
+      if (!current?.leases || !Object.hasOwn(current.leases, id)) return false
 
-      this.activeCounts.delete(subscription.directory)
-
-      const metadata = await this.read(subscription.directory)
-
-      if (metadata?.key === subscription.key) {
-        await this.write({
-          ...metadata,
-          lastUsedAt: Date.now(),
-          activeUntil: 0,
-        })
-      }
+      const leases = this.liveLeases(current)
+      delete leases[id]
+      await this.write({
+        ...current,
+        leases,
+        lastUsedAt: Date.now(),
+        activeUntil: Math.max(0, ...Object.values(leases)),
+      })
 
       return true
     })
@@ -294,62 +409,59 @@ class InstallationStore {
     )
   }
 
-  async sweep(): Promise<void> {
-    const directories = await fs.readdir(this.rootPath, { withFileTypes: true })
-    await Promise.all(
-      directories
-        .filter(entry => entry.isDirectory())
-        .map(async entry => {
-          const directory = path.join(this.rootPath, entry.name)
-          const metadata = await this.read(directory)
+  sweep(): Promise<void> {
+    this.sweepInProgress ??= this.sweepDirectories().finally(() => {
+      this.sweepInProgress = undefined
+    })
 
-          if (!metadata) {
-            await this.installationApi.disposePackage({
-              installPath: directory,
-            })
-
-            return
-          }
-
-          await this.withKeyLock(metadata.key, async () => {
-            const current = await this.read(directory)
-
-            if (!current) return
-
-            const now = Date.now()
-
-            this.expireSubscriptions(directory, now)
-
-            if (
-              this.activeCounts.get(directory) ||
-              (current.activeUntil || 0) > now ||
-              current.lastUsedAt + this.retentionMs > now
-            ) {
-              return
-            }
-
-            await this.installationApi.disposePackage({
-              installPath: directory,
-            })
-          })
-        }),
-    )
+    return this.sweepInProgress
   }
 
-  expireSubscriptions(directory: string, now: number): void {
-    for (const [id, subscription] of this.subscriptions) {
-      if (
-        subscription.directory !== directory ||
-        subscription.activeUntil > now
-      ) {
-        continue
-      }
+  private async sweepDirectories(): Promise<void> {
+    const directories = await fs.readdir(this.rootPath, { withFileTypes: true })
 
-      this.subscriptions.delete(id)
-      this.activeCounts.set(
-        directory,
-        (this.activeCounts.get(directory) || 1) - 1,
-      )
+    // Recursive deletion can allocate heavily; process one workspace at a time.
+    for (const entry of directories) {
+      if (this.closing) break
+
+      if (!entry.isDirectory()) continue
+
+      const directory = path.join(this.rootPath, entry.name)
+      await this.withDirectoryLock(directory, async () => {
+        const current = await this.read(directory)
+
+        if (!current) {
+          await this.disposeDirectory(directory)
+
+          return
+        }
+
+        const now = Date.now()
+
+        if (
+          (current.activeUntil || 0) > now ||
+          current.lastUsedAt + this.retentionMs > now
+        ) {
+          return
+        }
+
+        await this.disposeDirectory(directory)
+      }).catch(this.onError)
+    }
+  }
+
+  private async disposeDirectory(directory: string): Promise<void> {
+    // package-build-stats can log a deletion error and resolve without removing files.
+    await this.installationApi.disposePackage({ installPath: directory })
+
+    const remaining = await fs.lstat(directory).catch(error => {
+      if (error.code !== 'ENOENT') throw error
+
+      return undefined
+    })
+
+    if (remaining) {
+      throw new Error(`Installation cleanup did not remove ${directory}`)
     }
   }
 
@@ -371,19 +483,28 @@ class InstallationStore {
 
     return {
       queue: this.queue.diagnostics(),
-      subscriptions: this.subscriptions.size,
+      subscriptions: entries.reduce(
+        (sum, entry) => sum + Object.keys(this.liveLeases(entry)).length,
+        0,
+      ),
       installations: entries.map(entry => ({
         packageString: entry.installation.packageString,
         packageVersion: entry.installation.packageVersion,
-        activeSubscriptions:
-          this.activeCounts.get(entry.installation.installPath) || 0,
+        activeSubscriptions: Object.keys(this.liveLeases(entry)).length,
         lastUsedAt: entry.lastUsedAt,
       })),
     }
   }
 
   async close(): Promise<void> {
+    this.closing = true
     clearInterval(this.sweepTimer)
+
+    for (const pending of this.pending.values()) pending.controller.abort()
+    await Promise.allSettled([
+      ...this.keyLocks.values(),
+      ...(this.sweepInProgress ? [this.sweepInProgress] : []),
+    ])
   }
 }
 
