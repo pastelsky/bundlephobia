@@ -2,6 +2,7 @@ import {
   BuildCancelledError,
   InstallError,
   PackageNotFoundError,
+  UnsupportedPackageError,
 } from 'package-build-stats'
 import { z } from 'zod'
 
@@ -33,6 +34,10 @@ function serviceError(
   { name, originalError, extra }: z.infer<typeof serviceErrorSchema>,
   status: number,
 ) {
+  if (name === 'UnsupportedPackageError') {
+    return new UnsupportedPackageError(originalError, extra)
+  }
+
   if (status === 404 || name === 'PackageNotFoundError') {
     return new PackageNotFoundError(originalError, extra)
   }
