@@ -301,8 +301,22 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
         exit 0
     fi
 
-    # The cron process and all cleanup children yield CPU and I/O to serving traffic.
-    chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; exit 1; }
-    ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; exit 1; }
+    # Use the higher of disk pressure and one-minute load relative to CPU count.
+    pressure=$(awk -v disk="$(get_disk_usage)" -v scratch="$(get_loop_usage)" \
+        -v cores="$(getconf _NPROCESSORS_ONLN)" '
+        { load = 100 * $1 / cores; p = (disk > scratch ? disk : scratch)
+          printf "%.0f\n", (load > p ? load : p) }' /proc/loadavg)
+
+    if [ "$pressure" -ge 80 ]; then
+        nice_priority=10
+        [ "$pressure" -ge 90 ] && nice_priority=0
+        chrt --other --pid 0 "$$" || { log "Could not set normal CPU scheduling"; exit 1; }
+        renice -n "$nice_priority" -p "$$" >/dev/null || exit 1
+        ionice -c 2 -n 4 -p "$$" || exit 1
+        log "Cleanup pressure=${pressure}%: normal scheduling, nice=${nice_priority}"
+    else
+        chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; exit 1; }
+        ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; exit 1; }
+    fi
     main
 fi
