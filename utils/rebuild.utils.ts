@@ -42,7 +42,7 @@ interface GotModule {
   <TBody = string>(
     url: string,
     options?: {
-      json?: boolean
+      responseType?: 'json'
     },
   ): Promise<GotResponse<TBody>>
 }
@@ -189,7 +189,7 @@ async function run() {
     queue.push(() =>
       got<{ gzip: number; size: number }>(
         `http://127.0.0.1:5000/api/size?package=${packString}&force=true`,
-        { json: true },
+        { responseType: 'json' },
       )
         .then(async response => {
           const result = response.body

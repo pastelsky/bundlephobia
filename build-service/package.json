@@ -6,7 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "@amplitude/node": "^1.10.2",
-    "@rspack/core": "^2.3.1",
+    "@rspack/core": "2.2.8",
     "dotenv-defaults": "^6.0.0",
     "fastify": "^5.12.8",
     "now-logs": "^0.0.7",

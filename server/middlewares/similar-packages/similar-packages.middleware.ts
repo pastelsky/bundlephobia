@@ -19,7 +19,7 @@ interface GotModule {
   <TBody = string>(
     url: string,
     options?: {
-      json?: boolean
+      responseType?: 'json'
     },
   ): Promise<GotResponse<TBody>>
 }
@@ -166,7 +166,7 @@ async function getReadme(
     const { body } = await got<{
       encoding?: string
       content: string
-    }>(apiUrl, { json: true })
+    }>(apiUrl, { responseType: 'json' })
 
     return body.encoding === 'base64'
       ? Buffer.from(body.content, 'base64').toString()
@@ -193,7 +193,7 @@ async function getPackageDetails(packageName: string) {
     `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(
       packageName,
     )}?x-algolia-application-id=OFCNCOG2CU&x-algolia-api-key=f54e21fa3a2a0160595bb058179bfb1e`,
-    { json: true },
+    { responseType: 'json' },
   )
 
   if (body.readme?.trim()) {
