@@ -530,7 +530,11 @@ export default function TrendsPage({
         <section className="trends-search">
           <div className="trends-search__chips">
             {packages.map((pkg, index) => (
-              <fieldset key={pkg} className="trends-chip">
+              <fieldset
+                key={pkg}
+                className="trends-chip"
+                aria-label={`${pkg} selected package`}
+              >
                 <legend className="sr-only">Selected package: {pkg}</legend>
                 <span
                   className="trends-chip__color"
