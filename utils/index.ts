@@ -92,7 +92,11 @@ export function zeroToN(n: number): number[] {
 
 const MAX_ERROR_DETAIL_LENGTH = 12_000
 
-const stringifyError = configure({ maximumBreadth: 20, maximumDepth: 4 })
+const stringifyError = configure({
+  maximumBreadth: 20,
+  maximumDepth: 4,
+  circularValue: '[Circular]',
+})
 
 function formatArrayError(originalError: unknown[]): string | null {
   const details = originalError.flatMap(error => {

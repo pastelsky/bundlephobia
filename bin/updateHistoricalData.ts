@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import debugFactory from 'debug'
-import firebase from 'firebase'
+import firebase from 'firebase/compat/app'
+import 'firebase/compat/database'
 import GithubAPI from 'github'
 import fetch from 'node-fetch'
 import trending from 'trending-github'

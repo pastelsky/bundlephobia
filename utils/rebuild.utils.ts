@@ -6,7 +6,8 @@ import path from 'path'
 
 import axios from 'axios'
 import createDebug from 'debug'
-import firebase from 'firebase'
+import firebase from 'firebase/compat/app'
+import 'firebase/compat/database'
 
 import config from '../server/config'
 import type { JsonValue } from '../types/json'

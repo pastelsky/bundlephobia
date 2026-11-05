@@ -1,4 +1,3 @@
-import registryFetch from 'npm-registry-fetch'
 import pacote from 'pacote'
 
 import {
@@ -19,6 +18,13 @@ export interface NpmPackagePackument {
   versions?: Record<string, NpmPackageManifest>
   repository?: RepositoryField
 }
+
+interface NpmRegistryFetchModule {
+  json<T>(path: string): Promise<T>
+}
+
+// SAFETY: npm-registry-fetch exports its `json` helper on its CommonJS function.
+const registryFetch = require('npm-registry-fetch') as NpmRegistryFetchModule
 
 function registryManifestPath(name: string, version: string): string {
   return `/${getEscapedNpmPackageName(name)}/${encodeURIComponent(version)}`

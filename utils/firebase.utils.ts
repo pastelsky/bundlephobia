@@ -1,7 +1,8 @@
 import axios from 'axios'
 import createDebug from 'debug'
-import firebaseSDK from 'firebase'
+import firebaseSDK from 'firebase/compat/app'
 import semver from 'semver'
+import 'firebase/compat/database'
 
 import type { PackageBuildInfoSnapshot } from '@bundlephobia/service-contracts/package'
 import { decodeFirebaseKey, encodeFirebaseKey } from './index'

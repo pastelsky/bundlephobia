@@ -1,4 +1,4 @@
-import 'dotenv-defaults/config.js'
+import 'dotenv-defaults/config'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import Fastify, { type FastifyReply } from 'fastify'

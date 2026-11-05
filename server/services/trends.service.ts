@@ -27,19 +27,21 @@ const MAX_CACHED_PACKAGE_RANGES = 250
 
 interface LruCache<K, V> {
   get(key: K): V | undefined
-  set(key: K, value: V, maxAge?: number): this
+  set(key: K, value: V, options?: { ttl?: number }): this
 }
 
 interface LruCacheConstructor {
-  new <K, V>(options: { max: number; maxAge: number }): LruCache<K, V>
+  new <K, V>(options: { max: number; ttl: number }): LruCache<K, V>
 }
 
-// SAFETY: the pinned lru-cache package uses this constructor and set contract.
-const LRU = require('lru-cache') as LruCacheConstructor
+// SAFETY: lru-cache v11 exposes its constructor as the named LRUCache export.
+const { LRUCache: LRU } = require('lru-cache') as {
+  LRUCache: LruCacheConstructor
+}
 
 const packageTrendsCache = new LRU<string, TrendsPackageSeries>({
   max: MAX_CACHED_PACKAGE_RANGES,
-  maxAge: COMPLETE_CACHE_TTL_MS,
+  ttl: COMPLETE_CACHE_TTL_MS,
 })
 
 const packageTrendsRequests = new Map<string, Promise<TrendsPackageSeries>>()
@@ -335,7 +337,7 @@ function getPackageTrendsSource(
           ? DEGRADED_CACHE_TTL_MS
           : COMPLETE_CACHE_TTL_MS
 
-      packageTrendsCache.set(key, source, ttl)
+      packageTrendsCache.set(key, source, { ttl })
 
       return source
     })

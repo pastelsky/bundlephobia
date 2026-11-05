@@ -1,5 +1,3 @@
-import fetch from 'unfetch'
-
 import type {
   PackageBuildInfo,
   PackageBuildInfoSnapshot,

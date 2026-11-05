@@ -106,7 +106,7 @@ const failureBackoffMiddleware: Middleware = async (ctx, next) => {
   await next()
 
   if (ctx.status >= 200 && ctx.status < 400) {
-    failureCache.del(failureCacheKey)
+    failureCache.delete(failureCacheKey)
   }
 }
 

@@ -1,6 +1,6 @@
 import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { Component, createRef } from 'react'
-import Dropzone from 'react-dropzone'
+import Dropzone, { type DropzoneRef } from 'react-dropzone'
 import * as semver from 'semver'
 
 import Analytics from '../../client/analytics'
@@ -148,7 +148,7 @@ class Scan extends Component<ScanProps, ScanState> {
   }
 
   private packageSelectionContainerRef = createRef<HTMLUListElement>()
-  private dropzoneRef = createRef<Dropzone>()
+  private dropzoneRef = createRef<DropzoneRef>()
 
   componentDidMount() {
     const persistedScanState = this.readPersistedScanState()
@@ -545,13 +545,15 @@ class Scan extends Component<ScanProps, ScanState> {
         <div>
           <Dropzone
             ref={this.dropzoneRef}
-            className="scan__dropzone"
             onDropAccepted={this.handleDropAccepted}
             onDropRejected={this.handleDropRejected}
             multiple={false}
-            accept="application/json"
+            accept={{ 'application/json': ['.json'] }}
           >
-            {isUrlFormOpen === false ? (
+            {({ getRootProps, getInputProps }) => (
+              <div {...getRootProps({ className: 'scan__dropzone' })}>
+                <input {...getInputProps()} />
+                {isUrlFormOpen === false ? (
               <>
                 <p>
                   Drop a <code> package.json </code> file here
@@ -647,6 +649,8 @@ class Scan extends Component<ScanProps, ScanState> {
                   )}
                 </div>
               </>
+                )}
+              </div>
             )}
           </Dropzone>
         </div>

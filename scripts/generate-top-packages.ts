@@ -1,7 +1,8 @@
 import fs from 'fs'
 import { removePathSync } from './cleanup.mts'
 import path from 'path'
-import admin from 'firebase-admin'
+import { cert, deleteApp, getApp, initializeApp } from 'firebase-admin/app'
+import { getDatabase } from 'firebase-admin/database'
 import semver from 'semver'
 
 import { decodeFirebaseKey } from '../utils/index'
@@ -40,12 +41,12 @@ if (!fs.existsSync(serviceAccountPath)) {
   process.exit(1)
 }
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccountPath),
+initializeApp({
+  credential: cert(serviceAccountPath),
   databaseURL: 'https://module-cost.firebaseio.com',
 })
 
-const db = admin.database()
+const db = getDatabase()
 
 const SIX_MONTHS_MS = 6 * 30 * 24 * 60 * 60 * 1000
 
@@ -253,7 +254,7 @@ async function main() {
     console.log('Cleaned up progress file')
   }
 
-  await admin.app().delete()
+  await deleteApp(getApp())
 }
 
 main().catch(err => {

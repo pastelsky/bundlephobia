@@ -1,11 +1,12 @@
-import 'dotenv-defaults/config.js'
+import 'dotenv-defaults/config'
 
 import type { AddressInfo } from 'node:net'
 
 import { CACHE_ROUTE } from '@bundlephobia/service-contracts/cache'
 
 import createFastify from 'fastify'
-import firebase from 'firebase'
+import firebase from 'firebase/compat/app'
+import 'firebase/compat/database'
 
 import {
   getExportsSizeMiddleware,

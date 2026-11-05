@@ -19,7 +19,7 @@ const mockedLogger = jest.spyOn(logger, 'info')
 
 describe('failure backoff middleware', () => {
   afterEach(() => {
-    failureCache.del(failureCacheKey)
+    failureCache.delete(failureCacheKey)
     mockedLogger.mockClear()
   })
 

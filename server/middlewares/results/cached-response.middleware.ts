@@ -48,7 +48,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
 
   if (cached) {
     ctx.state.analysis.cache = 'hit'
-    failureCache.del(
+    failureCache.delete(
       createAnalysisKey({
         language,
         operation,

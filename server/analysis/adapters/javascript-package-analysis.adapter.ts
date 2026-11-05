@@ -51,7 +51,10 @@ function manifestRequestContext(packageString: string): ManifestRequestContext {
   return {
     packageSpec,
     packageName: packageSpec?.name,
-    requestedVersion: packageSpec?.fetchSpec || 'latest',
+    requestedVersion:
+      packageSpec?.fetchSpec === '*'
+        ? 'latest'
+        : packageSpec?.fetchSpec || 'latest',
   }
 }
 
@@ -72,7 +75,7 @@ async function resolveRegistryManifest(
     return fetchPackageVersionManifest(packageSpec.name, version)
   }
 
-  if (packageSpec.type === 'tag') {
+  if (packageSpec.type === 'tag' || context.requestedVersion === 'latest') {
     return fetchPackageVersionManifest(
       packageSpec.name,
       context.requestedVersion,

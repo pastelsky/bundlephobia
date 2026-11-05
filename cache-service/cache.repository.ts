@@ -1,5 +1,6 @@
 import createDebug from 'debug'
-import firebase from 'firebase'
+import firebase from 'firebase/compat/app'
+import 'firebase/compat/database'
 import { LRUCache } from 'lru-cache'
 
 import {

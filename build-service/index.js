@@ -1,4 +1,4 @@
-import 'dotenv-defaults/config.js'
+import 'dotenv-defaults/config'
 import Fastify from 'fastify'
 import {
   getPackageStats,
