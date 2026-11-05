@@ -349,6 +349,17 @@ function handleUnknownError<T>(context: ErrorHandlerContext, error: T) {
   // SAFETY: only the optional error code is read from a caught runtime value.
   const errorObject = error as { code?: string } | null
 
+  if (errorObject?.code === 'QUEUE_FULL') {
+    context.ctx.cacheControl = { maxAge: 0 }
+    context.ctx.set('Retry-After', '15')
+    context.respondWithError(503, {
+      code: 'QueueFullError',
+      message: 'The build queue is full. Please try again in a few seconds.',
+    })
+
+    return
+  }
+
   if (errorObject?.code === 'JOB_EXPIRED') {
     context.ctx.cacheControl = { maxAge: 0 }
     context.respondWithError(503, {
