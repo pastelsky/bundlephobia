@@ -144,3 +144,13 @@ test('supervisor exits when the real child completes and preserves its status', 
     'status=7',
   )
 })
+
+test('process-tree discovery excludes every unrelated process and ancestor', () => {
+  assert.equal(
+    shell(`
+    ps() { printf '1 0\n100 1\n200 100\n300 200\n9 1\n999 9\n'; }
+    cleanup_process_tree 100 | sort -n
+  `),
+    '100\n200\n300',
+  )
+})

@@ -66,7 +66,7 @@ cleanup_process_tree() {
             do {
                 changed=0
                 for (pid in parent) {
-                    if (!found[pid] && found[parent[pid]]) { found[pid]=1; changed=1 }
+                    if (!(pid in found) && (parent[pid] in found)) { found[pid]=1; changed=1 }
                 }
             } while (changed)
             for (pid in found) print pid
