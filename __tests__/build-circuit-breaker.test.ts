@@ -1,3 +1,6 @@
+import os from 'node:os'
+import path from 'node:path'
+
 import {
   BuildCircuitBreaker,
   readBuildFilesystem,
@@ -106,4 +109,12 @@ it('does not hide permission or I/O errors by checking a different directory', a
   const read = jest.fn().mockRejectedValue(error)
   await expect(readBuildFilesystem('/tmp/scratch', read)).rejects.toBe(error)
   expect(read).toHaveBeenCalledTimes(1)
+})
+
+it('handles a real Node filesystem ENOENT across the test runtime boundary', async () => {
+  const disk = await readBuildFilesystem(
+    path.join(os.tmpdir(), 'bp-nonexistent-parent', 'not-created'),
+  )
+
+  expect(disk.bsize).toBeGreaterThan(0)
 })

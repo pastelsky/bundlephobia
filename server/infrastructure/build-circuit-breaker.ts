@@ -1,4 +1,5 @@
 import { statfs } from 'node:fs/promises'
+import { isNativeError } from 'node:util/types'
 import { dirname, resolve } from 'node:path'
 import type { StatsFs } from 'node:fs'
 import { Counter, Gauge } from 'prom-client'
@@ -110,7 +111,7 @@ export async function readBuildFilesystem(
     const parent = dirname(directory)
 
     if (
-      error instanceof Error &&
+      isNativeError(error) &&
       'code' in error &&
       error.code === 'ENOENT' &&
       parent !== directory
