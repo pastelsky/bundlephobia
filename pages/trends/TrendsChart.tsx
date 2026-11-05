@@ -380,7 +380,8 @@ export default function TrendsChart({
                   ref={svgRef}
                   className="trends-chart__svg"
                   viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`}
-                  aria-hidden="true"
+                  role="img"
+                  aria-label={`${metric} trends chart`}
                 >
                   <defs>
                     {model.series.map((series, index) => (
