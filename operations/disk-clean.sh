@@ -105,6 +105,23 @@ prune_bun_cache() {
     fi
 }
 
+prune_cached_analysis_metadata() {
+    local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
+    local status=0
+    local -a roots=()
+    [ -d "$cache_root" ] || return
+
+    # Sample afresh each run; never walk the full cache or active installations.
+    mapfile -d '' -t roots < <(
+        find "$cache_root" -mindepth 1 -maxdepth 1 ! -name '*.npm' -type d -print0 | shuf -z -n 1000
+    )
+    [ "${#roots[@]}" -gt 0 ] || return
+    timeout 3s find -P "${roots[@]}" -xdev -maxdepth 4 \
+        \( -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' \) \
+        -type f -delete 2>/dev/null || status=$?
+    log "Sampled cache metadata cleanup finished (status=${status}; 124 means time budget reached)"
+}
+
 evict_oldest_bun_cache_entries() {
     local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
     local entry path loop_usage
@@ -219,6 +236,7 @@ cleanup_loop_device() {
 
     if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
         log "Loop pressure at or above soft threshold ${LOOP_SOFT_THRESHOLD}% — running oldest-first cleanup to ${LOOP_TARGET_USAGE}%"
+        prune_cached_analysis_metadata
         cleanup_stale_package_dirs true
 
         loop_usage=$(get_loop_usage)
