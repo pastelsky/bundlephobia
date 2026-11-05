@@ -9864,6 +9864,7 @@ __metadata:
     is-empty-object: "npm:^1.1.1"
     jest: "npm:^30.4.2"
     jsdom: "npm:^24.0.0"
+    jsonc-parser: "npm:^3.3.1"
     jsonstream: "npm:^1.0.3"
     koa: "npm:3.2.1"
     koa-basic-auth: "npm:^4.0.0"
@@ -16980,7 +16981,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonc-parser@npm:^3.2.0":
+"jsonc-parser@npm:^3.2.0, jsonc-parser@npm:^3.3.1":
   version: 3.3.1
   resolution: "jsonc-parser@npm:3.3.1"
   checksum: 269c3ae0a0e4f907a914bf334306c384aabb9929bd8c99f909275ebd5c2d3bc70b9bcd119ad794f339dec9f24b6a4ee9cd5a8ab2e6435e730ad4075388fc2ab6
