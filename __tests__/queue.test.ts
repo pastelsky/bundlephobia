@@ -432,11 +432,9 @@ describe('Queue admission and expiry', () => {
           }),
       )
       const first = queue.process('first', 'TEST', {})
-      const expired = expect(
-        queue.process('second', 'TEST', {}),
-      ).rejects.toMatchObject({ code: 'JOB_EXPIRED' })
+      const expired = queue.process('second', 'TEST', {}).catch(error => error)
       jest.advanceTimersByTime(1001)
-      await expired
+      await expect(expired).resolves.toMatchObject({ code: 'JOB_EXPIRED' })
       expect(queue.getDiagnostics().total).toBe(1)
       const replacement = queue.process('third', 'TEST', {})
       expect(queue.getDiagnostics().total).toBe(2)
