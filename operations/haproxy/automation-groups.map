@@ -1,7 +1,7 @@
 # Case-insensitive UA substrings (the caller lowercases before lookup).
 # Aliases map to stable families; this is classification, not authentication.
 googlebot google
-googleother google
+googleother google_other
 google-inspectiontool google
 adsbot-google google
 mediapartners-google google
@@ -18,10 +18,10 @@ amazonbot amazon
 lightpanda lightpanda
 applebot apple
 yandex yandex
-gptbot openai
+gptbot openai_bulk
 oai-searchbot openai
 chatgpt-user openai
-claudebot anthropic
+claudebot anthropic_bulk
 claude-user anthropic
 claude-searchbot anthropic
 shields.io shields
