@@ -48,9 +48,9 @@ const debug = createDebug('bp:request')
 
 const requestQueue = new Queue({
   concurrency: 4,
-  // Four active builds and at most eight waiting; expire before proxy timeout.
-  maxJobs: 12,
-  maxAge: 15,
+  // Four active builds and at most sixteen waiting.
+  maxJobs: 20,
+  maxAge: 60 * 2,
 })
 
 registerQueueMetrics(applicationMetrics, 'analysis', () =>
