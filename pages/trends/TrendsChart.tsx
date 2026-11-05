@@ -257,7 +257,7 @@ export default function TrendsChart({
         )
       : []
 
-  /* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */
+  /* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role */
   return (
     <div className="trends-chart">
       <div className="trends-chart__layout">
@@ -681,5 +681,5 @@ export default function TrendsChart({
       </div>
     </div>
   )
-  /* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */
+  /* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role */
 }
