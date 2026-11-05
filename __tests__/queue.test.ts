@@ -392,3 +392,44 @@ describe('Queue expiry', () => {
     }
   })
 })
+
+
+describe('Queue admission and expiry', () => {
+  it('caps distinct jobs while allowing subscribers to share admitted work', async () => {
+    const queue = new Queue({ concurrency: 1, maxJobs: 2 })
+    let finish!: (value: string) => void
+    queue.addExecutor('TEST', () => new Promise<string>(resolve => { finish = resolve }))
+    const first = queue.process('first', 'TEST', {})
+    const second = queue.process('second', 'TEST', {})
+    const shared = queue.process('second', 'TEST', {})
+    await expect(queue.process('third', 'TEST', {})).rejects.toMatchObject({ code: 'QUEUE_FULL' })
+    expect(queue.getDiagnostics().total).toBe(2)
+    finish('first')
+    await first
+    finish('second')
+    await expect(second).resolves.toBe('second')
+    await expect(shared).resolves.toBe('second')
+  })
+
+  it('expires waiting jobs and frees admission while a worker remains busy', async () => {
+    jest.useFakeTimers()
+    try {
+      const queue = new Queue({ concurrency: 1, maxJobs: 2, maxAge: 1 })
+      let finish!: (value: string) => void
+      queue.addExecutor('TEST', () => new Promise<string>(resolve => { finish = resolve }))
+      const first = queue.process('first', 'TEST', {})
+      const expired = expect(queue.process('second', 'TEST', {})).rejects.toMatchObject({ code: 'JOB_EXPIRED' })
+      jest.advanceTimersByTime(1001)
+      await expired
+      expect(queue.getDiagnostics().total).toBe(1)
+      const replacement = queue.process('third', 'TEST', {})
+      expect(queue.getDiagnostics().total).toBe(2)
+      finish('first')
+      await first
+      finish('third')
+      await replacement
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+})

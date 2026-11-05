@@ -67,6 +67,7 @@ interface QueueJob<
 interface QueueOptions {
   concurrency?: number
   aging?: boolean
+  maxJobs?: number
   maxAge?: number
 }
 
@@ -121,6 +122,7 @@ class Queue {
     this.options = {
       concurrency: 1,
       aging: true,
+      maxJobs: Number.POSITIVE_INFINITY,
       maxAge: Number.POSITIVE_INFINITY,
       ...options,
     }
@@ -476,6 +478,16 @@ class Queue {
           // SAFETY: TResult is constrained to the runtime-value domain used by Queue.
           resolve: successListener as (value: RuntimeValue) => void,
           reject: failureListener,
+        })
+
+        return
+      }
+
+      // Existing subscribers may join a job even when admission is full.
+      if (this.jobs.length >= this.options.maxJobs) {
+        rejectSubscriber({
+          code: 'QUEUE_FULL',
+          message: 'The build queue has reached its job limit',
         })
 
         return
