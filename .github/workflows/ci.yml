@@ -13,7 +13,7 @@ on:
 jobs:
   build:
     name: build (${{ matrix.node-version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
@@ -67,7 +67,7 @@ jobs:
 
   integration:
     name: integration (${{ matrix.node-version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       matrix:
@@ -125,7 +125,7 @@ jobs:
           retention-days: 14
 
   jvm-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v7
@@ -156,7 +156,7 @@ jobs:
           ! grep -q '<dependencies>' "$CORE_POM"
 
   scratch-cleanup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

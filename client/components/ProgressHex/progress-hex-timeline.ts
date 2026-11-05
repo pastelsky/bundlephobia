@@ -1,4 +1,4 @@
-import anime, { AnimeAnimParams } from 'animejs'
+import anime from 'animejs'
 
 import colors from '../../config/colors'
 import { randomFromArray, zeroToN } from '../../../utils'

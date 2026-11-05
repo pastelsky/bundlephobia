@@ -383,7 +383,7 @@ jobs:
   agent:
     needs: activation
     if: needs.activation.outputs.daily_ai_credits_exceeded != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: read
@@ -1383,7 +1383,7 @@ jobs:
     if: >
       (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'publish_library_research') &&
       (needs.agent.result == 'success')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       actions: write
       contents: write

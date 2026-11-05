@@ -4,7 +4,6 @@ import Link from 'next/link'
 import API from '../../api'
 import Heart from '../../assets/heart.svg'
 import DigitalOceanLogo from '../../assets/digital-ocean-logo.svg'
-import { AnnouncementBanner } from '../AnnouncementBanner'
 import { WithClassName } from '../../../types'
 
 type LayoutProps = React.PropsWithChildren & WithClassName
@@ -34,7 +33,6 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
 
     return (
       <section className="layout">
-        <AnnouncementBanner />
         <main className={className}>{children}</main>
 
         <footer>

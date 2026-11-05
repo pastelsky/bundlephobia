@@ -255,7 +255,12 @@ type PackageNameElementProps = React.HTMLAttributes<HTMLElement> & {
 
 export function PackageNameElement({
   isHeading,
+  children,
   ...props
 }: PackageNameElementProps) {
-  return isHeading ? <h1 {...props} /> : <span {...props} />
+  return isHeading ? (
+    <h1 {...props}>{children}</h1>
+  ) : (
+    <span {...props}>{children}</span>
+  )
 }

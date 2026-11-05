@@ -1,16 +1,6 @@
 import { configure } from 'safe-stable-stringify'
 import truncate from 'truncate'
 
-type ErrorValue =
-  | string
-  | number
-  | bigint
-  | boolean
-  | symbol
-  | null
-  | undefined
-  | object
-
 export interface FormattedValue {
   unit: 'B' | 'kB' | 'MB' | 'μs' | 'ms' | 's'
   size: number

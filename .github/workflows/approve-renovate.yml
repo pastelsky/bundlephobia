@@ -17,7 +17,7 @@ jobs:
     if: >-
       github.event.pull_request.user.login == 'renovate[bot]' &&
       github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ github.token }}
       PR_NUMBER: ${{ github.event.pull_request.number }}

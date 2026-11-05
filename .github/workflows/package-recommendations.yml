@@ -22,12 +22,12 @@ jobs:
     if: >-
       github.event_name == 'issues' &&
       contains(github.event.issue.labels.*.name, 'similar suggestion')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v7
         with:
           node-version: '26'
@@ -43,9 +43,9 @@ jobs:
 
   check-curated-data:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v7
