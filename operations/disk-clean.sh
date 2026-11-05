@@ -105,7 +105,7 @@ prune_bun_cache() {
     fi
 }
 
-prune_analysis_metadata() {
+cleanup_non_bundlable_files() {
     local scratch_root="${BUILD_TMP_DIR:-/tmp/tmp-build}"
     local status=0
     [ -d "$scratch_root" ] || return
@@ -115,7 +115,7 @@ prune_analysis_metadata() {
     find -P "$scratch_root/installations" "$scratch_root/packages" -xdev -maxdepth 7 \
         \( -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' \) \
         -type f -delete 2>/dev/null || status=$?
-    log "Analysis metadata cleanup finished (status=${status})"
+    log "Non-bundlable file cleanup finished (status=${status})"
 }
 
 evict_oldest_bun_cache_entries() {
@@ -232,7 +232,6 @@ cleanup_loop_device() {
 
     if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
         log "Loop pressure at or above soft threshold ${LOOP_SOFT_THRESHOLD}% — running oldest-first cleanup to ${LOOP_TARGET_USAGE}%"
-        prune_analysis_metadata
         cleanup_stale_package_dirs true
 
         loop_usage=$(get_loop_usage)
@@ -288,6 +287,7 @@ cleanup_main() {
 
 main() {
     local usage
+    cleanup_non_bundlable_files
     usage=$(get_disk_usage)
     log "Main disk usage: ${usage}%   Loop pressure (higher of bytes/inodes): $(get_loop_usage)%"
 
