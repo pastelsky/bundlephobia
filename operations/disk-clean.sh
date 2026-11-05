@@ -105,6 +105,19 @@ prune_bun_cache() {
     fi
 }
 
+cleanup_non_bundlable_files() {
+    local scratch_root="${BUILD_TMP_DIR:-/tmp/tmp-build}"
+    local status=0
+    [ -d "$scratch_root" ] || return
+
+    # Cover ordinary/scoped node_modules layouts without walking arbitrarily deep.
+    # Unlink working copies only; keep every cache entry intact.
+    find -P "$scratch_root/installations" "$scratch_root/packages" -xdev -maxdepth 7 \
+        \( -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' \) \
+        -type f -delete 2>/dev/null || status=$?
+    log "Non-bundlable file cleanup finished (status=${status})"
+}
+
 evict_oldest_bun_cache_entries() {
     local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
     local entry path loop_usage
@@ -274,6 +287,7 @@ cleanup_main() {
 
 main() {
     local usage
+    cleanup_non_bundlable_files
     usage=$(get_disk_usage)
     log "Main disk usage: ${usage}%   Loop pressure (higher of bytes/inodes): $(get_loop_usage)%"
 
@@ -292,15 +306,8 @@ main() {
     fi
 }
 
-# Allow the integration check to source the production functions without running
-# host-wide housekeeping or acquiring the production lock.
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-    exec 9>/run/lock/disk-clean.lock
-    if ! flock -n 9; then
-        log "Another disk cleanup is already running — skipping"
-        exit 0
-    fi
-
+with_cleanup_priority() {
+    local pressure nice_priority
     # Use the higher of disk pressure and one-minute load relative to CPU count.
     pressure=$(awk -v disk="$(get_disk_usage)" -v scratch="$(get_loop_usage)" \
         -v cores="$(getconf _NPROCESSORS_ONLN)" '
@@ -310,13 +317,25 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     if [ "$pressure" -ge 80 ]; then
         nice_priority=10
         [ "$pressure" -ge 90 ] && nice_priority=0
-        chrt --other --pid 0 "$$" || { log "Could not set normal CPU scheduling"; exit 1; }
-        renice -n "$nice_priority" -p "$$" >/dev/null || exit 1
-        ionice -c 2 -n 4 -p "$$" || exit 1
+        chrt --other --pid 0 "$$" || { log "Could not set normal CPU scheduling"; return 1; }
+        renice -n "$nice_priority" -p "$$" >/dev/null || return 1
+        ionice -c 2 -n 4 -p "$$" || return 1
         log "Cleanup pressure=${pressure}%: normal scheduling, nice=${nice_priority}"
     else
-        chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; exit 1; }
-        ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; exit 1; }
+        chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; return 1; }
+        ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; return 1; }
     fi
-    main
+    # Set priority once on this shell; every cleanup command inherits it.
+    "$@"
+}
+
+# Allow the integration check to source the production functions without running
+# host-wide housekeeping or acquiring the production lock.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    exec 9>/run/lock/disk-clean.lock
+    if ! flock -n 9; then
+        log "Another disk cleanup is already running — skipping"
+        exit 0
+    fi
+    with_cleanup_priority main
 fi
