@@ -1,5 +1,6 @@
 import type { Middleware } from 'koa'
 import createDebug from 'debug'
+import got from 'got'
 import strip from 'strip-markdown'
 
 import { parsePackageString } from '../../../utils/common.utils'
@@ -7,21 +8,8 @@ import config from '../../config'
 import logger from '../../infrastructure/logger.service'
 import { categories } from '../../../utils/similarPackages'
 
-interface GotResponse<TBody> {
-  body: TBody
-}
-
 interface ProcessedMarkdown {
   toString(): string
-}
-
-interface GotModule {
-  <TBody = string>(
-    url: string,
-    options?: {
-      responseType?: 'json'
-    },
-  ): Promise<GotResponse<TBody>>
 }
 
 interface RemarkProcessor {
@@ -61,9 +49,6 @@ type CategoryLabel = keyof typeof categories
 type CategoryEntry = (typeof categories)[CategoryLabel]
 
 type CategoryTag = CategoryEntry['tags'][number]
-
-// SAFETY: the pinned got module exposes the request interface used here.
-const got = require('got') as GotModule
 
 // SAFETY: the pinned remark module exports the configured processor factory.
 const remark = require('remark') as () => RemarkProcessor
@@ -144,16 +129,16 @@ async function getReadme(
             path: path.replace(/\/tree\//, ''),
           }),
         ),
-      )
+      ).text()
     }
 
     try {
-      return (await getGithubFile('README.md')).body
+      return getGithubFile('README.md')
     } catch {
       try {
-        return (await getGithubFile('readme.md')).body
+        return getGithubFile('readme.md')
       } catch {
-        return (await getGithubFile('Readme.md')).body
+        return getGithubFile('Readme.md')
       }
     }
   }
@@ -163,10 +148,10 @@ async function getReadme(
       `${path}/README.md`,
     )}?ref=${branch}`
 
-    const { body } = await got<{
+    const body = await got(apiUrl).json<{
       encoding?: string
       content: string
-    }>(apiUrl, { responseType: 'json' })
+    }>()
 
     return body.encoding === 'base64'
       ? Buffer.from(body.content, 'base64').toString()
@@ -174,13 +159,11 @@ async function getReadme(
   }
 
   if (host === 'bitbucket.org') {
-    const { body } = await got(
+    return got(
       `https://bitbucket.org/${user}/${project}${
         path ? path.replace('src', 'raw') : `/raw/${branch}`
       }/README.md`,
-    )
-
-    return body
+    ).text()
   }
 
   return undefined
@@ -189,12 +172,11 @@ async function getReadme(
 async function getPackageDetails(packageName: string) {
   let readme = ''
 
-  const { body } = await got<AlgoliaPackageBody>(
+  const body = await got(
     `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(
       packageName,
     )}?x-algolia-application-id=OFCNCOG2CU&x-algolia-api-key=f54e21fa3a2a0160595bb058179bfb1e`,
-    { responseType: 'json' },
-  )
+  ).json<AlgoliaPackageBody>()
 
   if (body.readme?.trim()) {
     readme = await stripMarkdown(body.readme)

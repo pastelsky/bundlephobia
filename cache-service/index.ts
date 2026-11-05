@@ -5,8 +5,7 @@ import type { AddressInfo } from 'node:net'
 import { CACHE_ROUTE } from '@bundlephobia/service-contracts/cache'
 
 import createFastify from 'fastify'
-import firebase from 'firebase/compat/app'
-import 'firebase/compat/database'
+import { initializeApp } from 'firebase/app'
 
 import {
   getExportsSizeMiddleware,
@@ -25,7 +24,7 @@ const firebaseConfig = {
   databaseURL: process.env.FIREBASE_DATABASE_URL,
 }
 
-firebase.initializeApp(firebaseConfig)
+initializeApp(firebaseConfig)
 
 fastify.get(CACHE_ROUTE.package, getPackageSizeMiddleware)
 

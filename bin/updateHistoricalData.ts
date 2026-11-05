@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
 import debugFactory from 'debug'
-import firebase from 'firebase/compat/app'
-import 'firebase/compat/database'
 import GithubAPI from 'github'
-import fetch from 'node-fetch'
 import trending from 'trending-github'
 
 import firebaseUtils from '../utils/firebase.utils'
@@ -32,12 +29,6 @@ github.authenticate({
   type: 'oauth',
   key: process.env.GITHUB_CLIENT_ID || '',
   secret: process.env.GITHUB_CLIENT_SECRET || '',
-})
-
-firebase.initializeApp({
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.FIREBASE_DATABASE_URL,
 })
 
 const port = process.env.PORT || 5000

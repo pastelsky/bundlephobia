@@ -1,6 +1,5 @@
 import createDebug from 'debug'
-import firebase from 'firebase/compat/app'
-import 'firebase/compat/database'
+import { getDatabase, ref, get, set } from 'firebase/database'
 import { LRUCache } from 'lru-cache'
 
 import {
@@ -38,7 +37,7 @@ export function createCacheRepository(
   })
 
   function packageRef(root: string, name: string) {
-    return firebase.database().ref().child(root).child(encodeFirebaseKey(name))
+    return ref(getDatabase(), `${root}/${encodeFirebaseKey(name)}`)
   }
 
   function latestBuilt(root: string, name: string): Promise<CacheEntry | null> {
@@ -60,7 +59,7 @@ export function createCacheRepository(
     name: string,
   ): Promise<CacheEntry | null> {
     // Existing histories are small; avoid a second persistent index/write path.
-    const snapshot = await packageRef(root, name).once('value')
+    const snapshot = await get(packageRef(root, name))
     const versions: string[] = []
 
     snapshot.forEach(child => {
@@ -87,13 +86,12 @@ export function createCacheRepository(
     if (key.version === LATEST_BUILT_CACHE_VERSION)
       return latestBuilt(root, key.name)
 
-    const snapshot = await firebase
-      .database()
-      .ref()
-      .child(root)
-      .child(encodeFirebaseKey(key.name))
-      .child(encodeFirebaseKey(key.version))
-      .once('value')
+    const snapshot = await get(
+      ref(
+        getDatabase(),
+        `${root}/${encodeFirebaseKey(key.name)}/${encodeFirebaseKey(key.version)}`,
+      ),
+    )
 
     const value = snapshot.val()
 
@@ -153,13 +151,13 @@ export function createCacheRepository(
     },
 
     async set(key, result) {
-      await firebase
-        .database()
-        .ref()
-        .child(config.writeKey)
-        .child(encodeFirebaseKey(key.name))
-        .child(encodeFirebaseKey(key.version))
-        .set(result)
+      await set(
+        ref(
+          getDatabase(),
+          `${config.writeKey}/${encodeFirebaseKey(key.name)}/${encodeFirebaseKey(key.version)}`,
+        ),
+        result,
+      )
 
       // Keep memory and durable storage write-through consistent.
       memoryCache.set(cacheKey(key), result)

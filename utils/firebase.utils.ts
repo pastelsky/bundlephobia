@@ -1,8 +1,19 @@
 import axios from 'axios'
 import createDebug from 'debug'
-import firebaseSDK from 'firebase/compat/app'
+import { getApps, initializeApp } from 'firebase/app'
+import {
+  get,
+  getDatabase,
+  limitToLast,
+  orderByChild,
+  query,
+  ref,
+  set,
+  startAt,
+  update,
+  type Database,
+} from 'firebase/database'
 import semver from 'semver'
-import 'firebase/compat/database'
 
 import type { PackageBuildInfoSnapshot } from '@bundlephobia/service-contracts/package'
 import { decodeFirebaseKey, encodeFirebaseKey } from './index'
@@ -11,13 +22,18 @@ const debug = createDebug('bp:firebase-util')
 
 const FIREBASE_READ_KEY = process.env.FIREBASE_READ_KEY || 'modules-v2'
 
-if (process.env.FIREBASE_DATABASE_URL && !firebaseSDK.apps.length) {
-  firebaseSDK.initializeApp({
-    apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-    databaseURL: process.env.FIREBASE_DATABASE_URL,
-  })
-}
+const firebaseApp = process.env.FIREBASE_DATABASE_URL
+  ? (getApps().find(
+      app => app.options.databaseURL === process.env.FIREBASE_DATABASE_URL,
+    ) ??
+    initializeApp({
+      apiKey: process.env.FIREBASE_API_KEY,
+      authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+      databaseURL: process.env.FIREBASE_DATABASE_URL,
+    }))
+  : undefined
+
+const firebaseDatabase = firebaseApp ? getDatabase(firebaseApp) : undefined
 
 interface SearchRecord {
   lastSearched: number
@@ -85,40 +101,40 @@ function selectPackageHistoryVersions(
 }
 
 class FirebaseUtils {
-  private readonly firebase?: typeof firebaseSDK
+  private readonly database: Database | undefined
 
-  constructor(firebaseInstance: typeof firebaseSDK, enable = true) {
-    if (enable) {
-      this.firebase = firebaseInstance
-    }
+  constructor(database?: Database) {
+    this.database = database
   }
 
   setRecentSearch(
     name: string,
     packageInfo: { name: string; version?: string },
   ): void {
-    if (!this.firebase) {
+    if (!this.database) {
       return
     }
 
-    const searches = this.firebase.database().ref().child('searches-v2')
-    void searches
-      .child(encodeFirebaseKey(name))
-      .once('value')
+    const searchRef = ref(
+      this.database,
+      `searches-v2/${encodeFirebaseKey(name)}`,
+    )
+
+    void get(searchRef)
       .then(snapshot => {
         // SAFETY: searches-v2 values are written as SearchRecord entries.
         return snapshot.val() as SearchRecord | null
       })
       .then(result => {
         if (result) {
-          return searches.child(encodeFirebaseKey(name)).update({
+          return update(searchRef, {
             lastSearched: Date.now(),
             name: packageInfo.name,
             count: result.count + 1,
           })
         }
 
-        return searches.child(encodeFirebaseKey(name)).set({
+        return set(searchRef, {
           lastSearched: Date.now(),
           name: packageInfo.name,
           version: packageInfo.version,
@@ -133,22 +149,19 @@ class FirebaseUtils {
     limit = 15,
     includeVersion: (version: string) => boolean = () => true,
   ): Promise<PackageHistory> {
-    if (!this.firebase) {
+    const database = this.database
+
+    if (!database) {
       return {}
     }
 
     debug('package history %s', name)
     const packageHistory: PackageHistory = {}
-    const firebase = this.firebase
 
     const getHistoryFromKey = async (key: string) => {
-      const ref = firebase
-        .database()
-        .ref()
-        .child(key)
-        .child(encodeFirebaseKey(name))
+      const historyRef = ref(database, `${key}/${encodeFirebaseKey(name)}`)
 
-      return ref.once('value').then(snapshot => {
+      return get(historyRef).then(snapshot => {
         // SAFETY: modules-v2 and modules-v3 history values are package snapshots.
         return snapshot.val() as PackageHistory | null
       })
@@ -220,17 +233,19 @@ class FirebaseUtils {
   }
 
   getRecentSearches(limit = 10): Promise<Record<string, SearchRecord>> | {} {
-    if (!this.firebase) {
+    if (!this.database) {
       return {}
     }
 
-    const searches = this.firebase.database().ref().child('searches-v2')
     const recentSearches: Record<string, SearchRecord> = {}
 
-    return searches
-      .orderByChild('lastSearched')
-      .limitToLast(Number(limit))
-      .once('value')
+    return get(
+      query(
+        ref(this.database, 'searches-v2'),
+        orderByChild('lastSearched'),
+        limitToLast(Number(limit)),
+      ),
+    )
       .then(snapshot => {
         // SAFETY: searches-v2 values are keyed SearchRecord entries.
         return snapshot.val() as Record<string, SearchRecord> | null
@@ -249,17 +264,19 @@ class FirebaseUtils {
   }
 
   async getDailySearches(): Promise<Record<string, SearchRecord>> {
-    if (!this.firebase) {
+    if (!this.database) {
       return {}
     }
 
     const dailySearches: Record<string, SearchRecord> = {}
-    const searches = this.firebase.database().ref().child('searches-v2')
 
-    const snapshot = await searches
-      .orderByChild('lastSearched')
-      .startAt(Date.now() - 1000 * 60 * 60 * 24 * 4, 'lastSearched')
-      .once('value')
+    const snapshot = await get(
+      query(
+        ref(this.database, 'searches-v2'),
+        orderByChild('lastSearched'),
+        startAt(Date.now() - 1000 * 60 * 60 * 24 * 4, 'lastSearched'),
+      ),
+    )
 
     // SAFETY: searches-v2 values are keyed SearchRecord entries.
     const packages = snapshot.val() as Record<string, SearchRecord> | null
@@ -274,9 +291,6 @@ class FirebaseUtils {
   }
 }
 
-const firebaseUtils = new FirebaseUtils(
-  firebaseSDK,
-  Boolean(process.env.FIREBASE_DATABASE_URL),
-)
+const firebaseUtils = new FirebaseUtils(firebaseDatabase)
 
 export default firebaseUtils

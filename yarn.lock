@@ -5,13 +5,6 @@ __metadata:
   version: 10
   cacheKey: 10c0
 
-"@alloc/quick-lru@npm:^5.2.0":
-  version: 5.3.0
-  resolution: "@alloc/quick-lru@npm:5.3.0"
-  checksum: 10c0/de92309b58674d17e627e43b73db9744a7f47d1987f1e3995ed0b3bb218b25df61940cc311a3c83429bc482e140f3d90851725cac5250222f9a9a5e5ec8a4343
-  languageName: node
-  linkType: hard
-
 "@amplitude/analytics-browser@npm:^2.49.1":
   version: 2.49.1
   resolution: "@amplitude/analytics-browser@npm:2.49.1"
@@ -2162,16 +2155,14 @@ __metadata:
   resolution: "@bundlephobia/stats-app@workspace:stats-app"
   dependencies:
     "@fontsource-variable/inter": "npm:^5.3.0"
-    "@tailwindcss/postcss": "npm:^4.3.4"
+    "@tailwindcss/vite": "npm:^4.3.4"
     "@tanstack/react-query": "npm:^5.106.1"
     "@tremor/react": "npm:^3.18.7"
     "@types/node": "npm:^26.6.6"
     "@types/react": "npm:^19.3.0"
     "@types/react-dom": "npm:^19.3.0"
     "@vitejs/plugin-react": "npm:^6.2.1"
-    autoprefixer: "npm:^10.6.2"
     lucide-react: "npm:^1.69.0"
-    postcss: "npm:^8.5.32"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
     react-router-dom: "npm:^7.18.5"
@@ -7876,16 +7867,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tailwindcss/postcss@npm:^4.3.4":
+"@tailwindcss/vite@npm:^4.3.4":
   version: 4.3.4
-  resolution: "@tailwindcss/postcss@npm:4.3.4"
+  resolution: "@tailwindcss/vite@npm:4.3.4"
   dependencies:
-    "@alloc/quick-lru": "npm:^5.2.0"
     "@tailwindcss/node": "npm:4.3.4"
     "@tailwindcss/oxide": "npm:4.3.4"
-    postcss: "npm:^8.5.25"
     tailwindcss: "npm:4.3.4"
-  checksum: 10c0/056d94906326111159c062d439ddcea2cc8c35cc98e1468e15a4da0d7aab452317a4daa73417a9ea994cde46b755270f533403f9ed46d2de615ec4dbc39ed1a6
+  peerDependencies:
+    vite: ^5.2.0 || ^6 || ^7 || ^8
+  checksum: 10c0/cca3f2d4eddc6794a7e2fe041e1ed9c1a9d516fd1dda823f0597e45a0c9dc9d1e3f887711b87a7e014c5bf708594e28c58070dd79393cd5af46abe8ad285974d
   languageName: node
   linkType: hard
 
@@ -8534,16 +8525,6 @@ __metadata:
   version: 2.1.0
   resolution: "@types/ms@npm:2.1.0"
   checksum: 10c0/5ce692ffe1549e1b827d99ef8ff71187457e0eb44adbae38fdf7b9a74bae8d20642ee963c14516db1d35fa2652e65f47680fdf679dcbde52bbfadd021f497225
-  languageName: node
-  linkType: hard
-
-"@types/node-fetch@npm:^2.6.13":
-  version: 2.6.13
-  resolution: "@types/node-fetch@npm:2.6.13"
-  dependencies:
-    "@types/node": "npm:*"
-    form-data: "npm:^4.0.4"
-  checksum: 10c0/6313c89f62c50bd0513a6839cdff0a06727ac5495ccbb2eeda51bb2bbbc4f3c0a76c0393a491b7610af703d3d2deb6cf60e37e59c81ceeca803ffde745dbf309
   languageName: node
   linkType: hard
 
@@ -9878,23 +9859,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"autoprefixer@npm:^10.6.2":
-  version: 10.6.2
-  resolution: "autoprefixer@npm:10.6.2"
-  dependencies:
-    browserslist: "npm:^4.28.9"
-    caniuse-lite: "npm:^1.0.30001810"
-    fraction.js: "npm:^5.3.4"
-    picocolors: "npm:^1.1.1"
-    postcss-value-parser: "npm:^4.2.0"
-  peerDependencies:
-    postcss: ^8.1.0
-  bin:
-    autoprefixer: bin/autoprefixer
-  checksum: 10c0/16dce8742468c4f956205f2ad3a1b4a8da5a298533796077110dcddd2dfcc439fea693c03aaf503db080c10b24f0a286ae841a54dbd8f78b1aba4a690ac5b7f7
-  languageName: node
-  linkType: hard
-
 "avvio@npm:^9.0.0":
   version: 9.3.1
   resolution: "avvio@npm:9.3.1"
@@ -10535,7 +10499,6 @@ __metadata:
     "@types/koa-cash": "npm:^4.1.4"
     "@types/koa-static": "npm:^4.0.4"
     "@types/node": "npm:^26.6.6"
-    "@types/node-fetch": "npm:^2.6.13"
     "@types/npm-package-arg": "npm:^6.1.4"
     "@types/progress-stream": "npm:^2.0.5"
     "@types/react": "npm:^19.3.0"
@@ -10545,7 +10508,6 @@ __metadata:
     "@types/stream-json": "npm:^1.7.8"
     animejs: "npm:^3.2.2"
     array-to-sentence: "npm:^2.0.0"
-    autoprefixer: "npm:^10.6.2"
     axios: "npm:^1.21.0"
     balloon-css: "npm:^1.2.0"
     bfj: "npm:^9.1.4"
@@ -10598,7 +10560,6 @@ __metadata:
     mkdir-promise: "npm:^1.0.0"
     natural: "npm:^8.2.6"
     next: "npm:^16.4.5"
-    node-fetch: "npm:^3.3.2"
     nodemon: "npm:^3.1.14"
     normalize.css: "npm:^8.0.1"
     npm-package-arg: "npm:^14.0.0"
@@ -13889,19 +13850,6 @@ __metadata:
     mime-types: "npm:^2.1.12"
     safe-buffer: "npm:^5.2.1"
   checksum: 10c0/af7cb13fc8423ff95fd59c62d101c84b5458a73e1e426b0bc459afbf5b93b1e447dc6c225ac31c6df59f36b209904a3f1a10b4eb9e7a17e0fe394019749142cc
-  languageName: node
-  linkType: hard
-
-"form-data@npm:^4.0.4":
-  version: 4.0.5
-  resolution: "form-data@npm:4.0.5"
-  dependencies:
-    asynckit: "npm:^0.4.0"
-    combined-stream: "npm:^1.0.8"
-    es-set-tostringtag: "npm:^2.1.0"
-    hasown: "npm:^2.0.2"
-    mime-types: "npm:^2.1.12"
-  checksum: 10c0/dd6b767ee0bbd6d84039db12a0fa5a2028160ffbfaba1800695713b46ae974a5f6e08b3356c3195137f8530dcd9dfcb5d5ae1eeff53d0db1e5aad863b619ce3b
   languageName: node
   linkType: hard
 
@@ -21000,7 +20948,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.5.25, postcss@npm:^8.5.32":
+"postcss@npm:^8.5.32":
   version: 8.5.32
   resolution: "postcss@npm:8.5.32"
   dependencies:
