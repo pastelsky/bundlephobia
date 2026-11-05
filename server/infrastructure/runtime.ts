@@ -50,7 +50,7 @@ const requestQueue = new Queue({
   concurrency: 4,
   // Four active builds and at most sixteen waiting.
   maxJobs: 20,
-  maxAge: 60 * 2,
+  maxAge: 30,
 })
 
 registerQueueMetrics(applicationMetrics, 'analysis', () =>
