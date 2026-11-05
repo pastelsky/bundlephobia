@@ -1,4 +1,4 @@
-/* eslint-disable anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion, anti-slop/no-array-filter-map */
+/* eslint-disable anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion, anti-slop/no-array-filter-map, jsx-a11y/prefer-tag-over-role */
 
 import React, {
   useLayoutEffect,
@@ -257,7 +257,7 @@ export default function TrendsChart({
         )
       : []
 
-  /* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role */
+  /* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */
   return (
     <div className="trends-chart">
       <div className="trends-chart__layout">
@@ -681,5 +681,5 @@ export default function TrendsChart({
       </div>
     </div>
   )
-  /* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex, jsx-a11y/prefer-tag-over-role */
+  /* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */
 }
