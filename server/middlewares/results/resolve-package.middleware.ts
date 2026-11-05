@@ -12,12 +12,17 @@ import { debug, logger } from '../../infrastructure/runtime'
 
 function prefersBuiltRelease(ctx: Context, version: string | null) {
   const hasCrawlerCachePreference =
-    ctx.get('X-Bundlephobia-Prefer-Cached') === 'true'
+    ctx.get('X-Bundlephobia-Prefer-Cached') === 'true' ||
+    ctx.state.analysis.circuitBreakerActive === true
 
   const forceWasRequested = ctx.query.force === 'true'
   const isLatestVersion = version === null || version === 'latest'
 
-  return hasCrawlerCachePreference && !forceWasRequested && isLatestVersion
+  return (
+    hasCrawlerCachePreference &&
+    (!forceWasRequested || ctx.state.analysis.circuitBreakerActive) &&
+    isLatestVersion
+  )
 }
 
 async function serveBuiltRelease(
@@ -62,7 +67,11 @@ export function createResolvePackageMiddleware(
   cache?: Pick<CacheServiceClient, 'getLatestBuiltPackageSize'>,
 ): Middleware {
   return async (ctx, next) => {
-    ctx.state.analysis = { language: 'javascript', operation }
+    ctx.state.analysis = {
+      ...ctx.state.analysis,
+      language: 'javascript',
+      operation,
+    }
     const packageQuery = ctx.query.package
 
     const packageString = Array.isArray(packageQuery)

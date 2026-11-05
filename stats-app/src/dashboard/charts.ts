@@ -590,4 +590,53 @@ const resources = {
   },
 } satisfies Record<string, ChartDefinition>
 
-export const CHARTS = { ...traffic, ...pipeline, ...resources }
+const emergency = {
+  circuitActivations: {
+    id: 'circuit-activations',
+    title: 'Emergency circuit activations',
+    description:
+      'Transitions into cache-only mode; repeated rejected requests do not count as activations',
+    unit: 'activations',
+    measurement: 'counter',
+    format: value => numberFormat.format(value),
+    series: window => [
+      {
+        expression: `sum by (reason) (increase(bundlephobia_build_circuit_breaker_activations_total[${window}]))`,
+        groupBy: { label: 'reason' },
+      },
+    ],
+  },
+  circuitResponses: {
+    id: 'circuit-responses',
+    title: 'Responses during emergency cache mode',
+    description:
+      'Origin cache results served and cold requests rejected while active; cached results include requests that would normally hit cache',
+    unit: 'responses',
+    measurement: 'counter',
+    format: value => numberFormat.format(value),
+    series: window => [
+      {
+        expression: `sum by (result) (increase(bundlephobia_build_circuit_breaker_responses_total[${window}]))`,
+        groupBy: { label: 'result' },
+      },
+    ],
+  },
+  circuitState: {
+    id: 'circuit-state',
+    title: 'Emergency circuit state',
+    description:
+      '1 means cold builds are paused; 0 means disk admission is healthy',
+    unit: 'state',
+    format: value => numberFormat.format(value),
+    series: () => [
+      {
+        expression: 'max(bundlephobia_build_circuit_breaker_active)',
+        name: 'Active',
+        color: 'rose',
+      },
+    ],
+    chart: { type: 'line', minValue: 0, maxValue: 1, allowDecimals: false },
+  },
+} satisfies Record<string, ChartDefinition>
+
+export const CHARTS = { ...traffic, ...pipeline, ...resources, ...emergency }
