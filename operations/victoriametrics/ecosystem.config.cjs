@@ -14,7 +14,7 @@ module.exports = {
         '-retentionPeriod=15d',
         '-httpListenAddr=127.0.0.1:8428',
         '-http.pathPrefix=/stats',
-        // Cache allowance is not an RSS cap; leave room below PM2's 128M guard.
+        // Cache allowance is not an RSS cap; PM2 also needs room for process overhead.
         '-memory.allowedBytes=32MiB',
         '-search.maxConcurrentRequests=2',
         '-search.maxMemoryPerQuery=16MiB',
@@ -24,7 +24,7 @@ module.exports = {
         '-loggerLevel=WARN',
       ],
       autorestart: true,
-      max_memory_restart: '128M',
+      max_memory_restart: '256M',
       restart_delay: 1000,
       kill_timeout: 10000,
       watch: false,
