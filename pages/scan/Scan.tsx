@@ -154,6 +154,8 @@ class Scan extends Component<ScanProps, ScanState> {
     const persistedScanState = this.readPersistedScanState()
 
     if (persistedScanState) {
+      // sessionStorage is available only after hydration, so restore it after mount.
+      // oxlint-disable-next-line react/no-did-mount-set-state
       this.setState(
         {
           packages: persistedScanState.packages,
@@ -166,7 +168,6 @@ class Scan extends Component<ScanProps, ScanState> {
       const urlQuery = this.props.router?.query?.url
 
       if (urlQuery && !Array.isArray(urlQuery)) {
-        this.setState({ remoteUrlInput: urlQuery, isUrlFormOpen: true })
         this.fetchRemotePackageJson(urlQuery)
       }
     }
@@ -184,7 +185,6 @@ class Scan extends Component<ScanProps, ScanState> {
     })
 
     if (urlToFetch) {
-      this.setState({ remoteUrlInput: urlToFetch, isUrlFormOpen: true })
       this.fetchRemotePackageJson(urlToFetch)
     }
   }
@@ -323,6 +323,7 @@ class Scan extends Component<ScanProps, ScanState> {
 
     const normalizedUrl = normalizePackageJsonUrl(inputUrl)
     this.setState({
+      remoteUrlInput: inputUrl,
       isLoadingRemoteUrl: true,
       remoteUrlError: null,
       isUrlFormOpen: true,
@@ -517,6 +518,7 @@ class Scan extends Component<ScanProps, ScanState> {
                 <label>
                   <input
                     type="checkbox"
+                    aria-label={`Select ${name} for scanning`}
                     defaultChecked={selectedPackageValues.includes(
                       `${name}#${resolvedVersion}`,
                     )}
@@ -545,6 +547,7 @@ class Scan extends Component<ScanProps, ScanState> {
         <div>
           <Dropzone
             ref={this.dropzoneRef}
+            noClick={isUrlFormOpen}
             onDropAccepted={this.handleDropAccepted}
             onDropRejected={this.handleDropRejected}
             multiple={false}
@@ -554,101 +557,99 @@ class Scan extends Component<ScanProps, ScanState> {
               <div {...getRootProps({ className: 'scan__dropzone' })}>
                 <input {...getInputProps()} />
                 {isUrlFormOpen === false ? (
-              <>
-                <p>
-                  Drop a <code> package.json </code> file here
-                </p>
-                <Separator />
-                <div
-                  className="scan__dropzone-actions"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <Button
-                    className="scan__btn"
-                    type="button"
-                    variant="primary"
-                    onClick={() => this.dropzoneRef.current?.open()}
-                  >
-                    Upload <code> package.json </code>
-                  </Button>
-                  <Button
-                    className="scan__btn"
-                    type="button"
-                    variant="primary"
-                    onClick={e => {
-                      e.stopPropagation()
-                      this.setState({
-                        isUrlFormOpen: true,
-                        remoteUrlError: null,
-                      })
-                    }}
-                  >
-                    Scan from URL / GitHub
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p>
-                  Fetch <code> package.json </code> from URL or GitHub
-                </p>
-                <Separator />
-                <div
-                  className="scan__url-form-wrapper"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <form
-                    className="scan__url-form"
-                    onSubmit={this.handleRemoteUrlSubmit}
-                  >
-                    <input
-                      type="text"
-                      aria-label="Package.json URL"
-                      className="scan__url-input"
-                      placeholder="e.g. github.com/facebook/react or raw package.json URL"
-                      value={remoteUrlInput}
-                      onChange={e =>
-                        this.setState({ remoteUrlInput: e.target.value })
-                      }
-                      disabled={isLoadingRemoteUrl}
-                      autoFocus
-                    />
-                    <Button
-                      type="submit"
-                      className="scan__btn scan__url-btn"
-                      variant="primary"
-                      disabled={isLoadingRemoteUrl || !remoteUrlInput.trim()}
-                    >
-                      {isLoadingRemoteUrl ? 'Fetching...' : 'Fetch'}
-                    </Button>
-                    <IconButton
-                      type="button"
-                      className="scan__url-cancel-btn"
-                      onClick={e => {
-                        e.stopPropagation()
-                        this.setState({
-                          isUrlFormOpen: false,
-                          remoteUrlError: null,
-                          isLoadingRemoteUrl: false,
-                        })
-                      }}
-                      label="Cancel and return to upload view"
-                      variant="quiet"
-                    >
-                      ✕
-                    </IconButton>
-                  </form>
-
-                  {remoteUrlError && (
-                    <div className="scan__url-error-box">
-                      <h4 className="scan__url-error-code">FetchError</h4>
-                      <p className="scan__url-error-message">
-                        {remoteUrlError}
-                      </p>
+                  <>
+                    <p>
+                      Drop a <code> package.json </code> file here
+                    </p>
+                    <Separator />
+                    <div className="scan__dropzone-actions">
+                      <Button
+                        className="scan__btn"
+                        type="button"
+                        variant="primary"
+                        onClick={event => {
+                          event.stopPropagation()
+                          this.dropzoneRef.current?.open()
+                        }}
+                      >
+                        Upload <code> package.json </code>
+                      </Button>
+                      <Button
+                        className="scan__btn"
+                        type="button"
+                        variant="primary"
+                        onClick={e => {
+                          e.stopPropagation()
+                          this.setState({
+                            isUrlFormOpen: true,
+                            remoteUrlError: null,
+                          })
+                        }}
+                      >
+                        Scan from URL / GitHub
+                      </Button>
                     </div>
-                  )}
-                </div>
-              </>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      Fetch <code> package.json </code> from URL or GitHub
+                    </p>
+                    <Separator />
+                    <div className="scan__url-form-wrapper">
+                      <form
+                        className="scan__url-form"
+                        onSubmit={this.handleRemoteUrlSubmit}
+                      >
+                        <input
+                          type="text"
+                          aria-label="Package.json URL"
+                          className="scan__url-input"
+                          placeholder="e.g. github.com/facebook/react or raw package.json URL"
+                          value={remoteUrlInput}
+                          onChange={e =>
+                            this.setState({ remoteUrlInput: e.target.value })
+                          }
+                          disabled={isLoadingRemoteUrl}
+                        />
+                        <Button
+                          type="submit"
+                          className="scan__btn scan__url-btn"
+                          variant="primary"
+                          disabled={
+                            isLoadingRemoteUrl || !remoteUrlInput.trim()
+                          }
+                        >
+                          {isLoadingRemoteUrl ? 'Fetching...' : 'Fetch'}
+                        </Button>
+                        <IconButton
+                          type="button"
+                          className="scan__url-cancel-btn"
+                          onClick={e => {
+                            e.stopPropagation()
+                            this.setState({
+                              isUrlFormOpen: false,
+                              remoteUrlError: null,
+                              isLoadingRemoteUrl: false,
+                            })
+                          }}
+                          label="Cancel and return to upload view"
+                          variant="quiet"
+                        >
+                          ✕
+                        </IconButton>
+                      </form>
+
+                      {remoteUrlError && (
+                        <div className="scan__url-error-box">
+                          <h4 className="scan__url-error-code">FetchError</h4>
+                          <p className="scan__url-error-message">
+                            {remoteUrlError}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             )}

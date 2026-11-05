@@ -6,7 +6,7 @@ import {
   getAllPackageExports as getPackageExports,
   eventQueue,
 } from 'package-build-stats'
-import Amplitude from '@amplitude/node'
+import { init as initAmplitude } from '@amplitude/node'
 import { Counter } from 'prom-client'
 import serializeError from './serializeError.js'
 import { measureBuild } from './metrics.js'
@@ -108,7 +108,7 @@ function sendBuildError(res, packageString, error) {
 }
 
 if (process.env.AMPLITUDE_API_KEY) {
-  const client = Amplitude.init(process.env.AMPLITUDE_API_KEY)
+  const client = initAmplitude(process.env.AMPLITUDE_API_KEY)
 
   eventQueue.on('*', (event, details) => {
     client.logEvent({

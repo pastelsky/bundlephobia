@@ -143,6 +143,11 @@
 }
 
 .trends-chip {
+  min-inline-size: 0;
+  margin: 0;
+  border-style: solid;
+  padding-block: 0;
+
   display: inline-flex;
   align-items: center;
   height: 28px;

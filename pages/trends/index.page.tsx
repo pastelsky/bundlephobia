@@ -189,9 +189,17 @@ export default function TrendsPage({
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
 
   const requestKey = JSON.stringify([packages, range])
-  const trendsData = loadState.data
-  const loading = loadState.status === 'pending' && loadState.showLoading
-  const error = loadState.status === 'error' ? loadState.message : null
+
+  const displayedLoadState =
+    packages.length === 0 ? { status: 'empty' as const, data: null } : loadState
+
+  const trendsData = displayedLoadState.data
+
+  const loading =
+    displayedLoadState.status === 'pending' && displayedLoadState.showLoading
+
+  const error =
+    displayedLoadState.status === 'error' ? displayedLoadState.message : null
 
   const loadedPackageNames = new Set(
     trendsData?.range === range
@@ -251,6 +259,8 @@ export default function TrendsPage({
 
     const nextPackages = getSelectedPackages(queryPackages)
 
+    // Router query state arrives after Next.js hydrates this page.
+    // oxlint-disable-next-line react/set-state-in-effect
     setPackages(current =>
       current.join(',') === nextPackages.join(',') ? current : nextPackages,
     )
@@ -264,13 +274,13 @@ export default function TrendsPage({
   // Curated similarity is useful only when the classifier is confident. Broad
   // frameworks otherwise receive purpose-level comparison peers instead.
   useEffect(() => {
-    let isMounted = true
+    const lifecycle = { active: true }
     Promise.all(
       packages.map(packageName =>
         API.getSimilar(packageName).catch(() => null),
       ),
     ).then(results => {
-      if (!isMounted) return
+      if (!lifecycle.active) return
 
       const { recommendations, autocompleteQueries } = getTrendsRecommendations(
         {
@@ -284,7 +294,7 @@ export default function TrendsPage({
     })
 
     return () => {
-      isMounted = false
+      lifecycle.active = false
     }
   }, [packages])
 
@@ -321,20 +331,17 @@ export default function TrendsPage({
   // Fetch trends data
   useEffect(() => {
     if (packages.length === 0) {
-      setLoadState({ status: 'empty', data: null })
-
       return
     }
 
-    let isMounted = true
+    const lifecycle = { active: true }
     const startedAt = performance.now()
     // An indicator that flashes for a quick cache or network response is more
     // distracting than helpful. Keep the current chart visible until a request
     // has genuinely taken long enough to need a loading state.
-    startLoading()
 
     const loadingTimer = window.setTimeout(() => {
-      if (isMounted) {
+      if (lifecycle.active) {
         setLoadState(current => ({
           status: 'pending',
           data: current.data,
@@ -347,7 +354,7 @@ export default function TrendsPage({
       .then(res => {
         window.clearTimeout(loadingTimer)
 
-        if (isMounted) {
+        if (lifecycle.active) {
           setLoadState({ status: 'ready', data: res, requestKey })
           trackTrendsLoad(res, packages.length, range, startedAt)
         }
@@ -355,7 +362,7 @@ export default function TrendsPage({
       .catch(err => {
         window.clearTimeout(loadingTimer)
 
-        if (isMounted) {
+        if (lifecycle.active) {
           setLoadState(current => ({
             status: 'error',
             data: current.data,
@@ -370,7 +377,7 @@ export default function TrendsPage({
       })
 
     return () => {
-      isMounted = false
+      lifecycle.active = false
       window.clearTimeout(loadingTimer)
     }
   }, [packages, range, requestKey, startLoading])
@@ -523,12 +530,8 @@ export default function TrendsPage({
         <section className="trends-search">
           <div className="trends-search__chips">
             {packages.map((pkg, index) => (
-              <div
-                key={pkg}
-                className="trends-chip"
-                role="group"
-                aria-label={`${pkg} selected package`}
-              >
+              <fieldset key={pkg} className="trends-chip">
+                <legend className="sr-only">Selected package: {pkg}</legend>
                 <span
                   className="trends-chip__color"
                   style={{
@@ -537,7 +540,7 @@ export default function TrendsPage({
                   }}
                 />
                 <span className="trends-chip__name">{pkg}</span>
-                {loadState.status === 'pending' &&
+                {displayedLoadState.status === 'pending' &&
                   !loadedPackageNames.has(pkg) && (
                     <output
                       className="trends-chip__spinner"
@@ -553,7 +556,7 @@ export default function TrendsPage({
                 >
                   ×
                 </Button>
-              </div>
+              </fieldset>
             ))}
 
             {packages.length < MAX_PACKAGES && (
@@ -671,9 +674,11 @@ export default function TrendsPage({
           <div className="trends-toolbar__group trends-toolbar__group--overlays">
             <span className="trends-toolbar__label">Overlays</span>
             <div className="trends-overlays">
-              <label className="trends-toggle">
+              <label className="trends-toggle" htmlFor="show-major-releases">
                 <Checkbox.Root
+                  id="show-major-releases"
                   checked={showMajorReleases}
+                  aria-label="Toggle major version release markers"
                   onCheckedChange={enabled =>
                     handleReleaseOverlayChange('major_releases', enabled)
                   }
@@ -690,9 +695,11 @@ export default function TrendsPage({
                   aria-hidden="true"
                 />
               </label>
-              <label className="trends-toggle">
+              <label className="trends-toggle" htmlFor="show-minor-releases">
                 <Checkbox.Root
+                  id="show-minor-releases"
                   checked={showMinorReleases}
+                  aria-label="Toggle minor version release markers"
                   onCheckedChange={enabled =>
                     handleReleaseOverlayChange('minor_releases', enabled)
                   }

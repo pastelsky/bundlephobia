@@ -1,6 +1,12 @@
 /* eslint-disable anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion, anti-slop/no-array-filter-map */
 
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import anime from 'animejs'
 import { bisector } from 'd3-array'
 
@@ -33,6 +39,12 @@ const useIsomorphicLayoutEffect =
 const CHART_EASING = 'easeOutCubic'
 
 const DOT_MAGNET_RADIUS = 9
+
+const subscribeToNothing = () => () => undefined
+
+const getClientMountedSnapshot = () => true
+
+const getServerMountedSnapshot = () => false
 
 type TrendsChartProps = {
   packages: TrendsPackageSeries[]
@@ -79,7 +91,12 @@ export default function TrendsChart({
   actions,
   loading = false,
 }: TrendsChartProps) {
-  const [mounted, setMounted] = useState(false)
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    getClientMountedSnapshot,
+    getServerMountedSnapshot,
+  )
+
   const [showLoader, setShowLoader] = useState(loading && packages.length === 0)
 
   const [hover, setHover] = useState<{
@@ -154,8 +171,6 @@ export default function TrendsChart({
       loaderAnimation.pause()
     }
   }, [incrementalLoading, loading, showLoader])
-
-  React.useEffect(() => setMounted(true), [])
 
   const model = useMemo(
     () =>
@@ -242,6 +257,7 @@ export default function TrendsChart({
         )
       : []
 
+  /* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */
   return (
     <div className="trends-chart">
       <div className="trends-chart__layout">
@@ -249,21 +265,75 @@ export default function TrendsChart({
         <div className="trends-chart__plot">
           <div className="trends-chart__series" ref={chartSeriesRef}>
             {!model && !showLoader && (
-              <div className="trends-chart__no-data" role="status">
+              <output className="trends-chart__no-data">
                 <strong>No {metric} data points are available.</strong>
                 <span>Try another metric or time range.</span>
-              </div>
+              </output>
             )}
             {model && (
-              <svg
-                ref={svgRef}
-                className="trends-chart__svg"
-                viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`}
-                role="img"
-                aria-label={`${metric} trends chart`}
+              <div
+                className="trends-chart__interactive"
+                role="application"
+                aria-label={`${metric} trends chart. Use the left and right arrow keys to inspect data points.`}
+                tabIndex={0}
+                onKeyDown={event => {
+                  if (event.key === 'Escape') {
+                    setHover(null)
+
+                    return
+                  }
+
+                  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+                    return
+                  }
+
+                  const points = model.series
+                    .flatMap(series => [
+                      ...series.points,
+                      ...series.partialMarkers,
+                      ...series.releaseMarkers,
+                    ])
+                    .sort((pointA, pointB) => pointA.x - pointB.x)
+
+                  if (points.length === 0) return
+
+                  event.preventDefault()
+
+                  const currentIndex = hover
+                    ? points.reduce(
+                        (nearestIndex, point, index) =>
+                          Math.abs(point.x - hover.x) <
+                          Math.abs(points[nearestIndex].x - hover.x)
+                            ? index
+                            : nearestIndex,
+                        0,
+                      )
+                    : 0
+
+                  const nextIndex = Math.max(
+                    0,
+                    Math.min(
+                      points.length - 1,
+                      currentIndex + (event.key === 'ArrowRight' ? 1 : -1),
+                    ),
+                  )
+
+                  const point = points[nextIndex]
+
+                  setHover({
+                    x: point.x,
+                    cursorX: point.x,
+                    cursorY: CHART_HEIGHT / 2,
+                    timestamp: Date.parse(point.date),
+                    pointDate: point.date,
+                  })
+                }}
                 onMouseLeave={() => setHover(null)}
+                // eslint-disable-next-line complexity
                 onMouseMove={event => {
-                  const rect = event.currentTarget.getBoundingClientRect()
+                  const rect = svgRef.current?.getBoundingClientRect()
+
+                  if (!rect) return
 
                   const relativeX =
                     ((event.clientX - rect.left) / rect.width) * chartWidth
@@ -306,220 +376,229 @@ export default function TrendsChart({
                   })
                 }}
               >
-                <defs>
-                  {model.series.map((series, index) => (
-                    <clipPath
-                      key={series.renderKey}
-                      id={`trends-series-clip-${index}`}
-                    >
-                      <rect
-                        data-series-clip
-                        className="trends-chart__series-clip"
-                        x={PLOT.left}
-                        y={PLOT.top}
-                        width={model.plotWidth}
-                        height={model.plotHeight}
-                      />
-                    </clipPath>
-                  ))}
-                </defs>
-                {model.yTicks.map(value => {
-                  const y = model.yFor(value)
+                <svg
+                  ref={svgRef}
+                  className="trends-chart__svg"
+                  viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`}
+                  aria-hidden="true"
+                >
+                  <defs>
+                    {model.series.map((series, index) => (
+                      <clipPath
+                        key={series.renderKey}
+                        id={`trends-series-clip-${index}`}
+                      >
+                        <rect
+                          data-series-clip
+                          className="trends-chart__series-clip"
+                          x={PLOT.left}
+                          y={PLOT.top}
+                          width={model.plotWidth}
+                          height={model.plotHeight}
+                        />
+                      </clipPath>
+                    ))}
+                  </defs>
+                  {model.yTicks.map(value => {
+                    const y = model.yFor(value)
 
-                  return (
-                    <g key={value}>
+                    return (
+                      <g key={value}>
+                        <line
+                          className="trends-chart__grid"
+                          x1={PLOT.left}
+                          x2={PLOT.left + model.plotWidth}
+                          y1={y}
+                          y2={y}
+                        />
+                        <text
+                          className="trends-chart__axis-label"
+                          x={PLOT.left + 6}
+                          y={y <= PLOT.top + 20 ? y + 13 : y - 7}
+                          textAnchor="start"
+                        >
+                          <tspan>
+                            {formatMetricValue(value, metric).value}
+                          </tspan>
+                          {formatMetricValue(value, metric).unit && (
+                            <tspan className="trends-chart__axis-unit">
+                              {formatMetricValue(value, metric).unit}
+                            </tspan>
+                          )}
+                        </text>
+                      </g>
+                    )
+                  })}
+                  {model.xTicks.map((tick, index) => (
+                    <g key={tick.toISOString()}>
                       <line
-                        className="trends-chart__grid"
-                        x1={PLOT.left}
-                        x2={PLOT.left + model.plotWidth}
-                        y1={y}
-                        y2={y}
+                        className="trends-chart__axis-tick"
+                        x1={model.xForDate(tick)}
+                        x2={model.xForDate(tick)}
+                        y1={PLOT.top + model.plotHeight}
+                        y2={PLOT.top + model.plotHeight + 6}
                       />
                       <text
-                        className="trends-chart__axis-label"
-                        x={PLOT.left + 6}
-                        y={y <= PLOT.top + 20 ? y + 13 : y - 7}
-                        textAnchor="start"
+                        className="trends-chart__axis-label trends-chart__axis-label--x"
+                        x={model.xForDate(tick)}
+                        y={CHART_HEIGHT - 10}
+                        textAnchor={
+                          index === 0
+                            ? 'start'
+                            : index === model.xTicks.length - 1
+                              ? 'end'
+                              : 'middle'
+                        }
                       >
-                        <tspan>{formatMetricValue(value, metric).value}</tspan>
-                        {formatMetricValue(value, metric).unit && (
-                          <tspan className="trends-chart__axis-unit">
-                            {formatMetricValue(value, metric).unit}
-                          </tspan>
-                        )}
+                        {formatDateTick(tick)}
                       </text>
                     </g>
-                  )
-                })}
-                {model.xTicks.map((tick, index) => (
-                  <g key={tick.toISOString()}>
-                    <line
-                      className="trends-chart__axis-tick"
-                      x1={model.xForDate(tick)}
-                      x2={model.xForDate(tick)}
-                      y1={PLOT.top + model.plotHeight}
-                      y2={PLOT.top + model.plotHeight + 6}
-                    />
-                    <text
-                      className="trends-chart__axis-label trends-chart__axis-label--x"
-                      x={model.xForDate(tick)}
-                      y={CHART_HEIGHT - 10}
-                      textAnchor={
-                        index === 0
-                          ? 'start'
-                          : index === model.xTicks.length - 1
-                            ? 'end'
-                            : 'middle'
-                      }
-                    >
-                      {formatDateTick(tick)}
-                    </text>
-                  </g>
-                ))}
-                <line
-                  className="trends-chart__axis"
-                  x1={PLOT.left}
-                  x2={PLOT.left + model.plotWidth}
-                  y1={PLOT.top + model.plotHeight}
-                  y2={PLOT.top + model.plotHeight}
-                />
-                {model.releaseLines.map((release, index) => (
+                  ))}
                   <line
-                    key={`${release.date}-${release.version}-${index}`}
-                    className={
-                      release.major
-                        ? 'trends-chart__overlay trends-chart__overlay--major'
-                        : 'trends-chart__overlay trends-chart__overlay--minor'
-                    }
-                    x1={release.x}
-                    x2={release.x}
-                    y1={PLOT.top}
+                    className="trends-chart__axis"
+                    x1={PLOT.left}
+                    x2={PLOT.left + model.plotWidth}
+                    y1={PLOT.top + model.plotHeight}
                     y2={PLOT.top + model.plotHeight}
-                    stroke={release.color}
                   />
-                ))}
-                {model.series.map((series, index) => (
-                  <g
-                    key={series.renderKey}
-                    data-chart-series
-                    data-series-name={series.name}
-                    clipPath={`url(#trends-series-clip-${index})`}
-                  >
-                    <path
-                      className="trends-chart__line"
-                      d={pathFor(series.points)}
-                      stroke={series.color}
+                  {model.releaseLines.map((release, index) => (
+                    <line
+                      key={`${release.date}-${release.version}-${index}`}
+                      className={
+                        release.major
+                          ? 'trends-chart__overlay trends-chart__overlay--major'
+                          : 'trends-chart__overlay trends-chart__overlay--minor'
+                      }
+                      x1={release.x}
+                      x2={release.x}
+                      y1={PLOT.top}
+                      y2={PLOT.top + model.plotHeight}
+                      stroke={release.color}
                     />
-                    {series.partialPoints.length > 1 && (
+                  ))}
+                  {model.series.map((series, index) => (
+                    <g
+                      key={series.renderKey}
+                      data-chart-series
+                      data-series-name={series.name}
+                      clipPath={`url(#trends-series-clip-${index})`}
+                    >
                       <path
-                        className="trends-chart__line trends-chart__line--partial"
-                        d={pathFor(series.partialPoints)}
+                        className="trends-chart__line"
+                        d={pathFor(series.points)}
                         stroke={series.color}
                       />
-                    )}
-                    {series.denseMarkerPath && (
-                      <path
-                        data-series-marker-path
-                        data-point-count={series.points.length}
-                        className="trends-chart__series-marker-path"
-                        d={series.denseMarkerPath}
-                        fill={series.color}
-                      />
-                    )}
-                    {series.markers.map(point => (
-                      <circle
-                        key={`${series.name}-${point.date}`}
-                        data-series-dot
-                        className="trends-chart__series-dot"
-                        cx={point.x}
-                        cy={point.y}
-                        r="2.65"
-                        fill={series.color}
-                        opacity="1"
-                      />
-                    ))}
-                    {series.partialMarkers.map(point => (
-                      <circle
-                        key={`${series.name}-${point.date}-partial`}
-                        data-series-dot
-                        className="trends-chart__series-dot trends-chart__series-dot--partial"
-                        cx={point.x}
-                        cy={point.y}
-                        r="2.65"
-                        fill={series.color}
-                        opacity="1"
-                      />
-                    ))}
-                    {[
-                      ...series.points,
-                      ...series.partialMarkers,
-                      ...series.releaseMarkers,
-                    ]
-                      .filter(point => hover?.pointDate === point.date)
-                      .map(point => (
+                      {series.partialPoints.length > 1 && (
+                        <path
+                          className="trends-chart__line trends-chart__line--partial"
+                          d={pathFor(series.partialPoints)}
+                          stroke={series.color}
+                        />
+                      )}
+                      {series.denseMarkerPath && (
+                        <path
+                          data-series-marker-path
+                          data-point-count={series.points.length}
+                          className="trends-chart__series-marker-path"
+                          d={series.denseMarkerPath}
+                          fill={series.color}
+                        />
+                      )}
+                      {series.markers.map(point => (
                         <circle
-                          key={`${series.name}-${point.date}-magnet`}
-                          className="trends-chart__series-dot-magnet"
+                          key={`${series.name}-${point.date}`}
+                          data-series-dot
+                          className="trends-chart__series-dot"
                           cx={point.x}
                           cy={point.y}
-                          r="6"
-                          stroke={series.color}
-                          fill={
-                            point.placeholder
-                              ? 'var(--color-text-muted)'
-                              : 'none'
-                          }
+                          r="2.65"
+                          fill={series.color}
+                          opacity="1"
                         />
                       ))}
-                    {series.releaseMarkers.map(point => (
-                      <circle
-                        key={`${series.name}-${point.date}-${point.version}-release`}
-                        data-series-dot
-                        data-series-name={series.name}
-                        className="trends-chart__series-dot trends-chart__series-dot--placeholder"
-                        cx={point.x}
-                        cy={point.y}
-                        r="3"
-                        fill="var(--color-text-muted)"
-                        opacity="0.85"
-                      />
-                    ))}
-                  </g>
-                ))}
-                {model.seriesAnnotations.map(annotation => (
-                  <g
-                    key={`${annotation.name}-${metric}-${range}-${groupBy}-annotation`}
-                    className="trends-chart__series-annotation"
-                  >
-                    <a
-                      href={`/package/${annotation.name}`}
-                      className="trends-chart__series-annotation-link"
+                      {series.partialMarkers.map(point => (
+                        <circle
+                          key={`${series.name}-${point.date}-partial`}
+                          data-series-dot
+                          className="trends-chart__series-dot trends-chart__series-dot--partial"
+                          cx={point.x}
+                          cy={point.y}
+                          r="2.65"
+                          fill={series.color}
+                          opacity="1"
+                        />
+                      ))}
+                      {[
+                        ...series.points,
+                        ...series.partialMarkers,
+                        ...series.releaseMarkers,
+                      ]
+                        .filter(point => hover?.pointDate === point.date)
+                        .map(point => (
+                          <circle
+                            key={`${series.name}-${point.date}-magnet`}
+                            className="trends-chart__series-dot-magnet"
+                            cx={point.x}
+                            cy={point.y}
+                            r="6"
+                            stroke={series.color}
+                            fill={
+                              point.placeholder
+                                ? 'var(--color-text-muted)'
+                                : 'none'
+                            }
+                          />
+                        ))}
+                      {series.releaseMarkers.map(point => (
+                        <circle
+                          key={`${series.name}-${point.date}-${point.version}-release`}
+                          data-series-dot
+                          data-series-name={series.name}
+                          className="trends-chart__series-dot trends-chart__series-dot--placeholder"
+                          cx={point.x}
+                          cy={point.y}
+                          r="3"
+                          fill="var(--color-text-muted)"
+                          opacity="0.85"
+                        />
+                      ))}
+                    </g>
+                  ))}
+                  {model.seriesAnnotations.map(annotation => (
+                    <g
+                      key={`${annotation.name}-${metric}-${range}-${groupBy}-annotation`}
+                      className="trends-chart__series-annotation"
                     >
-                      <path
-                        d={annotationPath(annotation)}
-                        stroke={annotation.color}
-                      />
-                      <text
-                        x={annotation.labelX}
-                        y={annotation.labelY}
-                        textAnchor="start"
-                        fill={annotation.color}
+                      <a
+                        href={`/package/${annotation.name}`}
+                        className="trends-chart__series-annotation-link"
                       >
-                        {annotation.name}
-                      </text>
-                    </a>
-                  </g>
-                ))}
-                {hover && (
-                  <line
-                    className="trends-chart__hover-line"
-                    x1={hover.x}
-                    x2={hover.x}
-                    y1={PLOT.top}
-                    y2={PLOT.top + model.plotHeight}
-                  />
-                )}
-              </svg>
+                        <path
+                          d={annotationPath(annotation)}
+                          stroke={annotation.color}
+                        />
+                        <text
+                          x={annotation.labelX}
+                          y={annotation.labelY}
+                          textAnchor="start"
+                          fill={annotation.color}
+                        >
+                          {annotation.name}
+                        </text>
+                      </a>
+                    </g>
+                  ))}
+                  {hover && (
+                    <line
+                      className="trends-chart__hover-line"
+                      x1={hover.x}
+                      x2={hover.x}
+                      y1={PLOT.top}
+                      y2={PLOT.top + model.plotHeight}
+                    />
+                  )}
+                </svg>
+              </div>
             )}
           </div>
           {hover && tooltipRows.length > 0 && (
@@ -601,4 +680,5 @@ export default function TrendsChart({
       </div>
     </div>
   )
+  /* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */
 }
