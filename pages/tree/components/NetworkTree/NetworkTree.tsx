@@ -1,5 +1,3 @@
-import React from 'react'
-
 type TreeNode = {
   name: string
   version: string | null
@@ -16,6 +14,8 @@ type NetworkTreeProps = {
   links: TreeLink[]
 }
 
-export default function NetworkTree(_: NetworkTreeProps) {
+export default function NetworkTree(props: NetworkTreeProps) {
+  void props
+
   return null
 }

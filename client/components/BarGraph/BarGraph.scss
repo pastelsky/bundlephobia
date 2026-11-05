@@ -24,6 +24,12 @@ $bar-grow-duration: 0.4s;
 }
 
 .bar-graph__bar-group {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: inherit;
   position: relative;
   height: 100%;
   margin: 0 3px;

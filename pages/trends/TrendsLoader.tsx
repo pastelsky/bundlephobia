@@ -32,13 +32,13 @@ export default function TrendsLoader() {
         '.trends-loader__dot',
       )
 
-    let stopped = false
+    const lifecycle = { stopped: false }
     let activeAnimations: anime.AnimeInstance[] = []
     let activeTimers: Array<ReturnType<typeof setTimeout>> = []
     let cycleTimer: ReturnType<typeof setTimeout> | undefined
 
     const animateIteration = () => {
-      if (stopped) return
+      if (lifecycle.stopped) return
 
       activeAnimations.forEach(animation => animation.pause())
       activeAnimations = []
@@ -249,7 +249,7 @@ export default function TrendsLoader() {
             expandedRadius: Number(expandedRadius.toFixed(2)),
           })
           scheduleAt(pulseStart, () => {
-            if (stopped) return
+            if (lifecycle.stopped) return
             debugLoader('dot:pulse-begin', {
               group: curveIndex,
               node: nodeIndex,
@@ -280,7 +280,7 @@ export default function TrendsLoader() {
             )
           })
           scheduleAt(fadeStart, () => {
-            if (stopped) return
+            if (lifecycle.stopped) return
             activeAnimations.push(
               anime({
                 targets: nodeElements[nodeIndex],
@@ -321,7 +321,7 @@ export default function TrendsLoader() {
     })
 
     return () => {
-      stopped = true
+      lifecycle.stopped = true
 
       if (cycleTimer) clearTimeout(cycleTimer)
       activeTimers.forEach(timer => clearTimeout(timer))
