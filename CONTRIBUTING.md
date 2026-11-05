@@ -7,6 +7,11 @@ If you're looking to make changes to the core logic – building of packages and
 
 ## Running locally
 
+### Node versions
+
+On MacOS you should probably use Node 16. Older versions of Node will give you trouble with Canvas and its prebuilt dependencies, while newer versions have trouble with
+[this issue](https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported)
+
 ### Adding the necessary keys (Optional)
 
 Add a `.env` file to the root with Algolia credentials. The server should still run without this, but some features might be disabled.
