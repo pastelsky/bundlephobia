@@ -159,3 +159,15 @@ describe('API failures and absent summaries', () => {
     expect(summary.responses).toEqual([])
   })
 })
+
+it('charts emergency activations and cache responses as separate counter increases', () => {
+  expect(CHARTS.circuitActivations.series('60s')[0].expression).toContain(
+    'increase(bundlephobia_build_circuit_breaker_activations_total[60s])',
+  )
+  expect(CHARTS.circuitResponses.series('60s')[0].expression).toContain(
+    'increase(bundlephobia_build_circuit_breaker_responses_total[60s])',
+  )
+  expect(CHARTS.circuitState.series('60s')[0].expression).toBe(
+    'max(bundlephobia_build_circuit_breaker_active)',
+  )
+})

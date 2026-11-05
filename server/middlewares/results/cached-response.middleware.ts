@@ -12,7 +12,7 @@ const cachedResponse: Middleware = async (ctx, next) => {
   const { name, version, packageString, language } = ctx.state.resolved
   const { operation } = ctx.state.analysis
 
-  if (force === 'true') {
+  if (force === 'true' && !ctx.state.analysis.circuitBreakerActive) {
     ctx.state.analysis.cache = 'bypass'
     await next()
 
@@ -55,7 +55,9 @@ const cachedResponse: Middleware = async (ctx, next) => {
         packageSpecifier: packageString,
       }),
     )
-    ctx.cacheControl = { maxAge: getBuildCacheMaxAge(force, packageQuery) }
+    ctx.cacheControl = ctx.state.analysis.circuitBreakerActive
+      ? { noStore: true }
+      : { maxAge: getBuildCacheMaxAge(force, packageQuery) }
 
     logCache({ hit: true, message: `CACHE HIT: ${packageString}` })
 

@@ -21,6 +21,8 @@ export interface PackageAnalysisRequestState {
   language: LanguageId
   operation: AnalysisOperation
   cache?: 'hit' | 'miss' | 'bypass' | 'unavailable'
+  circuitBreakerActive?: boolean
+  circuitBreakerRejected?: boolean
   buildRequested?: boolean
 }
 

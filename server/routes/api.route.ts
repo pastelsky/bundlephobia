@@ -8,6 +8,7 @@ import type {
 
 import CacheServiceClient from '../clients/cache-service.client'
 import { createAnalysisContextMiddleware } from '../middlewares/analysis-context.middleware'
+import buildCircuitAdmission from '../middlewares/build-circuit-admission.middleware'
 import buildMissRateLimit from '../middlewares/build-miss-rate-limit.middleware'
 import { createExportSizesMiddleware } from '../middlewares/exports-sizes.middleware'
 import exportsMiddleware from '../middlewares/exports.middleware'
@@ -54,6 +55,7 @@ export function registerApiRoutes(
     createResolvePackageMiddleware('package-analysis', cache),
     createCachedResponseMiddleware,
     failureBackoffMiddleware,
+    buildCircuitAdmission,
     buildRequestLimit,
     buildMiddleware,
   )
@@ -65,6 +67,7 @@ export function registerApiRoutes(
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-exports'),
     failureBackoffMiddleware,
+    buildCircuitAdmission,
     buildRequestLimit,
     exportsMiddleware,
   )
@@ -86,6 +89,7 @@ export function registerApiRoutes(
     createResolvePackageMiddleware('package-export-sizes'),
     createCachedResponseMiddleware,
     failureBackoffMiddleware,
+    buildCircuitAdmission,
     buildRequestLimit,
     exportSizesMiddleware,
   )

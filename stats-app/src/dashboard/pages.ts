@@ -100,6 +100,9 @@ export const PAGES: DashboardPage[] = [
     icon: Hammer,
     source: 'pipeline',
     panels: [
+      CHARTS.circuitState,
+      CHARTS.circuitActivations,
+      CHARTS.circuitResponses,
       CHARTS.cacheShare,
       CHARTS.cacheResponses,
       CHARTS.buildRequests,
@@ -116,6 +119,15 @@ export const PAGES: DashboardPage[] = [
       {
         id: 'all',
         title: 'All activity',
+      },
+      {
+        id: 'recovery',
+        title: 'Emergency recovery',
+        panels: [
+          CHARTS.circuitState,
+          CHARTS.circuitActivations,
+          CHARTS.circuitResponses,
+        ],
       },
       {
         id: 'queues',
