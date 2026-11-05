@@ -49,10 +49,6 @@ jobs:
         run: yarn lint
       - name: Run unit tests
         run: yarn test:unit --runInBand
-      - name: Test adaptive cleanup priority
-        run: |
-          bash -n operations/disk-clean.sh
-          node --test __tests__/disk-clean-priority.test.mjs
       - name: Test HAProxy request limits
         if: matrix.node-version == '24.x'
         run: |

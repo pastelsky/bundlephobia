@@ -35,132 +35,6 @@ get_loop_usage() {
         awk 'NR==2 {gsub(/%/, ""); print ($1+0 > $2+0 ? $1 : $2)}'
 }
 
-# Load is normalized to CPU count, not CPU utilization: 3.2 on four cores = 80%.
-get_cleanup_load_percent() {
-    local cores
-    cores=$(getconf _NPROCESSORS_ONLN) || return
-    awk -v cores="$cores" '{printf "%.0f\n", 100 * $1 / cores}' /proc/loadavg
-}
-
-cleanup_priority_level() {
-    local pressure="$1" previous="${2:-background}"
-    # Hysteresis keeps priority from oscillating at 80/90% boundaries.
-    if (( pressure >= 90 )); then
-        echo urgent
-    elif [[ "$previous" == urgent ]] && (( pressure >= 85 )); then
-        echo urgent
-    elif (( pressure >= 80 )); then
-        echo elevated
-    elif [[ "$previous" != background ]] && (( pressure >= 75 )); then
-        echo elevated
-    else
-        echo background
-    fi
-}
-
-cleanup_process_tree() {
-    ps -e -o pid=,ppid= | awk -v root="$1" '
-        { parent[$1]=$2 }
-        END {
-            found[root]=1
-            do {
-                changed=0
-                for (pid in parent) {
-                    if (!(pid in found) && (parent[pid] in found)) { found[pid]=1; changed=1 }
-                }
-            } while (changed)
-            for (pid in found) print pid
-        }'
-}
-
-set_cleanup_process_priority() {
-    local pid="$1" level="$2" nice_value io_class io_priority
-    case "$level" in
-        urgent) nice_value=0; io_class=2; io_priority=4 ;;
-        elevated) nice_value=10; io_class=2; io_priority=6 ;;
-        background) nice_value=19; io_class=3; io_priority=0 ;;
-        *) return 1 ;;
-    esac
-
-    # Never use real-time scheduling; serving processes retain normal priority.
-    if [[ "$level" == background ]]; then
-        chrt --idle --pid 0 "$pid" >/dev/null 2>&1 || return 1
-    else
-        chrt --other --pid 0 "$pid" >/dev/null 2>&1 || return 1
-    fi
-    renice -n "$nice_value" -p "$pid" >/dev/null 2>&1 || return 1
-    ionice -c "$io_class" -n "$io_priority" -p "$pid" >/dev/null 2>&1
-}
-
-cleanup_task_ids() {
-    local pid="$1" task
-    if [[ -d "/proc/$pid/task" ]]; then
-        for task in /proc/"$pid"/task/[0-9]*; do
-            [[ -d "$task" ]] && echo "${task##*/}"
-        done
-    else
-        echo "$pid"
-    fi
-}
-
-apply_cleanup_priority() {
-    local worker="$1" level="$2" pid task failures=0
-    while read -r pid; do
-        # Linux priorities belong to threads; include existing Bun/npm I/O threads.
-        while read -r task; do
-            if ! set_cleanup_process_priority "$task" "$level"; then
-                # A task can legitimately finish between ps and the priority call.
-                if kill -0 "$task" 2>/dev/null; then failures=$((failures + 1)); fi
-            fi
-        done < <(cleanup_task_ids "$pid")
-    done < <(cleanup_process_tree "$worker")
-    if (( failures > 0 )); then
-        log "WARNING: Could not apply cleanup priority=${level} to ${failures} live process(es)"
-    fi
-}
-
-supervise_cleanup() {
-    local worker="$1" level=background next load root scratch pressure
-    while kill -0 "$worker" 2>/dev/null; do
-        load=$(get_cleanup_load_percent)
-        root=$(get_disk_usage)
-        scratch=$(get_loop_usage)
-        # Unknown readings must not demote recovery to idle scheduling.
-        [[ "$load" =~ ^[0-9]+$ ]] || load=90
-        [[ "$root" =~ ^[0-9]+$ ]] || root=90
-        [[ "$scratch" =~ ^[0-9]+$ ]] || scratch=90
-        pressure=$load
-        (( root > pressure )) && pressure=$root
-        (( scratch > pressure )) && pressure=$scratch
-        next=$(cleanup_priority_level "$pressure" "$level")
-        if [[ "$next" != "$level" ]]; then
-            log "Cleanup priority ${level}->${next}; load_per_core=${load}% root=${root}% scratch_pressure=${scratch}%"
-        fi
-        # Reapply to catch running descendants and children spawned since a change.
-        apply_cleanup_priority "$worker" "$next"
-        level=$next
-        sleep 5
-    done
-}
-
-stop_cleanup_worker() {
-    local worker="$1" pid
-    while read -r pid; do
-        kill -TERM "$pid" 2>/dev/null || true
-    done < <(cleanup_process_tree "$worker")
-    wait "$worker" 2>/dev/null || true
-}
-
-run_cleanup_phase() {
-    local phase="$1" started=$SECONDS result
-    shift
-    log "Cleanup phase=${phase} started"
-    "$@"
-    result=$?
-    log "Cleanup phase=${phase} completed elapsed_s=$((SECONDS - started)) status=${result} root=$(get_disk_usage)% scratch_pressure=$(get_loop_usage)%"
-    return "$result"
-}
-
 cleanup_orphaned_package_managers() {
     log "Scanning for orphaned package manager processes older than ${ORPHAN_MIN_AGE_SECONDS}s"
 
@@ -285,11 +159,6 @@ trim_loop_device() {
     fi
 }
 
-reset_bun_cache() {
-    find /tmp/tmp-build/cache/bun -mindepth 1 -maxdepth 1 -exec rm -rf -- {} + 2>/dev/null
-    log "Cleared complete bun cache"
-}
-
 cleanup_victoriametrics_data() {
     local data_kib pid was_running=false
 
@@ -339,10 +208,10 @@ cleanup_loop_device() {
     log "Loop device (/tmp/tmp-build) pressure (higher of bytes/inodes): ${loop_usage}%"
 
     if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
-        run_cleanup_phase bun_age_prune prune_bun_cache
+        prune_bun_cache
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -lt "$LOOP_SOFT_THRESHOLD" ]; then
-            run_cleanup_phase trim trim_loop_device
+            trim_loop_device
             log "Loop pressure after age pruning: ${loop_usage}%"
             return
         fi
@@ -350,26 +219,27 @@ cleanup_loop_device() {
 
     if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
         log "Loop pressure at or above soft threshold ${LOOP_SOFT_THRESHOLD}% — running oldest-first cleanup to ${LOOP_TARGET_USAGE}%"
-        run_cleanup_phase stale_workspaces cleanup_stale_package_dirs true
+        cleanup_stale_package_dirs true
 
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
-            run_cleanup_phase npm_cache cleanup_npm_cache
+            cleanup_npm_cache
         fi
 
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
-            run_cleanup_phase bun_eviction evict_oldest_bun_cache_entries
+            evict_oldest_bun_cache_entries
         fi
 
         # Keep the full reset as a fallback only if incremental cleanup cannot
         # bring either resource below the existing emergency threshold.
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -ge "$LOOP_HARD_THRESHOLD" ] && [ -d /tmp/tmp-build/cache/bun ]; then
-            run_cleanup_phase bun_full_reset reset_bun_cache
+            find /tmp/tmp-build/cache/bun -mindepth 1 -maxdepth 1 -exec rm -rf -- {} + 2>/dev/null
+            log "Cleared complete bun cache"
         fi
 
-        run_cleanup_phase trim trim_loop_device
+        trim_loop_device
         loop_usage=$(get_loop_usage)
         log "Loop pressure after oldest-first cleanup: ${loop_usage}%"
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
@@ -408,12 +278,12 @@ main() {
     log "Main disk usage: ${usage}%   Loop pressure (higher of bytes/inodes): $(get_loop_usage)%"
 
     # Always check loop device regardless of main disk
-    run_cleanup_phase scratch cleanup_loop_device
-    run_cleanup_phase metrics_housekeeping cleanup_victoriametrics_data
+    cleanup_loop_device
+    cleanup_victoriametrics_data
 
     if [ "$usage" -gt "$MAIN_THRESHOLD" ]; then
         log "Main disk above ${MAIN_THRESHOLD}% — running full cleanup"
-        run_cleanup_phase host_housekeeping cleanup_main
+        cleanup_main
         local new_usage
         new_usage=$(get_disk_usage)
         log "Main disk usage after cleanup: ${new_usage}%"
@@ -431,18 +301,22 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
         exit 0
     fi
 
-    # The supervisor stays schedulable while its worker initially yields to traffic.
-    # Both processes retain the lock; overlapping cron runs still skip safely.
-    (
-        set_cleanup_process_priority "$BASHPID" background || {
-            log "Could not set initial cleanup priority"
-            exit 1
-        }
-        run_cleanup_phase total main
-    ) &
-    cleanup_worker_pid=$!
-    trap 'stop_cleanup_worker "$cleanup_worker_pid"; exit 143' TERM
-    trap 'stop_cleanup_worker "$cleanup_worker_pid"; exit 130' INT
-    supervise_cleanup "$cleanup_worker_pid"
-    wait "$cleanup_worker_pid"
+    # Use the higher of disk pressure and one-minute load relative to CPU count.
+    pressure=$(awk -v disk="$(get_disk_usage)" -v scratch="$(get_loop_usage)" \
+        -v cores="$(getconf _NPROCESSORS_ONLN)" '
+        { load = 100 * $1 / cores; p = (disk > scratch ? disk : scratch)
+          printf "%.0f\n", (load > p ? load : p) }' /proc/loadavg)
+
+    if [ "$pressure" -ge 80 ]; then
+        nice_priority=10
+        [ "$pressure" -ge 90 ] && nice_priority=0
+        chrt --other --pid 0 "$$" || { log "Could not set normal CPU scheduling"; exit 1; }
+        renice -n "$nice_priority" -p "$$" >/dev/null || exit 1
+        ionice -c 2 -n 4 -p "$$" || exit 1
+        log "Cleanup pressure=${pressure}%: normal scheduling, nice=${nice_priority}"
+    else
+        chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; exit 1; }
+        ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; exit 1; }
+    fi
+    main
 fi
