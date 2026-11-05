@@ -7,10 +7,13 @@ This is a last-resort disk guard, separate from ordinary client rate limits.
 
 It opens below 5 GiB available on either filesystem or below 10% free inodes.
 An unreadable filesystem also opens it rather than admitting unknown disk demand.
+If the scratch directory has not been created yet, the check uses its nearest
+existing ancestor, on the filesystem that will contain it. Permission and I/O
+errors still fail closed.
 It closes after scratch has at least 10 GiB, root at least 8 GiB, and both have
 at least 20% free inodes for a sampled 60-second recovery period. These initial
 thresholds target the current 25 GiB scratch filesystem; larger deployments
-should review them. Local development needs an existing BUILD_TMP_DIR.
+should review them. BUILD_TMP_DIR selects the actual build workspace path.
 
 Cache hits continue through the ordinary cache path. During emergency mode,
 `force=true` still tries cached results. For unversioned/latest package-size

@@ -144,11 +144,13 @@ it('does not substitute an old release for an explicit version', async () => {
 it('does not count a cache outage as a successfully served cached result', async () => {
   const ctx = context(false)
   ctx.query.package = 'test'
+
   const cache = {
     getLatestBuiltPackageSize: jest
       .fn()
       .mockResolvedValue({ status: 'unavailable' }),
   }
+
   const build = jest.fn()
   await createAnalysisContextMiddleware('package-analysis')(ctx, async () => {
     await createResolvePackageMiddleware('package-analysis', cache)(ctx, build)

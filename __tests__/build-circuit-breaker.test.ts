@@ -1,5 +1,6 @@
 import {
   BuildCircuitBreaker,
+  readBuildFilesystem,
   type DiskHeadroom,
 } from '../server/infrastructure/build-circuit-breaker'
 
@@ -84,4 +85,25 @@ describe('emergency disk admission', () => {
     expect(read).toHaveBeenCalledTimes(1)
     expect(transition).toHaveBeenCalledWith(true, 'disk_check_failed')
   })
+})
+
+it('checks the containing filesystem before the scratch directory is created', async () => {
+  const missing = Object.assign(new Error('missing'), { code: 'ENOENT' })
+
+  const read = jest
+    .fn()
+    .mockRejectedValueOnce(missing)
+    .mockResolvedValueOnce({ bavail: 123 })
+
+  await expect(readBuildFilesystem('/tmp/not-created', read)).resolves.toEqual({
+    bavail: 123,
+  })
+  expect(read.mock.calls).toEqual([['/tmp/not-created'], ['/tmp']])
+})
+
+it('does not hide permission or I/O errors by checking a different directory', async () => {
+  const error = Object.assign(new Error('denied'), { code: 'EACCES' })
+  const read = jest.fn().mockRejectedValue(error)
+  await expect(readBuildFilesystem('/tmp/scratch', read)).rejects.toBe(error)
+  expect(read).toHaveBeenCalledTimes(1)
 })

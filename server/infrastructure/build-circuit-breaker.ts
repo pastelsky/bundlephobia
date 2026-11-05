@@ -1,4 +1,6 @@
 import { statfs } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
+import type { StatsFs } from 'node:fs'
 import { Counter, Gauge } from 'prom-client'
 import { applicationMetrics } from './application-metrics'
 
@@ -96,6 +98,30 @@ export class BuildCircuitBreaker {
   }
 }
 
+// Fresh hosts have no scratch directory until the first install creates it.
+// Its nearest existing ancestor belongs to the filesystem that will store it.
+export async function readBuildFilesystem(
+  directory: string,
+  read: (directory: string) => Promise<StatsFs> = statfs,
+): Promise<StatsFs> {
+  try {
+    return await read(directory)
+  } catch (error) {
+    const parent = dirname(directory)
+
+    if (
+      error instanceof Error &&
+      'code' in error &&
+      error.code === 'ENOENT' &&
+      parent !== directory
+    ) {
+      return readBuildFilesystem(parent, read)
+    }
+
+    throw error
+  }
+}
+
 const activations = new Counter({
   name: 'bundlephobia_build_circuit_breaker_activations_total',
   help: 'Transitions into emergency cache-only mode; not requests or rejections.',
@@ -127,7 +153,9 @@ active.set(0)
 export const buildCircuitBreaker = new BuildCircuitBreaker(
   async () => {
     const [scratch, root] = await Promise.all([
-      statfs(process.env.BUILD_TMP_DIR || '/tmp/tmp-build'),
+      readBuildFilesystem(
+        resolve(process.env.BUILD_TMP_DIR || '/tmp/tmp-build'),
+      ),
       statfs('/'),
     ])
 
