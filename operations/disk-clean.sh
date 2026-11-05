@@ -306,15 +306,8 @@ main() {
     fi
 }
 
-# Allow the integration check to source the production functions without running
-# host-wide housekeeping or acquiring the production lock.
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-    exec 9>/run/lock/disk-clean.lock
-    if ! flock -n 9; then
-        log "Another disk cleanup is already running — skipping"
-        exit 0
-    fi
-
+with_cleanup_priority() {
+    local pressure nice_priority
     # Use the higher of disk pressure and one-minute load relative to CPU count.
     pressure=$(awk -v disk="$(get_disk_usage)" -v scratch="$(get_loop_usage)" \
         -v cores="$(getconf _NPROCESSORS_ONLN)" '
@@ -324,13 +317,25 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     if [ "$pressure" -ge 80 ]; then
         nice_priority=10
         [ "$pressure" -ge 90 ] && nice_priority=0
-        chrt --other --pid 0 "$$" || { log "Could not set normal CPU scheduling"; exit 1; }
-        renice -n "$nice_priority" -p "$$" >/dev/null || exit 1
-        ionice -c 2 -n 4 -p "$$" || exit 1
+        chrt --other --pid 0 "$$" || { log "Could not set normal CPU scheduling"; return 1; }
+        renice -n "$nice_priority" -p "$$" >/dev/null || return 1
+        ionice -c 2 -n 4 -p "$$" || return 1
         log "Cleanup pressure=${pressure}%: normal scheduling, nice=${nice_priority}"
     else
-        chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; exit 1; }
-        ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; exit 1; }
+        chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; return 1; }
+        ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; return 1; }
     fi
-    main
+    # Set priority once on this shell; every cleanup command inherits it.
+    "$@"
+}
+
+# Allow the integration check to source the production functions without running
+# host-wide housekeeping or acquiring the production lock.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    exec 9>/run/lock/disk-clean.lock
+    if ! flock -n 9; then
+        log "Another disk cleanup is already running — skipping"
+        exit 0
+    fi
+    with_cleanup_priority main
 fi
