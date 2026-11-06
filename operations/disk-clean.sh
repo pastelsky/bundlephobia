@@ -97,7 +97,8 @@ cleanup_stale_package_dirs() {
 }
 
 cleanup_npm_cache() {
-    /usr/local/bin/npm cache clean --force --cache=/tmp/tmp-build/cache 2>/dev/null || true
+    # Equivalent to npm's force-clean target for this cache root.
+    rm -rf -- /tmp/tmp-build/cache/_cacache 2>/dev/null || true
     log "Cleared npm cache from loop device"
 }
 
