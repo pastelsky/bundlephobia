@@ -5,6 +5,7 @@
 #        freed loop-image blocks were never returned to the host filesystem.
 
 LOG_FILE="/var/log/disk_cleanup.log"
+FD_BIN="${FD_BIN:-$(command -v fdfind || command -v fd || true)}"
 MAIN_THRESHOLD=70          # % main disk usage before cleanup triggers
 # Thresholds apply to whichever is higher: allocated bytes or used inodes.
 LOOP_SOFT_THRESHOLD=60
@@ -24,6 +25,11 @@ export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
 log() {
     echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1" | tee -a "$LOG_FILE" 2>/dev/null || \
         echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1"
+}
+
+fd_cleanup() {
+    "$FD_BIN" --hidden --no-ignore --no-ignore-parent --case-sensitive \
+        --color never --threads 4 --min-depth 1 "$@"
 }
 
 get_disk_usage() {
@@ -84,8 +90,9 @@ cleanup_stale_package_dirs() {
         log "Removing stale package workspace (oldest first): ${path}"
         rm -rf -- "$path" 2>/dev/null
     done < <(
-        find "$package_root" -mindepth 1 -maxdepth 1 -type d -mmin +60 \
-            -printf '%T@ %p\0' 2>/dev/null | sort -z -n
+        # Preserve the rounded-minute cutoff; order candidates by modification time.
+        fd_cleanup --max-depth 1 --type d --changed-before 61min --print0 '^' "$package_root" \
+            --exec-batch stat --printf '%Y %n\0' -- 2>/dev/null | sort -z -n
     )
 }
 
@@ -107,14 +114,18 @@ prune_bun_cache() {
 
 cleanup_non_bundlable_files() {
     local scratch_root="${BUILD_TMP_DIR:-/tmp/tmp-build}"
-    local status=0
-    [ -d "$scratch_root" ] || return
+    local status=0 root
+    local -a roots=()
+    for root in "$scratch_root/installations" "$scratch_root/packages"; do
+        if [ -d "$root" ]; then roots+=("$root"); fi
+    done
+    [ "${#roots[@]}" -gt 0 ] || return 0
 
     # Cover ordinary/scoped node_modules layouts without walking arbitrarily deep.
     # Unlink working copies only; keep every cache entry intact.
-    find -P "$scratch_root/installations" "$scratch_root/packages" -xdev -maxdepth 7 \
-        \( -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' \) \
-        -type f -delete 2>/dev/null || status=$?
+    fd_cleanup --one-file-system --max-depth 7 --type f \
+        '\.(map|d\.(ts|mts|cts))$' "${roots[@]}" \
+        --exec-batch rm -f -- 2>/dev/null || status=$?
     log "Non-bundlable file cleanup finished (status=${status})"
 }
 
@@ -125,7 +136,7 @@ evict_oldest_bun_cache_entries() {
     local first_path=""
     local last_path=""
     local batch_size=100
-    local -a batch=()
+    local -a batch=() scopes=()
 
     [ -d "$cache_root" ] || return
 
@@ -144,12 +155,20 @@ evict_oldest_bun_cache_entries() {
         loop_usage=$(get_loop_usage)
         [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ] || break
     done < <(
-        # Walk into scope containers, but never into individual package payloads.
-        find "$cache_root" -mindepth 1 -maxdepth 2 \
-            -name '.tmp' -prune -o \
-            \( -type d -path "$cache_root/@*" ! -path "$cache_root/@*/*" \) -o \
-            \( \( -type d -o -type f \) -printf '%T@ %p\0' -prune \) \
-            2>/dev/null | sort -z -n
+        # List scope containers separately; never descend into package payloads.
+        {
+            while IFS= read -r -d '' path; do
+                path="${path%/}"
+                if [[ "${path##*/}" == @* && -d "$path" ]]; then
+                    scopes+=("$path")
+                else
+                    printf '%s\0' "$path"
+                fi
+            done < <(fd_cleanup --max-depth 1 --type d --type f --exclude .tmp --print0 '^' "$cache_root")
+            if [ "${#scopes[@]}" -gt 0 ]; then
+                fd_cleanup --max-depth 1 --type d --type f --exclude .tmp --print0 '^' "${scopes[@]}"
+            fi
+        } | xargs -0 -r stat --printf '%Y %n\0' -- 2>/dev/null | sort -z -n
     )
 
     loop_usage=$(get_loop_usage)
@@ -196,8 +215,8 @@ cleanup_victoriametrics_data() {
     fi
 
     # The full reset is safe only while VictoriaMetrics is stopped.
-    if ! find "$VICTORIAMETRICS_DATA_DIR" -mindepth 1 -maxdepth 1 \
-        ! -name lost+found -exec rm -rf -- {} + 2>/dev/null; then
+    if ! fd_cleanup --max-depth 1 --exclude lost+found '^' "$VICTORIAMETRICS_DATA_DIR" \
+        --exec-batch rm -rf -- 2>/dev/null; then
         log "WARNING: Could not clear VictoriaMetrics data; leaving the service stopped"
         return
     fi
@@ -248,7 +267,7 @@ cleanup_loop_device() {
         # bring either resource below the existing emergency threshold.
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -ge "$LOOP_HARD_THRESHOLD" ] && [ -d /tmp/tmp-build/cache/bun ]; then
-            find /tmp/tmp-build/cache/bun -mindepth 1 -maxdepth 1 -exec rm -rf -- {} + 2>/dev/null
+            fd_cleanup --max-depth 1 '^' /tmp/tmp-build/cache/bun --exec-batch rm -rf -- 2>/dev/null
             log "Cleared complete bun cache"
         fi
 
@@ -267,10 +286,9 @@ cleanup_main() {
     cleanup_orphaned_package_managers
 
     # Old log files (keep 7 days)
-    find /var/log -type f -name "*.log" -mtime +7 \
-        ! -name "disk_cleanup.log" ! -name "pm2_monitor.log" \
-        -delete 2>/dev/null
-    find /var/log -type f -name "*.gz" -mtime +30 -delete 2>/dev/null
+    fd_cleanup --type f --changed-before 8days --exclude disk_cleanup.log --exclude pm2_monitor.log \
+        '\.log$' /var/log --exec-batch rm -f -- 2>/dev/null
+    fd_cleanup --type f --changed-before 31days '\.gz$' /var/log --exec-batch rm -f -- 2>/dev/null
     log "Cleared old log files (kept pm2_monitor.log + disk_cleanup.log)"
 
     # Application logs are retained by the size-bounded logrotate policy.
@@ -332,6 +350,7 @@ with_cleanup_priority() {
 # Allow the integration check to source the production functions without running
 # host-wide housekeeping or acquiring the production lock.
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    command -v "$FD_BIN" >/dev/null || { log "Install fd-find before running cleanup"; exit 1; }
     exec 9>/run/lock/disk-clean.lock
     if ! flock -n 9; then
         log "Another disk cleanup is already running — skipping"

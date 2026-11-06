@@ -144,10 +144,17 @@ jobs:
       - name: Verify Maven publication layout
         working-directory: jvm-package-build-stats
         run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fd-find
           ./gradlew :core:publishMavenPublicationToReleaseTestRepository :cli:publishMavenPublicationToReleaseTestRepository --no-daemon
-          CORE_JAR=$(find build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -1)
-          CLI_JAR=$(find build/release-test-repository/com/bundlephobia/jvm-package-build-stats-cli/0.1.0-SNAPSHOT -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -1)
-          CORE_POM=$(find build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT -name '*.pom' | head -1)
+          publication_file() {
+            fdfind --hidden --no-ignore --no-ignore-parent --case-sensitive --type f \
+              --extension "$1" --exclude '*-sources.jar' --exclude '*-javadoc.jar' \
+              --max-results 1 '^' "$2"
+          }
+          CORE_JAR=$(publication_file jar build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT)
+          CLI_JAR=$(publication_file jar build/release-test-repository/com/bundlephobia/jvm-package-build-stats-cli/0.1.0-SNAPSHOT)
+          CORE_POM=$(publication_file pom build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT)
           test -n "$CORE_JAR" && test -n "$CLI_JAR" && test -n "$CORE_POM"
           jar tf "$CORE_JAR" | grep -q 'com/bundlephobia/jvm/PackageBuildStatsAnalyzer.class'
           jar tf "$CORE_JAR" | grep -q 'org/objectweb/asm/ClassReader.class'
@@ -170,5 +177,5 @@ jobs:
           corepack enable
           corepack yarn install --immutable
           sudo apt-get update
-          sudo apt-get install -y bubblewrap
+          sudo apt-get install -y bubblewrap fd-find
       - run: node __tests__/scratch-cleanup.mjs
