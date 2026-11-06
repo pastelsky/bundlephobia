@@ -118,6 +118,7 @@ if (process.argv[2] !== '--sandboxed') {
     recursive: true,
   })
   await fs.writeFile(path.join(fixture, '.gitignore'), 'node_modules/\n')
+
   for (const name of [
     '.hidden.d.ts',
     'index.d.mts',
@@ -126,6 +127,7 @@ if (process.argv[2] !== '--sandboxed') {
   ]) {
     await fs.writeFile(path.join(scopedPackage, name), 'remove')
   }
+
   await fs.writeFile(path.join(scopedPackage, 'index.js'), 'retain')
   await fs.writeFile(
     path.join(scopedPackage, 'dist/cjs/deeper/retain.map'),
@@ -133,7 +135,10 @@ if (process.argv[2] !== '--sandboxed') {
   )
   const cachedMap = path.join(root, 'cache/retain.map')
   await fs.writeFile(cachedMap, 'retain')
-  await fs.link(cachedMap, path.join(scopedPackage, 'cached.map'))
+  // Separate sandbox bind mounts cannot create cross-mount hardlinks.
+  const retainedHardlink = path.join(fixture, 'retained-hardlink')
+  await fs.writeFile(retainedHardlink, 'retain')
+  await fs.link(retainedHardlink, path.join(scopedPackage, 'cached.map'))
   await fs.symlink(path.join(root, 'cache'), path.join(scopedPackage, 'linked'))
   execFileSync(
     'bash',
@@ -145,6 +150,7 @@ if (process.argv[2] !== '--sandboxed') {
     ],
     { stdio: 'inherit' },
   )
+
   for (const name of [
     '.hidden.d.ts',
     'index.d.mts',
@@ -156,9 +162,11 @@ if (process.argv[2] !== '--sandboxed') {
       code: 'ENOENT',
     })
   }
+
   await fs.access(path.join(scopedPackage, 'index.js'))
   await fs.access(path.join(scopedPackage, 'dist/cjs/deeper/retain.map'))
   assert.equal(await fs.readFile(cachedMap, 'utf8'), 'retain')
+  assert.equal(await fs.readFile(retainedHardlink, 'utf8'), 'retain')
 
   const bunCache = path.join(root, 'cache/bun')
   await fs.mkdir(path.join(bunCache, '.tmp'), { recursive: true })
