@@ -111,6 +111,63 @@ if (process.argv[2] !== '--sandboxed') {
     [],
     'Production cleanup missed generated output',
   )
+
+  const fixture = path.join(root, 'packages/fd-fixture')
+  const scopedPackage = path.join(fixture, 'node_modules/@scope/pkg')
+  await fs.mkdir(path.join(scopedPackage, 'dist/cjs/deeper'), {
+    recursive: true,
+  })
+  await fs.writeFile(path.join(fixture, '.gitignore'), 'node_modules/\n')
+
+  for (const name of [
+    '.hidden.d.ts',
+    'index.d.mts',
+    'index.d.cts',
+    'dist/cjs/index.map',
+  ]) {
+    await fs.writeFile(path.join(scopedPackage, name), 'remove')
+  }
+
+  await fs.writeFile(path.join(scopedPackage, 'index.js'), 'retain')
+  await fs.writeFile(
+    path.join(scopedPackage, 'dist/cjs/deeper/retain.map'),
+    'retain',
+  )
+  const cachedMap = path.join(root, 'cache/retain.map')
+  await fs.writeFile(cachedMap, 'retain')
+  // Separate sandbox bind mounts cannot create cross-mount hardlinks.
+  const retainedHardlink = path.join(fixture, 'retained-hardlink')
+  await fs.writeFile(retainedHardlink, 'retain')
+  await fs.link(retainedHardlink, path.join(scopedPackage, 'cached.map'))
+  await fs.symlink(path.join(root, 'cache'), path.join(scopedPackage, 'linked'))
+  execFileSync(
+    'bash',
+    [
+      '-c',
+      'source "$1"; log() { :; }; cleanup_non_bundlable_files',
+      'cleanup',
+      new URL('../operations/disk-clean.sh', import.meta.url).pathname,
+    ],
+    { stdio: 'inherit' },
+  )
+
+  for (const name of [
+    '.hidden.d.ts',
+    'index.d.mts',
+    'index.d.cts',
+    'dist/cjs/index.map',
+    'cached.map',
+  ]) {
+    await assert.rejects(fs.access(path.join(scopedPackage, name)), {
+      code: 'ENOENT',
+    })
+  }
+
+  await fs.access(path.join(scopedPackage, 'index.js'))
+  await fs.access(path.join(scopedPackage, 'dist/cjs/deeper/retain.map'))
+  assert.equal(await fs.readFile(cachedMap, 'utf8'), 'retain')
+  assert.equal(await fs.readFile(retainedHardlink, 'utf8'), 'retain')
+
   const bunCache = path.join(root, 'cache/bun')
   await fs.mkdir(path.join(bunCache, '.tmp'), { recursive: true })
   const freshPackage = path.join(bunCache, 'fresh-fixture@1.0.0@@@1')
@@ -138,6 +195,16 @@ if (process.argv[2] !== '--sandboxed') {
   await fs.access(freshPackage)
   await fs.access(path.join(bunCache, 'old manifest.npm'))
   await fs.mkdir(path.join(bunCache, 'old package'))
+  await fs.mkdir(path.join(bunCache, '@scope/scoped-package'), {
+    recursive: true,
+  })
+  await fs.writeFile(
+    path.join(bunCache, '@scope/scoped-package/package.json'),
+    '{}',
+  )
+  await fs.mkdir(path.join(bunCache, '@scope/.tmp'))
+  await fs.writeFile(path.join(bunCache, '@scope/.tmp/active'), 'in progress')
+  await fs.writeFile(path.join(bunCache, '@manifest.npm'), 'metadata')
   execFileSync(
     'bash',
     [
@@ -148,7 +215,8 @@ if (process.argv[2] !== '--sandboxed') {
     ],
     { stdio: 'inherit' },
   )
-  assert.deepEqual(await fs.readdir(bunCache), ['.tmp'])
+  assert.deepEqual((await fs.readdir(bunCache)).sort(), ['.tmp', '@scope'])
+  assert.deepEqual(await fs.readdir(path.join(bunCache, '@scope')), ['.tmp'])
   assert.equal(
     await fs.readFile(path.join(bunCache, '.tmp/active'), 'utf8'),
     'in progress',
