@@ -54,7 +54,7 @@ class BotRateLimits(unittest.TestCase):
                                          '    http-request return status 504 hdr Cache-Control max-age=86400 if { path /upstream-timeout }\n'
                                          '    http-request return status 401 hdr Cache-Control max-age=86400 if { path /upstream-unauthorized }\n'
                                          '    http-request return status 404 hdr Cache-Control max-age=60 if { path /permanent-missing }\n'
-                                         '    http-request return status 200 hdr Cache-Control public,max-age=86400\n'
+                                         '    http-request return status 200 hdr Cache-Control public,max-age=86400 hdr X-Test-Build-Blocked %[req.hdr(X-Bundlephobia-Build-Budget-Exceeded)] hdr X-Test-Prefer-Cached %[req.hdr(X-Bundlephobia-Prefer-Cached)]\n'
                                          for name in sorted(upstreams)))
         config_args = ['-f', str(config), '-f', str(policy_directory)]
         validation = subprocess.run(['haproxy', '-c', *config_args],
@@ -146,12 +146,12 @@ class BotRateLimits(unittest.TestCase):
                    'Mozilla/5.0 Chrome/156.0 Safari/537.36']:
             self.assertEqual(self.request(ua, 242, '/asset.js'), 200)
         for i in range(190):
-            self.assertEqual(self.request(['Googlebot/2.1', 'GoogleOther'][i % 2], i, '/asset.js'), 200)
+            self.assertEqual(self.request(['Googlebot/2.1', 'Google-InspectionTool'][i % 2], i, '/asset.js'), 200)
         self.assertEqual(self.request('Google-InspectionTool', 240), 429)
 
     def test_cooldown_escalates_and_expires_for_bots_and_ordinary_clients(self):
         cases = [(['Bytespider/1', 'TikTokSpider/2'], True, 'bytedance'),
-                 (['Googlebot/2.1', 'GoogleOther'], True, 'google'),
+                 (['Googlebot/2.1', 'Google-InspectionTool'], True, 'google'),
                  (['Lightpanda/1.0', 'LIGHTPANDA/2.0'], True, 'lightpanda'),
                  (['Mozilla/5.0 Chrome/156.0', 'Mozilla/5.0 Firefox/140.0'],
                   False, '198.51.100.201'),
@@ -248,6 +248,34 @@ class BotRateLimits(unittest.TestCase):
         self.assertEqual(self.retry_after, '300')
         self.assertEqual(self.request('DifferentBot/1', ip, '/asset.js'), 200)
 
+    def test_bulk_crawlers_get_cache_preference_and_cannot_bypass_build_guard(self):
+        agents = ['GoogleOther', 'GPTBot/1', 'ClaudeBot/1', 'Amazonbot/1',
+                  'Ahrefs/1', 'Semrush/1', 'Dotbot/1', 'AwarioBot/1',
+                  'Shields.io/1', 'Badgen/1',
+                  'Mozilla/5.0 (compatible; YisouSpider/1.0)',
+                  'Mozilla/5.0 (compatible; ReflectionBot/1.0)',
+                  'Mozilla/5.0 (compatible; KeenableBot/1.0)']
+        for ua in agents:
+            for path in ['/api/size?package=example', '/package/example',
+                         '/api/exports-sizes?package=example',
+                         '/api/size?package=example&force=true']:
+                with self.subTest(ua=ua, path=path):
+                    self.assertEqual(self.request(ua, 1, path,
+                        headers={'X-Bundlephobia-Build-Budget-Exceeded': 'false'}), 200)
+                    headers = {k.lower(): v for k, v in self.response_headers}
+                    self.assertEqual(headers.get('x-test-build-blocked'), 'true')
+                    self.assertEqual(headers.get('x-test-prefer-cached'), 'true')
+        for ua in ['Googlebot/2.1', 'bingbot/2', 'Applebot/1',
+                   'OAI-SearchBot/1', 'ChatGPT-User/1', 'Claude-SearchBot/1',
+                   'Claude-User/1', 'Mozilla/5.0 Chrome/156.0']:
+            with self.subTest(ua=ua):
+                self.assertEqual(self.request(ua, 2, '/api/size?package=example',
+                    headers={'X-Bundlephobia-Build-Budget-Exceeded': 'true',
+                             'X-Bundlephobia-Prefer-Cached': 'true'}), 200)
+                headers = {k.lower(): v for k, v in self.response_headers}
+                self.assertNotEqual(headers.get('x-test-build-blocked'), 'true')
+                self.assertNotEqual(headers.get('x-test-prefer-cached'), 'true')
+
     def test_api_and_page_limits_share_pools_but_keep_family_cooldowns(self):
         paths = ['/api/size', '/package/example']
         pools = [
@@ -272,8 +300,7 @@ class BotRateLimits(unittest.TestCase):
                 self.assertEqual(self.request(agents[0], i, paths[i % 2]), 429)
             self.assertEqual(self.retry_after, '300')
             self.assertEqual(self.request(agents[0], 240, '/asset.js'), 429)
-            if pool != 'google':
-                self.assertEqual(self.request(agents[-1], 240, '/asset.js'), 200)
+            self.assertEqual(self.request(agents[-1], 240, '/asset.js'), 200)
         # Every pool is below 26/min, but together they stop at the global ceiling.
         for table in ['client_group_usage', 'automated_client_usage', 'named_bot_usage']:
             self.runtime(f'clear table {table}')

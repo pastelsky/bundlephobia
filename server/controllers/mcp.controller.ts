@@ -167,6 +167,7 @@ async function respondWithLocalTool(ctx: Context, port: number, path: string) {
       'CF-Connecting-IP': ctx.get('CF-Connecting-IP') || ctx.ip,
       'X-Bundlephobia-Client-Type': ctx.get('X-Bundlephobia-Client-Type'),
       'X-Bundlephobia-Client-Family': ctx.get('X-Bundlephobia-Client-Family'),
+      'X-Bundlephobia-Prefer-Cached': ctx.get('X-Bundlephobia-Prefer-Cached'),
       'X-Bundlephobia-Build-Budget-Exceeded': ctx.get(
         'X-Bundlephobia-Build-Budget-Exceeded',
       ),
