@@ -1,6 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@config '../../tailwind.config.ts';
+/* Tremor builds palette utilities dynamically, so keep the supported variants in the v4 source registry. */
+@source inline('data-[selected]:{text,border}-orange-{500,600} {hover:,}{bg,text,border,ring,stroke,fill}-{orange,rose,sky,emerald,stone,slate,amber,violet}-{50,100,200,300,400,500,600,700,800,900,950}');
 
 @font-face {
   font-family: 'Inter Variable';

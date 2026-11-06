@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import * as admin from 'firebase-admin'
+import { cert, initializeApp } from 'firebase-admin/app'
+import { getDatabase } from 'firebase-admin/database'
 import * as semver from 'semver'
 import { chain } from 'stream-chain'
 import { parser } from 'stream-json'
@@ -11,8 +12,8 @@ import progress from 'progress-stream'
 import type { JsonObject } from '../types/json'
 
 // Initialize Firebase (you'll need to set up your service account key)
-admin.initializeApp({
-  credential: admin.credential.cert(
+initializeApp({
+  credential: cert(
     path.join(
       __dirname,
       './keys/module-cost-firebase-adminsdk-xcnum-ca64ae80ff.json',
@@ -21,7 +22,7 @@ admin.initializeApp({
   databaseURL: 'https://module-cost.firebaseio.com',
 })
 
-const db = admin.database()
+const db = getDatabase()
 
 interface SearchesV2 {
   [packageName: string]: {

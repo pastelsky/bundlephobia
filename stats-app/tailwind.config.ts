@@ -69,29 +69,4 @@ export default {
       },
     },
   },
-  // Tremor constructs palette class names dynamically. Enumerate the supported
-  // colors explicitly so application components can use typed color props.
-  safelist: [
-    'data-[selected]:text-orange-500',
-    'data-[selected]:text-orange-600',
-    'data-[selected]:border-orange-500',
-    'data-[selected]:border-orange-600',
-    ...[
-      'orange',
-      'rose',
-      'sky',
-      'emerald',
-      'stone',
-      'slate',
-      'amber',
-      'violet',
-    ].flatMap(color =>
-      [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].flatMap(shade =>
-        ['bg', 'text', 'border', 'ring', 'stroke', 'fill'].flatMap(utility => [
-          `${utility}-${color}-${shade}`,
-          `hover:${utility}-${color}-${shade}`,
-        ]),
-      ),
-    ),
-  ],
 } satisfies Config

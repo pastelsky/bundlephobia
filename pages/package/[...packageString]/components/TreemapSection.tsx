@@ -38,8 +38,47 @@ class TreemapSection extends Component<
   }
 
   private treemapSectionRef = createRef<HTMLElement>()
+  private resizeObserver?: ResizeObserver
+  private resizeFrame?: number
 
   componentDidMount() {
+    const section = this.treemapSectionRef.current
+
+    if (section && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(this.scheduleSizeUpdate)
+      this.resizeObserver.observe(section)
+    }
+
+    window.addEventListener('resize', this.scheduleSizeUpdate)
+    this.scheduleSizeUpdate()
+  }
+
+  componentDidUpdate(previousProps: TreemapSectionProps) {
+    if (
+      previousProps.dependencySizes.length !== this.props.dependencySizes.length
+    ) {
+      this.scheduleSizeUpdate()
+    }
+  }
+
+  componentWillUnmount() {
+    this.resizeObserver?.disconnect()
+    window.removeEventListener('resize', this.scheduleSizeUpdate)
+
+    if (this.resizeFrame !== undefined) {
+      window.cancelAnimationFrame(this.resizeFrame)
+    }
+  }
+
+  private scheduleSizeUpdate = () => {
+    if (this.resizeFrame !== undefined) {
+      window.cancelAnimationFrame(this.resizeFrame)
+    }
+
+    this.resizeFrame = window.requestAnimationFrame(this.updateSize)
+  }
+
+  private updateSize = () => {
     const { dependencySizes } = this.props
 
     const width =
@@ -63,10 +102,11 @@ class TreemapSection extends Component<
       height = window.innerHeight * 0.45 * heightMultiplier
     }
 
-    this.setState({
-      width,
-      height,
-    })
+    this.setState(current =>
+      current.width === width && current.height === height
+        ? null
+        : { width, height },
+    )
   }
 
   getFormattedSize = (value: number) => {

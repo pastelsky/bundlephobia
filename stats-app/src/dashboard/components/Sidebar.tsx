@@ -1,3 +1,4 @@
+/* oxlint-disable next/no-html-link-for-pages -- These links leave the Vite dashboard for sibling Bundlephobia apps. */
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { Select, SelectItem } from '@tremor/react'
 import { ExternalLink, Radio } from 'lucide-react'

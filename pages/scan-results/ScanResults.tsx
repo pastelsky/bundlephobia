@@ -3,7 +3,7 @@ import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { Component } from 'react'
 import cx from 'classnames'
 import PQueue from 'p-queue'
-import { stringify } from 'query-string'
+import queryString from 'query-string'
 
 import Analytics from '../../client/analytics'
 import API, { type PackageBuildInfo } from '../../client/api'
@@ -258,7 +258,7 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
   setParamsAndState = (sortMode: SortMode) => {
     const updatedQuery = { ...this.props.router.query, sortMode }
     Router.replace(
-      `/scan-results?${stringify(updatedQuery, { encode: false })}`,
+      `/scan-results?${queryString.stringify(updatedQuery, { encode: false })}`,
     )
 
     // SAFETY: browsers without View Transitions simply omit this optional API.

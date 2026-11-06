@@ -5,6 +5,7 @@ import {
 } from '@contentful/rich-text-react-renderer'
 import { BLOCKS, Document, TopLevelBlock } from '@contentful/rich-text-types'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const getWordCount = (node: TopLevelBlock) => {
   let count = 0
@@ -53,11 +54,14 @@ const Post = ({ title, content, slug, preview, createdAt }: PostProps) => {
     renderNode: {
       [BLOCKS.EMBEDDED_ASSET]: (node: Parameters<NodeRenderer>[0]) => {
         // render the EMBEDDED_ASSET as you need
+        const file = node.data.target.fields.file
+        const src = new URL(file.url, 'https://images.ctfassets.net').toString()
+
         return (
-          <img
-            src={node.data.target.fields.file.url}
-            height={node.data.target.fields.file.details.image.height}
-            width={node.data.target.fields.file.details.image.width}
+          <Image
+            src={src}
+            height={file.details.image.height}
+            width={file.details.image.width}
             alt={node.data.target.fields.description}
           />
         )

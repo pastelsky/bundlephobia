@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
 
 export type Theme = 'light' | 'dark'
 
@@ -7,16 +7,27 @@ function parseTheme(value: string | null): Theme | null {
 }
 
 export const useTheme = () => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    // Server-side: default to light (FOUC script in _document handles the
-    // actual pre-hydration value on the client).
-    return 'light'
-  })
+  const subscribe = useCallback((onStoreChange: () => void) => {
+    window.addEventListener('themechange', onStoreChange)
+
+    return () => window.removeEventListener('themechange', onStoreChange)
+  }, [])
+
+  const getSnapshot = useCallback(
+    () =>
+      parseTheme(document.documentElement.getAttribute('data-theme')) ??
+      'light',
+    [],
+  )
+
+  const getServerSnapshot = useCallback((): Theme => 'light', [])
+
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   const apply = useCallback((next: Theme) => {
     document.documentElement.setAttribute('data-theme', next)
     localStorage.setItem('theme', next)
-    setTheme(next)
+    window.dispatchEvent(new Event('themechange'))
   }, [])
 
   useEffect(() => {
@@ -26,8 +37,6 @@ export const useTheme = () => {
     )
 
     if (applied === 'dark' || applied === 'light') {
-      setTheme(applied)
-
       return
     }
 

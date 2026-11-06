@@ -2,6 +2,9 @@ const path = require('path')
 
 module.exports = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'images.ctfassets.net' }],
+  },
   pageExtensions: ['page.js', 'page.tsx'],
   experimental: {
     turbopackFileSystemCacheForDev: true,

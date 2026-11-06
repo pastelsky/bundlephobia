@@ -17,10 +17,10 @@ function usePackagesFromSameScope(packageName: string) {
 
   useEffect(() => {
     if (!scope) {
-      setMorePackages([])
-
       return
     }
+
+    let isCurrent = true
 
     const getAgeScore = (result: PackageSuggestion) =>
       result.package.date
@@ -37,8 +37,21 @@ function usePackagesFromSameScope(packageName: string) {
             packageA.score.detail.popularity * getAgeScore(packageA),
         )
 
-      setMorePackages(sorted)
+      if (isCurrent) {
+        const today = new Date().toISOString()
+        setMorePackages(
+          sorted.map(result =>
+            result.package.date
+              ? result
+              : { ...result, package: { ...result.package, date: today } },
+          ),
+        )
+      }
     })
+
+    return () => {
+      isCurrent = false
+    }
   }, [packageName, scope])
 
   return morePackages
@@ -66,7 +79,7 @@ export default function InterLinksSection({
               key={pack.package.name}
               name={pack.package.name}
               description={pack.package.description}
-              date={pack.package.date ?? new Date().toISOString()}
+              date={pack.package.date!}
             />
           ))}
         </div>

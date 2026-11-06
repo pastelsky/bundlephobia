@@ -1,6 +1,16 @@
 import fs from 'fs'
 import path from 'path'
-import firebase from 'firebase'
+import { initializeApp } from 'firebase/app'
+import {
+  get,
+  getDatabase,
+  limitToFirst,
+  limitToLast,
+  orderByKey,
+  query,
+  ref,
+  startAt,
+} from 'firebase/database'
 
 import 'dotenv/config'
 
@@ -16,7 +26,7 @@ const firebaseConfig = {
   databaseURL: process.env.FIREBASE_DATABASE_URL,
 }
 
-firebase.initializeApp(firebaseConfig)
+initializeApp(firebaseConfig)
 
 function getFirebaseStoreFromDisk() {
   try {
@@ -34,21 +44,18 @@ function getFirebaseStoreFromDisk() {
 }
 
 async function getFirebaseStoreFromNetwork() {
-  const modulesRef = firebase.database().ref('modules-v2')
+  const database = getDatabase()
+  const modulesRef = ref(database, 'modules-v2')
 
-  const lastSnapshot =
-    // SAFETY: Firebase returns the modules-v2 package store at this boundary.
-    ((await modulesRef.limitToLast(1).once('value').then(snapshot => snapshot.val())) as
-      | FirebasePackageStore
-      | null) ?? {}
+  // SAFETY: modules-v2 stores package records keyed by package name.
+  const lastSnapshot = ((await get(query(modulesRef, limitToLast(1))).then(
+    snapshot => snapshot.val(),
+  )) as FirebasePackageStore | null) ?? {}
 
-  const firstSnapshot =
-    // SAFETY: Firebase returns the modules-v2 package store at this boundary.
-    ((await modulesRef
-      .limitToFirst(1)
-      .once('value')
-      .then(snapshot => snapshot.val())) as FirebasePackageStore | null) ??
-    {}
+  // SAFETY: modules-v2 stores package records keyed by package name.
+  const firstSnapshot = ((await get(query(modulesRef, limitToFirst(1))).then(
+    snapshot => snapshot.val(),
+  )) as FirebasePackageStore | null) ?? {}
 
   const lastEntry = Object.keys(lastSnapshot)[0]
   const firstEntry = Object.keys(firstSnapshot)[0]
@@ -63,14 +70,14 @@ async function getFirebaseStoreFromNetwork() {
     counter += 20000
 
     // SAFETY: Firebase returns the modules-v2 package store at this boundary.
-    const snapshot = (await firebase
-      .database()
-      .ref('modules-v2')
-      .orderByKey()
-      .startAt(currentLastEntry)
-      .limitToFirst(20000)
-      .once('value')
-      .then(snapshotData => snapshotData.val())) as FirebasePackageStore
+    const snapshot = (await get(
+      query(
+        modulesRef,
+        orderByKey(),
+        startAt(currentLastEntry),
+        limitToFirst(20000),
+      ),
+    ).then(snapshotData => snapshotData.val())) as FirebasePackageStore
 
     const packageNames = Object.keys(snapshot)
     currentLastEntry = packageNames[packageNames.length - 1]

@@ -94,7 +94,7 @@ describe('build API error middleware', () => {
       }),
     )
 
-    failureCache.del(
+    failureCache.delete(
       createAnalysisKey({
         language: 'javascript',
         operation: 'package-exports',

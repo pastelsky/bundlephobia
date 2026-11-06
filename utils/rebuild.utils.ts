@@ -6,7 +6,9 @@ import path from 'path'
 
 import axios from 'axios'
 import createDebug from 'debug'
-import firebase from 'firebase'
+import got from 'got'
+import { getApps, initializeApp } from 'firebase/app'
+import { get, getDatabase, ref } from 'firebase/database'
 
 import config from '../server/config'
 import type { JsonValue } from '../types/json'
@@ -33,19 +35,6 @@ type DeepEqual = (
 
 type Mkdir = (directory: string) => Promise<void>
 
-interface GotResponse<TBody> {
-  body: TBody
-}
-
-interface GotModule {
-  <TBody = string>(
-    url: string,
-    options?: {
-      json?: boolean
-    },
-  ): Promise<GotResponse<TBody>>
-}
-
 interface PackageBuildResult {
   gzip: number
   size: number
@@ -62,9 +51,6 @@ const deepEqual = require('lodash.isequal') as DeepEqual
 
 // SAFETY: the pinned mkdir module exposes a promise-returning directory helper.
 const mkdir = require('mkdir-promise') as Mkdir
-
-// SAFETY: the pinned got module implements the JSON request contract above.
-const got = require('got') as GotModule
 
 const debug = createDebug('rebuild:script')
 
@@ -93,13 +79,16 @@ const firebaseConfig = {
   databaseURL: process.env.FIREBASE_DATABASE_URL,
 }
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig)
-}
+const firebaseApp =
+  getApps().find(
+    app => app.options.databaseURL === firebaseConfig.databaseURL,
+  ) ?? initializeApp(firebaseConfig)
+
+const firebaseDatabase = getDatabase(firebaseApp)
 
 async function getFirebaseStore() {
   try {
-    const snapshot = await firebase.database().ref('modules-v2').once('value')
+    const snapshot = await get(ref(firebaseDatabase, 'modules-v2'))
 
     // SAFETY: Firebase modules-v2 stores package versions under this exact shape.
     return (snapshot.val() as PackageStore | null) ?? {}
@@ -117,14 +106,12 @@ async function getPackageResult({
   name: string
   version: string
 }) {
-  const ref = firebase
-    .database()
-    .ref()
-    .child('modules-v2')
-    .child(encodeFirebaseKey(name))
-    .child(encodeFirebaseKey(version))
+  const packageRef = ref(
+    firebaseDatabase,
+    `modules-v2/${encodeFirebaseKey(name)}/${encodeFirebaseKey(version)}`,
+  )
 
-  const snapshot = await ref.once('value')
+  const snapshot = await get(packageRef)
 
   return snapshot.val()
 }
@@ -186,12 +173,11 @@ async function run() {
     )}`
 
     queue.push(() =>
-      got<{ gzip: number; size: number }>(
+      got(
         `http://127.0.0.1:5000/api/size?package=${packString}&force=true`,
-        { json: true },
       )
-        .then(async response => {
-          const result = response.body
+        .json<{ gzip: number; size: number }>()
+        .then(async result => {
           const previous = packs[pack.packName][pack.version]
           const gzipDiff = Math.abs(result.gzip - previous.gzip)
           const minDiff = Math.abs(result.size - previous.size)

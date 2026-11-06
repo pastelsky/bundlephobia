@@ -7,6 +7,7 @@ const stringifyError = configure({
   deterministic: false,
   maximumBreadth: 20,
   maximumDepth: 4,
+  circularValue: '[Circular]',
 })
 
 function serializeValue(value) {

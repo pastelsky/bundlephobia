@@ -23,25 +23,27 @@ interface WorkerpoolModule {
 }
 
 interface LruCacheInstance<K, V> {
-  itemCount: number
+  size: number
   get(key: K): V | undefined
   set(key: K, value: V): this
-  del(key: K): void
+  delete(key: K): boolean
 }
 
 interface LruCacheConstructor {
-  new <K, V>(options: { max: number; maxAge: number }): LruCacheInstance<K, V>
+  new <K, V>(options: { max: number; ttl: number }): LruCacheInstance<K, V>
 }
 
-// SAFETY: the pinned lru-cache module implements the constructor contract above.
-const LRU = require('lru-cache') as LruCacheConstructor
+// SAFETY: lru-cache v11 exposes its constructor as the named LRUCache export.
+const { LRUCache: LRU } = require('lru-cache') as {
+  LRUCache: LruCacheConstructor
+}
 
 // SAFETY: the pinned workerpool module implements the pool contract above.
 const workerpool = require('workerpool') as WorkerpoolModule
 
 const failureCache = new LRU<string, FailureCacheEntry>({
   max: config.MAX_FAILURE_CACHE_ENTRIES,
-  maxAge: 30 * 24 * 60 * 60 * 1000,
+  ttl: 30 * 24 * 60 * 60 * 1000,
 })
 
 const debug = createDebug('bp:request')
@@ -68,7 +70,7 @@ if (process.env.BUILD_SERVICE_ENDPOINT) {
 
 registerMetricsProvider('main', () => ({
   queue: requestQueue.getDiagnostics(),
-  failureCacheEntries: failureCache.itemCount,
+  failureCacheEntries: failureCache.size,
 }))
 
 export { debug, failureCache, logger, pool, requestQueue }

@@ -23,7 +23,6 @@ export function SuggestionItem({
       className={cx('autocomplete-input__suggestion', {
         'autocomplete-input__suggestion--highlight': isHighlighted,
       })}
-      role="option"
       aria-selected={isHighlighted}
     >
       {item.highlight === null || item.highlight === undefined ? (

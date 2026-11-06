@@ -1,11 +1,11 @@
-import 'dotenv-defaults/config.js'
+import 'dotenv-defaults/config'
 
 import type { AddressInfo } from 'node:net'
 
 import { CACHE_ROUTE } from '@bundlephobia/service-contracts/cache'
 
 import createFastify from 'fastify'
-import firebase from 'firebase'
+import { initializeApp } from 'firebase/app'
 
 import {
   getExportsSizeMiddleware,
@@ -24,7 +24,7 @@ const firebaseConfig = {
   databaseURL: process.env.FIREBASE_DATABASE_URL,
 }
 
-firebase.initializeApp(firebaseConfig)
+initializeApp(firebaseConfig)
 
 fastify.get(CACHE_ROUTE.package, getPackageSizeMiddleware)
 

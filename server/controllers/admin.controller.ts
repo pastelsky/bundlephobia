@@ -1,4 +1,4 @@
-import exec from 'execa'
+import { execa } from 'execa'
 import { removePaths } from '../../scripts/cleanup.mts'
 import type { Context, Middleware } from 'koa'
 
@@ -16,7 +16,7 @@ export function createAdminController(password: string): AdminController {
   return {
     restart: async ctx => {
       try {
-        const { stdout } = await exec.command('pm2 reload all')
+        const { stdout } = await execa('pm2', ['reload', 'all'])
         ctx.body = 'Server restarted' + stdout
       } catch (error) {
         console.error('Failed to restart', error)
@@ -34,7 +34,7 @@ export function createAdminController(password: string): AdminController {
         ctx.status = 500
         ctx.body = 'Failed to restart'
       } else {
-        const { stdout, stderr } = await exec.command('pm2 reload all')
+        const { stdout, stderr } = await execa('pm2', ['reload', 'all'])
         ctx.body = 'Server restarted' + stdout
         console.error(stderr)
       }

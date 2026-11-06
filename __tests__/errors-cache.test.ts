@@ -1,5 +1,3 @@
-import fetch from 'node-fetch'
-
 const baseURL = 'http://127.0.0.1:5000/api/size?package='
 
 type PackageSizeResponse = {

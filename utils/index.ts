@@ -1,16 +1,6 @@
 import { configure } from 'safe-stable-stringify'
 import truncate from 'truncate'
 
-type ErrorValue =
-  | string
-  | number
-  | bigint
-  | boolean
-  | symbol
-  | null
-  | undefined
-  | object
-
 export interface FormattedValue {
   unit: 'B' | 'kB' | 'MB' | 'μs' | 'ms' | 's'
   size: number
@@ -92,7 +82,11 @@ export function zeroToN(n: number): number[] {
 
 const MAX_ERROR_DETAIL_LENGTH = 12_000
 
-const stringifyError = configure({ maximumBreadth: 20, maximumDepth: 4 })
+const stringifyError = configure({
+  maximumBreadth: 20,
+  maximumDepth: 4,
+  circularValue: '[Circular]',
+})
 
 function formatArrayError(originalError: unknown[]): string | null {
   const details = originalError.flatMap(error => {

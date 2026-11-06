@@ -1,4 +1,4 @@
-import 'dotenv-defaults/config.js'
+import 'dotenv-defaults/config'
 
 export interface CacheRepositoryConfig {
   readKey: string

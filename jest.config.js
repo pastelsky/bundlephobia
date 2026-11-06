@@ -7,7 +7,7 @@ module.exports = {
     ],
     '^.+\\.(t|j)sx?$': ['@swc/jest', { jsc: { target: 'es2022' } }],
   },
-  transformIgnorePatterns: ['/node_modules/(?!d3-|internmap)'],
+  transformIgnorePatterns: [],
   moduleNameMapper: {
     '^client/(.*)$': '<rootDir>/client/$1',
     '^utils$': '<rootDir>/utils/index.ts',

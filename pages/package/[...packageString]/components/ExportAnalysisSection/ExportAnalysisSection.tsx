@@ -105,7 +105,6 @@ class ExportPill extends React.Component<ExportPillProps> {
 function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
   const shouldShowLabels = exports.length > 20
   const exportDictionary: Record<string, ExportItem[]> = {}
-  let curIndex = 0
 
   exports.forEach(exp => {
     const firstLetter = exp.name[0].toLowerCase()
@@ -117,39 +116,47 @@ function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
     }
   })
 
+  const letters = Object.keys(exportDictionary).sort()
+
+  const loadingNames = new Set(
+    letters
+      .flatMap(letter => exportDictionary[letter])
+      .slice(0, 40)
+      .map(exp => exp.name),
+  )
+
   return (
     <ul className="export-analysis-section__list">
-      {Object.keys(exportDictionary)
-        .sort()
-        .map(letter => (
-          <div className="export-analysis-section__letter-group" key={letter}>
-            {shouldShowLabels && (
-              <div className="export-analysis-section__dont-break">
-                <h3 className="export-analysis-section__letter-heading">
-                  {letter}
-                </h3>
-                <ExportPill
-                  size={exportDictionary[letter][0].gzip}
-                  totalSize={totalSize}
-                  name={exportDictionary[letter][0].name}
-                  key={exportDictionary[letter][0].name}
-                  isLoading={curIndex++ < 40 && isLoading}
-                />
-              </div>
-            )}
-            {exportDictionary[letter]
-              .slice(shouldShowLabels ? 1 : 0)
-              .map(exp => (
-                <ExportPill
-                  size={exp.gzip}
-                  totalSize={totalSize}
-                  name={exp.name}
-                  key={exp.name}
-                  isLoading={curIndex++ < 40 && isLoading}
-                />
-              ))}
-          </div>
-        ))}
+      {letters.map(letter => (
+        <div className="export-analysis-section__letter-group" key={letter}>
+          {shouldShowLabels && (
+            <div className="export-analysis-section__dont-break">
+              <h3 className="export-analysis-section__letter-heading">
+                {letter}
+              </h3>
+              <ExportPill
+                size={exportDictionary[letter][0].gzip}
+                totalSize={totalSize}
+                name={exportDictionary[letter][0].name}
+                key={exportDictionary[letter][0].name}
+                isLoading={
+                  loadingNames.has(exportDictionary[letter][0].name) &&
+                  isLoading
+                }
+              />
+            </div>
+          )}
+          {exportDictionary[letter].slice(shouldShowLabels ? 1 : 0).map(exp => (
+            <ExportPill
+              size={exp.gzip}
+              totalSize={totalSize}
+              name={exp.name}
+              key={exp.name}
+              isLoading={loadingNames.has(exp.name) && isLoading}
+            />
+          ))}
+        </div>
+      ))}
       <div className="export-analysis-section__overflow-indicator" />
     </ul>
   )

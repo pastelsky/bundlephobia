@@ -69,7 +69,9 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
   }
 
   renderDisabledBar = (reading: Reading) => (
-    <div
+    <button
+      type="button"
+      aria-label={`Build package version ${reading.version}`}
       key={reading.version}
       className="bar-graph__bar-group bar-graph__bar-group--disabled"
       onClick={() => this.props.onBarClick(reading)}
@@ -80,7 +82,7 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
         data-balloon="Unknown | Click 👆 to build"
       />
       <BarVersion version={reading.version} />
-    </div>
+    </button>
   )
 
   renderActiveBar = (
@@ -98,7 +100,9 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
     }
 
     return (
-      <div
+      <button
+        type="button"
+        aria-label={`Show package size details for version ${reading.version}`}
         onClick={() => this.props.onBarClick(reading)}
         key={reading.version}
         className="bar-graph__bar-group"
@@ -141,7 +145,7 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
           data-balloon={getTooltipMessage(reading)}
         />
         <BarVersion version={reading.version} />
-      </div>
+      </button>
     )
   }
 

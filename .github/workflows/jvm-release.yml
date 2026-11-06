@@ -18,7 +18,7 @@ concurrency:
 jobs:
   publish:
     if: github.ref == 'refs/heads/bundlephobia'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: maven-central
 
