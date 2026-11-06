@@ -86,13 +86,13 @@ cleanup_stale_package_dirs() {
             [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ] || break
         fi
 
-        path="${entry#* }"
+        path="${entry#*$'\t'}"
         log "Removing stale package workspace (oldest first): ${path}"
         rm -rf -- "$path" 2>/dev/null
     done < <(
         # Preserve the rounded-minute cutoff; order candidates by modification time.
         fd_cleanup --max-depth 1 --type d --changed-before 61min --print0 '^' "$package_root" \
-            --exec-batch stat --printf '%Y %n\0' -- 2>/dev/null | sort -z -n
+            --exec-batch env TZ=UTC stat --printf '%y\t%n\0' -- 2>/dev/null | sort -z
     )
 }
 
@@ -141,7 +141,7 @@ evict_oldest_bun_cache_entries() {
     [ -d "$cache_root" ] || return
 
     while IFS= read -r -d '' entry; do
-        path="${entry#* }"
+        path="${entry#*$'\t'}"
         [ -n "$first_path" ] || first_path="$path"
         last_path="$path"
         batch+=("$path")
@@ -168,7 +168,7 @@ evict_oldest_bun_cache_entries() {
             if [ "${#scopes[@]}" -gt 0 ]; then
                 fd_cleanup --max-depth 1 --type d --type f --exclude .tmp --print0 '^' "${scopes[@]}"
             fi
-        } | xargs -0 -r stat --printf '%Y %n\0' -- 2>/dev/null | sort -z -n
+        } | xargs -0 -r env TZ=UTC stat --printf '%y\t%n\0' -- 2>/dev/null | sort -z
     )
 
     loop_usage=$(get_loop_usage)
