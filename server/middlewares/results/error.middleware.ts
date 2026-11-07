@@ -170,7 +170,7 @@ const handleUnsupportedPackageError: BuildErrorHandler = (context, error) => {
   context.ctx.cacheControl = {
     maxAge: context.force ? 0 : config.CACHE.SIZE_API_ERROR_UNSUPPORTED,
   }
-  context.respondWithError(403, {
+  context.respondWithError(422, {
     code: 'UnsupportedPackageError',
     message: `The package you were looking for is unsupported and cannot be built by bundlephobia — ${
       error.extra?.reason ?? 'unknown reason'
