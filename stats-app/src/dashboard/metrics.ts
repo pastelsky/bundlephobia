@@ -321,6 +321,46 @@ export async function loadResourceSummary(signal: AbortSignal) {
   }
 }
 
+export async function loadPm2Summary(range: TimeRange, signal: AbortSignal) {
+  const duration = `${range.seconds}s`
+
+  const [exporter, processes, online, restarts, unstableRestarts] =
+    await Promise.all([
+      queryInstant(
+        'bundlephobia_pm2_exporter_poll_success{job="bundlephobia_pm2"}',
+        signal,
+      ),
+      queryInstant(
+        'count(bundlephobia_pm2_process_up{job="bundlephobia_pm2"})',
+        signal,
+      ),
+      queryInstant(
+        'sum(bundlephobia_pm2_process_up{job="bundlephobia_pm2"})',
+        signal,
+      ),
+      queryInstant(
+        `sum(increase(bundlephobia_pm2_process_restarts_total{job="bundlephobia_pm2"}[${duration}]))`,
+        signal,
+      ),
+      queryInstant(
+        `sum(increase(bundlephobia_pm2_process_unstable_restarts_total{job="bundlephobia_pm2"}[${duration}]))`,
+        signal,
+      ),
+    ])
+
+  const scalar = (rows: typeof exporter) =>
+    rows[0] ? finiteValue(rows[0].value[1]) : null
+
+  return {
+    health: scalar(exporter),
+    configured: processes.length > 0,
+    processes: scalar(processes),
+    online: scalar(online),
+    restarts: scalar(restarts),
+    unstableRestarts: scalar(unstableRestarts),
+  }
+}
+
 export async function loadPageSummary(
   source: DashboardSource,
   range: TimeRange,
@@ -331,6 +371,8 @@ export async function loadPageSummary(
       return { source, data: await loadResourceSummary(signal) } as const
     case 'pipeline':
       return { source, data: await loadPipelineSummary(range, signal) } as const
+    case 'pm2':
+      return { source, data: await loadPm2Summary(range, signal) } as const
     case 'haproxy':
       return { source, data: await loadSummary(range, signal) } as const
   }

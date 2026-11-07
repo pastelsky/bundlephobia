@@ -3,7 +3,11 @@ import {
   stepSeconds,
   TIME_RANGES,
 } from '../stats-app/src/lib/api'
-import { loadPanel, loadSummary } from '../stats-app/src/dashboard/metrics'
+import {
+  loadPanel,
+  loadSummary,
+  loadPm2Summary,
+} from '../stats-app/src/dashboard/metrics'
 
 import { CHARTS } from '../stats-app/src/dashboard/charts'
 
@@ -63,6 +67,99 @@ describe('history from the VictoriaMetrics API', () => {
 
     expect(chart.hasData).toBe(false)
     expect(chart.data.every(row => row.Requests === null)).toBe(true)
+  })
+
+  it('queries PM2 restart counters per worker and keeps the worker label', async () => {
+    jest.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+      Response.json({
+        status: 'success',
+        data: {
+          resultType: 'matrix',
+          result: [
+            {
+              metric: { worker: 'build-service #2' },
+              values: [[end - 60, '2']],
+            },
+          ],
+        },
+      }),
+    )
+
+    const chart = await loadPanel(
+      CHARTS.restarts,
+      TIME_RANGES[0],
+      new AbortController().signal,
+    )
+
+    const requestUrl = new URL(
+      String(jest.mocked(fetch).mock.calls[0][0]),
+      'http://localhost',
+    )
+
+    const expression = requestUrl.searchParams.get('query')
+
+    expect(expression).toContain('sum by (worker)')
+    expect(expression).toContain(
+      'increase(bundlephobia_pm2_process_restarts_total',
+    )
+    expect(chart.categories).toContain('build-service #2')
+  })
+
+  it('summarizes online PM2 workers and restart counts over the selected range', async () => {
+    jest.spyOn(globalThis, 'fetch').mockImplementation(
+      jest.fn(async input => {
+        const query = new URL(
+          String(input),
+          'http://localhost',
+        ).searchParams.get('query')
+
+        const responses = [
+          {
+            matches: (value: string | null) => value?.includes('poll_success'),
+            value: '1',
+          },
+          {
+            matches: (value: string | null) => value?.startsWith('count('),
+            value: '5',
+          },
+          {
+            matches: (value: string | null) =>
+              value?.startsWith('sum(bundlephobia_pm2_process_up'),
+            value: '4',
+          },
+          {
+            matches: (value: string | null) =>
+              value?.includes('unstable_restarts'),
+            value: '1',
+          },
+        ]
+
+        const value =
+          responses.find(response => response.matches(query))?.value ?? '3'
+
+        return Response.json({
+          status: 'success',
+          data: {
+            resultType: 'vector',
+            result: [{ metric: {}, value: [end, value] }],
+          },
+        })
+      }),
+    )
+
+    const summary = await loadPm2Summary(
+      TIME_RANGES[0],
+      new AbortController().signal,
+    )
+
+    expect(summary).toEqual({
+      health: 1,
+      configured: true,
+      processes: 5,
+      online: 4,
+      restarts: 3,
+      unstableRestarts: 1,
+    })
   })
 
   it('shows newly identified bot families alongside the named dashboard categories', async () => {

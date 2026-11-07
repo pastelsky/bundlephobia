@@ -590,4 +590,94 @@ const resources = {
   },
 } satisfies Record<string, ChartDefinition>
 
-export const CHARTS = { ...traffic, ...pipeline, ...resources }
+const pm2Job = 'job="bundlephobia_pm2"'
+
+const pm2 = {
+  restarts: {
+    id: 'pm2-restarts',
+    title: 'Worker restarts',
+    description: 'Restart events for each PM2 process in each interval',
+    unit: 'restarts',
+    measurement: 'counter',
+    chart: { type: 'line', allowDecimals: false },
+    format: value => numberFormat.format(value),
+    series: window => [
+      {
+        expression: `sum by (worker) (increase(bundlephobia_pm2_process_restarts_total{${pm2Job}}[${window}]))`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+  unstableRestarts: {
+    id: 'pm2-unstable-restarts',
+    title: 'Unstable restarts',
+    description: 'Rapid restarts counted by PM2 for each process',
+    unit: 'restarts',
+    measurement: 'counter',
+    chart: { type: 'line', allowDecimals: false },
+    format: value => numberFormat.format(value),
+    series: window => [
+      {
+        expression: `sum by (worker) (increase(bundlephobia_pm2_process_unstable_restarts_total{${pm2Job}}[${window}]))`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+  availability: {
+    id: 'pm2-availability',
+    title: 'Worker status',
+    description: 'Whether each PM2 process is online',
+    unit: 'status',
+    chart: { minValue: 0, maxValue: 1, allowDecimals: false },
+    format: value => (value >= 1 ? 'Online' : 'Offline'),
+    series: () => [
+      {
+        expression: `max by (worker) (bundlephobia_pm2_process_up{${pm2Job}})`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+  uptime: {
+    id: 'pm2-uptime',
+    title: 'Worker uptime',
+    description: 'Time since PM2 last started each process',
+    unit: 'seconds',
+    chart: { type: 'line' },
+    format: value => `${numberFormat.format(value / 3600)} h`,
+    series: () => [
+      {
+        expression: `max by (worker) (bundlephobia_pm2_process_uptime_seconds{${pm2Job}})`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+  cpu: {
+    id: 'pm2-cpu',
+    title: 'Worker CPU',
+    description: 'CPU utilization reported by PM2',
+    unit: '%',
+    chart: { minValue: 0, maxValue: 100 },
+    format: value => `${numberFormat.format(value)}%`,
+    series: () => [
+      {
+        expression: `max by (worker) (bundlephobia_pm2_process_cpu_percent{${pm2Job}})`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+  memory: {
+    id: 'pm2-memory',
+    title: 'Worker memory',
+    description: 'Resident memory reported by PM2',
+    unit: 'bytes',
+    format: formatBytes,
+    series: () => [
+      {
+        expression: `max by (worker) (bundlephobia_pm2_process_memory_bytes{${pm2Job}})`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+} satisfies Record<string, ChartDefinition>
+
+export const CHARTS = { ...traffic, ...pipeline, ...resources, ...pm2 }

@@ -20,6 +20,13 @@ export const SOURCE_DETAILS = {
     scope: 'Whole server · sampled once per minute',
     footer: 'Host resource counters',
   },
+  pm2: {
+    eyebrow: 'PROCESS SUPERVISION',
+    healthy: 'PM2 metadata collecting',
+    section: 'PM2 WORKERS',
+    scope: 'Restart history · process state · CPU & memory',
+    footer: 'PM2 process metadata',
+  },
 }
 
 export type DashboardSource = keyof typeof SOURCE_DETAILS

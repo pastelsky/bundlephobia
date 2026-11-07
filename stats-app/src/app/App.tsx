@@ -11,6 +11,7 @@ import { ChartPanel } from '../dashboard/components/ChartPanel'
 import {
   SummaryCards,
   PipelineCards,
+  Pm2Cards,
   ResourceCards,
 } from '../dashboard/components/SummaryCards'
 import {
@@ -34,6 +35,7 @@ const SUMMARY_CARDS = {
   haproxy: SummaryCards,
   pipeline: PipelineCards,
   resources: ResourceCards,
+  pm2: Pm2Cards,
 }
 
 function SummarySection({ source, summary, loading }: SummarySectionProps) {
@@ -46,6 +48,8 @@ function SummarySection({ source, summary, loading }: SummarySectionProps) {
       return <PipelineCards data={summary.data} loading={loading} />
     case 'resources':
       return <ResourceCards data={summary.data} loading={loading} />
+    case 'pm2':
+      return <Pm2Cards data={summary.data} loading={loading} />
     case 'haproxy':
       return <SummaryCards data={summary.data} loading={loading} />
   }
