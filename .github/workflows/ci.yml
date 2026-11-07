@@ -185,5 +185,5 @@ jobs:
           corepack enable
           corepack yarn install --immutable
           sudo apt-get update
-          sudo apt-get install -y bubblewrap fd-find
+          sudo apt-get install -y bubblewrap fd-find psmisc
       - run: node __tests__/scratch-cleanup.mjs

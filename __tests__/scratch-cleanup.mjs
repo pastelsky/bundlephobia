@@ -121,6 +121,10 @@ if (process.argv[2] !== '--sandboxed') {
 
   for (const name of [
     '.hidden.d.ts',
+    'project.tsbuildinfo',
+    '.DS_Store',
+    'Thumbs.db',
+    'desktop.ini',
     'index.d.mts',
     'index.d.cts',
     'dist/cjs/index.map',
@@ -153,6 +157,10 @@ if (process.argv[2] !== '--sandboxed') {
 
   for (const name of [
     '.hidden.d.ts',
+    'project.tsbuildinfo',
+    '.DS_Store',
+    'Thumbs.db',
+    'desktop.ini',
     'index.d.mts',
     'index.d.cts',
     'dist/cjs/index.map',
@@ -167,6 +175,36 @@ if (process.argv[2] !== '--sandboxed') {
   await fs.access(path.join(scopedPackage, 'dist/cjs/deeper/retain.map'))
   assert.equal(await fs.readFile(cachedMap, 'utf8'), 'retain')
   assert.equal(await fs.readFile(retainedHardlink, 'utf8'), 'retain')
+
+  const logRoot = path.join(fixture, 'logs')
+  await fs.mkdir(logRoot)
+  const oldRotation = path.join(logRoot, 'access.log.1')
+  const freshRotation = path.join(logRoot, 'access.log.2')
+  const openRotation = path.join(logRoot, 'access.log.3')
+  const oldLog = new Date(Date.now() - 9 * 24 * 60 * 60_000)
+  for (const file of [oldRotation, freshRotation, openRotation]) {
+    await fs.writeFile(file, 'log')
+    if (file !== freshRotation) await fs.utimes(file, oldLog, oldLog)
+  }
+  const openLog = await fs.open(openRotation, 'r')
+  try {
+    execFileSync(
+      'bash',
+      [
+        '-c',
+        'source "$1"; log() { :; }; cleanup_rotated_logs "$2"',
+        'cleanup',
+        new URL('../operations/disk-clean.sh', import.meta.url).pathname,
+        logRoot,
+      ],
+      { stdio: 'inherit' },
+    )
+    await assert.rejects(fs.access(oldRotation), { code: 'ENOENT' })
+    await fs.access(freshRotation)
+    await fs.access(openRotation)
+  } finally {
+    await openLog.close()
+  }
 
   const bunCache = path.join(root, 'cache/bun')
   await fs.mkdir(path.join(bunCache, '.tmp'), { recursive: true })

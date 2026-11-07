@@ -124,7 +124,7 @@ cleanup_non_bundlable_files() {
     # Cover ordinary/scoped node_modules layouts without walking arbitrarily deep.
     # Unlink working copies only; keep every cache entry intact.
     fd_cleanup --one-file-system --max-depth 7 --type f \
-        '\.(map|d\.(ts|mts|cts))$' "${roots[@]}" \
+        '(\.(map|d\.(ts|mts|cts)|tsbuildinfo)$|^(\.DS_Store|Thumbs\.db|desktop\.ini)$)' "${roots[@]}" \
         --exec-batch rm -f -- 2>/dev/null || status=$?
     log "Non-bundlable file cleanup finished (status=${status})"
 }
@@ -280,12 +280,24 @@ cleanup_loop_device() {
     fi
 }
 
+cleanup_rotated_logs() {
+    local log_root="${1:-/var/log}" path
+    # Keep open rotations until their writer has reopened its current log.
+    command -v fuser >/dev/null || { log "Skipping rotated logs: fuser is unavailable"; return 0; }
+    while IFS= read -r -d '' path; do
+        if ! fuser -s "$path" 2>/dev/null; then
+            rm -f -- "$path"
+        fi
+    done < <(fd_cleanup --type f --changed-before 8days --print0 '\.log\.[0-9]+$' "$log_root")
+}
+
 cleanup_main() {
     log "Starting main disk cleanup"
 
     cleanup_orphaned_package_managers
 
     # Old log files (keep 7 days)
+    cleanup_rotated_logs
     fd_cleanup --type f --changed-before 8days --exclude disk_cleanup.log --exclude pm2_monitor.log \
         '\.log$' /var/log --exec-batch rm -f -- 2>/dev/null
     fd_cleanup --type f --changed-before 31days '\.gz$' /var/log --exec-batch rm -f -- 2>/dev/null
