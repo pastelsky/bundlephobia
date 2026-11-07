@@ -25,7 +25,9 @@ for (const [error, status] of [
   test(`preserves ${error.name} through the installation HTTP boundary`, async () => {
     const app = Fastify()
     const completions: unknown[] = []
-    const record = (details: unknown) => completions.push(details)
+
+    const record: Parameters<typeof eventQueue.on>[1] = details =>
+      completions.push(details)
 
     eventQueue.on('TASK_PACKAGE_STATS', record)
 
@@ -51,6 +53,7 @@ for (const [error, status] of [
           extra: error.extra,
         })
       }
+
       await expect(
         getPackageStats('example@1.0.0', { installationProvider: provider }),
       ).rejects.toMatchObject({ name: error.name })
