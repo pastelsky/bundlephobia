@@ -76,6 +76,19 @@ const installationProvider = process.env.INSTALLATION_SERVICE_ENDPOINT
   ? createInstallationProvider(process.env.INSTALLATION_SERVICE_ENDPOINT)
   : undefined
 
+const memoryLimitBytes = process.env.BUILD_WORKER_MEMORY_LIMIT_BYTES
+  ? Number(process.env.BUILD_WORKER_MEMORY_LIMIT_BYTES)
+  : undefined
+
+if (
+  memoryLimitBytes !== undefined &&
+  (!Number.isFinite(memoryLimitBytes) || memoryLimitBytes <= 0)
+) {
+  throw new Error(
+    'BUILD_WORKER_MEMORY_LIMIT_BYTES must be a positive byte count',
+  )
+}
+
 async function analyzePackage(req, res, analyze) {
   const controller = new AbortController()
   const abort = () => controller.abort()
@@ -86,6 +99,7 @@ async function analyzePackage(req, res, analyze) {
   try {
     return await analyze(decodeURIComponent(req.query.p), {
       installTimeout: 60000,
+      memoryLimitBytes,
       installationProvider,
       signal: controller.signal,
     })

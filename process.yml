@@ -30,7 +30,8 @@ apps:
       - --require=./scripts/memory-diagnostics.cjs
       - --experimental-strip-types
     instances: 3
-    max_memory_restart: 1000M
+    # One per-worker byte budget for PM2 and SDK batching.
+    max_memory_restart: &build_worker_memory_limit 1048576000
     exec_mode: cluster
     error_file: logs/build-service.log
     out_file: logs/build-service.log
@@ -42,6 +43,7 @@ apps:
       PM2_APM: 'false'
       PM2_DISABLE_METRICS: 'true'
       BUILD_METRICS_BASE_PORT: 8410
+      BUILD_WORKER_MEMORY_LIMIT_BYTES: *build_worker_memory_limit
       INSTALLATION_SERVICE_ENDPOINT: http://127.0.0.1:7003
       MEMORY_DIAGNOSTICS_SERVICE: build-service
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
