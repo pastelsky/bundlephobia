@@ -1,7 +1,20 @@
 import { MetricCards, type MetricCard } from '../../components/ui/MetricCards'
-import { Activity, ArrowDownLeft, Cable, ShieldAlert } from 'lucide-react'
+import {
+  Activity,
+  ArrowDownLeft,
+  Cable,
+  RotateCcw,
+  ShieldAlert,
+  TriangleAlert,
+  UsersRound,
+} from 'lucide-react'
 import { compactFormat, numberFormat, formatBytes } from '../../lib/format'
-import type { SummaryData, ResourceData, loadPipelineSummary } from '../metrics'
+import type {
+  SummaryData,
+  ResourceData,
+  loadPipelineSummary,
+  loadPm2Summary,
+} from '../metrics'
 
 type SummaryCard = Omit<MetricCard, 'format' | 'detail'> &
   Partial<Pick<MetricCard, 'format' | 'detail'>>
@@ -172,6 +185,44 @@ export function ResourceCards({
       value: root?.available,
       format: formatBytes,
       detail: `${optionalBytes(root?.total)} total capacity`,
+    },
+  ]
+
+  return <ValueCards cards={cards} loading={loading} />
+}
+
+export function Pm2Cards({
+  data,
+  loading,
+}: {
+  data?: Awaited<ReturnType<typeof loadPm2Summary>>
+  loading: boolean
+}) {
+  const cards: SummaryCard[] = [
+    {
+      title: 'Online processes',
+      value: data?.online,
+      detail: `${data?.processes ?? '—'} PM2-managed processes`,
+      icon: UsersRound,
+    },
+    {
+      title: 'Restarts',
+      value: data?.restarts,
+      detail: 'In the selected time range',
+      icon: RotateCcw,
+    },
+    {
+      title: 'Unstable restarts',
+      value: data?.unstableRestarts,
+      detail: 'Rapid restarts in the selected range',
+      icon: TriangleAlert,
+    },
+    {
+      title: 'PM2 metadata',
+      value: data?.health,
+      format: value => (value === 1 ? 'Collecting' : 'Unavailable'),
+      detail: 'Latest PM2 query status',
+      icon: Activity,
     },
   ]
 

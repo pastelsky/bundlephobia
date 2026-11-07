@@ -14,4 +14,5 @@ Declare charts in `src/dashboard/charts.ts` and arrange pages in
 `src/dashboard/pages.ts`. Dashboard-specific composition lives under
 `src/dashboard/`; reusable, data-independent UI lives under `src/components/ui/`.
 Use Tailwind utilities and shared components for styling. Root lint, typecheck,
-and build commands cover this app.
+and build commands cover this app. The PM2 workers page reads process metadata
+from the local exporter described in [`operations/pm2-exporter`](../operations/pm2-exporter/README.md).
