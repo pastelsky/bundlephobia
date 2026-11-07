@@ -182,11 +182,15 @@ if (process.argv[2] !== '--sandboxed') {
   const freshRotation = path.join(logRoot, 'access.log.2')
   const openRotation = path.join(logRoot, 'access.log.3')
   const oldLog = new Date(Date.now() - 9 * 24 * 60 * 60_000)
+
   for (const file of [oldRotation, freshRotation, openRotation]) {
     await fs.writeFile(file, 'log')
+
     if (file !== freshRotation) await fs.utimes(file, oldLog, oldLog)
   }
+
   const openLog = await fs.open(openRotation, 'r')
+
   try {
     execFileSync(
       'bash',
