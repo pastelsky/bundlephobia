@@ -7432,7 +7432,7 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     package-stats: bin/cli.js
-  checksum: 98355e2e6d8c6268bf10fc124c2fb304b712b5f6f45f6fb7d5c8f9adf850f702b894e849e5095a287d04a26635c216faee8661bff770b6da020480385913606c
+  checksum: 10/98355e2e6d8c6268bf10fc124c2fb304b712b5f6f45f6fb7d5c8f9adf850f702b894e849e5095a287d04a26635c216faee8661bff770b6da020480385913606c
   languageName: node
   linkType: hard
 

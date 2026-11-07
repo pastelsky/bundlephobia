@@ -38,6 +38,14 @@ jobs:
           key: yarn-${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
       - name: Install project dependencies
         run: yarn install --immutable
+      - name: Validate standalone build-service lockfile
+        if: matrix.node-version == '24.x'
+        run: |
+          standalone_dir="$(mktemp -d)"
+          cp build-service/package.json build-service/yarn.lock .yarnrc.yml "$standalone_dir/"
+          node -e 'const fs = require("node:fs"); const file = process.argv[1]; const pkg = JSON.parse(fs.readFileSync(file)); pkg.packageManager = require("./package.json").packageManager; fs.writeFileSync(file, JSON.stringify(pkg))' "$standalone_dir/package.json"
+          cd "$standalone_dir"
+          corepack yarn install --immutable --mode=skip-build
       - name: Cache Next.js build
         uses: actions/cache@v6
         with:
