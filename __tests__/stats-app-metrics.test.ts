@@ -69,7 +69,7 @@ describe('history from the VictoriaMetrics API', () => {
     expect(chart.data.every(row => row.Requests === null)).toBe(true)
   })
 
-  it('queries PM2 restart counters per worker and keeps the worker label', async () => {
+  it('queries PM2 restart-count changes per worker and keeps the worker label', async () => {
     jest.spyOn(globalThis, 'fetch').mockImplementation(async () =>
       Response.json({
         status: 'success',
@@ -98,14 +98,13 @@ describe('history from the VictoriaMetrics API', () => {
 
     const expression = requestUrl.searchParams.get('query')
 
-    expect(expression).toContain('sum by (worker)')
     expect(expression).toContain(
-      'increase(bundlephobia_pm2_process_restarts_total',
+      'label_join(clamp_min(delta(pm2_app_restart_count',
     )
     expect(chart.categories).toContain('build-service #2')
   })
 
-  it('summarizes online PM2 workers and restart counts over the selected range', async () => {
+  it('summarizes PM2 processes, restart counts, and errored applications', async () => {
     jest.spyOn(globalThis, 'fetch').mockImplementation(
       jest.fn(async input => {
         const query = new URL(
@@ -115,21 +114,21 @@ describe('history from the VictoriaMetrics API', () => {
 
         const responses = [
           {
-            matches: (value: string | null) => value?.includes('poll_success'),
+            matches: (value: string | null) => value?.startsWith('up{'),
             value: '1',
           },
           {
-            matches: (value: string | null) => value?.startsWith('count('),
+            matches: (value: string | null) =>
+              value?.startsWith('sum(pm2_app_instances'),
             value: '5',
           },
           {
             matches: (value: string | null) =>
-              value?.startsWith('sum(bundlephobia_pm2_process_up'),
-            value: '4',
+              value?.includes('delta(pm2_app_restart_count'),
+            value: '3',
           },
           {
-            matches: (value: string | null) =>
-              value?.includes('unstable_restarts'),
+            matches: (value: string | null) => value?.includes('== bool 4'),
             value: '1',
           },
         ]
@@ -156,9 +155,8 @@ describe('history from the VictoriaMetrics API', () => {
       health: 1,
       configured: true,
       processes: 5,
-      online: 4,
       restarts: 3,
-      unstableRestarts: 1,
+      erroredApps: 1,
     })
   })
 

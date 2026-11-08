@@ -324,29 +324,18 @@ export async function loadResourceSummary(signal: AbortSignal) {
 export async function loadPm2Summary(range: TimeRange, signal: AbortSignal) {
   const duration = `${range.seconds}s`
 
-  const [exporter, processes, online, restarts, unstableRestarts] =
-    await Promise.all([
-      queryInstant(
-        'bundlephobia_pm2_exporter_poll_success{job="bundlephobia_pm2"}',
-        signal,
-      ),
-      queryInstant(
-        'count(bundlephobia_pm2_process_up{job="bundlephobia_pm2"})',
-        signal,
-      ),
-      queryInstant(
-        'sum(bundlephobia_pm2_process_up{job="bundlephobia_pm2"})',
-        signal,
-      ),
-      queryInstant(
-        `sum(increase(bundlephobia_pm2_process_restarts_total{job="bundlephobia_pm2"}[${duration}]))`,
-        signal,
-      ),
-      queryInstant(
-        `sum(increase(bundlephobia_pm2_process_unstable_restarts_total{job="bundlephobia_pm2"}[${duration}]))`,
-        signal,
-      ),
-    ])
+  const [exporter, processes, restarts, erroredApps] = await Promise.all([
+    queryInstant('up{job="bundlephobia_pm2"}', signal),
+    queryInstant('sum(pm2_app_instances{job="bundlephobia_pm2"})', signal),
+    queryInstant(
+      `sum(clamp_min(delta(pm2_app_restart_count{job="bundlephobia_pm2"}[${duration}]), 0))`,
+      signal,
+    ),
+    queryInstant(
+      'sum(pm2_app_status{job="bundlephobia_pm2"} == bool 4)',
+      signal,
+    ),
+  ])
 
   const scalar = (rows: typeof exporter) =>
     rows[0] ? finiteValue(rows[0].value[1]) : null
@@ -355,9 +344,8 @@ export async function loadPm2Summary(range: TimeRange, signal: AbortSignal) {
     health: scalar(exporter),
     configured: processes.length > 0,
     processes: scalar(processes),
-    online: scalar(online),
     restarts: scalar(restarts),
-    unstableRestarts: scalar(unstableRestarts),
+    erroredApps: scalar(erroredApps),
   }
 }
 

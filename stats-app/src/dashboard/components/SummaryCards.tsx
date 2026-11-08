@@ -5,7 +5,6 @@ import {
   Cable,
   RotateCcw,
   ShieldAlert,
-  TriangleAlert,
   UsersRound,
 } from 'lucide-react'
 import { compactFormat, numberFormat, formatBytes } from '../../lib/format'
@@ -200,9 +199,9 @@ export function Pm2Cards({
 }) {
   const cards: SummaryCard[] = [
     {
-      title: 'Online processes',
-      value: data?.online,
-      detail: `${data?.processes ?? '—'} PM2-managed processes`,
+      title: 'PM2 processes',
+      value: data?.processes,
+      detail: 'Processes tracked by PM2',
       icon: UsersRound,
     },
     {
@@ -212,10 +211,10 @@ export function Pm2Cards({
       icon: RotateCcw,
     },
     {
-      title: 'Unstable restarts',
-      value: data?.unstableRestarts,
-      detail: 'Rapid restarts in the selected range',
-      icon: TriangleAlert,
+      title: 'Errored applications',
+      value: data?.erroredApps,
+      detail: 'Applications PM2 currently marks as errored',
+      icon: ShieldAlert,
     },
     {
       title: 'PM2 metadata',

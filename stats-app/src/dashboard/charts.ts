@@ -596,58 +596,46 @@ const pm2 = {
   restarts: {
     id: 'pm2-restarts',
     title: 'Worker restarts',
-    description: 'Restart events for each PM2 process in each interval',
+    description: 'Restart count changes for each PM2 process in each interval',
     unit: 'restarts',
     measurement: 'counter',
     chart: { type: 'line', allowDecimals: false },
     format: value => numberFormat.format(value),
     series: window => [
       {
-        expression: `sum by (worker) (increase(bundlephobia_pm2_process_restarts_total{${pm2Job}}[${window}]))`,
-        groupBy: { label: 'worker' },
-      },
-    ],
-  },
-  unstableRestarts: {
-    id: 'pm2-unstable-restarts',
-    title: 'Unstable restarts',
-    description: 'Rapid restarts counted by PM2 for each process',
-    unit: 'restarts',
-    measurement: 'counter',
-    chart: { type: 'line', allowDecimals: false },
-    format: value => numberFormat.format(value),
-    series: window => [
-      {
-        expression: `sum by (worker) (increase(bundlephobia_pm2_process_unstable_restarts_total{${pm2Job}}[${window}]))`,
+        expression: `label_join(clamp_min(delta(pm2_app_restart_count{${pm2Job}}[${window}]), 0), "worker", " #", "app", "instance")`,
         groupBy: { label: 'worker' },
       },
     ],
   },
   availability: {
     id: 'pm2-availability',
-    title: 'Worker status',
-    description: 'Whether each PM2 process is online',
+    title: 'Application status',
+    description: 'PM2 status for each application',
     unit: 'status',
-    chart: { minValue: 0, maxValue: 1, allowDecimals: false },
-    format: value => (value >= 1 ? 'Online' : 'Offline'),
+    chart: { minValue: 0, maxValue: 4, allowDecimals: false },
+    format: value =>
+      ['Unknown', 'Running', 'Pending', 'Stopped', 'Errored'][
+        Math.round(value)
+      ] ?? 'Unknown',
     series: () => [
       {
-        expression: `max by (worker) (bundlephobia_pm2_process_up{${pm2Job}})`,
-        groupBy: { label: 'worker' },
+        expression: `pm2_app_status{${pm2Job}}`,
+        groupBy: { label: 'app' },
       },
     ],
   },
   uptime: {
     id: 'pm2-uptime',
-    title: 'Worker uptime',
-    description: 'Time since PM2 last started each process',
+    title: 'Application uptime',
+    description: 'Time since PM2 last started each application',
     unit: 'seconds',
     chart: { type: 'line' },
     format: value => `${numberFormat.format(value / 3600)} h`,
     series: () => [
       {
-        expression: `max by (worker) (bundlephobia_pm2_process_uptime_seconds{${pm2Job}})`,
-        groupBy: { label: 'worker' },
+        expression: `pm2_app_uptime{${pm2Job}}`,
+        groupBy: { label: 'app' },
       },
     ],
   },
@@ -660,7 +648,7 @@ const pm2 = {
     format: value => `${numberFormat.format(value)}%`,
     series: () => [
       {
-        expression: `max by (worker) (bundlephobia_pm2_process_cpu_percent{${pm2Job}})`,
+        expression: `label_join(pm2_app_pids_cpu{${pm2Job}}, "worker", " #", "app", "instance")`,
         groupBy: { label: 'worker' },
       },
     ],
@@ -673,7 +661,7 @@ const pm2 = {
     format: formatBytes,
     series: () => [
       {
-        expression: `max by (worker) (bundlephobia_pm2_process_memory_bytes{${pm2Job}})`,
+        expression: `label_join(pm2_app_pids_memory{${pm2Job}}, "worker", " #", "app", "instance")`,
         groupBy: { label: 'worker' },
       },
     ],

@@ -150,12 +150,11 @@ export const PAGES: DashboardPage[] = [
     title: 'PM2 workers',
     heading: 'PM2 workers',
     description:
-      'Restart history, process state, uptime, CPU, and memory from PM2.',
+      'Per-worker restarts, CPU, and memory, with application status and uptime.',
     icon: RotateCcw,
     source: 'pm2',
     panels: [
       CHARTS.restarts,
-      CHARTS.unstableRestarts,
       CHARTS.availability,
       CHARTS.uptime,
       CHARTS.cpu,
@@ -167,7 +166,7 @@ export const PAGES: DashboardPage[] = [
       {
         id: 'restarts',
         title: 'Restarts',
-        panels: [CHARTS.restarts, CHARTS.unstableRestarts],
+        panels: [CHARTS.restarts],
       },
       {
         id: 'health',
