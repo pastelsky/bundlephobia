@@ -53,6 +53,12 @@ sudo pm2 startOrReload /var/www/bundlephobia/operations/victoriametrics/ecosyste
 sudo pm2 save
 ```
 
+To collect PM2 process metadata, deploy the application and then follow the
+[PM2 metrics module instructions](../pm2-prom-module/README.md). That installs
+the module with a loopback-only listener and refreshes the VictoriaMetrics
+scrape config. The dashboard reports per-process restart counts, CPU, and
+memory, plus per-application status and uptime.
+
 The static [stats app](../../stats-app/README.md) is built by the normal root build and
 served at `/stats/dashboard/`. The query explorer stays at `/stats/vmui/`.
 

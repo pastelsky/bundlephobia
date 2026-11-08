@@ -590,4 +590,82 @@ const resources = {
   },
 } satisfies Record<string, ChartDefinition>
 
-export const CHARTS = { ...traffic, ...pipeline, ...resources }
+const pm2Job = 'job="bundlephobia_pm2"'
+
+const pm2 = {
+  restarts: {
+    id: 'pm2-restarts',
+    title: 'Worker restarts',
+    description: 'Restart count changes for each PM2 process in each interval',
+    unit: 'restarts',
+    measurement: 'counter',
+    chart: { type: 'line', allowDecimals: false },
+    format: value => numberFormat.format(value),
+    series: window => [
+      {
+        expression: `label_join(clamp_min(delta(pm2_app_restart_count{${pm2Job}}[${window}]), 0), "worker", " #", "app", "instance")`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+  availability: {
+    id: 'pm2-availability',
+    title: 'Application status',
+    description: 'PM2 status for each application',
+    unit: 'status',
+    chart: { minValue: 0, maxValue: 4, allowDecimals: false },
+    format: value =>
+      ['Unknown', 'Running', 'Pending', 'Stopped', 'Errored'][
+        Math.round(value)
+      ] ?? 'Unknown',
+    series: () => [
+      {
+        expression: `pm2_app_status{${pm2Job}}`,
+        groupBy: { label: 'app' },
+      },
+    ],
+  },
+  uptime: {
+    id: 'pm2-uptime',
+    title: 'Application uptime',
+    description: 'Time since PM2 last started each application',
+    unit: 'seconds',
+    chart: { type: 'line' },
+    format: value => `${numberFormat.format(value / 3600)} h`,
+    series: () => [
+      {
+        expression: `pm2_app_uptime{${pm2Job}}`,
+        groupBy: { label: 'app' },
+      },
+    ],
+  },
+  cpu: {
+    id: 'pm2-cpu',
+    title: 'Worker CPU',
+    description: 'CPU utilization reported by PM2',
+    unit: '%',
+    chart: { minValue: 0, maxValue: 100 },
+    format: value => `${numberFormat.format(value)}%`,
+    series: () => [
+      {
+        expression: `label_join(pm2_app_pids_cpu{${pm2Job}}, "worker", " #", "app", "instance")`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+  memory: {
+    id: 'pm2-memory',
+    title: 'Worker memory',
+    description: 'Resident memory reported by PM2',
+    unit: 'bytes',
+    format: formatBytes,
+    series: () => [
+      {
+        expression: `label_join(pm2_app_pids_memory{${pm2Job}}, "worker", " #", "app", "instance")`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+} satisfies Record<string, ChartDefinition>
+
+export const CHARTS = { ...traffic, ...pipeline, ...resources, ...pm2 }

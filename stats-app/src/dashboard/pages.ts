@@ -4,6 +4,7 @@ import {
   Cpu,
   Hammer,
   LayoutDashboard,
+  RotateCcw,
   ShieldAlert,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -141,6 +142,41 @@ export const PAGES: DashboardPage[] = [
         id: 'installs',
         title: 'Installations',
         panels: [CHARTS.installs, CHARTS.installDuration],
+      },
+    ],
+  },
+  {
+    id: 'workers',
+    title: 'PM2 workers',
+    heading: 'PM2 workers',
+    description:
+      'Per-worker restarts, CPU, and memory, with application status and uptime.',
+    icon: RotateCcw,
+    source: 'pm2',
+    panels: [
+      CHARTS.restarts,
+      CHARTS.availability,
+      CHARTS.uptime,
+      CHARTS.cpu,
+      CHARTS.memory,
+    ],
+    breakdown: false,
+    tabs: [
+      { id: 'all', title: 'All workers' },
+      {
+        id: 'restarts',
+        title: 'Restarts',
+        panels: [CHARTS.restarts],
+      },
+      {
+        id: 'health',
+        title: 'Status & uptime',
+        panels: [CHARTS.availability, CHARTS.uptime],
+      },
+      {
+        id: 'resources',
+        title: 'CPU & memory',
+        panels: [CHARTS.cpu, CHARTS.memory],
       },
     ],
   },
