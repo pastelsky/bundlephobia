@@ -1,5 +1,5 @@
 #!/bin/bash
-# Disk + loop device cleanup — runs every 10 minutes via cron.
+# Disk + loop device cleanup — runs every 8 minutes via cron.
 # Fixes: LOOP_USAGE never set, journal retention too aggressive,
 #        loop device cleanup was never actually happening,
 #        freed loop-image blocks were never returned to the host filesystem.
@@ -25,6 +25,18 @@ export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
 log() {
     echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1" | tee -a "$LOG_FILE" 2>/dev/null || \
         echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1"
+}
+
+timed_cleanup() {
+    local label="$1"
+    local started=$SECONDS
+    local status
+    shift
+
+    "$@"
+    status=$?
+    log "${label} duration=$((SECONDS - started))s status=${status}"
+    return "$status"
 }
 
 fd_cleanup() {
@@ -240,10 +252,10 @@ cleanup_loop_device() {
     log "Loop device (/tmp/tmp-build) pressure (higher of bytes/inodes): ${loop_usage}%"
 
     if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
-        prune_bun_cache
+        timed_cleanup "Bun age pruning" prune_bun_cache
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -lt "$LOOP_SOFT_THRESHOLD" ]; then
-            trim_loop_device
+            timed_cleanup "Loop-device trim" trim_loop_device
             log "Loop pressure after age pruning: ${loop_usage}%"
             return
         fi
@@ -251,27 +263,27 @@ cleanup_loop_device() {
 
     if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
         log "Loop pressure at or above soft threshold ${LOOP_SOFT_THRESHOLD}% — running oldest-first cleanup to ${LOOP_TARGET_USAGE}%"
-        cleanup_stale_package_dirs true
+        timed_cleanup "Stale workspace cleanup" cleanup_stale_package_dirs true
 
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
-            cleanup_npm_cache
+            timed_cleanup "npm cache cleanup" cleanup_npm_cache
         fi
 
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
-            evict_oldest_bun_cache_entries
+            timed_cleanup "Bun cache eviction" evict_oldest_bun_cache_entries
         fi
 
         # Keep the full reset as a fallback only if incremental cleanup cannot
         # bring either resource below the existing emergency threshold.
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -ge "$LOOP_HARD_THRESHOLD" ] && [ -d /tmp/tmp-build/cache/bun ]; then
-            fd_cleanup --max-depth 1 '^' /tmp/tmp-build/cache/bun --exec-batch rm -rf -- 2>/dev/null
+            timed_cleanup "Full Bun cache fallback" fd_cleanup --max-depth 1 '^' /tmp/tmp-build/cache/bun --exec-batch rm -rf -- 2>/dev/null
             log "Cleared complete bun cache"
         fi
 
-        trim_loop_device
+        timed_cleanup "Loop-device trim" trim_loop_device
         loop_usage=$(get_loop_usage)
         log "Loop pressure after oldest-first cleanup: ${loop_usage}%"
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
@@ -305,17 +317,17 @@ cleanup_main() {
 
 main() {
     local usage
-    cleanup_non_bundlable_files
+    timed_cleanup "Non-bundlable file cleanup" cleanup_non_bundlable_files
     usage=$(get_disk_usage)
     log "Main disk usage: ${usage}%   Loop pressure (higher of bytes/inodes): $(get_loop_usage)%"
 
     # Always check loop device regardless of main disk
-    cleanup_loop_device
-    cleanup_victoriametrics_data
+    timed_cleanup "Scratch cleanup" cleanup_loop_device
+    timed_cleanup "VictoriaMetrics data cleanup" cleanup_victoriametrics_data
 
     if [ "$usage" -gt "$MAIN_THRESHOLD" ]; then
         log "Main disk above ${MAIN_THRESHOLD}% — running full cleanup"
-        cleanup_main
+        timed_cleanup "Main disk cleanup" cleanup_main
         local new_usage
         new_usage=$(get_disk_usage)
         log "Main disk usage after cleanup: ${new_usage}%"
