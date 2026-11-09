@@ -39,6 +39,94 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     )
   })
 
+  test('a multi-package comparison retains its own canonical URL and title rather than falling back to /trends', async ({
+    page,
+  }) => {
+    await page.goto('/trends?packages=preact~vs~react~vs~vue')
+    await expect(page).toHaveTitle(
+      'preact vs react vs vue — downloads, stars & size | Bundlephobia',
+    )
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      'content',
+      'preact vs react vs vue — downloads, stars & size | Bundlephobia',
+    )
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://bundlephobia.com/trends?packages=preact~vs~react~vs~vue',
+    )
+    await expect(page.locator('h1')).toHaveText('preact vs react vs vue trends')
+  })
+
+  test('a comparison with un-sorted query param canonicalizes to sorted order', async ({
+    page,
+  }) => {
+    await page.goto('/trends?packages=vue~vs~react')
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://bundlephobia.com/trends?packages=react~vs~vue',
+    )
+  })
+
+  test('trends landing page renders Schema.org JSON-LD and Open Graph tags', async ({
+    page,
+  }) => {
+    await page.goto('/trends')
+
+    const jsonLd = await page
+      .locator('script[type="application/ld+json"]')
+      .textContent()
+
+    expect(jsonLd).toBeTruthy()
+
+    const parsed = JSON.parse(jsonLd!)
+
+    expect(parsed['@context']).toBe('https://schema.org')
+    expect(parsed['@type']).toBe('WebPage')
+    expect(parsed.breadcrumb['@type']).toBe('BreadcrumbList')
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      'content',
+      'npm package trends & comparisons | Bundlephobia',
+    )
+    await expect(
+      page.locator('meta[property="twitter:title"]'),
+    ).toHaveAttribute(
+      'content',
+      'npm package trends & comparisons | Bundlephobia',
+    )
+  })
+
+  test('a comparison page renders ItemList Schema.org structured data', async ({
+    page,
+  }) => {
+    await page.goto('/trends?packages=react~vs~vue')
+
+    const jsonLd = await page
+      .locator('script[type="application/ld+json"]')
+      .textContent()
+
+    expect(jsonLd).toBeTruthy()
+
+    const parsed = JSON.parse(jsonLd!)
+
+    expect(parsed.mainEntity['@type']).toBe('ItemList')
+    expect(parsed.mainEntity.itemListElement).toHaveLength(2)
+  })
+
+  test('trends page renders category exploration section with links', async ({
+    page,
+  }) => {
+    await page.goto('/trends')
+    await expect(page.locator('.trends-categories')).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Popular comparisons by category' }),
+    ).toBeVisible()
+    await expect(page.locator('.trends-category-card').first()).toBeVisible()
+
+    const compareLink = page.locator('.trends-category-card__pair-pill').first()
+
+    await expect(compareLink).toHaveAttribute('href', /^\/trends\?packages=/)
+  })
+
   test('the sitemap includes the canonical landing page once', async ({
     request,
   }) => {
@@ -135,7 +223,7 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     await page.goto('/trends?packages=some-unlisted-package~vs~react')
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
-      'https://bundlephobia.com/trends',
+      'https://bundlephobia.com/trends?packages=react~vs~some-unlisted-package',
     )
   })
 })

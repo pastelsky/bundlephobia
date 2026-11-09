@@ -1133,3 +1133,112 @@
     stroke-width: 0.5px;
   }
 }
+
+// ─── Categories & Popular Comparisons ─────────────────────
+.trends-categories {
+  margin-top: $global-spacing * 6;
+  padding-top: $global-spacing * 4;
+  border-top: 1px solid var(--color-border-subtle);
+
+  &__header {
+    margin-bottom: $global-spacing * 3;
+  }
+
+  &__title {
+    @include font-size-xl;
+    font-weight: $font-weight-very-bold;
+    color: var(--color-text-primary);
+    margin: 0 0 ($global-spacing * 0.75);
+  }
+
+  &__subtitle {
+    @include font-size-reg;
+    color: var(--color-text-secondary);
+    margin: 0;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: $global-spacing * 2;
+  }
+}
+
+.trends-category-card {
+  display: flex;
+  flex-direction: column;
+  gap: $global-spacing * 1.5;
+  background: var(--color-search-box-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--trends-control-radius);
+  padding: $global-spacing * 2;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-border-primary);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $global-spacing;
+  }
+
+  &__name {
+    @include font-size-reg;
+    font-weight: $font-weight-very-bold;
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__compare-all {
+    @include font-size-xs;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-weight: $font-weight-bold;
+    transition: color 0.15s ease;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--color-text-primary);
+      text-decoration: underline;
+    }
+  }
+
+  &__pairs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $global-spacing;
+  }
+
+  &__pair-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: ($global-spacing * 0.5) ($global-spacing * 1.25);
+    @include font-size-xs;
+    color: var(--color-text-secondary);
+    background: var(--color-bg-base);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--trends-control-radius);
+    text-decoration: none;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease;
+
+    &:hover {
+      border-color: var(--color-border-primary);
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__vs {
+    color: var(--color-text-muted);
+    font-size: 10px;
+    font-weight: $font-weight-light;
+    text-transform: uppercase;
+  }
+}

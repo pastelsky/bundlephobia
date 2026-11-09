@@ -27,10 +27,11 @@ import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
 import { groupTrendsPackage } from '../../utils/trends'
+import { trendsComparisonCanonicalPath } from '../../seo/trends-comparisons'
 import {
-  trendsComparisonPath,
-  findTrendsComparison,
-} from '../../seo/trends-comparisons'
+  TRENDS_CATEGORIES,
+  getCategoryCompareAllPath,
+} from '../../seo/trends-categories'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 
@@ -159,16 +160,20 @@ function trackTrendsLoad(
 
 export const getServerSideProps: GetServerSideProps<{
   initialPackages: string[]
+  hasExplicitPackages: boolean
 }> = async ({ query }) => ({
   props: {
     initialPackages: getSelectedPackages(query.packages),
+    hasExplicitPackages: Boolean(query.packages),
   },
 })
 
 export default function TrendsPage({
   initialPackages,
+  hasExplicitPackages: initialHasExplicitPackages,
 }: {
   initialPackages: string[]
+  hasExplicitPackages: boolean
 }) {
   const router = useRouter()
   const [packages, setPackages] = useState<string[]>(initialPackages)
@@ -483,17 +488,95 @@ export default function TrendsPage({
       ),
   )
 
-  const comparison = router.query.packages
-    ? findTrendsComparison(packages)
-    : undefined
+  const hasExplicitPackages = router.isReady
+    ? Boolean(router.query.packages)
+    : initialHasExplicitPackages
 
-  const pageTitle = comparison
-    ? `${comparison.join(' vs ')} — downloads, stars & size | Bundlephobia`
+  const isComparison = hasExplicitPackages && packages.length > 0
+
+  const pageTitle = isComparison
+    ? `${packages.join(' vs ')} — downloads, stars & size | Bundlephobia`
     : 'npm package trends & comparisons | Bundlephobia'
 
-  const description = comparison
-    ? `Compare ${comparison.join(' vs ')} npm downloads, GitHub stars, and bundle size history.`
+  const description = isComparison
+    ? `Compare ${packages.join(' vs ')} npm downloads, GitHub stars, and bundle size history.`
     : 'Compare downloads, GitHub stars, and size history across packages.'
+
+  const canonicalPath = isComparison
+    ? trendsComparisonCanonicalPath(packages)
+    : '/trends'
+
+  const structuredDataJson = useMemo(() => {
+    const data = isComparison
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: pageTitle,
+          description,
+          url: `https://bundlephobia.com${canonicalPath}`,
+          breadcrumb: {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: 'https://bundlephobia.com',
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Trends',
+                item: 'https://bundlephobia.com/trends',
+              },
+              {
+                '@type': 'ListItem',
+                position: 3,
+                name: packages.join(' vs '),
+                item: `https://bundlephobia.com${canonicalPath}`,
+              },
+            ],
+          },
+          mainEntity: {
+            '@type': 'ItemList',
+            name: `${packages.join(' vs ')} comparison`,
+            itemListElement: packages.map((pkg, idx) => ({
+              '@type': 'SoftwareApplication',
+              position: idx + 1,
+              name: pkg,
+              applicationCategory: 'DeveloperApplication',
+              operatingSystem: 'Any',
+              url: `https://bundlephobia.com/package/${pkg}`,
+            })),
+          },
+        }
+      : {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: pageTitle,
+          description,
+          url: 'https://bundlephobia.com/trends',
+          breadcrumb: {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: 'https://bundlephobia.com',
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Trends',
+                item: 'https://bundlephobia.com/trends',
+              },
+            ],
+          },
+        }
+
+    return JSON.stringify(data)
+  }, [isComparison, pageTitle, description, canonicalPath, packages])
 
   return (
     <Layout className="trends-page">
@@ -501,17 +584,16 @@ export default function TrendsPage({
         title={pageTitle}
         description={description}
         twitterDescription={description}
-        canonicalPath={
-          comparison ? trendsComparisonPath(comparison) : '/trends'
-        }
+        canonicalPath={canonicalPath}
+        structuredDataJson={structuredDataJson}
       />
       <div className="trends-page__container">
         <PageNav />
 
         <header className="trends-page__header">
           <h1>
-            {comparison
-              ? `${comparison.join(' vs ')} trends`
+            {isComparison
+              ? `${packages.join(' vs ')} trends`
               : 'Package trends'}
           </h1>
           <p className="trends-page__subtitle">
@@ -860,6 +942,61 @@ export default function TrendsPage({
             </div>
           </section>
         )}
+
+        {/* ─── Explore Comparisons by Category ─── */}
+        <section
+          className="trends-categories"
+          aria-labelledby="trends-categories-heading"
+        >
+          <div className="trends-categories__header">
+            <h2
+              id="trends-categories-heading"
+              className="trends-categories__title"
+            >
+              Popular comparisons by category
+            </h2>
+            <p className="trends-categories__subtitle">
+              Compare download, star, and bundle size trends across common
+              JavaScript ecosystem categories.
+            </p>
+          </div>
+          <div className="trends-categories__grid">
+            {TRENDS_CATEGORIES.map(category => (
+              <div key={category.id} className="trends-category-card">
+                <div className="trends-category-card__header">
+                  <h3 className="trends-category-card__name">
+                    {category.title}
+                  </h3>
+                  <Link
+                    href={getCategoryCompareAllPath(category)}
+                    className="trends-category-card__compare-all"
+                    title={`Compare all ${category.title} packages`}
+                  >
+                    Compare all →
+                  </Link>
+                </div>
+                <div className="trends-category-card__pairs">
+                  {category.popularPairs.map(([a, b]) => {
+                    const pairPath = trendsComparisonCanonicalPath([a, b])
+
+                    return (
+                      <Link
+                        key={`${a}-vs-${b}`}
+                        href={pairPath}
+                        className="trends-category-card__pair-pill"
+                        title={`Compare ${a} vs ${b}`}
+                      >
+                        <span>{a}</span>
+                        <span className="trends-category-card__vs">vs</span>
+                        <span>{b}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </Layout>
   )
