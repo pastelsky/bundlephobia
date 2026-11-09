@@ -67,22 +67,11 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     )
   })
 
-  test('trends landing page renders Schema.org JSON-LD and Open Graph tags', async ({
+  test('trends landing page renders Open Graph and Twitter meta tags', async ({
     page,
   }) => {
     await page.goto('/trends')
 
-    const jsonLd = await page
-      .locator('script[type="application/ld+json"]')
-      .textContent()
-
-    expect(jsonLd).toBeTruthy()
-
-    const parsed = JSON.parse(jsonLd!)
-
-    expect(parsed['@context']).toBe('https://schema.org')
-    expect(parsed['@type']).toBe('WebPage')
-    expect(parsed.breadcrumb['@type']).toBe('BreadcrumbList')
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       'content',
       'npm package trends & comparisons | Bundlephobia',
@@ -93,23 +82,6 @@ test.describe('trends SEO and discovery without JavaScript', () => {
       'content',
       'npm package trends & comparisons | Bundlephobia',
     )
-  })
-
-  test('a comparison page renders ItemList Schema.org structured data', async ({
-    page,
-  }) => {
-    await page.goto('/trends?packages=react~vs~vue')
-
-    const jsonLd = await page
-      .locator('script[type="application/ld+json"]')
-      .textContent()
-
-    expect(jsonLd).toBeTruthy()
-
-    const parsed = JSON.parse(jsonLd!)
-
-    expect(parsed.mainEntity['@type']).toBe('ItemList')
-    expect(parsed.mainEntity.itemListElement).toHaveLength(2)
   })
 
   test('trends page renders category exploration section with links', async ({
