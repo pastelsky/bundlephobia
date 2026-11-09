@@ -5,6 +5,7 @@ import {
   getEscapedNpmPackageName,
   type RepositoryField,
 } from '../packages/npm-package'
+import { extractPackumentMetadataFromStream } from './npm-packument-stream'
 
 export interface NpmPackageManifest {
   name: string
@@ -40,11 +41,42 @@ export function fetchPackageVersionManifest(
   )
 }
 
-/** Fetches full registry metadata, including release dates and manifests. */
-export function fetchPackagePackument(
+/**
+ * Fetches package release history and metadata using the zero-decode streaming extractor.
+ *
+ * This intentionally bypasses `pacote.packument({ fullMetadata: true })` which buffers
+ * and deserializes the entire multi-megabyte `versions` tree into V8 heap.
+ */
+export async function fetchPackagePackument(
   packageName: string,
 ): Promise<NpmPackagePackument> {
-  return pacote.packument<NpmPackagePackument>(packageName, {
-    fullMetadata: true,
+  const path = `/${getEscapedNpmPackageName(packageName)}`
+
+  const response = await registryFetch(path, {
+    headers: { Accept: 'application/json' },
   })
+
+  const extracted = await extractPackumentMetadataFromStream(response.body)
+
+  let repository = extracted.repository
+
+  // Fallback: if the package did not declare repository at root, query latest manifest
+  if (!repository && extracted.distTags?.latest) {
+    try {
+      const latest = await fetchPackageVersionManifest(
+        packageName,
+        extracted.distTags.latest,
+      )
+
+      repository = latest.repository
+    } catch {
+      // Ignore fallback failure
+    }
+  }
+
+  return {
+    'dist-tags': extracted.distTags,
+    time: extracted.time,
+    repository,
+  }
 }
