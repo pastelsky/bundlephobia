@@ -290,4 +290,44 @@ describe('DFA Zero-Decode Packument Stream Extractor', () => {
     expect(result.time).toEqual({ '1.0.0': '2026-01-01' })
     expect(baseStream.destroyed).toBe(true)
   })
+
+  it('correctly handles target key being the final key in root object with null or string', async () => {
+    // repository as null at end of object
+    const jsonNull =
+      '{"name":"pkg","time":{"1.0.0":"2026-01-01"},"dist-tags":{"latest":"1.0.0"},"repository":null}'
+
+    const resultNull = await extractPackumentMetadataFromStream(
+      streamFromString(jsonNull, 5),
+    )
+
+    expect(resultNull.repository).toBeNull()
+    expect(resultNull.distTags).toEqual({ latest: '1.0.0' })
+    expect(resultNull.time).toEqual({ '1.0.0': '2026-01-01' })
+
+    // repository as string at end of object
+    const jsonString =
+      '{"time":{"1.0.0":"2026-01-01"},"repository":"https://github.com/example/repo.git"}'
+
+    const resultString = await extractPackumentMetadataFromStream(
+      streamFromString(jsonString, 7),
+    )
+
+    expect(resultString.repository).toEqual(
+      'https://github.com/example/repo.git',
+    )
+    expect(resultString.time).toEqual({ '1.0.0': '2026-01-01' })
+  })
+
+  it('correctly handles skipped non-target primitive as final key in root object', async () => {
+    const json =
+      '{"time":{"1.0.0":"2026-01-01"},"dist-tags":{"latest":"1.0.0"},"repository":null,"unwanted":false}'
+
+    const result = await extractPackumentMetadataFromStream(
+      streamFromString(json, 8),
+    )
+
+    expect(result.time).toEqual({ '1.0.0': '2026-01-01' })
+    expect(result.distTags).toEqual({ latest: '1.0.0' })
+    expect(result.repository).toBeNull()
+  })
 })
