@@ -30,7 +30,9 @@ import { groupTrendsPackage } from '../../utils/trends'
 import { trendsComparisonCanonicalPath } from '../../seo/trends-comparisons'
 import {
   TRENDS_CATEGORIES,
+  getRandomCategories,
   getCategoryCompareAllPath,
+  type TrendsCategory,
 } from '../../seo/trends-categories'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
@@ -192,6 +194,14 @@ export default function TrendsPage({
   const [copied, setCopied] = useState(false)
   const [relatedPackageNames, setRelatedPackageNames] = useState<string[]>([])
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
+
+  const [sampledCategories, setSampledCategories] = useState<TrendsCategory[]>(
+    () => TRENDS_CATEGORIES.slice(0, 6),
+  )
+
+  useEffect(() => {
+    setSampledCategories(getRandomCategories(6))
+  }, [])
 
   const requestKey = JSON.stringify([packages, range])
   const trendsData = loadState.data
@@ -591,10 +601,26 @@ export default function TrendsPage({
         <PageNav />
 
         <header className="trends-page__header">
-          <h1>
-            {isComparison
-              ? `${packages.join(' vs ')} trends`
-              : 'Package trends'}
+          <h1 className="trends-page__title">
+            {isComparison ? (
+              <>
+                {packages.map((pkg, i) => (
+                  <React.Fragment key={pkg}>
+                    {i > 0 && (
+                      <>
+                        {' '}
+                        <span className="trends-page__title-vs">vs</span>{' '}
+                      </>
+                    )}
+                    <span className="trends-page__title-pkg">{pkg}</span>
+                  </React.Fragment>
+                ))}
+                {' '}
+                <span className="trends-page__title-suffix">trends</span>
+              </>
+            ) : (
+              'Package trends'
+            )}
           </h1>
           <p className="trends-page__subtitle">
             Compare downloads, GitHub stars, and size history across packages.
@@ -955,13 +981,9 @@ export default function TrendsPage({
             >
               Popular comparisons by category
             </h2>
-            <p className="trends-categories__subtitle">
-              Compare download, star, and bundle size trends across common
-              JavaScript ecosystem categories.
-            </p>
           </div>
           <div className="trends-categories__grid">
-            {TRENDS_CATEGORIES.map(category => (
+            {sampledCategories.map(category => (
               <div key={category.id} className="trends-category-card">
                 <div className="trends-category-card__header">
                   <h3 className="trends-category-card__name">
@@ -976,7 +998,7 @@ export default function TrendsPage({
                   </Link>
                 </div>
                 <div className="trends-category-card__pairs">
-                  {category.popularPairs.map(([a, b]) => {
+                  {category.popularPairs.slice(0, 2).map(([a, b]) => {
                     const pairPath = trendsComparisonCanonicalPath([a, b])
 
                     return (

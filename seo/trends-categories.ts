@@ -32,6 +32,20 @@ export const TRENDS_CATEGORIES: TrendsCategory[] = Object.entries(categories)
   }))
   .filter(category => category.packages.length >= 2)
 
+export function getRandomCategories(count = 6): TrendsCategory[] {
+  const pool = [...TRENDS_CATEGORIES]
+
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const temp = pool[i]
+
+    pool[i] = pool[j]
+    pool[j] = temp
+  }
+
+  return pool.slice(0, count)
+}
+
 export function getCategoryCompareAllPath(category: TrendsCategory) {
   return trendsComparisonCanonicalPath(category.packages.slice(0, 5))
 }

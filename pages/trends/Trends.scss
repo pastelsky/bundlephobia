@@ -27,11 +27,37 @@
   margin-bottom: $global-spacing * 3;
 }
 
-.trends-page__header h1 {
-  @include font-size-xxl;
-  font-weight: $font-weight-very-bold;
+.trends-page__header h1,
+.trends-page__title {
+  @include font-size-lg;
+  font-weight: $font-weight-bold;
   margin: 0 0 $global-spacing;
   color: var(--color-text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35em;
+  line-height: 1.25;
+
+  &-pkg {
+    font-weight: $font-weight-very-bold;
+    color: var(--color-text-primary);
+  }
+
+  &-vs {
+    font-weight: $font-weight-light;
+    font-size: 0.7em;
+    text-transform: lowercase;
+    color: var(--color-text-secondary);
+    opacity: 0.6;
+    margin: 0 0.1em;
+  }
+
+  &-suffix {
+    font-weight: $font-weight-light;
+    font-size: 0.85em;
+    color: var(--color-text-secondary);
+  }
 }
 
 .trends-page__subtitle {
@@ -1136,44 +1162,37 @@
 
 // ─── Categories & Popular Comparisons ─────────────────────
 .trends-categories {
-  margin-top: $global-spacing * 6;
-  padding-top: $global-spacing * 4;
+  margin-top: $global-spacing * 4;
+  padding-top: $global-spacing * 2.5;
   border-top: 1px solid var(--color-border-subtle);
 
   &__header {
-    margin-bottom: $global-spacing * 3;
+    margin-bottom: $global-spacing * 1.5;
   }
 
   &__title {
-    @include font-size-xl;
-    font-weight: $font-weight-very-bold;
+    @include font-size-md;
+    font-weight: $font-weight-bold;
     color: var(--color-text-primary);
-    margin: 0 0 ($global-spacing * 0.75);
-  }
-
-  &__subtitle {
-    @include font-size-reg;
-    color: var(--color-text-secondary);
     margin: 0;
-    max-width: 640px;
-    line-height: 1.5;
   }
 
   &__grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: $global-spacing * 2;
+    gap: $global-spacing * 1.25;
   }
 }
 
 .trends-category-card {
   display: flex;
   flex-direction: column;
-  gap: $global-spacing * 1.5;
+  justify-content: space-between;
+  gap: $global-spacing * 0.75;
   background: var(--color-search-box-bg);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--trends-control-radius);
-  padding: $global-spacing * 2;
+  padding: ($global-spacing * 1.25) ($global-spacing * 1.5);
   transition: border-color 0.15s ease;
 
   &:hover {
@@ -1182,25 +1201,29 @@
 
   &__header {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     gap: $global-spacing;
   }
 
   &__name {
-    @include font-size-reg;
-    font-weight: $font-weight-very-bold;
+    @include font-size-sm;
+    font-weight: $font-weight-bold;
     color: var(--color-text-primary);
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__compare-all {
-    @include font-size-xs;
+    @include font-size-xxs;
     color: var(--color-text-secondary);
     text-decoration: none;
     font-weight: $font-weight-bold;
     transition: color 0.15s ease;
     white-space: nowrap;
+    flex-shrink: 0;
 
     &:hover {
       color: var(--color-text-primary);
@@ -1210,21 +1233,23 @@
 
   &__pairs {
     display: flex;
+    align-items: center;
+    gap: $global-spacing * 0.75;
     flex-wrap: wrap;
-    gap: $global-spacing;
   }
 
   &__pair-pill {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: ($global-spacing * 0.5) ($global-spacing * 1.25);
-    @include font-size-xs;
+    padding: ($global-spacing * 0.35) ($global-spacing * 0.85);
+    @include font-size-xxs;
     color: var(--color-text-secondary);
     background: var(--color-bg-base);
     border: 1px solid var(--color-border-subtle);
     border-radius: var(--trends-control-radius);
     text-decoration: none;
+    white-space: nowrap;
     transition:
       border-color 0.15s ease,
       color 0.15s ease;
@@ -1237,7 +1262,7 @@
 
   &__vs {
     color: var(--color-text-muted);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: $font-weight-light;
     text-transform: uppercase;
   }
