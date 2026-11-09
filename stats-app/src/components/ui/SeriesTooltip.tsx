@@ -1,12 +1,17 @@
 import type { CustomTooltipProps } from '@tremor/react'
 import { numberFormat } from '../../lib/format'
+import { resolveSeriesColor } from '../../lib/colors'
 
 export function SeriesTooltip({
   active,
   payload,
   label,
   format,
-}: CustomTooltipProps & { format: (value: number) => string }) {
+  showShare = false,
+}: CustomTooltipProps & {
+  format: (value: number) => string
+  showShare?: boolean
+}) {
   if (!active || !payload?.length) return null
 
   const entries = payload.flatMap(item => {
@@ -30,18 +35,20 @@ export function SeriesTooltip({
           >
             <dt className="flex items-center gap-2">
               <span
-                className="size-2 rounded-full"
-                style={{ backgroundColor: item.color }}
+                className="size-2 flex-none rounded-full"
+                style={{ backgroundColor: resolveSeriesColor(item.color) }}
               />
               {item.name}
             </dt>
             <dd className="tabular-nums">
               <strong className="font-medium">{format(item.value)}</strong>
-              <span className="ml-2 text-stats-muted">
-                {total > 0
-                  ? `${numberFormat.format((100 * item.value) / total)}%`
-                  : '—'}
-              </span>
+              {showShare && (
+                <span className="ml-2 text-stats-muted">
+                  {total > 0
+                    ? `${numberFormat.format((100 * item.value) / total)}%`
+                    : '—'}
+                </span>
+              )}
             </dd>
           </div>
         ))}

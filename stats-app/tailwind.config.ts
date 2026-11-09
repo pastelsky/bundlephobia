@@ -85,6 +85,20 @@ export default {
       'slate',
       'amber',
       'violet',
+      'teal',
+      'indigo',
+      'pink',
+      'lime',
+      'zinc',
+      'cyan',
+      'blue',
+      'purple',
+      'fuchsia',
+      'gray',
+      'neutral',
+      'red',
+      'yellow',
+      'green',
     ].flatMap(color =>
       [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].flatMap(shade =>
         ['bg', 'text', 'border', 'ring', 'stroke', 'fill'].flatMap(utility => [
