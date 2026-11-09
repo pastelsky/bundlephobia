@@ -1098,6 +1098,26 @@
   &__unit {
     color: var(--color-text-muted);
   }
+
+  &__skeleton {
+    display: inline-block;
+    width: 42px;
+    height: 12px;
+    background: var(--color-surface-raised);
+    border-radius: var(--trends-control-radius);
+    animation: trends-skeleton-pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes trends-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 // ─── Innovative Anime.js Monochrome Chart Loader ────────────

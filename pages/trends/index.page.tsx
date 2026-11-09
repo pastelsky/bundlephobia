@@ -614,8 +614,7 @@ export default function TrendsPage({
                     )}
                     <span className="trends-page__title-pkg">{pkg}</span>
                   </React.Fragment>
-                ))}
-                {' '}
+                ))}{' '}
                 <span className="trends-page__title-suffix">trends</span>
               </>
             ) : (
@@ -859,7 +858,7 @@ export default function TrendsPage({
         </section>
 
         {/* ─── Package Snapshot Cards ─── */}
-        {!loading && trendsData && trendsData.packages.length > 0 && (
+        {packages.length > 0 && (
           <section className="trends-snapshot">
             <h2 className="trends-snapshot__heading">Snapshot</h2>
             <div className="trends-snapshot__rows">
@@ -871,100 +870,134 @@ export default function TrendsPage({
                 <span>Minified</span>
                 <span aria-hidden="true" />
               </div>
-              {trendsData.packages.map((pack, index) => (
-                <div key={pack.name} className="trends-card">
-                  <div className="trends-card__header">
-                    <span
-                      className="trends-card__swatch"
-                      style={{
-                        backgroundColor:
-                          TRENDS_SERIES_COLORS[
-                            index % TRENDS_SERIES_COLORS.length
-                          ],
-                      }}
-                    />
-                    <Link
-                      href={`/package/${pack.name}`}
-                      className="trends-card__name"
-                    >
-                      {pack.name}
-                    </Link>
-                    <span className="trends-card__external-links">
-                      <a
-                        className="trends-card__external-link trends-card__external-link--npm"
-                        href={`https://npmjs.com/package/${pack.name}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`${pack.name} on npm`}
+              {packages.map((pkgName, index) => {
+                const pack = trendsData?.packages.find(p => p.name === pkgName)
+
+                return (
+                  <div key={pkgName} className="trends-card">
+                    <div className="trends-card__header">
+                      <span
+                        className="trends-card__swatch"
+                        style={{
+                          backgroundColor:
+                            TRENDS_SERIES_COLORS[
+                              index % TRENDS_SERIES_COLORS.length
+                            ],
+                        }}
+                      />
+                      <Link
+                        href={`/package/${pkgName}`}
+                        className="trends-card__name"
                       >
-                        <NPMIcon />
-                      </a>
-                      {pack.repository && (
+                        {pkgName}
+                      </Link>
+                      <span className="trends-card__external-links">
                         <a
-                          className="trends-card__external-link trends-card__external-link--github"
-                          href={
-                            pack.repository.startsWith('http')
-                              ? pack.repository
-                              : `https://github.com/${pack.repository}`
-                          }
+                          className="trends-card__external-link trends-card__external-link--npm"
+                          href={`https://npmjs.com/package/${pkgName}`}
                           target="_blank"
                           rel="noreferrer"
-                          aria-label={`${pack.name} on GitHub`}
+                          aria-label={`${pkgName} on npm`}
                         >
-                          <GithubIcon />
+                          <NPMIcon />
                         </a>
-                      )}
-                    </span>
-                  </div>
-                  <div className="trends-card__stats">
-                    <div className="trends-stat">
-                      <span className="trends-stat__label">Stars</span>
-                      <span className="trends-stat__value">
-                        <MetricValue
-                          formatted={formatCompactNumber(pack.current.stars)}
-                        />
+                        {pack?.repository && (
+                          <a
+                            className="trends-card__external-link trends-card__external-link--github"
+                            href={
+                              pack.repository.startsWith('http')
+                                ? pack.repository
+                                : `https://github.com/${pack.repository}`
+                            }
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`${pkgName} on GitHub`}
+                          >
+                            <GithubIcon />
+                          </a>
+                        )}
                       </span>
                     </div>
-                    <div className="trends-stat">
-                      <span className="trends-stat__label">
-                        Weekly downloads
-                      </span>
-                      <span className="trends-stat__value">
-                        <MetricValue
-                          formatted={formatCompactNumber(
-                            pack.current.weeklyDownloads,
+                    <div className="trends-card__stats">
+                      <div className="trends-stat">
+                        <span className="trends-stat__label">Stars</span>
+                        <span className="trends-stat__value">
+                          {pack ? (
+                            <MetricValue
+                              formatted={formatCompactNumber(
+                                pack.current.stars,
+                              )}
+                            />
+                          ) : (
+                            <span
+                              className="trends-stat__skeleton"
+                              aria-hidden="true"
+                            />
                           )}
-                        />
-                      </span>
+                        </span>
+                      </div>
+                      <div className="trends-stat">
+                        <span className="trends-stat__label">
+                          Weekly downloads
+                        </span>
+                        <span className="trends-stat__value">
+                          {pack ? (
+                            <MetricValue
+                              formatted={formatCompactNumber(
+                                pack.current.weeklyDownloads,
+                              )}
+                            />
+                          ) : (
+                            <span
+                              className="trends-stat__skeleton"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </span>
+                      </div>
+                      <div className="trends-stat">
+                        <span className="trends-stat__label">Gzip</span>
+                        <span className="trends-stat__value">
+                          {pack ? (
+                            <MetricValue
+                              formatted={formatSize(pack.current.gzip)}
+                            />
+                          ) : (
+                            <span
+                              className="trends-stat__skeleton"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </span>
+                      </div>
+                      <div className="trends-stat">
+                        <span className="trends-stat__label">Minified</span>
+                        <span className="trends-stat__value">
+                          {pack ? (
+                            <MetricValue
+                              formatted={formatSize(pack.current.size)}
+                            />
+                          ) : (
+                            <span
+                              className="trends-stat__skeleton"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </span>
+                      </div>
                     </div>
-                    <div className="trends-stat">
-                      <span className="trends-stat__label">Gzip</span>
-                      <span className="trends-stat__value">
-                        <MetricValue
-                          formatted={formatSize(pack.current.gzip)}
-                        />
-                      </span>
-                    </div>
-                    <div className="trends-stat">
-                      <span className="trends-stat__label">Minified</span>
-                      <span className="trends-stat__value">
-                        <MetricValue
-                          formatted={formatSize(pack.current.size)}
-                        />
-                      </span>
-                    </div>
+                    <Button
+                      type="button"
+                      className="trends-card__remove"
+                      onClick={() => handleRemovePackage(pkgName)}
+                      title={`Remove ${pkgName}`}
+                      aria-label={`Remove ${pkgName}`}
+                    >
+                      ×
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    className="trends-card__remove"
-                    onClick={() => handleRemovePackage(pack.name)}
-                    title={`Remove ${pack.name}`}
-                    aria-label={`Remove ${pack.name}`}
-                  >
-                    ×
-                  </Button>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
         )}
