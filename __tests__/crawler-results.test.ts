@@ -400,3 +400,24 @@ it('does not cache a negative export-size peek or start a build', async () => {
   expect(await response.json()).toMatchObject({ peekSuccess: false })
   expect(exportsBuild).not.toHaveBeenCalled()
 })
+
+it('renders the platform rejection on the package webpage with HTTP 422', async () => {
+  const reason =
+    'The requested package does not support our build server (linux/x64).'
+
+  build.mockRejectedValue(
+    new CustomError(
+      'UnsupportedPackageError',
+      'skipped @esbuild/android-arm@0.28.2 (unsupported platform)',
+      { reason },
+    ),
+  )
+
+  const response = await request('/package/platform-only@1.0.0')
+  const html = await response.text()
+
+  expect(response.status).toBe(422)
+  expect(html).toContain('UnsupportedPackageError')
+  expect(html).toContain(reason)
+  expect(html).not.toContain('unknown reason')
+})
