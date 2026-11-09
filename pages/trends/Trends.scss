@@ -1233,14 +1233,18 @@
     display: flex;
     align-items: center;
     gap: $global-spacing * 0.75;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
 
   &__pair-pill {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: ($global-spacing * 0.35) ($global-spacing * 0.85);
+    justify-content: center;
+    gap: 5px;
+    height: 24px;
+    padding: 0 ($global-spacing * 0.85);
+    line-height: 1;
     @include font-size-xxs;
     color: var(--color-text-secondary);
     background: var(--color-bg-base);
@@ -1248,9 +1252,17 @@
     border-radius: var(--trends-control-radius);
     text-decoration: none;
     white-space: nowrap;
+    box-sizing: border-box;
+    flex-shrink: 0;
     transition:
       border-color 0.15s ease,
       color 0.15s ease;
+
+    > span {
+      display: inline-flex;
+      align-items: center;
+      line-height: 1;
+    }
 
     &:hover {
       border-color: var(--color-border-primary);
@@ -1260,8 +1272,10 @@
 
   &__vs {
     color: var(--color-text-muted);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: $font-weight-light;
-    text-transform: uppercase;
+    text-transform: lowercase;
+    opacity: 0.6;
+    line-height: 1;
   }
 }
