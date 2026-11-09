@@ -68,8 +68,19 @@ const got = require('got') as GotModule
 // SAFETY: the pinned remark module exports the configured processor factory.
 const remark = require('remark') as () => RemarkProcessor
 
-// SAFETY: the pinned natural module exposes the tokenizer and stemmer APIs used here.
-const natural = require('natural') as NaturalModule
+// SAFETY: the pinned subpath modules expose WordTokenizer without loading the full natural monolith.
+const { WordTokenizer } = require('natural/lib/natural/tokenizers') as {
+  WordTokenizer: NaturalModule['WordTokenizer']
+}
+
+// SAFETY: the pinned subpath modules expose PorterStemmer without loading the full natural monolith.
+const PorterStemmer =
+  require('natural/lib/natural/stemmers/porter_stemmer') as NaturalModule['PorterStemmer']
+
+const natural: NaturalModule = {
+  WordTokenizer,
+  PorterStemmer,
+}
 
 const debugTest = createDebug('classifier:test')
 
