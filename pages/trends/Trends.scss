@@ -27,11 +27,37 @@
   margin-bottom: $global-spacing * 3;
 }
 
-.trends-page__header h1 {
-  @include font-size-xxl;
-  font-weight: $font-weight-very-bold;
+.trends-page__header h1,
+.trends-page__title {
+  @include font-size-lg;
+  font-weight: $font-weight-bold;
   margin: 0 0 $global-spacing;
   color: var(--color-text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35em;
+  line-height: 1.25;
+
+  &-pkg {
+    font-weight: $font-weight-very-bold;
+    color: var(--color-text-primary);
+  }
+
+  &-vs {
+    font-weight: $font-weight-light;
+    font-size: 0.7em;
+    text-transform: lowercase;
+    color: var(--color-text-secondary);
+    opacity: 0.6;
+    margin: 0 0.1em;
+  }
+
+  &-suffix {
+    font-weight: $font-weight-light;
+    font-size: 0.85em;
+    color: var(--color-text-secondary);
+  }
 }
 
 .trends-page__subtitle {
@@ -1072,6 +1098,26 @@
   &__unit {
     color: var(--color-text-muted);
   }
+
+  &__skeleton {
+    display: inline-block;
+    width: 42px;
+    height: 12px;
+    background: var(--color-surface-raised);
+    border-radius: var(--trends-control-radius);
+    animation: trends-skeleton-pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes trends-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 // ─── Innovative Anime.js Monochrome Chart Loader ────────────
@@ -1131,5 +1177,125 @@
   &__dot {
     stroke: var(--color-bg-base);
     stroke-width: 0.5px;
+  }
+}
+
+// ─── Categories & Popular Comparisons ─────────────────────
+.trends-categories {
+  margin-top: $global-spacing * 5;
+
+  &__header {
+    margin-bottom: $global-spacing * 1.5;
+  }
+
+  &__title {
+    @include font-size-md;
+    font-weight: $font-weight-bold;
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: $global-spacing * 1.25;
+  }
+}
+
+.trends-category-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: $global-spacing * 0.75;
+  background: var(--color-search-box-bg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--trends-control-radius);
+  padding: ($global-spacing * 1.25) ($global-spacing * 1.5);
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-border-primary);
+  }
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: $global-spacing;
+  }
+
+  &__name {
+    @include font-size-sm;
+    font-weight: $font-weight-bold;
+    color: var(--color-text-primary);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__compare-all {
+    @include font-size-xxs;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-weight: $font-weight-bold;
+    transition: color 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      color: var(--color-text-primary);
+      text-decoration: underline;
+    }
+  }
+
+  &__pairs {
+    display: flex;
+    align-items: center;
+    gap: $global-spacing * 0.75;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  &__pair-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 24px;
+    padding: 0 ($global-spacing * 0.85);
+    line-height: 1;
+    @include font-size-xxs;
+    color: var(--color-text-secondary);
+    background: var(--color-bg-base);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--trends-control-radius);
+    text-decoration: none;
+    white-space: nowrap;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease;
+
+    > span {
+      display: inline-flex;
+      align-items: center;
+      line-height: 1;
+    }
+
+    &:hover {
+      border-color: var(--color-border-primary);
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__vs {
+    color: var(--color-text-muted);
+    font-size: 10px;
+    font-weight: $font-weight-light;
+    text-transform: lowercase;
+    opacity: 0.6;
+    line-height: 1;
   }
 }
