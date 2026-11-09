@@ -84,10 +84,47 @@ function ChartCanvas({
   )
 }
 
-type TimeSeriesChartProps = LineChartProps & {
+export type TimeSeriesChartProps = LineChartProps & {
   variant?: 'area' | 'line'
   stacked?: boolean
   showShare?: boolean
+}
+
+export interface ChartBindingContext {
+  categories: string[]
+  colors: string[]
+  tooltip: (props: CustomTooltipProps) => React.JSX.Element | null
+  formatter: (value: number) => string
+}
+
+export function buildChartProps(
+  options: TimeSeriesChartProps,
+  context: ChartBindingContext,
+): LineChartProps {
+  const {
+    variant: _variant,
+    stacked: _stacked,
+    showShare: _showShare,
+    showLegend: _showLegend,
+    ...props
+  } = options
+
+  return {
+    ...props,
+    className: 'h-[205px] wide:h-[280px] mobile:h-60',
+    connectNulls: false,
+    curveType: 'linear',
+    showAnimation: false,
+    enableLegendSlider: true,
+    startEndOnly: true,
+    minValue: 0,
+    yAxisWidth: 60,
+    valueFormatter: context.formatter,
+    customTooltip: context.tooltip,
+    showLegend: false,
+    categories: context.categories,
+    colors: context.colors,
+  }
 }
 
 function chartConfig(options: TimeSeriesChartProps) {
@@ -106,7 +143,7 @@ function chartConfig(options: TimeSeriesChartProps) {
 }
 
 export function TimeSeriesChart(options: TimeSeriesChartProps) {
-  const { variant, stacked, showShare, ...props } = options
+  const { variant, stacked, showShare } = options
   const config = chartConfig(options)
   const filter = useSeriesFilter(config.categories, config.colors)
 
@@ -121,22 +158,12 @@ export function TimeSeriesChart(options: TimeSeriesChartProps) {
     [config.formatter, showShare],
   )
 
-  const chartProps: LineChartProps = {
-    className: 'h-[205px] wide:h-[280px] mobile:h-60',
-    connectNulls: false,
-    curveType: 'linear',
-    showAnimation: false,
-    enableLegendSlider: true,
-    startEndOnly: true,
-    minValue: 0,
-    yAxisWidth: 60,
-    valueFormatter: config.formatter,
-    customTooltip: tooltip,
-    showLegend: false,
-    ...props,
+  const chartProps = buildChartProps(options, {
     categories: filter.visible,
     colors: filter.visibleColors,
-  }
+    tooltip,
+    formatter: config.formatter,
+  })
 
   return (
     <div className={config.wrapperClass}>

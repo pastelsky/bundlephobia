@@ -93,3 +93,29 @@ describe('chart legend series filtering and multi-select', () => {
     expect(next.size).toBe(0)
   })
 })
+
+describe('Tremor chart props construction', () => {
+  it('always suppresses the internal Tremor legend so only custom ChartLegend renders', async () => {
+    const { buildChartProps } =
+      await import('../stats-app/src/components/ui/TimeSeriesChart')
+
+    const props = buildChartProps(
+      {
+        data: [],
+        index: 'time',
+        categories: ['2xx', '3xx'],
+        showLegend: true,
+      },
+      {
+        categories: ['2xx'],
+        colors: ['emerald'],
+        tooltip: () => null,
+        formatter: String,
+      },
+    )
+
+    expect(props.showLegend).toBe(false)
+    expect(props.categories).toEqual(['2xx'])
+    expect(props.colors).toEqual(['emerald'])
+  })
+})
