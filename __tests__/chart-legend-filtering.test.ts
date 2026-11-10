@@ -1,5 +1,8 @@
 import { resolveSeriesColor, PALETTE_COLORS } from '../stats-app/src/lib/colors'
-import { toggleSeries } from '../stats-app/src/components/ui/ChartLegend'
+import {
+  buildChartProps,
+  type ChartBindingContext,
+} from '../stats-app/src/components/ui/TimeSeriesChart'
 
 describe('series color resolution for hover tooltips', () => {
   it('resolves all Tremor named colors to exact Tailwind palette hex values', () => {
@@ -34,88 +37,106 @@ describe('series color resolution for hover tooltips', () => {
   })
 })
 
-describe('chart legend series filtering and multi-select', () => {
-  const total = 4
+describe('Tremor chart props construction and interactions', () => {
+  const dummyContext: ChartBindingContext = {
+    categories: ['2xx', '3xx', '4xx', '5xx'],
+    colors: ['emerald', 'sky', 'amber', 'rose'],
+    tooltip: () => null,
+    formatter: String,
+  }
 
-  it('filters to just the clicked label on regular click when all series are visible', () => {
-    const initial = new Set<string>()
-    const next = toggleSeries(initial, '2xx', { isShift: false, total })
+  it('provides an onValueChange handler so Tremor enables interactive legend and series highlighting', () => {
+    const props = buildChartProps(
+      {
+        data: [],
+        index: 'time',
+        categories: dummyContext.categories,
+      },
+      dummyContext,
+    )
 
-    expect([...next]).toEqual(['2xx'])
+    expect(props.onValueChange).toBeInstanceOf(Function)
+    expect(props.enableLegendSlider).toBe(true)
+    expect(props.showLegend).toBe(true)
+    expect(props.categories).toEqual(dummyContext.categories)
+    expect(props.colors).toEqual(dummyContext.colors)
   })
 
-  it('resets to showing all series when clicking the only currently active label again', () => {
-    const active = new Set(['2xx'])
-    const next = toggleSeries(active, '2xx', { isShift: false, total })
-
-    expect(next.size).toBe(0)
-  })
-
-  it('switches filter to just the newly clicked label on regular click', () => {
-    const active = new Set(['2xx', '3xx'])
-    const next = toggleSeries(active, '4xx', { isShift: false, total })
-
-    expect([...next]).toEqual(['4xx'])
-  })
-
-  it('starts multi-selection with the clicked label on Shift-click when no filter is active', () => {
-    const initial = new Set<string>()
-    const next = toggleSeries(initial, '3xx', { isShift: true, total })
-
-    expect([...next]).toEqual(['3xx'])
-  })
-
-  it('adds more series on Shift-click', () => {
-    const active = new Set(['2xx'])
-    const next = toggleSeries(active, '5xx', { isShift: true, total })
-
-    expect([...next].sort()).toEqual(['2xx', '5xx'])
-  })
-
-  it('removes a series on Shift-click if it was already selected', () => {
-    const active = new Set(['2xx', '5xx'])
-    const next = toggleSeries(active, '5xx', { isShift: true, total })
-
-    expect([...next]).toEqual(['2xx'])
-  })
-
-  it('resets to showing all series if removing the last selected series via Shift-click', () => {
-    const active = new Set(['2xx'])
-    const next = toggleSeries(active, '2xx', { isShift: true, total })
-
-    expect(next.size).toBe(0)
-  })
-
-  it('resets to showing all series if Shift-selecting every available series', () => {
-    const active = new Set(['2xx', '3xx', '4xx'])
-    const next = toggleSeries(active, '5xx', { isShift: true, total })
-
-    expect(next.size).toBe(0)
-  })
-})
-
-describe('Tremor chart props construction', () => {
-  it('always suppresses the internal Tremor legend so only custom ChartLegend renders', async () => {
-    const { buildChartProps } =
-      await import('../stats-app/src/components/ui/TimeSeriesChart')
+  it('hides legend when single category is present unless explicitly requested', () => {
+    const singleContext: ChartBindingContext = {
+      ...dummyContext,
+      categories: ['Requests'],
+      colors: ['orange'],
+    }
 
     const props = buildChartProps(
       {
         data: [],
         index: 'time',
-        categories: ['2xx', '3xx'],
-        showLegend: true,
+        categories: singleContext.categories,
       },
-      {
-        categories: ['2xx'],
-        colors: ['emerald'],
-        tooltip: () => null,
-        formatter: String,
-      },
+      singleContext,
     )
 
     expect(props.showLegend).toBe(false)
-    expect(props.categories).toEqual(['2xx'])
-    expect(props.colors).toEqual(['emerald'])
+  })
+
+  it('respects explicit showLegend override', () => {
+    const props = buildChartProps(
+      {
+        data: [],
+        index: 'time',
+        categories: dummyContext.categories,
+        showLegend: false,
+      },
+      dummyContext,
+    )
+
+    expect(props.showLegend).toBe(false)
+  })
+
+  it('defaults minValue to 0 when not specified', () => {
+    const props = buildChartProps(
+      {
+        data: [],
+        index: 'time',
+        categories: dummyContext.categories,
+      },
+      dummyContext,
+    )
+
+    expect(props.minValue).toBe(0)
+    expect(props.autoMinValue).toBeUndefined()
+  })
+
+  it('respects explicit minValue and maxValue', () => {
+    const props = buildChartProps(
+      {
+        data: [],
+        index: 'time',
+        categories: dummyContext.categories,
+        minValue: 10,
+        maxValue: 100,
+      },
+      dummyContext,
+    )
+
+    expect(props.minValue).toBe(10)
+    expect(props.maxValue).toBe(100)
+  })
+
+  it('sets minValue to undefined when autoMinValue is true so Tremor computes automatic domain', () => {
+    const props = buildChartProps(
+      {
+        data: [],
+        index: 'time',
+        categories: dummyContext.categories,
+        autoMinValue: true,
+      },
+      dummyContext,
+    )
+
+    expect(props.minValue).toBeUndefined()
+    expect(props.autoMinValue).toBe(true)
   })
 })

@@ -46,7 +46,10 @@ export interface ChartDefinition {
   series: SeriesFactory
   views?: ChartView[]
   capacity?: ChartCapacity
-  chart?: Pick<LineChartProps, 'minValue' | 'maxValue' | 'allowDecimals'> & {
+  chart?: Pick<
+    LineChartProps,
+    'minValue' | 'maxValue' | 'allowDecimals' | 'autoMinValue'
+  > & {
     type?: 'area' | 'line'
   }
 }
@@ -199,9 +202,11 @@ function durationChart(
     unit: 'seconds',
     chart: { type: 'line' },
     format: value =>
-      value < 1
-        ? `${numberFormat.format(value * 1000)} ms`
-        : `${numberFormat.format(value)} s`,
+      value === 0
+        ? '0 s'
+        : value < 1
+          ? `${numberFormat.format(value * 1000)} ms`
+          : `${numberFormat.format(value)} s`,
     series: window =>
       [
         { quantile: 0.5, name: 'p50', color: 'sky' },
@@ -613,7 +618,7 @@ const pm2 = {
     title: 'Application status',
     description: 'PM2 status for each application',
     unit: 'status',
-    chart: { minValue: 0, maxValue: 4, allowDecimals: false },
+    chart: { type: 'line', minValue: 0, maxValue: 4, allowDecimals: false },
     format: value =>
       ['Unknown', 'Running', 'Pending', 'Stopped', 'Errored'][
         Math.round(value)
@@ -629,7 +634,7 @@ const pm2 = {
     id: 'pm2-uptime',
     title: 'Application uptime',
     description: 'Time since PM2 last started each application',
-    unit: 'seconds',
+    unit: 'hours',
     chart: { type: 'line' },
     format: value => `${numberFormat.format(value / 3600)} h`,
     series: () => [
@@ -644,7 +649,7 @@ const pm2 = {
     title: 'Worker CPU',
     description: 'CPU utilization reported by PM2',
     unit: '%',
-    chart: { minValue: 0, maxValue: 100 },
+    chart: { type: 'line', minValue: 0, maxValue: 100 },
     format: value => `${numberFormat.format(value)}%`,
     series: () => [
       {
@@ -658,6 +663,7 @@ const pm2 = {
     title: 'Worker memory',
     description: 'Resident memory reported by PM2',
     unit: 'bytes',
+    chart: { type: 'line' },
     format: formatBytes,
     series: () => [
       {
