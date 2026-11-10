@@ -232,15 +232,33 @@ const handleInstallError: BuildErrorHandler = context => {
   context.ctx.cacheControl = { maxAge: 0 }
 }
 
-const handleEntryPointError: BuildErrorHandler = context => {
+const handleCLIBuildError: BuildErrorHandler = (context, error) => {
+  const status = 422
+
+  const body = {
+    error: {
+      code: 'CLIBuildError',
+      message:
+        'This package appears to be a command-line tool (CLI) executable rather than a library intended to be bundled in frontend applications.',
+      details: error.extra ?? getErrorDetails(error.originalError) ?? {},
+    },
+  }
+
+  setFatalCache(context)
+  context.respondWithError(status, body.error)
+  context.cacheFailure(status)
+}
+
+const handleEntryPointError: BuildErrorHandler = (context, error) => {
   const status = 422
 
   const body = {
     error: {
       code: 'EntryPointError',
       message:
-        'We could not guess a valid entry point for this package. ' +
-        "Perhaps the author hasn't specified one in its package.json ?",
+        'We could not detect a valid client JavaScript or CSS entry point for this package. ' +
+        "Check that package.json specifies a valid 'main', 'module', 'style', or 'exports' file that exists in this release.",
+      details: getErrorDetails(error.originalError) ?? {},
     },
   }
 
@@ -316,6 +334,7 @@ const buildErrorHandlers = {
   PackageNotFoundError: handlePackageNotFoundError,
   PackageVersionMismatchError: handlePackageVersionMismatchError,
   InstallError: handleInstallError,
+  CLIBuildError: handleCLIBuildError,
   EntryPointError: handleEntryPointError,
   MissingDependencyError: handleMissingDependencyError,
   MinifyError: handleMinifyError,

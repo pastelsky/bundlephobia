@@ -120,6 +120,40 @@ function getInitialResultProps(response: AxiosResponse<PackageBuildInfo>) {
   return { initialResult: null, initialError: response.data }
 }
 
+function buildPackageStructuredData(options: {
+  results: PackageResult | null
+  name: string
+  version?: string | null
+  description: string
+  formattedSizeText: string
+  origin: string
+}) {
+  const { results, name, version, description, formattedSizeText, origin } =
+    options
+
+  if (!results) return undefined
+
+  return JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name,
+    softwareVersion: version,
+    description,
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Any',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    fileSize: formattedSizeText,
+    url: `${origin}/package/${name}`,
+    sameAs: results.repository
+      ? [results.repository, `https://www.npmjs.com/package/${name}`]
+      : [`https://www.npmjs.com/package/${name}`],
+  })
+}
+
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   state: ResultPageState = {
     results: this.props.initialResult,
@@ -450,6 +484,15 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         ? `Size of ${title} is ${formattedSizeText} (minified), and ${formattedGZIPSizeText} when compressed using GZIP. ${DEFAULT_DESCRIPTION_START}`
         : `Find the size of javascript package ${title}. ${DEFAULT_DESCRIPTION_START}`
 
+    const structuredDataJson = buildPackageStructuredData({
+      results: resultsPromiseState === 'fulfilled' ? results : null,
+      name,
+      version,
+      description,
+      formattedSizeText,
+      origin,
+    })
+
     return (
       <MetaTags
         title={`${title} ❘ Bundlephobia`}
@@ -460,6 +503,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         twitterDescription="Insights into npm packages"
         canonicalPath={`/package/${name}`}
         isLargeImage
+        structuredDataJson={structuredDataJson}
       />
     )
   }

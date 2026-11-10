@@ -107,11 +107,33 @@ const Home = () => {
     }
   }
 
+  const homeStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'Bundlephobia',
+    url: 'https://bundlephobia.com',
+    description:
+      'Find the cost and bundle size of adding any npm package to your frontend application.',
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Any',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://bundlephobia.com/package/{search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  }
+
   return (
     <Layout className="homepage">
       <MetaTags
         title="Bundlephobia | Size of npm dependencies"
         canonicalPath=""
+        structuredDataJson={JSON.stringify(homeStructuredData)}
       />
       <div className="homepage__container">
         <PageNav minimal={true} />
