@@ -131,6 +131,7 @@ export function ChartPanel({ panel, range, live }: PanelProps) {
     () => ({
       ...panel,
       ...view?.presentation,
+      chart: { ...panel.chart, ...view?.presentation?.chart },
       series: view?.series ?? panel.series,
     }),
     [panel, view],
