@@ -1,0 +1,590 @@
+[
+  {
+    "package": "bella-lumpur37-breki",
+    "endpoint": "/size",
+    "originalBuildMs": 59451,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "@sentinel-password/breach@0.4.0",
+    "endpoint": "/exports",
+    "originalBuildMs": 58634,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@alvanero/odong271",
+    "endpoint": "/size",
+    "originalBuildMs": 57750,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "@mantine/code-highlight@9.8.0",
+    "endpoint": "/size",
+    "originalBuildMs": 56682,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "coreenmo-validation-library@2.1.0",
+    "endpoint": "/size",
+    "originalBuildMs": 54937,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "coreenmo-animal-dog@1.2.0",
+    "endpoint": "/size",
+    "originalBuildMs": 51889,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "csv-parse-jeannie-gutmann",
+    "endpoint": "/size",
+    "originalBuildMs": 51652,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "primitive-alike-cup",
+    "endpoint": "/size",
+    "originalBuildMs": 51368,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "ember-toggle-spark",
+    "endpoint": "/size",
+    "originalBuildMs": 49651,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "jhtfjhgjgukug",
+    "endpoint": "/size",
+    "originalBuildMs": 49604,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "@itwin/web-viewer-react",
+    "endpoint": "/size",
+    "originalBuildMs": 49033,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "@bory875/effects-timer",
+    "endpoint": "/size",
+    "originalBuildMs": 48702,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "onedionys-user-role-permission-management@5.0.0",
+    "endpoint": "/size",
+    "originalBuildMs": 47461,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "tomket",
+    "endpoint": "/size",
+    "originalBuildMs": 46762,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "@stamhoofd/structures@2.153.0",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 46505,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "onedionys-api-rate-limiting-handler@5.0.0",
+    "endpoint": "/size",
+    "originalBuildMs": 46425,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "@anthropic-ai/claude-agent-sdk@0.3.322",
+    "endpoint": "/size",
+    "originalBuildMs": 46067,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "piyfjfjyj",
+    "endpoint": "/size",
+    "originalBuildMs": 45218,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "@apple-pay-trust/start",
+    "endpoint": "/size",
+    "originalBuildMs": 45198,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "@7rabbit/ink-browser",
+    "endpoint": "/size",
+    "originalBuildMs": 44955,
+    "tier": "haproxy-heavy"
+  },
+  {
+    "package": "@superops/polaris-react-styleguide@5.1.0",
+    "endpoint": "/exports",
+    "originalBuildMs": 33034,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@rocketsoftware/carbon-components-angular@0.7.0",
+    "endpoint": "/exports",
+    "originalBuildMs": 31232,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@ldesign/icons-vue-next@2.2.43",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 31087,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@dimforge/rapier3d-simd-compat@0.21.0",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 30786,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@db-ux/v-core-components@6.3.0",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 27956,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@onfido/castor@2.4.9",
+    "endpoint": "/exports",
+    "originalBuildMs": 26487,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@dinav-marine/ui-kit@0.3.1",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 24608,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@finsweet/ts-utils@0.40.0",
+    "endpoint": "/exports",
+    "originalBuildMs": 23750,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "pd-markdown-ui@1.4.0",
+    "endpoint": "/exports",
+    "originalBuildMs": 20695,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@invisible/components@1.12.0",
+    "endpoint": "/exports",
+    "originalBuildMs": 20683,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@xylabs/react-shared@11.0.1",
+    "endpoint": "/exports",
+    "originalBuildMs": 20605,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@keyjeyelpi/ui@0.2.3",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 20294,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "@agility/plenum-ui@2.6.3",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 19979,
+    "tier": "haproxy-exports"
+  },
+  {
+    "package": "kaijibot",
+    "endpoint": "/size",
+    "originalBuildMs": 14963,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "protractor-xmlhttprequest-mock",
+    "endpoint": "/size",
+    "originalBuildMs": 14919,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "sveltekit-image",
+    "endpoint": "/size",
+    "originalBuildMs": 14880,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@aws-sdk/client-neptune@3.1165.0",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 14863,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@quirekit/data-view-editor",
+    "endpoint": "/size",
+    "originalBuildMs": 14786,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@magicniclus/simple-component-library",
+    "endpoint": "/size",
+    "originalBuildMs": 14748,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "rn-animated-tabs@1.0.4",
+    "endpoint": "/size",
+    "originalBuildMs": 14704,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@flycommerce/ui@0.6.0",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 14701,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@fruits-chain/react-bailu",
+    "endpoint": "/size",
+    "originalBuildMs": 14662,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@hypersonic-js/core",
+    "endpoint": "/size",
+    "originalBuildMs": 14657,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "blear.shims.avalon",
+    "endpoint": "/size",
+    "originalBuildMs": 14591,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@beautinique/frontend-zod@1.1.2",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 14580,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@secondlayer/mcp@11.6.6",
+    "endpoint": "/size",
+    "originalBuildMs": 14567,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@choerodon/devops",
+    "endpoint": "/size",
+    "originalBuildMs": 14550,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@superrouteca/smap@1.6.2",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 14532,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@aws-amplify/backend-cli",
+    "endpoint": "/size",
+    "originalBuildMs": 14525,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@agility/nextjs",
+    "endpoint": "/size",
+    "originalBuildMs": 14450,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@arco-themes/react-huihua",
+    "endpoint": "/size",
+    "originalBuildMs": 14405,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "rag-memory-epf-mcp@6.4.5",
+    "endpoint": "/size",
+    "originalBuildMs": 14361,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@jsweb001/company_profile_light_blue_theme",
+    "endpoint": "/size",
+    "originalBuildMs": 14347,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@mindyartera/senam5jari-422",
+    "endpoint": "/size",
+    "originalBuildMs": 14326,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@sanjeever/ssh-mcp-linux-arm64",
+    "endpoint": "/size",
+    "originalBuildMs": 14278,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "perfa",
+    "endpoint": "/size",
+    "originalBuildMs": 14275,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@alifd/theme-5996",
+    "endpoint": "/size",
+    "originalBuildMs": 14266,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@procedure-tech/mcp-google",
+    "endpoint": "/size",
+    "originalBuildMs": 14245,
+    "tier": "haproxy-medium"
+  },
+  {
+    "package": "@sp46/snek",
+    "endpoint": "/size",
+    "originalBuildMs": 2231,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "typeface-gamja-flower@1.1.13",
+    "endpoint": "/size",
+    "originalBuildMs": 3965,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "playwright-script-recorder",
+    "endpoint": "/size",
+    "originalBuildMs": 1702,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@crosstype/common",
+    "endpoint": "/size",
+    "originalBuildMs": 4885,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "sloty-s-samoi-malenkoi-stavkoi-na-1xbet-ayzv3a7rf",
+    "endpoint": "/size",
+    "originalBuildMs": 2406,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "ths-mobile-component-library",
+    "endpoint": "/size",
+    "originalBuildMs": 4343,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@kalamazoo/spinner@1.0.2",
+    "endpoint": "/exports",
+    "originalBuildMs": 4062,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "node-red-contrib-twilio-client",
+    "endpoint": "/size",
+    "originalBuildMs": 2707,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@getnao/fivetran-mcp-server@1.4.2",
+    "endpoint": "/size",
+    "originalBuildMs": 1896,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "stage-devtools@0.3.2",
+    "endpoint": "/size",
+    "originalBuildMs": 1759,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "farst-cache@0.0.1",
+    "endpoint": "/size",
+    "originalBuildMs": 2123,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "cra-template-typescript@1.3.0",
+    "endpoint": "/size",
+    "originalBuildMs": 1560,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "maille@0.1.8",
+    "endpoint": "/size",
+    "originalBuildMs": 2183,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@idexio/idexd-cli",
+    "endpoint": "/size",
+    "originalBuildMs": 4803,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "xsolve_wtf",
+    "endpoint": "/size",
+    "originalBuildMs": 4677,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@coopenomics/extension-kit",
+    "endpoint": "/size",
+    "originalBuildMs": 1798,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@mui-magic/log@4.11.1618532146386",
+    "endpoint": "/exports",
+    "originalBuildMs": 1795,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "electron-run",
+    "endpoint": "/size",
+    "originalBuildMs": 4649,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@mg21st/dev-assist",
+    "endpoint": "/size",
+    "originalBuildMs": 4667,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@anolilab/textlint-config",
+    "endpoint": "/size",
+    "originalBuildMs": 3664,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "raddish",
+    "endpoint": "/size",
+    "originalBuildMs": 2310,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "instabug-reactnative-custombuild",
+    "endpoint": "/size",
+    "originalBuildMs": 2312,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@incresco/eva-icons",
+    "endpoint": "/size",
+    "originalBuildMs": 3051,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "react-native-music-player-service",
+    "endpoint": "/size",
+    "originalBuildMs": 2037,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "@pawel-up/lupa",
+    "endpoint": "/size",
+    "originalBuildMs": 2803,
+    "tier": "haproxy-standard"
+  },
+  {
+    "package": "rmd-react-cmp@0.1.1",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 164,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "@semi-bot/semi-theme-eting",
+    "endpoint": "/size",
+    "originalBuildMs": 1271,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "@calipsa/tar",
+    "endpoint": "/size",
+    "originalBuildMs": 736,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "dsr-package-porta-fossa-jutty-waldo",
+    "endpoint": "/size",
+    "originalBuildMs": 1159,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "@justindfuller/entity",
+    "endpoint": "/size",
+    "originalBuildMs": 1164,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "@reopt-ai/brandapp-sdk@4.6.0",
+    "endpoint": "/exports",
+    "originalBuildMs": 540,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "cli-github",
+    "endpoint": "/size",
+    "originalBuildMs": 1377,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "qpzicon",
+    "endpoint": "/size",
+    "originalBuildMs": 715,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "@kalamazoo/spinner@1.0.2",
+    "endpoint": "/exports-sizes",
+    "originalBuildMs": 57,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "@alifd/theme-14047",
+    "endpoint": "/size",
+    "originalBuildMs": 1218,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "paratext-envelope",
+    "endpoint": "/size",
+    "originalBuildMs": 1343,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "googleplacesapi",
+    "endpoint": "/size",
+    "originalBuildMs": 1299,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "@scifi-kit/registry",
+    "endpoint": "/size",
+    "originalBuildMs": 1101,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "@lingfan-engine/stories-build@0.3.3",
+    "endpoint": "/exports",
+    "originalBuildMs": 899,
+    "tier": "haproxy-fast"
+  },
+  {
+    "package": "@ohos-ports/journeyapps-sqlcipher",
+    "endpoint": "/size",
+    "originalBuildMs": 813,
+    "tier": "haproxy-fast"
+  }
+]

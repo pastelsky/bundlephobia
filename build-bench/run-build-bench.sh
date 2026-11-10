@@ -10,9 +10,11 @@ mkdir -p "$RESULTS_DIR/diagnostics" "$RESULTS_DIR/reports"
 CONCURRENCY="${1:-1}"
 ITERATIONS="${2:-1}"
 RUN_STRACE="${RUN_STRACE:-false}"
+WORKLOAD_FILE="${WORKLOAD_FILE:-$DIR/workload/packages.json}"
 
 export CONCURRENCY
 export ITERATIONS
+export WORKLOAD_FILE
 
 echo "================================================================="
 echo "       Bundlephobia Build Service Benchmarking & Profiler        "
@@ -20,6 +22,7 @@ echo "================================================================="
 echo "Configuration:"
 echo "  - Concurrency:       $CONCURRENCY"
 echo "  - Workload Iterations: $ITERATIONS"
+echo "  - Workload File:     $WORKLOAD_FILE"
 echo "  - Low-level Strace:  $RUN_STRACE"
 echo "  - Results Directory: $RESULTS_DIR"
 echo "-----------------------------------------------------------------"
