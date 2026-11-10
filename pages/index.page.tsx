@@ -1,7 +1,6 @@
 import React from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import type { WebSite, WithContext } from 'schema-dts'
 
 import Analytics from '../client/analytics'
 import { AutocompleteInput } from '../client/components/AutocompleteInput'
@@ -10,6 +9,7 @@ import CarbonAd from '../client/components/CarbonAd'
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
+import { createWebSiteStructuredData } from '../client/seo/structured-data'
 
 const Logo = () => (
   <svg
@@ -108,22 +108,12 @@ const Home = () => {
     }
   }
 
-  const homeStructuredData: WithContext<WebSite> = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Bundlephobia',
-    alternateName: ['bundlephobia', 'bundlephobia.com'],
-    url: 'https://bundlephobia.com',
-    description:
-      'Find the cost and bundle size of adding any npm package to your frontend application.',
-  }
-
   return (
     <Layout className="homepage">
       <MetaTags
         title="Bundlephobia | Size of npm dependencies"
         canonicalPath=""
-        structuredDataJson={JSON.stringify(homeStructuredData)}
+        structuredData={createWebSiteStructuredData()}
       />
       <div className="homepage__container">
         <PageNav minimal={true} />

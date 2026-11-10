@@ -1,6 +1,8 @@
 import React from 'react'
 import Head from 'next/head'
 
+import { type StructuredData, serializeJsonLd } from '../seo/structured-data'
+
 export const DEFAULT_DESCRIPTION_START =
   'Bundlephobia helps you find the performance impact of npm packages.'
 
@@ -11,6 +13,7 @@ type MetaTagsProps = {
   twitterDescription?: string
   image?: string
   isLargeImage?: boolean
+  structuredData?: StructuredData | null
   structuredDataJson?: string
 }
 
@@ -21,6 +24,7 @@ export default function MetaTags({
   canonicalPath,
   image,
   isLargeImage,
+  structuredData,
   structuredDataJson,
 }: MetaTagsProps) {
   const defaultDescription = `${DEFAULT_DESCRIPTION_START} Find the size of any javascript package and its effect on your frontend bundle.`
@@ -35,6 +39,10 @@ export default function MetaTags({
     typeof window === 'undefined'
       ? 'https://bundlephobia.com'
       : window.location.origin
+
+  const serializedLd = structuredData
+    ? serializeJsonLd(structuredData)
+    : structuredDataJson
 
   return (
     <Head>
@@ -65,11 +73,11 @@ export default function MetaTags({
       )}
       <meta name="twitter:card" key="twitter:card" content={cardType} />
       <link rel="canonical" href={origin + canonicalPath} />
-      {structuredDataJson && (
+      {serializedLd && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: structuredDataJson,
+            __html: serializedLd,
           }}
         />
       )}
