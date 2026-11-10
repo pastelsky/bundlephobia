@@ -121,7 +121,7 @@ function getInitialResultProps(response: AxiosResponse<PackageBuildInfo>) {
 }
 
 function buildPackageStructuredData(options: {
-  results: PackageResult | null
+  results: PackageBuildInfo | null
   name: string
   version?: string | null
   description: string
@@ -140,12 +140,6 @@ function buildPackageStructuredData(options: {
     softwareVersion: version,
     description,
     applicationCategory: 'DeveloperApplication',
-    operatingSystem: 'Any',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
     fileSize: formattedSizeText,
     url: `${origin}/package/${name}`,
     sameAs: results.repository

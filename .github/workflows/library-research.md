@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 engine:
   id: copilot
-  model: gpt-5
+  model: gpt-6-luna?effort=high
   env:
     COPILOT_PROVIDER_WIRE_API: responses
   args:

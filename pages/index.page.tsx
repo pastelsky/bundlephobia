@@ -115,12 +115,6 @@ const Home = () => {
     description:
       'Find the cost and bundle size of adding any npm package to your frontend application.',
     applicationCategory: 'DeveloperApplication',
-    operatingSystem: 'Any',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
     potentialAction: {
       '@type': 'SearchAction',
       target: 'https://bundlephobia.com/package/{search_term_string}',
