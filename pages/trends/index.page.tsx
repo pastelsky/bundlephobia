@@ -18,6 +18,7 @@ import API, {
 } from '../../client/api'
 import Layout from '../../client/components/Layout'
 import MetaTags from '../../client/components/MetaTags'
+import { createTrendsStructuredData } from '../../client/seo/structured-data'
 import PageNav from '../../client/components/PageNav'
 import { AutocompleteInput } from '../../client/components/AutocompleteInput'
 import { formatSize as formatBundleSize } from '../../utils'
@@ -516,77 +517,16 @@ export default function TrendsPage({
     ? trendsComparisonCanonicalPath(packages)
     : '/trends'
 
-  const structuredDataJson = useMemo(() => {
-    const data = isComparison
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'WebPage',
-          name: pageTitle,
-          description,
-          url: `https://bundlephobia.com${canonicalPath}`,
-          breadcrumb: {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {
-                '@type': 'ListItem',
-                position: 1,
-                name: 'Home',
-                item: 'https://bundlephobia.com',
-              },
-              {
-                '@type': 'ListItem',
-                position: 2,
-                name: 'Trends',
-                item: 'https://bundlephobia.com/trends',
-              },
-              {
-                '@type': 'ListItem',
-                position: 3,
-                name: packages.join(' vs '),
-                item: `https://bundlephobia.com${canonicalPath}`,
-              },
-            ],
-          },
-          mainEntity: {
-            '@type': 'ItemList',
-            name: `${packages.join(' vs ')} comparison`,
-            itemListElement: packages.map((pkg, idx) => ({
-              '@type': 'SoftwareApplication',
-              position: idx + 1,
-              name: pkg,
-              applicationCategory: 'DeveloperApplication',
-              operatingSystem: 'Any',
-              url: `https://bundlephobia.com/package/${pkg}`,
-            })),
-          },
-        }
-      : {
-          '@context': 'https://schema.org',
-          '@type': 'WebPage',
-          name: pageTitle,
-          description,
-          url: 'https://bundlephobia.com/trends',
-          breadcrumb: {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {
-                '@type': 'ListItem',
-                position: 1,
-                name: 'Home',
-                item: 'https://bundlephobia.com',
-              },
-              {
-                '@type': 'ListItem',
-                position: 2,
-                name: 'Trends',
-                item: 'https://bundlephobia.com/trends',
-              },
-            ],
-          },
-        }
-
-    return JSON.stringify(data)
-  }, [isComparison, pageTitle, description, canonicalPath, packages])
+  const structuredData = useMemo(
+    () =>
+      createTrendsStructuredData({
+        packages: isComparison ? packages : [],
+        pageTitle,
+        description,
+        canonicalPath,
+      }),
+    [isComparison, packages, pageTitle, description, canonicalPath],
+  )
 
   return (
     <Layout className="trends-page">
@@ -595,7 +535,7 @@ export default function TrendsPage({
         description={description}
         twitterDescription={description}
         canonicalPath={canonicalPath}
-        structuredDataJson={structuredDataJson}
+        structuredData={structuredData}
       />
       <div className="trends-page__container">
         <PageNav />

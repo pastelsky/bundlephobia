@@ -9,6 +9,7 @@ import CarbonAd from '../client/components/CarbonAd'
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
+import { createWebSiteStructuredData } from '../client/seo/structured-data'
 
 const Logo = () => (
   <svg
@@ -112,6 +113,7 @@ const Home = () => {
       <MetaTags
         title="Bundlephobia | Size of npm dependencies"
         canonicalPath=""
+        structuredData={createWebSiteStructuredData()}
       />
       <div className="homepage__container">
         <PageNav minimal={true} />

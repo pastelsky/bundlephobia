@@ -3,8 +3,10 @@ import React, { PureComponent } from 'react'
 
 import API, { type PackageDependencyInfo } from 'client/api'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox'
+import MetaTags from 'client/components/MetaTags'
 import ResultLayout from 'client/components/ResultLayout'
 import { AutocompleteInput } from 'client/components/AutocompleteInput'
+import { createBreadcrumbStructuredData } from 'client/seo/structured-data'
 import { parsePackageString } from 'utils/common.utils'
 import NetworkTree from './components/NetworkTree'
 
@@ -122,9 +124,31 @@ class TreePage extends PureComponent<TreePageProps, TreePageState> {
 
   render() {
     const { inputInitialValue, nodes, links } = this.state
+    const packageQuery = getQueryValue(this.props.router.query, 'p')
+
+    const pageTitle = packageQuery
+      ? `Dependency tree of ${packageQuery} ❘ Bundlephobia`
+      : 'Dependency Tree ❘ Bundlephobia'
+
+    const canonicalPath = packageQuery ? `/tree?p=${packageQuery}` : '/tree'
+
+    const breadcrumbs = [
+      { name: 'Home', url: '/' },
+      { name: 'Dependency Tree', url: '/tree' },
+    ]
+
+    if (packageQuery) {
+      breadcrumbs.push({ name: packageQuery, url: `/tree?p=${packageQuery}` })
+    }
 
     return (
       <ResultLayout>
+        <MetaTags
+          title={pageTitle}
+          canonicalPath={canonicalPath}
+          description="Inspect the recursive dependency tree and nested package weights of any npm module."
+          structuredData={createBreadcrumbStructuredData(breadcrumbs)}
+        />
         <section className="content-container-wrap">
           <div className="content-container">
             <AutocompleteInputBox>

@@ -237,10 +237,14 @@ test('shows progress on a newly added package until its data arrives', async ({
   await expect(
     newChip.getByRole('button', { name: 'Remove lodash' }),
   ).toBeEnabled()
-  await expect(page.locator('.trends-card')).toHaveCount(2)
+  await expect(page.locator('.trends-card')).toHaveCount(3)
+  const lodashCard = page.locator('.trends-card').filter({ hasText: 'lodash' })
+  await expect(lodashCard).toBeVisible()
+  await expect(lodashCard.locator('.trends-stat__skeleton')).toHaveCount(4)
 
   releaseThird?.()
   await expect(page.locator('.trends-card')).toHaveCount(3)
+  await expect(lodashCard.locator('.trends-stat__skeleton')).toHaveCount(0)
   await expect(newChip.getByRole('status')).toHaveCount(0)
 
   await search.fill('axios')

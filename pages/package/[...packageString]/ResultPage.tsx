@@ -120,6 +120,8 @@ function getInitialResultProps(response: AxiosResponse<PackageBuildInfo>) {
   return { initialResult: null, initialError: response.data }
 }
 
+import { createPackageStructuredData } from '../../../client/seo/structured-data'
+
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   state: ResultPageState = {
     results: this.props.initialResult,
@@ -450,6 +452,18 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         ? `Size of ${title} is ${formattedSizeText} (minified), and ${formattedGZIPSizeText} when compressed using GZIP. ${DEFAULT_DESCRIPTION_START}`
         : `Find the size of javascript package ${title}. ${DEFAULT_DESCRIPTION_START}`
 
+    const structuredData =
+      resultsPromiseState === 'fulfilled' && results
+        ? createPackageStructuredData({
+            name,
+            version,
+            description,
+            fileSize: formattedSizeText,
+            repository: results.repository,
+            origin,
+          })
+        : undefined
+
     return (
       <MetaTags
         title={`${title} ❘ Bundlephobia`}
@@ -460,6 +474,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         twitterDescription="Insights into npm packages"
         canonicalPath={`/package/${name}`}
         isLargeImage
+        structuredData={structuredData}
       />
     )
   }

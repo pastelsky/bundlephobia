@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 engine:
   id: copilot
-  model: gpt-6-luna
+  model: gpt-6-luna?effort=high
   env:
     COPILOT_PROVIDER_WIRE_API: responses
   args:
@@ -119,13 +119,22 @@ trade-offs, with evidence links. Include the research run link, optional-source
 limitations, and a reminder that package checks do not validate every claim and
 human review is required. Do not just append a new report to old claims.
 
-Research the past 14 days through GitHub Trending (JavaScript/TypeScript), HN /
-Show HN (Algolia), and repository activity/releases. Established alternatives
-are welcome too. Shortlist promising candidates before deep investigation.
-Batch independent source reads and candidate investigations in parallel; do not
-repeat requests or inspect unrelated PRs. Use web-fetch for discovery and npm,
-and GitHub MCP for maintainer README, API examples and releases. Record exact
-links read. Optional discovery failures must not block verified candidates.
+Research candidate libraries along two distinct complementary vectors:
+
+1. Catalog expansion & trending releases: Investigate recent activity through GitHub
+   Trending (JavaScript/TypeScript), HN / Show HN (Algolia), and releases of packages
+   complementing existing catalog categories.
+2. Upcoming and niche discovery: Actively look for emerging functional clusters
+   and niche libraries not yet in the catalog. Query npm search
+   (`https://registry.npmjs.org/-/v1/search?text=...`) for rising topic keywords,
+   emerging protocols, or newly adopted browser APIs. When an emerging cluster has at
+   least two real competing solutions, you propose a new category if a current buckets
+   don't make sense.
+
+Shortlist promising candidates before deep investigation. Batch independent source reads
+and candidate investigations in parallel; do not repeat requests or inspect unrelated PRs.
+Use web-fetch for discovery and npm, and GitHub MCP for maintainer README, API examples
+and releases. Record exact links read. Optional discovery failures must not block verified candidates.
 
 Your job is semantic judgment: same concrete task and compatible environments,
 not popularity. Distinguish browser/server, framework-specific/generic, and
