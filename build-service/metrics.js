@@ -4,7 +4,7 @@ import path from 'node:path'
 import { monitorEventLoopDelay, performance } from 'node:perf_hooks'
 import { activeBuildCount, startBuildTrace } from './buildMemoryTrace.ts'
 
-const DEFAULT_SAMPLE_INTERVAL_MS = 250
+const DEFAULT_SAMPLE_INTERVAL_MS = 1000
 
 const DEFAULT_SLOW_BUILD_MS = 10_000
 
@@ -198,6 +198,61 @@ async function readDetailedProcesses(processes) {
     .slice(0, MAX_PEAK_PROCESSES)
 }
 
+async function readDescendantPids(rootPid) {
+  try {
+    const pids = [rootPid]
+    const pending = [rootPid]
+    const visited = new Set([rootPid])
+
+    while (pending.length > 0) {
+      const current = pending.pop()
+
+      const childrenStr = await fs.readFile(
+        `/proc/${current}/task/${current}/children`,
+        'utf8',
+      )
+
+      const children = childrenStr
+        .trim()
+        .split(/\s+/)
+        .map(Number)
+        .filter(n => Number.isInteger(n) && n > 0 && !visited.has(n))
+
+      for (const child of children) {
+        visited.add(child)
+        pids.push(child)
+        pending.push(child)
+      }
+    }
+
+    return pids
+  } catch {
+    return undefined
+  }
+}
+
+async function readProcessRecords() {
+  const targetPids = await readDescendantPids(process.pid)
+
+  if (targetPids) {
+    const records = await Promise.all(
+      targetPids.map(pid => readProcessRecord(pid)),
+    )
+
+    return records.filter(Boolean)
+  }
+
+  const entries = await fs.readdir('/proc', { withFileTypes: true })
+
+  return (
+    await Promise.all(
+      entries
+        .filter(entry => entry.isDirectory() && /^\d+$/.test(entry.name))
+        .map(entry => readProcessRecord(Number(entry.name))),
+    )
+  ).filter(Boolean)
+}
+
 // Process discovery necessarily branches around platform and process-lifecycle races.
 // oxlint-disable-next-line complexity
 async function readProcessTree() {
@@ -214,15 +269,7 @@ async function readProcessTree() {
     }
   }
 
-  const entries = await fs.readdir('/proc', { withFileTypes: true })
-
-  const records = (
-    await Promise.all(
-      entries
-        .filter(entry => entry.isDirectory() && /^\d+$/.test(entry.name))
-        .map(entry => readProcessRecord(Number(entry.name))),
-    )
-  ).filter(Boolean)
+  const records = await readProcessRecords()
 
   const childrenByParent = new Map()
 
