@@ -1,0 +1,51 @@
+services:
+  bp-build-service:
+    build:
+      context: ..
+      dockerfile: build-bench/Dockerfile.build-service
+    container_name: bp-build-service
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    ports:
+      - '7002:7002'
+      - '9229:9229'
+    environment:
+      - PORT=7002
+      - NODE_ENV=production
+      - DEBUG=bp:*
+      - ENABLE_DIAGNOSTICS=true
+      - MEMORY_DIAGNOSTICS_DIR=/diagnostics
+      - MEMORY_DIAGNOSTICS_RSS_THRESHOLD=850M
+      - MEMORY_DIAGNOSTICS_HEAP_SNAPSHOT=false
+    volumes:
+      - ./results/diagnostics:/diagnostics
+      - ./results:/app/results
+    networks:
+      - bp-build-net
+
+  bp-build-monitor:
+    image: node:24-bookworm-slim
+    container_name: bp-build-monitor
+    depends_on:
+      - bp-build-service
+    network_mode: 'service:bp-build-service'
+    environment:
+      - INSPECTOR_HOST=127.0.0.1
+      - INSPECTOR_PORT=9229
+      - RESULTS_DIR=/app/results
+      - POLL_INTERVAL_MS=500
+      - ENABLE_CPU_PROFILE=true
+      - ENABLE_ALLOC_PROFILE=true
+      - TAKE_HEAP_SNAPSHOTS=true
+    volumes:
+      - ./monitor:/app/monitor
+      - ./results:/app/results
+    working_dir: /app
+    command: ['node', 'monitor/cdp-monitor.mjs']
+
+networks:
+  bp-build-net:
+    driver: bridge

@@ -84,6 +84,8 @@
     "playwright-report/**",
     "test-results/**",
     "test-packages/**",
+    "build-bench/**",
+    "loadtest/**",
     "next-env.d.ts"
   ],
   "overrides": [

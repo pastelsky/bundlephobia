@@ -1,0 +1,55 @@
+FROM node:24-bookworm
+
+# Install low-level tracing, profiling, and debugging tools
+# strace (syscall tracing via ptrace), sysstat (pidstat), procps, lsof, iotop, gdb, etc.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3 \
+    curl \
+    git \
+    strace \
+    sysstat \
+    procps \
+    lsof \
+    iotop \
+    jq \
+    gdb \
+    ca-certificates \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Bun (package-build-stats uses Bun when available for fast package installation)
+RUN curl -fsSL https://bun.sh/install | bash \
+    && mv /root/.bun/bin/bun /usr/local/bin/bun \
+    && bun --version
+
+WORKDIR /app
+
+# Enable modern yarn via corepack
+RUN corepack enable
+
+# Copy build-service package files and install dependencies
+COPY build-service/package.json build-service/yarn.lock build-service/.yarnrc.yml ./build-service/
+RUN cd build-service && corepack yarn install --immutable
+RUN cd build-service && npm install --no-save prom-client@15.1.3
+RUN ln -s /app/build-service/node_modules /app/node_modules
+
+# Copy app files needed by build-service and diagnostics
+COPY scripts/ ./scripts/
+COPY server/infrastructure/ ./server/infrastructure/
+COPY build-service/ ./build-service/
+COPY build-bench/monitor/ ./build-bench/monitor/
+RUN chmod +x ./build-bench/monitor/*.sh
+
+# Setup diagnostics and scratch directories
+RUN mkdir -p /diagnostics /app/results /tmp/package-build-stats
+
+ENV PORT=7002
+ENV NODE_ENV=production
+ENV MEMORY_DIAGNOSTICS_SERVICE=build-service
+ENV MEMORY_DIAGNOSTICS_DIR=/diagnostics
+
+EXPOSE 7002 9229
+
+# Start with inspector enabled for CDP profiling and memory diagnostics
+CMD ["node", "--inspect=0.0.0.0:9229", "--require=./scripts/memory-diagnostics.cjs", "build-service/index.js"]

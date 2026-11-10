@@ -1,0 +1,104 @@
+[
+  {
+    "package": "is-odd@3.0.1",
+    "endpoint": "/size",
+    "tier": "micro",
+    "description": "Baseline micro-package, single tiny file, tests fastify & bun install baseline overhead"
+  },
+  {
+    "package": "clsx@2.1.1",
+    "endpoint": "/size",
+    "tier": "micro",
+    "description": "Modern ESM+CJS micro-utility, tests small bundler pipeline"
+  },
+  {
+    "package": "ms@2.1.3",
+    "endpoint": "/size",
+    "tier": "micro",
+    "description": "Small classic utility"
+  },
+  {
+    "package": "mime-types@2.1.35",
+    "endpoint": "/size",
+    "tier": "micro",
+    "description": "Small data dictionary package"
+  },
+  {
+    "package": "dayjs@1.11.13",
+    "endpoint": "/size",
+    "tier": "standard",
+    "description": "Standard modular utility, plugins, common real-world bundle target"
+  },
+  {
+    "package": "chalk@5.4.1",
+    "endpoint": "/size",
+    "tier": "standard",
+    "description": "Pure ESM utility package"
+  },
+  {
+    "package": "axios@1.7.9",
+    "endpoint": "/size",
+    "tier": "standard",
+    "description": "Popular HTTP client with browser/node platform conditions"
+  },
+  {
+    "package": "lodash@4.17.21",
+    "endpoint": "/size",
+    "tier": "standard",
+    "description": "Large monolithic commonjs library, tests large AST generation"
+  },
+  {
+    "package": "zod@3.24.1",
+    "endpoint": "/size",
+    "tier": "standard",
+    "description": "Modern TypeScript heavy inference library"
+  },
+  {
+    "package": "react@18.3.1",
+    "endpoint": "/size",
+    "tier": "heavy",
+    "description": "Heavy core library with react-dom/client peer relationships"
+  },
+  {
+    "package": "rxjs@7.8.1",
+    "endpoint": "/size",
+    "tier": "heavy",
+    "description": "Large reactive streams library, hundreds of operator subpaths, high memory during tree-shake"
+  },
+  {
+    "package": "@tanstack/react-query@5.62.7",
+    "endpoint": "/size",
+    "tier": "heavy",
+    "description": "Complex state management library with deeply nested TypeScript types and modern bundle formats"
+  },
+  {
+    "package": "date-fns@4.1.0",
+    "endpoint": "/size",
+    "tier": "heavy",
+    "description": "Modular date library with hundreds of exported functions"
+  },
+  {
+    "package": "lodash-es@4.17.21",
+    "endpoint": "/exports-sizes",
+    "tier": "multi-export",
+    "description": "Tests /exports-sizes over 600+ individual module entry points"
+  },
+  {
+    "package": "lucide-react@0.468.0",
+    "endpoint": "/exports",
+    "tier": "multi-export",
+    "description": "Tests /exports enumeration over 1000+ icon components"
+  },
+  {
+    "package": "this-package-definitely-does-not-exist-1234567@1.0.0",
+    "endpoint": "/size",
+    "tier": "error",
+    "description": "Tests 404 package handling, temporary directory cleanup, and error serialization"
+  },
+  {
+    "package": "react@999.999.999",
+    "endpoint": "/size",
+    "tier": "error",
+    "description": "Tests invalid version handling and failure backoff"
+  }
+]
