@@ -125,17 +125,16 @@ Research candidate libraries along two distinct complementary vectors:
    Trending (JavaScript/TypeScript), HN / Show HN (Algolia), and releases of packages
    complementing existing catalog categories.
 2. Autonomous frontier & niche discovery: Actively look for emerging functional clusters
-   and niche libraries that do not fit existing categories. Query the npm registry search
-   endpoint (https://registry.npmjs.org/-/v1/search?text=...) for rising keywords and topic tags
-   observed in newly trending repositories. Look for emerging developer needs (such as newly
-   introduced browser APIs, emerging runtime protocols, or novel paradigms) where two or more
-   independent libraries offer competing solutions. When discovering a viable emerging cluster
-   with at least two real alternatives, propose a new category rather than forcing packages into
-   unrelated existing buckets. Shortlist promising candidates before deep investigation.
-   Batch independent source reads and candidate investigations in parallel; do not
-   repeat requests or inspect unrelated PRs. Use web-fetch for discovery and npm,
-   and GitHub MCP for maintainer README, API examples and releases. Record exact
-   links read. Optional discovery failures must not block verified candidates.
+   and niche libraries not yet in the catalog. Query npm search
+   (`https://registry.npmjs.org/-/v1/search?text=...`) for rising topic keywords,
+   emerging protocols, or newly adopted browser APIs. When an emerging cluster has at
+   least two real competing solutions, propose a new category rather than forcing
+   packages into unrelated buckets.
+
+Shortlist promising candidates before deep investigation. Batch independent source reads
+and candidate investigations in parallel; do not repeat requests or inspect unrelated PRs.
+Use web-fetch for discovery and npm, and GitHub MCP for maintainer README, API examples
+and releases. Record exact links read. Optional discovery failures must not block verified candidates.
 
 Your job is semantic judgment: same concrete task and compatible environments,
 not popularity. Distinguish browser/server, framework-specific/generic, and

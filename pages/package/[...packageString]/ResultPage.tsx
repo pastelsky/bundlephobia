@@ -120,6 +120,18 @@ function getInitialResultProps(response: AxiosResponse<PackageBuildInfo>) {
   return { initialResult: null, initialError: response.data }
 }
 
+interface PackageStructuredData {
+  '@context': 'https://schema.org'
+  '@type': 'SoftwareApplication'
+  name: string
+  softwareVersion?: string | null
+  description: string
+  applicationCategory: string
+  fileSize: string
+  url: string
+  sameAs?: string[]
+}
+
 function buildPackageStructuredData(options: {
   results: PackageBuildInfo | null
   name: string
@@ -133,7 +145,7 @@ function buildPackageStructuredData(options: {
 
   if (!results) return undefined
 
-  return JSON.stringify({
+  const structuredData: PackageStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name,
@@ -142,10 +154,13 @@ function buildPackageStructuredData(options: {
     applicationCategory: 'DeveloperApplication',
     fileSize: formattedSizeText,
     url: `${origin}/package/${name}`,
-    sameAs: results.repository
-      ? [results.repository, `https://www.npmjs.com/package/${name}`]
-      : [`https://www.npmjs.com/package/${name}`],
-  })
+  }
+
+  if (results.repository) {
+    structuredData.sameAs = [results.repository]
+  }
+
+  return JSON.stringify(structuredData)
 }
 
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {

@@ -240,7 +240,10 @@ const handleCLIBuildError: BuildErrorHandler = (context, error) => {
       code: 'CLIBuildError',
       message:
         'This package appears to be a command-line tool (CLI) executable rather than a library intended to be bundled in frontend applications.',
-      details: error.extra ?? getErrorDetails(error.originalError) ?? {},
+      details: {
+        ...getErrorDetails(error.originalError),
+        ...(error.extra ?? {}),
+      },
     },
   }
 

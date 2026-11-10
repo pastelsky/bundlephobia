@@ -49,7 +49,7 @@ describe('Analytics', () => {
         elementInteractions: false,
         formInteractions: false,
         fileDownloads: false,
-        webVitals: false,
+        webVitals: true,
       },
       serverUrl: '/_events',
       enableRequestBodyCompression: true,
