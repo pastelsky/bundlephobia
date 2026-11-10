@@ -1,7 +1,7 @@
 import React from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import type { WebApplication, WithContext } from 'schema-dts'
+import type { WebSite, WithContext } from 'schema-dts'
 
 import Analytics from '../client/analytics'
 import { AutocompleteInput } from '../client/components/AutocompleteInput'
@@ -10,14 +10,6 @@ import CarbonAd from '../client/components/CarbonAd'
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
-
-type HomeStructuredData = WithContext<WebApplication> & {
-  potentialAction: {
-    '@type': 'SearchAction'
-    target: string
-    'query-input': string
-  }
-}
 
 const Logo = () => (
   <svg
@@ -116,19 +108,14 @@ const Home = () => {
     }
   }
 
-  const homeStructuredData: HomeStructuredData = {
+  const homeStructuredData: WithContext<WebSite> = {
     '@context': 'https://schema.org',
-    '@type': 'WebApplication',
+    '@type': 'WebSite',
     name: 'Bundlephobia',
+    alternateName: ['bundlephobia', 'bundlephobia.com'],
     url: 'https://bundlephobia.com',
     description:
       'Find the cost and bundle size of adding any npm package to your frontend application.',
-    applicationCategory: 'DeveloperApplication',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: 'https://bundlephobia.com/package/{search_term_string}',
-      'query-input': 'required name=search_term_string',
-    },
   }
 
   return (

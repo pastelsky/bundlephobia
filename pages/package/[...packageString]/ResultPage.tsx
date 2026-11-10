@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react'
 import semver from 'semver'
 import type { GetServerSidePropsContext } from 'next'
 import type { AxiosResponse } from 'axios'
-import type { SoftwareApplication, WithContext } from 'schema-dts'
+import type { BreadcrumbList, Graph, SoftwareApplication } from 'schema-dts'
 
 import Analytics, { type PackageLoadSource } from '../../../client/analytics'
 import API, {
@@ -142,19 +142,45 @@ function buildPackageStructuredData(options: {
 
   sameAs.push(`https://www.npmjs.com/package/${name}`)
 
-  const structuredData: WithContext<SoftwareApplication> = {
-    '@context': 'https://schema.org',
+  const softwareApp: SoftwareApplication = {
     '@type': 'SoftwareApplication',
+    '@id': `${origin}/package/${name}#software`,
     name,
     softwareVersion: version ?? undefined,
     description,
     applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Cross-platform',
+    isAccessibleForFree: true,
     fileSize: formattedSizeText,
     url: `${origin}/package/${name}`,
     sameAs,
   }
 
-  return JSON.stringify(structuredData)
+  const breadcrumbs: BreadcrumbList = {
+    '@type': 'BreadcrumbList',
+    '@id': `${origin}/package/${name}#breadcrumb`,
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: origin,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name,
+        item: `${origin}/package/${name}`,
+      },
+    ],
+  }
+
+  const graph: Graph = {
+    '@context': 'https://schema.org',
+    '@graph': [softwareApp, breadcrumbs],
+  }
+
+  return JSON.stringify(graph)
 }
 
 class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
