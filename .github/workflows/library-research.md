@@ -124,12 +124,12 @@ Research candidate libraries along two distinct complementary vectors:
 1. Catalog expansion & trending releases: Investigate recent activity through GitHub
    Trending (JavaScript/TypeScript), HN / Show HN (Algolia), and releases of packages
    complementing existing catalog categories.
-2. Autonomous frontier & niche discovery: Actively look for emerging functional clusters
+2. Upcoming and niche discovery: Actively look for emerging functional clusters
    and niche libraries not yet in the catalog. Query npm search
    (`https://registry.npmjs.org/-/v1/search?text=...`) for rising topic keywords,
    emerging protocols, or newly adopted browser APIs. When an emerging cluster has at
-   least two real competing solutions, propose a new category rather than forcing
-   packages into unrelated buckets.
+   least two real competing solutions, you propose a new category if a current buckets
+   don't make sense.
 
 Shortlist promising candidates before deep investigation. Batch independent source reads
 and candidate investigations in parallel; do not repeat requests or inspect unrelated PRs.
