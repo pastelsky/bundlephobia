@@ -49,7 +49,7 @@ post-steps:
     with:
       name: library-research-proposal
       path: /tmp/gh-aw/agent/proposal.json
-      if-no-files-found: error
+      if-no-files-found: ignore
 safe-outputs:
   threat-detection: false
   jobs:
@@ -169,6 +169,7 @@ Summary-only updates are supported; no new library is required to address feedba
 Submit exactly once through safeoutputs with
 `{"proposal":"proposal.json"}`; do not put proposal contents in the tool call,
 where text sanitization can alter JSON and scoped npm names/URLs.
+Leave `/tmp/gh-aw/agent/proposal.json` in place; do not delete or clean up proposal.json, as the post-step uploads it as an artifact for the downstream review publisher.
 Use an empty proposal array only after completed
 research finds no useful candidates; report_incomplete if core npm/repository
 evidence is inaccessible. Note optional-source limitations in your summary.
