@@ -9923,6 +9923,7 @@ __metadata:
     safe-stable-stringify: "npm:^2.5.0"
     sass: "npm:^1.70.0"
     sass-loader: "npm:^10.5.2"
+    schema-dts: "npm:^2.1.0"
     semver: "npm:^7.6.3"
     sitemap: "npm:^7.1.1"
     stream-chain: "npm:^3.3.2"
@@ -23029,6 +23030,22 @@ __metadata:
   version: 0.27.0
   resolution: "scheduler@npm:0.27.0"
   checksum: 4f03048cb05a3c8fddc45813052251eca00688f413a3cee236d984a161da28db28ba71bd11e7a3dd02f7af84ab28d39fb311431d3b3772fed557945beb00c452
+  languageName: node
+  linkType: hard
+
+"schema-dts-lib@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "schema-dts-lib@npm:1.1.0"
+  checksum: ee8992c0363b2a37de3562fb21dce3c04db8376ff0e5447c5b4ee5984d904b67507897011dad819c1e3673e0339dd7f07cd0ee0e620a70195b0f7119eeedb463
+  languageName: node
+  linkType: hard
+
+"schema-dts@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "schema-dts@npm:2.1.0"
+  dependencies:
+    schema-dts-lib: "npm:^1.1.0"
+  checksum: 93fc3df29744b9f55e5c8453bbc1969145fa32fa2d132e85d68f3647861d2d22f9b3cc2c0e28e04c7e778d333e2d83d7790d75df0b675d3381fbdb11f4e4309b
   languageName: node
   linkType: hard
 

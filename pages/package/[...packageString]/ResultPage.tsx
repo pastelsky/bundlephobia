@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react'
 import semver from 'semver'
 import type { GetServerSidePropsContext } from 'next'
 import type { AxiosResponse } from 'axios'
+import type { SoftwareApplication, WithContext } from 'schema-dts'
 
 import Analytics, { type PackageLoadSource } from '../../../client/analytics'
 import API, {
@@ -120,18 +121,6 @@ function getInitialResultProps(response: AxiosResponse<PackageBuildInfo>) {
   return { initialResult: null, initialError: response.data }
 }
 
-interface PackageStructuredData {
-  '@context': 'https://schema.org'
-  '@type': 'SoftwareApplication'
-  name: string
-  softwareVersion?: string | null
-  description: string
-  applicationCategory: string
-  fileSize: string
-  url: string
-  sameAs?: string[]
-}
-
 function buildPackageStructuredData(options: {
   results: PackageBuildInfo | null
   name: string
@@ -145,19 +134,24 @@ function buildPackageStructuredData(options: {
 
   if (!results) return undefined
 
-  const structuredData: PackageStructuredData = {
+  const sameAs: string[] = []
+
+  if (results.repository) {
+    sameAs.push(results.repository)
+  }
+
+  sameAs.push(`https://www.npmjs.com/package/${name}`)
+
+  const structuredData: WithContext<SoftwareApplication> = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name,
-    softwareVersion: version,
+    softwareVersion: version ?? undefined,
     description,
     applicationCategory: 'DeveloperApplication',
     fileSize: formattedSizeText,
     url: `${origin}/package/${name}`,
-  }
-
-  if (results.repository) {
-    structuredData.sameAs = [results.repository]
+    sameAs,
   }
 
   return JSON.stringify(structuredData)
