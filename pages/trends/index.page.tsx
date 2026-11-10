@@ -18,6 +18,7 @@ import API, {
 } from '../../client/api'
 import Layout from '../../client/components/Layout'
 import MetaTags from '../../client/components/MetaTags'
+import DataPreloader from '../../client/components/DataPreloader'
 import PageNav from '../../client/components/PageNav'
 import { AutocompleteInput } from '../../client/components/AutocompleteInput'
 import { formatSize as formatBundleSize } from '../../utils'
@@ -597,6 +598,9 @@ export default function TrendsPage({
         canonicalPath={canonicalPath}
         structuredDataJson={structuredDataJson}
       />
+      {packages.length > 0 && (
+        <DataPreloader urls={[API.getTrendsUrl(packages, range)]} />
+      )}
       <div className="trends-page__container">
         <PageNav />
 

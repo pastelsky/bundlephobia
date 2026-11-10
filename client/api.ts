@@ -146,8 +146,21 @@ async function parseResponse<T>(response: APIResponse): Promise<T> {
   throw error
 }
 
+declare global {
+  interface Window {
+    __BP_PRELOAD__?: Record<string, Promise<APIResponse>>
+  }
+}
+
 export default class API {
   static get<T = unknown>(url: string, isInternal = true): Promise<T> {
+    if (typeof window !== 'undefined' && window.__BP_PRELOAD__?.[url]) {
+      const preloadedPromise = window.__BP_PRELOAD__[url]
+      delete window.__BP_PRELOAD__[url]
+
+      return preloadedPromise.then(parseResponse<T>)
+    }
+
     const headers: APIHeaders = {
       Accept: 'application/json',
     }
@@ -173,10 +186,12 @@ export default class API {
     }).then(parseResponse<T>)
   }
 
+  static getInfoUrl(packageString: string) {
+    return `/api/size?package=${packageString}&record=true`
+  }
+
   static getInfo(packageString: string) {
-    return API.get<PackageBuildInfo>(
-      `/api/size?package=${packageString}&record=true`,
-    )
+    return API.get<PackageBuildInfo>(API.getInfoUrl(packageString))
   }
 
   static getExports(packageString: string) {
@@ -191,9 +206,13 @@ export default class API {
     )
   }
 
+  static getDependenciesUrl(packageString: string) {
+    return `/api/dependencies?package=${packageString}`
+  }
+
   static getDependencies(packageString: string) {
     return API.get<PackageDependencyInfo[]>(
-      `/api/dependencies?package=${packageString}`,
+      API.getDependenciesUrl(packageString),
     )
   }
 
@@ -212,13 +231,17 @@ export default class API {
     return API.get<PackageHistoryResponse>(`/api/package-history?${params}`)
   }
 
-  static getTrends(packages: string[], range: TrendsRange) {
+  static getTrendsUrl(packages: string[], range: TrendsRange) {
     const params = new URLSearchParams({
       packages: packages.join(','),
       range,
     })
 
-    return API.get<TrendsResponse>(`/api/trends?${params}`)
+    return `/api/trends?${params}`
+  }
+
+  static getTrends(packages: string[], range: TrendsRange) {
+    return API.get<TrendsResponse>(API.getTrendsUrl(packages, range))
   }
 
   static getRecentSearches(limit: number) {

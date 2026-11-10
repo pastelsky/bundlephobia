@@ -1,3 +1,5 @@
+/* eslint-disable anti-slop/no-chained-type-assertions, anti-slop/require-safety-comment-for-type-assertion */
+
 import fetch from 'unfetch'
 
 import API, { setFetchImplementation } from '../client/api'
@@ -95,4 +97,64 @@ describe('API error responses', () => {
       })
     },
   )
+})
+
+describe('API early data preloading', () => {
+  let restoreFetch: () => void
+
+  beforeEach(() => {
+    mockedFetch.mockReset()
+    restoreFetch?.()
+    restoreFetch = setFetchImplementation(mockedFetch)
+    ;(globalThis as unknown as { window?: typeof window }).window =
+      globalThis as unknown as typeof window
+    delete (globalThis as unknown as { window: { __BP_PRELOAD__?: unknown } })
+      .window.__BP_PRELOAD__
+  })
+
+  afterEach(() => {
+    restoreFetch()
+    delete (globalThis as unknown as { window?: typeof window }).window
+  })
+
+  test('consumes preloaded promise from window.__BP_PRELOAD__ without dispatching fetch', async () => {
+    const payload = { name: 'react', version: '19.3.1', size: 1000 }
+    const url = '/api/size?package=react@19.3.1&record=true'
+
+    window.__BP_PRELOAD__ = {
+      [url]: Promise.resolve(mockResponse(200, () => Promise.resolve(payload))),
+    }
+
+    const result = await API.get(url)
+
+    expect(result).toEqual(payload)
+    expect(mockedFetch).not.toHaveBeenCalled()
+    expect(window.__BP_PRELOAD__[url]).toBeUndefined()
+  })
+
+  test('falls back to standard fetch when no preloaded promise exists', async () => {
+    const payload = { name: 'vue', version: '3.4.0' }
+    const url = '/api/size?package=vue&record=true'
+
+    mockedFetch.mockResolvedValue(
+      mockResponse(200, () => Promise.resolve(payload)),
+    )
+
+    const result = await API.get(url)
+
+    expect(result).toEqual(payload)
+    expect(mockedFetch).toHaveBeenCalledTimes(1)
+  })
+
+  test('generates consistent URL helpers matching API methods', () => {
+    expect(API.getInfoUrl('react@19.3.1')).toBe(
+      '/api/size?package=react@19.3.1&record=true',
+    )
+    expect(API.getTrendsUrl(['react', 'vue'], 'last-year')).toBe(
+      '/api/trends?packages=react%2Cvue&range=last-year',
+    )
+    expect(API.getDependenciesUrl('lodash')).toBe(
+      '/api/dependencies?package=lodash',
+    )
+  })
 })

@@ -16,6 +16,7 @@ import BarGraph from '../../../client/components/BarGraph'
 import { type Reading } from '../../../client/components/BarGraph/BarGraph'
 import BuildProgressIndicator from '../../../client/components/BuildProgressIndicator'
 import CarbonAd from '../../../client/components/CarbonAd'
+import DataPreloader from '../../../client/components/DataPreloader'
 import MetaTags, {
   DEFAULT_DESCRIPTION_START,
 } from '../../../client/components/MetaTags'
@@ -709,9 +710,15 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   }
 
   render() {
+    const packageString = getPackageStringFromRouter(this.props.router)
+    const shouldPreload = !this.props.initialResult && Boolean(packageString)
+
     return (
       <ResultLayout>
         {this.getMetaTags()}
+        {shouldPreload && (
+          <DataPreloader urls={[API.getInfoUrl(packageString)]} />
+        )}
         <section className="content-container-wrap">
           <div className="content-container">
             <AutocompleteInputBox footer={this.renderQuickStatsBar()}>

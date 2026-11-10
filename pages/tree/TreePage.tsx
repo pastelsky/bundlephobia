@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react'
 
 import API, { type PackageDependencyInfo } from 'client/api'
 import AutocompleteInputBox from 'client/components/AutocompleteInputBox'
+import DataPreloader from 'client/components/DataPreloader'
 import ResultLayout from 'client/components/ResultLayout'
 import { AutocompleteInput } from 'client/components/AutocompleteInput'
 import { parsePackageString } from 'utils/common.utils'
@@ -122,9 +123,13 @@ class TreePage extends PureComponent<TreePageProps, TreePageState> {
 
   render() {
     const { inputInitialValue, nodes, links } = this.state
+    const queryPackage = getQueryValue(this.props.router.query, 'p')?.trim()
 
     return (
       <ResultLayout>
+        {queryPackage && (
+          <DataPreloader urls={[API.getDependenciesUrl(queryPackage)]} />
+        )}
         <section className="content-container-wrap">
           <div className="content-container">
             <AutocompleteInputBox>
