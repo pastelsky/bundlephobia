@@ -46,14 +46,10 @@ apps:
       BUILD_WORKER_MEMORY_LIMIT_BYTES: *build_worker_memory_limit
       INSTALLATION_SERVICE_ENDPOINT: http://127.0.0.1:7003
       # Native allocator tuning to prevent Linux RSS retention & PM2 restart loops:
-      # - MIMALLOC_PURGE_DELAY=0: purges empty mimalloc chunks immediately upon deallocation
-      # - MIMALLOC_PURGE_DECOMMITS=1: forces madvise(MADV_DONTNEED) so Linux kernel immediately drops RSS
+      # - MIMALLOC_PURGE_DECOMMITS=1: forces madvise(MADV_DONTNEED) so Linux kernel immediately drops freed RSS
       # - MALLOC_ARENA_MAX=2: limits glibc heap arena proliferation across worker threads
-      # - MALLOC_TRIM_THRESHOLD_=131072: returns freed glibc memory > 128KB promptly to the OS
-      MIMALLOC_PURGE_DELAY: '0'
       MIMALLOC_PURGE_DECOMMITS: '1'
       MALLOC_ARENA_MAX: '2'
-      MALLOC_TRIM_THRESHOLD_: '131072'
       MEMORY_DIAGNOSTICS_SERVICE: build-service
       MEMORY_DIAGNOSTICS_RSS_THRESHOLD: 850M
       MEMORY_DIAGNOSTICS_DIR: /var/cache/bundlephobia/diagnostics

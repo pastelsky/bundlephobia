@@ -1,0 +1,4 @@
+# Recommended /etc/fstab entry for the ephemeral build loop device:
+# - noatime,nodiratime: stops updating access timestamps on reads of thousands of node_modules files
+# - commit=60: delays ext4 journal transaction flushes for ephemeral workspaces deleted in <30s
+/var/tmp-build.img /tmp/tmp-build ext4 loop,noatime,nodiratime,commit=60,nofail 0 0
