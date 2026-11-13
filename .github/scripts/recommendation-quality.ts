@@ -35,9 +35,24 @@ const githubSchema = z.object({
 })
 
 const sizeSchema = z.object({
-  version: z.string(),
-  size: z.number(),
-  gzip: z.number(),
+  version: z.string().min(1),
+  size: z.number().positive(),
+  gzip: z.number().positive(),
+  assets: z
+    .array(
+      z.object({
+        type: z.string(),
+        size: z.number().nonnegative(),
+        gzip: z.number().nonnegative(),
+      }),
+    )
+    .refine(
+      assets =>
+        assets.some(
+          asset => asset.type === 'js' && asset.size > 0 && asset.gzip > 0,
+        ),
+      'Expected nonempty JavaScript bundle output',
+    ),
 })
 
 type BundleSize =
@@ -182,7 +197,24 @@ export async function collectBundleSize(
   url.searchParams.set('package', packageName)
 
   try {
-    const result = sizeSchema.parse(await fetchJson(url, undefined, fetchImpl))
+    const result = sizeSchema.parse(
+      await fetchJson(
+        url,
+        {
+          signal: AbortSignal.timeout(120000),
+          redirect: 'error',
+        },
+        fetchImpl,
+      ),
+    )
+
+    const versionSeparator = packageName.lastIndexOf('@')
+
+    if (
+      versionSeparator > 0 &&
+      result.version !== packageName.slice(versionSeparator + 1)
+    )
+      throw new Error('Bundle result does not match the requested version')
 
     return {
       available: true,
@@ -274,7 +306,12 @@ export async function collectPackageSignals(
           .then(value => githubSchema.nullable().parse(value))
           .catch(() => null)
       : null,
-    includeBundleSize ? collectBundleSize(packageName, { fetchImpl }) : null,
+    includeBundleSize
+      ? collectBundleSize(
+          latestVersion ? `${packageName}@${latestVersion}` : packageName,
+          { fetchImpl },
+        )
+      : null,
   ])
 
   const publishedAt = latestVersion ? registry.time?.[latestVersion] : null
@@ -319,6 +356,11 @@ export function evaluateRecommendation(
   }
 
   if (signals.deprecated) errors.push('The latest npm version is deprecated.')
+
+  if (signals.bundleSize && !signals.bundleSize.available)
+    errors.push(
+      'A successful Bundlephobia build with nonempty JavaScript output is required; retry failed or unavailable builds before recommending this package.',
+    )
 
   if (signals.repositoryArchived) {
     notes.push('The linked source repository is archived.')

@@ -77,10 +77,15 @@ const results = []
 
 for (const { category, packageName } of additions) {
   const signals = await collectPackageSignals(packageName, {
-    includeBundleSize: false,
+    includeBundleSize: true,
   })
 
   const { errors, notes } = evaluateRecommendation(signals)
+
+  if (!signals.bundleSize)
+    errors.push(
+      'Bundle verification is unavailable; retry before recommending this package.',
+    )
 
   if (category.packages.size > maxRecommendationsPerCategory) {
     errors.push(
@@ -136,7 +141,7 @@ if (additions.length) {
 
   lines.push(
     '',
-    '_Missing/deprecated npm packages and exceeding the category cap block. Popularity and maintenance are advisory; this check never triggers production package builds._',
+    '_Missing/deprecated npm packages, failed or empty JavaScript bundles, and exceeding the category cap block. Bundle checks use the normal Bundlephobia size API; popularity and maintenance remain advisory._',
   )
 }
 
