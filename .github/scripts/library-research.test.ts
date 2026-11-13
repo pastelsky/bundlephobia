@@ -220,11 +220,18 @@ test('rejects unsupported groups, weak evidence, invalid identities and oversize
     { repository: 'different/repo' },
     { discovery: undefined },
     { discovery: { reason: 'hype', source: null } },
+    { tradeoffs: '<script>alert("xss")</script>' },
+    { reason: '<div>unsupported markup</div>' },
   ]) {
     const p = proposal('one', 'two')
     Object.assign(p[0].recommendations[0], patch)
     assert.throws(() => mergeProposal({}, p))
   }
+
+  const valid = proposal('one', 'two')
+  valid[0].recommendations[0].tradeoffs =
+    'Requires Node >=22.12.0 and bundle size <= 50kb; verify runtime fit and dependencies.'
+  assert.doesNotThrow(() => mergeProposal({}, valid))
 })
 
 test('fails closed on npm identity/deprecation, registry failure or archived source; never calls size APIs', async () => {

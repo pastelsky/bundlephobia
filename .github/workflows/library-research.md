@@ -178,6 +178,7 @@ Summary-only updates are supported; no new library is required to address feedba
 Submit exactly once through safeoutputs with
 `{"proposal":"proposal.json"}`; do not put proposal contents in the tool call,
 where text sanitization can alter JSON and scoped npm names/URLs.
+Do not use raw HTML tags in proposal fields.
 Leave `/tmp/gh-aw/agent/proposal.json` in place; do not delete or clean up proposal.json, as the post-step uploads it as an artifact for the downstream review publisher.
 Use an empty proposal array only after completed
 research finds no useful candidates; report_incomplete if core npm/repository
