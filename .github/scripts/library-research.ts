@@ -457,7 +457,14 @@ export async function publishResearch({
         body: {
           content: execFileSync(
             'corepack',
-            ['yarn', 'format', '--stdin-filepath', catalogPath],
+            [
+              'yarn',
+              'workspace',
+              '@bundlephobia/recommendation-automation',
+              'format',
+              '--stdin-filepath',
+              `../${catalogPath}`,
+            ],
             { input: JSON.stringify(catalog), encoding: 'utf8' },
           ),
           encoding: 'utf-8',

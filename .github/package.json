@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "format": "oxfmt --config ../.oxfmtrc.json",
     "test": "node --test scripts/*.test.ts",
     "check": "tsc --project tsconfig.json"
   },
