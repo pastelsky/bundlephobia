@@ -133,8 +133,14 @@ Research candidate libraries along two distinct complementary vectors:
 
 Shortlist promising candidates before deep investigation. Batch independent source reads
 and candidate investigations in parallel; do not repeat requests or inspect unrelated PRs.
-Use web-fetch for discovery and npm, and GitHub MCP for maintainer README, API examples
-and releases. Record exact links read. Optional discovery failures must not block verified candidates.
+For network queries (npm latest/search, GitHub, and web discovery), use the `web_fetch` tool
+or `curl` from bash (`curl -fsSL ...`). Outbound HTTP/HTTPS traffic is filtered and routed via
+proxy environment variables (`https_proxy`), which `curl` and `web_fetch` handle automatically.
+Avoid running inline Node scripts with native `fetch()`, because Node's `fetch()` does not use
+the proxy by default and fails with DNS resolution errors. Use GitHub MCP for maintainer README,
+API examples, commits, and releases. To inspect `utils/similar-packages.catalog.json` efficiently
+without paginating across multiple turns, inspect targeted sections or summarize category keys via jq.
+Record exact links read. Optional discovery failures must not block verified candidates.
 
 Your job is semantic judgment: same concrete task and compatible environments,
 not popularity. Distinguish browser/server, framework-specific/generic, and
@@ -179,7 +185,7 @@ Submit exactly once through safeoutputs with
 `{"proposal":"proposal.json"}`; do not put proposal contents in the tool call,
 where text sanitization can alter JSON and scoped npm names/URLs.
 Do not use raw HTML tags in proposal fields.
-Leave `/tmp/gh-aw/agent/proposal.json` in place; do not delete or clean up proposal.json, as the post-step uploads it as an artifact for the downstream review publisher.
+Leave `/tmp/gh-aw/agent/proposal.json` in place; ensure parent directories exist (`mkdir -p /tmp/gh-aw/agent`) and do not delete or clean up proposal.json, as the post-step uploads it as an artifact for the downstream review publisher.
 Use an empty proposal array only after completed
 research finds no useful candidates; report_incomplete if core npm/repository
 evidence is inaccessible. Note optional-source limitations in your summary.
