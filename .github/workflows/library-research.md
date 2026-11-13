@@ -97,8 +97,8 @@ the PR description, never in the catalog's name/tags/similar data.
 
 Find genuine JavaScript/TypeScript alternatives for Bundlephobia. Read
 utils/similar-packages.catalog.json and comparisonGroups in utils/similarPackages.ts.
-Check only the PR with head pastelsky:codex/library-catalog: respect its pending
-catalog and maintainer feedback. No matching PR is a normal first run. Never
+Check only the PR with head codex/library-catalog (in GitHub search use is:pr head:codex/library-catalog; do not use the pastelsky: prefix as same-repo head searches do not match): respect its pending
+catalog and maintainer feedback. Pass its head commit SHA as expectedHead (or null if the branch does not yet exist). No matching PR is a normal first run. Never
 re-propose rejected recommendations. Before discovering more libraries, read the
 PR conversation, review bodies and inline comments (including pagination), and
 address actionable feedback. You own the editorial decisions: investigate,
@@ -134,13 +134,15 @@ Research candidate libraries along two distinct complementary vectors:
 Shortlist promising candidates before deep investigation. Batch independent source reads
 and candidate investigations in parallel; do not repeat requests or inspect unrelated PRs.
 For network queries (npm latest/search, GitHub, and web discovery), use the `web_fetch` tool
-or `curl` from bash (`curl -fsSL ...`). Outbound HTTP/HTTPS traffic is filtered and routed via
-proxy environment variables (`https_proxy`), which `curl` and `web_fetch` handle automatically.
-Avoid running inline Node scripts with native `fetch()`, because Node's `fetch()` does not use
-the proxy by default and fails with DNS resolution errors. Use GitHub MCP for maintainer README,
-API examples, commits, and releases. To inspect `utils/similar-packages.catalog.json` efficiently
-without paginating across multiple turns, inspect targeted sections or summarize category keys via jq.
-Record exact links read. Optional discovery failures must not block verified candidates.
+or `curl` from bash (`curl -fsSL ...`). Batch independent network reads in parallel using
+multiple curl calls or subagents rather than making sequential roundtrips. Outbound HTTP/HTTPS
+traffic is filtered and routed via proxy environment variables (`https_proxy`), which `curl`
+and `web_fetch` handle automatically. Avoid running inline Node scripts with native `fetch()`,
+because Node's `fetch()` does not use the proxy by default and fails with DNS resolution errors.
+Use GitHub MCP for maintainer README, API examples, commits, and releases. To inspect
+`utils/similar-packages.catalog.json` efficiently without paginating across multiple turns,
+inspect targeted sections or summarize category keys via jq. Record exact links read. Optional
+discovery failures must not block verified candidates.
 
 Your job is semantic judgment: same concrete task and compatible environments,
 not popularity. Distinguish browser/server, framework-specific/generic, and
@@ -173,8 +175,7 @@ post, a release/announcement (date), or a deliberate gap in the existing catalog
 Do not claim a package was trending merely because Trending was scanned. Cite
 the actual trigger; established alternatives with no recent signal must say so.
 
-In a temporary native TypeScript script, write a JSON object to
-/tmp/gh-aw/agent/proposal.json with proposal (the category proposals above),
+Write the JSON object directly to /tmp/gh-aw/agent/proposal.json (using the write tool or a small script) with proposal (the category proposals above),
 summary (your complete managed PR summary, without its outer markers), and
 expectedHead (the research branch SHA you read, or null if none). For catalog
 revisions, also include catalog (the complete desired name/tags/similar catalog).

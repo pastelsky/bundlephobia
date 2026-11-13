@@ -374,7 +374,7 @@ export async function publishResearch({
     snapshot = pending
   }
 
-  if (expectedHead !== (headRef?.object.sha ?? null))
+  if (rawCatalog && expectedHead !== (headRef?.object.sha ?? null))
     fail('Research branch changed since the agent read it; reread and retry')
 
   const catalog = rawCatalog

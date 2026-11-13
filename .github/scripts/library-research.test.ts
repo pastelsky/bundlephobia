@@ -546,6 +546,32 @@ test('publishes one branch/PR, preserves agent evidence and human notes, and dis
   assert.equal(state.prs[0].body, previousBody)
 })
 
+test('proposals rebase and merge cleanly even when expectedHead was null or older', async () => {
+  const { state, api } = github()
+
+  await publishResearch({
+    api,
+    proposal: proposal('candidate'),
+    verify: async () => {},
+    summary: 'Candidate rationale.',
+    expectedHead: null,
+  })
+
+  await publishResearch({
+    api,
+    proposal: proposal('another'),
+    verify: async () => {},
+    summary: 'Another rationale.',
+    expectedHead: null,
+  })
+
+  assert.deepEqual(state.catalogs[state.head!].example.similar, [
+    'original',
+    'candidate',
+    'another',
+  ])
+})
+
 test('a rejected PR blocks publication, and failed identity checks create no branch', async () => {
   const { state, api } = github()
   state.prs = [
