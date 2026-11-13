@@ -35,5 +35,6 @@ scrape_configs:
       - targets: ['127.0.0.1:5400']
 
   - job_name: bundlephobia_pm2
+    honor_labels: true
     static_configs:
       - targets: ['127.0.0.1:9988']
