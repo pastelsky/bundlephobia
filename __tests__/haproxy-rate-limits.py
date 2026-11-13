@@ -4,6 +4,7 @@ import http.client
 from contextlib import closing
 from pathlib import Path
 import socket
+import struct
 import subprocess
 import tempfile
 import time
@@ -54,7 +55,7 @@ class BotRateLimits(unittest.TestCase):
                                          '    http-request return status 504 hdr Cache-Control max-age=86400 if { path /upstream-timeout }\n'
                                          '    http-request return status 401 hdr Cache-Control max-age=86400 if { path /upstream-unauthorized }\n'
                                          '    http-request return status 404 hdr Cache-Control max-age=60 if { path /permanent-missing }\n'
-                                         '    http-request return status 200 hdr Cache-Control public,max-age=86400\n'
+                                         '    http-request return status 200 hdr Cache-Control public,max-age=86400 hdr X-Echo-Prefer-Cached "%[req.hdr(X-Bundlephobia-Prefer-Cached)]"\n'
                                          for name in sorted(upstreams)))
         config_args = ['-f', str(config), '-f', str(policy_directory)]
         validation = subprocess.run(['haproxy', '-c', *config_args],
@@ -67,11 +68,13 @@ class BotRateLimits(unittest.TestCase):
         for _ in range(100):
             try:
                 with socket.create_connection(('127.0.0.1', self.port), timeout=.1):
-                    return
+                    if self.admin_socket.exists():
+                        return
             except OSError:
                 if self.proxy.poll() is not None:
                     self.fail('HAProxy exited before listening')
                 time.sleep(.01)
+            time.sleep(.01)
         self.fail('HAProxy did not start')
 
     def stop_proxy(self):
@@ -80,6 +83,8 @@ class BotRateLimits(unittest.TestCase):
 
     def request(self, ua, number, path='/package/example', method=None, headers=None):
         with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as conn:
+            conn.connect()
+            conn.sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
             conn.request(method or ('POST' if path == '/_events' else 'GET'), path, headers={
                 **(headers or {}),
                 'User-Agent': ua,
@@ -89,6 +94,7 @@ class BotRateLimits(unittest.TestCase):
             response = conn.getresponse()
             self.response_headers = response.getheaders()
             self.retry_after = response.getheader('Retry-After')
+            self.echo_prefer_cached = response.getheader('X-Echo-Prefer-Cached')
             response.read()
             return response.status
 
@@ -262,7 +268,8 @@ class BotRateLimits(unittest.TestCase):
         ]
         for pool, agents in pools:
             self.runtime('clear table named_bot_usage')
-            for i in range(26):
+            pool_limit = 50 if pool == 'google' else 26
+            for i in range(pool_limit):
                 self.assertEqual(self.request(agents[i % len(agents)], i,
                                               paths[i % 2]), 200)
             for ua in agents:
@@ -274,10 +281,10 @@ class BotRateLimits(unittest.TestCase):
             self.assertEqual(self.request(agents[0], 240, '/asset.js'), 429)
             if pool != 'google':
                 self.assertEqual(self.request(agents[-1], 240, '/asset.js'), 200)
-        # Every pool is below 26/min, but together they stop at the global ceiling.
+        # Every pool is below its rate, but together they stop at the global ceiling.
         for table in ['client_group_usage', 'automated_client_usage', 'named_bot_usage']:
             self.runtime(f'clear table {table}')
-        for i in range(100):
+        for i in range(120):
             self.assertEqual(self.request(pools[i % len(pools)][1][0], i,
                                           paths[i % 2]), 200)
         for _, agents in pools:
@@ -295,7 +302,7 @@ class BotRateLimits(unittest.TestCase):
                           if k.lower() == 'access-control-allow-origin'], ['*'])
         self.assertIn(('access-control-max-age', '600'),
                       [(k.lower(), v) for k, v in self.response_headers])
-        for i in range(26):
+        for i in range(50):
             self.assertEqual(self.request('Googlebot/2.1', i, '/api/size'), 200)
         for i in range(30):
             self.assertEqual(self.request('Googlebot/2.1', i, '/api/size'), 429)
@@ -341,6 +348,22 @@ class BotRateLimits(unittest.TestCase):
             self.assertEqual(self.request('UnrelatedBot/1', 242), 200)
             self.assertEqual(self.request('Googlebot/2.1', 243), 200)
             self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0', 244), 200)
+
+    def test_automated_clients_prefer_cached_on_pages_and_apis(self):
+        # Automated client on package page gets X-Bundlephobia-Prefer-Cached
+        self.assertEqual(self.request('Googlebot/2.1', 1, '/package/example'), 200)
+        self.assertEqual(self.echo_prefer_cached, 'true')
+        # Automated client on API also gets X-Bundlephobia-Prefer-Cached
+        self.assertEqual(self.request('Googlebot/2.1', 1, '/api/size'), 200)
+        self.assertEqual(self.echo_prefer_cached, 'true')
+        # Ordinary browser does not get it on package page or API
+        self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0', 1, '/package/example'), 200)
+        self.assertIsNone(self.echo_prefer_cached)
+        self.assertEqual(self.request('Mozilla/5.0 Chrome/156.0', 1, '/api/size'), 200)
+        self.assertIsNone(self.echo_prefer_cached)
+        # Non-analysis asset route for bot does not get it
+        self.assertEqual(self.request('Googlebot/2.1', 1, '/asset.js'), 200)
+        self.assertIsNone(self.echo_prefer_cached)
 
 
 if __name__ == '__main__':

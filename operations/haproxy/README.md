@@ -45,7 +45,7 @@ sudo systemctl reload haproxy
 | 1     | HAProxy                    | Security checks and `/stats` authentication.                                                                                                                                                                                 |
 | 2     | HAProxy                    | Active cooldown blocks the responsible family/IP until expiry.                                                                                                                                                               |
 | 3     | HAProxy                    | 190/min across origin routes per bot family, or trusted IP otherwise. Non-bot application traffic additionally allows 120/5m/IP. Stats and telemetry use their own routing and are excluded from this application allowance. |
-| 4     | HAProxy                    | API and package pages: **26/min per pool or additional crawler family**, **100/min admitted across identified bots**. Cache hits count too.                                                                                  |
+| 4     | HAProxy                    | API and package pages: **50/min for Google**, **26/min per other pool or additional crawler family**, **120/min admitted across identified bots**. Cache hits count too.                                                                                  |
 | 5     | Server, after cache lookup | Hits return before the build guard. Misses share **10 build admissions/5m/IP** across analysis endpoints and are rejected when HAProxy signals **60 seconds of completed build time/5m/IP** has been spent.                  |
 | 6     | HAProxy                    | Every returned **429** counts toward the responsible family/IP's cooldown: 30/min gives 5m; 120/min gives 15m. Persistent 429s can renew 15m with at most 5m left. Other 4xx do not count.                                   |
 
@@ -55,7 +55,7 @@ no general request limiter or bot-specific limit branches. The budget signal and
 returned build duration are the bridge between those responsibilities. Spending
 the build budget alone does not block cache hits; traffic limits/cooldown can.
 
-Crawler pages prefer an already-built release but may build on a miss. Page/MCP
+Crawler pages and analysis APIs prefer an already-built release but may build on a miss. Page/MCP
 local API calls forward caller identity and budget state; only the outer request
 spends the proxy allowance. Build admissions may coalesce. Completed-time
 accounting does not reserve queued/in-flight work. Proxy rate windows roll; the
