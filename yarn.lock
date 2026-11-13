@@ -2109,6 +2109,8 @@ __metadata:
     "@types/semver": "npm:^7.7.1"
     "@types/validate-npm-package-name": "npm:^4.0.2"
     git-url-parse: "npm:^16.1.0"
+    npm-package-arg: "npm:^8.1.5"
+    picomatch: "npm:^4.0.3"
     semver: "npm:^7.6.3"
     typescript: "npm:^7.0.2"
     validate-npm-package-name: "npm:^8.0.0"

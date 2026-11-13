@@ -44,3 +44,54 @@ memory and should not be enabled by default during a memory investigation.
 References: [Rspack tracing](https://rspack.rs/contribute/development/tracing),
 [Rspack profiling](https://rspack.rs/contribute/development/profiling),
 [Rsdoctor memory caveats](https://rsdoctor.rs/guide/more/faq).
+
+## Weekly consumer-manifest discovery
+
+The optional JavaScript source in `.github/scripts/library-discovery.mjs` feeds the
+existing `library-research` workflow. It produces leads for the research agent;
+it does not edit the catalogue or decide whether two libraries are substitutes.
+
+Each successful run rotates six approved catalogue packages as reverse-search
+seeds and also searches Vue, Svelte, Solid, Lit, React and web-app topics. It reads
+pinned manifests from active, non-fork, non-archived repositories with at least
+100 stars. The app heuristic requires a private manifest, a web framework and a
+web build/dev script. It follows loaded internal workspaces, includes development
+dependencies and rejects obvious server/example/test paths. This is a bounded,
+incomplete sample; framework topics and manifests cannot prove browser execution.
+
+A candidate needs declarations under two different owners other than the package
+repository owner, a non-deprecated npm identity, and at least 1,000 estimated
+weekly downloads (last 28 days divided by four). These are screening thresholds,
+not acceptance criteria. npm growth compares the last two complete 28-day periods;
+it includes indirect installs and automation and is not adoption velocity. Leads
+are ordered by that growth, then downloads. All date windows, sample counts,
+budgets and source failures accompany the report.
+
+Budgets per run are two pages per query, 80 repositories, 12 manifests per repo,
+100 npm checks and 30 surfaced candidates. Search results are interleaved across
+sources; the cursor rotates their starting points. Missing/truncated sources and
+budget limits are reported, never interpreted as negative quality evidence.
+There is no depth-two crawl, PageRank, LLM scoring or historical manifest backfill.
+
+Approved catalogue entries, broad comparison-group members, the pending catalogue
+and previously surfaced names are excluded. The cursor and surfaced names persist
+in `state.json` on the workflow-managed `memory/library-discovery` branch. State
+advances only after collection completes; only the delivered batch is marked
+surfaced, so overflow remains eligible. A failed workflow/memory push can replay a
+batch; it cannot erase existing history. Removing a name from state explicitly
+allows reconsideration. Reviewers' rejection instructions still apply through
+the existing research PR feedback flow, including leads from other sources.
+
+Preview without writing memory or publishing anything:
+
+```sh
+NODE_USE_ENV_PROXY=1 GITHUB_TOKEN="$(gh auth token)" GITHUB_REPOSITORY=pastelsky/bundlephobia \
+  LIBRARY_DISCOVERY_OUTPUT=/tmp/library-discovery-preview.json \
+  node .github/scripts/run-library-discovery.mjs --dry-run
+```
+
+Run `yarn test:recommendations` for collector and publisher tests. The scheduled
+workflow uses the existing focused automation workspace, GitHub API client and
+repo-memory persistence; its other research sources remain available if this
+source fails. GitHub code search may require a credential with cross-repository
+code-search access; failures are reported and framework-topic searches continue.

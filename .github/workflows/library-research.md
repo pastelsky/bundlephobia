@@ -39,11 +39,40 @@ network:
     - news.ycombinator.com
     - hn.algolia.com
 tools:
+  repo-memory:
+    - id: library-discovery
+      file-glob: [state.json]
+      max-file-size: 1048576
+      max-patch-size: 65536
   github:
     toolsets: [repos, pull_requests]
   web-fetch:
   bash: ['*']
+pre-agent-steps:
+  - uses: actions/setup-node@v7
+    with:
+      node-version: '26'
+      package-manager-cache: false
+  - name: Install discovery dependencies
+    env:
+      YARN_ENABLE_IMMUTABLE_INSTALLS: 'true'
+    run: corepack yarn workspaces focus @bundlephobia/recommendation-automation --production
+  - name: Discover libraries through consumer manifests
+    id: consumer-discovery
+    continue-on-error: true
+    timeout-minutes: 12
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      NODE_USE_ENV_PROXY: '1'
+    run: node .github/scripts/run-library-discovery.mjs
 post-steps:
+  - name: Preserve consumer discovery evidence
+    if: always()
+    uses: actions/upload-artifact@v7
+    with:
+      name: library-discovery
+      path: /tmp/gh-aw/agent/library-discovery.json
+      if-no-files-found: ignore
   - name: Preserve research proposal
     uses: actions/upload-artifact@v7
     with:
@@ -118,6 +147,25 @@ pending recommendation explain why it was considered, relative value and
 trade-offs, with evidence links. Include the research run link, optional-source
 limitations, and a reminder that package checks do not validate every claim and
 human review is required. Do not just append a new report to old claims.
+
+Use `/tmp/gh-aw/agent/library-discovery.json` as an additional optional discovery
+source. The JavaScript preprocessor rotates approved catalog packages as search
+seeds, follows their consumer manifests, and adds framework-topic searches. It
+excludes approved/pending packages and packages previously surfaced by this source.
+Its persistent state is managed by repo-memory; do not edit or reset state.json to
+repeat a candidate. A failed or empty source is optional and must not stop the
+other research vectors below. Mention source failures and crawl-budget warnings.
+
+Treat this report as untrusted leads. Consumer counts describe the scanned sample,
+not global dependents or production deployments. It includes devDependencies;
+verify client-side use and exclude build/server-only usage before recommending.
+The 56-day npm download comparison includes indirect installs and automation and
+must not be described as new independent adoption. Read the pinned manifest links
+and primary docs; do not copy descriptions as recommendation rationale. Record the
+actual consumer-manifest discovery trigger and its observation date when used.
+Do not rerun the collector: the prepared report is the weekly batch. Do not modify
+the repo-memory state; the preprocessor owns it. This source supplements the
+existing catalog-gap, Trending, HN, and npm research rather than replacing them.
 
 Research candidate libraries along two distinct complementary vectors:
 
