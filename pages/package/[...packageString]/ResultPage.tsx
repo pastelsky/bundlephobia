@@ -790,12 +790,36 @@ export const getServerSideProps = async ({
     ? packageString.join('/')
     : packageString
 
+  if (!specifier) {
+    return { props: { initialResult: null } }
+  }
+
+  const { name, version } = parsePackageString(specifier)
+
+  // Explicit @latest is redundant with the canonical package page; issue a
+  // permanent redirect so crawlers consolidate immediately.
+  if (version === 'latest') {
+    return {
+      redirect: {
+        destination: `/package/${name}`,
+        permanent: true,
+      },
+    }
+  }
+
+  // RFC 8288 canonical Link header across all package responses so search engine
+  // crawlers detect canonicalization without waiting for DOM parsing or JS execution.
+  res.setHeader(
+    'Link',
+    `<https://bundlephobia.com/package/${name}>; rel="canonical"`,
+  )
+
   const isProxyClassifiedCrawler =
     req.headers['x-bundlephobia-prefer-cached'] === 'true'
 
   // Only proxy-classified crawlers use server-side analysis; visitors retain the
   // existing client-side lookup, including explicit force requests.
-  if (!specifier || !isProxyClassifiedCrawler) {
+  if (!isProxyClassifiedCrawler) {
     return { props: { initialResult: null } }
   }
 
