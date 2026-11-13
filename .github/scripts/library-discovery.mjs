@@ -155,9 +155,11 @@ async function search(github, query, kind, pages, notes) {
     const result = await github(`GET /search/${kind}`, parameters)
 
     for (const item of result.items) {
-      if (kind === 'code')
-        found.push({ repo: item.repository.full_name, paths: [item.path] })
-      else found.push({ repo: item.full_name, paths: [] })
+      if (kind === 'code') {
+        // REST code search uses legacy qualifiers; visibility is filtered from metadata.
+        if (!item.repository.private)
+          found.push({ repo: item.repository.full_name, paths: [item.path] })
+      } else found.push({ repo: item.full_name, paths: [] })
     }
 
     if (result.incomplete_results)
@@ -420,7 +422,7 @@ export async function discoverLibraries({
 
   const sources = seeds.map(seed => ({
     kind: 'code',
-    query: `"${seed}" filename:package.json is:public`,
+    query: `"${seed}" filename:package.json`,
   }))
 
   for (const topic of options.topics)
