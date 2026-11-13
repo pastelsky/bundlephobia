@@ -30,7 +30,7 @@ const researchText = (minimum = 1) =>
     .max(2000)
     .refine(
       value =>
-        !/[<>]/.test(value) &&
+        !/<\s*[a-z!/]/i.test(value) &&
         [...value].every(character => character.charCodeAt(0) >= 32),
       'Invalid research text',
     )
