@@ -11,6 +11,8 @@
     "@octokit/request": "^10.0.16",
     "git-url-parse": "^16.1.0",
     "npm-package-arg": "^8.1.5",
+    "p-retry": "^9.0.0",
+    "p-throttle": "^8.1.1",
     "picomatch": "^4.0.3",
     "semver": "^7.6.3",
     "validate-npm-package-name": "^8.0.0",
@@ -21,5 +23,6 @@
     "@types/semver": "^7.7.1",
     "@types/validate-npm-package-name": "^4.0.2",
     "typescript": "^7.0.2"
-  }
+  },
+  "description": "Shared library discovery, recommendation research and review publication tooling"
 }

@@ -3,7 +3,7 @@ import catalog from './similar-packages.catalog.json'
 import type { Catalog } from '@bundlephobia/service-contracts/recommendations'
 
 // Broad packages need purpose-level peers rather than plugins matched by tags.
-export const comparisonGroups = groups
+export const comparisonGroups = Object.values(groups)
 
 export type CategoryDefinition = Catalog[string]
 

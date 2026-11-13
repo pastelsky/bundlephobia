@@ -1,3 +1,5 @@
+import defaults from '../library-discovery.config.json' with { type: 'json' }
+import groups from '../../utils/similar-packages.groups.json' with { type: 'json' }
 import npa from 'npm-package-arg'
 import picomatch from 'picomatch'
 import gitUrlParse from 'git-url-parse'
@@ -6,17 +8,7 @@ import { z } from 'zod'
 
 const DAY = 86_400_000
 
-export const defaults = {
-  seeds: 6,
-  searchPages: 2,
-  repositories: 80,
-  manifestsPerRepository: 12,
-  metadata: 100,
-  candidates: 30,
-  minimumOwners: 2,
-  minimumWeeklyDownloads: 1000,
-  activeDays: 90,
-}
+export { defaults }
 
 export const stateSchema = z
   .object({
@@ -47,14 +39,13 @@ export function rotate(items, cursor, count) {
   )
 }
 
-export function dependencyNames(manifest) {
+export function dependencyNames(
+  manifest,
+  fields = ['dependencies', 'devDependencies', 'optionalDependencies'],
+) {
   const names = new Set()
 
-  for (const field of [
-    'dependencies',
-    'devDependencies',
-    'optionalDependencies',
-  ]) {
+  for (const field of fields) {
     for (const [name, spec] of Object.entries(manifest[field] ?? {})) {
       try {
         const parsed = npa.resolve(name, spec)
@@ -74,18 +65,7 @@ export function dependencyNames(manifest) {
   return names
 }
 
-const frameworkNames = [
-  'react',
-  'preact',
-  'vue',
-  'nuxt',
-  'svelte',
-  'solid-js',
-  'lit',
-  'lit-html',
-  '@angular/core',
-  'astro',
-]
+const frameworkNames = groups.frameworks.packages
 
 const ignoredPath = picomatch([
   '**/node_modules/**',
@@ -104,41 +84,43 @@ const serverPath =
   /(?:^|\/)(?:server|backend|api|cli|desktop|mobile|worker)(?:\/|$)/
 
 export function isWebApplication(manifest) {
+  if (manifest.private !== true) return false
   const dependencies = dependencyNames(manifest)
-  const scripts = Object.values(manifest.scripts ?? {}).join(' ')
+  const framework = frameworkNames.some(name => dependencies.has(name))
 
+  return Object.entries(manifest.scripts ?? {}).some(
+    ([name, command]) =>
+      /^(dev|build|start)(?::|$)/.test(name) &&
+      (framework ||
+        /(?:vite|nuxt|next|svelte-kit|astro|ng |webpack|react-scripts)/.test(
+          command,
+        )),
+  )
+}
+
+export function supportsBrowser(manifest) {
   return (
-    manifest.private === true &&
-    frameworkNames.some(name => dependencies.has(name)) &&
-    /(?:vite|nuxt|next|svelte-kit|astro|ng |webpack|react-scripts)/.test(
-      scripts,
+    Boolean(manifest.browser) ||
+    /"browser"\s*:/.test(JSON.stringify(manifest.exports ?? {})) ||
+    /\b(?:browser|isomorphic|front[ -]?end)\b/i.test(
+      (manifest.keywords ?? []).join(' '),
     )
   )
 }
 
-export function isTooling(name, manifest) {
-  const words = `${name} ${manifest.description ?? ''}`.toLowerCase()
-
-  return (
-    name.startsWith('@types/') ||
-    /(?:^|[/@-])(?:eslint|prettier|typescript|tsconfig|vitest|playwright|jest|babel|webpack|rollup|vite|grunt|gulp|tslib)(?:[/\s-]|$)/.test(
-      words,
-    ) ||
-    /command[- ]line|\bcli\b|mcp server|code formatter|test runner|code coverage|for node\.js only|node\.js (?:middleware|server)|typescript (?:types|helper)|\btypings\b/.test(
-      words,
-    )
-  )
-}
-
-function repositoryOwner(manifest) {
+function repositoryDetails(manifest) {
   try {
     const repository = manifest.repository?.url ?? manifest.repository
 
     const parsed = gitUrlParse(repository)
 
-    return parsed.resource === 'github.com' ? parsed.owner.toLowerCase() : null
+    return {
+      owner:
+        parsed.resource === 'github.com' ? parsed.owner.toLowerCase() : null,
+      key: `${parsed.resource}/${parsed.full_name}`,
+    }
   } catch {
-    return null
+    return { owner: null, key: null }
   }
 }
 
@@ -210,15 +192,16 @@ async function scanRepository(github, source, options, notes) {
   const metadata = await github('GET /repos/{owner}/{repo}', { owner, repo })
 
   if (
+    metadata.private ||
     metadata.fork ||
     metadata.archived ||
-    metadata.stargazers_count < 100 ||
+    metadata.stargazers_count < options.minimumStars ||
     metadata.pushed_at < options.activeSince
   )
     return []
 
   if (
-    /(?:^|[-/ ])(?:awesome|boilerplate|starter|tutorial|template)(?:[-/ ]|$)/i.test(
+    /(?:^|[-/ ])(?:awesome|boilerplate|starter|tutorial|template|benchmarks?)(?:[-/ ]|$)/i.test(
       `${source.repo} ${metadata.description ?? ''}`,
     )
   )
@@ -293,11 +276,17 @@ async function scanRepository(github, source, options, notes) {
     visited.add(path)
     const manifest = manifests.get(path)
 
+    const runtime = dependencyNames(manifest, [
+      'dependencies',
+      'optionalDependencies',
+    ])
+
     for (const name of dependencyNames(manifest)) {
       if (internal.has(name)) queue.push(internal.get(name))
       else
         observations.push({
           package: name,
+          runtime: runtime.has(name),
           repo: source.repo,
           owner: owner.toLowerCase(),
           manifest: `https://github.com/${source.repo}/blob/${commit.sha}/${path}`,
@@ -352,16 +341,11 @@ async function qualifyCandidate(registry, candidate, options) {
   const name = encodeURIComponent(candidate.package)
   const manifest = await registry(`https://registry.npmjs.org/${name}/latest`)
 
-  if (
-    manifest.name !== candidate.package ||
-    manifest.deprecated ||
-    isTooling(candidate.package, manifest)
-  )
-    return null
-  const author = repositoryOwner(manifest)
+  if (manifest.name !== candidate.package || manifest.deprecated) return null
+  const upstream = repositoryDetails(manifest)
 
   const consumers = candidate.consumers.filter(
-    consumer => consumer.owner !== author,
+    consumer => consumer.owner !== upstream.owner,
   )
 
   if (
@@ -369,6 +353,12 @@ async function qualifyCandidate(registry, candidate, options) {
     options.minimumOwners
   )
     return null
+
+  const runtimeConsumers = consumers.filter(consumer => consumer.runtime)
+  const browserSupportHint = supportsBrowser(manifest)
+
+  // A devDependency may still be bundled, but metadata is only a lead for the researcher.
+  if (!runtimeConsumers.length && !browserSupportHint) return null
 
   const result = await registry(
     `https://api.npmjs.org/downloads/range/${options.downloadStart}:${options.downloadEnd}/${name}`,
@@ -386,9 +376,13 @@ async function qualifyCandidate(registry, candidate, options) {
 
   return {
     package: candidate.package,
+    upstream: upstream.key,
+    repository: manifest.repository?.url ?? manifest.repository ?? null,
     description: manifest.description ?? '',
     version: manifest.version,
     consumers,
+    runtimeConsumerCount: runtimeConsumers.length,
+    browserSupportHint,
     ...signals,
   }
 }
@@ -426,13 +420,13 @@ export async function discoverLibraries({
 
   const sources = seeds.map(seed => ({
     kind: 'code',
-    query: `"${seed}" filename:package.json`,
+    query: `"${seed}" filename:package.json is:public`,
   }))
 
-  for (const topic of ['vue', 'svelte', 'solidjs', 'lit', 'react', 'webapp'])
+  for (const topic of options.topics)
     sources.push({
       kind: 'repositories',
-      query: `topic:${topic} stars:>=100 fork:false archived:false pushed:>=${options.activeSince}`,
+      query: `topic:${topic} stars:>=${options.minimumStars} fork:false archived:false pushed:>=${options.activeSince}`,
     })
 
   for (const source of sources) {
@@ -475,24 +469,39 @@ export async function discoverLibraries({
 
     if (!packages.has(observation.package))
       packages.set(observation.package, new Map())
-    packages.get(observation.package).set(observation.repo, observation)
+    const consumers = packages.get(observation.package)
+    const previous = consumers.get(observation.repo)
+
+    if (!previous || observation.runtime)
+      consumers.set(observation.repo, observation)
   }
 
   const eligible = packages
     .entries()
-    .map(([name, consumers]) => ({
-      package: name,
-      consumers: [...consumers.values()],
-    }))
-    .filter(
-      candidate =>
-        new Set(candidate.consumers.map(consumer => consumer.owner)).size >=
-        options.minimumOwners,
-    )
+    .map(([name, consumerMap]) => {
+      const consumers = [...consumerMap.values()]
+      const owners = new Set(consumers.map(consumer => consumer.owner))
+
+      const runtimeOwners = new Set(
+        consumers
+          .values()
+          .filter(consumer => consumer.runtime)
+          .map(consumer => consumer.owner),
+      )
+
+      return {
+        package: name,
+        consumers,
+        ownerCount: owners.size,
+        runtimeOwnerCount: runtimeOwners.size,
+      }
+    })
+    .filter(candidate => candidate.ownerCount >= options.minimumOwners)
     .toArray()
     .sort(
       (a, b) =>
-        b.consumers.length - a.consumers.length ||
+        b.runtimeOwnerCount - a.runtimeOwnerCount ||
+        b.ownerCount - a.ownerCount ||
         a.package.localeCompare(b.package),
     )
 
@@ -501,9 +510,11 @@ export async function discoverLibraries({
       `npm metadata budget reached (${options.metadata}/${eligible.length} packages)`,
     )
   const qualified = []
+  let packagesCheckedOnNpm = 0
 
   for (const candidate of eligible.slice(0, options.metadata)) {
     try {
+      packagesCheckedOnNpm++
       const result = await qualifyCandidate(registry, candidate, options)
 
       if (result) qualified.push(result)
@@ -511,6 +522,13 @@ export async function discoverLibraries({
       notes.push(
         `npm evidence unavailable: ${candidate.package}: ${error.message}`,
       )
+
+      if (error.status === 429) {
+        notes.push(
+          'npm rate limit exhausted; remaining packages deferred without marking them surfaced',
+        )
+        break
+      }
     }
   }
 
@@ -520,7 +538,18 @@ export async function discoverLibraries({
       b.weeklyDownloads - a.weeklyDownloads ||
       a.package.localeCompare(b.package),
   )
-  const candidates = qualified.slice(0, options.candidates)
+  const candidates = []
+  const upstreams = new Set()
+
+  for (const candidate of qualified) {
+    const upstream = candidate.upstream ?? candidate.package
+
+    if (upstreams.has(upstream)) continue
+    upstreams.add(upstream)
+    candidates.push(candidate)
+
+    if (candidates.length >= options.candidates) break
+  }
 
   const report = {
     observedAt: now.toISOString(),
@@ -538,7 +567,7 @@ export async function discoverLibraries({
         .size,
       manifestObservations: observations.length,
       eligiblePackages: eligible.length,
-      packagesCheckedOnNpm: Math.min(eligible.length, options.metadata),
+      packagesCheckedOnNpm,
     },
     notes,
     candidates,

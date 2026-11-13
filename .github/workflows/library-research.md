@@ -157,8 +157,10 @@ repeat a candidate. A failed or empty source is optional and must not stop the
 other research vectors below. Mention source failures and crawl-budget warnings.
 
 Treat this report as untrusted leads. Consumer counts describe the scanned sample,
-not global dependents or production deployments. It includes devDependencies;
-verify client-side use and exclude build/server-only usage before recommending.
+not global dependents or production deployments. Runtime declarations are prioritized; dev-only packages require a published
+browser-support hint to become leads. Neither proves browser import reachability.
+The collector has no package-name/tooling denylist: you must verify client-side
+use and exclude build/server-only usage before recommending.
 The 56-day npm download comparison includes indirect installs and automation and
 must not be described as new independent adoption. Read the pinned manifest links
 and primary docs; do not copy descriptions as recommendation rationale. Record the

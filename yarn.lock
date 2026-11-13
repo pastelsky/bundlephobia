@@ -2110,6 +2110,8 @@ __metadata:
     "@types/validate-npm-package-name": "npm:^4.0.2"
     git-url-parse: "npm:^16.1.0"
     npm-package-arg: "npm:^8.1.5"
+    p-retry: "npm:^9.0.0"
+    p-throttle: "npm:^8.1.1"
     picomatch: "npm:^4.0.3"
     semver: "npm:^7.6.3"
     typescript: "npm:^7.0.2"
@@ -15887,6 +15889,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"is-network-error@npm:^1.3.2":
+  version: 1.3.2
+  resolution: "is-network-error@npm:1.3.2"
+  checksum: 37edc576497b21d022754b49203358ee80fdac4a11a71a09687f38ad789ec437dd930c223301df39f1c920566692b31345e0108ae720996e592cab3879eca74f
+  languageName: node
+  linkType: hard
+
 "is-npm@npm:^6.0.0":
   version: 6.1.0
   resolution: "is-npm@npm:6.1.0"
@@ -20093,10 +20102,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"p-retry@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "p-retry@npm:9.0.0"
+  dependencies:
+    is-network-error: "npm:^1.3.2"
+  checksum: 69f80655ad6d08f6b1b15c007cca1586980a32d7a07ebe3e5a59a22cac4cf7d892a4700c6dbbe6dc6f0b1a6e90b289df586d76113c640f4ee35f2e23ad62c594
+  languageName: node
+  linkType: hard
+
 "p-throttle@npm:^4.1.1":
   version: 4.1.1
   resolution: "p-throttle@npm:4.1.1"
   checksum: c4bfdcd0318d704b446a7af59dd8e0e32e37ba3d9841dd8dfced1c09742bc2f7a95bc0fcf4072030c62abf4533a9a2ef2954e559462052c5f406ae03d195925a
+  languageName: node
+  linkType: hard
+
+"p-throttle@npm:^8.1.1":
+  version: 8.1.1
+  resolution: "p-throttle@npm:8.1.1"
+  checksum: db2cdb9e3dc1f1ef905d05a537ca6868812fc4f36c7e2d63941b0e5e08721bcb5f2a47db5ec210ed19351ce6cd6529511bf568c3686fd6287e56decae5c04c7f
   languageName: node
   linkType: hard
 

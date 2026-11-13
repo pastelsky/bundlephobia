@@ -1,3 +1,4 @@
+import { createDiscoveryClients } from './library-discovery-http.mjs'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { request } from '@octokit/request'
@@ -18,29 +19,7 @@ const githubRequest = request.defaults({
   request: { timeout: 20000 },
 })
 
-let lastCodeSearch = 0
-
-const github = async (route, parameters) => {
-  if (route === 'GET /search/code') {
-    await new Promise(resolve =>
-      setTimeout(resolve, Math.max(0, lastCodeSearch + 6500 - Date.now())),
-    )
-    lastCodeSearch = Date.now()
-  }
-
-  return (await githubRequest(route, parameters)).data
-}
-
-const registry = async url => {
-  const response = await fetch(url, {
-    signal: AbortSignal.timeout(20000),
-    redirect: 'error',
-  })
-
-  if (!response.ok) throw new Error(`npm returned HTTP ${response.status}`)
-
-  return response.json()
-}
+const { github, registry } = createDiscoveryClients({ githubRequest })
 
 let state
 
@@ -82,7 +61,7 @@ const groups = JSON.parse(
   ),
 )
 
-const excludedPackages = groups.flatMap(group => group.packages)
+const excludedPackages = Object.values(groups).flatMap(group => group.packages)
 
 const result = await discoverLibraries({
   github,

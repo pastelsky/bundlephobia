@@ -6,6 +6,7 @@ import {
   discoverLibraries,
   downloadSignals,
   isWebApplication,
+  supportsBrowser,
   readState,
   rotate,
 } from './library-discovery.mjs'
@@ -25,12 +26,12 @@ function fakeSources() {
   const app = {
     private: true,
     scripts: { dev: 'vite' },
+    devDependencies: { 'arbitrary-build-helper': '^1.0.0' },
     dependencies: {
       react: '^19.0.0',
       existing: '^1.0.0',
       fresh: '^1.0.0',
       pending: '^1.0.0',
-      eslint: '^9.0.0',
     },
   }
 
@@ -95,7 +96,7 @@ function fakeSources() {
       name,
       version: '1.0.0',
       description: name === 'eslint' ? 'ESLint tooling' : 'Browser utility',
-      repository: 'https://github.com/maintainer/library',
+      repository: `https://github.com/maintainer/${name}`,
     }
   }
 
@@ -386,5 +387,92 @@ test('truncated trees and wrong download periods are explicit unavailable eviden
   assert.deepEqual(stale.report.candidates, [])
   assert.ok(
     stale.report.notes.some(note => note.includes('different download window')),
+  )
+})
+
+test('browser hints use published metadata rather than package-name lists', () => {
+  assert.equal(supportsBrowser({ browser: './browser.js' }), true)
+  assert.equal(
+    supportsBrowser({ exports: { '.': { browser: './index.js' } } }),
+    true,
+  )
+  assert.equal(supportsBrowser({ keywords: ['isomorphic'] }), true)
+  assert.equal(supportsBrowser({}), false)
+})
+
+test('a batch includes one representative per upstream library repository', async () => {
+  const sources = fakeSources()
+
+  const registry = async url =>
+    url.includes('/downloads/')
+      ? { downloads }
+      : {
+          name: decodeURIComponent(url.split('/').at(-2)),
+          version: '1.0.0',
+          repository: 'https://github.com/maintainer/shared-library',
+        }
+
+  const result = await discoverLibraries({
+    ...sources,
+    registry,
+    catalog,
+    now,
+    limits,
+  })
+
+  assert.equal(result.report.candidates.length, 1)
+  assert.equal(result.state.surfaced.length, 1)
+})
+
+test('dev-only declarations need a browser hint; the same package is eligible when runtime evidence appears', async () => {
+  const sources = fakeSources()
+
+  const registry = async url => {
+    const manifest = await sources.registry(url)
+
+    if (url.includes('arbitrary-build-helper/latest'))
+      return { ...manifest, keywords: ['browser'] }
+
+    return manifest
+  }
+
+  const result = await discoverLibraries({
+    ...sources,
+    registry,
+    catalog,
+    now,
+    limits,
+  })
+
+  const browserDev = result.report.candidates.find(
+    candidate => candidate.package === 'arbitrary-build-helper',
+  )
+
+  assert.ok(browserDev)
+  assert.equal(browserDev.runtimeConsumerCount, 0)
+  assert.equal(browserDev.browserSupportHint, true)
+})
+
+test('exhausted npm throttling preserves the remaining unseen candidates for a later run', async () => {
+  const sources = fakeSources()
+
+  const registry = async () => {
+    throw Object.assign(new Error('npm returned HTTP 429'), { status: 429 })
+  }
+
+  const result = await discoverLibraries({
+    ...sources,
+    registry,
+    catalog,
+    now,
+    limits,
+  })
+
+  assert.deepEqual(result.state.surfaced, [])
+  assert.equal(result.report.coverage.packagesCheckedOnNpm, 1)
+  assert.ok(
+    result.report.notes.some(note =>
+      note.includes('remaining packages deferred'),
+    ),
   )
 })

@@ -47,6 +47,12 @@ References: [Rspack tracing](https://rspack.rs/contribute/development/tracing),
 
 ## Weekly consumer-manifest discovery
 
+The existing `.github/package.json` workspace (`@bundlephobia/recommendation-automation`)
+owns the discovery dependencies and tests. It uses Octokit for GitHub requests,
+`npm-package-arg` for dependency specs, `picomatch` for paths, `git-url-parse` for
+repository identities, Zod for state validation, and `p-throttle`/`p-retry` for API
+pacing and retry budgets. No new service or separate package installation is needed.
+
 The optional JavaScript source in `.github/scripts/library-discovery.mjs` feeds the
 existing `library-research` workflow. It produces leads for the research agent;
 it does not edit the catalogue or decide whether two libraries are substitutes.
@@ -54,20 +60,28 @@ it does not edit the catalogue or decide whether two libraries are substitutes.
 Each successful run rotates six approved catalogue packages as reverse-search
 seeds and also searches Vue, Svelte, Solid, Lit, React and web-app topics. It reads
 pinned manifests from active, non-fork, non-archived repositories with at least
-100 stars. The app heuristic requires a private manifest, a web framework and a
-web build/dev script. It follows loaded internal workspaces, includes development
+100 stars. The app heuristic requires a private manifest and a web build/dev script
+or a framework from the existing shared comparison groups. It follows loaded internal workspaces, includes development
 dependencies and rejects obvious server/example/test paths. This is a bounded,
 incomplete sample; framework topics and manifests cannot prove browser execution.
+
+There is no package-name or scope denylist. Runtime declarations are prioritized
+before npm checks. A dev-only candidate remains eligible when its published
+metadata declares browser support; this is an explicit hint for research, not
+proof of browser execution. The research agent owns the final tooling/server
+classification. Framework identities come from the shared comparison data.
 
 A candidate needs declarations under two different owners other than the package
 repository owner, a non-deprecated npm identity, and at least 1,000 estimated
 weekly downloads (last 28 days divided by four). These are screening thresholds,
 not acceptance criteria. npm growth compares the last two complete 28-day periods;
 it includes indirect installs and automation and is not adoption velocity. Leads
-are ordered by that growth, then downloads. All date windows, sample counts,
+are ordered by that growth, then downloads, with one representative per upstream
+repository in a batch. npm requests are paced and 429 responses use bounded retries. All date windows, sample counts,
 budgets and source failures accompany the report.
 
-Budgets per run are two pages per query, 80 repositories, 12 manifests per repo,
+Budgets and supported search topics live in `.github/library-discovery.config.json`,
+separately from discovery logic. Defaults per run are two pages per query, 80 repositories, 12 manifests per repo,
 100 npm checks and 30 surfaced candidates. Search results are interleaved across
 sources; the cursor rotates their starting points. Missing/truncated sources and
 budget limits are reported, never interpreted as negative quality evidence.

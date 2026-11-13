@@ -1,5 +1,5 @@
-[
-  {
+{
+  "frameworks": {
     "packages": [
       "react",
       "preact",
@@ -10,19 +10,19 @@
       "lit"
     ]
   },
-  {
+  "servers": {
     "packages": ["express", "fastify", "koa", "hono", "@nestjs/core"]
   },
-  {
+  "bundlers": {
     "packages": ["vite", "webpack", "rollup", "esbuild", "parcel"]
   },
-  {
+  "testing": {
     "packages": ["jest", "vitest", "ava", "mocha"]
   },
-  {
+  "state": {
     "packages": ["redux", "zustand", "jotai", "mobx", "recoil"]
   },
-  {
+  "dates": {
     "packages": ["date-fns", "dayjs", "luxon", "moment"]
   }
-]
+}
