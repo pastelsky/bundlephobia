@@ -1,3 +1,4 @@
+import cachedResponse from '../server/middlewares/results/cached-response.middleware'
 import { createAnalysisKey } from '../server/analysis/keys'
 import failureBackoffMiddleware, {
   recordFailure,
@@ -79,5 +80,61 @@ describe('failure backoff middleware', () => {
     await failureBackoffMiddleware(ctx as never, async () => {})
 
     expect(failureCache.get(failureCacheKey)).toBeUndefined()
+  })
+
+  it.each(['false', 'true'])(
+    'only force=true bypasses backoff (force=%s)',
+    async force => {
+      failureCache.set(
+        failureCacheKey,
+        recordFailure(recordFailure(undefined, failure), failure),
+      )
+
+      const ctx = {
+        query: { force },
+        set: jest.fn(),
+        state: {
+          analysis: { language: 'javascript', operation: 'package-analysis' },
+          resolved: { packageString },
+        },
+        status: 200,
+      }
+
+      const next = jest.fn()
+      // SAFETY: this fixture provides the middleware fields exercised by the test.
+      await failureBackoffMiddleware(ctx as never, next)
+      expect(next).toHaveBeenCalledTimes(force === 'true' ? 1 : 0)
+    },
+  )
+
+  it('serves an existing cached success and clears obsolete failure history', async () => {
+    failureCache.set(
+      failureCacheKey,
+      recordFailure(recordFailure(undefined, failure), failure),
+    )
+
+    const ctx = {
+      query: { force: 'false' },
+      cashed: jest.fn(async () => true),
+      state: {
+        analysis: { language: 'javascript', operation: 'package-analysis' },
+        resolved: {
+          name: '@example/package',
+          version: '1.0.0',
+          packageString,
+          language: 'javascript',
+        },
+      },
+      status: 200,
+    }
+
+    const build = jest.fn()
+    // SAFETY: these fixtures provide only the middleware fields exercised here.
+    await cachedResponse(ctx as never, () =>
+      failureBackoffMiddleware(ctx as never, build),
+    )
+    expect(build).not.toHaveBeenCalled()
+    expect(failureCache.get(failureCacheKey)).toBeUndefined()
+    expect(ctx.status).toBe(200)
   })
 })

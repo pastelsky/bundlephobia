@@ -37,4 +37,16 @@ describe('failure backoff', () => {
     expect(isFailureBlocked(entry, blockedUntil - 1)).toBe(true)
     expect(isFailureBlocked(entry, blockedUntil)).toBe(false)
   })
+
+  it('briefly pauses infrastructure errors without escalating into a package ban', () => {
+    const temporary = { status: 503 }
+    const first = recordFailure(undefined, temporary, 1_000)
+    const second = recordFailure(first, temporary, 2_000)
+    expect(first.blockedUntil).toBe(61_000)
+    expect(second.blockedUntil).toBe(62_000)
+    const packageFailure = recordFailure(second, failure, 63_000)
+    expect(packageFailure.consecutiveFailures).toBe(1)
+    expect(packageFailure.blockedUntil).toBeUndefined()
+    expect(packageFailure).not.toHaveProperty('body')
+  })
 })

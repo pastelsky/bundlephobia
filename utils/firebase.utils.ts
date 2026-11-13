@@ -1,6 +1,7 @@
 import axios from 'axios'
 import createDebug from 'debug'
-import firebaseSDK from 'firebase'
+import firebaseSDK from 'firebase/app'
+import 'firebase/database'
 import semver from 'semver'
 
 import type { PackageBuildInfoSnapshot } from '@bundlephobia/service-contracts/package'

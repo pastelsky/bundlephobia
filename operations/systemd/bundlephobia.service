@@ -1,0 +1,5 @@
+[Unit]
+Description=Run my script
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /var/www/autorestart.sh

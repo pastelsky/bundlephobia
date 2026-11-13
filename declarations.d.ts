@@ -25,7 +25,22 @@ declare module 'pacote' {
 }
 
 declare module 'npm-registry-fetch' {
+  interface NpmRegistryFetchResponse {
+    status: number
+    ok: boolean
+    body: NodeJS.ReadableStream
+  }
+
+  interface NpmRegistryFetchOptions {
+    headers?: Record<string, string>
+    timeout?: number
+  }
+
   interface NpmRegistryFetch {
+    (
+      path: string,
+      options?: NpmRegistryFetchOptions,
+    ): Promise<NpmRegistryFetchResponse>
     json<T>(path: string): Promise<T>
   }
 

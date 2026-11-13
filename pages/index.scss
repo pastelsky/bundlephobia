@@ -20,15 +20,9 @@
   max-width: 100%;
   height: calc(100vh - 90px);
 
-  // Preserve the vertical position created by the former inline ad slot.
-  &::after {
-    content: '';
-    flex: 0 0 calc(102px + 10vh);
-  }
-
   @media screen and (max-width: 40em) {
     height: auto;
-    min-height: calc(100vh - 90px);
+    min-height: 50vh;
 
     &::after {
       display: none;
@@ -90,6 +84,8 @@
 }
 
 .homepage__search-input {
+  position: relative;
+  z-index: 2;
   margin-top: $global-spacing;
   width: 100%;
 
@@ -127,7 +123,7 @@
     }
 
     sup {
-      color: $cornflower-blue;
+      color: var(--color-link-contrast);
     }
   }
 
@@ -151,8 +147,7 @@
   @media screen and (max-width: 40em) {
     position: static;
     width: min(calc(100vw - #{$global-spacing * 4}), $global-spacing * 36);
-    min-height: 0;
-    margin: clamp(12px, 3vh, 24px) auto 0;
+    margin: 0;
   }
 }
 

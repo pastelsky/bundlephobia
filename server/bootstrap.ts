@@ -4,10 +4,10 @@ import { monitorEventLoopDelay } from 'node:perf_hooks'
 
 import next from 'next'
 import Koa from 'koa'
-import proxy from 'koa-proxy'
+import proxy from 'koa-proxies'
 import serve from 'koa-static'
 import Router from '@koa/router'
-import bodyParser from 'koa-bodyparser'
+import { bodyParser } from '@koa/bodyparser'
 import cacheControl from 'koa-cache-control'
 import requestId from 'koa-requestid'
 import invariant from 'ts-invariant'
@@ -20,7 +20,7 @@ import { registerAdminRoutes } from './routes/admin.route'
 import { registerApiRoutes } from './routes/api.route'
 import { registerSystemRoutes } from './routes/system.route'
 import requestLoggerMiddleware from './middlewares/request-logger.middleware'
-import limit from './middlewares/rate-limit.middleware'
+import statsPathMiddleware from './middlewares/stats-path.middleware'
 
 interface ServerEnvironment {
   basicAuthPassword: string
@@ -80,20 +80,9 @@ export async function startServer(): Promise<void> {
   const router = new Router()
 
   server.use(requestId())
-  server.use(bodyParser())
   server.use(requestLoggerMiddleware)
   server.use(cacheControl())
   server.use(apiDiscoveryMiddleware)
-
-  if (!dev) {
-    server.use(
-      limit({
-        duration: 1000 * 60 * 5,
-        max: 120,
-        whiteList: ['127.0.0.1', '::1'],
-      }),
-    )
-  }
 
   server.use(async (ctx, nextMiddleware) => {
     try {
@@ -109,18 +98,23 @@ export async function startServer(): Promise<void> {
     }
   })
 
+  server.use(statsPathMiddleware)
+
   server.use(
     serve('./client/assets/public', {
       maxage: config.CACHE.PUBLIC_ASSETS * 1000,
     }),
   )
 
-  server.use(
-    proxy({
-      match: /^\/-\/search/,
-      host: 'https://www.npmjs.com',
-    }),
-  )
+  const searchProxyOptions = {
+    target: 'https://www.npmjs.com',
+    changeOrigin: true,
+    // Preserve koa-proxy's default of following upstream redirects.
+    followRedirects: true,
+  }
+
+  server.use(proxy(/^\/-\/search/, searchProxyOptions))
+  server.use(bodyParser())
 
   registerApiRoutes(router, { cache, port: environment.port })
   registerAdminRoutes(router, environment.basicAuthPassword)

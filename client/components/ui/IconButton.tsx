@@ -1,23 +1,44 @@
 import React from 'react'
 import cx from 'classnames'
 
-import { Button, type ButtonProps } from './Button'
+import type { ButtonProps } from './Button'
 
 type IconButtonProps = Omit<ButtonProps, 'children'> & {
   children: React.ReactNode
   label: string
 }
 
-export const IconButton = React.forwardRef<HTMLElement, IconButtonProps>(
-  ({ className, label, size = 'md', title, ...props }, ref) => (
-    <Button
+export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
+  (
+    {
+      className,
+      children,
+      label,
+      size = 'md',
+      title,
+      type = 'button',
+      variant = 'secondary',
+      ...props
+    },
+    ref,
+  ) => (
+    <button
       {...props}
       ref={ref}
-      size={size}
-      className={cx('ui-icon-button', `ui-icon-button--${size}`, className)}
+      type={type}
+      className={cx(
+        'ui-button',
+        `ui-button--${variant}`,
+        `ui-button--${size}`,
+        'ui-icon-button',
+        `ui-icon-button--${size}`,
+        className,
+      )}
       aria-label={label}
       title={title ?? label}
-    />
+    >
+      {children}
+    </button>
   ),
 )
 

@@ -31,18 +31,20 @@ export function getFailureCooldownMs(consecutiveFailures: number): number {
 
 export function recordFailure(
   previous: FailureCacheEntry | undefined,
-  failure: Pick<FailureCacheEntry, 'status' | 'body'>,
+  failure: Pick<FailureCacheEntry, 'status'>,
   recordedAt = Date.now(),
 ): FailureCacheEntry {
-  const consecutiveFailures = (previous?.consecutiveFailures ?? 0) + 1
-  const cooldownMs = getFailureCooldownMs(consecutiveFailures)
+  const consecutiveFailures =
+    (previous?.status === failure.status ? previous.consecutiveFailures : 0) + 1
+
+  // Infrastructure failures need a brief retry pause, not a multi-day package ban.
+  const cooldownMs =
+    failure.status >= 500 ? 60_000 : getFailureCooldownMs(consecutiveFailures)
 
   return {
     status: failure.status,
-    body: failure.body,
     consecutiveFailures,
-    blockedUntil:
-      cooldownMs > 0 ? recordedAt + cooldownMs : previous?.blockedUntil,
+    blockedUntil: cooldownMs > 0 ? recordedAt + cooldownMs : undefined,
   }
 }
 
@@ -64,7 +66,7 @@ const failureBackoffMiddleware: Middleware = async (ctx, next) => {
     packageSpecifier: packageString,
   })
 
-  if (!force) {
+  if (force !== 'true') {
     const failureCacheEntry = failureCache.get(failureCacheKey)
 
     if (isFailureBlocked(failureCacheEntry)) {

@@ -9,6 +9,7 @@ import ResultLayout from '../../client/components/ResultLayout'
 import Separator from '../../client/components/Separator'
 import { Button, IconButton } from '../../client/components/ui'
 import scanBlacklist from '../../client/config/scanBlacklist'
+import { createBreadcrumbStructuredData } from '../../client/seo/structured-data'
 import { normalizePackageJsonUrl } from '../../utils/common.utils'
 
 type PackageJsonDependencies = Record<string, string>
@@ -151,8 +152,6 @@ class Scan extends Component<ScanProps, ScanState> {
   private dropzoneRef = createRef<Dropzone>()
 
   componentDidMount() {
-    Analytics.pageView('scan')
-
     const persistedScanState = this.readPersistedScanState()
 
     if (persistedScanState) {
@@ -661,6 +660,10 @@ class Scan extends Component<ScanProps, ScanState> {
           title="Scan package.json ❘ Bundlephobia"
           canonicalPath="/scan"
           description="Scan dependencies in your package.json to find the largest and heaviest npm packages in your frontend javascript bundle."
+          structuredData={createBreadcrumbStructuredData([
+            { name: 'Home', url: '/' },
+            { name: 'Scan package.json', url: '/scan' },
+          ])}
         />
         {content}
       </ResultLayout>

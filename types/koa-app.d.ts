@@ -19,6 +19,8 @@ declare module 'koa' {
     cacheControl?: {
       maxAge?: number
       noCache?: boolean
+      private?: boolean
+      noStore?: boolean
     }
     cashed(): Promise<boolean>
   }

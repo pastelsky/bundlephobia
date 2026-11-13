@@ -13,6 +13,8 @@ export interface CacheKey {
   version: string
 }
 
+export const LATEST_BUILT_CACHE_VERSION = 'latest-built' as const
+
 export interface CacheRequestBody extends CacheKey {
   result: CacheEntry
 }

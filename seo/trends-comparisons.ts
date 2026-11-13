@@ -36,3 +36,17 @@ export function findTrendsComparison(packages: readonly string[]) {
       comparison.every(name => packages.includes(name)),
   )
 }
+
+export function trendsComparisonCanonicalPath(packages: readonly string[]) {
+  if (!packages || packages.length === 0) return '/trends'
+
+  const known = findTrendsComparison(packages)
+
+  if (known) {
+    return trendsComparisonPath(known)
+  }
+
+  const uniqueSorted = [...new Set(packages)].sort((a, b) => a.localeCompare(b))
+
+  return trendsComparisonPath(uniqueSorted)
+}

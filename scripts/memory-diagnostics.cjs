@@ -1,5 +1,7 @@
 const fs = require('fs')
 
+const { removePathSync } = require('./cleanup.mts')
+
 const path = require('path')
 
 const v8 = require('v8')
@@ -93,6 +95,8 @@ function createRuntimeMetrics() {
     },
   }
 }
+
+const enabled = getStartupEnvironment().ENABLE_DIAGNOSTICS === 'true'
 
 const runtimeMetrics = createRuntimeMetrics()
 
@@ -226,7 +230,7 @@ function createMemoryDiagnostics(options) {
   }
 
   function releaseLock() {
-    fsImpl.rmSync(lockDirectory, { recursive: true, force: true })
+    removePathSync(lockDirectory, fsImpl)
   }
 
   function acquireLock() {
@@ -252,7 +256,7 @@ function createMemoryDiagnostics(options) {
           return false
         }
 
-        fsImpl.rmSync(lockDirectory, { recursive: true, force: true })
+        removePathSync(lockDirectory, fsImpl)
         fsImpl.mkdirSync(lockDirectory)
       }
     }
@@ -265,7 +269,7 @@ function createMemoryDiagnostics(options) {
   function removeIncompleteCaptures() {
     for (const filename of fsImpl.readdirSync(serviceDirectory)) {
       if (filename.startsWith('.latest-')) {
-        fsImpl.rmSync(path.join(serviceDirectory, filename), { force: true })
+        removePathSync(path.join(serviceDirectory, filename), fsImpl)
       }
     }
   }
@@ -408,7 +412,7 @@ function createMemoryDiagnostics(options) {
         temporaryTimeline,
       ]) {
         try {
-          fsImpl.rmSync(filename, { force: true })
+          removePathSync(filename, fsImpl)
         } catch {}
       }
 
@@ -442,7 +446,7 @@ function startFromEnvironment() {
   const service = environment.MEMORY_DIAGNOSTICS_SERVICE
   const threshold = environment.MEMORY_DIAGNOSTICS_RSS_THRESHOLD
 
-  if (!service || !threshold) {
+  if (environment.ENABLE_DIAGNOSTICS !== 'true' || !service || !threshold) {
     return false
   }
 
@@ -461,14 +465,18 @@ function startFromEnvironment() {
 startFromEnvironment()
 
 module.exports = {
+  enabled,
   createMemoryDiagnostics,
   createRuntimeMetrics,
   getAvailableBytes,
   getStartupEnvironment,
   parseBytes,
-  recordRequestStart: () => runtimeMetrics.recordRequestStart(),
-  recordRequestComplete: request =>
-    runtimeMetrics.recordRequestComplete(request),
+  recordRequestStart: () => {
+    if (enabled) runtimeMetrics.recordRequestStart()
+  },
+  recordRequestComplete: request => {
+    if (enabled) runtimeMetrics.recordRequestComplete(request)
+  },
   registerMetricsProvider: (name, provider) =>
-    runtimeMetrics.registerProvider(name, provider),
+    enabled ? runtimeMetrics.registerProvider(name, provider) : () => false,
 }

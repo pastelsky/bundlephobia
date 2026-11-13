@@ -146,8 +146,9 @@ function repositoryForPackument(packument: NpmPackagePackument): string | null {
 export async function fetchPackageHistory(
   packageName: string,
   options: PackageHistoryOptions,
+  fetchPackument: typeof fetchPackagePackument = fetchPackagePackument,
 ): Promise<PackageHistoryResponse> {
-  const packument = await fetchPackagePackument(packageName)
+  const packument = await fetchPackument(packageName)
   const publishDates = getPublishDates(packument.time)
 
   const history = await firebaseUtils.getPackageHistory(

@@ -34,6 +34,14 @@ the production server.
 
 Inspect `git status` before pulling and do not overwrite server-side changes.
 
+Custom host maintenance is versioned in `operations/`: `disk-clean.sh` and
+`autorestart.sh` install at `/var/www/`, `cron/root.crontab` is the root user's
+crontab, `systemd/pm2-root.service` is the PM2 boot unit, and
+`systemd/bundlephobia.{service,timer}` is the existing hourly watchdog. Compare
+live files before installing updates; pulling the application does not install host files.
+Keep credentials, runtime data and generated PM2 dumps outside Git.
+Install the host package `fd-find` before enabling `disk-clean.sh`.
+
 ```sh
 ssh bphobia
 cd /var/www/bundlephobia

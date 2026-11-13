@@ -1,0 +1,381 @@
+#!/bin/bash
+# Disk + loop device cleanup — runs every 8 minutes via cron.
+# Fixes: LOOP_USAGE never set, journal retention too aggressive,
+#        loop device cleanup was never actually happening,
+#        freed loop-image blocks were never returned to the host filesystem.
+
+LOG_FILE="/var/log/disk_cleanup.log"
+FD_BIN="${FD_BIN:-$(command -v fdfind || command -v fd || true)}"
+MAIN_THRESHOLD=70          # % main disk usage before cleanup triggers
+# Thresholds apply to whichever is higher: allocated bytes or used inodes.
+LOOP_SOFT_THRESHOLD=60
+LOOP_HARD_THRESHOLD=80
+# Target 55% to prune gently without triggering a massive multi-gigabyte unlink storm down to 40%
+LOOP_TARGET_USAGE="${LOOP_TARGET_USAGE:-55}"
+ORPHAN_MIN_AGE_SECONDS=600
+BUN_CACHE_MAX_AGE_DAYS="${BUN_CACHE_MAX_AGE_DAYS:-1}"
+VICTORIAMETRICS_DATA_DIR="/var/lib/bundlephobia-victoriametrics"
+VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES=$((128 * 1024 * 1024))
+VICTORIAMETRICS_PM2_APP="bundlephobia-victoriametrics"
+
+PM2="/usr/local/bin/pm2"
+export HOME="/root"
+export PM2_HOME="/root/.pm2"
+export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
+
+log() {
+    echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1" | tee -a "$LOG_FILE" 2>/dev/null || \
+        echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1"
+}
+
+timed_cleanup() {
+    local label="$1"
+    local started=$SECONDS
+    local status
+    shift
+
+    "$@"
+    status=$?
+    log "${label} duration=$((SECONDS - started))s status=${status}"
+    return "$status"
+}
+
+fd_cleanup() {
+    "$FD_BIN" --hidden --no-ignore --no-ignore-parent --case-sensitive \
+        --color never --threads 4 --min-depth 1 "$@"
+}
+
+get_disk_usage() {
+    df / | awk 'NR==2 {gsub(/%/,"",$5); print $5}'
+}
+
+get_loop_usage() {
+    df --output=pcent,ipcent /tmp/tmp-build 2>/dev/null | \
+        awk 'NR==2 {gsub(/%/, ""); print ($1+0 > $2+0 ? $1 : $2)}'
+}
+
+cleanup_orphaned_package_managers() {
+    log "Scanning for orphaned package manager processes older than ${ORPHAN_MIN_AGE_SECONDS}s"
+
+    local matches
+    matches=$(ps -eo pid=,ppid=,etimes=,comm=,args= --no-headers | \
+        awk -v min_age="$ORPHAN_MIN_AGE_SECONDS" \
+        '$2 == 1 && $3 >= min_age && ($4 == "bun" || $4 == "npm" || $4 == "yarn" || $4 == "pnpm" || \
+        ($4 == "sh" && $5 ~ /^(bun|npm|yarn|pnpm)$/)) \
+        { print $1 "\t" $3 "\t" $4 "\t" substr($0, index($0,$5)) }')
+
+    if [ -z "$matches" ]; then
+        log "No orphaned package manager processes found"
+        return
+    fi
+
+    while IFS=$'\t' read -r pid etimes comm cmd; do
+        [ -n "$pid" ] || continue
+        log "Killing orphaned process pid=$pid age=${etimes}s comm=$comm"
+        kill -TERM "$pid" 2>/dev/null || true
+    done <<< "$matches"
+
+    sleep 2
+
+    while IFS=$'\t' read -r pid etimes comm cmd; do
+        [ -n "$pid" ] || continue
+        if kill -0 "$pid" 2>/dev/null; then
+            log "Force killing stubborn orphaned pid=$pid"
+            kill -KILL "$pid" 2>/dev/null || true
+        fi
+    done <<< "$matches"
+}
+
+cleanup_stale_package_dirs() {
+    local stop_at_target="${1:-true}"
+    local package_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/packages"
+    local entry path loop_usage
+
+    [ -d "$package_root" ] || return
+
+    while IFS= read -r -d '' entry; do
+        if [ "$stop_at_target" = "true" ]; then
+            loop_usage=$(get_loop_usage)
+            [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ] || break
+        fi
+
+        path="${entry#*$'\t'}"
+        log "Removing stale package workspace (oldest first): ${path}"
+        rm -rf -- "$path" 2>/dev/null
+    done < <(
+        # Preserve the rounded-minute cutoff; order candidates by modification time.
+        fd_cleanup --max-depth 1 --type d --changed-before 61min --print0 '^' "$package_root" \
+            --exec-batch env TZ=UTC stat --printf '%y\t%n\0' -- 2>/dev/null | sort -z
+    )
+}
+
+cleanup_npm_cache() {
+    /usr/local/bin/npm cache clean --force --cache=/tmp/tmp-build/cache 2>/dev/null || true
+    log "Cleared npm cache from loop device"
+}
+
+prune_bun_cache() {
+    local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
+    [ -d "$cache_root" ] || return
+
+    log "Pruning Bun package downloads older than ${BUN_CACHE_MAX_AGE_DAYS} day(s)"
+    if ! "${BUN_BIN:-/root/.bun/bin/bun}" pm cache prune \
+        --cache-dir="$cache_root" --max-age "$BUN_CACHE_MAX_AGE_DAYS" >>"$LOG_FILE" 2>&1; then
+        log "WARNING: Bun age pruning failed; continuing pressure cleanup"
+    fi
+}
+
+cleanup_non_bundlable_files() {
+    local scratch_root="${BUILD_TMP_DIR:-/tmp/tmp-build}"
+    local status=0 root
+    local -a roots=()
+    for root in "$scratch_root/installations" "$scratch_root/packages"; do
+        if [ -d "$root" ]; then roots+=("$root"); fi
+    done
+    [ "${#roots[@]}" -gt 0 ] || return 0
+
+    # Cover ordinary/scoped node_modules layouts without walking arbitrarily deep.
+    # Unlink working copies only; keep every cache entry intact.
+    fd_cleanup --one-file-system --max-depth 7 --type f \
+        '\.(map|d\.(ts|mts|cts))$' "${roots[@]}" \
+        --exec-batch rm -f -- 2>/dev/null || status=$?
+    log "Non-bundlable file cleanup finished (status=${status})"
+}
+
+evict_oldest_bun_cache_entries() {
+    local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
+    local entry path loop_usage
+    local evicted_count=0
+    local first_path=""
+    local last_path=""
+    local batch_size=100
+    local -a batch=() scopes=()
+
+    [ -d "$cache_root" ] || return
+
+    while IFS= read -r -d '' entry; do
+        path="${entry#*$'\t'}"
+        [ -n "$first_path" ] || first_path="$path"
+        last_path="$path"
+        batch+=("$path")
+
+        [ "${#batch[@]}" -ge "$batch_size" ] || continue
+
+        rm -rf -- "${batch[@]}" 2>/dev/null
+        evicted_count=$((evicted_count + ${#batch[@]}))
+        batch=()
+
+        # Yield I/O and CPU to live build workers between batches
+        sleep 0.02
+
+        loop_usage=$(get_loop_usage)
+        [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ] || break
+    done < <(
+        # List scope containers separately; never descend into package payloads.
+        {
+            while IFS= read -r -d '' path; do
+                path="${path%/}"
+                if [[ "${path##*/}" == @* && -d "$path" ]]; then
+                    scopes+=("$path")
+                else
+                    printf '%s\0' "$path"
+                fi
+            done < <(fd_cleanup --max-depth 1 --type d --type f --exclude .tmp --print0 '^' "$cache_root")
+            if [ "${#scopes[@]}" -gt 0 ]; then
+                fd_cleanup --max-depth 1 --type d --type f --exclude .tmp --print0 '^' "${scopes[@]}"
+            fi
+        } | xargs -0 -r env TZ=UTC stat --printf '%y\t%n\0' -- 2>/dev/null | sort -z
+    )
+
+    loop_usage=$(get_loop_usage)
+    if [ "${#batch[@]}" -gt 0 ] && [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
+        rm -rf -- "${batch[@]}" 2>/dev/null
+        evicted_count=$((evicted_count + ${#batch[@]}))
+    fi
+
+    if [ "$evicted_count" -gt 0 ]; then
+        log "Evicted ${evicted_count} oldest bun cache entries; first=${first_path}; last=${last_path}"
+    fi
+}
+
+trim_loop_device() {
+    local trim_output
+    local -a trim_cmd=(fstrim -v /tmp/tmp-build)
+    if command -v ionice >/dev/null 2>&1; then
+        trim_cmd=(ionice -c 3 nice -n 19 "${trim_cmd[@]}")
+    fi
+
+    if trim_output=$("${trim_cmd[@]}" 2>&1); then
+        log "Trimmed freed loop-image blocks: ${trim_output}"
+    else
+        log "WARNING: Could not trim freed loop-image blocks: ${trim_output}"
+    fi
+}
+
+cleanup_victoriametrics_data() {
+    local data_kib pid was_running=false
+
+    [ -d "$VICTORIAMETRICS_DATA_DIR" ] || return 0
+
+    data_kib=$(du -sk "$VICTORIAMETRICS_DATA_DIR" 2>/dev/null | awk 'NR==1 {print $1}')
+    [[ "$data_kib" =~ ^[0-9]+$ ]] || { log "WARNING: Could not read VictoriaMetrics data size"; return; }
+    if (( data_kib * 1024 <= VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES )); then
+        return 0
+    fi
+    [ -x "$PM2" ] || { log "WARNING: PM2 is unavailable — skipping VictoriaMetrics cleanup"; return; }
+
+    pid=$("$PM2" pid "$VICTORIAMETRICS_PM2_APP" 2>/dev/null | tail -n 1)
+    [[ "$pid" =~ ^[0-9]+$ ]] || { log "WARNING: Could not read the VictoriaMetrics PM2 process"; return; }
+
+    if [ "$pid" -gt 0 ]; then
+        if ! "$PM2" stop "$VICTORIAMETRICS_PM2_APP" >/dev/null 2>&1; then
+            log "WARNING: Could not stop VictoriaMetrics with PM2 — skipping cleanup"
+            return
+        fi
+        was_running=true
+    fi
+
+    # The full reset is safe only while VictoriaMetrics is stopped.
+    if ! fd_cleanup --max-depth 1 --exclude lost+found '^' "$VICTORIAMETRICS_DATA_DIR" \
+        --exec-batch rm -rf -- 2>/dev/null; then
+        log "WARNING: Could not clear VictoriaMetrics data; leaving the service stopped"
+        return
+    fi
+
+    log "Reset VictoriaMetrics history after storage exceeded 128 MiB (${data_kib} KiB)"
+
+    if [ "$was_running" = "true" ] && ! "$PM2" restart "$VICTORIAMETRICS_PM2_APP" >/dev/null 2>&1; then
+        log "WARNING: VictoriaMetrics history was cleared but PM2 could not restart the service"
+    fi
+}
+
+cleanup_loop_device() {
+    local loop_usage
+    loop_usage=$(get_loop_usage)
+
+    if [ -z "$loop_usage" ]; then
+        log "WARNING: Could not determine loop device usage — skipping loop cleanup"
+        return
+    fi
+
+    log "Loop device (/tmp/tmp-build) pressure (higher of bytes/inodes): ${loop_usage}%"
+
+    if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
+        timed_cleanup "Bun age pruning" prune_bun_cache
+        loop_usage=$(get_loop_usage)
+        if [ "$loop_usage" -lt "$LOOP_SOFT_THRESHOLD" ]; then
+            timed_cleanup "Loop-device trim" trim_loop_device
+            log "Loop pressure after age pruning: ${loop_usage}%"
+            return
+        fi
+    fi
+
+    if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
+        log "Loop pressure at or above soft threshold ${LOOP_SOFT_THRESHOLD}% — running oldest-first cleanup to ${LOOP_TARGET_USAGE}%"
+        timed_cleanup "Stale workspace cleanup" cleanup_stale_package_dirs true
+
+        loop_usage=$(get_loop_usage)
+        if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
+            timed_cleanup "npm cache cleanup" cleanup_npm_cache
+        fi
+
+        loop_usage=$(get_loop_usage)
+        if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
+            timed_cleanup "Bun cache eviction" evict_oldest_bun_cache_entries
+        fi
+
+        # Keep the full reset as a fallback only if incremental cleanup cannot
+        # bring either resource below the existing emergency threshold.
+        loop_usage=$(get_loop_usage)
+        if [ "$loop_usage" -ge "$LOOP_HARD_THRESHOLD" ] && [ -d /tmp/tmp-build/cache/bun ]; then
+            timed_cleanup "Full Bun cache fallback" fd_cleanup --max-depth 1 '^' /tmp/tmp-build/cache/bun --exec-batch rm -rf -- 2>/dev/null
+            log "Cleared complete bun cache"
+        fi
+
+        timed_cleanup "Loop-device trim" trim_loop_device
+        loop_usage=$(get_loop_usage)
+        log "Loop pressure after oldest-first cleanup: ${loop_usage}%"
+        if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
+            log "WARNING: Loop remains above cleanup target; no more bun cache entries were available"
+        fi
+    fi
+}
+
+cleanup_main() {
+    log "Starting main disk cleanup"
+
+    cleanup_orphaned_package_managers
+
+    # Old log files (keep 7 days)
+    fd_cleanup --type f --changed-before 8days --exclude disk_cleanup.log --exclude pm2_monitor.log \
+        '\.log$' /var/log --exec-batch rm -f -- 2>/dev/null
+    fd_cleanup --type f --changed-before 31days '\.gz$' /var/log --exec-batch rm -f -- 2>/dev/null
+    log "Cleared old log files (kept pm2_monitor.log + disk_cleanup.log)"
+
+    # Application logs are retained by the size-bounded logrotate policy.
+
+    # Journal: keep 7 days of history for debugging
+    journalctl --vacuum-time=7d 2>/dev/null
+    log "Vacuumed journal (kept 7 days)"
+
+    apt-get clean 2>/dev/null
+    log "Cleared apt cache"
+
+    log "Main disk cleanup completed"
+}
+
+main() {
+    local usage
+    timed_cleanup "Non-bundlable file cleanup" cleanup_non_bundlable_files
+    usage=$(get_disk_usage)
+    log "Main disk usage: ${usage}%   Loop pressure (higher of bytes/inodes): $(get_loop_usage)%"
+
+    # Always check loop device regardless of main disk
+    timed_cleanup "Scratch cleanup" cleanup_loop_device
+    timed_cleanup "VictoriaMetrics data cleanup" cleanup_victoriametrics_data
+
+    if [ "$usage" -gt "$MAIN_THRESHOLD" ]; then
+        log "Main disk above ${MAIN_THRESHOLD}% — running full cleanup"
+        timed_cleanup "Main disk cleanup" cleanup_main
+        local new_usage
+        new_usage=$(get_disk_usage)
+        log "Main disk usage after cleanup: ${new_usage}%"
+    else
+        log "Main disk below threshold — no full cleanup needed"
+    fi
+}
+
+with_cleanup_priority() {
+    local pressure nice_priority
+    # Scale priority strictly based on physical storage pressure (disk or loop scratch space/inodes).
+    # Do NOT elevate priority based on CPU load — doing so causes priority inversion where
+    # heavy compilations trigger cleanup to run with normal priority and compete for CPU/IO.
+    pressure=$(awk -v disk="$(get_disk_usage)" -v scratch="$(get_loop_usage)" '
+        BEGIN { p = (disk > scratch ? disk : scratch); print p }')
+
+    if [ "$pressure" -ge 85 ]; then
+        nice_priority=10
+        [ "$pressure" -ge 95 ] && nice_priority=0
+        chrt --other --pid 0 "$$" || { log "Could not set normal CPU scheduling"; return 1; }
+        renice -n "$nice_priority" -p "$$" >/dev/null || return 1
+        ionice -c 2 -n 4 -p "$$" || return 1
+        log "Storage emergency pressure=${pressure}%: elevated priority, nice=${nice_priority}"
+    else
+        chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; return 1; }
+        ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; return 1; }
+    fi
+    # Set priority once on this shell; every cleanup command inherits it.
+    "$@"
+}
+
+# Allow the integration check to source the production functions without running
+# host-wide housekeeping or acquiring the production lock.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    command -v "$FD_BIN" >/dev/null || { log "Install fd-find before running cleanup"; exit 1; }
+    exec 9>/run/lock/disk-clean.lock
+    if ! flock -n 9; then
+        log "Another disk cleanup is already running — skipping"
+        exit 0
+    fi
+    with_cleanup_priority main
+fi

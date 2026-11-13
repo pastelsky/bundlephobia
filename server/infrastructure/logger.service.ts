@@ -1,20 +1,29 @@
+import { AsyncLocalStorage } from 'node:async_hooks'
 import winston from 'winston'
 
-import type { JsonObject } from '../../types/json'
+import type { JsonObject, RuntimeValue } from '../../types/json'
+
+interface RequestLogContext {
+  requestId?: string
+  userAgent: string
+  clientType: string
+  clientFamily: string
+  source: string
+}
+
+const requestContext = new AsyncLocalStorage<RequestLogContext>()
+
+export function withRequestLogContext<T>(
+  context: RequestLogContext,
+  callback: () => T,
+): T {
+  return requestContext.run(context, callback)
+}
 
 type LogPayload = JsonObject
 
 function toPayload<T>(value: T): LogPayload {
-  if (value instanceof Error) {
-    const payload: LogPayload = {
-      message: value.message,
-      name: value.name,
-    }
-
-    if (value.stack) payload.stack = value.stack
-
-    return payload
-  }
+  if (value instanceof Error) return errorFields(value) ?? {}
 
   if (
     value !== null &&
@@ -27,11 +36,87 @@ function toPayload<T>(value: T): LogPayload {
   return { error: String(value) }
 }
 
-const logFormat = winston.format.printf(info => {
+type LogErrorSource = Partial<Error> & {
+  code?: RuntimeValue
+  originalError?: RuntimeValue
+}
+
+function errorText<T>(value: T): string | undefined {
+  return Object.prototype.toString.call(value) === '[object String]'
+    ? String(value).slice(0, 4000)
+    : undefined
+}
+
+function textFields(source: LogErrorSource): LogPayload {
+  const fields: LogPayload = {}
+
+  for (const key of ['name', 'code', 'message', 'stack'] as const) {
+    const text = errorText(source[key])
+
+    if (text !== undefined) fields[key] = text
+  }
+
+  return fields
+}
+
+function errorFields(cause: unknown, depth = 0): LogPayload | undefined {
+  const message = errorText(cause)
+
+  if (message !== undefined) return { message }
+
+  if (Object(cause) !== cause) return undefined
+
+  // SAFETY: cause is an object; each selected diagnostic field is checked before use.
+  const source = cause as LogErrorSource
+  const fields = textFields(source)
+
+  if (depth < 2) {
+    for (const key of ['cause', 'originalError'] as const) {
+      const nested = errorFields(source[key], depth + 1)
+
+      if (nested) fields[key] = nested
+    }
+  }
+
+  return Object.keys(fields).length ? fields : undefined
+}
+
+export function formatLogMessage(
+  info: winston.Logform.TransformableInfo,
+): string {
   const date = new Date().toISOString()
 
-  return `${date} ${info.level}: ${info.message}`
-})
+  const metadata = toPayload(info.metadata)
+  const level = info[Symbol.for('level')] ?? info.level
+
+  // Keep attribution on existing messages without serializing request headers,
+  // authorization, or potentially large result/error payloads.
+  const fields = {
+    tag: metadata.tag,
+    type: metadata.type,
+    time: metadata.time,
+    error:
+      level === 'error' ? errorFields(metadata.error ?? metadata) : undefined,
+    details: errorFields(metadata.details),
+    requestId: metadata.requestId,
+    userAgent: metadata.userAgent,
+    clientType: metadata.clientType,
+    clientFamily: metadata.clientFamily,
+    source: metadata.source,
+    operation: metadata.operation,
+    packageString: metadata.packageString,
+    cache: metadata.cache,
+    buildRequested: metadata.buildRequested,
+  }
+
+  const context = Object.values(fields).some(value => value !== undefined)
+    ? ` ${JSON.stringify(fields)}`
+    : ''
+
+  return `${date} ${info.level}: ${info.message}${context}`
+}
+
+const logFormat = winston.format.printf(formatLogMessage)
 
 class Logger {
   private readonly logger: winston.Logger
@@ -49,6 +134,7 @@ class Logger {
   info<T>(tag: string, json: T, message: string): void {
     this.logger.info(message, {
       metadata: {
+        ...requestContext.getStore(),
         message,
         tag,
         ...toPayload(json),
@@ -59,6 +145,7 @@ class Logger {
   error<T>(tag: string, json: T, message: string): void {
     this.logger.error(message, {
       metadata: {
+        ...requestContext.getStore(),
         tag,
         ...toPayload(json),
       },

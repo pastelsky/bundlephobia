@@ -9,6 +9,7 @@ import CarbonAd from '../client/components/CarbonAd'
 import Layout from '../client/components/Layout'
 import MetaTags from '../client/components/MetaTags'
 import PageNav from '../client/components/PageNav'
+import { createWebSiteStructuredData } from '../client/seo/structured-data'
 
 const Logo = () => (
   <svg
@@ -98,15 +99,12 @@ const Logo = () => (
 const Home = () => {
   const router = useRouter()
 
-  React.useEffect(() => {
-    Analytics.pageView('home')
-  }, [])
-
   const handleSearchSubmit = (value: string) => {
-    Analytics.performedSearch(value.trim())
+    const query = value.trim()
 
-    if (value ?? '') {
-      router.push(`/package/${value.trim()}`)
+    if (query) {
+      Analytics.performedSearch(query)
+      router.push(`/package/${query}`)
     }
   }
 
@@ -115,6 +113,7 @@ const Home = () => {
       <MetaTags
         title="Bundlephobia | Size of npm dependencies"
         canonicalPath=""
+        structuredData={createWebSiteStructuredData()}
       />
       <div className="homepage__container">
         <PageNav minimal={true} />
@@ -131,7 +130,6 @@ const Home = () => {
             <AutocompleteInput
               containerClass="homepage__search-input-container"
               onSearchSubmit={handleSearchSubmit}
-              autoFocus={true}
             />
           </AutocompleteInputBox>
           <CarbonAd className="homepage__carbon-ad" />

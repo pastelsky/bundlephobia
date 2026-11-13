@@ -33,11 +33,7 @@ function serializeValue(value) {
 }
 
 function serializeJsonError(error) {
-  if (
-    error &&
-    Object.prototype.toString.call(error) === '[object Object]' &&
-    error.toJSON instanceof Function
-  ) {
+  if (error?.toJSON instanceof Function) {
     const serialized = serializeValue(error)
 
     if (

@@ -12,7 +12,7 @@ $bar-grow-duration: 0.4s;
   flex-direction: column;
   justify-content: center;
   width: 100%;
-  height: 48vh;
+  height: $bar-graph-height;
 }
 
 .bar-graph {

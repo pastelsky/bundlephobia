@@ -9,6 +9,17 @@ import NPMIcon from '../../assets/npm-logo.svg'
 import InfoIcon from '../../assets/info.svg'
 import { PackageInfo } from '../../../types'
 
+function getDescriptionProps(
+  description: string,
+  shouldEscapeDescription: boolean,
+) {
+  if (shouldEscapeDescription) return { children: description }
+
+  return {
+    dangerouslySetInnerHTML: { __html: sanitizeHTML(description) },
+  }
+}
+
 type QuickStatsBarProps = Pick<
   PackageInfo,
   | 'name'
@@ -17,7 +28,7 @@ type QuickStatsBarProps = Pick<
   | 'dependencyCount'
   | 'isTreeShakeable'
   | 'hasSideEffects'
->
+> & { escapeDescription?: boolean }
 
 function SideEffectStat({
   hasSideEffects,
@@ -124,10 +135,13 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
       dependencyCount,
       name,
       repository,
+      escapeDescription = false,
     } = this.props
 
     const statItemCount = this.getStatItemCount()
     const description = this.getTrimmedDescription()
+
+    const descriptionProps = getDescriptionProps(description, escapeDescription)
 
     return (
       <div className="quick-stats-bar">
@@ -139,10 +153,10 @@ class QuickStatsBar extends Component<QuickStatsBarProps> {
           {statItemCount < 2 && (
             <span
               className="quick-stats-bar__stat--description-content"
-              dangerouslySetInnerHTML={{ __html: sanitizeHTML(description) }}
               style={{
                 maxWidth: `${500 - statItemCount * 280}px`,
               }}
+              {...descriptionProps}
             />
           )}
         </div>

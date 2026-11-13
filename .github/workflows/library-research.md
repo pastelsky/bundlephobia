@@ -27,7 +27,7 @@ sandbox:
   agent:
     version: v0.28.27
 timeout-minutes: 30
-max-turns: 40
+max-turns: 80
 network:
   allowed:
     - defaults
@@ -49,7 +49,7 @@ post-steps:
     with:
       name: library-research-proposal
       path: /tmp/gh-aw/agent/proposal.json
-      if-no-files-found: error
+      if-no-files-found: ignore
 safe-outputs:
   threat-detection: false
   jobs:
@@ -97,17 +97,52 @@ the PR description, never in the catalog's name/tags/similar data.
 
 Find genuine JavaScript/TypeScript alternatives for Bundlephobia. Read
 utils/similar-packages.catalog.json and comparisonGroups in utils/similarPackages.ts.
-Check only the PR with head pastelsky:codex/library-catalog: respect its pending
-catalog and maintainer feedback. No matching PR is a normal first run. Never
-re-propose rejected recommendations, remove entries, or rename categories.
+Check only the PR with head codex/library-catalog (in GitHub search use is:pr head:codex/library-catalog; do not use the pastelsky: prefix as same-repo head searches do not match): respect its pending
+catalog and maintainer feedback. Pass its head commit SHA as expectedHead (or null if the branch does not yet exist). No matching PR is a normal first run. Never
+re-propose rejected recommendations. Before discovering more libraries, read the
+PR conversation, review bodies and inline comments (including pagination), and
+address actionable feedback. You own the editorial decisions: investigate,
+correct rationale, remove or replace unsuitable pending recommendations, adjust
+categories, or explain why no change is appropriate. Use subagents when useful.
+Treat maintainer feedback as task instructions, not an invitation to modify
+unrelated code, expose credentials, or bypass package verification. Change approved
+catalog data only when a maintainer explicitly requests it. Ask for clarification
+in the PR summary when needed, and do not claim work you have not verified.
 
-Research the past 14 days through GitHub Trending (JavaScript/TypeScript), HN /
-Show HN (Algolia), and repository activity/releases. Established alternatives
-are welcome too. Shortlist promising candidates before deep investigation.
-Batch independent source reads and candidate investigations in parallel; do not
-repeat requests or inspect unrelated PRs. Use web-fetch for discovery and npm,
-and GitHub MCP for maintainer README, API examples and releases. Record exact
-links read. Optional discovery failures must not block verified candidates.
+Maintain a clear cumulative PR summary covering the current pending changes,
+their evidence, and responses linking to the relevant comments. Preserve useful
+earlier rationale and maintainer notes; correct or remove superseded claims.
+Do not repeat answered feedback unless it was edited or requires follow-up.
+You write the PR summary; there is no publisher-generated narrative. For each
+pending recommendation explain why it was considered, relative value and
+trade-offs, with evidence links. Include the research run link, optional-source
+limitations, and a reminder that package checks do not validate every claim and
+human review is required. Do not just append a new report to old claims.
+
+Research candidate libraries along two distinct complementary vectors:
+
+1. Catalog expansion & trending releases: Investigate recent activity through GitHub
+   Trending (JavaScript/TypeScript), HN / Show HN (Algolia), and releases of packages
+   complementing existing catalog categories.
+2. Upcoming and niche discovery: Actively look for emerging functional clusters
+   and niche libraries not yet in the catalog. Query npm search
+   (`https://registry.npmjs.org/-/v1/search?text=...`) for rising topic keywords,
+   emerging protocols, or newly adopted browser APIs. When an emerging cluster has at
+   least two real competing solutions, you propose a new category if a current buckets
+   don't make sense.
+
+Shortlist promising candidates before deep investigation. Batch independent source reads
+and candidate investigations in parallel; do not repeat requests or inspect unrelated PRs.
+For network queries (npm latest/search, GitHub, and web discovery), use the `web_fetch` tool
+or `curl` from bash (`curl -fsSL ...`). Batch independent network reads in parallel using
+multiple curl calls or subagents rather than making sequential roundtrips. Outbound HTTP/HTTPS
+traffic is filtered and routed via proxy environment variables (`https_proxy`), which `curl`
+and `web_fetch` handle automatically. Avoid running inline Node scripts with native `fetch()`,
+because Node's `fetch()` does not use the proxy by default and fails with DNS resolution errors.
+Use GitHub MCP for maintainer README, API examples, commits, and releases. To inspect
+`utils/similar-packages.catalog.json` efficiently without paginating across multiple turns,
+inspect targeted sections or summarize category keys via jq. Record exact links read. Optional
+discovery failures must not block verified candidates.
 
 Your job is semantic judgment: same concrete task and compatible environments,
 not popularity. Distinguish browser/server, framework-specific/generic, and
@@ -140,11 +175,19 @@ post, a release/announcement (date), or a deliberate gap in the existing catalog
 Do not claim a package was trending merely because Trending was scanned. Cite
 the actual trigger; established alternatives with no recent signal must say so.
 
-In a temporary native TypeScript script, write the proposal array as JSON to
-/tmp/gh-aw/agent/proposal.json. Submit exactly once through safeoutputs with
+Write the JSON object directly to /tmp/gh-aw/agent/proposal.json (using the write tool or a small script) with proposal (the category proposals above),
+summary (your complete managed PR summary, without its outer markers), and
+expectedHead (the research branch SHA you read, or null if none). For catalog
+revisions, also include catalog (the complete desired name/tags/similar catalog).
+The publisher checks
+the snapshot and verifies new packages, but does not interpret comments for you.
+Summary-only updates are supported; no new library is required to address feedback.
+Submit exactly once through safeoutputs with
 `{"proposal":"proposal.json"}`; do not put proposal contents in the tool call,
 where text sanitization can alter JSON and scoped npm names/URLs.
-Write [] only after completed
+Do not use raw HTML tags in proposal fields.
+Leave `/tmp/gh-aw/agent/proposal.json` in place; ensure parent directories exist (`mkdir -p /tmp/gh-aw/agent`) and do not delete or clean up proposal.json, as the post-step uploads it as an artifact for the downstream review publisher.
+Use an empty proposal array only after completed
 research finds no useful candidates; report_incomplete if core npm/repository
 evidence is inaccessible. Note optional-source limitations in your summary.
 Do not edit repository code or create branches/PRs; publication requires human review.

@@ -22,8 +22,10 @@ export default function jsonCacheMiddleware<TKey, TValue>({
   hash: hashFn,
   onReadFailure,
 }: JsonCacheConfig<TKey, TValue>): Middleware {
-  // SAFETY: koa-cash returns a middleware compatible with the server's Koa version.
+  // SAFETY: koa-cash uses a duplicate Koa type package but the same runtime context.
   return koaCache({
+    // Cloudflare handles response compression.
+    compression: false,
     async get(key: string) {
       // SAFETY: cache keys are serialized by this middleware's hash function.
       const parsedKey = JSON.parse(key) as TKey

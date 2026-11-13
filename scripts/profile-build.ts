@@ -83,6 +83,7 @@ try {
     {
       env: {
         ...process.env,
+        ENABLE_DIAGNOSTICS: 'true',
         BUILD_METRICS_DIR: directory,
         BUILD_METRICS_PEAK_RSS_MB: '1',
         BUILD_PROFILE_INSTALLATION: JSON.stringify(installation),

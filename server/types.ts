@@ -20,11 +20,12 @@ export interface ResolvedPackageState
 export interface PackageAnalysisRequestState {
   language: LanguageId
   operation: AnalysisOperation
+  cache?: 'hit' | 'miss' | 'bypass' | 'unavailable'
+  buildRequested?: boolean
 }
 
 export interface FailureCacheEntry {
   status: number
-  body: unknown
   consecutiveFailures: number
   blockedUntil?: number
 }

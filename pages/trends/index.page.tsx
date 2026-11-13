@@ -18,6 +18,7 @@ import API, {
 } from '../../client/api'
 import Layout from '../../client/components/Layout'
 import MetaTags from '../../client/components/MetaTags'
+import { createTrendsStructuredData } from '../../client/seo/structured-data'
 import PageNav from '../../client/components/PageNav'
 import { AutocompleteInput } from '../../client/components/AutocompleteInput'
 import { formatSize as formatBundleSize } from '../../utils'
@@ -27,16 +28,25 @@ import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
 import { groupTrendsPackage } from '../../utils/trends'
+import { trendsComparisonCanonicalPath } from '../../seo/trends-comparisons'
 import {
-  trendsComparisonPath,
-  findTrendsComparison,
-} from '../../seo/trends-comparisons'
+  TRENDS_CATEGORIES,
+  getRandomCategories,
+  getCategoryCompareAllPath,
+  type TrendsCategory,
+} from '../../seo/trends-categories'
 
 const DEFAULT_PACKAGES = ['react', 'vue']
 
 const MAX_PACKAGES = 5
 
 const PACKAGE_URL_SEPARATOR = '~vs~'
+
+type TrendsLoadState =
+  | { status: 'empty'; data: null }
+  | { status: 'pending'; data: TrendsResponse | null; showLoading: boolean }
+  | { status: 'ready'; data: TrendsResponse; requestKey: string }
+  | { status: 'error'; data: TrendsResponse | null; message: string }
 
 function decodePackageParam(value: string) {
   try {
@@ -57,6 +67,12 @@ function parsePackageParam(value: string | string[]) {
       .map(packageName => packageName.trim().toLowerCase())
       .filter(Boolean),
   )
+}
+
+function getSelectedPackages(value: string | string[] | undefined) {
+  if (value === undefined) return DEFAULT_PACKAGES
+
+  return [...new Set(parsePackageParam(value))].slice(0, MAX_PACKAGES)
 }
 
 const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
@@ -147,18 +163,20 @@ function trackTrendsLoad(
 
 export const getServerSideProps: GetServerSideProps<{
   initialPackages: string[]
+  hasExplicitPackages: boolean
 }> = async ({ query }) => ({
   props: {
-    initialPackages: query.packages
-      ? [...new Set(parsePackageParam(query.packages))].slice(0, MAX_PACKAGES)
-      : DEFAULT_PACKAGES,
+    initialPackages: getSelectedPackages(query.packages),
+    hasExplicitPackages: Boolean(query.packages),
   },
 })
 
 export default function TrendsPage({
   initialPackages,
+  hasExplicitPackages: initialHasExplicitPackages,
 }: {
   initialPackages: string[]
+  hasExplicitPackages: boolean
 }) {
   const router = useRouter()
   const [packages, setPackages] = useState<string[]>(initialPackages)
@@ -168,13 +186,34 @@ export default function TrendsPage({
   const [showMajorReleases, setShowMajorReleases] = useState(true)
   const [showMinorReleases, setShowMinorReleases] = useState(false)
 
-  const [loading, setLoading] = useState(true)
-  const [fetchingRange, setFetchingRange] = useState<TrendsRange | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [trendsData, setTrendsData] = useState<TrendsResponse | null>(null)
+  const [loadState, setLoadState] = useState<TrendsLoadState>({
+    status: 'pending',
+    data: null,
+    showLoading: true,
+  })
+
   const [copied, setCopied] = useState(false)
   const [relatedPackageNames, setRelatedPackageNames] = useState<string[]>([])
   const [suggestedPackages, setSuggestedPackages] = useState<string[]>([])
+
+  const [sampledCategories, setSampledCategories] = useState<TrendsCategory[]>(
+    () => TRENDS_CATEGORIES.slice(0, 6),
+  )
+
+  useEffect(() => {
+    setSampledCategories(getRandomCategories(6))
+  }, [])
+
+  const requestKey = JSON.stringify([packages, range])
+  const trendsData = loadState.data
+  const loading = loadState.status === 'pending' && loadState.showLoading
+  const error = loadState.status === 'error' ? loadState.message : null
+
+  const loadedPackageNames = new Set(
+    trendsData?.range === range
+      ? trendsData.packages.map(pack => pack.name)
+      : [],
+  )
 
   const analyticsContext = {
     packageCount: packages.length,
@@ -183,8 +222,12 @@ export default function TrendsPage({
     groupBy,
   }
 
-  useEffect(() => {
-    Analytics.pageView('trends')
+  const startLoading = useCallback(() => {
+    setLoadState(current => ({
+      status: 'pending',
+      data: current.data,
+      showLoading: false,
+    }))
   }, [])
 
   const chartPackages = useMemo(
@@ -192,6 +235,24 @@ export default function TrendsPage({
       trendsData?.packages.map(pack => groupTrendsPackage(pack, groupBy)) ?? [],
     [groupBy, trendsData],
   )
+
+  useEffect(() => {
+    if (loadState.status !== 'ready' || loadState.requestKey !== requestKey)
+      return
+
+    Analytics.trendsComparisonViewed({
+      packageCount: packages.length,
+      metric,
+      range,
+      groupBy,
+      dataPackageCount: loadState.data.packages.filter(
+        pack => pack[metric].length > 0,
+      ).length,
+      warningPackageCount: loadState.data.packages.filter(
+        pack => pack.warnings.length > 0,
+      ).length,
+    })
+  }, [loadState, requestKey, packages, metric, range, groupBy])
 
   // Sync state with URL params on mount / router change
   useEffect(() => {
@@ -204,36 +265,16 @@ export default function TrendsPage({
       groupBy: queryGroupBy,
     } = router.query
 
-    if (queryPackages) {
-      const parsed = parsePackageParam(queryPackages).slice(0, MAX_PACKAGES)
+    const nextPackages = getSelectedPackages(queryPackages)
 
-      if (parsed.length > 0) {
-        setPackages(current =>
-          current.join(',') === parsed.join(',') ? current : parsed,
-        )
-      }
-    }
-
-    if (
-      typeof queryMetric === 'string' &&
-      METRICS.some(m => m.id === queryMetric)
-    ) {
-      setMetric(queryMetric as TrendsMetric)
-    }
-
-    if (
-      typeof queryRange === 'string' &&
-      RANGES.some(r => r.id === queryRange)
-    ) {
-      setRange(queryRange as TrendsRange)
-    }
-
-    if (
-      typeof queryGroupBy === 'string' &&
-      GROUP_BY.some(option => option.id === queryGroupBy)
-    ) {
-      setGroupBy(queryGroupBy as TrendsGroupBy)
-    }
+    setPackages(current =>
+      current.join(',') === nextPackages.join(',') ? current : nextPackages,
+    )
+    setMetric(
+      METRICS.find(option => option.id === queryMetric)?.id ?? 'downloads',
+    )
+    setRange(RANGES.find(option => option.id === queryRange)?.id ?? 'last-year')
+    setGroupBy(GROUP_BY.find(option => option.id === queryGroupBy)?.id ?? 'day')
   }, [router.isReady, router.query])
 
   // Curated similarity is useful only when the classifier is confident. Broad
@@ -296,47 +337,46 @@ export default function TrendsPage({
   // Fetch trends data
   useEffect(() => {
     if (packages.length === 0) {
-      setTrendsData(null)
-      setLoading(false)
-      setFetchingRange(null)
+      setLoadState({ status: 'empty', data: null })
 
       return
     }
 
     let isMounted = true
-    let completed = false
     const startedAt = performance.now()
     // An indicator that flashes for a quick cache or network response is more
     // distracting than helpful. Keep the current chart visible until a request
     // has genuinely taken long enough to need a loading state.
-    setLoading(false)
-    setFetchingRange(range)
-    setError(null)
+    startLoading()
 
     const loadingTimer = window.setTimeout(() => {
-      if (isMounted && !completed) setLoading(true)
+      if (isMounted) {
+        setLoadState(current => ({
+          status: 'pending',
+          data: current.data,
+          showLoading: true,
+        }))
+      }
     }, 400)
 
     API.getTrends(packages, range)
       .then(res => {
-        completed = true
         window.clearTimeout(loadingTimer)
 
         if (isMounted) {
-          setTrendsData(res)
-          setLoading(false)
-          setFetchingRange(null)
+          setLoadState({ status: 'ready', data: res, requestKey })
           trackTrendsLoad(res, packages.length, range, startedAt)
         }
       })
       .catch(err => {
-        completed = true
         window.clearTimeout(loadingTimer)
 
         if (isMounted) {
-          setError(err?.message || 'Failed to fetch trends data')
-          setLoading(false)
-          setFetchingRange(null)
+          setLoadState(current => ({
+            status: 'error',
+            data: current.data,
+            message: err?.message || 'Failed to fetch trends data',
+          }))
           Analytics.trendsDataFailed({
             packageCount: packages.length,
             range,
@@ -349,7 +389,7 @@ export default function TrendsPage({
       isMounted = false
       window.clearTimeout(loadingTimer)
     }
-  }, [packages, range])
+  }, [packages, range, requestKey, startLoading])
 
   const [inputKey, setInputKey] = useState(0)
 
@@ -362,7 +402,7 @@ export default function TrendsPage({
     if (packages.length >= MAX_PACKAGES) return
     const updated = [...packages, clean]
     setPackages(updated)
-    setFetchingRange(range)
+    startLoading()
     setSuggestedPackages(current =>
       current.filter(packageName => packageName.toLowerCase() !== clean),
     )
@@ -378,6 +418,7 @@ export default function TrendsPage({
   const handleRemovePackage = (pkgName: string) => {
     const updated = packages.filter(p => p !== pkgName)
     setPackages(updated)
+    startLoading()
     updateUrl(updated, metric, range, groupBy)
     Analytics.trendsSelectionChanged({
       ...analyticsContext,
@@ -400,7 +441,7 @@ export default function TrendsPage({
   const handleRangeChange = (newRange: TrendsRange) => {
     if (newRange === range) return
     setRange(newRange)
-    setFetchingRange(newRange)
+    startLoading()
     updateUrl(packages, metric, newRange, groupBy)
     Analytics.trendsSelectionChanged({
       ...analyticsContext,
@@ -458,17 +499,34 @@ export default function TrendsPage({
       ),
   )
 
-  const comparison = router.query.packages
-    ? findTrendsComparison(packages)
-    : undefined
+  const hasExplicitPackages = router.isReady
+    ? Boolean(router.query.packages)
+    : initialHasExplicitPackages
 
-  const pageTitle = comparison
-    ? `${comparison.join(' vs ')} — downloads, stars & size | Bundlephobia`
+  const isComparison = hasExplicitPackages && packages.length > 0
+
+  const pageTitle = isComparison
+    ? `${packages.join(' vs ')} — downloads, stars & size | Bundlephobia`
     : 'npm package trends & comparisons | Bundlephobia'
 
-  const description = comparison
-    ? `Compare ${comparison.join(' vs ')} npm downloads, GitHub stars, and bundle size history.`
+  const description = isComparison
+    ? `Compare ${packages.join(' vs ')} npm downloads, GitHub stars, and bundle size history.`
     : 'Compare downloads, GitHub stars, and size history across packages.'
+
+  const canonicalPath = isComparison
+    ? trendsComparisonCanonicalPath(packages)
+    : '/trends'
+
+  const structuredData = useMemo(
+    () =>
+      createTrendsStructuredData({
+        packages: isComparison ? packages : [],
+        pageTitle,
+        description,
+        canonicalPath,
+      }),
+    [isComparison, packages, pageTitle, description, canonicalPath],
+  )
 
   return (
     <Layout className="trends-page">
@@ -476,18 +534,32 @@ export default function TrendsPage({
         title={pageTitle}
         description={description}
         twitterDescription={description}
-        canonicalPath={
-          comparison ? trendsComparisonPath(comparison) : '/trends'
-        }
+        canonicalPath={canonicalPath}
+        structuredData={structuredData}
       />
       <div className="trends-page__container">
         <PageNav />
 
         <header className="trends-page__header">
-          <h1>
-            {comparison
-              ? `${comparison.join(' vs ')} trends`
-              : 'Package trends'}
+          <h1 className="trends-page__title">
+            {isComparison ? (
+              <>
+                {packages.map((pkg, i) => (
+                  <React.Fragment key={pkg}>
+                    {i > 0 && (
+                      <>
+                        {' '}
+                        <span className="trends-page__title-vs">vs</span>{' '}
+                      </>
+                    )}
+                    <span className="trends-page__title-pkg">{pkg}</span>
+                  </React.Fragment>
+                ))}{' '}
+                <span className="trends-page__title-suffix">trends</span>
+              </>
+            ) : (
+              'Package trends'
+            )}
           </h1>
           <p className="trends-page__subtitle">
             Compare downloads, GitHub stars, and size history across packages.
@@ -512,9 +584,8 @@ export default function TrendsPage({
                   }}
                 />
                 <span className="trends-chip__name">{pkg}</span>
-                {fetchingRange === range &&
-                  (trendsData?.range !== range ||
-                    !trendsData.packages.some(pack => pack.name === pkg)) && (
+                {loadState.status === 'pending' &&
+                  !loadedPackageNames.has(pkg) && (
                     <output
                       className="trends-chip__spinner"
                       aria-label={`Loading ${pkg} trends`}
@@ -727,7 +798,7 @@ export default function TrendsPage({
         </section>
 
         {/* ─── Package Snapshot Cards ─── */}
-        {!loading && trendsData && trendsData.packages.length > 0 && (
+        {packages.length > 0 && (
           <section className="trends-snapshot">
             <h2 className="trends-snapshot__heading">Snapshot</h2>
             <div className="trends-snapshot__rows">
@@ -739,103 +810,188 @@ export default function TrendsPage({
                 <span>Minified</span>
                 <span aria-hidden="true" />
               </div>
-              {trendsData.packages.map((pack, index) => (
-                <div key={pack.name} className="trends-card">
-                  <div className="trends-card__header">
-                    <span
-                      className="trends-card__swatch"
-                      style={{
-                        backgroundColor:
-                          TRENDS_SERIES_COLORS[
-                            index % TRENDS_SERIES_COLORS.length
-                          ],
-                      }}
-                    />
-                    <Link
-                      href={`/package/${pack.name}`}
-                      className="trends-card__name"
-                    >
-                      {pack.name}
-                    </Link>
-                    <span className="trends-card__external-links">
-                      <a
-                        className="trends-card__external-link trends-card__external-link--npm"
-                        href={`https://npmjs.com/package/${pack.name}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`${pack.name} on npm`}
+              {packages.map((pkgName, index) => {
+                const pack = trendsData?.packages.find(p => p.name === pkgName)
+
+                return (
+                  <div key={pkgName} className="trends-card">
+                    <div className="trends-card__header">
+                      <span
+                        className="trends-card__swatch"
+                        style={{
+                          backgroundColor:
+                            TRENDS_SERIES_COLORS[
+                              index % TRENDS_SERIES_COLORS.length
+                            ],
+                        }}
+                      />
+                      <Link
+                        href={`/package/${pkgName}`}
+                        className="trends-card__name"
                       >
-                        <NPMIcon />
-                      </a>
-                      {pack.repository && (
+                        {pkgName}
+                      </Link>
+                      <span className="trends-card__external-links">
                         <a
-                          className="trends-card__external-link trends-card__external-link--github"
-                          href={
-                            pack.repository.startsWith('http')
-                              ? pack.repository
-                              : `https://github.com/${pack.repository}`
-                          }
+                          className="trends-card__external-link trends-card__external-link--npm"
+                          href={`https://npmjs.com/package/${pkgName}`}
                           target="_blank"
                           rel="noreferrer"
-                          aria-label={`${pack.name} on GitHub`}
+                          aria-label={`${pkgName} on npm`}
                         >
-                          <GithubIcon />
+                          <NPMIcon />
                         </a>
-                      )}
-                    </span>
-                  </div>
-                  <div className="trends-card__stats">
-                    <div className="trends-stat">
-                      <span className="trends-stat__label">Stars</span>
-                      <span className="trends-stat__value">
-                        <MetricValue
-                          formatted={formatCompactNumber(pack.current.stars)}
-                        />
+                        {pack?.repository && (
+                          <a
+                            className="trends-card__external-link trends-card__external-link--github"
+                            href={
+                              pack.repository.startsWith('http')
+                                ? pack.repository
+                                : `https://github.com/${pack.repository}`
+                            }
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`${pkgName} on GitHub`}
+                          >
+                            <GithubIcon />
+                          </a>
+                        )}
                       </span>
                     </div>
-                    <div className="trends-stat">
-                      <span className="trends-stat__label">
-                        Weekly downloads
-                      </span>
-                      <span className="trends-stat__value">
-                        <MetricValue
-                          formatted={formatCompactNumber(
-                            pack.current.weeklyDownloads,
+                    <div className="trends-card__stats">
+                      <div className="trends-stat">
+                        <span className="trends-stat__label">Stars</span>
+                        <span className="trends-stat__value">
+                          {pack ? (
+                            <MetricValue
+                              formatted={formatCompactNumber(
+                                pack.current.stars,
+                              )}
+                            />
+                          ) : (
+                            <span
+                              className="trends-stat__skeleton"
+                              aria-hidden="true"
+                            />
                           )}
-                        />
-                      </span>
+                        </span>
+                      </div>
+                      <div className="trends-stat">
+                        <span className="trends-stat__label">
+                          Weekly downloads
+                        </span>
+                        <span className="trends-stat__value">
+                          {pack ? (
+                            <MetricValue
+                              formatted={formatCompactNumber(
+                                pack.current.weeklyDownloads,
+                              )}
+                            />
+                          ) : (
+                            <span
+                              className="trends-stat__skeleton"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </span>
+                      </div>
+                      <div className="trends-stat">
+                        <span className="trends-stat__label">Gzip</span>
+                        <span className="trends-stat__value">
+                          {pack ? (
+                            <MetricValue
+                              formatted={formatSize(pack.current.gzip)}
+                            />
+                          ) : (
+                            <span
+                              className="trends-stat__skeleton"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </span>
+                      </div>
+                      <div className="trends-stat">
+                        <span className="trends-stat__label">Minified</span>
+                        <span className="trends-stat__value">
+                          {pack ? (
+                            <MetricValue
+                              formatted={formatSize(pack.current.size)}
+                            />
+                          ) : (
+                            <span
+                              className="trends-stat__skeleton"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </span>
+                      </div>
                     </div>
-                    <div className="trends-stat">
-                      <span className="trends-stat__label">Gzip</span>
-                      <span className="trends-stat__value">
-                        <MetricValue
-                          formatted={formatSize(pack.current.gzip)}
-                        />
-                      </span>
-                    </div>
-                    <div className="trends-stat">
-                      <span className="trends-stat__label">Minified</span>
-                      <span className="trends-stat__value">
-                        <MetricValue
-                          formatted={formatSize(pack.current.size)}
-                        />
-                      </span>
-                    </div>
+                    <Button
+                      type="button"
+                      className="trends-card__remove"
+                      onClick={() => handleRemovePackage(pkgName)}
+                      title={`Remove ${pkgName}`}
+                      aria-label={`Remove ${pkgName}`}
+                    >
+                      ×
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    className="trends-card__remove"
-                    onClick={() => handleRemovePackage(pack.name)}
-                    title={`Remove ${pack.name}`}
-                    aria-label={`Remove ${pack.name}`}
-                  >
-                    ×
-                  </Button>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
         )}
+
+        {/* ─── Explore Comparisons by Category ─── */}
+        <section
+          className="trends-categories"
+          aria-labelledby="trends-categories-heading"
+        >
+          <div className="trends-categories__header">
+            <h2
+              id="trends-categories-heading"
+              className="trends-categories__title"
+            >
+              Popular comparisons by category
+            </h2>
+          </div>
+          <div className="trends-categories__grid">
+            {sampledCategories.map(category => (
+              <div key={category.id} className="trends-category-card">
+                <div className="trends-category-card__header">
+                  <h3 className="trends-category-card__name">
+                    {category.title}
+                  </h3>
+                  <Link
+                    href={getCategoryCompareAllPath(category)}
+                    className="trends-category-card__compare-all"
+                    title={`Compare all ${category.title} packages`}
+                  >
+                    Compare all →
+                  </Link>
+                </div>
+                <div className="trends-category-card__pairs">
+                  {category.popularPairs.slice(0, 2).map(([a, b]) => {
+                    const pairPath = trendsComparisonCanonicalPath([a, b])
+
+                    return (
+                      <Link
+                        key={`${a}-vs-${b}`}
+                        href={pairPath}
+                        className="trends-category-card__pair-pill"
+                        title={`Compare ${a} vs ${b}`}
+                      >
+                        <span>{a}</span>
+                        <span className="trends-category-card__vs">vs</span>
+                        <span>{b}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </Layout>
   )

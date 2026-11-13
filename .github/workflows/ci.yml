@@ -17,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [26.x]
+        node-version: [24.x, 26.x]
 
     steps:
       - uses: actions/checkout@v7
@@ -38,6 +38,14 @@ jobs:
           key: yarn-${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
       - name: Install project dependencies
         run: yarn install --immutable
+      - name: Validate standalone build-service lockfile
+        if: matrix.node-version == '24.x'
+        run: |
+          standalone_dir="$(mktemp -d)"
+          cp build-service/package.json build-service/yarn.lock build-service/.yarnrc.yml "$standalone_dir/"
+          node -e 'const fs = require("node:fs"); const file = process.argv[1]; const pkg = JSON.parse(fs.readFileSync(file)); pkg.packageManager = require("./package.json").packageManager; fs.writeFileSync(file, JSON.stringify(pkg))' "$standalone_dir/package.json"
+          cd "$standalone_dir"
+          corepack yarn install --immutable --mode=skip-build
       - name: Cache Next.js build
         uses: actions/cache@v6
         with:
@@ -47,6 +55,14 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
       - name: Run lint
         run: yarn lint
+      - name: Run unit tests
+        run: yarn test:unit --runInBand
+      - name: Test HAProxy request limits
+        if: matrix.node-version == '24.x'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y haproxy
+          yarn test:haproxy
       - name: Test package recommendation automation
         run: yarn test:recommendations
       - name: Type check recommendation automation
@@ -136,13 +152,38 @@ jobs:
       - name: Verify Maven publication layout
         working-directory: jvm-package-build-stats
         run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fd-find
           ./gradlew :core:publishMavenPublicationToReleaseTestRepository :cli:publishMavenPublicationToReleaseTestRepository --no-daemon
-          CORE_JAR=$(find build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -1)
-          CLI_JAR=$(find build/release-test-repository/com/bundlephobia/jvm-package-build-stats-cli/0.1.0-SNAPSHOT -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -1)
-          CORE_POM=$(find build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT -name '*.pom' | head -1)
+          publication_file() {
+            fdfind --hidden --no-ignore --no-ignore-parent --case-sensitive --type f \
+              --extension "$1" --exclude '*-sources.jar' --exclude '*-javadoc.jar' \
+              --max-results 1 '^' "$2"
+          }
+          CORE_JAR=$(publication_file jar build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT)
+          CLI_JAR=$(publication_file jar build/release-test-repository/com/bundlephobia/jvm-package-build-stats-cli/0.1.0-SNAPSHOT)
+          CORE_POM=$(publication_file pom build/release-test-repository/com/bundlephobia/jvm-package-build-stats-core/0.1.0-SNAPSHOT)
           test -n "$CORE_JAR" && test -n "$CLI_JAR" && test -n "$CORE_POM"
           jar tf "$CORE_JAR" | grep -q 'com/bundlephobia/jvm/PackageBuildStatsAnalyzer.class'
           jar tf "$CORE_JAR" | grep -q 'org/objectweb/asm/ClassReader.class'
           jar tf "$CLI_JAR" | grep -q 'com/bundlephobia/jvm/cli/MainKt.class'
           java -jar "$CLI_JAR" --help | grep -q 'Analyze published JVM package size'
           ! grep -q '<dependencies>' "$CORE_POM"
+
+  scratch-cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: |
+          corepack enable
+          corepack yarn install --immutable
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap fd-find
+      - run: node __tests__/scratch-cleanup.mjs
