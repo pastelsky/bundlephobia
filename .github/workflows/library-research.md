@@ -27,7 +27,7 @@ sandbox:
   agent:
     version: v0.28.27
 timeout-minutes: 30
-max-turns: 40
+max-turns: 80
 network:
   allowed:
     - defaults
