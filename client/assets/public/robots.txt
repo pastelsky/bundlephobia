@@ -3,8 +3,6 @@ User-agent: *
 Allow: /
 Disallow: /scan-results
 
-# Host
-Host: https://bundlephobia.com
-
 # Sitemaps
 Sitemap: https://bundlephobia.com/sitemap.xml
+
