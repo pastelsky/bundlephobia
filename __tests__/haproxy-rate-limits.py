@@ -4,6 +4,7 @@ import http.client
 from contextlib import closing
 from pathlib import Path
 import socket
+import struct
 import subprocess
 import tempfile
 import time
@@ -80,6 +81,8 @@ class BotRateLimits(unittest.TestCase):
 
     def request(self, ua, number, path='/package/example', method=None, headers=None):
         with closing(http.client.HTTPConnection('127.0.0.1', self.port, timeout=3)) as conn:
+            conn.connect()
+            conn.sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
             conn.request(method or ('POST' if path == '/_events' else 'GET'), path, headers={
                 **(headers or {}),
                 'User-Agent': ua,
@@ -167,7 +170,7 @@ class BotRateLimits(unittest.TestCase):
 
                 for i in range(190 if rotating_ips else 120):
                     self.assertEqual(send(i), 200)
-                for i in range(29):
+                for i in range(59):
                     self.assertEqual(send(i), 429)
                     self.assertEqual(self.retry_after, '60')
                 self.assertEqual(send(240), 429)
@@ -243,7 +246,7 @@ class BotRateLimits(unittest.TestCase):
         self.runtime('clear table client_group_usage')
         self.assertEqual(self.request('ExampleBot/1', ip, '/asset.js'), 200)
         # A small overage can still switch families: no six-hour IP ban yet.
-        for _ in range(30):
+        for _ in range(60):
             self.assertEqual(self.request('ExampleBot/1', ip, '/upstream-busy'), 429)
         self.assertEqual(self.retry_after, '300')
         self.assertEqual(self.request('DifferentBot/1', ip, '/asset.js'), 200)
@@ -268,7 +271,7 @@ class BotRateLimits(unittest.TestCase):
             for ua in agents:
                 self.assertEqual(self.request(ua, 240), 429)
             # Only the first family enters cooldown; the next pool stays available.
-            for i in range(30):
+            for i in range(60):
                 self.assertEqual(self.request(agents[0], i, paths[i % 2]), 429)
             self.assertEqual(self.retry_after, '300')
             self.assertEqual(self.request(agents[0], 240, '/asset.js'), 429)
@@ -297,7 +300,7 @@ class BotRateLimits(unittest.TestCase):
                       [(k.lower(), v) for k, v in self.response_headers])
         for i in range(26):
             self.assertEqual(self.request('Googlebot/2.1', i, '/api/size'), 200)
-        for i in range(30):
+        for i in range(60):
             self.assertEqual(self.request('Googlebot/2.1', i, '/api/size'), 429)
         self.assertEqual(self.retry_after, '300')
         self.assertEqual(self.request('Googlebot/2.1', 240, '/api/size',
@@ -332,7 +335,7 @@ class BotRateLimits(unittest.TestCase):
             for i in range(26):
                 self.assertEqual(self.request(original, i), 200)
             self.assertEqual(self.request(updated, 240), 429)
-            for i in range(30):
+            for i in range(60):
                 self.assertEqual(self.request(updated, i), 429)
             self.assertTrue(295 <= int(self.retry_after) <= 300)
             self.runtime('clear table automated_client_usage')

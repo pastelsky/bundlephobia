@@ -47,7 +47,7 @@ sudo systemctl reload haproxy
 | 3     | HAProxy                    | 190/min across origin routes per bot family, or trusted IP otherwise. Non-bot application traffic additionally allows 120/5m/IP. Stats and telemetry use their own routing and are excluded from this application allowance. |
 | 4     | HAProxy                    | API and package pages: **26/min per pool or additional crawler family**, **100/min admitted across identified bots**. Cache hits count too.                                                                                  |
 | 5     | Server, after cache lookup | Hits return before the build guard. Misses share **10 build admissions/5m/IP** across analysis endpoints and are rejected when HAProxy signals **60 seconds of completed build time/5m/IP** has been spent.                  |
-| 6     | HAProxy                    | Every returned **429** counts toward the responsible family/IP's cooldown: 30/min gives 5m; 120/min gives 15m. Persistent 429s can renew 15m with at most 5m left. Other 4xx do not count.                                   |
+| 6     | HAProxy                    | Every returned **429** counts toward the responsible family/IP's cooldown: 60/5m gives 5m; 150/5m gives 15m. Persistent 429s can renew 15m with at most 5m left. Other 4xx do not count.                                   |
 
 HAProxy owns traffic counters, classification, completed-build-time accounting
 and cooldowns. The server owns cache lookup and one build-admission guard; it has
