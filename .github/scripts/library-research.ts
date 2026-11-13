@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { execFileSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import { request } from '@octokit/request'
 import { z } from 'zod'
@@ -8,6 +9,7 @@ import {
   type Catalog,
 } from '@bundlephobia/service-contracts/recommendations'
 import {
+  collectBundleSize,
   extractGitHubRepository,
   isPlausiblePackageName,
   normalizePackageName,
@@ -247,6 +249,7 @@ export async function verifyPackages(
         const manifest = z
           .object({
             name: z.string(),
+            version: z.string().min(1),
             deprecated: z.string().optional(),
             repository: z.unknown().optional(),
           })
@@ -282,6 +285,16 @@ export async function verifyPackages(
           z.object({ archived: z.boolean() }).parse(await repo.json()).archived
         )
           fail(`Repository archived: ${item.repository}`)
+
+        const bundle = await collectBundleSize(
+          `${item.package}@${manifest.version}`,
+          { fetchImpl },
+        )
+
+        if (!bundle.available || bundle.version !== manifest.version)
+          fail(
+            `Cannot verify a usable bundle for ${item.package}@${manifest.version}; retry before publishing`,
+          )
       }),
     ),
   )
@@ -442,7 +455,18 @@ export async function publishResearch({
       await api('/git/blobs', {
         method: 'POST',
         body: {
-          content: `${JSON.stringify(catalog, null, 2)}\n`,
+          content: execFileSync(
+            'corepack',
+            [
+              'yarn',
+              'workspace',
+              '@bundlephobia/recommendation-automation',
+              'format',
+              '--stdin-filepath',
+              `../${catalogPath}`,
+            ],
+            { input: JSON.stringify(catalog), encoding: 'utf8' },
+          ),
           encoding: 'utf-8',
         },
       }),

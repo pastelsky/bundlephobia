@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "format": "oxfmt --config ../.oxfmtrc.json",
     "test": "node --test scripts/*.test.ts",
     "check": "tsc --project tsconfig.json"
   },
@@ -10,6 +11,7 @@
     "@bundlephobia/service-contracts": "workspace:*",
     "@octokit/request": "^10.0.16",
     "git-url-parse": "^16.1.0",
+    "oxfmt": "^0.63.0",
     "semver": "^7.6.3",
     "validate-npm-package-name": "^8.0.0",
     "zod": "^4.4.2"
