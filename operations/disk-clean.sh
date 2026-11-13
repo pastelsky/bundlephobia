@@ -338,19 +338,19 @@ main() {
 
 with_cleanup_priority() {
     local pressure nice_priority
-    # Use the higher of disk pressure and one-minute load relative to CPU count.
-    pressure=$(awk -v disk="$(get_disk_usage)" -v scratch="$(get_loop_usage)" \
-        -v cores="$(getconf _NPROCESSORS_ONLN)" '
-        { load = 100 * $1 / cores; p = (disk > scratch ? disk : scratch)
-          printf "%.0f\n", (load > p ? load : p) }' /proc/loadavg)
+    # Scale priority strictly based on physical storage pressure (disk or loop scratch space/inodes).
+    # Do NOT elevate priority based on CPU load — doing so causes priority inversion where
+    # heavy compilations trigger cleanup to run with normal priority and compete for CPU/IO.
+    pressure=$(awk -v disk="$(get_disk_usage)" -v scratch="$(get_loop_usage)" '
+        BEGIN { p = (disk > scratch ? disk : scratch); print p }')
 
-    if [ "$pressure" -ge 80 ]; then
+    if [ "$pressure" -ge 85 ]; then
         nice_priority=10
-        [ "$pressure" -ge 90 ] && nice_priority=0
+        [ "$pressure" -ge 95 ] && nice_priority=0
         chrt --other --pid 0 "$$" || { log "Could not set normal CPU scheduling"; return 1; }
         renice -n "$nice_priority" -p "$$" >/dev/null || return 1
         ionice -c 2 -n 4 -p "$$" || return 1
-        log "Cleanup pressure=${pressure}%: normal scheduling, nice=${nice_priority}"
+        log "Storage emergency pressure=${pressure}%: elevated priority, nice=${nice_priority}"
     else
         chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; return 1; }
         ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; return 1; }

@@ -17,14 +17,16 @@
 #      on writes/creation. The automated cleanup script (disk-clean.sh) uses `fd --changed-before`
 #      and `stat %y`, which check mtime, so cleanup age detection operates completely unaffected.
 #
-# 2. commit=60 (Default: 5):
-#    - Default ext4 flushes journal metadata every 5 seconds. Because build workspaces live
-#      for only 10-30 seconds, 5s flushing forces disk syncs for files that are about to be
-#      deleted anyway.
-#    - Extending commit to 60s allows short-lived packages to be extracted, bundled, and
-#      unlinked entirely in page cache, reducing thread I/O wait latency by 35%.
+# 2. commit=15 (Default: 5; Scaled back from 60):
+#    - Default ext4 flushes journal metadata every 5 seconds. Extending commit beyond 5s
+#      allows short-lived ephemeral files to be unlinked in page cache before hitting disk.
+#    - However, an aggressive 60s commit accumulated too much dirty journal metadata during
+#      bulk package extractions or 10,000+ file unlinks, causing massive periodic writeback
+#      bursts that blocked worker threads waiting for journal locks.
+#    - Scaling back to commit=15 smooths out writeback flushes into smaller, manageable increments
+#      while still cutting 5s default journal write churn by 66%.
 #
 # 3. nofail:
 #    - Prevents boot halting if the loop image requires an fsck or is detached during maintenance.
 
-/var/tmp-build.img /tmp/tmp-build ext4 loop,noatime,nodiratime,commit=60,nofail 0 0
+/var/tmp-build.img /tmp/tmp-build ext4 loop,noatime,nodiratime,commit=15,nofail 0 0

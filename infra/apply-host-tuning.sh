@@ -45,8 +45,8 @@ systemctl enable --now zswap-configure.service
 
 # 5. Remount /tmp/tmp-build with ephemeral performance flags
 if mountpoint -q /tmp/tmp-build; then
-    echo "5. Remounting /tmp/tmp-build with noatime,nodiratime,commit=60..."
-    mount -o remount,noatime,nodiratime,commit=60 /tmp/tmp-build
+    echo "5. Remounting /tmp/tmp-build with noatime,nodiratime,commit=15..."
+    mount -o remount,noatime,nodiratime,commit=15 /tmp/tmp-build
 fi
 
 # 6. Verification
