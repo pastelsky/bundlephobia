@@ -47,13 +47,20 @@ References: [Rspack tracing](https://rspack.rs/contribute/development/tracing),
 
 ## Weekly consumer-manifest discovery
 
-The existing `.github/package.json` workspace (`@bundlephobia/recommendation-automation`)
-owns the discovery dependencies and tests. It uses Octokit for GitHub requests,
+The private `packages/library-discovery` workspace (`@bundlephobia/library-discovery`)
+owns the discovery modules, dependencies and tests. The existing recommendation
+automation workspace depends on it. It uses Octokit for GitHub requests,
 `npm-package-arg` for dependency specs, `picomatch` for paths, `git-url-parse` for
 repository identities, Zod for state validation, and `p-throttle`/`p-retry` for API
 pacing and retry budgets. No new service or separate package installation is needed.
 
-The optional JavaScript source in `.github/scripts/library-discovery.mjs` feeds the
+Start with `index.mjs` for the pipeline and `config.json` for its budgets.
+`search.mjs` finds repositories, `repositories.mjs`/`manifests.mjs` read consumer
+evidence, and `candidates.mjs`/`npm.mjs` screen leads. `http.mjs` owns API pacing;
+`catalog.mjs` owns catalogue exclusions and persisted state validation. The workflow
+entry point only calls `cli.mjs`, which reads inputs and writes the report/state.
+
+The optional JavaScript source in `packages/library-discovery/index.mjs` feeds the
 existing `library-research` workflow. It produces leads for the research agent;
 it does not edit the catalogue or decide whether two libraries are substitutes.
 
@@ -80,7 +87,7 @@ are ordered by that growth, then downloads, with one representative per upstream
 repository in a batch. npm requests are paced and 429 responses use bounded retries. All date windows, sample counts,
 budgets and source failures accompany the report.
 
-Budgets and supported search topics live in `.github/library-discovery.config.json`,
+Budgets and supported search topics live in `packages/library-discovery/config.json`,
 separately from discovery logic. Defaults per run are two pages per query, 80 repositories, 12 manifests per repo,
 100 npm checks and 30 surfaced candidates. Search results are interleaved across
 sources; the cursor rotates their starting points. Missing/truncated sources and

@@ -1,7 +1,7 @@
 import { setTimeout as delay } from 'node:timers/promises'
 import pThrottle from 'p-throttle'
 import pRetry, { AbortError } from 'p-retry'
-import config from '../library-discovery.config.json' with { type: 'json' }
+import config from './config.json' with { type: 'json' }
 
 export function createDiscoveryClients({
   githubRequest,

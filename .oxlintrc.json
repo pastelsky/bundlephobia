@@ -88,7 +88,11 @@
   ],
   "overrides": [
     {
-      "files": ["scripts/**", ".github/scripts/**"],
+      "files": [
+        "scripts/**",
+        ".github/scripts/**",
+        "packages/library-discovery/**"
+      ],
       "rules": {
         "complexity": "off",
         "max-depth": "off",

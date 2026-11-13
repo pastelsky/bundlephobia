@@ -2099,20 +2099,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bundlephobia/library-discovery@workspace:*, @bundlephobia/library-discovery@workspace:packages/library-discovery":
+  version: 0.0.0-use.local
+  resolution: "@bundlephobia/library-discovery@workspace:packages/library-discovery"
+  dependencies:
+    "@octokit/request": "npm:^10.0.16"
+    git-url-parse: "npm:^16.1.0"
+    npm-package-arg: "npm:^8.1.5"
+    p-retry: "npm:^9.0.0"
+    p-throttle: "npm:^8.1.1"
+    picomatch: "npm:^4.0.3"
+    validate-npm-package-name: "npm:^8.0.0"
+    zod: "npm:^4.4.2"
+  languageName: unknown
+  linkType: soft
+
 "@bundlephobia/recommendation-automation@workspace:.github":
   version: 0.0.0-use.local
   resolution: "@bundlephobia/recommendation-automation@workspace:.github"
   dependencies:
+    "@bundlephobia/library-discovery": "workspace:*"
     "@bundlephobia/service-contracts": "workspace:*"
     "@octokit/request": "npm:^10.0.16"
     "@types/node": "npm:^24.0.0"
     "@types/semver": "npm:^7.7.1"
     "@types/validate-npm-package-name": "npm:^4.0.2"
     git-url-parse: "npm:^16.1.0"
-    npm-package-arg: "npm:^8.1.5"
-    p-retry: "npm:^9.0.0"
-    p-throttle: "npm:^8.1.1"
-    picomatch: "npm:^4.0.3"
     semver: "npm:^7.6.3"
     typescript: "npm:^7.0.2"
     validate-npm-package-name: "npm:^8.0.0"

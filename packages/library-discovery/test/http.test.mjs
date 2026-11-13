@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import config from '../library-discovery.config.json' with { type: 'json' }
-import { createDiscoveryClients } from './library-discovery-http.mjs'
+import config from '../config.json' with { type: 'json' }
+import { createDiscoveryClients } from '../http.mjs'
 
 const policy = {
   ...config.http,
