@@ -27,7 +27,7 @@ sandbox:
   agent:
     version: v0.28.27
 timeout-minutes: 30
-max-turns: 40
+max-turns: 60
 network:
   allowed:
     - defaults
@@ -133,6 +133,7 @@ Research candidate libraries along two distinct complementary vectors:
 
 Shortlist promising candidates before deep investigation. Batch independent source reads
 and candidate investigations in parallel; do not repeat requests or inspect unrelated PRs.
+Focus discovery on 1-2 strong candidates per run so that investigation, validation, and safeoutput submission finish comfortably within your turn budget.
 Use web-fetch for discovery and npm, and GitHub MCP for maintainer README, API examples
 and releases. Record exact links read. Optional discovery failures must not block verified candidates.
 
