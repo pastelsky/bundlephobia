@@ -46,8 +46,15 @@ apps:
       BUILD_WORKER_MEMORY_LIMIT_BYTES: *build_worker_memory_limit
       INSTALLATION_SERVICE_ENDPOINT: http://127.0.0.1:7003
       # Native allocator tuning to prevent Linux RSS retention & PM2 restart loops:
-      # - MIMALLOC_PURGE_DECOMMITS=1: forces madvise(MADV_DONTNEED) so Linux kernel immediately drops freed RSS
-      # - MALLOC_ARENA_MAX=2: limits glibc heap arena proliferation across worker threads
+      # - MIMALLOC_PURGE_DECOMMITS=1: forces madvise(MADV_DONTNEED) so the Linux kernel immediately
+      #   drops freed RSS back to the OS when builds finish, preventing false-positive PM2 kills.
+      # - MALLOC_ARENA_MAX=2: limits glibc heap arena proliferation across worker threads, curbing
+      #   memory fragmentation while maintaining multi-threaded performance.
+      #
+      # Note: MIMALLOC_PURGE_DELAY=0 and MALLOC_TRIM_THRESHOLD_ were empirically evaluated and
+      # intentionally omitted: setting PURGE_DELAY=0 forced synchronous page decommits on every single
+      # heap chunk during active multi-chunk compilation, triggering severe kernel madvise syscall
+      # storms and CPU spikes. Leaving mimalloc's default purge delay allows decommits to batch cleanly.
       MIMALLOC_PURGE_DECOMMITS: '1'
       MALLOC_ARENA_MAX: '2'
       MEMORY_DIAGNOSTICS_SERVICE: build-service
