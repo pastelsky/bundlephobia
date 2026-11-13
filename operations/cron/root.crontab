@@ -14,8 +14,8 @@
 # PM2 watchdog — every minute; silent when healthy
 */1 * * * * bash /var/www/autorestart.sh >> /dev/null 2>&1
 
-# Disk + loop device cleanup — every 8 minutes
-*/8 * * * * bash /var/www/disk-clean.sh
+# Disk + loop device cleanup — every 8 minutes with cgroups v2 low I/O & CPU priority
+*/8 * * * * systemd-run --quiet --scope -p IOWeight=10 -p CPUWeight=20 bash /var/www/disk-clean.sh
 
 # Bundlephobia webpack/build cache — every 12 hours (fast to clear, safe)
 0 */12 * * * chrt --idle 0 ionice -c 3 rm -rf /var/www/bundlephobia/node_modules/.cache

@@ -10,7 +10,8 @@ MAIN_THRESHOLD=70          # % main disk usage before cleanup triggers
 # Thresholds apply to whichever is higher: allocated bytes or used inodes.
 LOOP_SOFT_THRESHOLD=60
 LOOP_HARD_THRESHOLD=80
-LOOP_TARGET_USAGE=$((LOOP_SOFT_THRESHOLD * 2 / 3))
+# Target 55% to prune gently without triggering a massive multi-gigabyte unlink storm down to 40%
+LOOP_TARGET_USAGE="${LOOP_TARGET_USAGE:-55}"
 ORPHAN_MIN_AGE_SECONDS=600
 BUN_CACHE_MAX_AGE_DAYS="${BUN_CACHE_MAX_AGE_DAYS:-1}"
 VICTORIAMETRICS_DATA_DIR="/var/lib/bundlephobia-victoriametrics"
@@ -164,6 +165,9 @@ evict_oldest_bun_cache_entries() {
         evicted_count=$((evicted_count + ${#batch[@]}))
         batch=()
 
+        # Yield I/O and CPU to live build workers between batches
+        sleep 0.02
+
         loop_usage=$(get_loop_usage)
         [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ] || break
     done < <(
@@ -255,7 +259,6 @@ cleanup_loop_device() {
         timed_cleanup "Bun age pruning" prune_bun_cache
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -lt "$LOOP_SOFT_THRESHOLD" ]; then
-            timed_cleanup "Loop-device trim" trim_loop_device
             log "Loop pressure after age pruning: ${loop_usage}%"
             return
         fi
@@ -283,7 +286,6 @@ cleanup_loop_device() {
             log "Cleared complete bun cache"
         fi
 
-        timed_cleanup "Loop-device trim" trim_loop_device
         loop_usage=$(get_loop_usage)
         log "Loop pressure after oldest-first cleanup: ${loop_usage}%"
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
