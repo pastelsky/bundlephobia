@@ -392,7 +392,7 @@
         "weight": 5
       }
     ],
-    "similar": ["minisearch", "flexsearch", "fuse.js", "lunr"]
+    "similar": ["minisearch", "flexsearch", "fuse.js", "lunr", "@orama/orama"]
   },
   "fetch-polyfill": {
     "name": "Fetch polyfills",
@@ -1840,5 +1840,28 @@
       { "tag": "sdk", "weight": 5 }
     ],
     "similar": ["@google/genai", "openai", "@anthropic-ai/sdk"]
+  },
+  "javascript-bundlers": {
+    "name": "JavaScript and TypeScript bundlers",
+    "tags": [
+      { "tag": "bundler", "weight": 15 },
+      { "tag": "bundle", "weight": 12 },
+      { "tag": "javascript", "weight": 7 },
+      { "tag": "typescript", "weight": 7 },
+      { "tag": "build", "weight": 5 },
+      { "tag": "web", "weight": 5 }
+    ],
+    "similar": ["rolldown", "@rspack/core"]
+  },
+  "browser-indexeddb": {
+    "name": "Browser IndexedDB wrappers",
+    "tags": [
+      { "tag": "indexeddb", "weight": 15 },
+      { "tag": "browser", "weight": 10 },
+      { "tag": "database", "weight": 9 },
+      { "tag": "storage", "weight": 7 },
+      { "tag": "offline", "weight": 4 }
+    ],
+    "similar": ["idb", "dexie"]
   }
 }
