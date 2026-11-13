@@ -200,7 +200,12 @@ evict_oldest_bun_cache_entries() {
 
 trim_loop_device() {
     local trim_output
-    if trim_output=$(fstrim -v /tmp/tmp-build 2>&1); then
+    local -a trim_cmd=(fstrim -v /tmp/tmp-build)
+    if command -v ionice >/dev/null 2>&1; then
+        trim_cmd=(ionice -c 3 nice -n 19 "${trim_cmd[@]}")
+    fi
+
+    if trim_output=$("${trim_cmd[@]}" 2>&1); then
         log "Trimmed freed loop-image blocks: ${trim_output}"
     else
         log "WARNING: Could not trim freed loop-image blocks: ${trim_output}"
@@ -259,6 +264,7 @@ cleanup_loop_device() {
         timed_cleanup "Bun age pruning" prune_bun_cache
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -lt "$LOOP_SOFT_THRESHOLD" ]; then
+            timed_cleanup "Loop-device trim" trim_loop_device
             log "Loop pressure after age pruning: ${loop_usage}%"
             return
         fi
@@ -286,6 +292,7 @@ cleanup_loop_device() {
             log "Cleared complete bun cache"
         fi
 
+        timed_cleanup "Loop-device trim" trim_loop_device
         loop_usage=$(get_loop_usage)
         log "Loop pressure after oldest-first cleanup: ${loop_usage}%"
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
