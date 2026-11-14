@@ -1,15 +1,4 @@
-import picomatch from 'picomatch'
-
-const ignoredPath = picomatch([
-  '**/node_modules/**',
-  '**/vendor/**',
-  '**/examples/**',
-  '**/fixtures/**',
-  '**/tests/**',
-  '**/docs/**',
-  '**/storybook/**',
-  '**/.*/**',
-])
+import { matchesGlob } from 'node:path'
 
 const webPath = /(?:^|\/)(?:apps?|web|frontend|client|ui|site)(?:\/|$)/
 
@@ -24,7 +13,10 @@ export function selectManifestPaths(tree, source, options, notes) {
           entry.type === 'blob' &&
           (entry.path === 'package.json' ||
             entry.path.endsWith('/package.json')) &&
-          !ignoredPath(entry.path) &&
+          !matchesGlob(
+            entry.path,
+            '**/{node_modules,vendor,examples,fixtures,tests,docs,storybook,.*}/**',
+          ) &&
           !serverPath.test(entry.path),
       )
       .map(entry => [entry.path, entry]),

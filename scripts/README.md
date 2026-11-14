@@ -47,72 +47,50 @@ References: [Rspack tracing](https://rspack.rs/contribute/development/tracing),
 
 ## Weekly consumer-manifest discovery
 
-The private `packages/library-discovery` workspace (`@bundlephobia/library-discovery`)
-owns the discovery modules, dependencies and tests. The existing recommendation
-automation workspace depends on it. It uses Octokit for GitHub requests,
-`npm-package-arg` for dependency specs, `picomatch` for paths, `git-url-parse` for
-repository identities, Zod for state validation, and `p-throttle`/`p-retry` for API
-pacing and retry budgets. No new service or separate package installation is needed.
+The private `packages/library-discovery` workspace feeds leads to the existing
+weekly research agent, which verifies browser use, category fit and tradeoffs.
+It does not publish recommendations itself. Run `yarn test:recommendations` for
+collector and publisher tests.
 
-Start with `index.mjs` for the pipeline and `config.json` for its budgets.
-`search.mjs` finds repositories, `repositories.mjs`/`manifests.mjs` read consumer
-evidence, and `candidates.mjs`/`npm.mjs` screen leads. `http.mjs` owns API pacing;
-`catalog.mjs` owns catalogue exclusions and persisted state validation. The workflow
-runs `cli.mjs` directly to read inputs and write the report/state.
+Start with `index.mjs` for the pipeline and `config.json` for budgets/topics.
+`search.mjs` finds repositories; `repositories.mjs`, `paths.mjs` and `manifests.mjs`
+read pinned consumer evidence; `candidates.mjs` and `npm.mjs` screen and rank leads.
+`catalog.mjs` validates state and `http.mjs` handles API pacing/retries. The workflow
+runs `cli.mjs` directly. Dependencies belong to this workspace: Octokit,
+`npm-package-arg`, `git-url-parse`, Zod, `p-throttle` and `p-retry`.
 
-The optional JavaScript source in `packages/library-discovery/index.mjs` feeds the
-existing `library-research` workflow. It produces leads for the research agent;
-it does not edit the catalogue or decide whether two libraries are substitutes.
+Each run rotates approved catalogue seeds and interleaves consumer-code searches
+with framework-topic searches. Repository metadata excludes private, inactive,
+low-star, forked and archived repositories. A private manifest with a web build/dev
+script identifies an app; framework identities come from shared comparison data.
+Selected internal workspaces are followed, while obvious server/test/example paths
+are excluded. This is a bounded sample, not proof of production or browser use.
 
-Each successful run rotates six approved catalogue packages as reverse-search
-seeds and also searches Vue, Svelte, Solid, Lit, React and web-app topics. It reads
-pinned manifests from active, non-fork, non-archived repositories with at least
-100 stars. The app heuristic requires a private manifest and a web build/dev script
-or a framework from the existing shared comparison groups. It follows loaded internal workspaces, includes development
-dependencies and rejects obvious server/example/test paths. This is a bounded,
-incomplete sample; framework topics and manifests cannot prove browser execution.
+Candidates need two distinct consumer owners other than their upstream owner,
+a non-deprecated npm identity and minimum download usage. Runtime declarations
+are prioritized; dev-only candidates need a published browser-support hint.
+There is no package/scope denylist: the research agent excludes tooling/server-only
+usage. Ranking compares two complete 28-day npm download periods, then downloads,
+with one package per upstream per batch. Downloads include indirect installs and
+automation; growth is not independent adoption velocity.
 
-There is no package-name or scope denylist. Runtime declarations are prioritized
-before npm checks. A dev-only candidate remains eligible when its published
-metadata declares browser support; this is an explicit hint for research, not
-proof of browser execution. The research agent owns the final tooling/server
-classification. Framework identities come from the shared comparison data.
+Approved, pending, comparison-group and previously surfaced names are excluded.
+Repo-memory persists the cursor and delivered names in `state.json` on
+`memory/library-discovery`. Overflow stays eligible; malformed history fails
+rather than resetting. State advances only after collection; a failed memory push
+can replay a batch. Removing a surfaced name explicitly allows reconsideration.
+Maintainer rejection feedback remains part of the existing research PR flow.
 
-A candidate needs declarations under two different owners other than the package
-repository owner, a non-deprecated npm identity, and at least 1,000 estimated
-weekly downloads (last 28 days divided by four). These are screening thresholds,
-not acceptance criteria. npm growth compares the last two complete 28-day periods;
-it includes indirect installs and automation and is not adoption velocity. Leads
-are ordered by that growth, then downloads, with one representative per upstream
-repository in a batch. npm requests are paced and 429 responses use bounded retries. All date windows, sample counts,
-budgets and source failures accompany the report.
+Reports include windows, sample counts, budgets and unavailable evidence. Truncated
+sources are skipped; exhausted npm rate limits defer remaining candidates. Code
+search may need cross-repository credentials; topic searches provide a fallback.
+This optional source can fail without blocking other research vectors. There is
+no depth-two crawl, PageRank or historical adoption backfill.
 
-Budgets and supported search topics live in `packages/library-discovery/config.json`,
-separately from discovery logic. Defaults per run are two pages per query, 80 repositories, 12 manifests per repo,
-100 npm checks and 30 surfaced candidates. Search results are interleaved across
-sources; the cursor rotates their starting points. Missing/truncated sources and
-budget limits are reported, never interpreted as negative quality evidence.
-There is no depth-two crawl, PageRank, LLM scoring or historical manifest backfill.
-
-Approved catalogue entries, broad comparison-group members, the pending catalogue
-and previously surfaced names are excluded. The cursor and surfaced names persist
-in `state.json` on the workflow-managed `memory/library-discovery` branch. State
-advances only after collection completes; only the delivered batch is marked
-surfaced, so overflow remains eligible. A failed workflow/memory push can replay a
-batch; it cannot erase existing history. Removing a name from state explicitly
-allows reconsideration. Reviewers' rejection instructions still apply through
-the existing research PR feedback flow, including leads from other sources.
-
-Preview without writing memory or publishing anything:
+Preview without writing memory or publishing:
 
 ```sh
 NODE_USE_ENV_PROXY=1 GITHUB_TOKEN="$(gh auth token)" GITHUB_REPOSITORY=pastelsky/bundlephobia \
   LIBRARY_DISCOVERY_OUTPUT=/tmp/library-discovery-preview.json \
   node packages/library-discovery/cli.mjs --dry-run
 ```
-
-Run `yarn test:recommendations` for collector and publisher tests. The scheduled
-workflow uses the existing focused automation workspace, GitHub API client and
-repo-memory persistence; its other research sources remain available if this
-source fails. GitHub code search may require a credential with cross-repository
-code-search access; failures are reported and framework-topic searches continue.

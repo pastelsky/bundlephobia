@@ -1,69 +1,51 @@
 export function eligibleCandidates(observations, known, minimumOwners) {
-  const packages = new Map()
+  const packages = Map.groupBy(
+    observations.filter(item => !known.has(item.package)),
+    item => item.package,
+  )
 
-  for (const observation of observations) {
-    if (known.has(observation.package)) continue
+  return Array.from(packages, ([name, declarations]) => {
+    const repositories = Map.groupBy(declarations, item => item.repo)
 
-    if (!packages.has(observation.package))
-      packages.set(observation.package, new Map())
-    const consumers = packages.get(observation.package)
-    const previous = consumers.get(observation.repo)
+    const consumers = Array.from(
+      repositories.values(),
+      declarations =>
+        declarations.findLast(item => item.runtime) ?? declarations[0],
+    )
 
-    if (!previous || observation.runtime)
-      consumers.set(observation.repo, observation)
-  }
-
-  const eligible = packages
-    .entries()
-    .map(([name, consumerMap]) => {
-      const consumers = [...consumerMap.values()]
-      const owners = new Set(consumers.map(consumer => consumer.owner))
-
-      const runtimeOwners = new Set(
+    return {
+      package: name,
+      consumers,
+      ownerCount: new Set(consumers.map(item => item.owner)).size,
+      runtimeOwnerCount: new Set(
         consumers
           .values()
-          .filter(consumer => consumer.runtime)
-          .map(consumer => consumer.owner),
-      )
-
-      return {
-        package: name,
-        consumers,
-        ownerCount: owners.size,
-        runtimeOwnerCount: runtimeOwners.size,
-      }
-    })
+          .filter(item => item.runtime)
+          .map(item => item.owner),
+      ).size,
+    }
+  })
     .filter(candidate => candidate.ownerCount >= minimumOwners)
-    .toArray()
     .sort(
       (a, b) =>
         b.runtimeOwnerCount - a.runtimeOwnerCount ||
         b.ownerCount - a.ownerCount ||
         a.package.localeCompare(b.package),
     )
-
-  return eligible
 }
 
 export function selectCandidates(qualified, limit) {
-  qualified.sort(
+  const ranked = qualified.toSorted(
     (a, b) =>
       (b.downloadGrowth ?? 0) - (a.downloadGrowth ?? 0) ||
       b.weeklyDownloads - a.weeklyDownloads ||
       a.package.localeCompare(b.package),
   )
-  const candidates = []
-  const upstreams = new Set()
 
-  for (const candidate of qualified) {
-    const upstream = candidate.upstream ?? candidate.package
+  const libraries = Map.groupBy(
+    ranked,
+    candidate => candidate.upstream ?? candidate.package,
+  )
 
-    if (upstreams.has(upstream)) continue
-    upstreams.add(upstream)
-    candidates.push(candidate)
-
-    if (candidates.length >= limit) break
-  }
-
-  return candidates
+  return Array.from(libraries.values(), packages => packages[0]).slice(0, limit)
 }

@@ -2108,7 +2108,6 @@ __metadata:
     npm-package-arg: "npm:^8.1.5"
     p-retry: "npm:^9.0.0"
     p-throttle: "npm:^8.1.1"
-    picomatch: "npm:^4.0.3"
     validate-npm-package-name: "npm:^8.0.0"
     zod: "npm:^4.4.2"
   languageName: unknown

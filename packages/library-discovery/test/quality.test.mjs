@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { discoverLibraries } from '../index.mjs'
+import { eligibleCandidates } from '../candidates.mjs'
 import { catalog, downloads, now, limits, fakeSources } from './fixtures.mjs'
 
 test('multiple repositories under one owner do not establish independent consensus', async () => {
@@ -109,4 +110,26 @@ test('dev-only declarations need a browser hint; the same package is eligible wh
   assert.ok(browserDev)
   assert.equal(browserDev.runtimeConsumerCount, 0)
   assert.equal(browserDev.browserSupportHint, true)
+})
+
+test('duplicate manifests count once per repo and retain runtime evidence', () => {
+  const runtime = {
+    package: 'browser',
+    repo: 'alpha/app',
+    owner: 'alpha',
+    runtime: true,
+  }
+
+  const dev = { ...runtime, runtime: false }
+  const other = { ...dev, repo: 'beta/app', owner: 'beta' }
+
+  const [candidate] = eligibleCandidates(
+    [dev, runtime, dev, other],
+    new Set(),
+    2,
+  )
+
+  assert.deepEqual(candidate.consumers, [runtime, other])
+  assert.equal(candidate.ownerCount, 2)
+  assert.equal(candidate.runtimeOwnerCount, 1)
 })

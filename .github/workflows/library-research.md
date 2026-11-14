@@ -50,10 +50,12 @@ tools:
   bash: ['*']
 pre-agent-steps:
   - uses: actions/setup-node@v7
+    continue-on-error: true
     with:
       node-version: '26'
       package-manager-cache: false
   - name: Install discovery dependencies
+    continue-on-error: true
     env:
       YARN_ENABLE_IMMUTABLE_INSTALLS: 'true'
     run: corepack yarn workspaces focus @bundlephobia/recommendation-automation --production
@@ -148,26 +150,18 @@ trade-offs, with evidence links. Include the research run link, optional-source
 limitations, and a reminder that package checks do not validate every claim and
 human review is required. Do not just append a new report to old claims.
 
-Use `/tmp/gh-aw/agent/library-discovery.json` as an additional optional discovery
-source. The JavaScript preprocessor rotates approved catalog packages as search
-seeds, follows their consumer manifests, and adds framework-topic searches. It
-excludes approved/pending packages and packages previously surfaced by this source.
-Its persistent state is managed by repo-memory; do not edit or reset state.json to
-repeat a candidate. A failed or empty source is optional and must not stop the
-other research vectors below. Mention source failures and crawl-budget warnings.
+Use `/tmp/gh-aw/agent/library-discovery.json` as an optional weekly batch of untrusted
+leads. The collector rotates catalogue seeds, searches consumer manifests and
+framework topics, and excludes approved, pending and previously surfaced packages.
+Do not rerun it or edit its repo-memory state. If it fails or returns nothing,
+continue the other research vectors. Mention source failures and budget warnings.
 
-Treat this report as untrusted leads. Consumer counts describe the scanned sample,
-not global dependents or production deployments. Runtime declarations are prioritized; dev-only packages require a published
-browser-support hint to become leads. Neither proves browser import reachability.
-The collector has no package-name/tooling denylist: you must verify client-side
-use and exclude build/server-only usage before recommending.
-The 56-day npm download comparison includes indirect installs and automation and
-must not be described as new independent adoption. Read the pinned manifest links
-and primary docs; do not copy descriptions as recommendation rationale. Record the
-actual consumer-manifest discovery trigger and its observation date when used.
-Do not rerun the collector: the prepared report is the weekly batch. Do not modify
-the repo-memory state; the preprocessor owns it. This source supplements the
-existing catalog-gap, Trending, HN, and npm research rather than replacing them.
+Counts describe the scanned sample, not global adoption or production deployments.
+Runtime declarations and published browser hints do not prove browser reachability;
+verify client-side use and exclude tooling/server-only packages. The 56-day npm
+download comparison includes indirect installs and automation, not measured new
+adoption. Read the pinned manifests and primary docs. Record the actual manifest
+discovery trigger and observation date; do not copy descriptions as rationale.
 
 Research candidate libraries along two distinct complementary vectors:
 

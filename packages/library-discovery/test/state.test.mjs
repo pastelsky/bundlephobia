@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { discoverLibraries } from '../index.mjs'
+import { selectCandidates } from '../candidates.mjs'
 import { catalogPackages, readState, rotate } from '../catalog.mjs'
 import { catalog, downloads, now, limits, fakeSources } from './fixtures.mjs'
 
@@ -105,4 +106,17 @@ test('a batch includes one representative per upstream library repository', asyn
 
   assert.equal(result.report.candidates.length, 1)
   assert.equal(result.state.surfaced.length, 1)
+})
+
+test('candidate selection keeps the highest-ranked upstream representative and respects zero budget', () => {
+  const candidates = [
+    { package: 'older', upstream: 'shared', downloadGrowth: 0 },
+    { package: 'rising', upstream: 'shared', downloadGrowth: 1 },
+  ]
+
+  assert.deepEqual(
+    selectCandidates(candidates, 2).map(item => item.package),
+    ['rising'],
+  )
+  assert.deepEqual(selectCandidates(candidates, 0), [])
 })
