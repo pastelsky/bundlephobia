@@ -1,10 +1,5 @@
 export const catalog = { search: { similar: ['existing'] } }
 
-export const downloads = Array.from({ length: 56 }, (_, i) => ({
-  day: new Date(Date.UTC(2026, 8, 19 + i)).toISOString().slice(0, 10),
-  downloads: i < 28 ? 100 : 200,
-}))
-
 export const now = new Date('2026-11-14T12:00:00Z')
 
 export const limits = { seeds: 1, searchPages: 1, repositories: 3 }
@@ -75,17 +70,5 @@ export function fakeSources() {
     throw new Error(`Unexpected GitHub call: ${route}`)
   }
 
-  const registry = async url => {
-    if (url.includes('/downloads/range/')) return { downloads }
-    const name = decodeURIComponent(url.split('/').at(-2))
-
-    return {
-      name,
-      version: '1.0.0',
-      description: name === 'eslint' ? 'ESLint tooling' : 'Browser utility',
-      repository: `https://github.com/maintainer/${name}`,
-    }
-  }
-
-  return { github, registry, excludedPackages: ['react'] }
+  return { github, excludedPackages: ['react'] }
 }

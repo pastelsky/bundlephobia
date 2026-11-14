@@ -110,7 +110,7 @@ export async function loadManifests(github, repository, entries) {
   return manifests
 }
 
-export function observeManifests(manifests, { repo, sha, frameworks }) {
+export function observeManifests(manifests, { repo, sha, stars, frameworks }) {
   const internal = new Map(
     [...manifests].map(([path, manifest]) => [manifest.name, path]),
   )
@@ -131,24 +131,21 @@ export function observeManifests(manifests, { repo, sha, frameworks }) {
       'optionalDependencies',
     ])
 
-    for (const name of dependencyNames(manifest)) {
+    for (const name of runtime) {
       if (internal.has(name)) queue.add(internal.get(name))
       else
         observations.push({
           package: name,
-          runtime: runtime.has(name),
+          runtime: true,
           repo,
+          stars,
           owner: repo.split('/')[0].toLowerCase(),
           manifest: `https://github.com/${repo}/blob/${sha}/${path}`,
         })
     }
 
     // Workspace specs deliberately aren't registry packages; follow the loaded local manifests instead.
-    for (const field of [
-      'dependencies',
-      'devDependencies',
-      'optionalDependencies',
-    ]) {
+    for (const field of ['dependencies', 'optionalDependencies']) {
       for (const name of Object.keys(manifest[field] ?? {}))
         if (internal.has(name)) queue.add(internal.get(name))
     }

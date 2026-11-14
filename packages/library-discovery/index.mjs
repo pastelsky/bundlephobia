@@ -2,11 +2,6 @@ import { z } from 'zod'
 import validatePackageName from 'validate-npm-package-name'
 import defaults from './config.json' with { type: 'json' }
 import { findRepositories, scanRepositories, rotate } from './search.mjs'
-import {
-  eligibleCandidates,
-  selectCandidates,
-  checkNpmCandidates,
-} from './npm.mjs'
 
 const stateSchema = z
   .object({
@@ -32,7 +27,6 @@ const DAY = 86_400_000
 
 export async function discoverLibraries({
   github,
-  registry,
   catalog,
   pendingCatalog = {},
   excludedPackages = [],
@@ -57,8 +51,6 @@ export async function discoverLibraries({
     new Date(now.getTime() - offset * DAY).toISOString().slice(0, 10)
 
   options.activeSince = date(options.activeDays)
-  options.downloadStart = date(56)
-  options.downloadEnd = date(1)
   const notes = []
 
   const { pools, repositories } = await findRepositories(
@@ -76,20 +68,8 @@ export async function discoverLibraries({
     notes,
   )
 
-  const eligible = eligibleCandidates(
-    observations,
-    known,
-    options.minimumOwners,
-  )
-
-  const { qualified, packagesCheckedOnNpm } = await checkNpmCandidates(
-    registry,
-    eligible,
-    options,
-    notes,
-  )
-
-  const candidates = selectCandidates(qualified, options.candidates)
+  const eligible = rankCandidates(observations, known, options.minimumOwners)
+  const candidates = eligible.slice(0, options.candidates)
 
   const report = {
     observedAt: now.toISOString(),
@@ -97,7 +77,6 @@ export async function discoverLibraries({
     seeds,
     windows: {
       repositoryActivitySince: options.activeSince,
-      npmDownloads: { start: options.downloadStart, end: options.downloadEnd },
     },
     limits: options,
     coverage: {
@@ -107,12 +86,11 @@ export async function discoverLibraries({
         .size,
       manifestObservations: observations.length,
       eligiblePackages: eligible.length,
-      packagesCheckedOnNpm,
     },
     notes,
     candidates,
     interpretation:
-      'Sampled manifest declarations, not global dependents, production use or browser import reachability. npm download growth includes indirect installs and automation; it is not measured adoption velocity.',
+      'Sampled manifest declarations ranked by sum(log2(1 + maximum repository stars per runtime consumer owner)). Distinct owners do not prove independent adoption, production use or browser reachability. The research agent verifies package quality and author affiliation.',
   }
 
   return {
@@ -128,4 +106,35 @@ export async function discoverLibraries({
       ].sort(),
     },
   }
+}
+
+export function rankCandidates(observations, known, minimumOwners) {
+  const packages = Map.groupBy(
+    observations.filter(item => item.runtime && !known.has(item.package)),
+    item => item.package,
+  )
+
+  return Array.from(packages, ([name, declarations]) => {
+    const repositories = Map.groupBy(declarations, item => item.repo)
+
+    const consumers = Array.from(
+      repositories.values(),
+      declarations => declarations[0],
+    )
+
+    const owners = Map.groupBy(consumers, item => item.owner)
+
+    const authorityScore = Array.from(owners.values(), repositories =>
+      Math.log2(1 + Math.max(...repositories.map(item => item.stars))),
+    ).reduce((sum, contribution) => sum + contribution, 0)
+
+    return { package: name, authorityScore, ownerCount: owners.size, consumers }
+  })
+    .filter(candidate => candidate.ownerCount >= minimumOwners)
+    .sort(
+      (a, b) =>
+        b.authorityScore - a.authorityScore ||
+        b.ownerCount - a.ownerCount ||
+        a.package.localeCompare(b.package),
+    )
 }

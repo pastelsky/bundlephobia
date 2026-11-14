@@ -1,4 +1,5 @@
-import { createDiscoveryClients } from './http.mjs'
+import pThrottle from 'p-throttle'
+import config from './config.json' with { type: 'json' }
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { request } from '@octokit/request'
@@ -18,10 +19,22 @@ const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
 
 const githubRequest = request.defaults({
   headers: { authorization: `Bearer ${process.env.GITHUB_TOKEN}` },
-  request: { timeout: 20000 },
+  request: { timeout: config.requestTimeoutMs },
 })
 
-const { github, registry } = createDiscoveryClients({ githubRequest })
+const codeSearch = pThrottle({
+  limit: 1,
+  interval: config.codeSearchIntervalMs,
+  strict: true,
+})(githubRequest)
+
+const github = async (route, parameters) =>
+  (
+    await (route === 'GET /search/code' ? codeSearch : githubRequest)(
+      route,
+      parameters,
+    )
+  ).data
 
 let state
 
@@ -53,7 +66,6 @@ const excludedPackages = Object.values(groups).flatMap(group => group.packages)
 
 const result = await discoverLibraries({
   github,
-  registry,
   catalog,
   pendingCatalog,
   excludedPackages,

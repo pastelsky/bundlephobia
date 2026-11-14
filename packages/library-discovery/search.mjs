@@ -111,6 +111,12 @@ async function scanRepository(github, source, options, notes) {
   const metadata = await github('GET /repos/{owner}/{repo}', { owner, repo })
 
   if (
+    !Number.isSafeInteger(metadata.stargazers_count) ||
+    metadata.stargazers_count < 0
+  )
+    throw new Error(`Invalid repository star count: ${source.repo}`)
+
+  if (
     metadata.private ||
     metadata.fork ||
     metadata.archived ||
@@ -148,6 +154,7 @@ async function scanRepository(github, source, options, notes) {
   return observeManifests(manifests, {
     repo: source.repo,
     sha: commit.sha,
+    stars: metadata.stargazers_count,
     frameworks: options.frameworks,
   })
 }

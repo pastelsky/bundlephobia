@@ -3,19 +3,11 @@
   "searchPages": 2,
   "repositories": 80,
   "manifestsPerRepository": 12,
-  "metadata": 100,
   "candidates": 30,
   "minimumOwners": 2,
-  "minimumWeeklyDownloads": 1000,
   "minimumStars": 100,
   "activeDays": 90,
   "topics": ["vue", "svelte", "solidjs", "lit", "react", "webapp"],
-  "http": {
-    "npmIntervalMs": 2100,
-    "codeSearchIntervalMs": 6500,
-    "retries": 2,
-    "retryMinTimeoutMs": 5000,
-    "maxRetryTimeMs": 60000,
-    "requestTimeoutMs": 20000
-  }
+  "codeSearchIntervalMs": 6500,
+  "requestTimeoutMs": 20000
 }

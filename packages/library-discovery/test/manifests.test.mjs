@@ -65,6 +65,7 @@ test('optional workspace links are followed once even with cycles', () => {
   const observed = observeManifests(manifests, {
     repo: 'owner/app',
     sha: 'commit',
+    stars: 1000,
     frameworks: [],
   })
 

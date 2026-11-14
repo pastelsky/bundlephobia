@@ -156,12 +156,15 @@ framework topics, and excludes approved, pending and previously surfaced package
 Do not rerun it or edit its repo-memory state. If it fails or returns nothing,
 continue the other research vectors. Mention source failures and budget warnings.
 
-Counts describe the scanned sample, not global adoption or production deployments.
-Runtime declarations and published browser hints do not prove browser reachability;
-verify client-side use and exclude tooling/server-only packages. The 56-day npm
-download comparison includes indirect installs and automation, not measured new
-adoption. Read the pinned manifests and primary docs. Record the actual manifest
-discovery trigger and observation date; do not copy descriptions as rationale.
+This report is consumed in this cron run; saved state only prevents repeats and
+rotates searches on later runs. Ranking sums log2(1 + stars) from the strongest
+runtime consumer repository per owner, requiring at least two owners. Counts and
+scores describe this sample, not global adoption, trendiness or production use. The collector performs no npm quality,
+browser-support or author-affiliation checks: verify npm metadata and primary
+docs, exclude tooling/server-only usage, and confirm consumers are independent of
+the package author before recommending. Runtime declarations do not prove
+browser reachability. Read the pinned manifests and record the actual discovery
+trigger and observation date; do not copy descriptions as rationale.
 
 Research candidate libraries along two distinct complementary vectors:
 

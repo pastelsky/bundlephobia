@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { discoverLibraries, readState, catalogPackages } from '../index.mjs'
+import {
+  discoverLibraries,
+  readState,
+  catalogPackages,
+  rankCandidates,
+} from '../index.mjs'
 import { rotate } from '../search.mjs'
-import { catalog, downloads, now, limits, fakeSources } from './fixtures.mjs'
+import { catalog, now, limits, fakeSources } from './fixtures.mjs'
 
 test('state corruption fails rather than silently allowing repeated discoveries', () => {
   assert.throws(() => readState({ version: 2, cursor: 0, surfaced: [] }))
@@ -37,10 +42,9 @@ test('catalog, pending and surfaced names are excluded; repeat collection yields
     result.report.candidates[0].consumers[0].manifest,
     /\/blob\/pinned-commit\/package.json$/,
   )
-  assert.deepEqual(result.report.windows.npmDownloads, {
-    start: '2026-09-19',
-    end: '2026-11-13',
-  })
+  assert.equal(result.report.windows.repositoryActivitySince, '2026-08-16')
+  assert.equal(result.report.candidates[0].consumers[0].stars, 1000)
+  assert.equal(result.report.candidates[0].authorityScore, 2 * Math.log2(1001))
   assert.deepEqual(result.state.surfaced, ['fresh'])
 
   const repeated = await discoverLibraries({
@@ -83,30 +87,6 @@ test('candidate delivery budgets do not consume unseen overflow', async () => {
   )
 })
 
-test('a batch includes one representative per upstream library repository', async () => {
-  const sources = fakeSources()
-
-  const registry = async url =>
-    url.includes('/downloads/')
-      ? { downloads }
-      : {
-          name: decodeURIComponent(url.split('/').at(-2)),
-          version: '1.0.0',
-          repository: 'https://github.com/maintainer/shared-library',
-        }
-
-  const result = await discoverLibraries({
-    ...sources,
-    registry,
-    catalog,
-    now,
-    limits,
-  })
-
-  assert.equal(result.report.candidates.length, 1)
-  assert.equal(result.state.surfaced.length, 1)
-})
-
 test('unavailable optional code search falls back to topic discovery with explicit notes', async () => {
   const sources = fakeSources()
   const original = sources.github
@@ -133,7 +113,6 @@ test('complete source failure does not return a state update', async () => {
       github: async () => {
         throw new Error('offline')
       },
-      registry: async () => null,
       catalog,
       now,
       limits,
@@ -142,7 +121,7 @@ test('complete source failure does not return a state update', async () => {
   )
 })
 
-test('truncated trees and wrong download periods are explicit unavailable evidence', async () => {
+test('truncated trees are explicit unavailable evidence', async () => {
   const sources = fakeSources()
   const original = sources.github
 
@@ -165,51 +144,78 @@ test('truncated trees and wrong download periods are explicit unavailable eviden
       note.includes('Truncated repository tree'),
     ),
   )
+})
 
-  const registry = async url =>
-    url.includes('/downloads/')
-      ? {
-          downloads: downloads.map((day, i) => ({
-            ...day,
-            day: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
-          })),
-        }
-      : sources.registry(url)
+test('authority uses the strongest repo per owner and requires two owners regardless of stars', () => {
+  const observation = (name, repo, stars, runtime = true) => ({
+    package: name,
+    repo,
+    owner: repo.split('/')[0],
+    stars,
+    runtime,
+  })
 
-  const stale = await discoverLibraries({
+  const strong = observation('strong', 'alpha/app', 100000)
+
+  const ranked = rankCandidates(
+    [
+      strong,
+      { ...strong, runtime: false },
+      observation('strong', 'alpha/other', 1000),
+      observation('strong', 'beta/app', 100),
+      observation('modest', 'alpha/app', 1000),
+      observation('modest', 'beta/app', 1000),
+      observation('one-owner', 'alpha/app', 1000000),
+      observation('one-owner', 'alpha/other', 1000000),
+      observation('dev-only', 'alpha/app', 1000000, false),
+      observation('dev-only', 'beta/app', 1000000, false),
+    ],
+    new Set(),
+    2,
+  )
+
+  assert.deepEqual(
+    ranked.map(item => item.package),
+    ['strong', 'modest'],
+  )
+  assert.equal(ranked[0].authorityScore, Math.log2(100001) + Math.log2(101))
+  assert.equal(ranked[0].ownerCount, 2)
+  assert.deepEqual(ranked[0].consumers[0], strong)
+})
+
+test('invalid star metadata is unavailable evidence rather than a non-finite score', async () => {
+  const sources = fakeSources()
+
+  const github = async (route, args) => {
+    const result = await sources.github(route, args)
+
+    return route === 'GET /repos/{owner}/{repo}'
+      ? { ...result, stargazers_count: null }
+      : result
+  }
+
+  const { report } = await discoverLibraries({
     ...sources,
-    registry,
+    github,
     catalog,
     now,
     limits,
   })
 
-  assert.deepEqual(stale.report.candidates, [])
+  assert.deepEqual(report.candidates, [])
   assert.ok(
-    stale.report.notes.some(note => note.includes('different download window')),
+    report.notes.some(note => note.includes('Invalid repository star count')),
   )
 })
 
-test('exhausted npm throttling preserves the remaining unseen candidates for a later run', async () => {
-  const sources = fakeSources()
-
-  const registry = async () => {
-    throw Object.assign(new Error('npm returned HTTP 429'), { status: 429 })
-  }
-
+test('a zero delivery budget leaves every candidate unsurfaced', async () => {
   const result = await discoverLibraries({
-    ...sources,
-    registry,
+    ...fakeSources(),
     catalog,
     now,
-    limits,
+    limits: { ...limits, candidates: 0 },
   })
 
+  assert.deepEqual(result.report.candidates, [])
   assert.deepEqual(result.state.surfaced, [])
-  assert.equal(result.report.coverage.packagesCheckedOnNpm, 1)
-  assert.ok(
-    result.report.notes.some(note =>
-      note.includes('remaining packages deferred'),
-    ),
-  )
 })
