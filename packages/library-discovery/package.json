@@ -1,0 +1,20 @@
+{
+  "name": "@bundlephobia/library-discovery",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Weekly consumer-manifest discovery for Bundlephobia library research",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@octokit/request": "^10.0.16",
+    "npm-package-arg": "^8.1.5",
+    "p-throttle": "^8.1.1",
+    "validate-npm-package-name": "^8.0.0",
+    "zod": "^4.4.2"
+  }
+}

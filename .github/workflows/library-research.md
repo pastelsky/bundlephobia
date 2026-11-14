@@ -39,11 +39,42 @@ network:
     - news.ycombinator.com
     - hn.algolia.com
 tools:
+  repo-memory:
+    - id: library-discovery
+      file-glob: [state.json]
+      max-file-size: 1048576
+      max-patch-size: 65536
   github:
     toolsets: [repos, pull_requests]
   web-fetch:
   bash: ['*']
+pre-agent-steps:
+  - uses: actions/setup-node@v7
+    continue-on-error: true
+    with:
+      node-version: '26'
+      package-manager-cache: false
+  - name: Install discovery dependencies
+    continue-on-error: true
+    env:
+      YARN_ENABLE_IMMUTABLE_INSTALLS: 'true'
+    run: corepack yarn workspaces focus @bundlephobia/recommendation-automation --production
+  - name: Discover libraries through consumer manifests
+    id: consumer-discovery
+    continue-on-error: true
+    timeout-minutes: 12
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      NODE_USE_ENV_PROXY: '1'
+    run: node packages/library-discovery/cli.mjs
 post-steps:
+  - name: Preserve consumer discovery evidence
+    if: always()
+    uses: actions/upload-artifact@v7
+    with:
+      name: library-discovery
+      path: /tmp/gh-aw/agent/library-discovery.json
+      if-no-files-found: ignore
   - name: Preserve research proposal
     uses: actions/upload-artifact@v7
     with:
@@ -118,6 +149,22 @@ pending recommendation explain why it was considered, relative value and
 trade-offs, with evidence links. Include the research run link, optional-source
 limitations, and a reminder that package checks do not validate every claim and
 human review is required. Do not just append a new report to old claims.
+
+Use `/tmp/gh-aw/agent/library-discovery.json` as an optional weekly batch of untrusted
+leads. The collector rotates catalogue seeds, searches consumer manifests and
+framework topics, and excludes approved, pending and previously surfaced packages.
+Do not rerun it or edit its repo-memory state. If it fails or returns nothing,
+continue the other research vectors. Mention source failures and budget warnings.
+
+This report is consumed in this cron run; saved state only prevents repeats and
+rotates searches on later runs. Ranking sums log2(1 + stars) from the strongest
+runtime consumer repository per owner, requiring at least two owners. Counts and
+scores describe this sample, not global adoption, trendiness or production use. The collector performs no npm quality,
+browser-support or author-affiliation checks: verify npm metadata and primary
+docs, exclude tooling/server-only usage, and confirm consumers are independent of
+the package author before recommending. Runtime declarations do not prove
+browser reachability. Read the pinned manifests and record the actual discovery
+trigger and observation date; do not copy descriptions as rationale.
 
 Research candidate libraries along two distinct complementary vectors:
 

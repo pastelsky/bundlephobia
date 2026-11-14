@@ -1,0 +1,13 @@
+{
+  "seeds": 6,
+  "searchPages": 2,
+  "repositories": 80,
+  "manifestsPerRepository": 12,
+  "candidates": 30,
+  "minimumOwners": 2,
+  "minimumStars": 100,
+  "activeDays": 90,
+  "topics": ["vue", "svelte", "solidjs", "lit", "react", "webapp"],
+  "codeSearchIntervalMs": 6500,
+  "requestTimeoutMs": 20000
+}

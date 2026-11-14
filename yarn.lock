@@ -2099,10 +2099,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bundlephobia/library-discovery@workspace:*, @bundlephobia/library-discovery@workspace:packages/library-discovery":
+  version: 0.0.0-use.local
+  resolution: "@bundlephobia/library-discovery@workspace:packages/library-discovery"
+  dependencies:
+    "@octokit/request": "npm:^10.0.16"
+    npm-package-arg: "npm:^8.1.5"
+    p-throttle: "npm:^8.1.1"
+    validate-npm-package-name: "npm:^8.0.0"
+    zod: "npm:^4.4.2"
+  languageName: unknown
+  linkType: soft
+
 "@bundlephobia/recommendation-automation@workspace:.github":
   version: 0.0.0-use.local
   resolution: "@bundlephobia/recommendation-automation@workspace:.github"
   dependencies:
+    "@bundlephobia/library-discovery": "workspace:*"
     "@bundlephobia/service-contracts": "workspace:*"
     "@octokit/request": "npm:^10.0.16"
     "@types/node": "npm:^24.0.0"
@@ -20095,6 +20108,13 @@ __metadata:
   version: 4.1.1
   resolution: "p-throttle@npm:4.1.1"
   checksum: c4bfdcd0318d704b446a7af59dd8e0e32e37ba3d9841dd8dfced1c09742bc2f7a95bc0fcf4072030c62abf4533a9a2ef2954e559462052c5f406ae03d195925a
+  languageName: node
+  linkType: hard
+
+"p-throttle@npm:^8.1.1":
+  version: 8.1.1
+  resolution: "p-throttle@npm:8.1.1"
+  checksum: db2cdb9e3dc1f1ef905d05a537ca6868812fc4f36c7e2d63941b0e5e08721bcb5f2a47db5ec210ed19351ce6cd6529511bf568c3686fd6287e56decae5c04c7f
   languageName: node
   linkType: hard
 

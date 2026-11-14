@@ -44,3 +44,52 @@ memory and should not be enabled by default during a memory investigation.
 References: [Rspack tracing](https://rspack.rs/contribute/development/tracing),
 [Rspack profiling](https://rspack.rs/contribute/development/profiling),
 [Rsdoctor memory caveats](https://rsdoctor.rs/guide/more/faq).
+
+## Weekly consumer-manifest discovery
+
+The private `packages/library-discovery` workspace feeds leads to the existing
+weekly research agent in the **same cron run**. The agent verifies browser use,
+quality, author affiliation and alternatives; the existing publisher validates npm
+identity/deprecation and catalogue changes. The collector makes no npm requests.
+Run `yarn test:recommendations` for collector and publisher tests.
+
+`index.mjs` owns ranking, report construction and state validation; `search.mjs`
+finds and scans repositories; `manifests.mjs` handles paths and declarations.
+`cli.mjs` reads/writes files and uses the existing Octokit client with request
+timeouts. `p-throttle` paces GitHub code search; there is no custom retry layer.
+Budgets/topics are in `config.json`; dependency parsing uses `npm-package-arg`.
+
+Each run rotates catalogue seeds and interleaves consumer-code searches with
+framework-topic searches. Repository metadata excludes private, inactive, low-star,
+forked and archived repositories. Private app manifests are recognized by web
+build/dev scripts and shared framework identities. Loaded internal workspaces are
+followed; obvious server/test/example paths are excluded. All windows, sample
+counts, budgets and source failures accompany the report.
+
+Candidates need runtime declarations (`dependencies` or `optionalDependencies`)
+from at least two distinct consumer owners. Their score is the sum of
+`log2(1 + stars)` using the highest-starred consumer repository per owner. Repeated
+manifests and additional repositories from the same owner do not inflate that
+owner's contribution. Stars measure repository popularity, not production use,
+independent adoption, browser compatibility or package trendiness. Packages declared
+only as development dependencies are skipped; runtime declarations can still
+contain tooling/server libraries, which the research agent must exclude.
+
+Approved, pending, comparison-group and previously surfaced names are excluded.
+Repo-memory stores the cursor and **delivered** names in `state.json` on
+`memory/library-discovery`, solely for deduplication/search rotation next run.
+Overflow stays eligible. Malformed history fails rather than resetting; writes
+are atomic. A failed memory push can replay a batch. Maintainer rejection feedback
+remains part of the existing research PR flow.
+
+Code search may require cross-repository credentials; topic searches provide a
+fallback. Optional setup/collector failures do not block the other research
+sources. There is no npm download ranking, depth-two crawl or historical backfill.
+
+Preview without writing memory or publishing:
+
+```sh
+NODE_USE_ENV_PROXY=1 GITHUB_TOKEN="$(gh auth token)" GITHUB_REPOSITORY=pastelsky/bundlephobia \
+  LIBRARY_DISCOVERY_OUTPUT=/tmp/library-discovery-preview.json \
+  node packages/library-discovery/cli.mjs --dry-run
+```

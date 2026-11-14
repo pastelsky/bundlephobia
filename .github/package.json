@@ -3,10 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test scripts/*.test.ts",
+    "test": "yarn workspace @bundlephobia/library-discovery test && node --test scripts/*.test.ts",
     "check": "tsc --project tsconfig.json"
   },
   "dependencies": {
+    "@bundlephobia/library-discovery": "workspace:*",
     "@bundlephobia/service-contracts": "workspace:*",
     "@octokit/request": "^10.0.16",
     "git-url-parse": "^16.1.0",
@@ -19,5 +20,6 @@
     "@types/semver": "^7.7.1",
     "@types/validate-npm-package-name": "^4.0.2",
     "typescript": "^7.0.2"
-  }
+  },
+  "description": "Shared library discovery, recommendation research and review publication tooling"
 }
