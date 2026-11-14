@@ -7,18 +7,6 @@ import { checkNpmCandidates } from './npm.mjs'
 
 const DAY = 86_400_000
 
-export { defaults }
-
-export { catalogPackages, readState, rotate } from './catalog.mjs'
-
-export {
-  dependencyNames,
-  isWebApplication,
-  supportsBrowser,
-} from './dependencies.mjs'
-
-export { downloadSignals } from './downloads.mjs'
-
 export async function discoverLibraries({
   github,
   registry,

@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  catalogPackages,
-  discoverLibraries,
-  readState,
-  rotate,
-} from '../index.mjs'
+import { discoverLibraries } from '../index.mjs'
+import { catalogPackages, readState, rotate } from '../catalog.mjs'
 import { catalog, downloads, now, limits, fakeSources } from './fixtures.mjs'
 
 test('state corruption fails rather than silently allowing repeated discoveries', () => {

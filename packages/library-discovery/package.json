@@ -4,10 +4,6 @@
   "private": true,
   "type": "module",
   "description": "Weekly consumer-manifest discovery for Bundlephobia library research",
-  "exports": {
-    ".": "./index.mjs",
-    "./cli": "./cli.mjs"
-  },
   "scripts": {
     "test": "node --test test/*.test.mjs"
   },

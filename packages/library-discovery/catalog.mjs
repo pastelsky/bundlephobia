@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import validatePackageName from 'validate-npm-package-name'
 
-export const stateSchema = z
+const stateSchema = z
   .object({
     version: z.literal(1),
     cursor: z.number().int().nonnegative(),

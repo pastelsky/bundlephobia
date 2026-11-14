@@ -64,7 +64,7 @@ pre-agent-steps:
     env:
       GITHUB_TOKEN: ${{ github.token }}
       NODE_USE_ENV_PROXY: '1'
-    run: node .github/scripts/run-library-discovery.mjs
+    run: node packages/library-discovery/cli.mjs
 post-steps:
   - name: Preserve consumer discovery evidence
     if: always()

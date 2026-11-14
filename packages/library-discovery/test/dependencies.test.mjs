@@ -2,10 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   dependencyNames,
-  downloadSignals,
   isWebApplication,
   supportsBrowser,
-} from '../index.mjs'
+} from '../dependencies.mjs'
+import { downloadSignals } from '../downloads.mjs'
 import { downloads } from './fixtures.mjs'
 
 test('registry aliases are normalized; workspaces and git references are excluded', () => {

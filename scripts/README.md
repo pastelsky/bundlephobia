@@ -58,7 +58,7 @@ Start with `index.mjs` for the pipeline and `config.json` for its budgets.
 `search.mjs` finds repositories, `repositories.mjs`/`manifests.mjs` read consumer
 evidence, and `candidates.mjs`/`npm.mjs` screen leads. `http.mjs` owns API pacing;
 `catalog.mjs` owns catalogue exclusions and persisted state validation. The workflow
-entry point only calls `cli.mjs`, which reads inputs and writes the report/state.
+runs `cli.mjs` directly to read inputs and write the report/state.
 
 The optional JavaScript source in `packages/library-discovery/index.mjs` feeds the
 existing `library-research` workflow. It produces leads for the research agent;
@@ -108,7 +108,7 @@ Preview without writing memory or publishing anything:
 ```sh
 NODE_USE_ENV_PROXY=1 GITHUB_TOKEN="$(gh auth token)" GITHUB_REPOSITORY=pastelsky/bundlephobia \
   LIBRARY_DISCOVERY_OUTPUT=/tmp/library-discovery-preview.json \
-  node .github/scripts/run-library-discovery.mjs --dry-run
+  node packages/library-discovery/cli.mjs --dry-run
 ```
 
 Run `yarn test:recommendations` for collector and publisher tests. The scheduled
