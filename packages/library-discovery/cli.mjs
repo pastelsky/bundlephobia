@@ -19,7 +19,13 @@ const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
 
 const githubRequest = request.defaults({
   headers: { authorization: `Bearer ${process.env.GITHUB_TOKEN}` },
-  request: { timeout: config.requestTimeoutMs },
+  request: {
+    fetch: (url, options) =>
+      fetch(url, {
+        ...options,
+        signal: AbortSignal.timeout(config.requestTimeoutMs),
+      }),
+  },
 })
 
 const codeSearch = pThrottle({
