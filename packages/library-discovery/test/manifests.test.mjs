@@ -1,7 +1,47 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { observeManifests } from '../manifests.mjs'
-import { selectManifestPaths } from '../paths.mjs'
+import {
+  dependencyNames,
+  isWebApplication,
+  observeManifests,
+  selectManifestPaths,
+} from '../manifests.mjs'
+
+test('registry aliases are normalized; workspaces and git references are excluded', () => {
+  assert.deepEqual(
+    [
+      ...dependencyNames({
+        dependencies: {
+          alias: 'npm:actual-package@^1.0.0',
+          local: 'workspace:*',
+          github: 'github:owner/repo',
+          react: '^19.0.0',
+        },
+        devDependencies: { browser: '^1.0.0' },
+      }),
+    ].sort(),
+    ['actual-package', 'browser', 'react'],
+  )
+})
+
+test('web app manifests include browser libraries declared as development dependencies', () => {
+  assert.equal(
+    isWebApplication({
+      private: true,
+      devDependencies: { nuxt: '^4.0.0' },
+      scripts: { build: 'nuxt build' },
+    }),
+    true,
+  )
+  assert.equal(
+    isWebApplication({
+      private: false,
+      dependencies: { react: '^19.0.0' },
+      scripts: { build: 'vite build' },
+    }),
+    false,
+  )
+})
 
 test('optional workspace links are followed once even with cycles', () => {
   const manifests = new Map([

@@ -53,9 +53,9 @@ It does not publish recommendations itself. Run `yarn test:recommendations` for
 collector and publisher tests.
 
 Start with `index.mjs` for the pipeline and `config.json` for budgets/topics.
-`search.mjs` finds repositories; `repositories.mjs`, `paths.mjs` and `manifests.mjs`
-read pinned consumer evidence; `candidates.mjs` and `npm.mjs` screen and rank leads.
-`catalog.mjs` validates state and `http.mjs` handles API pacing/retries. The workflow
+`search.mjs` finds and scans repositories; `manifests.mjs` handles paths and
+consumer declarations; `npm.mjs` screens and ranks leads. State validation lives
+with the pipeline in `index.mjs`; `http.mjs` handles API pacing/retries. The workflow
 runs `cli.mjs` directly. Dependencies belong to this workspace: Octokit,
 `npm-package-arg`, `git-url-parse`, Zod, `p-throttle` and `p-retry`.
 

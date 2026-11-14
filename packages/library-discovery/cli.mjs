@@ -2,8 +2,7 @@ import { createDiscoveryClients } from './http.mjs'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { request } from '@octokit/request'
-import { discoverLibraries } from './index.mjs'
-import { readState } from './catalog.mjs'
+import { discoverLibraries, readState } from './index.mjs'
 import catalog from '../../utils/similar-packages.catalog.json' with { type: 'json' }
 import groups from '../../utils/similar-packages.groups.json' with { type: 'json' }
 

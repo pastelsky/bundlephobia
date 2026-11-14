@@ -1,8 +1,33 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { discoverLibraries } from '../index.mjs'
-import { eligibleCandidates } from '../candidates.mjs'
+import {
+  eligibleCandidates,
+  selectCandidates,
+  downloadSignals,
+  supportsBrowser,
+} from '../npm.mjs'
 import { catalog, downloads, now, limits, fakeSources } from './fixtures.mjs'
+
+test('two non-overlapping complete 28-day periods are required for download growth', () => {
+  assert.deepEqual(downloadSignals(downloads), {
+    previous28Days: 2800,
+    last28Days: 5600,
+    weeklyDownloads: 1400,
+    downloadGrowth: 1,
+  })
+  assert.throws(() => downloadSignals(downloads.slice(1)))
+})
+
+test('browser hints use published metadata rather than package-name lists', () => {
+  assert.equal(supportsBrowser({ browser: './browser.js' }), true)
+  assert.equal(
+    supportsBrowser({ exports: { '.': { browser: './index.js' } } }),
+    true,
+  )
+  assert.equal(supportsBrowser({ keywords: ['isomorphic'] }), true)
+  assert.equal(supportsBrowser({}), false)
+})
 
 test('multiple repositories under one owner do not establish independent consensus', async () => {
   const sources = fakeSources()
@@ -132,4 +157,17 @@ test('duplicate manifests count once per repo and retain runtime evidence', () =
   assert.deepEqual(candidate.consumers, [runtime, other])
   assert.equal(candidate.ownerCount, 2)
   assert.equal(candidate.runtimeOwnerCount, 1)
+})
+
+test('candidate selection keeps the highest-ranked upstream representative and respects zero budget', () => {
+  const candidates = [
+    { package: 'older', upstream: 'shared', downloadGrowth: 0 },
+    { package: 'rising', upstream: 'shared', downloadGrowth: 1 },
+  ]
+
+  assert.deepEqual(
+    selectCandidates(candidates, 2).map(item => item.package),
+    ['rising'],
+  )
+  assert.deepEqual(selectCandidates(candidates, 0), [])
 })

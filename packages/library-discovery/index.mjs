@@ -1,9 +1,32 @@
+import { z } from 'zod'
+import validatePackageName from 'validate-npm-package-name'
 import defaults from './config.json' with { type: 'json' }
-import { catalogPackages, readState, rotate } from './catalog.mjs'
-import { findRepositories } from './search.mjs'
-import { scanRepositories } from './repositories.mjs'
-import { eligibleCandidates, selectCandidates } from './candidates.mjs'
-import { checkNpmCandidates } from './npm.mjs'
+import { findRepositories, scanRepositories, rotate } from './search.mjs'
+import {
+  eligibleCandidates,
+  selectCandidates,
+  checkNpmCandidates,
+} from './npm.mjs'
+
+const stateSchema = z
+  .object({
+    version: z.literal(1),
+    cursor: z.number().int().nonnegative(),
+    surfaced: z.array(
+      z.string().refine(name => validatePackageName(name).validForNewPackages),
+    ),
+  })
+  .strict()
+
+export function readState(value = { version: 1, cursor: 0, surfaced: [] }) {
+  return stateSchema.parse(value)
+}
+
+export function catalogPackages(catalog) {
+  return [
+    ...new Set(Object.values(catalog).flatMap(category => category.similar)),
+  ].sort()
+}
 
 const DAY = 86_400_000
 
