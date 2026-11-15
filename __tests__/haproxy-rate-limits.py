@@ -19,6 +19,8 @@ class BotRateLimits(unittest.TestCase):
         self.admin_socket = root / 'admin'
         networks = root / 'cloudflare.lst'
         networks.write_text('127.0.0.1/32\n')
+        google_networks = root / 'google-crawler-networks.lst'
+        google_networks.write_text('66.249.64.0/19\n2001:4860:4801::/48\n198.51.100.0/24\n')
         groups = root / 'automation-groups.map'
         groups.write_text((Path(__file__).resolve().parents[1] /
                            'operations/haproxy/automation-groups.map').read_text())
@@ -34,6 +36,7 @@ class BotRateLimits(unittest.TestCase):
                           if not line.strip().startswith('log-format ')) + '\n'
         rules = rules.replace('bind :80', f'bind 127.0.0.1:{self.port}')
         rules = rules.replace('/etc/haproxy/cloudflare-networks.lst', str(networks))
+        rules = rules.replace('/etc/haproxy/google-crawler-networks.lst', str(google_networks))
         rules = rules.replace('/etc/haproxy/automation-groups.map', str(groups))
         upstreams = {line.split()[1] for line in rules.splitlines()
                      if line.strip().startswith(('use_backend ', 'default_backend '))}
@@ -364,6 +367,24 @@ class BotRateLimits(unittest.TestCase):
         # Non-analysis asset route for bot does not get it
         self.assertEqual(self.request('Googlebot/2.1', 1, '/asset.js'), 200)
         self.assertIsNone(self.echo_prefer_cached)
+
+    def test_spoofed_googlebot_does_not_poison_google_limits(self):
+        spoofed_ip = '203.0.113.55'
+        verified_ip = '198.51.100.1'
+
+        for table in ['client_group_usage', 'automated_client_usage', 'named_bot_usage']:
+            self.runtime(f'clear table {table}')
+
+        # Spoofed Googlebot from an unverified IP exceeds standard per-IP bot rate limit (26 req/10s)
+        for _ in range(26):
+            self.assertEqual(self.request('Googlebot/2.1', spoofed_ip), 200)
+        # Next request from spoofed IP is rate-limited (429)
+        self.assertEqual(self.request('Googlebot/2.1', spoofed_ip), 429)
+
+        # Genuine Googlebot IP is unaffected and continues to get 200 OK
+        self.assertEqual(self.request('Googlebot/2.1', verified_ip), 200)
+
+
 
 
 if __name__ == '__main__':

@@ -11,8 +11,6 @@
 
 const fs = require('fs');
 
-const { execSync } = require('child_process');
-
 const SOURCES = [
   'https://developers.google.com/search/apis/ipranges/googlebot.json',
   'https://developers.google.com/search/apis/ipranges/special-crawlers.json',
@@ -84,7 +82,7 @@ function generateFileContent(v4, v6) {
   return lines.join('\n');
 }
 
-function updateNetworksFile(newContent, reloadHaproxy) {
+function updateNetworksFile(newContent) {
   let existingContent = '';
 
   if (fs.existsSync(TARGET_PATH)) {
@@ -92,7 +90,7 @@ function updateNetworksFile(newContent, reloadHaproxy) {
   }
 
   if (newContent === existingContent) {
-    console.log(`${TARGET_PATH} is already up to date. No reload needed.`);
+    console.log(`${TARGET_PATH} is already up to date.`);
 
     return;
   }
@@ -100,21 +98,9 @@ function updateNetworksFile(newContent, reloadHaproxy) {
   fs.writeFileSync(TARGET_PATH, newContent, 'utf8');
 
   console.log(`Updated ${TARGET_PATH}`);
-
-  if (reloadHaproxy) {
-    console.log('Reloading HAProxy service...');
-
-    execSync('systemctl reload haproxy', { stdio: 'inherit' });
-
-    console.log('HAProxy reloaded successfully.');
-  }
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-
-  const reloadHaproxy = args.includes('--reload');
-
   console.log(`[${new Date().toISOString()}] Fetching Google crawler ranges from ${SOURCES.length} sources...`);
 
   const { v4, v6 } = await fetchGooglePrefixes();
@@ -123,7 +109,7 @@ async function main() {
 
   const newContent = generateFileContent(v4, v6);
 
-  updateNetworksFile(newContent, reloadHaproxy);
+  updateNetworksFile(newContent);
 }
 
 main().catch((err) => {
