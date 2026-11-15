@@ -188,7 +188,7 @@ fastify.get('/exports', async (req, res) => {
 })
 
 fastify
-  .listen({ port: 7002 })
+  .listen({ host: '127.0.0.1', port: 7002 })
   .then(() => {
     console.log(`server listening on ${fastify.server.address().port}`)
   })

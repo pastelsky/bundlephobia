@@ -12,6 +12,20 @@ interface RateLimitEntry {
   count: number
 }
 
+interface LruCacheInstance<K, V> {
+  itemCount: number
+  get(key: K): V | undefined
+  set(key: K, value: V): this
+  del(key: K): void
+}
+
+interface LruCacheConstructor {
+  new <K, V>(options: { max: number; maxAge: number }): LruCacheInstance<K, V>
+}
+
+// SAFETY: the pinned lru-cache module implements the constructor contract above.
+const LRU = require('lru-cache') as LruCacheConstructor
+
 const DEFAULT_DURATION_MS = 1000 * 60 * 5
 
 const DEFAULT_MAX_REQUESTS = 10
@@ -34,7 +48,11 @@ export default function buildMissRateLimit(
   const maxRequests = options.maxRequests ?? DEFAULT_MAX_REQUESTS
   const whiteList = new Set(options.whiteList ?? ['127.0.0.1', '::1'])
   const message429 = options.message429 ?? DEFAULT_MESSAGE
-  const db: Record<string, RateLimitEntry> = {}
+
+  const db = new LRU<string, RateLimitEntry>({
+    max: 10_000,
+    maxAge: durationMs,
+  })
 
   return async (ctx, next) => {
     // Registered after cache lookup: hits return before reaching this guard.
@@ -63,18 +81,22 @@ export default function buildMissRateLimit(
     }
 
     const now = Date.now()
-    const current = db[ip]
+    const current = db.get(ip)
+
+    let entry: RateLimitEntry
 
     if (!current || current.resetAt <= now) {
-      db[ip] = {
+      entry = {
         resetAt: now + durationMs,
         count: 1,
       }
     } else {
       current.count += 1
+      entry = current
     }
 
-    const entry = db[ip]
+    db.set(ip, entry)
+
     const remaining = Math.max(maxRequests - entry.count, 0)
 
     const retryAfterSeconds = Math.max(
