@@ -6,6 +6,7 @@ import type { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { Button } from '@base-ui/react/button'
 import { Checkbox } from '@base-ui/react/checkbox'
+import { Popover } from '@base-ui/react/popover'
 import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
 import Analytics from '../../client/analytics'
@@ -87,7 +88,7 @@ const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
     { id: 'size', label: 'Size', description: 'Cached gzip size history' },
     {
       id: 'vulnerabilities',
-      label: 'Vulnerabilities',
+      label: 'Vulns',
       description: 'Active & unresolved vulnerabilities over time (OSV.dev)',
     },
   ]
@@ -734,46 +735,83 @@ export default function TrendsPage({
 
           <div className="trends-toolbar__group trends-toolbar__group--overlays">
             <span className="trends-toolbar__label">Overlays</span>
-            <div className="trends-overlays">
-              <label className="trends-toggle">
-                <Checkbox.Root
-                  checked={showMajorReleases}
-                  onCheckedChange={enabled =>
-                    handleReleaseOverlayChange('major_releases', enabled)
-                  }
-                  className="trends-toggle__control"
-                >
-                  <Checkbox.Indicator
-                    keepMounted
-                    className="trends-toggle__indicator"
-                  />
-                </Checkbox.Root>
-                <span className="trends-toggle__label">Major version</span>
-                <span
-                  className="trends-overlay-key trends-overlay-key--major"
+            <Popover.Root>
+              <Popover.Trigger
+                type="button"
+                className="trends-overlays-trigger"
+                aria-label="Toggle release overlays"
+              >
+                <span>Releases</span>
+                {(showMajorReleases || showMinorReleases) && (
+                  <span className="trends-overlays-trigger__badge">
+                    {(showMajorReleases ? 1 : 0) + (showMinorReleases ? 1 : 0)}
+                  </span>
+                )}
+                <svg
+                  className="trends-overlays-trigger__arrow"
+                  width="10"
+                  height="6"
+                  viewBox="0 0 10 6"
+                  fill="none"
                   aria-hidden="true"
-                />
-              </label>
-              <label className="trends-toggle">
-                <Checkbox.Root
-                  checked={showMinorReleases}
-                  onCheckedChange={enabled =>
-                    handleReleaseOverlayChange('minor_releases', enabled)
-                  }
-                  className="trends-toggle__control"
                 >
-                  <Checkbox.Indicator
-                    keepMounted
-                    className="trends-toggle__indicator"
+                  <path
+                    d="M1 1L5 5L9 1"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
-                </Checkbox.Root>
-                <span className="trends-toggle__label">Minor version</span>
-                <span
-                  className="trends-overlay-key trends-overlay-key--minor"
-                  aria-hidden="true"
-                />
-              </label>
-            </div>
+                </svg>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Positioner side="bottom" align="end" sideOffset={6}>
+                  <Popover.Popup className="trends-overlays-popup">
+                    <div className="trends-overlays-popup__header">
+                      Release markers
+                    </div>
+                    <label className="trends-toggle">
+                      <Checkbox.Root
+                        checked={showMajorReleases}
+                        onCheckedChange={enabled =>
+                          handleReleaseOverlayChange('major_releases', enabled)
+                        }
+                        className="trends-toggle__control"
+                      >
+                        <Checkbox.Indicator
+                          keepMounted
+                          className="trends-toggle__indicator"
+                        />
+                      </Checkbox.Root>
+                      <span className="trends-toggle__label">Major version</span>
+                      <span
+                        className="trends-overlay-key trends-overlay-key--major"
+                        aria-hidden="true"
+                      />
+                    </label>
+                    <label className="trends-toggle">
+                      <Checkbox.Root
+                        checked={showMinorReleases}
+                        onCheckedChange={enabled =>
+                          handleReleaseOverlayChange('minor_releases', enabled)
+                        }
+                        className="trends-toggle__control"
+                      >
+                        <Checkbox.Indicator
+                          keepMounted
+                          className="trends-toggle__indicator"
+                        />
+                      </Checkbox.Root>
+                      <span className="trends-toggle__label">Minor version</span>
+                      <span
+                        className="trends-overlay-key trends-overlay-key--minor"
+                        aria-hidden="true"
+                      />
+                    </label>
+                  </Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
           </div>
         </div>
 
@@ -825,7 +863,7 @@ export default function TrendsPage({
                 <span>Weekly downloads</span>
                 <span>Gzip</span>
                 <span>Minified</span>
-                <span>Vulnerabilities</span>
+                <span>Vulns</span>
                 <span aria-hidden="true" />
               </div>
               {packages.map((pkgName, index) => {
@@ -944,9 +982,7 @@ export default function TrendsPage({
                         </span>
                       </div>
                       <div className="trends-stat">
-                        <span className="trends-stat__label">
-                          Vulnerabilities
-                        </span>
+                        <span className="trends-stat__label">Vulns</span>
                         <span className="trends-stat__value">
                           {pack ? (
                             <span
