@@ -1,8 +1,10 @@
 import type { Middleware } from 'koa'
 import createDebug from 'debug'
 import strip from 'strip-markdown'
+import { z } from 'zod'
 
 import { parsePackageString } from '../../../utils/common.utils'
+import type { JsonValue } from '../../../types/json'
 import config from '../../config'
 import logger from '../../infrastructure/logger.service'
 import { categories } from '../../../utils/similarPackages'
@@ -41,19 +43,52 @@ interface NaturalModule {
   }
 }
 
-interface RepositoryInfo {
-  host: string
+interface ReadmeLocation {
   user: string
   project: string
   branch: string
   path: string
 }
 
-interface AlgoliaPackageBody {
-  description?: string
-  keywords?: string[]
-  readme?: string
-  repository: RepositoryInfo
+const repositoryInfoSchema = z
+  .object({
+    host: z.string().trim().min(1).nullish(),
+    user: z.string().trim().min(1).nullish(),
+    project: z.string().trim().min(1).nullish(),
+    branch: z.string().trim().min(1).nullish(),
+    path: z.string().trim().nullish(),
+    head: z.string().trim().nullish(),
+    url: z.string().trim().nullish(),
+  })
+  .passthrough()
+  .nullish()
+
+const algoliaPackageBodySchema = z
+  .object({
+    description: z.string().nullish(),
+    keywords: z.array(z.string()).nullish(),
+    readme: z.string().nullish(),
+    repository: repositoryInfoSchema,
+  })
+  .passthrough()
+
+const gitlabFileResponseSchema = z
+  .object({
+    encoding: z.string().nullish(),
+    content: z.string().nullish(),
+  })
+  .passthrough()
+
+export type RepositoryInfo = z.infer<typeof repositoryInfoSchema>
+
+export type AlgoliaPackageBody = z.infer<typeof algoliaPackageBodySchema>
+
+export function parseAlgoliaPackage(
+  payload: JsonValue | undefined,
+): AlgoliaPackageBody {
+  const parsed = algoliaPackageBodySchema.safeParse(payload)
+
+  return parsed.success ? parsed.data : {}
 }
 
 type CategoryLabel = keyof typeof categories
@@ -138,78 +173,144 @@ async function stripMarkdown(readme: string): Promise<string> {
   })
 }
 
-async function getReadme(
-  repository: RepositoryInfo,
+function cleanRepositoryPath(path: string | null | undefined): string {
+  if (!path) {
+    return ''
+  }
+
+  return path.replace(/\/tree\//, '').replace(/^\//, '')
+}
+
+function resolveRepositoryBranch(repository: RepositoryInfo): string {
+  return repository?.branch || repository?.head || 'master'
+}
+
+async function fetchGithubReadme(
+  location: ReadmeLocation,
 ): Promise<string | undefined> {
-  const { host, user, project, branch, path } = repository
-
-  if (host === 'github.com') {
-    const getGithubFile = async (fileName: string) => {
-      return got(
-        String(
-          prefixURL(fileName, {
-            base: 'https://raw.githubusercontent.com',
-            user,
-            project,
-            head: branch,
-            path: path.replace(/\/tree\//, ''),
-          }),
-        ),
-      )
-    }
-
-    try {
-      return (await getGithubFile('README.md')).body
-    } catch {
-      try {
-        return (await getGithubFile('readme.md')).body
-      } catch {
-        return (await getGithubFile('Readme.md')).body
-      }
-    }
-  }
-
-  if (host === 'gitlab.com') {
-    const apiUrl = `https://gitlab.com/api/v4/projects/${user}%2F${project}/repository/files/${encodeURIComponent(
-      `${path}/README.md`,
-    )}?ref=${branch}`
-
-    const { body } = await got<{
-      encoding?: string
-      content: string
-    }>(apiUrl, { json: true })
-
-    return body.encoding === 'base64'
-      ? Buffer.from(body.content, 'base64').toString()
-      : body.content
-  }
-
-  if (host === 'bitbucket.org') {
-    const { body } = await got(
-      `https://bitbucket.org/${user}/${project}${
-        path ? path.replace('src', 'raw') : `/raw/${branch}`
-      }/README.md`,
+  const getFile = async (fileName: string) => {
+    return got(
+      String(
+        prefixURL(fileName, {
+          base: 'https://raw.githubusercontent.com',
+          user: location.user,
+          project: location.project,
+          head: location.branch,
+          path: location.path,
+        }),
+      ),
     )
+  }
 
-    return body
+  const candidateFileNames = ['README.md', 'readme.md', 'Readme.md']
+
+  for (const fileName of candidateFileNames) {
+    try {
+      const response = await getFile(fileName)
+
+      return response.body
+    } catch {
+      // Continue to next filename candidate on 404 or request error
+    }
   }
 
   return undefined
 }
 
-async function getPackageDetails(packageName: string) {
-  let readme = ''
+async function fetchGitlabReadme(
+  location: ReadmeLocation,
+): Promise<string | undefined> {
+  const filePath = location.path ? `${location.path}/README.md` : 'README.md'
 
-  const { body } = await got<AlgoliaPackageBody>(
-    `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(
-      packageName,
-    )}?x-algolia-application-id=OFCNCOG2CU&x-algolia-api-key=f54e21fa3a2a0160595bb058179bfb1e`,
-    { json: true },
+  const apiUrl = `https://gitlab.com/api/v4/projects/${encodeURIComponent(
+    `${location.user}/${location.project}`,
+  )}/repository/files/${encodeURIComponent(filePath)}?ref=${encodeURIComponent(
+    location.branch,
+  )}`
+
+  // SAFETY: GitLab file API response is parsed via gitlabFileResponseSchema
+  const response = await got<JsonValue>(apiUrl, { json: true })
+  const parsed = gitlabFileResponseSchema.safeParse(response.body)
+
+  if (!parsed.success || !parsed.data.content) {
+    return undefined
+  }
+
+  return parsed.data.encoding === 'base64'
+    ? Buffer.from(parsed.data.content, 'base64').toString()
+    : parsed.data.content
+}
+
+async function fetchBitbucketReadme(
+  location: ReadmeLocation,
+): Promise<string | undefined> {
+  const subPath = location.path
+    ? location.path.replace(/^src\/?/, 'raw/')
+    : `raw/${location.branch}`
+
+  const response = await got(
+    `https://bitbucket.org/${location.user}/${location.project}/${subPath}/README.md`,
   )
+
+  return response.body
+}
+
+export async function getReadme(
+  repository?: RepositoryInfo | null,
+): Promise<string | undefined> {
+  if (!repository?.host || !repository.user || !repository.project) {
+    return undefined
+  }
+
+  const location: ReadmeLocation = {
+    user: repository.user,
+    project: repository.project,
+    branch: resolveRepositoryBranch(repository),
+    path: cleanRepositoryPath(repository.path),
+  }
+
+  if (repository.host === 'github.com') {
+    return fetchGithubReadme(location)
+  }
+
+  if (repository.host === 'gitlab.com') {
+    return fetchGitlabReadme(location)
+  }
+
+  if (repository.host === 'bitbucket.org') {
+    return fetchBitbucketReadme(location)
+  }
+
+  return undefined
+}
+
+export async function getPackageDetails(
+  packageName: string,
+): Promise<AlgoliaPackageBody & { readme: string }> {
+  let readme = ''
+  let body: AlgoliaPackageBody = {}
+
+  try {
+    // SAFETY: Algolia npm-search payload is parsed via algoliaPackageBodySchema
+    const response = await got<JsonValue>(
+      `https://ofcncog2cu-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(
+        packageName,
+      )}?x-algolia-application-id=OFCNCOG2CU&x-algolia-api-key=f54e21fa3a2a0160595bb058179bfb1e`,
+      { json: true },
+    )
+
+    body = parseAlgoliaPackage(response.body)
+  } catch (error) {
+    debug(
+      'failed to fetch package details from algolia for %s: %o',
+      packageName,
+      error,
+    )
+  }
 
   if (body.readme?.trim()) {
     readme = await stripMarkdown(body.readme)
-  } else {
+  } else if (body.repository) {
     try {
       const readmeMarkdown = await getReadme(body.repository)
       readme = readmeMarkdown ? await stripMarkdown(readmeMarkdown) : ''
@@ -250,12 +351,14 @@ async function getCategory(packageName: string) {
     }
   }
 
-  const { description = '', keywords = [] } =
-    await getPackageDetails(packageName)
+  const { description, keywords } = await getPackageDetails(packageName)
 
   const tokenizer = new natural.WordTokenizer()
 
-  const tokenString = `${await stripMarkdown(description)} ${keywords.join(
+  const safeDescription = description ?? ''
+  const safeKeywords = keywords ?? []
+
+  const tokenString = `${await stripMarkdown(safeDescription)} ${safeKeywords.join(
     ' ',
   )}`
 
