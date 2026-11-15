@@ -51,7 +51,7 @@ Google publishes official crawler IP ranges as machine-readable JSON feeds (`goo
 To manually refresh and deploy the list at any time:
 
 ```sh
-node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js && sudo systemctl reload haproxy
+node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js --if-changed && sudo systemctl reload haproxy
 ```
 
 ## Request limits (in evaluation order)

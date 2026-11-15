@@ -92,15 +92,21 @@ function updateNetworksFile(newContent) {
   if (newContent === existingContent) {
     console.log(`${TARGET_PATH} is already up to date.`);
 
-    return;
+    return false;
   }
 
   fs.writeFileSync(TARGET_PATH, newContent, 'utf8');
 
   console.log(`Updated ${TARGET_PATH}`);
+
+  return true;
 }
 
 async function main() {
+  const args = process.argv.slice(2);
+
+  const ifChangedOnly = args.includes('--if-changed');
+
   console.log(`[${new Date().toISOString()}] Fetching Google crawler ranges from ${SOURCES.length} sources...`);
 
   const { v4, v6 } = await fetchGooglePrefixes();
@@ -109,7 +115,11 @@ async function main() {
 
   const newContent = generateFileContent(v4, v6);
 
-  updateNetworksFile(newContent);
+  const changed = updateNetworksFile(newContent);
+
+  if (ifChangedOnly && !changed) {
+    process.exit(2);
+  }
 }
 
 main().catch((err) => {
