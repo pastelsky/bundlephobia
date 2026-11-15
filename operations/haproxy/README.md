@@ -36,18 +36,19 @@ sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/hap
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/conf.d/*.cfg /etc/haproxy/conf.d/
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/logrotate/bundlephobia-custom /etc/logrotate.d/bundlephobia-custom
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/cron/haproxy-logrotate /etc/cron.d/haproxy-logrotate
+sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/cron/sync-google-crawlers /etc/cron.d/sync-google-crawlers
 sudo /usr/sbin/haproxy -Ws -f /etc/haproxy/haproxy.cfg -f /etc/haproxy/conf.d -c -S /run/haproxy-master.sock
 sudo systemctl reload haproxy
 ```
 
 ### Syncing Google Crawler IP Ranges
 
-Google publishes official crawler IP ranges as machine-readable JSON feeds (`googlebot.json`, `special-crawlers.json`, `user-triggered-fetchers.json`). To refresh the list:
+Google publishes official crawler IP ranges as machine-readable JSON feeds (`googlebot.json`, `special-crawlers.json`, `user-triggered-fetchers.json`). The cron job `/etc/cron.d/sync-google-crawlers` checks for updates weekly on Sunday at 04:00 UTC and automatically reloads HAProxy if the list changed.
+
+To manually refresh and deploy the list at any time:
 
 ```sh
-python3 /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.py
-sudo cp /var/www/bundlephobia/operations/haproxy/google-crawler-networks.lst /etc/haproxy/google-crawler-networks.lst
-sudo systemctl reload haproxy
+node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js --install --reload
 ```
 
 ## Request limits (in evaluation order)
