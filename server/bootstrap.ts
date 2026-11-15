@@ -128,7 +128,35 @@ export async function startServer(): Promise<void> {
   })
 
   server.use(router.routes())
-  server.listen(environment.port, environment.host, () => {
+
+  const httpServer = server.listen(environment.port, environment.host, () => {
     console.log(`> Ready on http://${environment.host}:${environment.port}`)
+
+    if (process.send) {
+      process.send('ready')
+    }
   })
+
+  let isShuttingDown = false
+
+  const gracefulShutdown = () => {
+    if (isShuttingDown) return
+    isShuttingDown = true
+    console.log('> Received shutdown signal, closing HTTP server...')
+
+    httpServer.close(err => {
+      if (err) {
+        console.error('> Error during HTTP server close:', err)
+        process.exit(1)
+      }
+
+      console.log('> HTTP server closed gracefully')
+      process.exit(0)
+    })
+
+    httpServer.closeIdleConnections?.()
+  }
+
+  process.once('SIGINT', gracefulShutdown)
+  process.once('SIGTERM', gracefulShutdown)
 }

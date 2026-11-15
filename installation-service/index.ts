@@ -199,6 +199,10 @@ await fastify.listen({ host: '127.0.0.1', port })
 
 console.log(`installation service listening on ${port}`)
 
+if (process.send) {
+  process.send('ready')
+}
+
 async function shutdown() {
   await fastify.close()
 }
