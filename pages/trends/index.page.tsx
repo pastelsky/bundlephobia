@@ -150,7 +150,10 @@ function MetricValue({
     <>
       <span className="trends-stat__number">{formatted.value}</span>
       {formatted.unit && (
-        <span className="trends-stat__unit">{formatted.unit}</span>
+        <>
+          {' '}
+          <span className="trends-stat__unit">{formatted.unit}</span>
+        </>
       )}
     </>
   )
@@ -783,7 +786,9 @@ export default function TrendsPage({
                           className="trends-toggle__indicator"
                         />
                       </Checkbox.Root>
-                      <span className="trends-toggle__label">Major version</span>
+                      <span className="trends-toggle__label">
+                        Major version
+                      </span>
                       <span
                         className="trends-overlay-key trends-overlay-key--major"
                         aria-hidden="true"
@@ -802,7 +807,9 @@ export default function TrendsPage({
                           className="trends-toggle__indicator"
                         />
                       </Checkbox.Root>
-                      <span className="trends-toggle__label">Minor version</span>
+                      <span className="trends-toggle__label">
+                        Minor version
+                      </span>
                       <span
                         className="trends-overlay-key trends-overlay-key--minor"
                         aria-hidden="true"
