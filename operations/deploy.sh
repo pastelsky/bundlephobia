@@ -161,6 +161,19 @@ if [ -d "/etc/haproxy" ] && command -v haproxy >/dev/null 2>&1; then
   if [ "${HAPROXY_CHANGED}" = false ]; then
     log "HAProxy configuration is up to date."
   fi
+
+  # Ensure Google crawler networks list exists for HAProxy verification
+  if [ ! -f "/etc/haproxy/google-crawler-networks.lst" ] && [ -f "${REPO_ROOT}/operations/haproxy/scripts/sync-google-crawlers.js" ]; then
+    log "Populating initial Google crawler network list..."
+    node "${REPO_ROOT}/operations/haproxy/scripts/sync-google-crawlers.js" || true
+  fi
+
+  # Sync server root crontab
+  CRONTAB_FILE="${REPO_ROOT}/operations/cron/root.crontab"
+  if [ -f "${CRONTAB_FILE}" ] && command -v crontab >/dev/null 2>&1; then
+    log "Synchronizing crontab from operations/cron/root.crontab..."
+    crontab "${CRONTAB_FILE}" || true
+  fi
 fi
 
 # ── Step 5: Graceful Zero-Downtime Application Reload ────────────────────────
