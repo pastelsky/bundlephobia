@@ -35,7 +35,7 @@ sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/hap
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/haproxy/conf.d/*.cfg /etc/haproxy/conf.d/
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/logrotate/bundlephobia-custom /etc/logrotate.d/bundlephobia-custom
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/cron/haproxy-logrotate /etc/cron.d/haproxy-logrotate
-sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/cron/sync-google-crawlers /etc/cron.d/sync-google-crawlers
+crontab /var/www/bundlephobia/operations/cron/root.crontab
 
 # Dynamically populate /etc/haproxy/google-crawler-networks.lst from Google's official endpoints
 node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js
@@ -46,7 +46,7 @@ sudo systemctl reload haproxy
 
 ### Syncing Google Crawler IP Ranges
 
-Google publishes official crawler IP ranges as machine-readable JSON feeds (`googlebot.json`, `special-crawlers.json`, `user-triggered-fetchers.json`). The dynamic IP list is not committed to git; instead, the cron job `/etc/cron.d/sync-google-crawlers` checks for updates daily at 04:00 UTC and automatically reloads HAProxy if the list changed.
+Google publishes official crawler IP ranges as machine-readable JSON feeds (`googlebot.json`, `special-crawlers.json`, `user-triggered-fetchers.json`). The dynamic IP list is not committed to git; instead, `operations/cron/root.crontab` schedules daily checks at 04:00 UTC and automatically reloads HAProxy if the list changed.
 
 To manually refresh and deploy the list at any time:
 
