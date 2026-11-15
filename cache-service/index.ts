@@ -49,8 +49,31 @@ fastify
     // SAFETY: Fastify returns AddressInfo after the string-address guard above.
     const addressInfo = address as AddressInfo
     console.log(`server listening on ${addressInfo.port}`)
+
+    if (process.send) {
+      process.send('ready')
+    }
   })
   .catch(error => {
     console.error(error)
     process.exit(1)
   })
+
+let isShuttingDown = false
+
+const gracefulShutdown = async () => {
+  if (isShuttingDown) return
+  isShuttingDown = true
+
+  try {
+    await fastify.close()
+    process.exit(0)
+  } catch (error) {
+    console.error('Error during shutdown:', error)
+    process.exit(1)
+  }
+}
+
+process.once('SIGINT', gracefulShutdown)
+
+process.once('SIGTERM', gracefulShutdown)
