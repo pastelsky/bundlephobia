@@ -34,6 +34,7 @@ const DEFAULT_MESSAGE = '429: Too Many Build Requests.'
 
 function getClientIp(ctx: Context): string {
   const rawIp =
+    ctx.request.header['x-koaip'] ||
     ctx.request.header['cf-connecting-ip'] ||
     ctx.ip
 
