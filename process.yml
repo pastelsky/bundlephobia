@@ -9,6 +9,8 @@ apps:
     error_file: logs/index.log
     out_file: logs/index.log
     kill_timeout: 20000
+    wait_ready: true
+    listen_timeout: 10000
     exec_mode: cluster
     env:
       NODE_ENV: production
@@ -36,6 +38,8 @@ apps:
     error_file: logs/build-service.log
     out_file: logs/build-service.log
     kill_timeout: 20000
+    wait_ready: true
+    listen_timeout: 10000
     env:
       NODE_ENV: production
       ENABLE_DIAGNOSTICS: 'false'
@@ -72,6 +76,8 @@ apps:
     error_file: logs/installation-service.log
     out_file: logs/installation-service.log
     kill_timeout: 20000
+    wait_ready: true
+    listen_timeout: 10000
     env:
       NODE_ENV: production
       ENABLE_DIAGNOSTICS: 'false'
@@ -93,6 +99,8 @@ apps:
     max_memory_restart: 200M
     exec_mode: cluster
     kill_timeout: 5000
+    wait_ready: true
+    listen_timeout: 10000
     error_file: logs/cache-service.log
     out_file: logs/cache-service.log
     env:

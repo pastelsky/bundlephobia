@@ -191,8 +191,31 @@ fastify
   .listen({ host: '127.0.0.1', port: 7002 })
   .then(() => {
     console.log(`server listening on ${fastify.server.address().port}`)
+
+    if (process.send) {
+      process.send('ready')
+    }
   })
   .catch(err => {
     console.error(err)
     process.exit(1)
   })
+
+let isShuttingDown = false
+
+const gracefulShutdown = async () => {
+  if (isShuttingDown) return
+  isShuttingDown = true
+
+  try {
+    await fastify.close()
+    process.exit(0)
+  } catch (err) {
+    console.error('Error during shutdown:', err)
+    process.exit(1)
+  }
+}
+
+process.once('SIGINT', gracefulShutdown)
+
+process.once('SIGTERM', gracefulShutdown)

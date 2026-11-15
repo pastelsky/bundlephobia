@@ -45,16 +45,22 @@ Install the host package `fd-find` before enabling `disk-clean.sh`.
 ```sh
 ssh bphobia
 cd /var/www/bundlephobia
-git status --short
-git pull --ff-only origin bundlephobia
-corepack yarn install --immutable
-cd build-service && corepack yarn install --immutable
-bun upgrade
-pm2 restart all --update-env
-pm2 save
+./operations/deploy.sh
 ```
 
+The zero-downtime deployment script performs the complete sequence:
+
+1. Validates git status and pulls `origin/bundlephobia` (`--ff-only`).
+2. Installs dependencies immutably for root and `build-service`, and upgrades Bun.
+3. Compiles production assets (`corepack yarn build`) _before_ reloading services so
+   the running server is never restarted against unbuilt or incompatible bundles.
+4. Validates and syncs HAProxy configuration if modified, reloading HAProxy hitlessly.
+5. Performs a rolling, zero-downtime reload of all PM2 apps (`pm2 reload all --update-env`)
+   with coordinated readiness signals (`wait_ready`) and graceful HTTP connection draining.
+6. Saves the PM2 process list and runs automated health checks against loopback (port 5400)
+   and HAProxy endpoints.
+
 Confirm both installed `package-build-stats` versions, Bun, and the deployed git
-commit. Check PM2, application/build logs, nginx errors, host resources, and API
-responses. Treat upstream timeouts, OOM kills, restart loops, or growing orphaned
-installer processes as deployment failures.
+commit from the script's output summary. Check PM2, application/build logs,
+nginx/HAProxy errors, host resources, and API responses. Treat upstream timeouts,
+OOM kills, restart loops, or growing orphaned installer processes as deployment failures.
