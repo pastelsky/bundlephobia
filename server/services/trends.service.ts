@@ -328,10 +328,7 @@ function getRangeFixes(range: OsvRange): string[] {
   return fixes
 }
 
-function matchesPackage(
-  affPkgName?: string,
-  targetPkgName?: string,
-): boolean {
+function matchesPackage(affPkgName?: string, targetPkgName?: string): boolean {
   if (!targetPkgName || !affPkgName) return true
 
   return affPkgName.toLowerCase() === targetPkgName.toLowerCase()
