@@ -24,6 +24,7 @@ import statsPathMiddleware from './middlewares/stats-path.middleware'
 
 interface ServerEnvironment {
   basicAuthPassword: string
+  host: string
   nodeEnv: string
   port: number
 }
@@ -39,6 +40,7 @@ function getEnvironment(
 
   return {
     basicAuthPassword: environment.BASIC_AUTH_PASSWORD,
+    host: environment.HOST || '127.0.0.1',
     nodeEnv: environment.NODE_ENV,
     port: environment.PORT
       ? parseInt(environment.PORT)
@@ -127,8 +129,8 @@ export async function startServer(): Promise<void> {
 
   server.use(router.routes())
 
-  const httpServer = server.listen(environment.port, () => {
-    console.log(`> Ready on http://localhost:${environment.port}`)
+  const httpServer = server.listen(environment.port, environment.host, () => {
+    console.log(`> Ready on http://${environment.host}:${environment.port}`)
 
     if (process.send) {
       process.send('ready')

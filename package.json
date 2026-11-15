@@ -36,6 +36,7 @@
     "bfj": "^9.0.2",
     "big-json": "^3.2.0",
     "canvas": "^3.2.1",
+    "cidr-tools": "^13.0.4",
     "classnames": "^2.5.1",
     "d3-array": "^3.2.4",
     "d3-path": "^3.1.0",

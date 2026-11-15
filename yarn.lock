@@ -9947,6 +9947,7 @@ __metadata:
     bfj: "npm:^9.0.2"
     big-json: "npm:^3.2.0"
     canvas: "npm:^3.2.1"
+    cidr-tools: "npm:^13.0.4"
     classnames: "npm:^2.5.1"
     d3-array: "npm:^3.2.4"
     d3-path: "npm:^3.1.0"
@@ -10551,6 +10552,23 @@ __metadata:
   version: 4.4.0
   resolution: "ci-info@npm:4.4.0"
   checksum: 44156201545b8dde01aa8a09ee2fe9fc7a73b1bef9adbd4606c9f61c8caeeb73fb7a575c88b0443f7b4edb5ee45debaa59ed54ba5f99698339393ca01349eb3a
+  languageName: node
+  linkType: hard
+
+"cidr-regex@npm:^7.1.1":
+  version: 7.1.2
+  resolution: "cidr-regex@npm:7.1.2"
+  checksum: f8b0f966968d7c2287c7890f626255a66e07ffd7fe3b6721c8e6072a2e5dd11e0c27eb8db40f70840bc0d40ee90a5a66971f09347c50a09ed4d9244a48ce3e84
+  languageName: node
+  linkType: hard
+
+"cidr-tools@npm:^13.0.4":
+  version: 13.0.4
+  resolution: "cidr-tools@npm:13.0.4"
+  dependencies:
+    cidr-regex: "npm:^7.1.1"
+    ip-bigint: "npm:^10.0.3"
+  checksum: fbd53e8f6a256fa879aed023042b7d5228157c6bee8c647cd29d9b703d6663214e3d25302d747050a7c52cc4cc7be80072db4113b69a1a53365cb74cf6a6395d
   languageName: node
   linkType: hard
 
@@ -15722,6 +15740,15 @@ __metadata:
   version: 10.1.0
   resolution: "ip-address@npm:10.1.0"
   checksum: 0103516cfa93f6433b3bd7333fa876eb21263912329bfa47010af5e16934eeeff86f3d2ae700a3744a137839ddfad62b900c7a445607884a49b5d1e32a3d7566
+  languageName: node
+  linkType: hard
+
+"ip-bigint@npm:^10.0.3":
+  version: 10.0.4
+  resolution: "ip-bigint@npm:10.0.4"
+  dependencies:
+    cidr-regex: "npm:^7.1.1"
+  checksum: de13e73f5f41716de8c1b62168d49d7259fdb8f3f3453b1faed289d6b2d6027f7605a7a25156321a754ded2435c2d563980a7951cd8f66fc112ecc877b9d4469
   languageName: node
   linkType: hard
 

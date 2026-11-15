@@ -23,3 +23,7 @@
 # Trash cleanup — every 10 days
 0 0 */10 * * chrt --idle 0 ionice -c 3 rm -rf /root/.local/share/Trash/files/* /root/.local/share/Trash/info/*
 
+# Sync Google crawler IP ranges for HAProxy verification — daily at 04:00 UTC (reloads only if ranges changed)
+0 4 * * * (node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js --if-changed && systemctl reload haproxy) >> /var/log/haproxy-google-sync.log 2>&1
+
+
