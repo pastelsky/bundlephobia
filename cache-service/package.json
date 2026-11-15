@@ -11,7 +11,7 @@
     "dotenv-defaults": "^2.0.2",
     "fastify": "^4.25.2",
     "firebase": "^8.10.1",
-    "lru-cache": "^11.5.2",
+    "lru-cache": "^11.5.3",
     "semver": "^7.6.3"
   },
   "scripts": {
