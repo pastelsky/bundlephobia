@@ -234,7 +234,7 @@ test('rejects unsupported groups, weak evidence, invalid identities and oversize
   assert.doesNotThrow(() => mergeProposal({}, valid))
 })
 
-test('fails closed on npm identity/deprecation, registry failure or archived source; never calls size APIs', async () => {
+test('requires a version-pinned bundle after verifying npm identity and repository', async () => {
   const urls: string[] = []
   await verifyPackages(
     proposal('candidate'),
@@ -252,15 +252,26 @@ test('fails closed on npm identity/deprecation, registry failure or archived sou
           url.includes('registry.npmjs.org')
             ? {
                 name: 'candidate',
+                version: '1.0.0',
                 repository: 'https://github.com/owner/candidate',
               }
-            : { archived: false },
+            : url.includes('bundlephobia.com')
+              ? {
+                  version: '1.0.0',
+                  size: 1000,
+                  gzip: 300,
+                  assets: [{ type: 'js', size: 1000, gzip: 300 }],
+                }
+              : { archived: false },
       }
     },
     'test-token',
   )
-  assert.equal(urls.length, 2)
-  assert.ok(urls.every(url => !url.includes('bundlephobia')))
+  assert.equal(urls.length, 3)
+  assert.equal(
+    urls[2],
+    'https://bundlephobia.com/api/size?package=candidate%401.0.0',
+  )
 
   for (const manifest of [
     { name: 'other' },
@@ -289,6 +300,7 @@ test('fails closed on npm identity/deprecation, registry failure or archived sou
         url.includes('registry.npmjs.org')
           ? {
               name: 'candidate',
+              version: '1.0.0',
               repository: 'https://github.com/owner/candidate',
             }
           : { archived: true },
@@ -319,11 +331,22 @@ test('verifies candidates concurrently but checks npm identity before authentica
           ok: true,
           json: async () => ({
             name,
+            version: '1.0.0',
             repository: `https://github.com/owner/${name}`,
           }),
         }
       }
 
+      if (url.includes('bundlephobia.com'))
+        return {
+          ok: true,
+          json: async () => ({
+            version: '1.0.0',
+            size: 1000,
+            gzip: 300,
+            assets: [{ type: 'js', size: 1000, gzip: 300 }],
+          }),
+        }
       repositoryReads.push(url)
 
       return { ok: true, json: async () => ({ archived: false }) }
@@ -339,6 +362,25 @@ test('verifies candidates concurrently but checks npm identity before authentica
   }
 
   assert.equal(repositoryReads.length, 3)
+})
+
+test('publication verification refuses candidates whose bundle build fails', async () => {
+  await assert.rejects(
+    verifyPackages(proposal('candidate'), async url => ({
+      ok: true,
+      json: async () =>
+        url.includes('registry.npmjs.org')
+          ? {
+              name: 'candidate',
+              version: '1.0.0',
+              repository: 'https://github.com/owner/candidate',
+            }
+          : url.includes('api.github.com')
+            ? { archived: false }
+            : { error: { code: 'BuildError' } },
+    })),
+    /usable bundle/,
+  )
 })
 
 test('three-way carry retains new approved categories and stops on overlapping maintainer edits', () => {

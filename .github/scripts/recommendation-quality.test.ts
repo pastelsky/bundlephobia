@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import {
+  collectBundleSize,
   collectPackageSignals,
   evaluateRecommendation,
   evaluateSizeAdvantage,
@@ -129,8 +130,13 @@ test('collects objective npm and GitHub quality signals', async () => {
       },
     ],
     [
-      'https://bundlephobia.com/api/size?package=example-package',
-      { version: '2.0.0', size: 5_000, gzip: 2_000 },
+      'https://bundlephobia.com/api/size?package=example-package%402.0.0',
+      {
+        version: '2.0.0',
+        size: 5_000,
+        gzip: 2_000,
+        assets: [{ type: 'js', size: 5000, gzip: 2000 }],
+      },
     ],
   ])
 
@@ -150,6 +156,60 @@ test('collects objective npm and GitHub quality signals', async () => {
   assert.equal(signals.activeOrStable, true)
   assert.equal(signals.repository, 'example/package')
   assert.equal(signals.bundleSize?.gzip, 2_000)
+})
+
+test('bundle verification blocks errors, timeouts, empty output and wrong versions', async () => {
+  const valid = {
+    version: '1.0.0',
+    size: 1000,
+    gzip: 300,
+    assets: [{ type: 'js', size: 1000, gzip: 300 }],
+  }
+
+  for (const body of [
+    { error: { code: 'BuildError' } },
+    { ...valid, size: 0 },
+    { ...valid, gzip: -1 },
+    { ...valid, assets: [] },
+    { ...valid, assets: [{ type: 'css', size: 1000, gzip: 300 }] },
+    { ...valid, assets: [{ type: 'js', size: 0, gzip: 0 }] },
+    { ...valid, version: '0.9.0' },
+  ]) {
+    const bundleSize = await collectBundleSize('candidate@1.0.0', {
+      fetchImpl: async () => ({ ok: true, json: async () => body }),
+    })
+
+    assert.equal(bundleSize.available, false)
+    assert.ok(
+      evaluateRecommendation({ exists: true, bundleSize }).errors.some(error =>
+        error.includes('build'),
+      ),
+    )
+  }
+
+  for (const fetchImpl of [
+    async () => ({ ok: false, status: 503, json: async () => null }),
+    async () => {
+      throw new DOMException('timeout', 'TimeoutError')
+    },
+  ])
+    assert.equal(
+      (await collectBundleSize('candidate@1.0.0', { fetchImpl })).available,
+      false,
+    )
+
+  assert.equal(
+    (
+      await collectBundleSize('@scope/candidate@1.0.0', {
+        fetchImpl: async (_url, options) => {
+          assert.ok(options?.signal)
+
+          return { ok: true, json: async () => valid }
+        },
+      })
+    ).available,
+    true,
+  )
 })
 
 test('blocks authoritative failures but keeps incomplete signals advisory', () => {
@@ -303,7 +363,12 @@ test('the issue-triage entrypoint reads the shared catalog and publishes one rep
       else if (url.includes('/repos/date-fns/date-fns'))
         body = { stargazers_count: 10_000, archived: false }
       else if (url.includes('bundlephobia.com/api/size'))
-        body = { version: '1.0.0', size: 1000, gzip: 300 }
+        body = {
+          version: '1.0.0',
+          size: 1000,
+          gzip: 300,
+          assets: [{ type: 'js', size: 1000, gzip: 300 }],
+        }
       else if (url.includes('/search/issues')) body = { items: [] }
       else if (
         url.includes('/issues/42/comments') &&
