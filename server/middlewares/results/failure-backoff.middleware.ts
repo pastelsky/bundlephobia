@@ -38,8 +38,13 @@ export function recordFailure(
     (previous?.status === failure.status ? previous.consecutiveFailures : 0) + 1
 
   // Infrastructure failures need a brief retry pause, not a multi-day package ban.
+  // Allow 1 retry first; only pause if it fails consecutively (>= 2).
   const cooldownMs =
-    failure.status >= 500 ? 60_000 : getFailureCooldownMs(consecutiveFailures)
+    failure.status >= 500
+      ? consecutiveFailures < 2
+        ? 0
+        : 60_000
+      : getFailureCooldownMs(consecutiveFailures)
 
   return {
     status: failure.status,

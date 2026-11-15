@@ -42,9 +42,11 @@ describe('failure backoff', () => {
     const temporary = { status: 503 }
     const first = recordFailure(undefined, temporary, 1_000)
     const second = recordFailure(first, temporary, 2_000)
-    expect(first.blockedUntil).toBe(61_000)
+    const third = recordFailure(second, temporary, 3_000)
+    expect(first.blockedUntil).toBeUndefined()
     expect(second.blockedUntil).toBe(62_000)
-    const packageFailure = recordFailure(second, failure, 63_000)
+    expect(third.blockedUntil).toBe(63_000)
+    const packageFailure = recordFailure(third, failure, 64_000)
     expect(packageFailure.consecutiveFailures).toBe(1)
     expect(packageFailure.blockedUntil).toBeUndefined()
     expect(packageFailure).not.toHaveProperty('body')

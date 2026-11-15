@@ -65,7 +65,8 @@ describe('failure backoff middleware', () => {
   it('returns 503 ServiceUnavailableError during backoff for infrastructure failures (>=500)', async () => {
     const serverError = { status: 500 }
     const first = recordFailure(undefined, serverError, Date.now())
-    failureCache.set(failureCacheKey, first)
+    const second = recordFailure(first, serverError, Date.now())
+    failureCache.set(failureCacheKey, second)
 
     const ctx = {
       body: undefined,
