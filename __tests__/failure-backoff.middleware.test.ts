@@ -62,6 +62,40 @@ describe('failure backoff middleware', () => {
     )
   })
 
+  it('returns 503 ServiceUnavailableError during backoff for infrastructure failures (>=500)', async () => {
+    const serverError = { status: 500 }
+    const first = recordFailure(undefined, serverError, Date.now())
+    failureCache.set(failureCacheKey, first)
+
+    const ctx = {
+      body: undefined,
+      cacheControl: undefined,
+      query: {},
+      set: jest.fn(),
+      state: {
+        analysis: { language: 'javascript', operation: 'package-analysis' },
+        resolved: { packageString },
+      },
+      status: undefined,
+    }
+
+    const next = jest.fn()
+
+    // SAFETY: this fixture provides the middleware fields exercised by the test.
+    await failureBackoffMiddleware(ctx as never, next)
+
+    expect(next).not.toHaveBeenCalled()
+    expect(ctx.status).toBe(503)
+    expect(ctx.body).toEqual({
+      error: {
+        code: 'ServiceUnavailableError',
+        message:
+          'The build service is temporarily unavailable. Retries are briefly paused. Please try again in a moment.',
+      },
+    })
+    expect(ctx.set).toHaveBeenCalledWith('Retry-After', expect.any(String))
+  })
+
   it('clears the consecutive failure history after success', async () => {
     const first = recordFailure(undefined, failure, Date.now())
     failureCache.set(failureCacheKey, first)

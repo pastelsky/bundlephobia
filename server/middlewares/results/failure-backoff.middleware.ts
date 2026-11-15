@@ -90,12 +90,14 @@ const failureBackoffMiddleware: Middleware = async (ctx, next) => {
       )
       ctx.set('Retry-After', String(retryAfterSeconds))
       ctx.cacheControl = { maxAge: 0 }
-      ctx.status = failureCacheEntry.status
+      const isServiceError = failureCacheEntry.status >= 500
+      ctx.status = isServiceError ? 503 : failureCacheEntry.status
       ctx.body = {
         error: {
-          code: 'BuildError',
-          message:
-            'The package has failed to build multiple times recently and further tries are temporarily paused. Please try again later.',
+          code: isServiceError ? 'ServiceUnavailableError' : 'BuildError',
+          message: isServiceError
+            ? 'The build service is temporarily unavailable. Retries are briefly paused. Please try again in a moment.'
+            : 'The package has failed to build multiple times recently and further tries are temporarily paused. Please try again later.',
         },
       }
 
