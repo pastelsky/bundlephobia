@@ -1,8 +1,13 @@
 {
   "version": 1,
-  "cursor": 6,
+  "cursor": 12,
   "surfaced": [
+    "@angular/common",
+    "@angular/compiler",
+    "@angular/platform-browser",
+    "@angular/router",
     "@dnd-kit/utilities",
+    "@lit/context",
     "@modelcontextprotocol/ext-apps",
     "@radix-ui/react-dialog",
     "@radix-ui/react-popover",
@@ -14,23 +19,27 @@
     "@tauri-apps/plugin-fs",
     "@tauri-apps/plugin-opener",
     "@tauri-apps/plugin-updater",
+    "@types/node",
     "@vueuse/core",
     "class-variance-authority",
     "cmdk",
     "dotenv",
     "highlight.js",
     "katex",
+    "leaflet",
     "mermaid",
     "next",
     "prettier",
     "qrcode",
     "react-dom",
     "react-markdown",
+    "rxjs",
     "shiki",
     "socket.io-client",
     "tailwind-merge",
     "tailwindcss-animate",
     "tldts",
-    "vue-router"
+    "vue-router",
+    "zone.js"
   ]
 }
