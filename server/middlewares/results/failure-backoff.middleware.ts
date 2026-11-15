@@ -38,8 +38,13 @@ export function recordFailure(
     (previous?.status === failure.status ? previous.consecutiveFailures : 0) + 1
 
   // Infrastructure failures need a brief retry pause, not a multi-day package ban.
+  // Allow 1 retry first; only pause if it fails consecutively (>= 2).
   const cooldownMs =
-    failure.status >= 500 ? 60_000 : getFailureCooldownMs(consecutiveFailures)
+    failure.status >= 500
+      ? consecutiveFailures < 2
+        ? 0
+        : 60_000
+      : getFailureCooldownMs(consecutiveFailures)
 
   return {
     status: failure.status,
@@ -90,12 +95,14 @@ const failureBackoffMiddleware: Middleware = async (ctx, next) => {
       )
       ctx.set('Retry-After', String(retryAfterSeconds))
       ctx.cacheControl = { maxAge: 0 }
-      ctx.status = failureCacheEntry.status
+      const isServiceError = failureCacheEntry.status >= 500
+      ctx.status = isServiceError ? 503 : failureCacheEntry.status
       ctx.body = {
         error: {
-          code: 'BuildError',
-          message:
-            'The package has failed to build multiple times recently and further tries are temporarily paused. Please try again later.',
+          code: isServiceError ? 'ServiceUnavailableError' : 'BuildError',
+          message: isServiceError
+            ? 'The build service is temporarily unavailable. Retries are briefly paused. Please try again in a moment.'
+            : 'The package has failed to build multiple times recently and further tries are temporarily paused. Please try again later.',
         },
       }
 
