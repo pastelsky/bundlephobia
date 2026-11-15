@@ -11,8 +11,6 @@
 
 const fs = require('fs');
 
-const path = require('path');
-
 const { execSync } = require('child_process');
 
 const SOURCES = [
@@ -21,9 +19,7 @@ const SOURCES = [
   'https://developers.google.com/search/apis/ipranges/user-triggered-fetchers.json',
 ];
 
-const DEFAULT_REPO_OUTPUT = path.resolve(__dirname, '..', 'google-crawler-networks.lst');
-
-const SYSTEM_HAPROXY_PATH = '/etc/haproxy/google-crawler-networks.lst';
+const TARGET_PATH = process.env.GOOGLE_NETWORKS_FILE || '/etc/haproxy/google-crawler-networks.lst';
 
 async function fetchGooglePrefixes() {
   const { mergeCidr } = await import('cidr-tools');
@@ -88,22 +84,22 @@ function generateFileContent(v4, v6) {
   return lines.join('\n');
 }
 
-function installSystemFile(newContent, reloadHaproxy) {
-  let existingSystem = '';
+function updateNetworksFile(newContent, reloadHaproxy) {
+  let existingContent = '';
 
-  if (fs.existsSync(SYSTEM_HAPROXY_PATH)) {
-    existingSystem = fs.readFileSync(SYSTEM_HAPROXY_PATH, 'utf8');
+  if (fs.existsSync(TARGET_PATH)) {
+    existingContent = fs.readFileSync(TARGET_PATH, 'utf8');
   }
 
-  if (newContent === existingSystem) {
-    console.log(`${SYSTEM_HAPROXY_PATH} is already up to date. No reload needed.`);
+  if (newContent === existingContent) {
+    console.log(`${TARGET_PATH} is already up to date. No reload needed.`);
 
     return;
   }
 
-  fs.writeFileSync(SYSTEM_HAPROXY_PATH, newContent, 'utf8');
+  fs.writeFileSync(TARGET_PATH, newContent, 'utf8');
 
-  console.log(`Installed updated networks to ${SYSTEM_HAPROXY_PATH}`);
+  console.log(`Updated ${TARGET_PATH}`);
 
   if (reloadHaproxy) {
     console.log('Reloading HAProxy service...');
@@ -114,34 +110,10 @@ function installSystemFile(newContent, reloadHaproxy) {
   }
 }
 
-function writeRepoFile(newContent, outputPath) {
-  let existingRepo = '';
-
-  if (fs.existsSync(outputPath)) {
-    existingRepo = fs.readFileSync(outputPath, 'utf8');
-  }
-
-  if (newContent === existingRepo) {
-    console.log(`${outputPath} is already up to date.`);
-
-    return;
-  }
-
-  fs.writeFileSync(outputPath, newContent, 'utf8');
-
-  console.log(`Updated ${outputPath}`);
-}
-
 async function main() {
   const args = process.argv.slice(2);
 
-  const installToSystem = args.includes('--install');
-
   const reloadHaproxy = args.includes('--reload');
-
-  const outArgIdx = args.indexOf('--output');
-
-  const outputPath = outArgIdx !== -1 && args[outArgIdx + 1] ? args[outArgIdx + 1] : DEFAULT_REPO_OUTPUT;
 
   console.log(`[${new Date().toISOString()}] Fetching Google crawler ranges from ${SOURCES.length} sources...`);
 
@@ -151,11 +123,7 @@ async function main() {
 
   const newContent = generateFileContent(v4, v6);
 
-  if (installToSystem) {
-    installSystemFile(newContent, reloadHaproxy);
-  } else {
-    writeRepoFile(newContent, outputPath);
-  }
+  updateNetworksFile(newContent, reloadHaproxy);
 }
 
 main().catch((err) => {

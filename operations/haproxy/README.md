@@ -38,7 +38,7 @@ sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/cron/haprox
 sudo install -o root -g root -m 644 /var/www/bundlephobia/operations/cron/sync-google-crawlers /etc/cron.d/sync-google-crawlers
 
 # Dynamically populate /etc/haproxy/google-crawler-networks.lst from Google's official endpoints
-node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js --install
+node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js
 
 sudo /usr/sbin/haproxy -Ws -f /etc/haproxy/haproxy.cfg -f /etc/haproxy/conf.d -c -S /run/haproxy-master.sock
 sudo systemctl reload haproxy
@@ -51,7 +51,7 @@ Google publishes official crawler IP ranges as machine-readable JSON feeds (`goo
 To manually refresh and deploy the list at any time:
 
 ```sh
-node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js --install --reload
+node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js --reload
 ```
 
 ## Request limits (in evaluation order)

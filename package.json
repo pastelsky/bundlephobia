@@ -128,7 +128,6 @@
     "test": "jest",
     "test:unit": "jest --testPathIgnorePatterns='/__tests__/errors-cache\\.test\\.ts$'",
     "test:haproxy": "python3 __tests__/haproxy-rate-limits.py",
-    "sync:google-crawlers": "node operations/haproxy/scripts/sync-google-crawlers.js",
     "test:process-config": "jest --runInBand __tests__/validate-process-config.test.ts",
     "typecheck": "tsc --project tsconfig.typecheck.json --noEmit",
     "test:e2e": "yarn build && playwright test",
