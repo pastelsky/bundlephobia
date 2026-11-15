@@ -18,6 +18,7 @@ import {
 import { fetchNpmDownloadRange } from '../clients/npm-downloads.client'
 import {
   fetchPackageVulnerabilities,
+  type OsvRange,
   type OsvVulnerability,
 } from '../clients/osv.client'
 import { fetchPackageHistory } from './package-history.service'
@@ -266,9 +267,15 @@ export type VulnerabilityTrendsResult = {
   summary: TrendsVulnerabilitySummary
 }
 
+export type VulnerabilityInterval = {
+  id: string
+  openedAt: string
+  resolvedAt: string | null
+}
+
 const SEVERITY_MAP = new Map<
   string,
-  keyof Omit<TrendsVulnerabilitySummary, 'total'>
+  keyof Omit<TrendsVulnerabilitySummary, 'total' | 'active'>
 >([
   ['CRITICAL', 'critical'],
   ['HIGH', 'high'],
@@ -282,6 +289,7 @@ export function summarizeVulnerabilities(
 ): TrendsVulnerabilitySummary {
   const summary: TrendsVulnerabilitySummary = {
     total: vulns.length,
+    active: 0,
     critical: 0,
     high: 0,
     moderate: 0,
@@ -301,26 +309,135 @@ export function summarizeVulnerabilities(
   return summary
 }
 
-function buildVulnerabilityCumulativeMap(sorted: OsvVulnerability[]) {
-  const pointsMap = new Map<string, number>()
-  let count = 0
+function addDaysToIso(isoDate: string, days: number): string {
+  const d = new Date(`${isoDate}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
 
-  for (const v of sorted) {
-    count += 1
-    const day = v.published.slice(0, 10)
+  return d.toISOString().slice(0, 10)
+}
 
-    if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
-      pointsMap.set(day, count)
+function getRangeFixes(range: OsvRange): string[] {
+  const fixes: string[] = []
+
+  for (const ev of range.events ?? []) {
+    if (ev.fixed) {
+      fixes.push(ev.fixed)
     }
   }
 
-  return { pointsMap, totalCount: count }
+  return fixes
+}
+
+function matchesPackage(
+  affPkgName?: string,
+  targetPkgName?: string,
+): boolean {
+  if (!targetPkgName || !affPkgName) return true
+
+  return affPkgName.toLowerCase() === targetPkgName.toLowerCase()
+}
+
+function findFixVersions(
+  vuln: OsvVulnerability,
+  packageName?: string,
+): string[] {
+  const fixes: string[] = []
+
+  for (const aff of vuln.affected ?? []) {
+    if (matchesPackage(aff.package?.name, packageName)) {
+      for (const range of aff.ranges ?? []) {
+        fixes.push(...getRangeFixes(range))
+      }
+    }
+  }
+
+  return fixes
+}
+
+function resolveInterval(
+  openedAt: string,
+  fixVersions: string[],
+  publishDates: Record<string, string>,
+): string | null {
+  const fixDates = fixVersions
+    .flatMap(ver => {
+      const date = publishDates[ver]
+
+      return date ? [date] : []
+    })
+    .sort()
+
+  const fixDate = fixDates[0]
+
+  if (!fixDate) {
+    return null
+  }
+
+  if (fixDate > openedAt) {
+    return fixDate
+  }
+
+  return addDaysToIso(openedAt, 7)
+}
+
+export function toVulnerabilityInterval(
+  vuln: OsvVulnerability,
+  packageName: string | undefined,
+  publishDates: Record<string, string>,
+): VulnerabilityInterval {
+  const openedAt = vuln.published.slice(0, 10)
+  const fixVersions = findFixVersions(vuln, packageName)
+  const resolvedAt = resolveInterval(openedAt, fixVersions, publishDates)
+
+  return { id: vuln.id, openedAt, resolvedAt }
+}
+
+export function countActiveVulnerabilities(
+  intervals: VulnerabilityInterval[],
+  date: string,
+): number {
+  let count = 0
+
+  for (const iv of intervals) {
+    if (iv.openedAt <= date && (!iv.resolvedAt || iv.resolvedAt > date)) {
+      count += 1
+    }
+  }
+
+  return count
+}
+
+function buildDailyActiveTimeline(
+  intervals: VulnerabilityInterval[],
+  from: string,
+  today: string,
+): TrendsPoint[] {
+  const points: TrendsPoint[] = []
+  const cur = new Date(`${from}T00:00:00Z`)
+  const end = new Date(`${today}T00:00:00Z`)
+
+  while (cur <= end) {
+    const dStr = cur.toISOString().slice(0, 10)
+    const active = countActiveVulnerabilities(intervals, dStr)
+
+    points.push({ date: dStr, value: active })
+    cur.setUTCDate(cur.getUTCDate() + 1)
+  }
+
+  return points
+}
+
+export type BuildVulnerabilityOptions = {
+  packageName?: string
+  publishDates?: Record<string, string>
 }
 
 export function buildVulnerabilityPoints(
   vulns: OsvVulnerability[],
   from: string,
+  options: BuildVulnerabilityOptions = {},
 ): VulnerabilityTrendsResult {
+  const { packageName, publishDates = {} } = options
   const summary = summarizeVulnerabilities(vulns)
   const today = formatTrendsDate(new Date())
 
@@ -336,29 +453,22 @@ export function buildVulnerabilityPoints(
     return emptyResult
   }
 
-  const sorted = [...vulns].sort((a, b) =>
-    a.published.localeCompare(b.published),
+  const intervals = vulns.map(v =>
+    toVulnerabilityInterval(v, packageName, publishDates),
   )
 
-  const { pointsMap, totalCount } = buildVulnerabilityCumulativeMap(sorted)
-  const priorVulns = sorted.filter(v => v.published.slice(0, 10) < from).length
-  const points: TrendsPoint[] = [{ date: from, value: priorVulns }]
+  summary.active = countActiveVulnerabilities(intervals, today)
 
-  for (const [date, val] of pointsMap.entries()) {
-    if (date > from && date <= today) {
-      points.push({ date, value: val })
-    } else if (date === from) {
-      points[0].value = val
-    }
-  }
-
-  if (points.length === 0 || points[points.length - 1].date < today) {
-    points.push({ date: today, value: totalCount })
-  }
-
+  const points = buildDailyActiveTimeline(intervals, from, today)
   const result: VulnerabilityTrendsResult = { points, summary }
 
   return result
+}
+
+function weeklyDownloadsTotal(downloads: TrendsPoint[]): number | null {
+  if (downloads.length === 0) return null
+
+  return downloads.slice(-7).reduce((total, point) => total + point.value, 0)
 }
 
 async function fetchPackageTrendsSource(
@@ -393,11 +503,13 @@ async function fetchPackageTrendsSource(
   const downloads = getSettledDownloads(downloadsResult, warnings)
   const github = getSettledGithub(githubResult, warnings)
 
-  const vulns =
-    vulnsResult.status === 'fulfilled' ? vulnsResult.value : []
+  const vulns = vulnsResult.status === 'fulfilled' ? vulnsResult.value : []
 
   const { points: vulnerabilities, summary: vulnerabilitySummary } =
-    buildVulnerabilityPoints(vulns, from)
+    buildVulnerabilityPoints(vulns, from, {
+      packageName,
+      publishDates: history.publishDates ?? {},
+    })
 
   const size = sizePoints(history)
   const latest = latestBuiltVersion(history.versions)
@@ -416,10 +528,7 @@ async function fetchPackageTrendsSource(
       minor: release.minor,
     })),
     current: {
-      weeklyDownloads:
-        downloads.length > 0
-          ? downloads.slice(-7).reduce((total, point) => total + point.value, 0)
-          : null,
+      weeklyDownloads: weeklyDownloadsTotal(downloads),
       stars: github.current,
       size: latest?.size ?? null,
       gzip: latest?.gzip ?? null,

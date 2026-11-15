@@ -176,6 +176,7 @@ export async function fetchPackageHistory(
     repository,
     versions,
     ...releaseMetadata(packument.time, options),
+    publishDates,
     range: {
       from: options.from ?? null,
       to: options.to ?? null,

@@ -87,8 +87,8 @@ const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
     { id: 'size', label: 'Size', description: 'Cached gzip size history' },
     {
       id: 'vulnerabilities',
-      label: 'Security',
-      description: 'Cumulative vulnerabilities disclosed (OSV.dev)',
+      label: 'Vulnerabilities',
+      description: 'Active & unresolved vulnerabilities over time (OSV.dev)',
     },
   ]
 
@@ -135,8 +135,8 @@ function formatVulnerabilities(
   if (!summary) return { value: '—', unit: '' }
 
   return {
-    value: summary.total.toLocaleString(),
-    unit: summary.total === 1 ? 'vuln' : 'vulns',
+    value: summary.active.toLocaleString(),
+    unit: 'active',
   }
 }
 
@@ -825,7 +825,7 @@ export default function TrendsPage({
                 <span>Weekly downloads</span>
                 <span>Gzip</span>
                 <span>Minified</span>
-                <span>Security</span>
+                <span>Vulnerabilities</span>
                 <span aria-hidden="true" />
               </div>
               {packages.map((pkgName, index) => {
@@ -944,13 +944,15 @@ export default function TrendsPage({
                         </span>
                       </div>
                       <div className="trends-stat">
-                        <span className="trends-stat__label">Security</span>
+                        <span className="trends-stat__label">
+                          Vulnerabilities
+                        </span>
                         <span className="trends-stat__value">
                           {pack ? (
                             <span
                               title={
                                 pack.current.vulnerabilities
-                                  ? `${pack.current.vulnerabilities.total} total vulnerabilities disclosed via OSV.dev (${pack.current.vulnerabilities.critical} critical, ${pack.current.vulnerabilities.high} high, ${pack.current.vulnerabilities.moderate} moderate, ${pack.current.vulnerabilities.low} low)`
+                                  ? `${pack.current.vulnerabilities.active} active today (${pack.current.vulnerabilities.total} total disclosed: ${pack.current.vulnerabilities.total - pack.current.vulnerabilities.active} resolved, ${pack.current.vulnerabilities.critical} critical, ${pack.current.vulnerabilities.high} high, ${pack.current.vulnerabilities.moderate} moderate, ${pack.current.vulnerabilities.low} low)`
                                   : undefined
                               }
                             >

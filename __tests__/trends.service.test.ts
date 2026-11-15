@@ -35,6 +35,7 @@ const series: TrendsPackageSeries = {
     gzip: 12,
     vulnerabilities: {
       total: 2,
+      active: 1,
       critical: 0,
       high: 1,
       moderate: 1,
@@ -57,11 +58,12 @@ describe('trends data', () => {
     ).toBe('2023-02-28')
   })
 
-  it('sums downloads but keeps the latest star total and size release', () => {
+  it('sums downloads but keeps the latest star total, size release, and peak active vulns', () => {
     expect(groupTrendsPackage(series, 'week')).toMatchObject({
       downloads: [{ date: '2026-09-14', value: 5 }],
       stars: [{ date: '2026-09-14', value: 100 }],
       size: [{ date: '2026-09-14', value: 12, version: '1.1.0' }],
+      vulnerabilities: [{ date: '2026-09-14', value: 2 }],
     })
   })
 
@@ -123,48 +125,83 @@ describe('trends data', () => {
     ])
   })
 
-  it('builds cumulative vulnerability timeline and severity summaries from OSV data', () => {
+  it('builds active vulnerability timeline with peaks, fixes, and severity summaries', () => {
     const vulns = [
       {
         id: 'GHSA-1',
-        published: '2023-01-15T12:00:00Z',
+        published: '2024-05-10T12:00:00Z',
         database_specific: { severity: 'HIGH' },
+        affected: [
+          {
+            package: { name: 'example-pkg' },
+            ranges: [
+              {
+                events: [{ introduced: '1.0.0' }, { fixed: '1.0.1' }],
+              },
+            ],
+          },
+        ],
       },
       {
         id: 'GHSA-2',
-        published: '2024-05-10T08:00:00Z',
+        published: '2024-05-15T08:00:00Z',
         database_specific: { severity: 'CRITICAL' },
-      },
-      {
-        id: 'GHSA-3',
-        published: '2024-05-10T14:00:00Z',
-        database_specific: { severity: 'MODERATE' },
+        affected: [
+          {
+            package: { name: 'example-pkg' },
+            ranges: [
+              {
+                events: [{ introduced: '1.0.0' }], // Never fixed
+              },
+            ],
+          },
+        ],
       },
     ]
 
-    const result = buildVulnerabilityPoints(vulns, '2024-01-01')
+    const publishDates = {
+      '1.0.1': '2024-05-20',
+    }
+
+    const result = buildVulnerabilityPoints(vulns, '2024-05-01', {
+      packageName: 'example-pkg',
+      publishDates,
+    })
 
     expect(result.summary).toEqual({
-      total: 3,
+      total: 2,
+      active: 1, // GHSA-2 is never fixed, so 1 active today
       critical: 1,
       high: 1,
-      moderate: 1,
+      moderate: 0,
       low: 0,
     })
 
-    // First point reflects prior vulns before 'from' (2024-01-01)
-    expect(result.points[0]).toEqual({ date: '2024-01-01', value: 1 })
-    // Same-day vulns (GHSA-2 & GHSA-3) collapse to the daily total (3)
-    const midPoint = result.points.find(p => p.date === '2024-05-10')
-    expect(midPoint).toEqual({ date: '2024-05-10', value: 3 })
-    // Final point extends to today at cumulative total
-    expect(result.points[result.points.length - 1].value).toBe(3)
+    // Before any disclosures: 0 active
+    const before = result.points.find(p => p.date === '2024-05-05')
+    expect(before?.value).toBe(0)
+
+    // After GHSA-1 disclosed, before GHSA-2: 1 active
+    const singleActive = result.points.find(p => p.date === '2024-05-12')
+    expect(singleActive?.value).toBe(1)
+
+    // Overlap window: both GHSA-1 and GHSA-2 are open (peak = 2)
+    const peak = result.points.find(p => p.date === '2024-05-16')
+    expect(peak?.value).toBe(2)
+
+    // After 1.0.1 published (2024-05-20), GHSA-1 resolved; GHSA-2 remains open: 1 active
+    const postFix = result.points.find(p => p.date === '2024-05-25')
+    expect(postFix?.value).toBe(1)
+
+    // Extends to today at current active count (1)
+    expect(result.points[result.points.length - 1].value).toBe(1)
   })
 
   it('creates a zero-baseline timeline when package has 0 vulnerabilities', () => {
     const result = buildVulnerabilityPoints([], '2024-01-01')
 
     expect(result.summary.total).toBe(0)
+    expect(result.summary.active).toBe(0)
     expect(result.points[0]).toEqual({ date: '2024-01-01', value: 0 })
     expect(result.points[result.points.length - 1].value).toBe(0)
   })

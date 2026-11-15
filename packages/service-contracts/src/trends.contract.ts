@@ -37,6 +37,7 @@ export type TrendsRelease = {
 
 export type TrendsVulnerabilitySummary = {
   total: number
+  active: number
   critical: number
   high: number
   moderate: number

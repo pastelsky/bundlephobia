@@ -51,10 +51,26 @@ function bucketDate(date: string, groupBy: TrendsGroupBy): string {
   return date
 }
 
+function computeBucketValue(
+  bucket: TrendsPoint[],
+  last: TrendsPoint,
+  mode: 'sum' | 'last' | 'max',
+): number {
+  if (mode === 'sum') {
+    return bucket.reduce((total, point) => total + point.value, 0)
+  }
+
+  if (mode === 'max') {
+    return Math.max(...bucket.map(point => point.value))
+  }
+
+  return last.value
+}
+
 export function rollupTrendsPoints(
   points: TrendsPoint[],
   groupBy: TrendsGroupBy,
-  options: { mode: 'sum' | 'last'; now?: Date },
+  options: { mode: 'sum' | 'last' | 'max'; now?: Date },
 ): TrendsPoint[] {
   const { mode, now = new Date() } = options
   const currentBucket = bucketDate(formatTrendsDate(now), groupBy)
@@ -77,10 +93,7 @@ export function rollupTrendsPoints(
 
       return {
         date,
-        value:
-          mode === 'sum'
-            ? bucket.reduce((total, point) => total + point.value, 0)
-            : last.value,
+        value: computeBucketValue(bucket, last, mode),
         version: last.version,
         partial:
           bucket.some(point => point.partial) ||
@@ -102,7 +115,7 @@ export function groupTrendsPackage(
       source.vulnerabilities ?? [],
       groupBy,
       {
-        mode: 'last',
+        mode: 'max',
       },
     ),
   }
