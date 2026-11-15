@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "zod": "^4.4.2"
+    "zod": "^4.6.7"
   },
   "main": "./src/index.ts",
   "exports": {

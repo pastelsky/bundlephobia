@@ -35,7 +35,7 @@ fastify.get(CACHE_ROUTE.exports, getExportsSizeMiddleware)
 fastify.post(CACHE_ROUTE.exports, postExportsSizeMiddleware)
 
 fastify
-  .listen({ port: 7001 })
+  .listen({ host: '127.0.0.1', port: 7001 })
   .then(() => {
     const address = fastify.server.address()
 
