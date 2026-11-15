@@ -15,6 +15,7 @@ import API, {
   type TrendsMetric,
   type TrendsRange,
   type TrendsResponse,
+  type TrendsVulnerabilitySummary,
 } from '../../client/api'
 import Layout from '../../client/components/Layout'
 import MetaTags from '../../client/components/MetaTags'
@@ -84,6 +85,11 @@ const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
       description: 'Total repository stars',
     },
     { id: 'size', label: 'Size', description: 'Cached gzip size history' },
+    {
+      id: 'vulnerabilities',
+      label: 'Security',
+      description: 'Cumulative vulnerabilities disclosed (OSV.dev)',
+    },
   ]
 
 const RANGES: Array<{ id: TrendsRange; label: string }> = [
@@ -120,6 +126,17 @@ function formatSize(value: number | null) {
       formatted.size.toFixed(formatted.unit === 'B' ? 0 : 1),
     ).toString(),
     unit: formatted.unit,
+  }
+}
+
+function formatVulnerabilities(
+  summary: TrendsVulnerabilitySummary | undefined | null,
+) {
+  if (!summary) return { value: '—', unit: '' }
+
+  return {
+    value: summary.total.toLocaleString(),
+    unit: summary.total === 1 ? 'vuln' : 'vulns',
   }
 }
 
@@ -808,6 +825,7 @@ export default function TrendsPage({
                 <span>Weekly downloads</span>
                 <span>Gzip</span>
                 <span>Minified</span>
+                <span>Security</span>
                 <span aria-hidden="true" />
               </div>
               {packages.map((pkgName, index) => {
@@ -917,6 +935,31 @@ export default function TrendsPage({
                             <MetricValue
                               formatted={formatSize(pack.current.size)}
                             />
+                          ) : (
+                            <span
+                              className="trends-stat__skeleton"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </span>
+                      </div>
+                      <div className="trends-stat">
+                        <span className="trends-stat__label">Security</span>
+                        <span className="trends-stat__value">
+                          {pack ? (
+                            <span
+                              title={
+                                pack.current.vulnerabilities
+                                  ? `${pack.current.vulnerabilities.total} total vulnerabilities disclosed via OSV.dev (${pack.current.vulnerabilities.critical} critical, ${pack.current.vulnerabilities.high} high, ${pack.current.vulnerabilities.moderate} moderate, ${pack.current.vulnerabilities.low} low)`
+                                  : undefined
+                              }
+                            >
+                              <MetricValue
+                                formatted={formatVulnerabilities(
+                                  pack.current.vulnerabilities,
+                                )}
+                              />
+                            </span>
                           ) : (
                             <span
                               className="trends-stat__skeleton"

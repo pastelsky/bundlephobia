@@ -98,5 +98,12 @@ export function groupTrendsPackage(
     downloads: rollupTrendsPoints(source.downloads, groupBy, { mode: 'sum' }),
     stars: rollupTrendsPoints(source.stars, groupBy, { mode: 'last' }),
     size: rollupTrendsPoints(source.size, groupBy, { mode: 'last' }),
+    vulnerabilities: rollupTrendsPoints(
+      source.vulnerabilities ?? [],
+      groupBy,
+      {
+        mode: 'last',
+      },
+    ),
   }
 }

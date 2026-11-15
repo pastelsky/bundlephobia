@@ -77,6 +77,8 @@ export function seriesForMetric(
       return pack.stars
     case 'size':
       return pack.size
+    case 'vulnerabilities':
+      return pack.vulnerabilities
   }
 }
 
@@ -92,6 +94,13 @@ export function formatMetricValue(
     return {
       value: trimZeros(formatted.size.toFixed(formatted.unit === 'B' ? 0 : 1)),
       unit: formatted.unit,
+    }
+  }
+
+  if (metric === 'vulnerabilities') {
+    return {
+      value: `${Math.round(value)}`,
+      unit: '',
     }
   }
 

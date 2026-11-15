@@ -7,6 +7,7 @@ import type {
   TrendsPoint,
   TrendsRange,
   TrendsResponse,
+  TrendsVulnerabilitySummary,
 } from '@bundlephobia/service-contracts/trends'
 import { formatTrendsDate, startOfTrendsRangeDate } from '../../utils/trends'
 import {
@@ -15,6 +16,10 @@ import {
   type GithubStarHistoryRow,
 } from '../clients/github.client'
 import { fetchNpmDownloadRange } from '../clients/npm-downloads.client'
+import {
+  fetchPackageVulnerabilities,
+  type OsvVulnerability,
+} from '../clients/osv.client'
 import { fetchPackageHistory } from './package-history.service'
 
 const MAX_GITHUB_HISTORY_PAGES = 100
@@ -256,6 +261,106 @@ function getSettledGithub(
   return { points: [], current: null }
 }
 
+export type VulnerabilityTrendsResult = {
+  points: TrendsPoint[]
+  summary: TrendsVulnerabilitySummary
+}
+
+const SEVERITY_MAP = new Map<
+  string,
+  keyof Omit<TrendsVulnerabilitySummary, 'total'>
+>([
+  ['CRITICAL', 'critical'],
+  ['HIGH', 'high'],
+  ['MODERATE', 'moderate'],
+  ['MEDIUM', 'moderate'],
+  ['LOW', 'low'],
+])
+
+export function summarizeVulnerabilities(
+  vulns: OsvVulnerability[],
+): TrendsVulnerabilitySummary {
+  const summary: TrendsVulnerabilitySummary = {
+    total: vulns.length,
+    critical: 0,
+    high: 0,
+    moderate: 0,
+    low: 0,
+  }
+
+  for (const v of vulns) {
+    const rawSev = (v.database_specific?.severity ?? '').toUpperCase()
+
+    const key = SEVERITY_MAP.get(rawSev)
+
+    if (key) {
+      summary[key] += 1
+    }
+  }
+
+  return summary
+}
+
+function buildVulnerabilityCumulativeMap(sorted: OsvVulnerability[]) {
+  const pointsMap = new Map<string, number>()
+  let count = 0
+
+  for (const v of sorted) {
+    count += 1
+    const day = v.published.slice(0, 10)
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+      pointsMap.set(day, count)
+    }
+  }
+
+  return { pointsMap, totalCount: count }
+}
+
+export function buildVulnerabilityPoints(
+  vulns: OsvVulnerability[],
+  from: string,
+): VulnerabilityTrendsResult {
+  const summary = summarizeVulnerabilities(vulns)
+  const today = formatTrendsDate(new Date())
+
+  if (vulns.length === 0) {
+    const emptyResult: VulnerabilityTrendsResult = {
+      points: [
+        { date: from, value: 0 },
+        { date: today, value: 0 },
+      ],
+      summary,
+    }
+
+    return emptyResult
+  }
+
+  const sorted = [...vulns].sort((a, b) =>
+    a.published.localeCompare(b.published),
+  )
+
+  const { pointsMap, totalCount } = buildVulnerabilityCumulativeMap(sorted)
+  const priorVulns = sorted.filter(v => v.published.slice(0, 10) < from).length
+  const points: TrendsPoint[] = [{ date: from, value: priorVulns }]
+
+  for (const [date, val] of pointsMap.entries()) {
+    if (date > from && date <= today) {
+      points.push({ date, value: val })
+    } else if (date === from) {
+      points[0].value = val
+    }
+  }
+
+  if (points.length === 0 || points[points.length - 1].date < today) {
+    points.push({ date: today, value: totalCount })
+  }
+
+  const result: VulnerabilityTrendsResult = { points, summary }
+
+  return result
+}
+
 async function fetchPackageTrendsSource(
   packageName: string,
   range: TrendsRange,
@@ -275,17 +380,24 @@ async function fetchPackageTrendsSource(
 
   const warnings: string[] = []
 
-  const [[downloadsResult], [githubResult]] = await Promise.all([
+  const [[downloadsResult], [githubResult], [vulnsResult]] = await Promise.all([
     downloadsResults,
     Promise.allSettled([
       history.repository
         ? fetchGithubStars(history.repository, from)
         : Promise.resolve({ points: [], current: null }),
     ]),
+    Promise.allSettled([fetchPackageVulnerabilities(packageName)]),
   ])
 
   const downloads = getSettledDownloads(downloadsResult, warnings)
   const github = getSettledGithub(githubResult, warnings)
+
+  const vulns =
+    vulnsResult.status === 'fulfilled' ? vulnsResult.value : []
+
+  const { points: vulnerabilities, summary: vulnerabilitySummary } =
+    buildVulnerabilityPoints(vulns, from)
 
   const size = sizePoints(history)
   const latest = latestBuiltVersion(history.versions)
@@ -296,6 +408,7 @@ async function fetchPackageTrendsSource(
     downloads,
     stars: github.points,
     size,
+    vulnerabilities,
     releases: history.releases.map(release => ({
       version: release.version,
       date: release.publishedAt,
@@ -310,6 +423,7 @@ async function fetchPackageTrendsSource(
       stars: github.current,
       size: latest?.size ?? null,
       gzip: latest?.gzip ?? null,
+      vulnerabilities: vulnerabilitySummary,
     },
     warnings,
   }

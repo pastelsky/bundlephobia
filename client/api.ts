@@ -15,6 +15,7 @@ import type {
   TrendsRange,
   TrendsPoint,
   TrendsResponse,
+  TrendsVulnerabilitySummary,
 } from '@bundlephobia/service-contracts/trends'
 
 // Re-export domain types that client code imports from this module.
@@ -29,6 +30,7 @@ export type {
   TrendsPoint,
   TrendsRange,
   TrendsResponse,
+  TrendsVulnerabilitySummary,
 }
 
 /** A single npm-search suggestion returned by the npms.io API. */

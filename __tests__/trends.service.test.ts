@@ -3,6 +3,7 @@ import type { TrendsPackageSeries } from '@bundlephobia/service-contracts/trends
 import { splitNpmDateRange } from '../server/clients/npm-downloads.client'
 import {
   buildGithubStarTotals,
+  buildVulnerabilityPoints,
   getTrendsRangeStart,
 } from '../server/services/trends.service'
 import { groupTrendsPackage } from '../utils/trends'
@@ -22,8 +23,24 @@ const series: TrendsPackageSeries = {
     { date: '2026-09-14', value: 10, version: '1.0.0' },
     { date: '2026-09-15', value: 12, version: '1.1.0' },
   ],
+  vulnerabilities: [
+    { date: '2026-09-14', value: 1 },
+    { date: '2026-09-15', value: 2 },
+  ],
   releases: [],
-  current: { weeklyDownloads: 5, stars: 100, size: 20, gzip: 12 },
+  current: {
+    weeklyDownloads: 5,
+    stars: 100,
+    size: 20,
+    gzip: 12,
+    vulnerabilities: {
+      total: 2,
+      critical: 0,
+      high: 1,
+      moderate: 1,
+      low: 0,
+    },
+  },
   warnings: [],
 }
 
@@ -104,5 +121,51 @@ describe('trends data', () => {
       '2025-09-20:2026-09-19',
       '2026-09-20:2026-09-21',
     ])
+  })
+
+  it('builds cumulative vulnerability timeline and severity summaries from OSV data', () => {
+    const vulns = [
+      {
+        id: 'GHSA-1',
+        published: '2023-01-15T12:00:00Z',
+        database_specific: { severity: 'HIGH' },
+      },
+      {
+        id: 'GHSA-2',
+        published: '2024-05-10T08:00:00Z',
+        database_specific: { severity: 'CRITICAL' },
+      },
+      {
+        id: 'GHSA-3',
+        published: '2024-05-10T14:00:00Z',
+        database_specific: { severity: 'MODERATE' },
+      },
+    ]
+
+    const result = buildVulnerabilityPoints(vulns, '2024-01-01')
+
+    expect(result.summary).toEqual({
+      total: 3,
+      critical: 1,
+      high: 1,
+      moderate: 1,
+      low: 0,
+    })
+
+    // First point reflects prior vulns before 'from' (2024-01-01)
+    expect(result.points[0]).toEqual({ date: '2024-01-01', value: 1 })
+    // Same-day vulns (GHSA-2 & GHSA-3) collapse to the daily total (3)
+    const midPoint = result.points.find(p => p.date === '2024-05-10')
+    expect(midPoint).toEqual({ date: '2024-05-10', value: 3 })
+    // Final point extends to today at cumulative total
+    expect(result.points[result.points.length - 1].value).toBe(3)
+  })
+
+  it('creates a zero-baseline timeline when package has 0 vulnerabilities', () => {
+    const result = buildVulnerabilityPoints([], '2024-01-01')
+
+    expect(result.summary.total).toBe(0)
+    expect(result.points[0]).toEqual({ date: '2024-01-01', value: 0 })
+    expect(result.points[result.points.length - 1].value).toBe(0)
   })
 })
