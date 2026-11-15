@@ -271,7 +271,7 @@ class BotRateLimits(unittest.TestCase):
         ]
         for pool, agents in pools:
             self.runtime('clear table named_bot_usage')
-            pool_limit = 50 if pool == 'google' else 26
+            pool_limit = 65 if pool == 'google' else 26
             for i in range(pool_limit):
                 self.assertEqual(self.request(agents[i % len(agents)], i,
                                               paths[i % 2]), 200)
@@ -305,7 +305,7 @@ class BotRateLimits(unittest.TestCase):
                           if k.lower() == 'access-control-allow-origin'], ['*'])
         self.assertIn(('access-control-max-age', '600'),
                       [(k.lower(), v) for k, v in self.response_headers])
-        for i in range(50):
+        for i in range(65):
             self.assertEqual(self.request('Googlebot/2.1', i, '/api/size'), 200)
         for i in range(60):
             self.assertEqual(self.request('Googlebot/2.1', i, '/api/size'), 429)
