@@ -19,17 +19,61 @@ const MAX_ERROR_LIST_ITEMS = 20
 // Coalesced callers share one rejection: count the failed attempt once per key.
 const recordedFailures = new WeakMap<Error, Set<string>>()
 
-function recordFailedAttempt(error: Error | undefined, key: string): boolean {
-  if (!error) return true
+const recentFailureAttempts = new Map<string, number>()
+
+export const FAILURE_COALESCE_WINDOW_MS = 3_000
+
+function pruneRecentFailureAttempts(cutoff: number): void {
+  for (const [key, timestamp] of recentFailureAttempts) {
+    if (timestamp < cutoff) recentFailureAttempts.delete(key)
+  }
+}
+
+function hasRecordedErrorInstance(
+  error: Error | undefined,
+  key: string,
+): boolean {
+  if (!error) return false
 
   const keys = recordedFailures.get(error) ?? new Set<string>()
 
-  if (keys.has(key)) return false
+  if (keys.has(key)) return true
 
   keys.add(key)
   recordedFailures.set(error, keys)
 
+  return false
+}
+
+export function recordFailedAttempt(
+  error: Error | undefined,
+  key: string,
+  now = Date.now(),
+): boolean {
+  if (hasRecordedErrorInstance(error, key)) return false
+
+  // Prevent double-counting when coalesced subscribers receive distinct Error instances
+  // or non-Error rejections for the same build job within the coalescing window.
+  const lastRecorded = recentFailureAttempts.get(key)
+
+  if (
+    lastRecorded !== undefined &&
+    now - lastRecorded < FAILURE_COALESCE_WINDOW_MS
+  ) {
+    return false
+  }
+
+  recentFailureAttempts.set(key, now)
+
+  if (recentFailureAttempts.size > 2_000) {
+    pruneRecentFailureAttempts(now - FAILURE_COALESCE_WINDOW_MS)
+  }
+
   return true
+}
+
+export function clearRecentFailureAttempts(): void {
+  recentFailureAttempts.clear()
 }
 
 interface ErrorResponseBody {
