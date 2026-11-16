@@ -63,8 +63,18 @@ export function createTrendsController(
     const range = parseRange(rawRange)
 
     try {
-      ctx.body = await readTrends(packages, range)
-      ctx.cacheControl = { maxAge: config.CACHE.TRENDS_API }
+      const response = await readTrends(packages, range)
+      ctx.body = response
+
+      const hasWarnings = response.packages.some(
+        pack => pack.warnings && pack.warnings.length > 0,
+      )
+
+      if (hasWarnings) {
+        ctx.cacheControl = { noStore: true }
+      } else {
+        ctx.cacheControl = { maxAge: config.CACHE.TRENDS_API }
+      }
     } catch (error) {
       ctx.cacheControl = { noStore: true }
       logger.error('TRENDS', error, `TRENDS FAILED: ${packages.join(',')}`)

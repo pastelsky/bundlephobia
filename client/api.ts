@@ -16,6 +16,7 @@ import type {
   TrendsPoint,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
+import { getPackageGithubStars, type FetchLike } from './github-stars.service'
 
 // Re-export domain types that client code imports from this module.
 export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
@@ -212,13 +213,38 @@ export default class API {
     return API.get<PackageHistoryResponse>(`/api/package-history?${params}`)
   }
 
-  static getTrends(packages: string[], range: TrendsRange) {
-    const params = new URLSearchParams({
-      packages: packages.join(','),
-      range,
-    })
+  static async getTrends(
+    packages: string[],
+    range: TrendsRange,
+    fetchImpl?: FetchLike,
+  ): Promise<TrendsResponse> {
+    const response = await API.get<TrendsResponse>(
+      `/api/trends?packages=${encodeURIComponent(packages.join(','))}&range=${encodeURIComponent(range)}`,
+    )
 
-    return API.get<TrendsResponse>(`/api/trends?${params}`)
+    await Promise.all(
+      response.packages.map(async pack => {
+        if (!pack.repository) return
+
+        try {
+          const starData = await getPackageGithubStars(
+            pack.repository,
+            range,
+            fetchImpl,
+          )
+
+          pack.stars = starData.stars
+          pack.current.stars = starData.current
+        } catch {
+          pack.warnings = [
+            ...(pack.warnings || []),
+            'GitHub star history is unavailable',
+          ]
+        }
+      }),
+    )
+
+    return response
   }
 
   static getRecentSearches(limit: number) {

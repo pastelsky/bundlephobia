@@ -9,15 +9,10 @@ import type {
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
 import { formatTrendsDate, startOfTrendsRangeDate } from '../../utils/trends'
-import {
-  fetchGithubStarCount,
-  fetchGithubStarHistoryPage,
-  type GithubStarHistoryRow,
-} from '../clients/github.client'
 import { fetchNpmDownloadRange } from '../clients/npm-downloads.client'
 import { fetchPackageHistory } from './package-history.service'
 
-const MAX_GITHUB_HISTORY_PAGES = 100
+export { buildGithubStarTotals } from '../../utils/trends'
 
 const COMPLETE_CACHE_TTL_MS = 10 * 60 * 1000
 
@@ -77,124 +72,6 @@ function parsePackages(packages: string[]): string[] {
   ].filter(Boolean)
 }
 
-function dateForGithubDay(week: number, day: number): string | null {
-  const weekStart = new Date(week * 1000)
-
-  if (!Number.isFinite(weekStart.getTime())) return null
-
-  // GitHub says day zero is Sunday but its week boundary may not align with
-  // UTC. Normalize the epoch's UTC date to the nearest Sunday before applying
-  // calendar arithmetic, independently of the server timezone.
-  const utcDay = weekStart.getUTCDay()
-  const daysToSunday = utcDay <= 3 ? -utcDay : 7 - utcDay
-  const utcWeekStart = new Date(weekStart)
-  utcWeekStart.setUTCDate(utcWeekStart.getUTCDate() + daysToSunday + day)
-
-  return isoDate(utcWeekStart)
-}
-
-function githubGainsByDate(
-  rows: GithubStarHistoryRow[],
-  today: string,
-): Map<string, number> {
-  const gainsByDate = new Map<string, number>()
-
-  for (const row of rows) {
-    for (const [day, value] of row.days.entries()) {
-      const date = dateForGithubDay(row.week, day)
-
-      if (!date || date > today) continue
-
-      gainsByDate.set(date, value)
-    }
-  }
-
-  return gainsByDate
-}
-
-export function buildGithubStarTotals(
-  rows: GithubStarHistoryRow[],
-  current: number,
-  options: { from: string; now?: Date },
-): TrendsPoint[] {
-  const { from, now = new Date() } = options
-  const today = isoDate(now)
-  const gainsByDate = githubGainsByDate(rows, today)
-
-  // GitHub exposes created-star history but not historical unstars. Walking
-  // backward from the active-star count produces the closest available total
-  // history and guarantees that the latest point is authoritative.
-  if (!gainsByDate.has(today)) gainsByDate.set(today, 0)
-
-  const gains = [...gainsByDate]
-    .map(([date, value]) => ({ date, value }))
-    .sort((left, right) => left.date.localeCompare(right.date))
-
-  const totals: TrendsPoint[] = []
-  let total = current
-
-  for (let index = gains.length - 1; index >= 0; index -= 1) {
-    const gain = gains[index]
-
-    totals.push({
-      date: gain.date,
-      value: Math.max(0, total),
-      partial: gain.date === today,
-    })
-    total -= gain.value
-  }
-
-  return totals.reverse().filter(point => point.date >= from)
-}
-
-type GithubHistoryCursor = {
-  page: number
-  lastPage: number | null
-  from: string
-}
-
-function shouldStopGithubHistory(
-  rows: GithubStarHistoryRow[],
-  cursor: GithubHistoryCursor,
-): boolean {
-  if (rows.length === 0) return true
-
-  const oldestRow = rows.at(-1)
-  const oldestDate = oldestRow ? dateForGithubDay(oldestRow.week, 0) : null
-
-  return Boolean(
-    (oldestDate !== null && oldestDate <= cursor.from) ||
-    (cursor.lastPage !== null && cursor.page >= cursor.lastPage) ||
-    (cursor.lastPage === null && rows.length < 30),
-  )
-}
-
-async function fetchGithubStars(
-  repository: string,
-  from: string,
-): Promise<{ points: TrendsPoint[]; current: number | null }> {
-  const rows: GithubStarHistoryRow[] = []
-  let page = 1
-  let lastPage: number | null = null
-
-  while (page <= MAX_GITHUB_HISTORY_PAGES) {
-    const result = await fetchGithubStarHistoryPage(repository, page)
-    rows.push(...result.rows)
-    lastPage = result.lastPage
-
-    if (shouldStopGithubHistory(result.rows, { page, lastPage, from })) break
-
-    page += 1
-  }
-
-  const current = await fetchGithubStarCount(repository)
-
-  return {
-    points: buildGithubStarTotals(rows, current, { from }),
-    current,
-  }
-}
-
 async function fetchDownloads(
   packageName: string,
   range: TrendsRange,
@@ -243,50 +120,22 @@ function getSettledDownloads(
   return []
 }
 
-type GithubTrendResult = { points: TrendsPoint[]; current: number | null }
-
-function getSettledGithub(
-  result: PromiseSettledResult<GithubTrendResult>,
-  warnings: string[],
-): GithubTrendResult {
-  if (result.status === 'fulfilled') return result.value
-
-  warnings.push('GitHub star history is unavailable')
-
-  return { points: [], current: null }
-}
-
 async function fetchPackageTrendsSource(
   packageName: string,
   range: TrendsRange,
 ): Promise<TrendsPackageSeries> {
   const from = getTrendsRangeStart(range)
 
-  // npm downloads do not depend on the package's release history or repository.
-  // Attach a rejection handler immediately while the history request is pending.
-  const downloadsResults = Promise.allSettled([
-    fetchDownloads(packageName, range),
+  const [downloadsResults, history] = await Promise.all([
+    Promise.allSettled([fetchDownloads(packageName, range)]),
+    fetchPackageHistory(packageName, {
+      from,
+      limit: 500,
+    }),
   ])
-
-  const history = await fetchPackageHistory(packageName, {
-    from,
-    limit: 500,
-  })
 
   const warnings: string[] = []
-
-  const [[downloadsResult], [githubResult]] = await Promise.all([
-    downloadsResults,
-    Promise.allSettled([
-      history.repository
-        ? fetchGithubStars(history.repository, from)
-        : Promise.resolve({ points: [], current: null }),
-    ]),
-  ])
-
-  const downloads = getSettledDownloads(downloadsResult, warnings)
-  const github = getSettledGithub(githubResult, warnings)
-
+  const downloads = getSettledDownloads(downloadsResults[0], warnings)
   const size = sizePoints(history)
   const latest = latestBuiltVersion(history.versions)
 
@@ -294,7 +143,7 @@ async function fetchPackageTrendsSource(
     name: packageName,
     repository: history.repository,
     downloads,
-    stars: github.points,
+    stars: [],
     size,
     releases: history.releases.map(release => ({
       version: release.version,
@@ -307,7 +156,7 @@ async function fetchPackageTrendsSource(
         downloads.length > 0
           ? downloads.slice(-7).reduce((total, point) => total + point.value, 0)
           : null,
-      stars: github.current,
+      stars: null,
       size: latest?.size ?? null,
       gzip: latest?.gzip ?? null,
     },
