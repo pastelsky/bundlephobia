@@ -1,8 +1,5 @@
 import {
-  addDays,
   format,
-  isAfter,
-  isValid,
   parseISO,
   startOfMonth,
   startOfWeek,
@@ -21,37 +18,6 @@ export type GithubStarHistoryRow = {
   week: number
   total: number
   days: number[]
-}
-
-const MAX_NPM_RANGE_DAYS = 365
-
-export function splitNpmDateRange(range: string): string[] {
-  const match = /^(\d{4}-\d{2}-\d{2}):(\d{4}-\d{2}-\d{2})$/.exec(range)
-
-  if (!match) return [range]
-
-  const start = parseISO(match[1])
-  const end = parseISO(match[2])
-
-  if (!isValid(start) || !isValid(end)) return [range]
-
-  if (isAfter(start, end)) return [range]
-
-  const ranges: string[] = []
-  let chunkStart = start
-
-  while (!isAfter(chunkStart, end)) {
-    const proposedEnd = addDays(chunkStart, MAX_NPM_RANGE_DAYS - 1)
-    const chunkEnd = isAfter(proposedEnd, end) ? end : proposedEnd
-
-    ranges.push(
-      `${format(chunkStart, 'yyyy-MM-dd')}:${format(chunkEnd, 'yyyy-MM-dd')}`,
-    )
-
-    chunkStart = addDays(chunkEnd, 1)
-  }
-
-  return ranges
 }
 
 export function dateForGithubDay(week: number, day: number): string | null {
