@@ -9,6 +9,7 @@ import { Checkbox } from '@base-ui/react/checkbox'
 import { Popover } from '@base-ui/react/popover'
 import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
+import { Tooltip } from '@base-ui/react/tooltip'
 import Analytics from '../../client/analytics'
 
 import API, {
@@ -549,6 +550,24 @@ export default function TrendsPage({
     [isComparison, packages, pageTitle, description, canonicalPath],
   )
 
+  const releaseCounts = useMemo(() => {
+    let major = 0
+    let minor = 0
+    const byPackage: Array<{ name: string; major: number; minor: number }> = []
+
+    packages.forEach(pkgName => {
+      const pack = trendsData?.packages.find(p => p.name === pkgName)
+      if (!pack) return
+      const pMajor = pack.releases.filter(r => r.major).length
+      const pMinor = pack.releases.filter(r => r.minor).length
+      major += pMajor
+      minor += pMinor
+      byPackage.push({ name: pkgName, major: pMajor, minor: pMinor })
+    })
+
+    return { major, minor, total: major + minor, byPackage }
+  }, [packages, trendsData])
+
   return (
     <Layout className="trends-page">
       <MetaTags
@@ -739,34 +758,79 @@ export default function TrendsPage({
           <div className="trends-toolbar__group trends-toolbar__group--overlays">
             <span className="trends-toolbar__label">Overlays</span>
             <Popover.Root>
-              <Popover.Trigger
-                type="button"
-                className="trends-overlays-trigger"
-                aria-label="Toggle release overlays"
-              >
-                <span>Releases</span>
-                {(showMajorReleases || showMinorReleases) && (
-                  <span className="trends-overlays-trigger__badge">
-                    {(showMajorReleases ? 1 : 0) + (showMinorReleases ? 1 : 0)}
-                  </span>
-                )}
-                <svg
-                  className="trends-overlays-trigger__arrow"
-                  width="10"
-                  height="6"
-                  viewBox="0 0 10 6"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M1 1L5 5L9 1"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+              <Tooltip.Provider delay={250}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger
+                    render={
+                      <Popover.Trigger
+                        type="button"
+                        className="trends-overlays-trigger"
+                        aria-label="Toggle release overlays"
+                      >
+                        <span>Releases</span>
+                        {(showMajorReleases || showMinorReleases) && (
+                          <span className="trends-overlays-trigger__badge">
+                            {(showMajorReleases ? 1 : 0) +
+                              (showMinorReleases ? 1 : 0)}
+                          </span>
+                        )}
+                        <svg
+                          className="trends-overlays-trigger__arrow"
+                          width="10"
+                          height="6"
+                          viewBox="0 0 10 6"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M1 1L5 5L9 1"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </Popover.Trigger>
+                    }
                   />
-                </svg>
-              </Popover.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Positioner side="top" sideOffset={8}>
+                      <Tooltip.Popup className="trends-tooltip-popup">
+                        <div className="trends-tooltip-popup__header">
+                          Releases ({releaseCounts.total})
+                        </div>
+                        <div className="trends-tooltip-popup__row">
+                          <span className="trends-overlay-key trends-overlay-key--major" />
+                          <span>
+                            Major: <strong>{releaseCounts.major}</strong>
+                          </span>
+                        </div>
+                        <div className="trends-tooltip-popup__row">
+                          <span className="trends-overlay-key trends-overlay-key--minor" />
+                          <span>
+                            Minor: <strong>{releaseCounts.minor}</strong>
+                          </span>
+                        </div>
+                        {releaseCounts.byPackage.length > 1 && (
+                          <div className="trends-tooltip-popup__breakdown">
+                            {releaseCounts.byPackage.map(p => (
+                              <div
+                                key={p.name}
+                                className="trends-tooltip-popup__subrow"
+                              >
+                                <span>{p.name}:</span>
+                                <span>
+                                  {p.major} major, {p.minor} minor
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </Tooltip.Popup>
+                    </Tooltip.Positioner>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
               <Popover.Portal>
                 <Popover.Positioner side="bottom" align="end" sideOffset={6}>
                   <Popover.Popup className="trends-overlays-popup">
@@ -787,7 +851,10 @@ export default function TrendsPage({
                         />
                       </Checkbox.Root>
                       <span className="trends-toggle__label">
-                        Major version
+                        Major version{' '}
+                        <span className="trends-toggle__count">
+                          ({releaseCounts.major})
+                        </span>
                       </span>
                       <span
                         className="trends-overlay-key trends-overlay-key--major"
@@ -808,7 +875,10 @@ export default function TrendsPage({
                         />
                       </Checkbox.Root>
                       <span className="trends-toggle__label">
-                        Minor version
+                        Minor version{' '}
+                        <span className="trends-toggle__count">
+                          ({releaseCounts.minor})
+                        </span>
                       </span>
                       <span
                         className="trends-overlay-key trends-overlay-key--minor"
@@ -992,19 +1062,77 @@ export default function TrendsPage({
                         <span className="trends-stat__label">Vulns</span>
                         <span className="trends-stat__value">
                           {pack ? (
-                            <span
-                              title={
-                                pack.current.vulnerabilities
-                                  ? `${pack.current.vulnerabilities.active} active today (${pack.current.vulnerabilities.total} total disclosed: ${pack.current.vulnerabilities.total - pack.current.vulnerabilities.active} resolved, ${pack.current.vulnerabilities.critical} critical, ${pack.current.vulnerabilities.high} high, ${pack.current.vulnerabilities.moderate} moderate, ${pack.current.vulnerabilities.low} low)`
-                                  : undefined
-                              }
-                            >
-                              <MetricValue
-                                formatted={formatVulnerabilities(
-                                  pack.current.vulnerabilities,
+                            <Tooltip.Provider delay={250}>
+                              <Tooltip.Root>
+                                <Tooltip.Trigger
+                                  render={
+                                    <span className="trends-stat__metric-trigger">
+                                      <MetricValue
+                                        formatted={formatVulnerabilities(
+                                          pack.current.vulnerabilities,
+                                        )}
+                                      />
+                                    </span>
+                                  }
+                                />
+                                {pack.current.vulnerabilities && (
+                                  <Tooltip.Portal>
+                                    <Tooltip.Positioner
+                                      side="top"
+                                      sideOffset={6}
+                                    >
+                                      <Tooltip.Popup className="trends-tooltip-popup">
+                                        <div className="trends-tooltip-popup__header">
+                                          {pkgName} Vulns
+                                        </div>
+                                        <div className="trends-tooltip-popup__row">
+                                          <span>
+                                            Active:{' '}
+                                            <strong>
+                                              {pack.current.vulnerabilities.active}
+                                            </strong>
+                                          </span>
+                                          <span>•</span>
+                                          <span>
+                                            Resolved:{' '}
+                                            <strong>
+                                              {pack.current.vulnerabilities.total -
+                                                pack.current.vulnerabilities.active}
+                                            </strong>
+                                          </span>
+                                        </div>
+                                        <div className="trends-tooltip-popup__breakdown">
+                                          <div className="trends-tooltip-popup__subrow">
+                                            <span>Critical:</span>
+                                            <span>
+                                              {pack.current.vulnerabilities.critical}
+                                            </span>
+                                          </div>
+                                          <div className="trends-tooltip-popup__subrow">
+                                            <span>High:</span>
+                                            <span>
+                                              {pack.current.vulnerabilities.high}
+                                            </span>
+                                          </div>
+                                          <div className="trends-tooltip-popup__subrow">
+                                            <span>Moderate:</span>
+                                            <span>
+                                              {pack.current.vulnerabilities.moderate}
+                                            </span>
+                                          </div>
+                                          <div className="trends-tooltip-popup__subrow">
+                                            <span>Low:</span>
+                                            <span>
+                                              {pack.current.vulnerabilities.low}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </Tooltip.Popup>
+                                    </Tooltip.Positioner>
+                                  </Tooltip.Portal>
                                 )}
-                              />
-                            </span>
+                              </Tooltip.Root>
+                            </Tooltip.Provider>
                           ) : (
                             <span
                               className="trends-stat__skeleton"

@@ -459,6 +459,59 @@
   }
 }
 
+.trends-tooltip-popup {
+  background: var(--color-tooltip-bg);
+  border: 1px solid var(--color-tooltip-border);
+  border-radius: var(--trends-control-radius);
+  box-shadow: var(--shadow-tooltip);
+  padding: ($global-spacing * 0.6) ($global-spacing * 0.9);
+  color: var(--color-tooltip-text);
+  font-family: $font-family-body;
+  @include font-size-xs;
+  line-height: 1.4;
+  z-index: 1000;
+  pointer-events: none;
+  min-width: 150px;
+
+  &__header {
+    font-weight: $font-weight-bold;
+    color: var(--color-tooltip-text);
+    padding-bottom: $global-spacing * 0.3;
+    margin-bottom: $global-spacing * 0.3;
+    border-bottom: 1px solid var(--color-tooltip-border);
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: $global-spacing * 0.5;
+    color: var(--color-tooltip-text);
+  }
+
+  &__breakdown {
+    margin-top: $global-spacing * 0.4;
+    padding-top: $global-spacing * 0.4;
+    border-top: 1px solid var(--color-tooltip-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__subrow {
+    display: flex;
+    justify-content: space-between;
+    gap: $global-spacing * 1;
+    color: var(--color-tooltip-text-muted);
+    font-size: 11px;
+  }
+}
+
+.trends-toggle__count {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  margin-left: 2px;
+}
+
 // Overlay toggles
 .trends-overlays {
   display: flex;
