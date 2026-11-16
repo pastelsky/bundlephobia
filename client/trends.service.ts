@@ -6,7 +6,6 @@ import type {
   TrendsRange,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
-import type { PackageHistoryResponse } from '../types/package-history'
 import {
   buildGithubStarTotals,
   dateForGithubDay,
@@ -180,27 +179,6 @@ export async function fetchGithubStarHistory(
   return buildGithubStarTotals(rows, current, { from })
 }
 
-function sizePoints(history: PackageHistoryResponse): TrendsPoint[] {
-  return history.versions.flatMap(version => {
-    if (!version.publishedAt || version.gzip === null) return []
-
-    return [
-      {
-        date: version.publishedAt,
-        value: version.gzip,
-        version: version.version,
-      },
-    ]
-  })
-}
-
-function latestBuiltVersion(history: PackageHistoryResponse) {
-  return [...history.versions]
-    .filter(version => version.gzip !== null || version.size !== null)
-    .sort((a, b) => (a.publishedAt ?? '').localeCompare(b.publishedAt ?? ''))
-    .at(-1)
-}
-
 async function resolveDownloads(
   packageName: string,
   range: TrendsRange,
@@ -280,34 +258,7 @@ export async function resolvePackageTrendsClient(
 ): Promise<TrendsPackageSeries> {
   const from = startOfTrendsRangeDate(range)
   const warnings: string[] = []
-
-  let repository = baseSeries?.repository ?? null
-  let size = baseSeries?.size ?? []
-  let releases = baseSeries?.releases ?? []
-  let latestSize = baseSeries?.current?.size ?? null
-  let latestGzip = baseSeries?.current?.gzip ?? null
-
-  if (!size.length) {
-    try {
-      const history = await API.getHistory(packageName, { from, limit: 500 })
-
-      repository = repository || history.repository
-      size = sizePoints(history)
-      releases = history.releases.map(release => ({
-        version: release.version,
-        date: release.publishedAt,
-        major: release.major,
-        minor: release.minor,
-      }))
-
-      const latest = latestBuiltVersion(history)
-
-      latestSize = latest?.size ?? null
-      latestGzip = latest?.gzip ?? null
-    } catch {
-      // keep base values
-    }
-  }
+  const repository = baseSeries?.repository ?? null
 
   const [downloadResult, starsResult] = await Promise.all([
     resolveDownloads(packageName, range, baseSeries, fetchImpl),
@@ -325,16 +276,16 @@ export async function resolvePackageTrendsClient(
     repository,
     downloads,
     stars: starsResult.stars,
-    size,
-    releases,
+    size: baseSeries?.size ?? [],
+    releases: baseSeries?.releases ?? [],
     current: {
       weeklyDownloads:
         downloads.length > 0
           ? downloads.slice(-7).reduce((total, p) => total + p.value, 0)
           : null,
       stars: starsResult.currentStars,
-      size: latestSize,
-      gzip: latestGzip,
+      size: baseSeries?.current?.size ?? null,
+      gzip: baseSeries?.current?.gzip ?? null,
     },
     warnings,
   }
