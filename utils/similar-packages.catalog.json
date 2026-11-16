@@ -1020,5 +1020,16 @@
       { "tag": "geospatial", "weight": 8 }
     ],
     "similar": ["leaflet", "maplibre-gl", "ol"]
+  },
+  "browser-spreadsheet-editors": {
+    "name": "Browser spreadsheet editors",
+    "tags": [
+      { "tag": "spreadsheet", "weight": 15 },
+      { "tag": "spreadsheet editor", "weight": 15 },
+      { "tag": "excel-like", "weight": 11 },
+      { "tag": "workbook", "weight": 8 },
+      { "tag": "data grid", "weight": 7 }
+    ],
+    "similar": ["@univerjs/preset-sheets-core", "jspreadsheet-ce"]
   }
 }
