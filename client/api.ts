@@ -16,6 +16,7 @@ import type {
   TrendsPoint,
   TrendsResponse,
 } from '@bundlephobia/service-contracts/trends'
+import { fetchTrends } from './trends.service'
 
 // Re-export domain types that client code imports from this module.
 export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
@@ -213,12 +214,7 @@ export default class API {
   }
 
   static getTrends(packages: string[], range: TrendsRange) {
-    const params = new URLSearchParams({
-      packages: packages.join(','),
-      range,
-    })
-
-    return API.get<TrendsResponse>(`/api/trends?${params}`)
+    return fetchTrends(packages, range)
   }
 
   static getRecentSearches(limit: number) {

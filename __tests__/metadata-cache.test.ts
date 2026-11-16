@@ -91,3 +91,34 @@ it.each([
     expect(await recovered.json()).not.toHaveProperty('error')
   },
 )
+
+it('prevents caching degraded /api/trends responses with warnings', async () => {
+  readTrends.mockResolvedValueOnce({
+    packages: [
+      {
+        name: 'example',
+        repository: 'example/example',
+        downloads: [],
+        stars: [],
+        size: [],
+        releases: [],
+        current: {
+          weeklyDownloads: null,
+          stars: null,
+          size: null,
+          gzip: null,
+        },
+        warnings: ['GitHub star history is unavailable'],
+      },
+    ],
+    range: 'last-year',
+    generatedAt: '2026-10-25T00:00:00Z',
+  })
+
+  const response = await fetch(
+    `${baseURL}/api/trends?packages=example&range=last-year`,
+  )
+
+  expect(response.status).toBe(200)
+  expect(response.headers.get('cache-control')).toContain('no-store')
+})
