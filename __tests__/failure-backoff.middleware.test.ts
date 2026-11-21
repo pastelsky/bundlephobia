@@ -172,4 +172,33 @@ describe('failure backoff middleware', () => {
     expect(failureCache.get(failureCacheKey)).toBeUndefined()
     expect(ctx.status).toBe(200)
   })
+
+  it('backs off deterministic exact-version errors on first failure, but keeps 1 retry for transient/generic errors', () => {
+    const now = 1_700_000_000_000
+
+    for (const status of [403, 422]) {
+      const entry = recordFailure(
+        undefined,
+        { status, deterministic: true },
+        now,
+      )
+
+      expect(entry.consecutiveFailures).toBe(1)
+      expect(entry.blockedUntil).toBe(now + 60 * 60 * 1000)
+    }
+
+    // Transient 5xx, 404, and generic BuildError must NOT back off on first failure
+    expect(
+      recordFailure(undefined, { status: 500 }, now).blockedUntil,
+    ).toBeUndefined()
+    expect(
+      recordFailure(undefined, { status: 503 }, now).blockedUntil,
+    ).toBeUndefined()
+    expect(
+      recordFailure(undefined, { status: 404 }, now).blockedUntil,
+    ).toBeUndefined()
+    expect(
+      recordFailure(undefined, { status: 422 }, now).blockedUntil,
+    ).toBeUndefined()
+  })
 })

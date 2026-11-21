@@ -18,11 +18,19 @@ const FAILURE_COOLDOWNS_MS = [
   3 * DAY_MS,
 ] as const
 
-export function getFailureCooldownMs(consecutiveFailures: number): number {
-  if (consecutiveFailures < 2) return 0
+// Deterministic failures on an immutable exact package version do not need a
+// second full install+build attempt before backing off. Transient 5xx errors,
+// 404s, and generic BuildErrors still require >=2 consecutive failures.
+export function getFailureCooldownMs(
+  consecutiveFailures: number,
+  { deterministic = false }: { deterministic?: boolean } = {},
+): number {
+  if (!deterministic && consecutiveFailures < 2) return 0
+
+  const offset = deterministic ? 1 : 2
 
   const index = Math.min(
-    consecutiveFailures - 2,
+    Math.max(consecutiveFailures - offset, 0),
     FAILURE_COOLDOWNS_MS.length - 1,
   )
 
@@ -31,7 +39,7 @@ export function getFailureCooldownMs(consecutiveFailures: number): number {
 
 export function recordFailure(
   previous: FailureCacheEntry | undefined,
-  failure: Pick<FailureCacheEntry, 'status'>,
+  failure: Pick<FailureCacheEntry, 'status'> & { deterministic?: boolean },
   recordedAt = Date.now(),
 ): FailureCacheEntry {
   const consecutiveFailures =
@@ -44,7 +52,9 @@ export function recordFailure(
       ? consecutiveFailures < 2
         ? 0
         : 60_000
-      : getFailureCooldownMs(consecutiveFailures)
+      : getFailureCooldownMs(consecutiveFailures, {
+          deterministic: failure.deterministic,
+        })
 
   return {
     status: failure.status,
