@@ -19,7 +19,7 @@
   align-items: center;
   max-width: 100%;
   height: calc(100vh - 90px);
-  padding-bottom: 140px;
+  padding-bottom: 14vh;
   box-sizing: border-box;
 
   @media screen and (max-width: 40em) {
@@ -112,6 +112,10 @@
   color: var(--color-text-muted);
   margin-top: 4vh;
   letter-spacing: 3px;
+
+  @media screen and (max-width: 40em) {
+    display: none;
+  }
 }
 
 .homepage__scan-link {
@@ -131,7 +135,7 @@
   }
 
   @media screen and (max-width: 40em) {
-    margin-top: 3vh;
+    display: none;
   }
 }
 
@@ -149,9 +153,8 @@
 
   @media screen and (max-width: 40em) {
     position: static;
-    order: 4;
     width: min(calc(100vw - #{$global-spacing * 4}), $global-spacing * 36);
-    margin: $global-spacing * 3 0 0;
+    margin: $global-spacing * 2 0 0;
   }
 }
 
