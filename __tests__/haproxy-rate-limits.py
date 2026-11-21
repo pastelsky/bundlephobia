@@ -146,7 +146,7 @@ class BotRateLimits(unittest.TestCase):
     def test_families_share_across_ips_but_do_not_penalize_each_other(self):
         for i in range(190):
             self.assertEqual(self.request(['Bytespider/1', 'TikTokSpider/2'][i % 2], i,
-                             ['/_events', '/asset.js'][i % 2]), 200)
+                             ['/_events', '/asset.js'][i % 2]), [204, 200][i % 2])
         self.assertEqual(self.request('Bytespider/new-version', 240), 429)
         self.assertEqual(self.request('TikTokSpider/new-version', 241, '/_events'), 429)
         self.assert_cache_control('no-store')

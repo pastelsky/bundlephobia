@@ -2,6 +2,7 @@
 User-agent: *
 Allow: /
 Disallow: /scan-results
+Disallow: /_events
 
 # Sitemaps
 Sitemap: https://bundlephobia.com/sitemap.xml
