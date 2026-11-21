@@ -4,7 +4,7 @@
 @import '../../../stylesheets/base';
 @import '../../../stylesheets/colors';
 
-$footer-content-max-width: 800px;
+$footer-content-max-width: $global-spacing * 80;
 
 .layout {
   max-width: 100%;
@@ -32,12 +32,14 @@ footer {
 
 .footer__recent-search-bar {
   width: 100%;
+  box-sizing: border-box;
   background: var(--color-footer-search-bg);
-  padding: 0 $global-spacing * 2;
+  padding: 0 $layout-gutter-mobile;
 }
 
 .footer__recent-search-bar__wrap {
   max-width: $footer-content-max-width;
+  min-height: $control-height;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,12 +113,15 @@ footer {
 
 .footer__split {
   display: flex;
-  max-width: $footer-content-max-width;
-  padding: $global-spacing * 3 $global-spacing;
+  width: min(
+    calc(100% - #{$layout-gutter-mobile * 2}),
+    #{$footer-content-max-width}
+  );
+  box-sizing: border-box;
+  padding: $global-spacing * 3 0;
   margin: auto;
 
   @media screen and (max-width: 40em) {
-    padding: $global-spacing * 3 $global-spacing * 2.5;
     flex-direction: column;
   }
 }

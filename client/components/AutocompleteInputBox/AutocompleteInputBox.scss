@@ -16,8 +16,10 @@
   }
 
   @media screen and (max-width: 40em) {
-    width: 85vw;
+    width: 100%;
+    max-width: 100%;
     min-width: auto;
+    box-sizing: border-box;
   }
 }
 

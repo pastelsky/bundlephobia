@@ -175,7 +175,11 @@ describe('build API error middleware', () => {
       // Each caller throws a distinct error instance
       // SAFETY: this fixture provides the error middleware's context fields.
       await errorHandler(ctx as never, async () => {
-        throw new CustomError('BuildError', `failed attempt ${caller}`, undefined)
+        throw new CustomError(
+          'BuildError',
+          `failed attempt ${caller}`,
+          undefined,
+        )
       })
     }
 

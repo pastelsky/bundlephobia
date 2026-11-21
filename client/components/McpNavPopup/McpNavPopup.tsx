@@ -99,24 +99,14 @@ const McpNavPopup = () => {
           variant="quiet"
         >
           {copied ? (
-            <svg
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
               <path
                 fill="currentColor"
                 d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
               />
             </svg>
           ) : (
-            <svg
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
               <path
                 fill="currentColor"
                 d="M16 1H6a2 2 0 0 0-2 2v12h2V3h10V1zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H10V7h9v14z"

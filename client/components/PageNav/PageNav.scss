@@ -14,7 +14,7 @@
   align-items: center;
 
   @media screen and (max-width: 40em) {
-    padding: $global-spacing * 2;
+    padding: $layout-gutter-mobile;
     align-items: flex-start;
   }
 }
@@ -74,9 +74,19 @@
   margin: 0;
   font-weight: $font-weight-light;
   display: flex;
+  align-items: center;
+
+  li {
+    display: flex;
+    align-items: center;
+  }
 
   a {
     @include font-size-xs;
+    display: inline-flex;
+    align-items: center;
+    min-height: $control-height;
+    line-height: 1;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     font-weight: $font-weight-bold;
@@ -127,6 +137,9 @@
 
     summary {
       @include font-size-xs;
+      display: inline-flex;
+      align-items: center;
+      min-height: $control-height;
       color: var(--color-nav-link);
       cursor: pointer;
       font-weight: $font-weight-bold;
@@ -185,6 +198,7 @@
   @include font-size-xs;
   display: inline-flex;
   align-items: center;
+  min-height: $control-height;
   padding: 0;
   line-height: 1;
   list-style: none;
