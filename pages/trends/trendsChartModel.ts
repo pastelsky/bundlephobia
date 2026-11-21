@@ -186,32 +186,12 @@ export function buildChartModel({
   showMinorReleases: boolean
   chartWidth: number
 }) {
-  const rawSeries = packages.map((pack, index) => {
-    let points = seriesForMetric(pack, metric)
-
-    if (
-      metric === 'downloads' &&
-      points.length > 1 &&
-      points.some(p => p.value > 0)
-    ) {
-      let end = points.length
-
-      while (end > 1 && points[end - 1].value === 0) {
-        end--
-      }
-
-      if (end < points.length) {
-        points = points.slice(0, end)
-      }
-    }
-
-    return {
-      name: pack.name,
-      color: TRENDS_SERIES_COLORS[index % TRENDS_SERIES_COLORS.length],
-      points,
-      releases: pack.releases,
-    }
-  })
+  const rawSeries = packages.map((pack, index) => ({
+    name: pack.name,
+    color: TRENDS_SERIES_COLORS[index % TRENDS_SERIES_COLORS.length],
+    points: seriesForMetric(pack, metric),
+    releases: pack.releases,
+  }))
 
   const allPoints = rawSeries.flatMap(series => series.points)
 
