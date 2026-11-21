@@ -174,6 +174,7 @@ if (process.argv[2] !== '--sandboxed') {
       get_loop_usage() { echo 65; }
       cleanup_stale_package_dirs() { :; }
       cleanup_npm_cache() { :; }
+      evict_large_bun_cache_entries() { :; }
       evict_oldest_bun_cache_entries() { :; }
       trim_loop_device() { echo "TRIMMED"; }
       cleanup_loop_device 60
@@ -186,6 +187,63 @@ if (process.argv[2] !== '--sandboxed') {
   )
 
   assert.equal(trimCalls.trim(), 'TRIMMED')
+
+  const largePayload = Buffer.alloc(200 * 1024, 'x')
+  const nowMs = Date.now()
+  const bigOld = path.join(bunCache, 'big-old@1.0.0')
+  const smallOld = path.join(bunCache, 'small-old@1.0.0')
+  const bigMid = path.join(bunCache, '@scope', 'big-mid@1.0.0')
+  const bigFresh = path.join(bunCache, 'big-fresh@1.0.0')
+
+  await fs.mkdir(bigOld, { recursive: true })
+  await fs.mkdir(smallOld, { recursive: true })
+  await fs.mkdir(bigMid, { recursive: true })
+  await fs.mkdir(bigFresh, { recursive: true })
+
+  await fs.writeFile(path.join(bigOld, 'payload.bin'), largePayload)
+  await fs.writeFile(path.join(smallOld, 'index.js'), 'export default 1')
+  await fs.writeFile(path.join(bigMid, 'payload.bin'), largePayload)
+  await fs.writeFile(path.join(bigFresh, 'payload.bin'), largePayload)
+
+  const twentyMinAgo = new Date(nowMs - 20 * 60_000)
+  const eightMinAgo = new Date(nowMs - 8 * 60_000)
+  const oneMinAgo = new Date(nowMs - 60_000)
+
+  await fs.utimes(bigOld, twentyMinAgo, twentyMinAgo)
+  await fs.utimes(smallOld, twentyMinAgo, twentyMinAgo)
+  await fs.utimes(bigMid, eightMinAgo, eightMinAgo)
+  await fs.utimes(bigFresh, oneMinAgo, oneMinAgo)
+
+  execFileSync(
+    'bash',
+    [
+      '-c',
+      'source "$1"; log() { :; }; get_loop_usage() { echo 80; }; evict_large_bun_cache_entries 15 100',
+      'cleanup',
+      new URL('../operations/disk-clean.sh', import.meta.url).pathname,
+    ],
+    { stdio: 'inherit' },
+  )
+
+  await assert.rejects(fs.access(bigOld), { code: 'ENOENT' })
+  await fs.access(smallOld)
+  await fs.access(bigMid)
+  await fs.access(bigFresh)
+
+  execFileSync(
+    'bash',
+    [
+      '-c',
+      'source "$1"; log() { :; }; get_loop_usage() { echo 80; }; evict_large_bun_cache_entries 5 100',
+      'cleanup',
+      new URL('../operations/disk-clean.sh', import.meta.url).pathname,
+    ],
+    { stdio: 'inherit' },
+  )
+
+  await assert.rejects(fs.access(bigMid), { code: 'ENOENT' })
+  await fs.access(smallOld)
+  await fs.access(bigFresh)
 
   console.log(
     'Real builds stayed in approved paths; existing cleanup reclaimed their retained output.',
