@@ -1,6 +1,11 @@
 @import '../stylesheets/base';
 @import '../stylesheets/variables';
 
+// Shared offset/clearance for the bottom-right Carbon Ad so the centered hero
+// search box stays above the ad band on standard laptop viewports (e.g. 1280x800).
+$homepage-carbon-ad-offset: $global-spacing * 2;
+$homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12;
+
 .homepage {
   height: 100vh;
   height: calc(100vh - 4px);
@@ -19,7 +24,7 @@
   align-items: center;
   max-width: 100%;
   height: calc(100vh - 90px);
-  padding-bottom: 14vh;
+  padding-bottom: $homepage-carbon-ad-clearance;
   box-sizing: border-box;
 
   @media screen and (max-width: 40em) {
@@ -144,8 +149,8 @@
   flex-direction: column;
   justify-content: flex-end;
   position: absolute;
-  right: $global-spacing * 2;
-  bottom: $global-spacing * 2;
+  right: $homepage-carbon-ad-offset;
+  bottom: $homepage-carbon-ad-offset;
   width: min($global-spacing * 36, calc(100vw - #{$global-spacing * 4}));
   min-height: auto;
   margin: 0;
