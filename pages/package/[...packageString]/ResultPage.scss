@@ -93,17 +93,6 @@
   line-height: 1.5;
 }
 
-.result-error__actions {
-  margin-top: $global-spacing * 2.5;
-}
-
-.result-error__home-link {
-  @include font-size-sm;
-  color: var(--color-link-contrast);
-  border-bottom: 1px dashed var(--color-border-primary);
-  padding-bottom: 2px;
-}
-
 .page-container {
   min-height: 100vh;
   display: flex;

@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { PureComponent } from 'react'
 import semver from 'semver'
@@ -641,11 +640,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
             <pre>{errorDetails}</pre>
           </details>
         )}
-        <div className="result-error__actions">
-          <Link href="/" className="result-error__home-link">
-            ← Search another package
-          </Link>
-        </div>
       </div>
     )
   }
