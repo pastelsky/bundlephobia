@@ -49,12 +49,16 @@ function useAutocompleteCombobox({
   suggestions,
   value,
   handleInputValueChange,
+  setDisplayValue,
+  restoreTypedValue,
   setSuggestions,
   onSearchSubmit,
 }: {
   suggestions: PackageSuggestion[]
   value: string
   handleInputValueChange: (value: string) => void
+  setDisplayValue: (value: string) => void
+  restoreTypedValue: () => void
   setSuggestions: (suggestions: PackageSuggestion[]) => void
   onSearchSubmit: (value: string) => void
 }) {
@@ -62,8 +66,29 @@ function useAutocompleteCombobox({
     items: suggestions,
     inputValue: value,
     itemToString: item => item?.package.name ?? '',
-    onInputValueChange: ({ inputValue = '' }) => {
+    onInputValueChange: ({ inputValue = '', type }) => {
+      if (
+        type === useCombobox.stateChangeTypes.InputKeyDownArrowDown ||
+        type === useCombobox.stateChangeTypes.InputKeyDownArrowUp
+      ) {
+        return
+      }
+
       handleInputValueChange(inputValue)
+    },
+    onHighlightedIndexChange: ({ highlightedIndex = -1, type }) => {
+      if (
+        type !== useCombobox.stateChangeTypes.InputKeyDownArrowDown &&
+        type !== useCombobox.stateChangeTypes.InputKeyDownArrowUp
+      ) {
+        return
+      }
+
+      if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+        setDisplayValue(suggestions[highlightedIndex].package.name)
+      } else if (highlightedIndex === -1) {
+        restoreTypedValue()
+      }
     },
     onSelectedItemChange: ({ selectedItem }) => {
       if (!selectedItem) return
@@ -154,6 +179,9 @@ export const AutocompleteInput = ({
     suggestions,
     handleSubmit,
     handleInputValueChange,
+    setDisplayValue,
+    restoreTypedValue,
+    resetToInitial,
     setSuggestions,
   } = useAutocompleteInput({
     initialValue,
@@ -173,6 +201,8 @@ export const AutocompleteInput = ({
     suggestions,
     value,
     handleInputValueChange,
+    setDisplayValue,
+    restoreTypedValue,
     setSuggestions,
     onSearchSubmit,
   })
@@ -183,6 +213,12 @@ export const AutocompleteInput = ({
   )
 
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape' && initialValue && value !== initialValue) {
+      resetToInitial()
+
+      return
+    }
+
     submitOnEnter(event, { highlightedIndex, value, onSearchSubmit })
   }
 
