@@ -1,6 +1,11 @@
 @import '../stylesheets/base';
 @import '../stylesheets/variables';
 
+// Shared offset/clearance for the bottom-right Carbon Ad so the centered hero
+// search box stays above the ad band on standard laptop viewports (e.g. 1280x800).
+$homepage-carbon-ad-offset: $global-spacing * 2;
+$homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12;
+
 .homepage {
   height: 100vh;
   height: calc(100vh - 4px);
@@ -19,10 +24,13 @@
   align-items: center;
   max-width: 100%;
   height: calc(100vh - 90px);
+  padding-bottom: $homepage-carbon-ad-clearance;
+  box-sizing: border-box;
 
   @media screen and (max-width: 40em) {
     height: auto;
     min-height: 50vh;
+    padding-bottom: $global-spacing * 4;
 
     &::after {
       display: none;
@@ -39,6 +47,12 @@
   text-align: center;
   line-height: 1.4;
   letter-spacing: 1px;
+
+  @media screen and (max-width: 40em) {
+    font-size: 16px;
+    margin-top: $global-spacing * 0.75;
+    margin-bottom: 0;
+  }
 }
 
 .logo {
@@ -49,6 +63,10 @@
   @include font-size-md;
   user-select: none;
   margin-top: $global-spacing * 2;
+
+  @media screen and (max-width: 40em) {
+    margin-top: $global-spacing;
+  }
 }
 
 .logo__alt {
@@ -68,8 +86,8 @@
   height: 157px * 0.9;
 
   @media screen and (max-width: 40em) {
-    width: 137px * 0.8;
-    height: 157px * 0.8;
+    width: 137px * 0.62;
+    height: 157px * 0.62;
   }
 
   &:hover {
@@ -85,13 +103,13 @@
 
 .homepage__search-input {
   position: relative;
-  z-index: 2;
+  z-index: 20;
   margin-top: $global-spacing;
   width: 100%;
 
   @media screen and (max-width: 40em) {
-    margin-top: 5vh;
-    margin-bottom: 5vh;
+    margin-top: $global-spacing * 2.5;
+    margin-bottom: 0;
   }
 
   .autocomplete-input {
@@ -109,6 +127,10 @@
   color: var(--color-text-muted);
   margin-top: 4vh;
   letter-spacing: 3px;
+
+  @media screen and (max-width: 40em) {
+    display: none;
+  }
 }
 
 .homepage__scan-link {
@@ -128,7 +150,7 @@
   }
 
   @media screen and (max-width: 40em) {
-    margin-top: 3vh;
+    display: none;
   }
 }
 
@@ -137,17 +159,17 @@
   flex-direction: column;
   justify-content: flex-end;
   position: absolute;
-  right: $global-spacing * 2;
-  bottom: $global-spacing * 2;
+  right: $homepage-carbon-ad-offset;
+  bottom: $homepage-carbon-ad-offset;
   width: min($global-spacing * 36, calc(100vw - #{$global-spacing * 4}));
-  min-height: 280px;
+  min-height: auto;
   margin: 0;
   z-index: 1;
 
   @media screen and (max-width: 40em) {
     position: static;
     width: min(calc(100vw - #{$global-spacing * 4}), $global-spacing * 36);
-    margin: 0;
+    margin: $global-spacing * 2.5 0 0;
   }
 }
 
