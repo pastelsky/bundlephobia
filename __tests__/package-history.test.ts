@@ -86,6 +86,13 @@ describe('package history', () => {
         },
       ],
       range: { from: '2024-01-01', to: '2024-03-02' },
+      publishDates: {
+        '1.0.0': '2024-01-02',
+        '2.0.0': '2024-02-02',
+        '2.1.0': '2024-03-02',
+        '2.1.1': '2024-03-03',
+        '3.0.0-beta.1': '2024-04-02',
+      },
     })
     expect(mockGetPackageHistory).toHaveBeenCalledWith(
       'example',

@@ -18,6 +18,7 @@ export type PackageHistoryResponse = {
   repository: string | null
   versions: PackageHistoryVersion[]
   releases: PackageHistoryRelease[]
+  publishDates?: Record<string, string>
   range: {
     from: string | null
     to: string | null
