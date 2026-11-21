@@ -1020,5 +1020,15 @@
       { "tag": "geospatial", "weight": 8 }
     ],
     "similar": ["leaflet", "maplibre-gl", "ol"]
+  },
+  "interactive-browser-graphs": {
+    "name": "Interactive browser graph visualization",
+    "tags": [
+      { "tag": "graph visualization", "weight": 15 },
+      { "tag": "network visualization", "weight": 14 },
+      { "tag": "graph theory", "weight": 10 },
+      { "tag": "nodes and edges", "weight": 8 }
+    ],
+    "similar": ["cytoscape", "sigma", "vis-network"]
   }
 }
