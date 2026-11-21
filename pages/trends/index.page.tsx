@@ -537,9 +537,8 @@ export default function TrendsPage({
         canonicalPath={canonicalPath}
         structuredData={structuredData}
       />
+      <PageNav />
       <div className="trends-page__container">
-        <PageNav />
-
         <header className="trends-page__header">
           <h1 className="trends-page__title">
             {isComparison ? (

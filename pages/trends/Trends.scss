@@ -15,10 +15,10 @@
   max-width: $layout-max-width;
   box-sizing: border-box;
   margin: 0 auto;
-  padding: ($global-spacing * 2) $layout-gutter ($global-spacing * 6);
+  padding: ($global-spacing * 1.5) $layout-gutter ($global-spacing * 6);
 
   @media screen and (max-width: 48em) {
-    padding: $global-spacing ($global-spacing * 2) ($global-spacing * 4);
+    padding: $global-spacing $layout-gutter-mobile ($global-spacing * 4);
   }
 }
 
@@ -128,7 +128,10 @@
       input {
         @include font-size-sm;
         font-family: $font-family-code;
-        padding: ($global-spacing * 0.6) ($global-spacing * 1.5);
+        min-height: $control-height-sm;
+        box-sizing: border-box;
+        padding: ($global-spacing * 0.5) 38px ($global-spacing * 0.5)
+          ($global-spacing * 1.5);
         border: none;
         border-radius: var(--trends-control-radius) !important;
         background: transparent;
@@ -146,6 +149,13 @@
           border: none;
           background: transparent;
         }
+      }
+
+      .ui-icon-button {
+        width: $control-height-sm;
+        height: $control-height-sm;
+        min-width: $control-height-sm;
+        min-height: $control-height-sm;
       }
     }
   }
@@ -189,7 +199,7 @@
 .trends-chip {
   display: inline-flex;
   align-items: center;
-  height: 28px;
+  height: $control-height-sm;
   box-sizing: border-box;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-subtle);
@@ -259,8 +269,8 @@
     margin-left: 0;
     cursor: pointer;
     padding: 0;
-    width: 26px;
-    height: 26px;
+    width: $icon-button-size-sm;
+    height: $control-height-sm;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -315,10 +325,22 @@
     gap: $global-spacing * 1.5;
   }
 
+  @media screen and (max-width: 40em) {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    row-gap: $global-spacing * 1.2;
+    column-gap: $global-spacing * 1.5;
+  }
+
   &__group {
     display: flex;
     align-items: center;
     gap: $global-spacing * 0.8;
+
+    @media screen and (max-width: 40em) {
+      display: contents;
+    }
   }
 
   &__group--overlays {
@@ -327,6 +349,11 @@
     @media screen and (max-width: 48em) {
       width: 100%;
       margin-left: 0;
+    }
+
+    @media screen and (max-width: 40em) {
+      display: contents;
+      width: auto;
     }
   }
 
@@ -348,11 +375,16 @@
   background: transparent;
 
   &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: $control-height-sm;
+    box-sizing: border-box;
     background: var(--color-bg-base);
     border: 1px solid var(--color-border-primary);
     border-left: none;
     border-radius: 0 !important;
-    padding: ($global-spacing * 0.5) ($global-spacing * 1.5);
+    padding: 0 ($global-spacing * 1.5);
     @include font-size-xs;
     font-weight: $font-weight-bold;
     color: var(--color-text-secondary);
@@ -395,13 +427,15 @@
   }
 
   &--compact &__btn {
-    padding: ($global-spacing * 0.5) ($global-spacing * 1.2);
+    padding: 0 ($global-spacing * 1.2);
   }
 }
 
 // Overlay toggles
 .trends-overlays {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: $global-spacing * 1.2;
 }
 
@@ -423,9 +457,11 @@
 .trends-toggle {
   display: inline-flex;
   align-items: center;
+  min-height: $control-height-sm;
+  box-sizing: border-box;
   gap: $global-spacing * 0.4;
   cursor: pointer;
-  padding: ($global-spacing * 0.2) ($global-spacing * 0.5);
+  padding: 0 ($global-spacing * 0.5);
   border-radius: var(--trends-control-radius) !important;
   transition: background 0.15s ease;
 
@@ -909,7 +945,8 @@
 
 // ─── Snapshot Section (Sharp Flat Columns, Rich Hover States)
 .trends-snapshot {
-  --trends-snapshot-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr)) 26px;
+  --trends-snapshot-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr))
+    #{$icon-button-size-sm};
 
   margin-bottom: $global-spacing * 4;
 
@@ -970,7 +1007,7 @@
 
     &__remove {
       position: absolute;
-      top: $global-spacing * 1.35;
+      top: $global-spacing * 1.5;
       right: 0;
     }
   }
@@ -982,6 +1019,7 @@
   &__header {
     display: flex;
     align-items: center;
+    min-height: $icon-button-size-sm;
     gap: $global-spacing * 0.8;
     margin-bottom: 0;
   }
@@ -989,6 +1027,7 @@
   &__external-links {
     display: inline-flex;
     align-items: center;
+    height: $icon-button-size-sm;
     gap: $global-spacing;
     margin-left: $global-spacing * 0.35;
   }
@@ -1001,6 +1040,9 @@
   }
 
   &__name {
+    display: inline-flex;
+    align-items: center;
+    min-height: $icon-button-size-sm;
     font-family: $font-family-body;
     @include font-size-sm;
     font-weight: $font-weight-light;
@@ -1018,7 +1060,7 @@
     align-items: center;
     justify-content: center;
     width: 20px;
-    height: 20px;
+    height: $icon-button-size-sm;
     color: var(--color-icon-secondary);
     line-height: 0;
     flex: 0 0 auto;
@@ -1066,8 +1108,8 @@
   }
 
   &__remove {
-    width: 26px;
-    height: 26px;
+    width: $icon-button-size-sm;
+    height: $icon-button-size-sm;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1248,7 +1290,8 @@
 
   &__header {
     display: flex;
-    align-items: baseline;
+    align-items: center;
+    min-height: $icon-button-size-sm;
     justify-content: space-between;
     gap: $global-spacing;
   }
@@ -1257,6 +1300,7 @@
     @include font-size-sm;
     font-weight: $font-weight-bold;
     color: var(--color-text-primary);
+    line-height: $icon-button-size-sm;
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1264,6 +1308,9 @@
   }
 
   &__compare-all {
+    display: inline-flex;
+    align-items: center;
+    height: $icon-button-size-sm;
     @include font-size-xxs;
     color: var(--color-text-secondary);
     text-decoration: none;
