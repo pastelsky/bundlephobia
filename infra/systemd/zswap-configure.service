@@ -30,7 +30,7 @@ Before=basic.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/sh -c 'echo lz4 > /sys/module/zswap/parameters/compressor && echo 20 > /sys/module/zswap/parameters/max_pool_percent && echo 1 > /sys/module/zswap/parameters/enabled'
+ExecStart=/bin/sh -c 'echo z3fold > /sys/module/zswap/parameters/zpool && echo lz4 > /sys/module/zswap/parameters/compressor && echo 20 > /sys/module/zswap/parameters/max_pool_percent && echo 1 > /sys/module/zswap/parameters/enabled'
 
 [Install]
 WantedBy=basic.target
