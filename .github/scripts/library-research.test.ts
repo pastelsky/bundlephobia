@@ -864,12 +864,12 @@ test('the shared catalog retains the existing category contract', async () => {
 
 test('formats bundle sizes, counts, and dates into human-readable PR metrics', () => {
   assert.equal(formatBytes(5_925_205), '5.93 MB')
-  assert.equal(formatBytes(476_214), '476.2 kB')
+  assert.equal(formatBytes(476_214), '476 kB')
   assert.equal(formatBytes(980), '980 B')
   assert.equal(formatBytes(null), '—')
 
   assert.equal(formatCompactNumber(11_646_312), '11.6M')
-  assert.equal(formatCompactNumber(128_851), '128.9k')
+  assert.equal(formatCompactNumber(128_851), '128.9K')
   assert.equal(formatCompactNumber(797), '797')
   assert.equal(formatCompactNumber(undefined), '—')
 
@@ -908,8 +908,8 @@ test('renders pretty-printed metrics table and parses interactive selection chec
     'unwanted',
   ])
 
-  assert.match(rendered, /148\.5 kB \/ 42\.7 kB/)
-  assert.match(rendered, /\| 11\.6M \| 43\.2k \| Oct 2026 \| MIT \|/)
+  assert.match(rendered, /149 kB \/ 42\.7 kB/)
+  assert.match(rendered, /\| 11\.6M \| 43\.2K \| Oct 2026 \| MIT \|/)
   assert.match(rendered, /- \[x\] `candidate` \(`example`\)/)
   assert.match(rendered, /- \[x\] `alpha` \(`new-cat`\)/)
   assert.deepEqual(parseRejectedPackages(rendered), ['unwanted'])

@@ -4,65 +4,6 @@ import {
   observeManifests,
 } from './manifests.mjs'
 
-export function retryAfterMs(error, nowMs = Date.now()) {
-  const status = error?.status ?? error?.response?.status
-  const message = String(error?.message ?? '')
-  const headers = error?.response?.headers ?? {}
-
-  const isRateLimit =
-    status === 429 ||
-    (status === 403 &&
-      (headers['retry-after'] !== undefined ||
-        headers['x-ratelimit-remaining'] === '0' ||
-        /rate limit|try again in/i.test(message))) ||
-    /try again in \d+(?:\.\d+)?s/i.test(message)
-
-  if (!isRateLimit) return null
-
-  const retryHeader = Number(headers['retry-after'])
-
-  if (Number.isFinite(retryHeader) && retryHeader > 0)
-    return Math.ceil(retryHeader * 1000) + 500
-
-  const match = message.match(/try again in (\d+(?:\.\d+)?)s/i)
-
-  if (match) return Math.ceil(Number(match[1]) * 1000) + 500
-
-  const resetEpoch = Number(headers['x-ratelimit-reset'])
-
-  if (
-    headers['x-ratelimit-remaining'] === '0' &&
-    Number.isFinite(resetEpoch) &&
-    resetEpoch > 0
-  )
-    return Math.max(1000, resetEpoch * 1000 - nowMs + 500)
-
-  return 15_000
-}
-
-export async function withRateLimitRetry(
-  fn,
-  {
-    maxRetries = 2,
-    maxWaitMs = 65_000,
-    sleep = ms => new Promise(resolve => setTimeout(resolve, ms)),
-    now = () => Date.now(),
-  } = {},
-) {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await fn()
-    } catch (error) {
-      const waitMs = retryAfterMs(error, now())
-
-      if (waitMs === null || attempt >= maxRetries || waitMs > maxWaitMs)
-        throw error
-
-      await sleep(waitMs)
-    }
-  }
-}
-
 export async function discoverHackerNewsStories(
   fetchImpl,
   {

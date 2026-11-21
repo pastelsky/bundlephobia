@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import { request } from '@octokit/request'
+import prettyBytes from 'pretty-bytes'
 import { z } from 'zod'
 import { isDeepStrictEqual } from 'node:util'
 import {
@@ -312,42 +313,30 @@ export type PendingPackageMetrics = {
   license: string | null
 }
 
+const compactNumberFormatter = new Intl.NumberFormat('en', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+
+const monthYearFormatter = new Intl.DateTimeFormat('en', {
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
+
 export function formatBytes(bytes: number | null | undefined): string {
   if (bytes === null || bytes === undefined || !Number.isFinite(bytes))
     return '—'
 
-  if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(2)} MB`
-
-  if (bytes >= 1_000) return `${(bytes / 1_000).toFixed(1)} kB`
-
-  return `${Math.round(bytes)} B`
+  return prettyBytes(bytes)
 }
 
 export function formatCompactNumber(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value))
     return '—'
 
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`
-
-  return String(Math.round(value))
+  return compactNumberFormatter.format(value)
 }
-
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-]
 
 export function formatMonthYear(iso: string | null | undefined): string {
   if (!iso) return '—'
@@ -355,7 +344,7 @@ export function formatMonthYear(iso: string | null | undefined): string {
 
   if (Number.isNaN(date.getTime())) return '—'
 
-  return `${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`
+  return monthYearFormatter.format(date)
 }
 
 export const selectionStart = '<!-- library-selection:start -->'

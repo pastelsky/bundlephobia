@@ -160,8 +160,8 @@ just append a new report to old claims.
 Use `/tmp/gh-aw/agent/library-discovery.json` as an optional weekly batch of untrusted
 leads. The collector rotates catalogue seeds, searches consumer manifests and
 framework topics, collects recent high-point Hacker News stories (`hackerNewsStories`,
-including non-Show-HN releases), and excludes approved, pending, build-tool/desktop-plugin
-noise, and previously surfaced packages.
+including non-Show-HN releases), and excludes approved, pending, `@types/*`,
+and previously surfaced packages while capping candidates per `@scope`.
 Do not rerun it or edit its repo-memory state. If it fails or returns nothing,
 continue the other research vectors. Mention source failures and budget warnings.
 
@@ -183,14 +183,13 @@ Research candidate libraries along two distinct complementary vectors:
    categories. If querying Algolia HN directly, search **all stories (`tags=story`)**
    with a points threshold (`points>=25`) across broad JS/TS/web/npm topics — do NOT
    restrict queries to `"Show HN javascript library"`.
-2. Active counterpart & niche discovery: When a strong candidate surfaces (e.g.
-   `@floating-ui/dom`, `yjs`, `vaul`, `@tanstack/vue-query`), actively search npm
+2. Active counterpart & niche discovery: When a strong candidate surfaces from
+   consumer manifests, HN, or releases, actively search npm
    (`https://registry.npmjs.org/-/v1/search?text=...`) and primary docs for modern
    competing alternatives rather than stopping at only the first/legacy pair or
    packages already in the initial discovery batch. Also look for emerging functional
    clusters, rising protocols, or newly adopted browser APIs not yet in the catalog.
-   Legacy-incumbent vs. modern-successor comparisons (e.g. `@popperjs/core` vs.
-   `@floating-ui/dom`, like `moment` vs. `dayjs`) are valid and valuable when the
+   Legacy-incumbent vs. modern-successor comparisons are valid and valuable when the
    incumbent still has heavy active npm downloads and developers compare bundle sizes
    for migration.
 

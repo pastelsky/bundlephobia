@@ -8,48 +8,6 @@ import {
   discoverHackerNewsStories,
 } from './search.mjs'
 
-const NOISE_PACKAGES = new Set([
-  'autoprefixer',
-  'biome',
-  'electron',
-  'electron-builder',
-  'esbuild',
-  'eslint',
-  'oxfmt',
-  'oxlint',
-  'postcss',
-  'prettier',
-  'rollup',
-  'tailwindcss',
-  'ts-node',
-  'tsup',
-  'tsx',
-  'turbo',
-  'typescript',
-  'vite',
-  'webpack',
-])
-
-const NOISE_PREFIXES = [
-  '@biomejs/',
-  '@eslint/',
-  '@tailwindcss/',
-  '@tauri-apps/',
-  '@types/',
-  '@vitejs/',
-  'eslint-',
-  'prettier-',
-]
-
-export function isNoisePackage(name) {
-  const lower = name.toLowerCase()
-
-  return (
-    NOISE_PACKAGES.has(lower) ||
-    NOISE_PREFIXES.some(prefix => lower.startsWith(prefix))
-  )
-}
-
 const stateSchema = z
   .object({
     version: z.literal(1),
@@ -174,7 +132,7 @@ export function rankCandidates(
       item =>
         item.runtime &&
         !known.has(item.package) &&
-        !isNoisePackage(item.package),
+        !item.package.startsWith('@types/'),
     ),
     item => item.package,
   )

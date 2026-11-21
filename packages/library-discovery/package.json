@@ -11,6 +11,8 @@
     "node": ">=24"
   },
   "dependencies": {
+    "@octokit/core": "^7.0.8",
+    "@octokit/plugin-throttling": "^11.0.5",
     "@octokit/request": "^10.0.16",
     "npm-package-arg": "^8.1.5",
     "p-throttle": "^8.1.1",
