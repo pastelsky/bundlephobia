@@ -86,7 +86,7 @@ export function DashboardToolbar(props: ToolbarProps) {
     : '—'
 
   return (
-    <div className="mb-[22px] mt-7 flex flex-wrap items-center justify-between gap-3 mobile:mb-[18px] mobile:mt-[22px] mobile:flex-wrap">
+    <div className="relative z-20 mb-[22px] mt-7 flex flex-wrap items-center justify-between gap-3 mobile:mb-[18px] mobile:mt-[22px] mobile:flex-wrap">
       <div className="flex min-w-0 items-center gap-3 mobile:w-full mobile:flex-wrap">
         <TabGroup
           className="w-auto shrink-0 mobile:w-full"

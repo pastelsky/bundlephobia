@@ -39,12 +39,12 @@ export async function loadPanel(
 ) {
   const resolution = chartResolution(range.seconds, range.step)
 
-  // Counter increases cover exactly one display interval. CPU rates retain a
-  // wider minimum window to avoid noisy single-scrape rate calculations.
+  // Counter deltas cover one display interval; rate/quantile/max queries keep
+  // at least a 2m window so 1m scrapes always have >=2 points for rate().
   const window =
     panel.measurement === 'counter'
       ? resolution.window
-      : `${Math.max(300, resolution.step)}s`
+      : `${Math.max(120, resolution.step)}s`
 
   const end = Math.floor(Date.now() / 60000) * 60
   const queries = panel.series(window)

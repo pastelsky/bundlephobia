@@ -10,6 +10,7 @@ import {
 } from '../stats-app/src/dashboard/metrics'
 
 import { CHARTS } from '../stats-app/src/dashboard/charts'
+import { resolvePage } from '../stats-app/src/dashboard/pages'
 
 const end = Date.parse('2026-10-24T06:00:00Z') / 1000
 
@@ -201,13 +202,44 @@ describe('history from the VictoriaMetrics API', () => {
     expect(chart.data).toHaveLength(181)
     expect(request.searchParams.get('step')).toBe('7200')
     expect(request.searchParams.get('query')).toContain('[7200s]')
-    expect(request.searchParams.get('query')).toContain('increase(')
+    expect(request.searchParams.get('query')).toContain('rate(')
     expect(chart.resolution.label).toBe('2 hours')
     expect(request.searchParams.get('query')).toContain(
       'proxy="bundlephobia_http"',
     )
     expect(fetchCall[1]?.signal).toBe(signal)
     expect(fetchCall[1]?.credentials).toBe('same-origin')
+  })
+
+  it('keeps host and PM2 CPU/memory charts distinct without key collisions', () => {
+    expect(CHARTS.hostCpu.id).toBe('host-cpu')
+    expect(CHARTS.pm2Cpu.id).toBe('pm2-cpu')
+    expect(CHARTS.hostMemory.id).toBe('host-memory')
+    expect(CHARTS.pm2Memory.id).toBe('pm2-memory')
+    expect(
+      CHARTS.hostCpu.series('5m').map(s => ('name' in s ? s.name : '')),
+    ).toEqual(['User', 'System', 'I/O wait'])
+    expect(
+      CHARTS.buildDuration.series('5m').map(s => ('name' in s ? s.name : '')),
+    ).toEqual(['p50', 'p90', 'p95', 'p99'])
+    expect(CHARTS.queueBacklog.series('5m')[0].expression).toContain(
+      'max_over_time(',
+    )
+  })
+
+  it('scopes breakdowns to specific tabs and preserves legacy routes', () => {
+    const computeTab = resolvePage('/resources', 'compute')
+    const storageTab = resolvePage('/resources', 'storage')
+    const legacyResponses = resolvePage('/responses', null)
+    const legacyWorkers = resolvePage('/workers', null)
+
+    expect(computeTab.breakdown).toBeUndefined()
+    expect(storageTab.breakdown).toBe('disk')
+    expect(legacyResponses.page.id).toBe('traffic')
+    expect(legacyResponses.tabId).toBe('responses')
+    expect(legacyResponses.breakdown).toBe('responses')
+    expect(legacyWorkers.page.id).toBe('resources')
+    expect(legacyWorkers.tabId).toBe('workers')
   })
 })
 

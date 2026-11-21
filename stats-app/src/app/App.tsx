@@ -3,7 +3,7 @@ import { Topbar } from '../dashboard/components/Topbar'
 import { useState } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
-import { resolvePage } from '../dashboard/pages'
+import { resolvePage, type BreakdownKind } from '../dashboard/pages'
 import { TIME_RANGES } from '../lib/api'
 import { loadPageSummary, type PageSummary } from '../dashboard/metrics'
 import { Sidebar } from '../dashboard/components/Sidebar'
@@ -57,15 +57,15 @@ function SummarySection({ source, summary, loading }: SummarySectionProps) {
 
 function PageBreakdown({
   summary,
-  showResponses,
+  breakdown,
 }: {
   summary?: PageSummary
-  showResponses: boolean
+  breakdown?: BreakdownKind
 }) {
-  if (summary?.source === 'resources')
+  if (breakdown === 'disk' && summary?.source === 'resources')
     return <DiskBreakdown data={summary.data} />
 
-  if (showResponses)
+  if (breakdown === 'responses')
     return (
       <ResponseBreakdown
         data={summary?.source === 'haproxy' ? summary.data : undefined}
@@ -79,7 +79,7 @@ export function App() {
   const location = useLocation()
   const [params, setParams] = useSearchParams()
 
-  const { page, tabId, panels } = resolvePage(
+  const { page, tabId, panels, breakdown } = resolvePage(
     location.pathname,
     params.get('tab'),
   )
@@ -146,7 +146,7 @@ export function App() {
               />
             ))}
           </div>
-          <PageBreakdown summary={summary} showResponses={page.breakdown} />
+          <PageBreakdown summary={summary} breakdown={breakdown} />
           <footer className="flex items-center justify-between gap-5 pb-1 pt-6 text-[9px] text-slate-400 mobile:flex-col mobile:items-start mobile:gap-2.5 mobile:text-[8px]">
             <span className="flex items-center gap-1.5">
               <span className="size-[5px] rounded-full bg-slate-300" />
