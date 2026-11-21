@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import BlogLayout from '../../../client/components/BlogLayout'
 import { useContentful } from 'react-contentful'
 import BlogPost from './Post'
@@ -30,6 +31,11 @@ const Article = () => {
   } else if (data) {
     return (
       <>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <Link href="/blog" style={{ opacity: 0.75, fontSize: '0.9rem' }}>
+            ← Back to Blog
+          </Link>
+        </div>
         {data.items.map(item => (
           <BlogPost
             key={item.fields.title}
