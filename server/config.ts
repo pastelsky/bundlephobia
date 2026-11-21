@@ -50,6 +50,7 @@ const config = {
     TIMEOUT_MS: {
       GITHUB: 10_000,
       NPM_DOWNLOADS: 10_000,
+      OSV: 10_000,
     },
   },
 } as const

@@ -431,12 +431,146 @@
   }
 }
 
-// Overlay toggles
-.trends-overlays {
-  display: flex;
+// Overlay dropdown trigger, popup, and snapshot tooltips
+.trends-overlays-trigger {
+  display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: $global-spacing * 1.2;
+  justify-content: center;
+  justify-self: start;
+  gap: $global-spacing * 0.6;
+  min-height: $control-height-sm;
+  box-sizing: border-box;
+  padding: 0 ($global-spacing * 1.1);
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--trends-control-radius) !important;
+  color: var(--color-text-secondary);
+  font-family: $font-family-body;
+  @include font-size-xs;
+  font-weight: $font-weight-bold;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover,
+  &[data-popup-open] {
+    background: var(--color-surface-raised);
+    color: var(--color-text-primary);
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-primary);
+    border-radius: 999px;
+    @include font-size-xxs;
+    font-weight: $font-weight-bold;
+    line-height: 1;
+    color: var(--color-text-primary);
+  }
+
+  &__arrow {
+    display: block;
+    width: 8px;
+    height: 5px;
+    opacity: 0.65;
+    transition: transform 0.15s ease;
+
+    [data-popup-open] & {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.trends-overlays-popup {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--trends-control-radius);
+  box-shadow: var(--shadow-popover);
+  padding: ($global-spacing * 0.9) $global-spacing;
+  display: flex;
+  flex-direction: column;
+  gap: $global-spacing * 0.4;
+  min-width: 185px;
+  z-index: 100;
+  outline: none;
+
+  &__header {
+    @include font-size-xxs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    padding-bottom: $global-spacing * 0.5;
+    border-bottom: 1px solid var(--color-border-subtle);
+    margin-bottom: $global-spacing * 0.25;
+  }
+}
+
+.trends-tooltip-popup {
+  background: var(--color-tooltip-bg);
+  border: 1px solid var(--color-tooltip-border);
+  border-radius: var(--trends-control-radius);
+  box-shadow: var(--shadow-tooltip);
+  padding: ($global-spacing * 0.7) $global-spacing;
+  color: var(--color-tooltip-text);
+  font-family: $font-family-body;
+  @include font-size-xs;
+  line-height: 1.45;
+  z-index: 1000;
+  pointer-events: none;
+  min-width: 165px;
+
+  &__header {
+    font-weight: $font-weight-bold;
+    color: var(--color-tooltip-text);
+    padding-bottom: $global-spacing * 0.4;
+    margin-bottom: $global-spacing * 0.4;
+    border-bottom: 1px solid var(--color-tooltip-border);
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: $global-spacing * 0.5;
+    color: var(--color-tooltip-text);
+  }
+
+  &__breakdown {
+    margin-top: $global-spacing * 0.5;
+    padding-top: $global-spacing * 0.5;
+    border-top: 1px solid var(--color-tooltip-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__subrow {
+    display: flex;
+    justify-content: space-between;
+    gap: $global-spacing;
+    color: var(--color-tooltip-text-muted);
+    @include font-size-xxs;
+  }
+
+  &__note {
+    margin-top: $global-spacing * 0.4;
+    color: var(--color-tooltip-text-muted);
+    @include font-size-xxs;
+  }
+}
+
+.trends-toggle__count {
+  color: var(--color-text-muted);
+  @include font-size-xxs;
+  margin-left: 2px;
 }
 
 .trends-overlay-key {
@@ -945,7 +1079,7 @@
 
 // ─── Snapshot Section (Sharp Flat Columns, Rich Hover States)
 .trends-snapshot {
-  --trends-snapshot-columns: minmax(11rem, 2fr) repeat(4, minmax(0, 1fr))
+  --trends-snapshot-columns: minmax(11rem, 2fr) repeat(5, minmax(0, 1fr))
     #{$icon-button-size-sm};
 
   margin-bottom: $global-spacing * 4;
@@ -1168,6 +1302,33 @@
 
   &__unit {
     color: var(--color-text-muted);
+  }
+
+  &__metric-trigger {
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--color-border-primary);
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+    cursor: help;
+    transition: border-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      border-bottom-color: var(--color-text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-primary);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
   }
 
   &__skeleton {

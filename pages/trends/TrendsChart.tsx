@@ -316,9 +316,9 @@ export default function TrendsChart({
                         data-series-clip
                         className="trends-chart__series-clip"
                         x={PLOT.left}
-                        y={PLOT.top}
+                        y={PLOT.top - 2}
                         width={model.plotWidth}
-                        height={model.plotHeight}
+                        height={model.plotHeight + 4}
                       />
                     </clipPath>
                   ))}

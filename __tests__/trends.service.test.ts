@@ -2,6 +2,7 @@ import type { TrendsPackageSeries } from '@bundlephobia/service-contracts/trends
 
 import {
   buildGithubStarTotals,
+  buildVulnerabilityPoints,
   getTrendsRangeStart,
 } from '../server/services/trends.service'
 import { groupTrendsPackage, splitNpmDateRange } from '../utils/trends'
@@ -21,8 +22,25 @@ const series: TrendsPackageSeries = {
     { date: '2026-09-14', value: 10, version: '1.0.0' },
     { date: '2026-09-15', value: 12, version: '1.1.0' },
   ],
+  vulnerabilities: [
+    { date: '2026-09-14', value: 1 },
+    { date: '2026-09-15', value: 2 },
+  ],
   releases: [],
-  current: { weeklyDownloads: 5, stars: 100, size: 20, gzip: 12 },
+  current: {
+    weeklyDownloads: 5,
+    stars: 100,
+    size: 20,
+    gzip: 12,
+    vulnerabilities: {
+      total: 2,
+      active: 1,
+      critical: 0,
+      high: 1,
+      moderate: 0,
+      low: 0,
+    },
+  },
   warnings: [],
 }
 
@@ -39,11 +57,12 @@ describe('trends data', () => {
     ).toBe('2023-02-28')
   })
 
-  it('sums downloads but keeps the latest star total and size release', () => {
+  it('sums downloads but keeps the latest star total, size release, and peak vulns', () => {
     expect(groupTrendsPackage(series, 'week')).toMatchObject({
       downloads: [{ date: '2026-09-14', value: 5 }],
       stars: [{ date: '2026-09-14', value: 100 }],
       size: [{ date: '2026-09-14', value: 12, version: '1.1.0' }],
+      vulnerabilities: [{ date: '2026-09-14', value: 2 }],
     })
   })
 
@@ -103,5 +122,86 @@ describe('trends data', () => {
       '2025-09-20:2026-09-19',
       '2026-09-20:2026-09-21',
     ])
+  })
+
+  it('tracks active OSV semver exposure across releases without fake post-fix spikes', () => {
+    const vulns = [
+      {
+        id: 'GHSA-old-resolved',
+        published: '2024-05-18T00:00:00Z',
+        database_specific: { severity: 'HIGH' },
+        affected: [
+          {
+            package: { name: 'example-pkg', ecosystem: 'npm' },
+            ranges: [{ events: [{ introduced: '0' }, { fixed: '1.0.0' }] }],
+          },
+        ],
+      },
+      {
+        id: 'GHSA-patched',
+        published: '2024-05-25T00:00:00Z',
+        database_specific: { severity: 'MODERATE' },
+        affected: [
+          {
+            package: { name: 'example-pkg', ecosystem: 'npm' },
+            ranges: [{ events: [{ introduced: '1.0.0' }, { fixed: '1.2.0' }] }],
+          },
+        ],
+      },
+      {
+        id: 'GHSA-unpatched',
+        published: '2024-05-15T00:00:00Z',
+        database_specific: { severity: 'CRITICAL' },
+        affected: [
+          {
+            package: { name: 'example-pkg', ecosystem: 'npm' },
+            ranges: [
+              { events: [{ introduced: '1.1.0' }, { last_affected: '1.2.0' }] },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'GHSA-withdrawn',
+        withdrawn: '2024-05-16T00:00:00Z',
+        database_specific: { severity: 'HIGH' },
+        affected: [
+          {
+            package: { name: 'example-pkg', ecosystem: 'npm' },
+            ranges: [{ events: [{ introduced: '0' }] }],
+          },
+        ],
+      },
+    ]
+
+    const result = buildVulnerabilityPoints(vulns, '2024-05-01', {
+      packageName: 'example-pkg',
+      now: new Date('2024-05-30T00:00:00Z'),
+      publishDates: {
+        '1.0.0': '2024-05-01',
+        '1.1.0': '2024-05-10',
+        '1.2.0': '2024-05-20',
+      },
+    })
+
+    const valueOn = (date: string) =>
+      result.points.find(point => point.date === date)?.value
+
+    // 1.0.0: GHSA-patched only (GHSA-old-resolved already fixed in 1.0.0)
+    expect(valueOn('2024-05-05')).toBe(1)
+    // 1.1.0: GHSA-patched + GHSA-unpatched
+    expect(valueOn('2024-05-12')).toBe(2)
+    // 1.2.0: GHSA-patched resolved; no fake spike on 2024-05-25 published date
+    expect(valueOn('2024-05-22')).toBe(1)
+    expect(valueOn('2024-05-25')).toBe(1)
+
+    expect(result.summary).toEqual({
+      total: 3,
+      active: 1,
+      critical: 1,
+      high: 0,
+      moderate: 0,
+      low: 0,
+    })
   })
 })
