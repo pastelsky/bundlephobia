@@ -14,7 +14,6 @@ import API, {
   type TrendsGroupBy,
   type TrendsMetric,
   type TrendsRange,
-  type TrendsResponse,
 } from '../../client/api'
 import Layout from '../../client/components/Layout'
 import MetaTags from '../../client/components/MetaTags'
@@ -27,11 +26,7 @@ import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
-import {
-  fetchTrendsDownloads,
-  getCachedPackageDownloads,
-  type PackageDownloadsResult,
-} from './trendsDownloadsClient'
+import { useTrendsData } from './useTrendsData'
 import { groupTrendsPackage } from '../../utils/trends'
 import { trendsComparisonCanonicalPath } from '../../seo/trends-comparisons'
 import {
@@ -46,12 +41,6 @@ const DEFAULT_PACKAGES = ['react', 'vue']
 const MAX_PACKAGES = 5
 
 const PACKAGE_URL_SEPARATOR = '~vs~'
-
-type TrendsLoadState =
-  | { status: 'empty'; data: null }
-  | { status: 'pending'; data: TrendsResponse | null; showLoading: boolean }
-  | { status: 'ready'; data: TrendsResponse; requestKey: string }
-  | { status: 'error'; data: TrendsResponse | null; message: string }
 
 function decodePackageParam(value: string) {
   try {
@@ -143,62 +132,6 @@ function MetricValue({
   )
 }
 
-function mergeDownloadsIntoTrendsResponse(
-  serverRes: TrendsResponse,
-  clientDownloads: Map<string, PackageDownloadsResult>,
-): TrendsResponse {
-  return {
-    ...serverRes,
-    packages: serverRes.packages.map(pack => {
-      // Preserve server-supplied downloads when present (for instance in mocked tests)
-      if (pack.downloads.length > 0) return pack
-
-      const clientResult = clientDownloads.get(pack.name)
-
-      if (!clientResult) return pack
-
-      const warnings =
-        clientResult.warning && !pack.warnings.includes(clientResult.warning)
-          ? [...pack.warnings, clientResult.warning]
-          : pack.warnings
-
-      return {
-        ...pack,
-        downloads: clientResult.downloads,
-        current: {
-          ...pack.current,
-          weeklyDownloads:
-            pack.current.weeklyDownloads ?? clientResult.weeklyDownloads,
-        },
-        warnings,
-      }
-    }),
-  }
-}
-
-function trackTrendsLoad(
-  response: TrendsResponse,
-  packageCount: number,
-  range: TrendsRange,
-  startedAt: number,
-) {
-  Analytics.trendsDataLoaded({
-    packageCount,
-    range,
-    timeTaken: Math.round(performance.now() - startedAt),
-    downloadPackageCount: response.packages.filter(
-      pack => pack.downloads.length > 0,
-    ).length,
-    starsPackageCount: response.packages.filter(pack => pack.stars.length > 0)
-      .length,
-    sizePackageCount: response.packages.filter(pack => pack.size.length > 0)
-      .length,
-    warningPackageCount: response.packages.filter(
-      pack => pack.warnings.length > 0,
-    ).length,
-  })
-}
-
 export const getServerSideProps: GetServerSideProps<{
   initialPackages: string[]
   hasExplicitPackages: boolean
@@ -224,11 +157,14 @@ export default function TrendsPage({
   const [showMajorReleases, setShowMajorReleases] = useState(true)
   const [showMinorReleases, setShowMinorReleases] = useState(false)
 
-  const [loadState, setLoadState] = useState<TrendsLoadState>({
-    status: 'pending',
-    data: null,
-    showLoading: true,
-  })
+  const { trendsData, loading, isPending, error, startLoading } = useTrendsData(
+    {
+      packages,
+      metric,
+      range,
+      groupBy,
+    },
+  )
 
   const [copied, setCopied] = useState(false)
   const [relatedPackageNames, setRelatedPackageNames] = useState<string[]>([])
@@ -241,11 +177,6 @@ export default function TrendsPage({
   useEffect(() => {
     setSampledCategories(getRandomCategories(6))
   }, [])
-
-  const requestKey = JSON.stringify([packages, range])
-  const trendsData = loadState.data
-  const loading = loadState.status === 'pending' && loadState.showLoading
-  const error = loadState.status === 'error' ? loadState.message : null
 
   const loadedPackageNames = new Set(
     trendsData?.range === range
@@ -260,37 +191,11 @@ export default function TrendsPage({
     groupBy,
   }
 
-  const startLoading = useCallback(() => {
-    setLoadState(current => ({
-      status: 'pending',
-      data: current.data,
-      showLoading: false,
-    }))
-  }, [])
-
   const chartPackages = useMemo(
     () =>
       trendsData?.packages.map(pack => groupTrendsPackage(pack, groupBy)) ?? [],
     [groupBy, trendsData],
   )
-
-  useEffect(() => {
-    if (loadState.status !== 'ready' || loadState.requestKey !== requestKey)
-      return
-
-    Analytics.trendsComparisonViewed({
-      packageCount: packages.length,
-      metric,
-      range,
-      groupBy,
-      dataPackageCount: loadState.data.packages.filter(
-        pack => pack[metric].length > 0,
-      ).length,
-      warningPackageCount: loadState.data.packages.filter(
-        pack => pack.warnings.length > 0,
-      ).length,
-    })
-  }, [loadState, requestKey, packages, metric, range, groupBy])
 
   // Sync state with URL params on mount / router change
   useEffect(() => {
@@ -371,123 +276,6 @@ export default function TrendsPage({
     },
     [router],
   )
-
-  // Fetch server metadata/stars/size and client-side npm downloads in parallel
-  useEffect(() => {
-    if (packages.length === 0) {
-      setLoadState({ status: 'empty', data: null })
-
-      return
-    }
-
-    let isMounted = true
-    const startedAt = performance.now()
-    const downloadController = new AbortController()
-    let serverRes: TrendsResponse | null = null
-    let clientDownloads = new Map<string, PackageDownloadsResult>()
-    let downloadsSettled = false
-
-    for (const pkg of packages) {
-      const cached = getCachedPackageDownloads(pkg, range)
-
-      if (cached) clientDownloads.set(pkg, cached)
-    }
-
-    // An indicator that flashes for a quick cache or network response is more
-    // distracting than helpful. Keep the current chart visible until a request
-    // has genuinely taken long enough to need a loading state.
-    startLoading()
-
-    const loadingTimer = window.setTimeout(() => {
-      if (isMounted) {
-        setLoadState(current => ({
-          status: 'pending',
-          data: current.data,
-          showLoading: true,
-        }))
-      }
-    }, 400)
-
-    const publishIfReady = () => {
-      if (!isMounted || !serverRes) return
-
-      const merged = mergeDownloadsIntoTrendsResponse(
-        serverRes,
-        clientDownloads,
-      )
-
-      if (!downloadsSettled) {
-        setLoadState(current => ({
-          status: 'pending',
-          data: merged,
-          showLoading:
-            current.status === 'pending' ? current.showLoading : false,
-        }))
-
-        return
-      }
-
-      window.clearTimeout(loadingTimer)
-      setLoadState({ status: 'ready', data: merged, requestKey })
-      trackTrendsLoad(merged, packages.length, range, startedAt)
-    }
-
-    API.getTrends(packages, range)
-      .then(res => {
-        if (!isMounted) return
-
-        serverRes = res
-
-        if (res.packages.every(pack => pack.downloads.length > 0)) {
-          downloadsSettled = true
-          downloadController.abort()
-        }
-
-        publishIfReady()
-      })
-      .catch(err => {
-        window.clearTimeout(loadingTimer)
-        downloadController.abort()
-
-        if (isMounted) {
-          setLoadState(current => ({
-            status: 'error',
-            data: current.data,
-            message: err?.message || 'Failed to fetch trends data',
-          }))
-          Analytics.trendsDataFailed({
-            packageCount: packages.length,
-            range,
-            timeTaken: Math.round(performance.now() - startedAt),
-          })
-        }
-      })
-
-    fetchTrendsDownloads(packages, range, {
-      signal: downloadController.signal,
-    })
-      .then(downloadsMap => {
-        if (!isMounted || downloadsSettled) return
-
-        clientDownloads = downloadsMap
-        downloadsSettled = true
-        publishIfReady()
-      })
-      .catch(err => {
-        if (!isMounted || downloadsSettled) return
-
-        if (err instanceof Error && err.name === 'AbortError') return
-
-        downloadsSettled = true
-        publishIfReady()
-      })
-
-    return () => {
-      isMounted = false
-      window.clearTimeout(loadingTimer)
-      downloadController.abort()
-    }
-  }, [packages, range, requestKey, startLoading])
 
   const [inputKey, setInputKey] = useState(0)
 
@@ -681,13 +469,12 @@ export default function TrendsPage({
                   }}
                 />
                 <span className="trends-chip__name">{pkg}</span>
-                {loadState.status === 'pending' &&
-                  !loadedPackageNames.has(pkg) && (
-                    <output
-                      className="trends-chip__spinner"
-                      aria-label={`Loading ${pkg} trends`}
-                    />
-                  )}
+                {isPending && !loadedPackageNames.has(pkg) && (
+                  <output
+                    className="trends-chip__spinner"
+                    aria-label={`Loading ${pkg} trends`}
+                  />
+                )}
                 <Button
                   type="button"
                   className="trends-chip__remove"
