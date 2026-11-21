@@ -485,6 +485,14 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   renderQuickStatsBar() {
     const { resultsPromiseState, results } = this.state
 
+    if (resultsPromiseState === 'rejected') {
+      const { errorName } = resolveBuildError(this.state.resultsError)
+
+      if (errorName === 'PackageNotFoundError') {
+        return null
+      }
+    }
+
     if (resultsPromiseState !== 'fulfilled' || !results) {
       const name = parsePackageString(
         getPackageStringFromRouter(this.props.router),
