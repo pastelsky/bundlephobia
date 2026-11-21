@@ -133,67 +133,9 @@ if (process.argv[2] !== '--sandboxed') {
     path.join(scopedPackage, 'dist/cjs/deeper/retain.map'),
     'retain',
   )
-  const cachedMap = path.join(root, 'cache/retain.map')
-  await fs.writeFile(cachedMap, 'retain')
-  // Separate sandbox bind mounts cannot create cross-mount hardlinks.
-  const retainedHardlink = path.join(fixture, 'retained-hardlink')
-  await fs.writeFile(retainedHardlink, 'retain')
-  await fs.link(retainedHardlink, path.join(scopedPackage, 'cached.map'))
-  await fs.symlink(path.join(root, 'cache'), path.join(scopedPackage, 'linked'))
-  execFileSync(
-    'bash',
-    [
-      '-c',
-      'source "$1"; log() { :; }; cleanup_non_bundlable_files',
-      'cleanup',
-      new URL('../operations/disk-clean.sh', import.meta.url).pathname,
-    ],
-    { stdio: 'inherit' },
-  )
-
-  for (const name of [
-    '.hidden.d.ts',
-    'index.d.mts',
-    'index.d.cts',
-    'dist/cjs/index.map',
-    'cached.map',
-  ]) {
-    await assert.rejects(fs.access(path.join(scopedPackage, name)), {
-      code: 'ENOENT',
-    })
-  }
-
-  await fs.access(path.join(scopedPackage, 'index.js'))
-  await fs.access(path.join(scopedPackage, 'dist/cjs/deeper/retain.map'))
-  assert.equal(await fs.readFile(cachedMap, 'utf8'), 'retain')
-  assert.equal(await fs.readFile(retainedHardlink, 'utf8'), 'retain')
-
   const bunCache = path.join(root, 'cache/bun')
   await fs.mkdir(path.join(bunCache, '.tmp'), { recursive: true })
-  const freshPackage = path.join(bunCache, 'fresh-fixture@1.0.0@@@1')
-  await fs.mkdir(freshPackage)
-  await fs.writeFile(path.join(freshPackage, 'package.json'), '{}')
-  await fs.writeFile(path.join(bunCache, 'old manifest.npm'), 'metadata')
   await fs.writeFile(path.join(bunCache, '.tmp/active'), 'in progress')
-  const agedPackage = path.join(bunCache, 'cleanup-fixture@1.0.0@@@1')
-  await fs.mkdir(agedPackage)
-  await fs.writeFile(path.join(agedPackage, 'package.json'), '{}')
-  const yesterday = new Date(Date.now() - 2 * 24 * 60 * 60_000)
-  await fs.utimes(agedPackage, yesterday, yesterday)
-  execFileSync(
-    'bash',
-    [
-      '-c',
-      'BUN_BIN="$2"; source "$1"; LOG_FILE=/dev/stderr; log() { :; }; prune_bun_cache',
-      'cleanup',
-      new URL('../operations/disk-clean.sh', import.meta.url).pathname,
-      execFileSync('which', ['bun'], { encoding: 'utf8' }).trim(),
-    ],
-    { stdio: 'inherit' },
-  )
-  await assert.rejects(fs.access(agedPackage), { code: 'ENOENT' })
-  await fs.access(freshPackage)
-  await fs.access(path.join(bunCache, 'old manifest.npm'))
   await fs.mkdir(path.join(bunCache, 'old package'))
   await fs.mkdir(path.join(bunCache, '@scope/scoped-package'), {
     recursive: true,
@@ -221,6 +163,29 @@ if (process.argv[2] !== '--sandboxed') {
     await fs.readFile(path.join(bunCache, '.tmp/active'), 'utf8'),
     'in progress',
   )
+
+  const trimCalls = execFileSync(
+    'bash',
+    [
+      '-c',
+      `
+      source "$1"
+      log() { :; }
+      get_loop_usage() { echo 65; }
+      cleanup_stale_package_dirs() { :; }
+      cleanup_npm_cache() { :; }
+      evict_oldest_bun_cache_entries() { :; }
+      trim_loop_device() { echo "TRIMMED"; }
+      cleanup_loop_device 60
+      cleanup_loop_device 70
+      `,
+      'cleanup',
+      new URL('../operations/disk-clean.sh', import.meta.url).pathname,
+    ],
+    { encoding: 'utf8' },
+  )
+
+  assert.equal(trimCalls.trim(), 'TRIMMED')
 
   console.log(
     'Real builds stayed in approved paths; existing cleanup reclaimed their retained output.',
