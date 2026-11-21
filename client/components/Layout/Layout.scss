@@ -4,7 +4,7 @@
 @import '../../../stylesheets/base';
 @import '../../../stylesheets/colors';
 
-$footer-content-max-width: $content-max-width;
+$footer-content-max-width: $global-spacing * 80;
 
 .layout {
   max-width: 100%;

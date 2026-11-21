@@ -101,14 +101,11 @@ $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12
   width: 100%;
 }
 
-.autocomplete-input-box.homepage__search-input {
+.homepage__search-input {
   position: relative;
   z-index: 20;
   margin-top: $global-spacing;
   width: 100%;
-  max-width: $content-max-width;
-  min-width: 0;
-  box-sizing: border-box;
 
   @media screen and (max-width: 40em) {
     margin-top: $global-spacing * 2.5;
