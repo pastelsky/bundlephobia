@@ -141,9 +141,25 @@ async function fetchDownloads(
     getNpmTrendsRange(range),
   )
 
-  return points
+  const normalized = points
     .filter(point => /^\d{4}-\d{2}-\d{2}$/.test(point.day))
     .map(point => ({ date: point.day, value: point.downloads }))
+
+  // npm's downloads range API returns 0 for trailing UTC days that have not yet
+  // been aggregated; drop those unaggregated tail buckets when prior days exist.
+  if (normalized.length > 1 && normalized.some(point => point.value > 0)) {
+    let end = normalized.length
+
+    while (end > 1 && normalized[end - 1].value === 0) {
+      end -= 1
+    }
+
+    if (end < normalized.length) {
+      return normalized.slice(0, end)
+    }
+  }
+
+  return normalized
 }
 
 function sizePoints(history: PackageHistoryResponse): TrendsPoint[] {

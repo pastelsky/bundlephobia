@@ -337,9 +337,9 @@ export default function TrendsChart({
                       />
                       <text
                         className="trends-chart__axis-label"
-                        x={PLOT.left + 6}
-                        y={y <= PLOT.top + 20 ? y + 13 : y - 7}
-                        textAnchor="start"
+                        x={PLOT.left - 8}
+                        y={y + 3}
+                        textAnchor="end"
                       >
                         <tspan>{formatMetricValue(value, metric).value}</tspan>
                         {formatMetricValue(value, metric).unit && (
@@ -502,7 +502,7 @@ export default function TrendsChart({
                       <text
                         x={annotation.labelX}
                         y={annotation.labelY}
-                        textAnchor="start"
+                        textAnchor={annotation.textAnchor}
                         fill={annotation.color}
                       >
                         {annotation.name}
