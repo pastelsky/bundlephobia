@@ -1029,6 +1029,6 @@
       { "tag": "graph theory", "weight": 10 },
       { "tag": "nodes and edges", "weight": 8 }
     ],
-    "similar": ["cytoscape", "sigma"]
+    "similar": ["cytoscape", "sigma", "vis-network"]
   }
 }

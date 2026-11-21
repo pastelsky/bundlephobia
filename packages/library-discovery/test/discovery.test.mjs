@@ -287,9 +287,14 @@ test('hacker news discovery queries non-Show-HN stories, deduplicates, and sorts
     { now, notes },
   )
 
-  assert.equal(urls.length, 3)
+  assert.equal(urls.length, 7)
   assert.ok(
-    urls.every(url => url.includes('tags=story') && !url.includes('Show')),
+    urls.every(
+      url =>
+        url.includes('tags=story') &&
+        !url.includes('Show') &&
+        !url.includes('+OR+'),
+    ),
   )
   assert.deepEqual(
     stories.map(story => story.title),
