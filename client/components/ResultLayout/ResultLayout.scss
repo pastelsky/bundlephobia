@@ -67,7 +67,7 @@
   flex-direction: column;
   min-height: 100vh;
   min-height: calc(100vh - 6px);
-  flex-gorw: 1;
+  flex-grow: 1;
 }
 
 .page-content {
@@ -76,9 +76,11 @@
   justify-content: center;
   flex-direction: column;
   flex-grow: 1;
+  width: 100%;
+  box-sizing: border-box;
 
   @media screen and (max-width: 40em) {
-    padding: 0 $global-spacing * 2;
+    padding: 0 $layout-gutter-mobile;
   }
 }
 
