@@ -1,0 +1,26 @@
+# ==============================================================================
+# thp-configure.service
+# ==============================================================================
+# Configures Transparent Huge Pages (THP) defrag policy on boot.
+#
+# Rationale:
+# - With `defrag=madvise` (Ubuntu default), native allocators (mimalloc in Rspack/Oxc,
+#   glibc, Bun) issuing MADV_HUGEPAGE trigger synchronous direct compaction stalls.
+# - On an 8 GB host holding ~650k ext4_inode_cache/dentry slab objects, contiguous
+#   2 MB physical page allocations fail ~99.98% of the time, causing allocation pauses
+#   before falling back to 4 KB pages anyway.
+# - Setting `defrag=never` keeps `enabled=madvise` intact while avoiding synchronous
+#   compaction stalls (instant 4 KB fallback when no 2 MB block is immediately free).
+
+[Unit]
+Description=Disable synchronous Transparent Huge Pages defragmentation
+Before=basic.target
+ConditionPathExists=/sys/kernel/mm/transparent_hugepage/defrag
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'echo never > /sys/kernel/mm/transparent_hugepage/defrag'
+
+[Install]
+WantedBy=multi-user.target

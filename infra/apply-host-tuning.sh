@@ -37,11 +37,14 @@ echo "3. Applying kernel sysctl parameters..."
 install -m 0644 "${SCRIPT_DIR}/sysctl.d/99-bundlephobia.conf" /etc/sysctl.d/99-bundlephobia.conf
 sysctl --system >/dev/null
 
-# 4. zswap configuration
-echo "4. Setting up zswap service..."
+# 4. zswap & THP defrag configuration
+echo "4. Setting up zswap and THP defrag services..."
 install -m 0644 "${SCRIPT_DIR}/systemd/zswap-configure.service" /etc/systemd/system/zswap-configure.service
+install -m 0644 "${SCRIPT_DIR}/systemd/thp-configure.service" /etc/systemd/system/thp-configure.service
 systemctl daemon-reload
 systemctl enable --now zswap-configure.service
+systemctl enable --now thp-configure.service
+systemctl restart thp-configure.service 2>/dev/null || true
 
 # 5. Remount /tmp/tmp-build with ephemeral performance flags
 if mountpoint -q /tmp/tmp-build; then
@@ -56,6 +59,8 @@ echo "TCP Congestion: $(sysctl -n net.ipv4.tcp_congestion_control)"
 echo "Default Qdisc:  $(sysctl -n net.core.default_qdisc)"
 echo "Swappiness:     $(sysctl -n vm.swappiness)"
 echo "VFS Pressure:   $(sysctl -n vm.vfs_cache_pressure)"
+echo "Compaction:     $(sysctl -n vm.compaction_proactiveness 2>/dev/null || echo 'N/A')"
+echo "THP Defrag:     $(cat /sys/kernel/mm/transparent_hugepage/defrag 2>/dev/null || echo 'N/A')"
 echo "zswap Enabled:  $(cat /sys/module/zswap/parameters/enabled 2>/dev/null || echo 'N/A')"
 echo "zswap Compress: $(cat /sys/module/zswap/parameters/compressor 2>/dev/null || echo 'N/A')"
 if mountpoint -q /tmp/tmp-build; then
