@@ -47,8 +47,8 @@ const failureCache = new LRU<string, FailureCacheEntry>({
 const debug = createDebug('bp:request')
 
 const requestQueue = new Queue({
-  concurrency: 4,
-  // Four active builds and at most sixteen waiting.
+  concurrency: 3,
+  // Three active builds (matching build-service instances) and at most seventeen waiting.
   maxJobs: 20,
   maxAge: 30,
 })

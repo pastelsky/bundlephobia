@@ -131,8 +131,8 @@ the PR description, never in the catalog's name/tags/similar data.
 Find genuine JavaScript/TypeScript alternatives for Bundlephobia. Read
 utils/similar-packages.catalog.json and comparisonGroups in utils/similarPackages.ts.
 Check only the PR with head codex/library-catalog (in GitHub search use is:pr head:codex/library-catalog; do not use the pastelsky: prefix as same-repo head searches do not match): respect its pending
-catalog and maintainer feedback. Pass its head commit SHA as expectedHead (or null if the branch does not yet exist). No matching PR is a normal first run. Never
-re-propose rejected recommendations. Before discovering more libraries, read the
+catalog and maintainer feedback. Pass its head commit SHA as expectedHead (or null if the branch does not yet exist). No matching PR is a normal first run. Never re-propose rejected recommendations, including packages unchecked in the PR's
+`Selection checklist` or listed under `Dismissed / unchecked packages`. Before discovering more libraries, read the
 PR conversation, review bodies and inline comments (including pagination), and
 address actionable feedback. You own the editorial decisions: investigate,
 correct rationale, remove or replace unsuitable pending recommendations, adjust
@@ -146,19 +146,22 @@ Maintain a clear cumulative PR summary covering the current pending changes,
 their evidence, and responses linking to the relevant comments. Preserve useful
 earlier rationale and maintainer notes; correct or remove superseded claims.
 Do not repeat answered feedback unless it was edited or requires follow-up.
-You write the PR summary; there is no publisher-generated narrative. For each
-pending recommendation explain why it was considered, relative value and
-trade-offs, with evidence links. Include the research run link, optional-source
-limitations, and a reminder that package checks do not validate every claim and
-human review is required. Do not just append a new report to old claims.
-Lead with the actual catalog diff and a short table of additions. Put supporting
-research, considered-but-rejected libraries/categories and their specific reasons,
-and provenance caveats in `<details><summary>...</summary>...</details>` sections.
-Keep those HTML elements in the summary only, never in proposal data fields.
+The publisher deterministically prepends a pretty-printed metrics table (version,
+minified/gzip sizes in kB/MB, weekly downloads, GitHub stars, last publish date,
+and license) and an interactive `Selection checklist` above your summary. You write
+the editorial narrative: lead with a brief catalog diff overview and concise trade-offs,
+and put supporting research, considered-but-rejected libraries/categories and their
+specific reasons, and provenance caveats in `<details><summary>...</summary>...</details>`
+sections. Keep those HTML elements in the summary only, never in proposal data fields.
+Include the research run link, optional-source limitations, and a reminder that
+package checks do not validate every claim and human review is required. Do not
+just append a new report to old claims.
 
 Use `/tmp/gh-aw/agent/library-discovery.json` as an optional weekly batch of untrusted
 leads. The collector rotates catalogue seeds, searches consumer manifests and
-framework topics, and excludes approved, pending and previously surfaced packages.
+framework topics, collects recent high-point Hacker News stories (`hackerNewsStories`,
+including non-Show-HN releases), and excludes approved, pending, `@types/*`,
+and previously surfaced packages while capping candidates per `@scope`.
 Do not rerun it or edit its repo-memory state. If it fails or returns nothing,
 continue the other research vectors. Mention source failures and budget warnings.
 
@@ -174,15 +177,21 @@ trigger and observation date; do not copy descriptions as rationale.
 
 Research candidate libraries along two distinct complementary vectors:
 
-1. Catalog expansion & trending releases: Investigate recent activity through GitHub
-   Trending (JavaScript/TypeScript), HN / Show HN (Algolia), and releases of packages
-   complementing existing catalog categories.
-2. Upcoming and niche discovery: Actively look for emerging functional clusters
-   and niche libraries not yet in the catalog. Query npm search
-   (`https://registry.npmjs.org/-/v1/search?text=...`) for rising topic keywords,
-   emerging protocols, or newly adopted browser APIs. When an emerging cluster has at
-   least two real competing solutions, you propose a new category if a current buckets
-   don't make sense.
+1. Consumer leads, HN stories & releases: Start from `/tmp/gh-aw/agent/library-discovery.json`
+   (both consumer-manifest leads and `hackerNewsStories`), GitHub Trending
+   (JavaScript/TypeScript), and releases of packages complementing existing catalog
+   categories. If querying Algolia HN directly, search **all stories (`tags=story`)**
+   with a points threshold (`points>=25`) across broad JS/TS/web/npm topics — do NOT
+   restrict queries to `"Show HN javascript library"`.
+2. Active counterpart & niche discovery: When a strong candidate surfaces from
+   consumer manifests, HN, or releases, actively search npm
+   (`https://registry.npmjs.org/-/v1/search?text=...`) and primary docs for modern
+   competing alternatives rather than stopping at only the first/legacy pair or
+   packages already in the initial discovery batch. Also look for emerging functional
+   clusters, rising protocols, or newly adopted browser APIs not yet in the catalog.
+   Legacy-incumbent vs. modern-successor comparisons are valid and valuable when the
+   incumbent still has heavy active npm downloads and developers compare bundle sizes
+   for migration.
 
 Shortlist promising candidates before deep investigation. Batch independent source reads
 and candidate investigations in parallel; do not repeat requests or inspect unrelated PRs.
@@ -192,17 +201,25 @@ multiple curl calls or subagents rather than making sequential roundtrips. Outbo
 traffic is filtered and routed via proxy environment variables (`https_proxy`), which `curl`
 and `web_fetch` handle automatically. Avoid running inline Node scripts with native `fetch()`,
 because Node's `fetch()` does not use the proxy by default and fails with DNS resolution errors.
-Use GitHub MCP for maintainer README, API examples, commits, and releases. To inspect
+Use GitHub MCP for maintainer README, API examples, commits, and releases. Do NOT treat
+GitHub `search_code` as a hard requirement for verifying candidates: GitHub Code Search has
+strict secondary rate limits (HTTP 429). Never drop strong candidates solely because
+`search_code` returned 429 — use `library-discovery.json` consumer manifests when present,
+or npm registry downloads, maintainer docs, and releases. To inspect
 `utils/similar-packages.catalog.json` efficiently without paginating across multiple turns,
 inspect targeted sections or summarize category keys via jq. Record exact links read. Optional
 discovery failures must not block verified candidates.
 
 Your job is semantic judgment: same concrete task and compatible environments,
-not popularity. Distinguish browser/server, framework-specific/generic, and
-plugins/frameworks. Explain relative use cases, migration costs, maintenance and
-uncertainty. Do not invent size/performance advantages. The publisher handles
-npm identity, deprecation, archived repositories, catalog constraints, merging,
-branch lifecycle and CI; do not recreate those checks in temporary scripts.
+not popularity. Target composable, embeddable browser or isomorphic libraries —
+NOT monolithic full-application platforms or multi-megabyte office suites (such as
+full collaborative spreadsheet/document platforms), and do not pair a multi-megabyte
+platform SDK with a lightweight widget as interchangeable alternatives. Distinguish
+browser/server, framework-specific/generic, and plugins/frameworks. Explain relative
+use cases, migration costs, maintenance and uncertainty. Do not invent size/performance
+advantages. The publisher handles npm identity, deprecation, archived repositories,
+catalog constraints, merging, branch lifecycle and CI; do not recreate those checks
+in temporary scripts.
 Read npm latest and primary docs for evidence, without installing packages.
 Before recommending a candidate, call the normal Bundlephobia `/api/size` endpoint
 with its exact npm version (`package=name@version`) and record the version, size,
@@ -246,7 +263,7 @@ Submit exactly once through safeoutputs with
 where text sanitization can alter JSON and scoped npm names/URLs.
 Do not use raw HTML tags in proposal fields.
 Leave `/tmp/gh-aw/agent/proposal.json` in place; ensure parent directories exist (`mkdir -p /tmp/gh-aw/agent`) and do not delete or clean up proposal.json, as the post-step uploads it as an artifact for the downstream review publisher.
-Use an empty proposal array only after completed
-research finds no useful candidates; report_incomplete if core npm/repository
-evidence is inaccessible. Note optional-source limitations in your summary.
+Returning an empty proposal array (`[]`) is strongly preferred over forcing a
+weak or mismatched GitHub Trending fallback; use `report_incomplete` only if core
+npm/repository evidence is inaccessible. Note optional-source limitations in your summary.
 Do not edit repository code or create branches/PRs; publication requires human review.

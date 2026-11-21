@@ -213,12 +213,9 @@ export default class API {
   }
 
   static getTrends(packages: string[], range: TrendsRange) {
-    const params = new URLSearchParams({
-      packages: packages.join(','),
-      range,
-    })
-
-    return API.get<TrendsResponse>(`/api/trends?${params}`)
+    return API.get<TrendsResponse>(
+      `/api/trends?packages=${encodeURIComponent(packages.join(','))}&range=${encodeURIComponent(range)}`,
+    )
   }
 
   static getRecentSearches(limit: number) {

@@ -38,14 +38,26 @@ const client = axios.create({
   },
 })
 
-function requestHeaders() {
-  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN
+export function getGithubRequestHeaders(
+  env: NodeJS.ProcessEnv = process.env,
+): GithubRequestHeaders {
+  const token = env.GITHUB_TOKEN || env.GH_TOKEN
+  const clientId = env.GITHUB_CLIENT_ID
+  const clientSecret = env.GITHUB_CLIENT_SECRET
 
   const headers: GithubRequestHeaders = {
     'User-Agent': 'bundlephobia-trends',
   }
 
-  if (token) headers.Authorization = `Bearer ${token}`
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  } else if (clientId && clientSecret) {
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
+      'base64',
+    )
+
+    headers.Authorization = `Basic ${credentials}`
+  }
 
   return headers
 }
@@ -56,14 +68,28 @@ function assertRepository(repository: string): void {
   }
 }
 
+type HttpRequestOptions = {
+  headers?: Record<string, string>
+  params?: Record<string, string | number>
+  maxRedirects?: number
+}
+
+type HttpClient = {
+  get<T>(
+    url: string,
+    options?: HttpRequestOptions,
+  ): Promise<{ data: T; headers: Record<string, string | undefined> }>
+}
+
 export async function fetchGithubStarCount(
   repository: string,
+  httpClient: HttpClient = client,
 ): Promise<number> {
   assertRepository(repository)
 
-  const { data } = await client.get<unknown>(
+  const { data } = await httpClient.get<unknown>(
     `/repos/${repository}/stargazers/count`,
-    { headers: requestHeaders(), maxRedirects: 5 },
+    { headers: getGithubRequestHeaders(), maxRedirects: 5 },
   )
 
   return githubStarCountSchema.parse(data).count
@@ -72,6 +98,7 @@ export async function fetchGithubStarCount(
 export async function fetchGithubStarHistoryPage(
   repository: string,
   page: number,
+  httpClient: HttpClient = client,
 ): Promise<GithubStarHistoryPage> {
   assertRepository(repository)
 
@@ -79,11 +106,11 @@ export async function fetchGithubStarHistoryPage(
     throw new RangeError(`Invalid GitHub star history page: ${page}`)
   }
 
-  const response = await client.get<unknown>(
+  const response = await httpClient.get<unknown>(
     `/repos/${repository}/stargazers/history`,
     {
       params: { per_page: 30, page },
-      headers: requestHeaders(),
+      headers: getGithubRequestHeaders(),
       maxRedirects: 5,
     },
   )

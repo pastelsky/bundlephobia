@@ -1021,15 +1021,14 @@
     ],
     "similar": ["leaflet", "maplibre-gl", "ol"]
   },
-  "browser-spreadsheet-editors": {
-    "name": "Browser spreadsheet editors",
+  "interactive-browser-graphs": {
+    "name": "Interactive browser graph visualization",
     "tags": [
-      { "tag": "spreadsheet", "weight": 15 },
-      { "tag": "spreadsheet editor", "weight": 15 },
-      { "tag": "excel-like", "weight": 11 },
-      { "tag": "workbook", "weight": 8 },
-      { "tag": "data grid", "weight": 7 }
+      { "tag": "graph visualization", "weight": 15 },
+      { "tag": "network visualization", "weight": 14 },
+      { "tag": "graph theory", "weight": 10 },
+      { "tag": "nodes and edges", "weight": 8 }
     ],
-    "similar": ["@univerjs/preset-sheets-core", "jspreadsheet-ce"]
+    "similar": ["cytoscape", "sigma"]
   }
 }

@@ -1,8 +1,8 @@
-import pThrottle from 'p-throttle'
 import config from './config.json' with { type: 'json' }
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { request } from '@octokit/request'
+import { Octokit } from '@octokit/core'
+import { throttling } from '@octokit/plugin-throttling'
 import { discoverLibraries, readState } from './index.mjs'
 import catalog from '../../utils/similar-packages.catalog.json' with { type: 'json' }
 import groups from '../../utils/similar-packages.groups.json' with { type: 'json' }
@@ -17,8 +17,10 @@ const statePath =
 
 const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
 
-const githubRequest = request.defaults({
-  headers: { authorization: `Bearer ${process.env.GITHUB_TOKEN}` },
+const ThrottledOctokit = Octokit.plugin(throttling)
+
+const octokit = new ThrottledOctokit({
+  auth: process.env.GITHUB_TOKEN,
   request: {
     fetch: (url, options) =>
       fetch(url, {
@@ -26,21 +28,16 @@ const githubRequest = request.defaults({
         signal: AbortSignal.timeout(config.requestTimeoutMs),
       }),
   },
+  throttle: {
+    onRateLimit: (retryAfter, _options, _octokit, retryCount) =>
+      retryCount < 2 && retryAfter <= 65,
+    onSecondaryRateLimit: (retryAfter, _options, _octokit, retryCount) =>
+      retryCount < 2 && retryAfter <= 65,
+  },
 })
 
-const codeSearch = pThrottle({
-  limit: 1,
-  interval: config.codeSearchIntervalMs,
-  strict: true,
-})(githubRequest)
-
 const github = async (route, parameters) =>
-  (
-    await (route === 'GET /search/code' ? codeSearch : githubRequest)(
-      route,
-      parameters,
-    )
-  ).data
+  (await octokit.request(route, parameters)).data
 
 let state
 
@@ -77,6 +74,7 @@ const result = await discoverLibraries({
   excludedPackages,
   frameworks: groups.frameworks.packages,
   state,
+  fetchImpl: fetch,
 })
 
 await mkdir(dirname(output), { recursive: true })

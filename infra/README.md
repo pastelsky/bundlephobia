@@ -32,10 +32,11 @@ Bundlephobia operates under a unique workload profile:
 - **Effect:** Intercepts memory pages destined for the SSD swapfile and compresses them dynamically into a pool in physical RAM. Swap operations complete in microseconds in RAM rather than 15–30 ms on physical disk.
 - **Empirical Result:** Compressed **~254 MB of anonymous memory into 124 MB of RAM** (~2.05x compression ratio) with **0 pages written to physical SSD**.
 
-### 3. Kernel Memory Balancing (`sysctl.d/99-bundlephobia.conf`)
+### 3. Kernel Memory Balancing & Compaction (`sysctl.d/99-bundlephobia.conf`, `systemd/thp-configure.service`)
 
 - **`vm.swappiness = 10`**: With >5 GB of RAM used as filesystem cache, directs the kernel memory reclaimer (`kswapd`) to reclaim disposable file cache first before paging out active Node processes.
 - **`vm.vfs_cache_pressure = 100`**: Retains directory dentries and inode metadata in RAM to avoid expensive cold SSD seeks during recursive module resolution.
+- **`vm.compaction_proactiveness = 0` & THP `defrag = never`**: Prevents synchronous direct compaction stalls and futile `kcompactd0` page scanning on slab-fragmented RAM (~650k `ext4_inode_cache`/`dentry` objects), where 99.98% of 2 MB compaction attempts failed. Live matched-load A/B testing cut `compact_stall`/`compact_fail` to `0` and reduced scanned pages by >300x (`367,650 -> 1,197`).
 
 ### 4. Network: TCP BBR Congestion Control (`sysctl.d/99-bundlephobia.conf`)
 

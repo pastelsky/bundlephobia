@@ -1,0 +1,47 @@
+name: Sync library selection
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+jobs:
+  sync:
+    if: >-
+      github.event.issue.pull_request != null &&
+      github.event.issue.state == 'open' &&
+      (
+        github.event.comment.author_association == 'OWNER' ||
+        github.event.comment.author_association == 'MEMBER' ||
+        github.event.comment.author_association == 'COLLABORATOR'
+      ) &&
+      (
+        github.event.comment.body == '/sync' ||
+        startsWith(github.event.comment.body, '/sync ') ||
+        startsWith(github.event.comment.body, '/sync\r') ||
+        startsWith(github.event.comment.body, '/sync\n')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+          package-manager-cache: false
+      - name: Install automation dependencies
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 'true'
+        run: corepack yarn workspaces focus @bundlephobia/recommendation-automation --production
+      - name: Apply PR checklist selection
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: node .github/scripts/sync-library-selection.ts

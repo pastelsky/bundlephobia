@@ -4,6 +4,74 @@ import {
   observeManifests,
 } from './manifests.mjs'
 
+export async function discoverHackerNewsStories(
+  fetchImpl,
+  {
+    now = new Date(),
+    lookbackDays = 14,
+    minPoints = 25,
+    maxStories = 20,
+    notes = [],
+  } = {},
+) {
+  if (!fetchImpl) return []
+
+  const sinceUnix = Math.floor(
+    (now.getTime() - lookbackDays * 86_400_000) / 1000,
+  )
+
+  const queries = [
+    'javascript OR typescript',
+    'npm OR bundler OR webassembly',
+    'react OR vue OR svelte OR browser',
+  ]
+
+  const stories = new Map()
+
+  for (const query of queries) {
+    try {
+      const url = new URL('https://hn.algolia.com/api/v1/search_by_date')
+      url.searchParams.set('query', query)
+      url.searchParams.set('tags', 'story')
+      url.searchParams.set(
+        'numericFilters',
+        `points>=${minPoints},created_at_i>${sinceUnix}`,
+      )
+      url.searchParams.set('hitsPerPage', '50')
+
+      const response = await fetchImpl(String(url), {
+        signal: AbortSignal.timeout(15_000),
+      })
+
+      if (!response.ok) {
+        notes.push(`Unavailable HN search (${query}): HTTP ${response.status}`)
+        continue
+      }
+
+      const data = await response.json()
+
+      for (const hit of data?.hits ?? []) {
+        if (!hit?.objectID || !hit?.title || stories.has(hit.objectID)) continue
+        stories.set(hit.objectID, {
+          title: hit.title,
+          url:
+            hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`,
+          hnUrl: `https://news.ycombinator.com/item?id=${hit.objectID}`,
+          points: Number(hit.points ?? 0),
+          comments: Number(hit.num_comments ?? 0),
+          createdAt: hit.created_at ?? null,
+        })
+      }
+    } catch (error) {
+      notes.push(`Unavailable HN search (${query}): ${error.message}`)
+    }
+  }
+
+  return [...stories.values()]
+    .sort((a, b) => b.points - a.points || a.title.localeCompare(b.title))
+    .slice(0, maxStories)
+}
+
 export function rotate(items, cursor, count) {
   if (!items.length) return []
 
@@ -39,7 +107,7 @@ async function search(github, query, kind, pages, notes) {
   for (let page = 1; page <= pages; page++) {
     const parameters = { q: query, per_page: 100, page }
 
-    if (kind === 'repositories') parameters.sort = 'updated'
+    if (kind === 'repositories') parameters.sort = 'stars'
 
     const result = await github(`GET /search/${kind}`, parameters)
 
