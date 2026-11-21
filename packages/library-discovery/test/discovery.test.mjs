@@ -6,7 +6,7 @@ import {
   catalogPackages,
   rankCandidates,
 } from '../index.mjs'
-import { rotate } from '../search.mjs'
+import { rotate, discoverHackerNewsStories } from '../search.mjs'
 import { catalog, now, limits, fakeSources } from './fixtures.mjs'
 
 test('state corruption fails rather than silently allowing repeated discoveries', () => {
@@ -218,4 +218,82 @@ test('a zero delivery budget leaves every candidate unsurfaced', async () => {
 
   assert.deepEqual(result.report.candidates, [])
   assert.deepEqual(result.state.surfaced, [])
+})
+
+test('ranking excludes @types packages and caps packages per scope', () => {
+  const observation = (name, repo, stars = 1000) => ({
+    package: name,
+    repo,
+    owner: repo.split('/')[0],
+    stars,
+    runtime: true,
+  })
+
+  const ranked = rankCandidates(
+    [
+      observation('@types/node', 'a/app', 10000),
+      observation('@types/node', 'b/app', 10000),
+      observation('@scope/one', 'a/app', 5000),
+      observation('@scope/one', 'b/app', 5000),
+      observation('@scope/two', 'a/app', 4000),
+      observation('@scope/two', 'b/app', 4000),
+      observation('@scope/three', 'a/app', 3000),
+      observation('@scope/three', 'b/app', 3000),
+      observation('standalone', 'a/app', 2000),
+      observation('standalone', 'b/app', 2000),
+    ],
+    new Set(),
+    2,
+  )
+
+  assert.deepEqual(
+    ranked.map(item => item.package),
+    ['@scope/one', '@scope/two', 'standalone'],
+  )
+})
+
+test('hacker news discovery queries non-Show-HN stories, deduplicates, and sorts by points', async () => {
+  const urls = []
+  const notes = []
+
+  const stories = await discoverHackerNewsStories(
+    async url => {
+      urls.push(url)
+
+      return {
+        ok: true,
+        json: async () => ({
+          hits: [
+            {
+              objectID: '1',
+              title: 'Orama 3.0',
+              url: 'https://orama.com',
+              points: 180,
+              num_comments: 40,
+              created_at: '2026-11-10T00:00:00Z',
+            },
+            {
+              objectID: '2',
+              title: 'Show HN: Tiny DOM Helper',
+              url: 'https://example.com',
+              points: 60,
+              num_comments: 12,
+              created_at: '2026-11-12T00:00:00Z',
+            },
+          ],
+        }),
+      }
+    },
+    { now, notes },
+  )
+
+  assert.equal(urls.length, 3)
+  assert.ok(
+    urls.every(url => url.includes('tags=story') && !url.includes('Show')),
+  )
+  assert.deepEqual(
+    stories.map(story => story.title),
+    ['Orama 3.0', 'Show HN: Tiny DOM Helper'],
+  )
+  assert.deepEqual(notes, [])
 })

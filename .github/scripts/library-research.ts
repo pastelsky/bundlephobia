@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import { request } from '@octokit/request'
+import prettyBytes from 'pretty-bytes'
 import { z } from 'zod'
 import { isDeepStrictEqual } from 'node:util'
 import {
@@ -10,6 +11,7 @@ import {
 } from '@bundlephobia/service-contracts/recommendations'
 import {
   collectBundleSize,
+  collectPackageSignals,
   extractGitHubRepository,
   isPlausiblePackageName,
   normalizePackageName,
@@ -300,6 +302,318 @@ export async function verifyPackages(
   )
 }
 
+export type PendingPackageMetrics = {
+  packageName: string
+  version: string | null
+  size: number | null
+  gzip: number | null
+  weeklyDownloads: number | null
+  githubStars: number | null
+  publishedAt: string | null
+  license: string | null
+}
+
+const compactNumberFormatter = new Intl.NumberFormat('en', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+
+const monthYearFormatter = new Intl.DateTimeFormat('en', {
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
+
+export function formatBytes(bytes: number | null | undefined): string {
+  if (bytes === null || bytes === undefined || !Number.isFinite(bytes))
+    return '—'
+
+  return prettyBytes(bytes)
+}
+
+export function formatCompactNumber(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value))
+    return '—'
+
+  return compactNumberFormatter.format(value)
+}
+
+export function formatMonthYear(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  const date = new Date(iso)
+
+  if (Number.isNaN(date.getTime())) return '—'
+
+  return monthYearFormatter.format(date)
+}
+
+export const selectionStart = '<!-- library-selection:start -->'
+
+export const selectionEnd = '<!-- library-selection:end -->'
+
+export const rejectedStart = '<!-- library-rejected:start -->'
+
+export const rejectedEnd = '<!-- library-rejected:end -->'
+
+export const overviewStart = '<!-- library-overview:start -->'
+
+export const overviewEnd = '<!-- library-overview:end -->'
+
+export type SelectionItem = { slug: string; package: string }
+
+export type SelectionChecklist = {
+  checked: SelectionItem[]
+  unchecked: SelectionItem[]
+}
+
+export type PrunedCatalogResult = {
+  catalog: Catalog
+  removed: Array<{ slug: string; package: string; reason: string }>
+}
+
+export function parseSelectionChecklist(body = ''): SelectionChecklist {
+  const from = body.indexOf(selectionStart)
+  const to = body.indexOf(selectionEnd)
+
+  if (from < 0 || to <= from) return { checked: [], unchecked: [] }
+
+  const block = body.slice(from + selectionStart.length, to)
+  const checked: SelectionItem[] = []
+  const unchecked: SelectionItem[] = []
+
+  const pattern = /^- \[([ xX])\] `([^`]+)` \(`([a-z][a-z0-9-]*)`\)/gm
+
+  for (const match of block.matchAll(pattern)) {
+    const item = { package: match[2], slug: match[3] }
+
+    if (match[1].toLowerCase() === 'x') checked.push(item)
+    else unchecked.push(item)
+  }
+
+  return { checked, unchecked }
+}
+
+export function parseRejectedPackages(body = ''): string[] {
+  const from = body.indexOf(rejectedStart)
+  const to = body.indexOf(rejectedEnd)
+
+  if (from < 0 || to <= from) return []
+
+  const block = body.slice(from + rejectedStart.length, to)
+  const packages: string[] = []
+
+  for (const match of block.matchAll(/^- `([^`]+)`/gm)) {
+    packages.push(match[1])
+  }
+
+  return [...new Set(packages)]
+}
+
+export function pendingAdditions(
+  base: Catalog,
+  catalog: Catalog,
+): Array<{ slug: string; categoryName: string; package: string }> {
+  const additions: Array<{
+    slug: string
+    categoryName: string
+    package: string
+  }> = []
+
+  for (const [slug, category] of Object.entries(catalog)) {
+    const baseSet = new Set(base[slug]?.similar ?? [])
+
+    for (const pkg of category.similar) {
+      if (!baseSet.has(pkg))
+        additions.push({ slug, categoryName: category.name, package: pkg })
+    }
+  }
+
+  return additions
+}
+
+export function pruneUncheckedFromCatalog(
+  base: Catalog,
+  pending: Catalog,
+  unchecked: SelectionItem[],
+): PrunedCatalogResult {
+  const result = structuredClone(pending)
+  const removed: Array<{ slug: string; package: string; reason: string }> = []
+
+  const uncheckedBySlug = new Map<string, Set<string>>()
+
+  for (const item of unchecked) {
+    const set = uncheckedBySlug.get(item.slug) ?? new Set<string>()
+    set.add(item.package)
+    uncheckedBySlug.set(item.slug, set)
+  }
+
+  for (const [slug, packagesToRemove] of uncheckedBySlug) {
+    const category = result[slug]
+
+    if (!category) continue
+    const baseSet = new Set(base[slug]?.similar ?? [])
+
+    const kept: string[] = []
+
+    for (const pkg of category.similar) {
+      if (packagesToRemove.has(pkg) && !baseSet.has(pkg)) {
+        removed.push({ slug, package: pkg, reason: 'unchecked by maintainer' })
+      } else {
+        kept.push(pkg)
+      }
+    }
+
+    if (!base[slug] && kept.length < 2) {
+      for (const pkg of kept) {
+        removed.push({
+          slug,
+          package: pkg,
+          reason: 'new category fell below 2 alternatives',
+        })
+      }
+
+      delete result[slug]
+    } else {
+      result[slug] = { ...category, similar: kept }
+    }
+  }
+
+  return { catalog: result, removed }
+}
+
+export function renderPendingOverview(
+  base: Catalog,
+  catalog: Catalog,
+  metrics: Map<string, PendingPackageMetrics>,
+  rejected: string[] = [],
+): string {
+  const additions = pendingAdditions(base, catalog)
+  const sections: string[] = []
+
+  if (additions.length > 0) {
+    const rows = additions.map(entry => {
+      const m = metrics.get(entry.package)
+      const version = m?.version ? `\`${m.version}\`` : '—'
+
+      const sizes =
+        m?.size !== null && m?.size !== undefined
+          ? `${formatBytes(m.size)} / ${formatBytes(m.gzip)}`
+          : '—'
+
+      return `| ${entry.categoryName} | \`${entry.package}\` | ${version} | ${sizes} | ${formatCompactNumber(m?.weeklyDownloads)} | ${formatCompactNumber(m?.githubStars)} | ${formatMonthYear(m?.publishedAt)} | ${m?.license ?? '—'} |`
+    })
+
+    sections.push(
+      [
+        '### Pending additions',
+        '',
+        '| Category | Package | Version | Min / Gzip | Downloads/wk | Stars | Published | License |',
+        '| --- | --- | --- | ---: | ---: | ---: | --- | --- |',
+        ...rows,
+      ].join('\n'),
+    )
+
+    const checklistLines = additions.map(
+      entry => `- [x] \`${entry.package}\` (\`${entry.slug}\`)`,
+    )
+
+    sections.push(
+      [
+        '### Selection checklist',
+        '',
+        'Uncheck any package you do not want to merge, then comment `/sync` on this PR (or wait for the next weekly run) to update `utils/similar-packages.catalog.json` with only your checked selections.',
+        '',
+        selectionStart,
+        ...checklistLines,
+        selectionEnd,
+      ].join('\n'),
+    )
+  }
+
+  const uniqueRejected = [...new Set(rejected)].sort()
+
+  if (uniqueRejected.length > 0) {
+    sections.push(
+      [
+        '<details><summary>Dismissed / unchecked packages</summary>',
+        '',
+        rejectedStart,
+        ...uniqueRejected.map(pkg => `- \`${pkg}\``),
+        rejectedEnd,
+        '',
+        '</details>',
+      ].join('\n'),
+    )
+  }
+
+  if (!sections.length) return ''
+
+  return `${overviewStart}\n${sections.join('\n\n')}\n${overviewEnd}`
+}
+
+export async function collectPendingPackageMetrics(
+  packages: string[],
+  fetchImpl: FetchJson = fetch,
+  githubToken = process.env.GITHUB_TOKEN,
+): Promise<Map<string, PendingPackageMetrics>> {
+  const results = new Map<string, PendingPackageMetrics>()
+
+  await Promise.all(
+    [...new Set(packages)].map(async packageName => {
+      try {
+        const signals = await collectPackageSignals(packageName, {
+          fetchImpl,
+          githubToken,
+          includeBundleSize: true,
+        })
+
+        let license: string | null = null
+
+        try {
+          const manifestRes = await fetchImpl(
+            `https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest`,
+            { signal: AbortSignal.timeout(15000), redirect: 'error' },
+          )
+
+          if (manifestRes.ok) {
+            const parsed = z
+              .object({
+                license: z
+                  .union([
+                    z.string(),
+                    z.object({ type: z.string() }).transform(item => item.type),
+                  ])
+                  .optional(),
+              })
+              .safeParse(await manifestRes.json())
+
+            if (parsed.success && parsed.data.license) {
+              license = parsed.data.license
+            }
+          }
+        } catch {
+          // License is advisory for the PR table.
+        }
+
+        results.set(packageName, {
+          packageName,
+          version: signals.latestVersion ?? null,
+          size: signals.bundleSize?.available ? signals.bundleSize.size : null,
+          gzip: signals.bundleSize?.available ? signals.bundleSize.gzip : null,
+          weeklyDownloads: signals.weeklyDownloads ?? null,
+          githubStars: signals.githubStars ?? null,
+          publishedAt: signals.publishedAt ?? null,
+          license,
+        })
+      } catch {
+        // Best-effort metrics enrichment for the PR table.
+      }
+    }),
+  )
+
+  return results
+}
+
 export async function publishResearch({
   api,
   proposal: rawProposal,
@@ -307,6 +621,7 @@ export async function publishResearch({
   summary: agentSummary,
   expectedHead,
   verify = verifyPackages,
+  collectMetrics,
 }: {
   api: GitHubApi
   proposal: unknown
@@ -314,6 +629,9 @@ export async function publishResearch({
   summary: string
   expectedHead: string | null
   verify?: (proposal: Proposal) => Promise<void>
+  collectMetrics?: (
+    packages: string[],
+  ) => Promise<Map<string, PendingPackageMetrics>>
 }) {
   const proposal = validateProposal(rawProposal)
 
@@ -387,6 +705,19 @@ export async function publishResearch({
     snapshot = pending
   }
 
+  let pr = open[0]
+  const previousBody = pr?.body ?? ''
+  const { unchecked } = parseSelectionChecklist(previousBody)
+  const previouslyRejected = parseRejectedPackages(previousBody)
+
+  let prunedRejected: string[] = []
+
+  if (unchecked.length > 0 && !rawCatalog) {
+    const pruned = pruneUncheckedFromCatalog(base, current, unchecked)
+    current = pruned.catalog
+    prunedRejected = pruned.removed.map(item => item.package)
+  }
+
   if (rawCatalog && expectedHead !== (headRef?.object.sha ?? null))
     fail('Research branch changed since the agent read it; reread and retry')
 
@@ -414,22 +745,35 @@ export async function publishResearch({
   }
 
   await verify(proposal)
-  const changed = !same(current, catalog)
+  const changed = prunedRejected.length > 0 || !same(current, catalog)
 
   if (!changed && !open[0] && same(base, catalog))
     return { status: 'no changes' }
 
   const start = '<!-- library-research:start -->'
   const end = '<!-- library-research:end -->'
-  let pr = open[0]
-  const previousBody = pr?.body ?? ''
 
   const from = previousBody.indexOf(start),
     to = previousBody.indexOf(end)
 
   const summary = submissionSchema.shape.summary.parse(agentSummary)
+  const pending = pendingAdditions(base, catalog)
 
-  const section = `${start}\n${summary}\n${end}`
+  const metricsCollector =
+    collectMetrics ??
+    (verify === verifyPackages
+      ? collectPendingPackageMetrics
+      : async () => new Map<string, PendingPackageMetrics>())
+
+  const metrics =
+    pending.length > 0
+      ? await metricsCollector(pending.map(entry => entry.package))
+      : new Map<string, PendingPackageMetrics>()
+
+  const rejected = [...new Set([...previouslyRejected, ...prunedRejected])]
+  const overview = renderPendingOverview(base, catalog, metrics, rejected)
+  const inner = overview ? `${overview}\n\n${summary}` : summary
+  const section = `${start}\n${inner}\n${end}`
 
   const body =
     from >= 0 && to > from
