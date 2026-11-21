@@ -50,20 +50,29 @@
 }
 
 .autocomplete-input__dummy-input--compact {
-  padding: 6px 36px 6px 12px;
+  padding: 6px 38px 6px 12px;
   @include font-size-sm;
   line-height: 1.2;
   letter-spacing: -0.2px;
+
+  @media screen and (max-width: 40em) {
+    padding: 6px 38px 6px 12px;
+  }
 }
 
 .autocomplete-input--compact {
   position: relative;
   z-index: 2;
   width: 100%;
-  padding: 6px 36px 6px 12px;
+  min-width: 0;
+  padding: 6px 38px 6px 12px;
   @include font-size-sm;
   line-height: 1.2;
   letter-spacing: -0.2px;
+
+  @media screen and (max-width: 40em) {
+    padding: 6px 38px 6px 12px;
+  }
 }
 
 .dummy-input__package-name {
