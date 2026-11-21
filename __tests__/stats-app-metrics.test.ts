@@ -227,19 +227,19 @@ describe('history from the VictoriaMetrics API', () => {
     )
   })
 
-  it('scopes breakdowns to specific tabs and preserves legacy routes', () => {
+  it('scopes breakdowns to specific tabs, keeps PM2 workers separate, and preserves legacy routes', () => {
     const computeTab = resolvePage('/resources', 'compute')
     const storageTab = resolvePage('/resources', 'storage')
     const legacyResponses = resolvePage('/responses', null)
-    const legacyWorkers = resolvePage('/workers', null)
+    const workersPage = resolvePage('/workers', null)
 
     expect(computeTab.breakdown).toBeUndefined()
     expect(storageTab.breakdown).toBe('disk')
     expect(legacyResponses.page.id).toBe('traffic')
     expect(legacyResponses.tabId).toBe('responses')
     expect(legacyResponses.breakdown).toBe('responses')
-    expect(legacyWorkers.page.id).toBe('resources')
-    expect(legacyWorkers.tabId).toBe('workers')
+    expect(workersPage.page.id).toBe('workers')
+    expect(workersPage.page.source).toBe('pm2')
   })
 })
 
