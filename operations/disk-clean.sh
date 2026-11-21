@@ -13,7 +13,6 @@ LOOP_HARD_THRESHOLD=80
 # Target 55% to prune gently without triggering a massive multi-gigabyte unlink storm down to 40%
 LOOP_TARGET_USAGE="${LOOP_TARGET_USAGE:-55}"
 ORPHAN_MIN_AGE_SECONDS=600
-BUN_CACHE_MAX_AGE_DAYS="${BUN_CACHE_MAX_AGE_DAYS:-1}"
 VICTORIAMETRICS_DATA_DIR="/var/lib/bundlephobia-victoriametrics"
 VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES=$((128 * 1024 * 1024))
 VICTORIAMETRICS_PM2_APP="bundlephobia-victoriametrics"
@@ -114,34 +113,6 @@ cleanup_npm_cache() {
     log "Cleared npm cache from loop device"
 }
 
-prune_bun_cache() {
-    local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
-    [ -d "$cache_root" ] || return
-
-    log "Pruning Bun package downloads older than ${BUN_CACHE_MAX_AGE_DAYS} day(s)"
-    if ! "${BUN_BIN:-/root/.bun/bin/bun}" pm cache prune \
-        --cache-dir="$cache_root" --max-age "$BUN_CACHE_MAX_AGE_DAYS" >>"$LOG_FILE" 2>&1; then
-        log "WARNING: Bun age pruning failed; continuing pressure cleanup"
-    fi
-}
-
-cleanup_non_bundlable_files() {
-    local scratch_root="${BUILD_TMP_DIR:-/tmp/tmp-build}"
-    local status=0 root
-    local -a roots=()
-    for root in "$scratch_root/installations" "$scratch_root/packages"; do
-        if [ -d "$root" ]; then roots+=("$root"); fi
-    done
-    [ "${#roots[@]}" -gt 0 ] || return 0
-
-    # Cover ordinary/scoped node_modules layouts without walking arbitrarily deep.
-    # Unlink working copies only; keep every cache entry intact.
-    fd_cleanup --one-file-system --max-depth 7 --type f \
-        '\.(map|d\.(ts|mts|cts))$' "${roots[@]}" \
-        --exec-batch rm -f -- 2>/dev/null || status=$?
-    log "Non-bundlable file cleanup finished (status=${status})"
-}
-
 evict_oldest_bun_cache_entries() {
     local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
     local entry path loop_usage
@@ -201,8 +172,8 @@ evict_oldest_bun_cache_entries() {
 trim_loop_device() {
     local trim_output
     local -a trim_cmd=(fstrim -v /tmp/tmp-build)
-    if command -v ionice >/dev/null 2>&1; then
-        trim_cmd=(ionice -c 3 nice -n 19 "${trim_cmd[@]}")
+    if command -v nice >/dev/null 2>&1; then
+        trim_cmd=(nice -n 19 "${trim_cmd[@]}")
     fi
 
     if trim_output=$("${trim_cmd[@]}" 2>&1); then
@@ -250,6 +221,7 @@ cleanup_victoriametrics_data() {
 }
 
 cleanup_loop_device() {
+    local main_usage="${1:-}"
     local loop_usage
     loop_usage=$(get_loop_usage)
 
@@ -258,17 +230,11 @@ cleanup_loop_device() {
         return
     fi
 
-    log "Loop device (/tmp/tmp-build) pressure (higher of bytes/inodes): ${loop_usage}%"
-
-    if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
-        timed_cleanup "Bun age pruning" prune_bun_cache
-        loop_usage=$(get_loop_usage)
-        if [ "$loop_usage" -lt "$LOOP_SOFT_THRESHOLD" ]; then
-            timed_cleanup "Loop-device trim" trim_loop_device
-            log "Loop pressure after age pruning: ${loop_usage}%"
-            return
-        fi
+    if [ -z "$main_usage" ]; then
+        main_usage=$(get_disk_usage)
     fi
+
+    log "Loop device (/tmp/tmp-build) pressure (higher of bytes/inodes): ${loop_usage}%"
 
     if [ "$loop_usage" -ge "$LOOP_SOFT_THRESHOLD" ]; then
         log "Loop pressure at or above soft threshold ${LOOP_SOFT_THRESHOLD}% — running oldest-first cleanup to ${LOOP_TARGET_USAGE}%"
@@ -292,7 +258,12 @@ cleanup_loop_device() {
             log "Cleared complete bun cache"
         fi
 
-        timed_cleanup "Loop-device trim" trim_loop_device
+        if [ -n "$main_usage" ] && [ "$main_usage" -ge "$MAIN_THRESHOLD" ]; then
+            timed_cleanup "Loop-device trim" trim_loop_device
+        else
+            log "Skipping loop-device trim (main disk ${main_usage:-unknown}% < ${MAIN_THRESHOLD}%)"
+        fi
+
         loop_usage=$(get_loop_usage)
         log "Loop pressure after oldest-first cleanup: ${loop_usage}%"
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
@@ -326,12 +297,11 @@ cleanup_main() {
 
 main() {
     local usage
-    timed_cleanup "Non-bundlable file cleanup" cleanup_non_bundlable_files
     usage=$(get_disk_usage)
     log "Main disk usage: ${usage}%   Loop pressure (higher of bytes/inodes): $(get_loop_usage)%"
 
     # Always check loop device regardless of main disk
-    timed_cleanup "Scratch cleanup" cleanup_loop_device
+    timed_cleanup "Scratch cleanup" cleanup_loop_device "$usage"
     timed_cleanup "VictoriaMetrics data cleanup" cleanup_victoriametrics_data
 
     if [ "$usage" -gt "$MAIN_THRESHOLD" ]; then
@@ -358,11 +328,9 @@ with_cleanup_priority() {
         [ "$pressure" -ge 95 ] && nice_priority=0
         chrt --other --pid 0 "$$" || { log "Could not set normal CPU scheduling"; return 1; }
         renice -n "$nice_priority" -p "$$" >/dev/null || return 1
-        ionice -c 2 -n 4 -p "$$" || return 1
         log "Storage emergency pressure=${pressure}%: elevated priority, nice=${nice_priority}"
     else
         chrt --idle --pid 0 "$$" || { log "Could not set idle CPU priority"; return 1; }
-        ionice -c 3 -p "$$" || { log "Could not set idle I/O priority"; return 1; }
     fi
     # Set priority once on this shell; every cleanup command inherits it.
     "$@"
