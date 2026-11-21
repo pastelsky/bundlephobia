@@ -8,15 +8,21 @@ import type {
 } from '@bundlephobia/service-contracts/package'
 import type { JsonObject } from '../types/json'
 import type { PackageHistoryResponse } from '../types/package-history'
-import type {
-  TrendsGroupBy,
-  TrendsMetric,
-  TrendsPackageSeries,
-  TrendsRange,
-  TrendsPoint,
-  TrendsResponse,
-  TrendsVulnerabilitySummary,
+import {
+  TRENDS_VULNERABILITY_SEVERITIES,
+  type TrendsGroupBy,
+  type TrendsMetric,
+  type TrendsPackageSeries,
+  type TrendsRange,
+  type TrendsPoint,
+  type TrendsResponse,
+  type TrendsVulnerabilityAdvisory,
+  type TrendsVulnerabilitySeverity,
+  type TrendsVulnerabilitySummary,
+  type TrendsVulnerabilityWindow,
 } from '@bundlephobia/service-contracts/trends'
+
+export { TRENDS_VULNERABILITY_SEVERITIES }
 
 // Re-export domain types that client code imports from this module.
 export type { PackageBuildInfo, PackageBuildInfoSnapshot, PackageExportAsset }
@@ -30,7 +36,10 @@ export type {
   TrendsPoint,
   TrendsRange,
   TrendsResponse,
+  TrendsVulnerabilityAdvisory,
+  TrendsVulnerabilitySeverity,
   TrendsVulnerabilitySummary,
+  TrendsVulnerabilityWindow,
 }
 
 /** A single npm-search suggestion returned by the npms.io API. */

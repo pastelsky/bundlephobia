@@ -13,9 +13,11 @@ import { Tooltip } from '@base-ui/react/tooltip'
 import Analytics from '../../client/analytics'
 
 import API, {
+  TRENDS_VULNERABILITY_SEVERITIES,
   type TrendsGroupBy,
   type TrendsMetric,
   type TrendsRange,
+  type TrendsVulnerabilitySeverity,
   type TrendsVulnerabilitySummary,
 } from '../../client/api'
 import Layout from '../../client/components/Layout'
@@ -28,9 +30,13 @@ import GithubIcon from '../../client/assets/github-logo.svg'
 import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
+import TrendsVulnerabilityPanel from './TrendsVulnerabilityPanel'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
 import { useTrendsData } from './useTrendsData'
-import { groupTrendsPackage } from '../../utils/trends'
+import {
+  filterPackageVulnerabilities,
+  groupTrendsPackage,
+} from '../../utils/trends'
 import { trendsComparisonCanonicalPath } from '../../seo/trends-comparisons'
 import {
   TRENDS_CATEGORIES,
@@ -176,6 +182,15 @@ export default function TrendsPage({
   const [showMajorReleases, setShowMajorReleases] = useState(true)
   const [showMinorReleases, setShowMinorReleases] = useState(false)
 
+  const [enabledSeverities, setEnabledSeverities] = useState<
+    Set<TrendsVulnerabilitySeverity>
+  >(() => new Set(TRENDS_VULNERABILITY_SEVERITIES))
+
+  const [inspectedVuln, setInspectedVuln] = useState<{
+    timestamp: number
+    packageName: string
+  } | null>(null)
+
   const { trendsData, loading, isPending, error, startLoading } = useTrendsData(
     {
       packages,
@@ -210,11 +225,32 @@ export default function TrendsPage({
     groupBy,
   }
 
-  const chartPackages = useMemo(
+  const filteredPackages = useMemo(
     () =>
-      trendsData?.packages.map(pack => groupTrendsPackage(pack, groupBy)) ?? [],
-    [groupBy, trendsData],
+      trendsData?.packages.map(pack =>
+        filterPackageVulnerabilities(pack, enabledSeverities),
+      ) ?? [],
+    [trendsData, enabledSeverities],
   )
+
+  const chartPackages = useMemo(
+    () => filteredPackages.map(pack => groupTrendsPackage(pack, groupBy)),
+    [filteredPackages, groupBy],
+  )
+
+  const toggleSeverity = (severity: TrendsVulnerabilitySeverity) => {
+    setEnabledSeverities(current => {
+      const next = new Set(current)
+
+      if (next.has(severity)) {
+        next.delete(severity)
+      } else {
+        next.add(severity)
+      }
+
+      return next
+    })
+  }
 
   // Sync state with URL params on mount / router change
   useEffect(() => {
@@ -733,29 +769,101 @@ export default function TrendsPage({
               {error}
             </div>
           ) : loading || trendsData ? (
-            <TrendsChart
-              // Keep the last resolved series mounted while an incremental
-              // request is in flight; the chart can then draw the new series
-              // into the existing frame instead of blanking the plot.
-              packages={chartPackages}
-              metric={metric}
-              range={trendsData?.range ?? range}
-              groupBy={groupBy}
-              showMajorReleases={showMajorReleases}
-              showMinorReleases={showMinorReleases}
-              actions={
-                <>
-                  <Button
-                    type="button"
-                    className="trends-action"
-                    onClick={handleCopyLink}
-                  >
-                    {copied ? 'Link copied' : 'Copy link'}
-                  </Button>
-                </>
-              }
-              loading={loading}
-            />
+            <>
+              <TrendsChart
+                // Keep the last resolved series mounted while an incremental
+                // request is in flight; the chart can then draw the new series
+                // into the existing frame instead of blanking the plot.
+                packages={chartPackages}
+                metric={metric}
+                range={trendsData?.range ?? range}
+                groupBy={groupBy}
+                showMajorReleases={showMajorReleases}
+                showMinorReleases={showMinorReleases}
+                enabledSeverities={enabledSeverities}
+                inspectedTimestamp={inspectedVuln?.timestamp ?? null}
+                onInspectVulnerability={setInspectedVuln}
+                leftActions={
+                  metric === 'vulnerabilities' ? (
+                    <div
+                      className="trends-severity-filter"
+                      role="group"
+                      aria-label="Filter vulnerabilities by severity"
+                    >
+                      <span className="trends-severity-filter__label">
+                        Severity
+                      </span>
+                      {TRENDS_VULNERABILITY_SEVERITIES.map(severity => {
+                        const active = enabledSeverities.has(severity)
+
+                        return (
+                          <Button
+                            key={severity}
+                            type="button"
+                            className={`trends-severity-filter__btn trends-severity-filter__btn--${severity}${
+                              active
+                                ? ' trends-severity-filter__btn--active'
+                                : ''
+                            }`}
+                            aria-pressed={active}
+                            onClick={() => toggleSeverity(severity)}
+                          >
+                            <span className="trends-severity-filter__dot" />
+                            <span>
+                              {severity.charAt(0).toUpperCase() +
+                                severity.slice(1)}
+                            </span>
+                          </Button>
+                        )
+                      })}
+                      {enabledSeverities.size <
+                        TRENDS_VULNERABILITY_SEVERITIES.length && (
+                        <Button
+                          type="button"
+                          className="trends-severity-filter__reset"
+                          onClick={() =>
+                            setEnabledSeverities(
+                              new Set(TRENDS_VULNERABILITY_SEVERITIES),
+                            )
+                          }
+                        >
+                          All
+                        </Button>
+                      )}
+                    </div>
+                  ) : undefined
+                }
+                actions={
+                  <>
+                    <Button
+                      type="button"
+                      className="trends-action"
+                      onClick={handleCopyLink}
+                    >
+                      {copied ? 'Link copied' : 'Copy link'}
+                    </Button>
+                  </>
+                }
+                loading={loading}
+              />
+              {metric === 'vulnerabilities' &&
+                inspectedVuln &&
+                filteredPackages.length > 0 && (
+                  <TrendsVulnerabilityPanel
+                    timestamp={inspectedVuln.timestamp}
+                    groupBy={groupBy}
+                    packages={filteredPackages}
+                    activePackage={inspectedVuln.packageName}
+                    enabledSeverities={enabledSeverities}
+                    onSelectPackage={packageName =>
+                      setInspectedVuln(current =>
+                        current ? { ...current, packageName } : null,
+                      )
+                    }
+                    onClose={() => setInspectedVuln(null)}
+                  />
+                )}
+            </>
           ) : (
             <div className="trends-chart-area__state">
               Add at least one package above to compare trends.
@@ -779,9 +887,7 @@ export default function TrendsPage({
                   <span aria-hidden="true" />
                 </div>
                 {packages.map((pkgName, index) => {
-                  const pack = trendsData?.packages.find(
-                    p => p.name === pkgName,
-                  )
+                  const pack = filteredPackages.find(p => p.name === pkgName)
 
                   const vulnsSummary = pack?.current.vulnerabilities
 
@@ -912,6 +1018,21 @@ export default function TrendsPage({
                                     <button
                                       type="button"
                                       className="trends-stat__metric-trigger"
+                                      onClick={() => {
+                                        const latestDate =
+                                          pack.vulnerabilities?.at(-1)?.date
+
+                                        if (!latestDate) return
+
+                                        if (metric !== 'vulnerabilities') {
+                                          handleMetricChange('vulnerabilities')
+                                        }
+
+                                        setInspectedVuln({
+                                          timestamp: Date.parse(latestDate),
+                                          packageName: pkgName,
+                                        })
+                                      }}
                                     >
                                       <MetricValue
                                         formatted={formatVulnerabilities(

@@ -4,13 +4,16 @@ import React, { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import anime from 'animejs'
 import { bisector } from 'd3-array'
 
-import type {
-  TrendsGroupBy,
-  TrendsMetric,
-  TrendsPackageSeries,
-  TrendsPoint,
-  TrendsRange,
+import {
+  TRENDS_VULNERABILITY_SEVERITIES,
+  type TrendsGroupBy,
+  type TrendsMetric,
+  type TrendsPackageSeries,
+  type TrendsPoint,
+  type TrendsRange,
+  type TrendsVulnerabilitySeverity,
 } from '../../client/api'
+import { resolveBucketVulnerabilityDetails } from '../../utils/trends'
 import TrendsLoader from './TrendsLoader'
 import {
   CHART_HEIGHT,
@@ -41,15 +44,193 @@ type TrendsChartProps = {
   groupBy: TrendsGroupBy
   showMajorReleases: boolean
   showMinorReleases: boolean
+  leftActions?: React.ReactNode
   actions?: React.ReactNode
   loading?: boolean
+  enabledSeverities?: ReadonlySet<TrendsVulnerabilitySeverity>
+  inspectedTimestamp?: number | null
+  onInspectVulnerability?: (selection: {
+    timestamp: number
+    packageName: string
+  }) => void
 }
 
-function nearestPoint(points: TrendsPoint[], timestamp: number) {
+const ALL_SEVERITIES = new Set<TrendsVulnerabilitySeverity>(
+  TRENDS_VULNERABILITY_SEVERITIES,
+)
+
+const SEVERITY_SHORT_LABELS: Record<TrendsVulnerabilitySeverity, string> = {
+  critical: 'crit',
+  high: 'high',
+  moderate: 'mod',
+  low: 'low',
+}
+
+function resolveChartPointer(
+  event: React.MouseEvent<SVGSVGElement>,
+  chartWidth: number,
+  model: NonNullable<ReturnType<typeof buildChartModel>>,
+) {
+  const rect = event.currentTarget.getBoundingClientRect()
+  const relativeX = ((event.clientX - rect.left) / rect.width) * chartWidth
+  const relativeY = ((event.clientY - rect.top) / rect.height) * CHART_HEIGHT
+
+  const clampedX = Math.max(
+    PLOT.left,
+    Math.min(PLOT.left + model.plotWidth, relativeX),
+  )
+
+  const nearestMatch = nearestByX(
+    model.series.flatMap(series => [
+      ...series.points,
+      ...series.partialMarkers,
+      ...series.releaseMarkers,
+    ]),
+    clampedX,
+  )
+
+  const magnetic =
+    nearestMatch && Math.abs(nearestMatch.x - clampedX) <= DOT_MAGNET_RADIUS
+      ? nearestMatch
+      : null
+
+  const hoverX = magnetic?.x ?? clampedX
+
+  const timestamp = magnetic
+    ? Date.parse(magnetic.date)
+    : model.timestampForX(hoverX)
+
+  return {
+    x: hoverX,
+    cursorX: clampedX,
+    cursorY: relativeY,
+    timestamp,
+    pointDate: magnetic?.date,
+  }
+}
+
+type SeriesCandidate = { name: string; distance: number; value: number }
+
+function isBetterSeriesCandidate(
+  candidate: SeriesCandidate,
+  current: SeriesCandidate | null,
+) {
+  if (!current) return true
+
+  if (Math.abs(candidate.distance - current.distance) > 2) {
+    return candidate.distance < current.distance
+  }
+
+  return candidate.value > current.value
+}
+
+function closestSeriesPackage(
+  model: NonNullable<ReturnType<typeof buildChartModel>>,
+  timestamp: number,
+  cursorY: number,
+): string | null {
+  let winner: SeriesCandidate | null = null
+
+  for (const series of model.series) {
+    const point = nearestPoint(
+      [...series.points, ...series.partialMarkers],
+      timestamp,
+    )
+
+    if (!point) continue
+
+    const candidate: SeriesCandidate = {
+      name: series.name,
+      distance: Math.abs(point.y - cursorY),
+      value: point.value,
+    }
+
+    if (isBetterSeriesCandidate(candidate, winner)) winner = candidate
+  }
+
+  return winner?.name ?? null
+}
+
+type TooltipRowData = {
+  name: string
+  color: string
+  point: TrendsPoint | null
+  vulnDetails: ReturnType<typeof resolveBucketVulnerabilityDetails>
+}
+
+function formatPointSuffix(point: TrendsPoint, isPlaceholder: boolean): string {
+  if (isPlaceholder) return ' (size unavailable)'
+
+  return point.partial ? ' (in progress)' : ''
+}
+
+function TrendsTooltipEntry({
+  row,
+  metric,
+}: {
+  row: TooltipRowData
+  metric: TrendsMetric
+}) {
+  if (!row.point) return null
+
+  const formatted = formatMetricValue(row.point.value, metric)
+
+  const isPlaceholder = Boolean(
+    (row.point as TrendsPoint & { placeholder?: boolean }).placeholder,
+  )
+
+  return (
+    <div className="trends-chart__tooltip-entry">
+      <div className="trends-chart__tooltip-row">
+        <span
+          className="trends-chart__swatch"
+          style={{ backgroundColor: row.color }}
+        />
+        <span className="trends-chart__tooltip-name">
+          {row.name}
+          {row.point.version ? ` v${row.point.version}` : ''}
+          {formatPointSuffix(row.point, isPlaceholder)}
+        </span>
+        {isPlaceholder ? (
+          <span className="trends-chart__tooltip-unit">—</span>
+        ) : (
+          <span className="trends-chart__tooltip-value">
+            <span>{formatted.value}</span>
+            {formatted.unit && (
+              <span className="trends-chart__tooltip-unit">
+                {' '}
+                {formatted.unit}
+              </span>
+            )}
+          </span>
+        )}
+      </div>
+      {row.vulnDetails && row.vulnDetails.count > 0 && (
+        <div className="trends-chart__tooltip-severities">
+          {TRENDS_VULNERABILITY_SEVERITIES.filter(
+            sev => (row.vulnDetails?.bySeverity[sev] ?? 0) > 0,
+          ).map(sev => (
+            <span
+              key={sev}
+              className={`trends-chart__tooltip-sev trends-chart__tooltip-sev--${sev}`}
+            >
+              {row.vulnDetails?.bySeverity[sev]} {SEVERITY_SHORT_LABELS[sev]}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function nearestPoint<T extends TrendsPoint>(
+  points: T[],
+  timestamp: number,
+): T | null {
   if (points.length === 0) return null
 
   return points[
-    bisector<TrendsPoint, number>(point => Date.parse(point.date)).center(
+    bisector<T, number>(point => Date.parse(point.date)).center(
       points,
       timestamp,
     )
@@ -76,8 +257,12 @@ export default function TrendsChart({
   groupBy,
   showMajorReleases,
   showMinorReleases,
+  leftActions,
   actions,
   loading = false,
+  enabledSeverities = ALL_SEVERITIES,
+  inspectedTimestamp = null,
+  onInspectVulnerability,
 }: TrendsChartProps) {
   const [mounted, setMounted] = useState(false)
   const [showLoader, setShowLoader] = useState(loading && packages.length === 0)
@@ -230,8 +415,29 @@ export default function TrendsChart({
             ],
             hover.timestamp,
           ),
+          vulnDetails:
+            metric === 'vulnerabilities'
+              ? resolveBucketVulnerabilityDetails(pack, {
+                  timestamp: hover.timestamp,
+                  groupBy,
+                  enabledSeverities,
+                })
+              : null,
         }))
       : []
+
+  const hasInspectableAdvisories =
+    metric === 'vulnerabilities' &&
+    packages.some(pack => Boolean(pack.advisories))
+
+  const pinX =
+    metric === 'vulnerabilities' &&
+    inspectedTimestamp !== null &&
+    model &&
+    inspectedTimestamp >= model.minTime &&
+    inspectedTimestamp <= model.maxTime
+      ? model.xForDate(new Date(inspectedTimestamp))
+      : null
 
   const tooltipAnnotations =
     hover && model
@@ -245,7 +451,16 @@ export default function TrendsChart({
   return (
     <div className="trends-chart">
       <div className="trends-chart__layout">
-        {actions && <div className="trends-chart__actions">{actions}</div>}
+        {(leftActions || actions) && (
+          <div className="trends-chart__actions">
+            {leftActions && (
+              <div className="trends-chart__actions-left">{leftActions}</div>
+            )}
+            {actions && (
+              <div className="trends-chart__actions-right">{actions}</div>
+            )}
+          </div>
+        )}
         <div className="trends-chart__plot">
           <div className="trends-chart__series" ref={chartSeriesRef}>
             {!model && !showLoader && (
@@ -257,53 +472,38 @@ export default function TrendsChart({
             {model && (
               <svg
                 ref={svgRef}
-                className="trends-chart__svg"
+                className={`trends-chart__svg${
+                  hasInspectableAdvisories && onInspectVulnerability
+                    ? ' trends-chart__svg--interactive'
+                    : ''
+                }`}
                 viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`}
                 role="img"
                 aria-label={`${metric} trends chart`}
                 onMouseLeave={() => setHover(null)}
-                onMouseMove={event => {
-                  const rect = event.currentTarget.getBoundingClientRect()
+                onMouseMove={event =>
+                  setHover(resolveChartPointer(event, chartWidth, model))
+                }
+                onClick={event => {
+                  if (!hasInspectableAdvisories || !onInspectVulnerability) {
+                    return
+                  }
 
-                  const relativeX =
-                    ((event.clientX - rect.left) / rect.width) * chartWidth
+                  const pointer = resolveChartPointer(event, chartWidth, model)
 
-                  const relativeY =
-                    ((event.clientY - rect.top) / rect.height) * CHART_HEIGHT
+                  const packageName =
+                    closestSeriesPackage(
+                      model,
+                      pointer.timestamp,
+                      pointer.cursorY,
+                    ) ?? packages[0]?.name
 
-                  const clampedX = Math.max(
-                    PLOT.left,
-                    Math.min(PLOT.left + model.plotWidth, relativeX),
-                  )
-
-                  const nearestPoint = nearestByX(
-                    model.series.flatMap(series => [
-                      ...series.points,
-                      ...series.partialMarkers,
-                      ...series.releaseMarkers,
-                    ]),
-                    clampedX,
-                  )
-
-                  const magneticPoint =
-                    nearestPoint &&
-                    Math.abs(nearestPoint.x - clampedX) <= DOT_MAGNET_RADIUS
-                      ? nearestPoint
-                      : null
-
-                  const hoverX = magneticPoint?.x ?? clampedX
-
-                  const timestamp = magneticPoint
-                    ? Date.parse(magneticPoint.date)
-                    : model.timestampForX(hoverX)
-
-                  setHover({
-                    x: hoverX,
-                    cursorX: clampedX,
-                    cursorY: relativeY,
-                    timestamp,
-                    pointDate: magneticPoint?.date,
-                  })
+                  if (packageName) {
+                    onInspectVulnerability({
+                      timestamp: pointer.timestamp,
+                      packageName,
+                    })
+                  }
                 }}
               >
                 <defs>
@@ -510,6 +710,15 @@ export default function TrendsChart({
                     </a>
                   </g>
                 ))}
+                {pinX !== null && (
+                  <line
+                    className="trends-chart__pin-line"
+                    x1={pinX}
+                    x2={pinX}
+                    y1={PLOT.top}
+                    y2={PLOT.top + model.plotHeight}
+                  />
+                )}
                 {hover && (
                   <line
                     className="trends-chart__hover-line"
@@ -528,49 +737,19 @@ export default function TrendsChart({
                 {new Date(hover.timestamp).toISOString().slice(0, 10)}
               </div>
               <div className="trends-chart__tooltip-items">
-                {tooltipRows.map(
-                  row =>
-                    row.point && (
-                      <div key={row.name} className="trends-chart__tooltip-row">
-                        <span
-                          className="trends-chart__swatch"
-                          style={{ backgroundColor: row.color }}
-                        />
-                        <span className="trends-chart__tooltip-name">
-                          {row.name}
-                          {row.point.version ? ` v${row.point.version}` : ''}
-                          {(
-                            row.point as TrendsPoint & { placeholder?: boolean }
-                          ).placeholder
-                            ? ' (size unavailable)'
-                            : row.point.partial
-                              ? ' (in progress)'
-                              : ''}
-                        </span>
-                        {(row.point as TrendsPoint & { placeholder?: boolean })
-                          .placeholder ? (
-                          <span className="trends-chart__tooltip-unit">—</span>
-                        ) : (
-                          <span className="trends-chart__tooltip-value">
-                            <span>
-                              {formatMetricValue(row.point.value, metric).value}
-                            </span>
-                            {formatMetricValue(row.point.value, metric)
-                              .unit && (
-                              <span className="trends-chart__tooltip-unit">
-                                {' '}
-                                {
-                                  formatMetricValue(row.point.value, metric)
-                                    .unit
-                                }
-                              </span>
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    ),
-                )}
+                {tooltipRows.map(row => (
+                  <TrendsTooltipEntry
+                    key={row.name}
+                    row={row}
+                    metric={metric}
+                  />
+                ))}
               </div>
+              {hasInspectableAdvisories && (
+                <div className="trends-chart__tooltip-hint">
+                  Click chart to inspect CVEs
+                </div>
+              )}
               {tooltipAnnotations.length > 0 && (
                 <div className="trends-chart__tooltip-markers">
                   {tooltipAnnotations.map(annotation => (

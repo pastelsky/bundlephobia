@@ -5,7 +5,12 @@ import {
   buildVulnerabilityPoints,
   getTrendsRangeStart,
 } from '../server/services/trends.service'
-import { groupTrendsPackage, splitNpmDateRange } from '../utils/trends'
+import {
+  filterPackageVulnerabilities,
+  groupTrendsPackage,
+  resolveBucketVulnerabilityDetails,
+  splitNpmDateRange,
+} from '../utils/trends'
 
 const series: TrendsPackageSeries = {
   name: 'react',
@@ -150,6 +155,8 @@ describe('trends data', () => {
       },
       {
         id: 'GHSA-unpatched',
+        aliases: ['CVE-2024-9999'],
+        summary: 'Critical issue',
         published: '2024-05-15T00:00:00Z',
         database_specific: { severity: 'CRITICAL' },
         affected: [
@@ -203,5 +210,48 @@ describe('trends data', () => {
       moderate: 0,
       low: 0,
     })
+
+    // Only range-overlapping advisories (GHSA-patched + GHSA-unpatched) are included
+    expect(result.advisories.map(adv => adv.id)).toEqual([
+      'GHSA-patched',
+      'GHSA-unpatched',
+    ])
+
+    const mockPack: TrendsPackageSeries = {
+      ...series,
+      vulnerabilities: result.points,
+      advisories: result.advisories,
+      current: { ...series.current, vulnerabilities: result.summary },
+    }
+
+    const criticalOnly = filterPackageVulnerabilities(
+      mockPack,
+      new Set(['critical']),
+    )
+
+    expect(
+      criticalOnly.vulnerabilities.find(p => p.date === '2024-05-05')?.value,
+    ).toBe(0)
+    expect(
+      criticalOnly.vulnerabilities.find(p => p.date === '2024-05-12')?.value,
+    ).toBe(1)
+
+    const peakDetails = resolveBucketVulnerabilityDetails(mockPack, {
+      timestamp: Date.parse('2024-05-14T00:00:00Z'),
+      groupBy: 'month',
+      enabledSeverities: new Set(['critical', 'high', 'moderate', 'low']),
+    })
+
+    expect(peakDetails?.count).toBe(2)
+    expect(peakDetails?.bySeverity).toEqual({
+      critical: 1,
+      high: 0,
+      moderate: 1,
+      low: 0,
+    })
+    expect(peakDetails?.advisories.map(adv => adv.cve ?? adv.id)).toEqual([
+      'CVE-2024-9999',
+      'GHSA-patched',
+    ])
   })
 })

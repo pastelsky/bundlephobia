@@ -35,6 +35,31 @@ export type TrendsRelease = {
   minor: boolean
 }
 
+export const TRENDS_VULNERABILITY_SEVERITIES = [
+  'critical',
+  'high',
+  'moderate',
+  'low',
+] as const
+
+export type TrendsVulnerabilitySeverity =
+  (typeof TRENDS_VULNERABILITY_SEVERITIES)[number]
+
+export type TrendsVulnerabilityWindow = {
+  from: string
+  to: string | null
+  introducedVersion?: string
+  fixedVersion?: string
+}
+
+export type TrendsVulnerabilityAdvisory = {
+  id: string
+  cve?: string
+  summary?: string
+  severity: TrendsVulnerabilitySeverity | 'unknown'
+  windows: TrendsVulnerabilityWindow[]
+}
+
 export type TrendsVulnerabilitySummary = {
   total: number
   active: number
@@ -59,6 +84,7 @@ export type TrendsPackageSeries = {
   stars: TrendsPoint[]
   size: TrendsPoint[]
   vulnerabilities: TrendsPoint[]
+  advisories?: TrendsVulnerabilityAdvisory[]
   releases: TrendsRelease[]
   current: TrendsCurrent
   warnings: string[]

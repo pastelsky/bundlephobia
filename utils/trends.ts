@@ -1,5 +1,7 @@
 import {
   addDays,
+  endOfMonth,
+  endOfWeek,
   format,
   isAfter,
   isValid,
@@ -10,11 +12,14 @@ import {
   subYears,
 } from 'date-fns'
 
-import type {
-  TrendsGroupBy,
-  TrendsPackageSeries,
-  TrendsPoint,
-  TrendsRange,
+import {
+  TRENDS_VULNERABILITY_SEVERITIES,
+  type TrendsGroupBy,
+  type TrendsPackageSeries,
+  type TrendsPoint,
+  type TrendsRange,
+  type TrendsVulnerabilityAdvisory,
+  type TrendsVulnerabilitySeverity,
 } from '@bundlephobia/service-contracts/trends'
 
 export type GithubStarHistoryRow = {
@@ -193,6 +198,220 @@ export function groupTrendsPackage(
     vulnerabilities: rollupTrendsPoints(source.vulnerabilities ?? [], groupBy, {
       mode: 'max',
     }),
+  }
+}
+
+const SEVERITY_ORDER: Record<TrendsVulnerabilitySeverity | 'unknown', number> =
+  {
+    critical: 0,
+    high: 1,
+    moderate: 2,
+    low: 3,
+    unknown: 4,
+  }
+
+export type BucketVulnerabilityDetails = {
+  date: string
+  count: number
+  bySeverity: Record<TrendsVulnerabilitySeverity, number>
+  advisories: TrendsVulnerabilityAdvisory[]
+}
+
+export function isAdvisoryActiveOnDate(
+  advisory: TrendsVulnerabilityAdvisory,
+  date: string,
+): boolean {
+  return advisory.windows.some(
+    win => win.from <= date && (win.to === null || win.to > date),
+  )
+}
+
+function advisoryMatchesFilter(
+  advisory: TrendsVulnerabilityAdvisory,
+  enabledSeverities: ReadonlySet<TrendsVulnerabilitySeverity>,
+): boolean {
+  if (enabledSeverities.size === TRENDS_VULNERABILITY_SEVERITIES.length) {
+    return true
+  }
+
+  return (
+    advisory.severity !== 'unknown' && enabledSeverities.has(advisory.severity)
+  )
+}
+
+function countBySeverity(
+  advisories: TrendsVulnerabilityAdvisory[],
+): Record<TrendsVulnerabilitySeverity, number> {
+  const counts: Record<TrendsVulnerabilitySeverity, number> = {
+    critical: 0,
+    high: 0,
+    moderate: 0,
+    low: 0,
+  }
+
+  for (const advisory of advisories) {
+    if (advisory.severity !== 'unknown') {
+      counts[advisory.severity] += 1
+    }
+  }
+
+  return counts
+}
+
+export function filterPackageVulnerabilities(
+  pack: TrendsPackageSeries,
+  enabledSeverities: ReadonlySet<TrendsVulnerabilitySeverity>,
+): TrendsPackageSeries {
+  if (
+    !pack.advisories ||
+    enabledSeverities.size === TRENDS_VULNERABILITY_SEVERITIES.length
+  ) {
+    return pack
+  }
+
+  const matchingAdvisories = pack.advisories.filter(advisory =>
+    advisoryMatchesFilter(advisory, enabledSeverities),
+  )
+
+  const vulnerabilities = (pack.vulnerabilities ?? []).map(point => ({
+    ...point,
+    value: matchingAdvisories.filter(adv =>
+      isAdvisoryActiveOnDate(adv, point.date),
+    ).length,
+  }))
+
+  const latestDate =
+    vulnerabilities.at(-1)?.date ?? formatTrendsDate(new Date())
+
+  const activeToday = matchingAdvisories.filter(adv =>
+    isAdvisoryActiveOnDate(adv, latestDate),
+  )
+
+  const severityCounts = countBySeverity(activeToday)
+
+  return {
+    ...pack,
+    vulnerabilities,
+    current: {
+      ...pack.current,
+      vulnerabilities: pack.current.vulnerabilities
+        ? {
+            total: pack.current.vulnerabilities.total,
+            active: activeToday.length,
+            ...severityCounts,
+          }
+        : null,
+    },
+  }
+}
+
+type DateBounds = { start: string; end: string }
+
+type PeakDateMatch = {
+  peakDate: string
+  activeOnPeak: TrendsVulnerabilityAdvisory[]
+}
+
+function bucketBounds(timestamp: number, groupBy: TrendsGroupBy): DateBounds {
+  const day = formatTrendsDate(new Date(timestamp))
+  const parsed = parseISO(day)
+
+  if (groupBy === 'month') {
+    return {
+      start: format(startOfMonth(parsed), 'yyyy-MM-dd'),
+      end: format(endOfMonth(parsed), 'yyyy-MM-dd'),
+    }
+  }
+
+  if (groupBy === 'week') {
+    return {
+      start: format(startOfWeek(parsed, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+      end: format(endOfWeek(parsed, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+    }
+  }
+
+  return { start: day, end: day }
+}
+
+function clipBucketBounds(
+  bounds: DateBounds,
+  points: TrendsPoint[],
+): DateBounds {
+  const firstPoint = points[0]?.date
+  const lastPoint = points.at(-1)?.date
+
+  return {
+    start: firstPoint && bounds.start < firstPoint ? firstPoint : bounds.start,
+    end: lastPoint && bounds.end > lastPoint ? lastPoint : bounds.end,
+  }
+}
+
+function pickPeakDate(
+  advisories: TrendsVulnerabilityAdvisory[],
+  start: string,
+  end: string,
+): PeakDateMatch {
+  let peakDate = start
+  let activeOnPeak: TrendsVulnerabilityAdvisory[] = []
+  let cursor = parseISO(start)
+  const endDate = parseISO(end)
+
+  while (!isAfter(cursor, endDate)) {
+    const dayStr = format(cursor, 'yyyy-MM-dd')
+    const active = advisories.filter(adv => isAdvisoryActiveOnDate(adv, dayStr))
+
+    if (dayStr === start || active.length > activeOnPeak.length) {
+      peakDate = dayStr
+      activeOnPeak = active
+    }
+
+    cursor = addDays(cursor, 1)
+  }
+
+  return { peakDate, activeOnPeak }
+}
+
+export function resolveBucketVulnerabilityDetails(
+  pack: TrendsPackageSeries,
+  options: {
+    timestamp: number
+    groupBy: TrendsGroupBy
+    enabledSeverities: ReadonlySet<TrendsVulnerabilitySeverity>
+  },
+): BucketVulnerabilityDetails | null {
+  if (!pack.advisories) return null
+
+  const { start, end } = clipBucketBounds(
+    bucketBounds(options.timestamp, options.groupBy),
+    pack.vulnerabilities ?? [],
+  )
+
+  if (start > end) {
+    return {
+      date: start,
+      count: 0,
+      bySeverity: countBySeverity([]),
+      advisories: [],
+    }
+  }
+
+  const matching = pack.advisories.filter(adv =>
+    advisoryMatchesFilter(adv, options.enabledSeverities),
+  )
+
+  const { peakDate, activeOnPeak } = pickPeakDate(matching, start, end)
+
+  const sorted = [...activeOnPeak].sort(
+    (left, right) =>
+      SEVERITY_ORDER[left.severity] - SEVERITY_ORDER[right.severity] ||
+      (left.cve ?? left.id).localeCompare(right.cve ?? right.id),
+  )
+
+  return {
+    date: peakDate,
+    count: sorted.length,
+    bySeverity: countBySeverity(sorted),
+    advisories: sorted,
   }
 }
 

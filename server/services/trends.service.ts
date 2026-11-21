@@ -9,7 +9,9 @@ import type {
   TrendsPoint,
   TrendsRange,
   TrendsResponse,
+  TrendsVulnerabilityAdvisory,
   TrendsVulnerabilitySummary,
+  TrendsVulnerabilityWindow,
 } from '@bundlephobia/service-contracts/trends'
 import {
   buildGithubStarTotals,
@@ -165,6 +167,7 @@ function getSettledGithub(
 export type VulnerabilityTrendsResult = {
   points: TrendsPoint[]
   summary: TrendsVulnerabilitySummary
+  advisories: TrendsVulnerabilityAdvisory[]
 }
 
 export type BuildVulnerabilityOptions = {
@@ -396,7 +399,82 @@ function emptyVulnerabilityTimeline(
       { date: todayStr, value: 0 },
     ],
     summary: summarizeVulnerabilities(total, []),
+    advisories: [],
   }
+}
+
+function buildAdvisoryWindows(
+  vulnId: string,
+  transitions: VersionTransition[],
+  activeIdsByVersion: Map<string, Set<string>>,
+): TrendsVulnerabilityWindow[] {
+  const windows: TrendsVulnerabilityWindow[] = []
+  let open: TrendsVulnerabilityWindow | null = null
+
+  for (const transition of transitions) {
+    const affected = activeIdsByVersion.get(transition.version)?.has(vulnId)
+
+    if (affected) {
+      open ??= {
+        from: transition.since,
+        to: null,
+        introducedVersion: transition.version,
+      }
+    } else if (open) {
+      open.to = transition.since
+      open.fixedVersion = transition.version
+      windows.push(open)
+      open = null
+    }
+  }
+
+  if (open) windows.push(open)
+
+  return windows
+}
+
+function toAdvisoryRecord(
+  vuln: OsvVulnerability,
+  windows: TrendsVulnerabilityWindow[],
+): TrendsVulnerabilityAdvisory {
+  const rawSeverity = (vuln.database_specific?.severity ?? '').toUpperCase()
+  const severity = SEVERITY_MAP.get(rawSeverity) ?? 'unknown'
+  const cve = vuln.aliases?.find(alias => alias.startsWith('CVE-'))
+
+  const record: TrendsVulnerabilityAdvisory = {
+    id: vuln.id,
+    severity,
+    windows,
+  }
+
+  if (cve) record.cve = cve
+
+  if (vuln.summary) record.summary = vuln.summary
+
+  return record
+}
+
+function buildRangeAdvisories(
+  vulns: OsvVulnerability[],
+  transitions: VersionTransition[],
+  activeListByVersion: Map<string, OsvVulnerability[]>,
+): TrendsVulnerabilityAdvisory[] {
+  const activeIdsByVersion = new Map<string, Set<string>>(
+    [...activeListByVersion.entries()].map(([version, list]) => [
+      version,
+      new Set(list.map(vuln => vuln.id)),
+    ]),
+  )
+
+  return vulns.flatMap(vuln => {
+    const windows = buildAdvisoryWindows(
+      vuln.id,
+      transitions,
+      activeIdsByVersion,
+    )
+
+    return windows.length > 0 ? [toAdvisoryRecord(vuln, windows)] : []
+  })
 }
 
 export function buildVulnerabilityPoints(
@@ -428,18 +506,30 @@ export function buildVulnerabilityPoints(
     [...activeListByVersion.entries()].map(([ver, list]) => [ver, list.length]),
   )
 
+  const advisories = buildRangeAdvisories(
+    activeVulns,
+    transitions,
+    activeListByVersion,
+  ).filter(advisory =>
+    advisory.windows.some(
+      win => win.from <= todayStr && (win.to === null || win.to > from),
+    ),
+  )
+
   return {
     points: buildDailyActiveTimeline(transitions, activeCountByVersion, {
       from,
       today: todayStr,
     }),
     summary: summarizeVulnerabilities(activeVulns.length, currentActive),
+    advisories,
   }
 }
 
 type SettledVulnerabilityResult = {
   points: TrendsPoint[]
   summary: TrendsVulnerabilitySummary | null
+  advisories: TrendsVulnerabilityAdvisory[]
 }
 
 function getSettledVulnerabilities(
@@ -454,19 +544,13 @@ function getSettledVulnerabilities(
   if (result.status !== 'fulfilled') {
     warnings.push('Security vulnerability history is unavailable')
 
-    return { points: [], summary: null }
+    return { points: [], summary: null, advisories: [] }
   }
 
-  const { points, summary } = buildVulnerabilityPoints(
-    result.value,
-    options.from,
-    {
-      packageName: options.packageName,
-      publishDates: options.publishDates,
-    },
-  )
-
-  return { points, summary }
+  return buildVulnerabilityPoints(result.value, options.from, {
+    packageName: options.packageName,
+    publishDates: options.publishDates,
+  })
 }
 
 async function fetchPackageTrendsSource(
@@ -512,6 +596,7 @@ async function fetchPackageTrendsSource(
     stars: github.points,
     size,
     vulnerabilities: vulns.points,
+    advisories: vulns.advisories,
     releases: history.releases.map(release => ({
       version: release.version,
       date: release.publishedAt,

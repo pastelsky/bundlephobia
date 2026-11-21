@@ -27,6 +27,7 @@ export type OsvAffected = {
 
 export type OsvVulnerability = {
   id: string
+  aliases?: string[]
   summary?: string
   published?: string
   modified?: string

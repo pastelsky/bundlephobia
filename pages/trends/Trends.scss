@@ -785,15 +785,29 @@
 
   &__actions {
     display: flex;
-    align-self: flex-end;
-    gap: $global-spacing * 0.5;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: $global-spacing * 0.8;
     margin-bottom: $global-spacing;
 
-    @media screen and (max-width: 48em) {
+    &-left {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: $global-spacing * 0.6;
+    }
+
+    &-right {
       margin-left: auto;
-      width: 100%;
-      justify-content: flex-end;
-      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: $global-spacing * 0.5;
+    }
+
+    @media screen and (max-width: 48em) {
+      margin-bottom: $global-spacing * 0.5;
     }
   }
 
@@ -802,6 +816,10 @@
     width: 100%;
     height: 380px;
     overflow: visible;
+
+    &--interactive {
+      cursor: crosshair;
+    }
   }
 
   &__grid {
@@ -937,6 +955,12 @@
     }
   }
 
+  &__pin-line {
+    stroke: var(--color-text-primary);
+    stroke-width: 1;
+    opacity: 0.35;
+  }
+
   &__hover-line {
     stroke: var(--color-text-muted);
     stroke-width: 1;
@@ -983,10 +1007,54 @@
     gap: $global-spacing * 0.7;
   }
 
+  &__tooltip-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
   &__tooltip-row {
     display: flex;
     align-items: center;
     gap: $global-spacing * 0.6;
+  }
+
+  &__tooltip-severities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $global-spacing * 0.6;
+    padding-left: calc(8px + #{$global-spacing * 0.6});
+    @include font-size-xxs;
+    font-family: $font-family-code;
+    color: var(--color-tooltip-text-muted);
+  }
+
+  &__tooltip-sev {
+    white-space: nowrap;
+
+    &--critical {
+      color: #f87171;
+    }
+
+    &--high {
+      color: #fb923c;
+    }
+
+    &--moderate {
+      color: #facc15;
+    }
+
+    &--low {
+      color: var(--color-tooltip-text-muted);
+    }
+  }
+
+  &__tooltip-hint {
+    margin-top: $global-spacing * 0.6;
+    padding-top: $global-spacing * 0.5;
+    border-top: 1px solid var(--color-tooltip-border);
+    @include font-size-xxs;
+    color: var(--color-tooltip-text-muted);
   }
 
   &__swatch {
@@ -1534,5 +1602,305 @@
     text-transform: lowercase;
     opacity: 0.6;
     line-height: 1;
+  }
+}
+
+// ─── Vulnerability Severity Filter & CVE Inspector Panel ────
+.trends-severity-filter {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $global-spacing * 0.5;
+
+  &__label {
+    @include font-size-xxs;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    font-weight: $font-weight-bold;
+    margin-right: $global-spacing * 0.3;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 24px;
+    padding: 0 ($global-spacing * 0.85);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--trends-control-radius) !important;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-family: $font-family-body;
+    @include font-size-xxs;
+    font-weight: $font-weight-bold;
+    cursor: pointer;
+    opacity: 0.62;
+    transition:
+      opacity 0.15s ease,
+      background 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+
+    &:hover {
+      opacity: 1;
+      background: var(--color-surface-raised);
+    }
+
+    &--active {
+      opacity: 1;
+      background: var(--color-bg-base);
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  &__btn--critical &__dot {
+    background: #dc2626;
+  }
+
+  &__btn--high &__dot {
+    background: #ea580c;
+  }
+
+  &__btn--moderate &__dot {
+    background: #ca8a04;
+  }
+
+  &__btn--low &__dot {
+    background: #64748b;
+  }
+
+  &__reset {
+    background: transparent;
+    border: none;
+    padding: 0 ($global-spacing * 0.4);
+    color: var(--color-text-muted);
+    @include font-size-xxs;
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:hover {
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+.trends-vuln-severity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  height: 20px;
+  padding: 0 ($global-spacing * 0.6);
+  border-radius: 4px;
+  border: 1px solid var(--color-border-primary);
+  @include font-size-xxs;
+  font-family: $font-family-code;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  flex-shrink: 0;
+
+  &--critical {
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.35);
+    background: rgba(220, 38, 38, 0.06);
+  }
+
+  &--high {
+    color: #ea580c;
+    border-color: rgba(234, 88, 12, 0.35);
+    background: rgba(234, 88, 12, 0.06);
+  }
+
+  &--moderate {
+    color: #b45309;
+    border-color: rgba(202, 138, 4, 0.35);
+    background: rgba(202, 138, 4, 0.06);
+  }
+
+  &--low {
+    color: var(--color-text-secondary);
+    background: var(--color-surface-raised);
+  }
+
+  &--unknown {
+    color: var(--color-text-muted);
+  }
+}
+
+.trends-vuln-panel {
+  margin-top: $global-spacing * 2;
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--trends-control-radius);
+  background: var(--color-bg-base);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $global-spacing;
+    padding: $global-spacing ($global-spacing * 1.5);
+    border-bottom: 1px solid var(--color-border-subtle);
+    background: var(--color-surface-raised);
+  }
+
+  &__title-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $global-spacing * 1.25;
+  }
+
+  &__title {
+    margin: 0;
+    @include font-size-xs;
+    font-weight: $font-weight-bold;
+    color: var(--color-text-secondary);
+
+    span {
+      font-family: $font-family-code;
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: $global-spacing * 0.5;
+  }
+
+  &__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 ($global-spacing * 0.8);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--trends-control-radius) !important;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-family: $font-family-code;
+    @include font-size-xxs;
+    cursor: pointer;
+
+    &--active {
+      background: var(--color-text-primary);
+      border-color: var(--color-text-primary);
+      color: var(--color-bg-base);
+    }
+  }
+
+  &__tab-swatch {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+  }
+
+  &__tab-count {
+    opacity: 0.75;
+  }
+
+  &__close {
+    background: transparent;
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--trends-control-radius) !important;
+    height: 24px;
+    padding: 0 ($global-spacing * 0.85);
+    color: var(--color-text-muted);
+    @include font-size-xxs;
+    font-weight: $font-weight-bold;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--color-text-primary);
+      background: var(--color-bg-base);
+    }
+  }
+
+  &__empty {
+    padding: ($global-spacing * 2) ($global-spacing * 1.5);
+    @include font-size-xs;
+    color: var(--color-text-muted);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: $global-spacing * 1.25;
+    padding: ($global-spacing * 1.1) ($global-spacing * 1.5);
+    border-bottom: 1px solid var(--color-border-subtle);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    @media screen and (max-width: 40em) {
+      flex-direction: column;
+      gap: $global-spacing * 0.5;
+    }
+  }
+
+  &__item-body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__item-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: $global-spacing * 0.75;
+  }
+
+  &__id {
+    font-family: $font-family-code;
+    @include font-size-xs;
+    font-weight: $font-weight-bold;
+    color: var(--color-text-primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__ghsa {
+    font-family: $font-family-code;
+    @include font-size-xxs;
+    color: var(--color-text-muted);
+  }
+
+  &__span {
+    margin-left: auto;
+    font-family: $font-family-code;
+    @include font-size-xxs;
+    color: var(--color-text-muted);
+
+    @media screen and (max-width: 40em) {
+      margin-left: 0;
+    }
+  }
+
+  &__summary {
+    margin: ($global-spacing * 0.35) 0 0;
+    @include font-size-xs;
+    color: var(--color-text-secondary);
+    line-height: 1.45;
   }
 }
