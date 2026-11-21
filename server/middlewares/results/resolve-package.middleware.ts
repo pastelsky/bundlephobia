@@ -57,6 +57,25 @@ async function serveBuiltRelease(
   return true
 }
 
+function isCacheOnlyRequest(ctx: Context): boolean {
+  return (
+    ctx.get('X-Bundlephobia-Cache-Only') === 'true' &&
+    ctx.query.force !== 'true'
+  )
+}
+
+function respondCacheOnlyMiss(ctx: Context): void {
+  ctx.state.analysis.cache = 'miss'
+  ctx.cacheControl = { private: true, noStore: true }
+  ctx.status = 404
+  ctx.body = {
+    error: {
+      code: 'CacheMissError',
+      message: 'No cached analysis is available for this package.',
+    },
+  }
+}
+
 export function createResolvePackageMiddleware(
   operation: AnalysisOperation,
   cache?: Pick<CacheServiceClient, 'getLatestBuiltPackageSize'>,
@@ -98,13 +117,20 @@ export function createResolvePackageMiddleware(
       )
 
       if (responseWasServed) return
+
+      if (isCacheOnlyRequest(ctx)) {
+        respondCacheOnlyMiss(ctx)
+
+        return
+      }
     }
 
     const resolveStart = now()
 
-    const resolvedPackage = await packageAnalysisGateway.resolvePackage(
-      createJavaScriptPackageReference(resolvedPackageString),
-    )
+    const { manifest, ...resolvedPackage } =
+      await packageAnalysisGateway.resolvePackage(
+        createJavaScriptPackageReference(resolvedPackageString),
+      )
 
     const resolveEnd = now()
 
@@ -115,6 +141,7 @@ export function createResolvePackageMiddleware(
     }
 
     ctx.state.resolved = result
+    ctx.state.packageManifest = manifest
 
     debug('resolved to %s@%s', result.name, result.version)
     const time = resolveEnd - resolveStart

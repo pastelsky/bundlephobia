@@ -71,9 +71,12 @@ no general request limiter or bot-specific limit branches. The budget signal and
 returned build duration are the bridge between those responsibilities. Spending
 the build budget alone does not block cache hits; traffic limits/cooldown can.
 
-Crawler pages and analysis APIs prefer an already-built release but may build on a miss. Page/MCP
-local API calls forward caller identity and budget state; only the outer request
-spends the proxy allowance. Build admissions may coalesce. Completed-time
+Crawler pages and analysis APIs prefer an already-built release. Verified Google
+crawlers, badge services (`shields`, `badgen`), and ordinary clients/CLI tools (`curl`,
+`got`) may still build on a cold miss; all other crawlers and scrapers receive
+`X-Bundlephobia-Cache-Only: true` and get a non-cacheable `404` (`private, no-store`)
+on cold misses instead of starting builds. Page/MCP local API calls forward caller
+identity, cache-only, and budget state; only the outer request spends the proxy allowance. Build admissions may coalesce. Completed-time
 accounting does not reserve queued/in-flight work. Proxy rate windows roll; the
 server admission window resets five minutes after its first admitted miss.
 

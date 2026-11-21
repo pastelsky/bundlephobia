@@ -400,3 +400,45 @@ it('does not cache a negative export-size peek or start a build', async () => {
   expect(await response.json()).toMatchObject({ peekSuccess: false })
   expect(exportsBuild).not.toHaveBeenCalled()
 })
+
+it('serves cached results to cache-only crawlers but never triggers cold builds on misses', async () => {
+  cached.set('example@latest-built', older)
+  cached.set('example@2.0.0', current)
+
+  const cachedHit = await request('/api/size?package=example', {
+    'X-Bundlephobia-Cache-Only': 'true',
+  })
+
+  expect(cachedHit.status).toBe(200)
+  expect(await cachedHit.json()).toMatchObject({ version: older.version })
+  expect(build).not.toHaveBeenCalled()
+
+  // Unversioned cold miss returns 404 private, no-store without hitting npm registry or building
+  const coldUnversioned = await request('/api/size?package=unbuilt-pkg', {
+    'X-Bundlephobia-Cache-Only': 'true',
+  })
+
+  expect(coldUnversioned.status).toBe(404)
+  expect(coldUnversioned.headers.get('cache-control')).toContain('private')
+  expect(coldUnversioned.headers.get('cache-control')).toContain('no-store')
+  expect(resolve).not.toHaveBeenCalled()
+  expect(build).not.toHaveBeenCalled()
+
+  // Exact-version cold miss also returns 404 private, no-store without starting a build
+  const coldVersioned = await request('/api/size?package=unbuilt-pkg@1.0.0', {
+    'X-Bundlephobia-Cache-Only': 'true',
+  })
+
+  expect(coldVersioned.status).toBe(404)
+  expect(coldVersioned.headers.get('cache-control')).toContain('private')
+  expect(coldVersioned.headers.get('cache-control')).toContain('no-store')
+  expect(build).not.toHaveBeenCalled()
+
+  // SSR package page propagates cache-only and returns 404 without building
+  const coldPage = await request('/package/unbuilt-pkg', {
+    'X-Bundlephobia-Cache-Only': 'true',
+  })
+
+  expect(coldPage.status).toBe(404)
+  expect(build).not.toHaveBeenCalled()
+})

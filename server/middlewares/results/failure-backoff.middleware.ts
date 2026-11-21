@@ -18,11 +18,28 @@ const FAILURE_COOLDOWNS_MS = [
   3 * DAY_MS,
 ] as const
 
-export function getFailureCooldownMs(consecutiveFailures: number): number {
-  if (consecutiveFailures < 2) return 0
+// Deterministic failures on an immutable exact package version do not need a
+// second full install+build attempt before backing off. Transient 5xx errors,
+// 404s, and generic BuildErrors still require >=2 consecutive failures.
+const DETERMINISTIC_FAILURE_CODES = new Set([
+  'CLIBuildError',
+  'EntryPointError',
+  'UnsupportedPackageError',
+])
+
+export function getFailureCooldownMs(
+  consecutiveFailures: number,
+  code?: string,
+): number {
+  const isDeterministic =
+    code !== undefined && DETERMINISTIC_FAILURE_CODES.has(code)
+
+  if (!isDeterministic && consecutiveFailures < 2) return 0
+
+  const offset = isDeterministic ? 1 : 2
 
   const index = Math.min(
-    consecutiveFailures - 2,
+    Math.max(consecutiveFailures - offset, 0),
     FAILURE_COOLDOWNS_MS.length - 1,
   )
 
@@ -31,7 +48,7 @@ export function getFailureCooldownMs(consecutiveFailures: number): number {
 
 export function recordFailure(
   previous: FailureCacheEntry | undefined,
-  failure: Pick<FailureCacheEntry, 'status'>,
+  failure: Pick<FailureCacheEntry, 'status' | 'code'>,
   recordedAt = Date.now(),
 ): FailureCacheEntry {
   const consecutiveFailures =
@@ -44,13 +61,19 @@ export function recordFailure(
       ? consecutiveFailures < 2
         ? 0
         : 60_000
-      : getFailureCooldownMs(consecutiveFailures)
+      : getFailureCooldownMs(consecutiveFailures, failure.code)
 
-  return {
+  const entry: FailureCacheEntry = {
     status: failure.status,
     consecutiveFailures,
     blockedUntil: cooldownMs > 0 ? recordedAt + cooldownMs : undefined,
   }
+
+  if (failure.code) {
+    entry.code = failure.code
+  }
+
+  return entry
 }
 
 export function isFailureBlocked(

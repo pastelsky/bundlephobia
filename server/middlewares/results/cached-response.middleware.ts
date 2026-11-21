@@ -72,6 +72,19 @@ const cachedResponse: Middleware = async (ctx, next) => {
     return
   }
 
+  if (ctx.get('X-Bundlephobia-Cache-Only') === 'true') {
+    ctx.cacheControl = { private: true, noStore: true }
+    ctx.status = 404
+    ctx.body = {
+      error: {
+        code: 'CacheMissError',
+        message: 'No cached analysis is available for this package.',
+      },
+    }
+
+    return
+  }
+
   await next()
 }
 

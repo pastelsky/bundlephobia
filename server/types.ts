@@ -26,6 +26,7 @@ export interface PackageAnalysisRequestState {
 
 export interface FailureCacheEntry {
   status: number
+  code?: string
   consecutiveFailures: number
   blockedUntil?: number
 }

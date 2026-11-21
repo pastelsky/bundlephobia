@@ -762,6 +762,7 @@ function analysisRequestHeaders(req: GetServerSidePropsContext['req']) {
     'CF-Connecting-IP':
       req.headers['cf-connecting-ip'] ?? req.socket.remoteAddress,
     'X-Bundlephobia-Prefer-Cached': req.headers['x-bundlephobia-prefer-cached'],
+    'X-Bundlephobia-Cache-Only': req.headers['x-bundlephobia-cache-only'],
     'X-Bundlephobia-Build-Budget-Exceeded':
       req.headers['x-bundlephobia-build-budget-exceeded'],
   }

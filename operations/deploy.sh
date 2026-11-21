@@ -131,31 +131,40 @@ if [ -d "/etc/haproxy" ] && command -v haproxy >/dev/null 2>&1; then
   HAPROXY_CHANGED=false
   SOURCE_CFG="${REPO_ROOT}/operations/haproxy/conf.d/30-traffic-policy.cfg"
   TARGET_CFG="/etc/haproxy/conf.d/30-traffic-policy.cfg"
+  SOURCE_MAP="${REPO_ROOT}/operations/haproxy/automation-groups.map"
+  TARGET_MAP="/etc/haproxy/automation-groups.map"
 
-  if [ -f "${SOURCE_CFG}" ] && [ -d "/etc/haproxy/conf.d" ]; then
-    if ! cmp -s "${SOURCE_CFG}" "${TARGET_CFG}" 2>/dev/null; then
-      log "Detected HAProxy configuration changes. Validating..."
-      BACKUP_CFG="$(mktemp)"
-      if [ -f "${TARGET_CFG}" ]; then
-        cp "${TARGET_CFG}" "${BACKUP_CFG}"
-      fi
+  CFG_DIFFERS=false
+  MAP_DIFFERS=false
+  if [ -f "${SOURCE_CFG}" ] && [ -d "/etc/haproxy/conf.d" ] && ! cmp -s "${SOURCE_CFG}" "${TARGET_CFG}" 2>/dev/null; then
+    CFG_DIFFERS=true
+  fi
+  if [ -f "${SOURCE_MAP}" ] && ! cmp -s "${SOURCE_MAP}" "${TARGET_MAP}" 2>/dev/null; then
+    MAP_DIFFERS=true
+  fi
 
-      sudo cp "${SOURCE_CFG}" "${TARGET_CFG}"
+  if [ "${CFG_DIFFERS}" = true ] || [ "${MAP_DIFFERS}" = true ]; then
+    log "Detected HAProxy configuration changes. Validating..."
+    BACKUP_CFG="$(mktemp)"
+    BACKUP_MAP="$(mktemp)"
+    [ -f "${TARGET_CFG}" ] && cp "${TARGET_CFG}" "${BACKUP_CFG}"
+    [ -f "${TARGET_MAP}" ] && cp "${TARGET_MAP}" "${BACKUP_MAP}"
 
-      if sudo /usr/sbin/haproxy -c -f /etc/haproxy/haproxy.cfg -f /etc/haproxy/conf.d >/dev/null 2>&1; then
-        log "HAProxy config valid. Reloading HAProxy hitlessly..."
-        sudo systemctl reload haproxy
-        HAPROXY_CHANGED=true
-      else
-        error "HAProxy config validation failed! Restoring previous configuration."
-        if [ -s "${BACKUP_CFG}" ]; then
-          sudo cp "${BACKUP_CFG}" "${TARGET_CFG}"
-        fi
-        rm -f "${BACKUP_CFG}"
-        exit 1
-      fi
-      rm -f "${BACKUP_CFG}"
+    [ "${MAP_DIFFERS}" = true ] && sudo cp "${SOURCE_MAP}" "${TARGET_MAP}"
+    [ "${CFG_DIFFERS}" = true ] && sudo cp "${SOURCE_CFG}" "${TARGET_CFG}"
+
+    if sudo /usr/sbin/haproxy -c -f /etc/haproxy/haproxy.cfg -f /etc/haproxy/conf.d >/dev/null 2>&1; then
+      log "HAProxy config valid. Reloading HAProxy hitlessly..."
+      sudo systemctl reload haproxy
+      HAPROXY_CHANGED=true
+    else
+      error "HAProxy config validation failed! Restoring previous configuration."
+      [ -s "${BACKUP_CFG}" ] && sudo cp "${BACKUP_CFG}" "${TARGET_CFG}"
+      [ -s "${BACKUP_MAP}" ] && sudo cp "${BACKUP_MAP}" "${TARGET_MAP}"
+      rm -f "${BACKUP_CFG}" "${BACKUP_MAP}"
+      exit 1
     fi
+    rm -f "${BACKUP_CFG}" "${BACKUP_MAP}"
   fi
 
   if [ "${HAPROXY_CHANGED}" = false ]; then

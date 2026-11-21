@@ -8,6 +8,7 @@ import type {
   PackageExportSizesResult,
   PackageExportsResult,
 } from '@bundlephobia/service-contracts/package'
+import type { NpmPackageManifest } from '../clients/npm-registry.client'
 
 const ANALYSIS_OPERATIONS = [
   'package-analysis',
@@ -28,6 +29,7 @@ export interface ResolvedAnalysisPackage<
 > extends ResolvedPackageIdentity<L> {
   description: string
   repository: string
+  manifest?: NpmPackageManifest
 }
 
 interface PackageResolutionAdapter<L extends LanguageId = LanguageId> {

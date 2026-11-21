@@ -58,7 +58,7 @@ class BotRateLimits(unittest.TestCase):
                                          '    http-request return status 504 hdr Cache-Control max-age=86400 if { path /upstream-timeout }\n'
                                          '    http-request return status 401 hdr Cache-Control max-age=86400 if { path /upstream-unauthorized }\n'
                                          '    http-request return status 404 hdr Cache-Control max-age=60 if { path /permanent-missing }\n'
-                                         '    http-request return status 200 hdr Cache-Control public,max-age=86400 hdr X-Echo-Prefer-Cached "%[req.hdr(X-Bundlephobia-Prefer-Cached)]"\n'
+                                         '    http-request return status 200 hdr Cache-Control public,max-age=86400 hdr X-Echo-Prefer-Cached "%[req.hdr(X-Bundlephobia-Prefer-Cached)]" hdr X-Echo-Cache-Only "%[req.hdr(X-Bundlephobia-Cache-Only)]"\n'
                                          for name in sorted(upstreams)))
         config_args = ['-f', str(config), '-f', str(policy_directory)]
         validation = subprocess.run(['haproxy', '-c', *config_args],
@@ -98,6 +98,7 @@ class BotRateLimits(unittest.TestCase):
             self.response_headers = response.getheaders()
             self.retry_after = response.getheader('Retry-After')
             self.echo_prefer_cached = response.getheader('X-Echo-Prefer-Cached')
+            self.echo_cache_only = response.getheader('X-Echo-Cache-Only')
             response.read()
             return response.status
 
@@ -367,6 +368,33 @@ class BotRateLimits(unittest.TestCase):
         # Non-analysis asset route for bot does not get it
         self.assertEqual(self.request('Googlebot/2.1', 1, '/asset.js'), 200)
         self.assertIsNone(self.echo_prefer_cached)
+
+    def test_cache_only_header_for_non_google_non_badge_crawlers(self):
+        # Verified Googlebot, badge services, browsers, and curl can still build
+        for ua in ['Googlebot/2.1', 'Shields.io/1', 'Badgen/1', 'Mozilla/5.0 Chrome/156.0', 'curl/8.7.1']:
+            self.assertEqual(self.request(ua, 1, '/api/size'), 200)
+            self.assertIsNone(self.echo_cache_only, f'{ua} should not be cache-only')
+
+        # AI, SEO, search (non-Google), aggressive, headless, and unmapped bots are cache-only
+        for ua in [
+            'GPTBot/1.0',
+            'Mozilla/5.0 (compatible; Yeti/1.1; +https://naver.me/spd)',
+            'deepseek-harness/0.0.1',
+            'PerplexityBot/1.0',
+            'KeenableBot/1.0',
+            'AhrefsBot/7.0',
+            'Data-Pipeline-Enricher/1.0',
+            'Mozilla/5.0 HeadlessChrome/159.0',
+            'NeverSeenBot/1.0',
+        ]:
+            self.assertEqual(self.request(ua, 1, '/api/size'), 200)
+            self.assertEqual(self.echo_cache_only, 'true', f'{ua} should be cache-only')
+            self.assertEqual(self.request(ua, 1, '/package/example'), 200)
+            self.assertEqual(self.echo_cache_only, 'true', f'{ua} should be cache-only on page')
+
+        # Spoofed Googlebot from an unverified IP is also forced to cache-only
+        self.assertEqual(self.request('Googlebot/2.1', '203.0.113.55', '/api/size'), 200)
+        self.assertEqual(self.echo_cache_only, 'true')
 
     def test_spoofed_googlebot_does_not_poison_google_limits(self):
         spoofed_ip = '203.0.113.55'
