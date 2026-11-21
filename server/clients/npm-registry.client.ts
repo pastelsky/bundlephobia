@@ -1,6 +1,7 @@
 import registryFetch from 'npm-registry-fetch'
 import pacote from 'pacote'
 
+import type { RuntimeValue } from '../../types/json'
 import {
   getEscapedNpmPackageName,
   type RepositoryField,
@@ -12,6 +13,13 @@ export interface NpmPackageManifest {
   version: string
   description?: string
   repository?: RepositoryField
+  os?: string[]
+  cpu?: string[]
+  bin?: string | Record<string, string>
+  exports?: RuntimeValue
+  dist?: {
+    unpackedSize?: number
+  }
 }
 
 export interface NpmPackagePackument {

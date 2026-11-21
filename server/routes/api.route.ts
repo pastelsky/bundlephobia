@@ -17,6 +17,7 @@ import errorMiddleware from '../middlewares/results/error.middleware'
 import blockBlacklistMiddleware from '../middlewares/results/block-blacklist.middleware'
 import createCachedResponseMiddleware from '../middlewares/results/cached-response.middleware'
 import failureBackoffMiddleware from '../middlewares/results/failure-backoff.middleware'
+import screenManifestMiddleware from '../middlewares/results/screen-manifest.middleware'
 import { createBuildMiddleware } from '../middlewares/results/build-result.middleware'
 import { createResolvePackageMiddleware } from '../middlewares/results/resolve-package.middleware'
 import similarPackagesMiddleware from '../middlewares/similar-packages/similar-packages.middleware'
@@ -53,6 +54,7 @@ export function registerApiRoutes(
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-analysis', cache),
     createCachedResponseMiddleware,
+    screenManifestMiddleware,
     failureBackoffMiddleware,
     buildRequestLimit,
     buildMiddleware,
@@ -64,6 +66,7 @@ export function registerApiRoutes(
     errorMiddleware,
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-exports'),
+    screenManifestMiddleware,
     failureBackoffMiddleware,
     buildRequestLimit,
     exportsMiddleware,
@@ -85,6 +88,7 @@ export function registerApiRoutes(
     blockBlacklistMiddleware,
     createResolvePackageMiddleware('package-export-sizes'),
     createCachedResponseMiddleware,
+    screenManifestMiddleware,
     failureBackoffMiddleware,
     buildRequestLimit,
     exportSizesMiddleware,
