@@ -1,11 +1,10 @@
 import type { TrendsPackageSeries } from '@bundlephobia/service-contracts/trends'
 
-import { splitNpmDateRange } from '../server/clients/npm-downloads.client'
 import {
   buildGithubStarTotals,
   getTrendsRangeStart,
 } from '../server/services/trends.service'
-import { groupTrendsPackage } from '../utils/trends'
+import { groupTrendsPackage, splitNpmDateRange } from '../utils/trends'
 
 const series: TrendsPackageSeries = {
   name: 'react',

@@ -1,5 +1,8 @@
 import {
+  addDays,
   format,
+  isAfter,
+  isValid,
   parseISO,
   startOfMonth,
   startOfWeek,
@@ -175,4 +178,82 @@ export function groupTrendsPackage(
     stars: rollupTrendsPoints(source.stars, groupBy, { mode: 'last' }),
     size: rollupTrendsPoints(source.size, groupBy, { mode: 'last' }),
   }
+}
+
+export type NpmDownloadPoint = { day: string; downloads: number }
+
+// The npm downloads API silently truncates large range requests to its
+// retention window. Keep requests to one year so callers can retrieve longer
+// histories by stitching together bounded ranges.
+const MAX_NPM_RANGE_DAYS = 365
+
+export function splitNpmDateRange(range: string): string[] {
+  const match = /^(\d{4}-\d{2}-\d{2}):(\d{4}-\d{2}-\d{2})$/.exec(range)
+
+  if (!match) return [range]
+
+  const start = parseISO(match[1])
+  const end = parseISO(match[2])
+
+  if (!isValid(start) || !isValid(end)) return [range]
+
+  if (isAfter(start, end)) return [range]
+
+  const ranges: string[] = []
+  let chunkStart = start
+
+  while (!isAfter(chunkStart, end)) {
+    const proposedEnd = addDays(chunkStart, MAX_NPM_RANGE_DAYS - 1)
+    const chunkEnd = isAfter(proposedEnd, end) ? end : proposedEnd
+
+    ranges.push(
+      `${format(chunkStart, 'yyyy-MM-dd')}:${format(chunkEnd, 'yyyy-MM-dd')}`,
+    )
+
+    chunkStart = addDays(chunkEnd, 1)
+  }
+
+  return ranges
+}
+
+export function getNpmTrendsRange(
+  range: TrendsRange,
+  now = new Date(),
+): string {
+  const end = formatTrendsDate(now)
+  const start = startOfTrendsRangeDate(range, now)
+
+  return `${start}:${end}`
+}
+
+export function normalizeNpmDownloadPoints(
+  points: NpmDownloadPoint[],
+): TrendsPoint[] {
+  const normalized = points.flatMap(point =>
+    /^\d{4}-\d{2}-\d{2}$/.test(point.day)
+      ? [{ date: point.day, value: point.downloads }]
+      : [],
+  )
+
+  // npm's downloads range API returns 0 for trailing UTC days that have not yet
+  // been aggregated; drop those unaggregated tail buckets when prior days exist.
+  if (normalized.length > 1 && normalized.some(point => point.value > 0)) {
+    let end = normalized.length
+
+    while (end > 1 && normalized[end - 1].value === 0) {
+      end -= 1
+    }
+
+    if (end < normalized.length) {
+      return normalized.slice(0, end)
+    }
+  }
+
+  return normalized
+}
+
+export function computeWeeklyDownloads(points: TrendsPoint[]): number | null {
+  if (points.length === 0) return null
+
+  return points.slice(-7).reduce((total, point) => total + point.value, 0)
 }
