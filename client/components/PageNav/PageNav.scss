@@ -211,6 +211,18 @@
   opacity: 1;
 }
 
+.mcp-nav__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 72px $global-spacing * 2 $global-spacing * 2;
+  box-sizing: border-box;
+}
+
 .mcp-nav__popup {
   position: absolute;
   right: 0;
@@ -222,14 +234,49 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: 10px;
   box-shadow: var(--shadow-popover, 0 10px 30px rgba(0, 0, 0, 0.16));
-  padding: 12px;
+  padding: 14px;
 
   @media screen and (max-width: 40em) {
-    position: fixed;
-    left: $global-spacing * 2;
-    right: $global-spacing * 2;
-    top: 64px;
-    width: auto;
+    position: static;
+    width: min(calc(100vw - #{$global-spacing * 4}), 400px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+  }
+}
+
+.mcp-nav__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $global-spacing;
+  margin-bottom: 10px;
+}
+
+.mcp-nav__title {
+  @include font-size-xs;
+  font-weight: $font-weight-bold;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.mcp-nav__subtitle {
+  @include font-size-xxs;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.mcp-nav__close {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+
+  &:hover {
+    color: var(--color-text-primary);
   }
 }
 
