@@ -41,6 +41,7 @@ interface BuildServiceJobParams {
 }
 
 interface BuildRequestOptions {
+  age?: boolean
   signal?: AbortSignal
   onComplete?: (durationMs: number) => void
 }
@@ -254,7 +255,7 @@ export default class BuildService {
         packageString,
         onComplete: options.onComplete,
       },
-      options: { priority, signal: options.signal },
+      options: { priority, age: options.age, signal: options.signal },
     })
   }
 
@@ -279,7 +280,7 @@ export default class BuildService {
         packageString,
         onComplete: options.onComplete,
       },
-      options: { priority, signal: options.signal },
+      options: { priority, age: options.age, signal: options.signal },
     })
   }
 
@@ -304,7 +305,7 @@ export default class BuildService {
         packageString,
         onComplete: options.onComplete,
       },
-      options: { priority, signal: options.signal },
+      options: { priority, age: options.age, signal: options.signal },
     })
   }
 }

@@ -20,6 +20,7 @@ export type AnalysisOperation = (typeof ANALYSIS_OPERATIONS)[number]
 
 export interface AnalysisRequestOptions {
   priority: number
+  age?: boolean
   signal?: AbortSignal
   onComplete?: (durationMs: number) => void
 }

@@ -7,7 +7,7 @@ import type {
   ExportsCacheResult,
 } from '@bundlephobia/service-contracts/cache'
 
-import { getRequestPriority } from '../../utils/server.utils'
+import { getRequestAging, getRequestPriority } from '../../utils/server.utils'
 import { packageAnalysisGateway } from '../analysis'
 import { BUILD_DURATION_HEADER } from '../clients/build-service.client'
 import logger from '../infrastructure/logger.service'
@@ -22,6 +22,7 @@ export function createExportSizesMiddleware(
 ): Middleware {
   return async ctx => {
     const priority = getRequestPriority(ctx)
+    const age = getRequestAging(ctx)
     const { name, version, packageString } = ctx.state.resolved
     const { force, peek, package: packageQuery } = ctx.query
 
@@ -40,6 +41,7 @@ export function createExportSizesMiddleware(
       ctx.state.resolved,
       {
         priority,
+        age,
         onComplete: durationMs => {
           ctx.set(BUILD_DURATION_HEADER, String(durationMs))
         },

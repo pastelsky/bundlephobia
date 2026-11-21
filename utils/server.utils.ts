@@ -17,3 +17,7 @@ export function getRequestPriority(ctx: Context): number {
       return Queue.priority.LOW
   }
 }
+
+export function getRequestAging(ctx: Context): boolean {
+  return ctx.headers['x-bundlephobia-client-type'] !== 'bot'
+}

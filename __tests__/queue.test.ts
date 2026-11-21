@@ -357,6 +357,77 @@ describe('Queue priority', () => {
 
     expect(executionOrder).toEqual(['blocker', 'shared', 'medium'])
   })
+
+  it('does not age jobs queued with age: false so humans stay ahead of bots', async () => {
+    const queue = new Queue({ concurrency: 1, aging: true })
+    const executionOrder: string[] = []
+    let releaseBlocker: () => void = () => {}
+
+    const blocker = new Promise<void>(resolve => {
+      releaseBlocker = resolve
+    })
+
+    queue.addExecutor<string, string>('TEST', async id => {
+      executionOrder.push(id)
+
+      if (id === 'blocker') {
+        await blocker
+      }
+
+      return id
+    })
+
+    const blockerResult = queue.process<string, string>({
+      id: 'blocker',
+      type: 'TEST',
+      jobParams: 'blocker',
+    })
+
+    // Queue a non-aging bot job at priority 10, then age the queue several times.
+    const botJob = queue.process<string, string>({
+      id: 'bot-job',
+      type: 'TEST',
+      jobParams: 'bot-job',
+      options: { priority: Queue.priority.MEDIUM, age: false },
+    })
+
+    // Aging human jobs at priority 8 catch up and overtake the non-aging bot job.
+    const human1 = queue.process<string, string>({
+      id: 'human-1',
+      type: 'TEST',
+      jobParams: 'human-1',
+      options: { priority: 10 },
+    })
+
+    const human2 = queue.process<string, string>({
+      id: 'human-2',
+      type: 'TEST',
+      jobParams: 'human-2',
+      options: { priority: 10 },
+    })
+
+    const human3 = queue.process<string, string>({
+      id: 'human-3',
+      type: 'TEST',
+      jobParams: 'human-3',
+      options: { priority: 10 },
+    })
+
+    queue.ageJobs()
+    queue.ageJobs()
+
+    releaseBlocker()
+
+    await Promise.all([blockerResult, botJob, human1, human2, human3])
+
+    expect(executionOrder).toEqual([
+      'blocker',
+      'human-1',
+      'human-2',
+      'human-3',
+      'bot-job',
+    ])
+  })
 })
 
 describe('Queue expiry', () => {

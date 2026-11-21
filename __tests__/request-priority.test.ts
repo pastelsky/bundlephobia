@@ -1,12 +1,16 @@
 import type { Context } from 'koa'
 
 import Queue from '../server/infrastructure/queue.service'
-import { getRequestPriority } from '../utils/server.utils'
+import { getRequestAging, getRequestPriority } from '../utils/server.utils'
 
-function contextFor(client?: string): Context {
-  const context = {
-    headers: client ? { 'x-bundlephobia-user': client } : {},
-  }
+function contextFor(client?: string, clientType?: string): Context {
+  const headers: Record<string, string> = {}
+
+  if (client) headers['x-bundlephobia-user'] = client
+
+  if (clientType) headers['x-bundlephobia-client-type'] = clientType
+
+  const context = { headers }
 
   // SAFETY: this fixture only exercises the request headers read by the priority helper.
   return context as Context
@@ -30,5 +34,11 @@ describe('request priority', () => {
     expect(getRequestPriority(contextFor('yarn website'))).toBe(
       Queue.priority.LOW,
     )
+  })
+
+  it('disables queue aging only for proxy-classified bots', () => {
+    expect(getRequestAging(contextFor(undefined, 'bot'))).toBe(false)
+    expect(getRequestAging(contextFor(undefined, 'non_bot'))).toBe(true)
+    expect(getRequestAging(contextFor('bundlephobia website'))).toBe(true)
   })
 })
