@@ -135,6 +135,7 @@ $font-family-code:
 $global-spacing: 10px;
 $layout-max-width: 1200px;
 $layout-gutter: $global-spacing * 3;
+$layout-gutter-mobile: $global-spacing * 2;
 
 // Shared UI controls
 $control-border-radius: 6px;
@@ -151,4 +152,6 @@ $focus-ring-offset: 2px;
 $popover-z-index: 100;
 
 // Content width
+// Shared centered column width for homepage search and global footer.
+$content-max-width: $global-spacing * 80;
 $max-content-width: $global-spacing * 85;

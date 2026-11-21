@@ -3,13 +3,13 @@
 
 // Shared offset/clearance for the bottom-right Carbon Ad so the centered hero
 // search box stays above the ad band on standard laptop viewports (e.g. 1280x800).
-$homepage-carbon-ad-offset: $global-spacing * 2;
+$homepage-carbon-ad-offset: $layout-gutter;
 $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12;
 
 .homepage {
   height: 100vh;
   height: calc(100vh - 4px);
-  padding: 0 $global-spacing * 2;
+  padding: 0 $layout-gutter-mobile;
 
   @media screen and (max-width: 40em) {
     height: auto;
@@ -101,11 +101,14 @@ $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12
   width: 100%;
 }
 
-.homepage__search-input {
+.autocomplete-input-box.homepage__search-input {
   position: relative;
   z-index: 20;
   margin-top: $global-spacing;
   width: 100%;
+  max-width: $content-max-width;
+  min-width: 0;
+  box-sizing: border-box;
 
   @media screen and (max-width: 40em) {
     margin-top: $global-spacing * 2.5;
@@ -168,7 +171,10 @@ $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12
 
   @media screen and (max-width: 40em) {
     position: static;
-    width: min(calc(100vw - #{$global-spacing * 4}), $global-spacing * 36);
+    width: min(
+      calc(100vw - #{$layout-gutter-mobile * 2}),
+      $global-spacing * 36
+    );
     margin: $global-spacing * 2.5 0 0;
   }
 }
