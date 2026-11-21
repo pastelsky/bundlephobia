@@ -5,7 +5,7 @@
 
 .quick-stats-bar {
   display: flex;
-  align-content: center;
+  align-items: stretch;
   @include font-size-xs;
   color: var(--color-stats-bar-text);
   background: var(--color-stats-bar-bg);
@@ -15,13 +15,15 @@
 
 .quick-stats-bar__stat {
   padding: math.div($global-spacing, 1.5) $global-spacing * 1.5;
+  min-height: 32px;
+  box-sizing: border-box;
   display: flex;
-  align-content: center;
+  align-items: center;
   position: relative;
   justify-content: center;
   flex: 1 1 auto;
   white-space: nowrap;
-  margin: auto 0;
+  margin: 0;
 
   & > * {
     margin: auto 0;
@@ -56,10 +58,15 @@
 }
 
 .quick-stats-bar__stat--description {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  flex: 1 1 auto;
+
+  svg {
+    flex-shrink: 0;
+  }
 
   @media screen and (max-width: 40em) {
     display: none;
@@ -68,6 +75,10 @@
 
 .quick-stats-bar__stat--description-content {
   margin-left: $global-spacing;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .quick-stats-bar__stat-icon {

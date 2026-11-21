@@ -115,7 +115,8 @@
 
 .content-split-container {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  gap: $layout-gutter;
   width: 100%;
   margin-top: 10vh;
 
@@ -123,19 +124,22 @@
     flex-direction: column;
     margin-top: 5vh;
   }
-
-  @media screen and (max-width: 40em) {
-    padding: 0 $global-spacing * 2;
-  }
 }
 
 .content-container-wrap {
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 0 10%;
+  max-width: $layout-max-width;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 0 $layout-gutter;
   flex-grow: 1;
   animation: fade-in-full 0.2s;
+
+  @media screen and (max-width: 40em) {
+    padding: 0;
+  }
 }
 
 .result-page__carbon-ad {
@@ -148,9 +152,9 @@
   margin: 4vh auto;
 
   @media screen and (max-width: 40em) {
-    width: 125%;
+    width: 100%;
     min-height: 280px;
-    margin: 4vh -12.5%;
+    margin: 4vh auto;
   }
 }
 
@@ -216,6 +220,10 @@
   display: flex;
   align-items: center;
   flex-direction: column;
+  width: 100%;
+  max-width: $global-spacing * 52;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .size-container h3,
@@ -234,7 +242,19 @@
 
 .size-stats,
 .time-stats {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $global-spacing * 2;
+  width: 100%;
+
+  @media screen and (max-width: 40em) {
+    gap: $global-spacing;
+  }
+
+  .stat-container {
+    margin: 0;
+    min-width: 0;
+  }
 }
 
 .ct-series-a .ct-bar {
