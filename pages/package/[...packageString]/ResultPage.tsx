@@ -486,7 +486,11 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const { resultsPromiseState, results } = this.state
 
     if (resultsPromiseState === 'rejected') {
-      return null
+      const { errorName } = resolveBuildError(this.state.resultsError)
+
+      if (errorName === 'PackageNotFoundError') {
+        return null
+      }
     }
 
     if (resultsPromiseState !== 'fulfilled' || !results) {
