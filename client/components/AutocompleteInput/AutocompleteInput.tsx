@@ -254,11 +254,6 @@ export const AutocompleteInput = ({
               autoCapitalize: 'off',
               spellCheck: false,
               style: compact ? undefined : { fontSize: searchFontSize! },
-              onFocus: (event: React.FocusEvent<HTMLInputElement>) => {
-                if (initialValue && value === initialValue) {
-                  event.currentTarget.select()
-                }
-              },
               onKeyDown: handleInputKeyDown,
             })}
           />
