@@ -47,6 +47,12 @@ $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12
   text-align: center;
   line-height: 1.4;
   letter-spacing: 1px;
+
+  @media screen and (max-width: 40em) {
+    font-size: 16px;
+    margin-top: $global-spacing * 0.75;
+    margin-bottom: 0;
+  }
 }
 
 .logo {
@@ -163,7 +169,7 @@ $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12
   @media screen and (max-width: 40em) {
     position: static;
     width: min(calc(100vw - #{$global-spacing * 4}), $global-spacing * 36);
-    margin: $global-spacing * 2 0 0;
+    margin: $global-spacing * 2.5 0 0;
   }
 }
 
