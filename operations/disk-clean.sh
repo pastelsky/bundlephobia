@@ -12,6 +12,9 @@ LOOP_SOFT_THRESHOLD=60
 LOOP_HARD_THRESHOLD=80
 # Target 55% to prune gently without triggering a massive multi-gigabyte unlink storm down to 40%
 LOOP_TARGET_USAGE="${LOOP_TARGET_USAGE:-55}"
+BUN_LARGE_ENTRY_MIN_KB="${BUN_LARGE_ENTRY_MIN_KB:-10240}"
+BUN_LARGE_TIER1_AGE_MINUTES="${BUN_LARGE_TIER1_AGE_MINUTES:-15}"
+BUN_LARGE_TIER2_AGE_MINUTES="${BUN_LARGE_TIER2_AGE_MINUTES:-5}"
 ORPHAN_MIN_AGE_SECONDS=600
 VICTORIAMETRICS_DATA_DIR="/var/lib/bundlephobia-victoriametrics"
 VICTORIAMETRICS_CLEANUP_THRESHOLD_BYTES=$((128 * 1024 * 1024))
@@ -111,6 +114,35 @@ cleanup_stale_package_dirs() {
 cleanup_npm_cache() {
     /usr/local/bin/npm cache clean --force --cache=/tmp/tmp-build/cache 2>/dev/null || true
     log "Cleared npm cache from loop device"
+}
+
+evict_large_bun_cache_entries() {
+    local min_age_minutes="$1"
+    local min_size_kb="${2:-$BUN_LARGE_ENTRY_MIN_KB}"
+    local cache_root="${BUILD_TMP_DIR:-/tmp/tmp-build}/cache/bun"
+    local size_kb path evicted=0
+
+    [ -d "$cache_root" ] || return
+
+    while IFS=$'\t' read -r size_kb path; do
+        [ -n "$path" ] || continue
+        rm -rf -- "$path" 2>/dev/null
+        evicted=$((evicted + 1))
+        if (( evicted % 10 == 0 )); then
+            sleep 0.02
+            [ "$(get_loop_usage)" -gt "$LOOP_TARGET_USAGE" ] || break
+        fi
+    done < <(
+        find "$cache_root" -mindepth 1 -maxdepth 2 -type d \
+            \( -name '.tmp' -prune \) -o \
+            \( -path "$cache_root/@*" ! -path "$cache_root/@*/*" \) -o \
+            \( -mmin "+${min_age_minutes}" -print0 -prune \) -o -prune 2>/dev/null | \
+            xargs -0 -r du -sk 2>/dev/null | \
+            awk -v min_kb="$min_size_kb" '$1 + 0 >= min_kb { print }' | \
+            sort -rn
+    )
+
+    [ "$evicted" -gt 0 ] && log "Evicted ${evicted} large (>=${min_size_kb}KiB, >${min_age_minutes}m) bun cache entries"
 }
 
 evict_oldest_bun_cache_entries() {
@@ -243,6 +275,18 @@ cleanup_loop_device() {
         loop_usage=$(get_loop_usage)
         if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
             timed_cleanup "npm cache cleanup" cleanup_npm_cache
+        fi
+
+        loop_usage=$(get_loop_usage)
+        if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
+            timed_cleanup "Bun large cache eviction (>${BUN_LARGE_TIER1_AGE_MINUTES}m)" \
+                evict_large_bun_cache_entries "$BUN_LARGE_TIER1_AGE_MINUTES" "$BUN_LARGE_ENTRY_MIN_KB"
+        fi
+
+        loop_usage=$(get_loop_usage)
+        if [ "$loop_usage" -gt "$LOOP_TARGET_USAGE" ]; then
+            timed_cleanup "Bun large cache eviction (>${BUN_LARGE_TIER2_AGE_MINUTES}m)" \
+                evict_large_bun_cache_entries "$BUN_LARGE_TIER2_AGE_MINUTES" "$BUN_LARGE_ENTRY_MIN_KB"
         fi
 
         loop_usage=$(get_loop_usage)
