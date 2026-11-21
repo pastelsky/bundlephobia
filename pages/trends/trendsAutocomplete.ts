@@ -47,9 +47,14 @@ export async function loadRelatedPackageSuggestions(
   query: string,
   relatedPackageNames: string[],
 ) {
+  const normalizedQuery = query.toLowerCase()
+  const matchingRelated = relatedPackageNames.filter(name =>
+    name.toLowerCase().includes(normalizedQuery),
+  )
+
   // Related packages expand discovery, but keep the request fan-out bounded
   // while a user is typing.
-  const queries = [query, ...relatedPackageNames]
+  const queries = [query, ...matchingRelated]
     .filter(Boolean)
     .slice(0, MAX_RELATED_PACKAGES + 1)
 

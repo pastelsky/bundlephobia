@@ -18,6 +18,12 @@ export function useAutocompleteInput({
   const [value, setValue] = React.useState(initialValue)
   const [suggestions, setSuggestions] = React.useState<PackageSuggestion[]>([])
   const [, startTransition] = React.useTransition()
+  const typedValueRef = React.useRef(initialValue)
+
+  React.useEffect(() => {
+    setValue(initialValue)
+    typedValueRef.current = initialValue
+  }, [initialValue])
 
   const getSuggestions = React.useMemo(() => {
     return debounce((query: string) => {
@@ -31,11 +37,15 @@ export function useAutocompleteInput({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!value.trim()) return
+
     onSubmit(value)
   }
 
   const handleInputValueChange = (nextValue: string) => {
     setValue(nextValue)
+    typedValueRef.current = nextValue
     const trimmedValue = nextValue.trim()
     const { name } = parsePackageString(trimmedValue)
 
@@ -48,11 +58,28 @@ export function useAutocompleteInput({
     }
   }
 
+  const setDisplayValue = React.useCallback((nextValue: string) => {
+    setValue(nextValue)
+  }, [])
+
+  const restoreTypedValue = React.useCallback(() => {
+    setValue(typedValueRef.current)
+  }, [])
+
+  const resetToInitial = React.useCallback(() => {
+    setValue(initialValue)
+    typedValueRef.current = initialValue
+    setSuggestions([])
+  }, [initialValue])
+
   return {
     value,
     suggestions,
     handleSubmit,
     handleInputValueChange,
+    setDisplayValue,
+    restoreTypedValue,
+    resetToInitial,
     setSuggestions,
   }
 }

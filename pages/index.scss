@@ -19,10 +19,13 @@
   align-items: center;
   max-width: 100%;
   height: calc(100vh - 90px);
+  padding-bottom: 140px;
+  box-sizing: border-box;
 
   @media screen and (max-width: 40em) {
     height: auto;
     min-height: 50vh;
+    padding-bottom: $global-spacing * 4;
 
     &::after {
       display: none;
@@ -85,7 +88,7 @@
 
 .homepage__search-input {
   position: relative;
-  z-index: 2;
+  z-index: 20;
   margin-top: $global-spacing;
   width: 100%;
 
@@ -140,14 +143,15 @@
   right: $global-spacing * 2;
   bottom: $global-spacing * 2;
   width: min($global-spacing * 36, calc(100vw - #{$global-spacing * 4}));
-  min-height: 280px;
+  min-height: auto;
   margin: 0;
   z-index: 1;
 
   @media screen and (max-width: 40em) {
     position: static;
+    order: 4;
     width: min(calc(100vw - #{$global-spacing * 4}), $global-spacing * 36);
-    margin: 0;
+    margin: $global-spacing * 3 0 0;
   }
 }
 

@@ -23,6 +23,8 @@ export default function Separator({
     <div
       style={{
         width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden',
         position: 'relative',
         margin: '6px 0',
         opacity: '0.7',
@@ -36,7 +38,7 @@ export default function Separator({
         }}
       >
         {showLeft && (
-          <div style={commonStyles}>
+          <div style={{ ...commonStyles, flexShrink: 0 }}>
             <svg width="49" height="39" xmlns="http://www.w3.org/2000/svg">
               <g fill="currentColor" fillRule="evenodd">
                 <path d="M28.4 21c5.2-2.9 12.2-2.3 18.1-1-1.9.8-3.7 1.8-5.8 2.1a24.8 24.8 0 0 1-12.3-1zm-7.2 14.7c3 4.3 11.2 3.8 11.7-2.1.4-4.7-5.8-8-8.5-3.6-.7 1.3-.9 3 .3 4 1.5 1.3 3.5.5 4.1-1.2.3-.7-.8-.7-1.1-.4-1.1 1-2-.1-2-1 0-1.6 2-2 3.1-1.4 3 1.5 2.8 5.8-.4 6.7-2.6.7-5-1-6-3.3-1.2-2.3-.6-4.9.6-7 1-1.7 2.1-3 3.4-4l2.3.7c3.6 1 7.5 1.3 11.2.8 2.8-.4 6.4-1.3 8.4-3.5l.2-.3c.2-.2.3-.5 0-.6-6.8-3-15.3-3.2-21.7 1a15 15 0 0 1-6.3-4.8C17.5 12 17 4.4 22.7 2.6c2.4-.8 5.3.3 5.7 3 .3 2-1.1 4-3.3 4.2-.8 0-1.9-.3-2.2-1a.9.9 0 0 1 1.4-1.1c.5.4 1.3-.3 1-.8-1.4-1.8-3.4-1-3.9 1-.5 2.6 2 3.7 4 3.3 5.1-1 6.6-8.4 1.4-10.2-5.4-1.8-10 3.7-10.3 8.6-.4 5.7 3.7 9.9 8.5 12.2-4 3.4-7.1 9.1-3.8 14z" />
@@ -45,8 +47,15 @@ export default function Separator({
             </svg>
           </div>
         )}
-        <div style={commonStyles}>
-          <svg width="249" height="3" xmlns="http://www.w3.org/2000/svg">
+        <div style={{ ...commonStyles, flex: '1 1 0', minWidth: 0 }}>
+          <svg
+            width="249"
+            height="3"
+            viewBox="0 0 249 3"
+            preserveAspectRatio="none"
+            style={{ width: '100%', maxWidth: '249px', height: '3px' }}
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path
               d="M1.5 2.3c31.4.7 62.9.2 94.3.3h144.8c1.3 0 .5-1.7-.5-1.7h-.3c-1.3 0-.4 1.7.5 1.7h8c1.3-.1.3-2-.8-1.6h.1c-1.2 0-.4 1.5.5 1.5.1 0 .2 0 0 0 1.2.4 1-1.5-.2-1.6h-8c-1.4 0-.5 1.7.4 1.7h.3c1.3 0 .5-1.7-.5-1.7H55.4c-18 0-36.2-.1-54.2.3-.9 0-.3 1.1.3 1.1"
               fill="currentColor"

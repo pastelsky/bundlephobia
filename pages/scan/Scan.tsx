@@ -555,7 +555,7 @@ class Scan extends Component<ScanProps, ScanState> {
             {isUrlFormOpen === false ? (
               <>
                 <p>
-                  Drop a <code> package.json </code> file here
+                  Drop a <code>package.json</code> file here
                 </p>
                 <Separator />
                 <div
@@ -568,7 +568,9 @@ class Scan extends Component<ScanProps, ScanState> {
                     variant="primary"
                     onClick={() => this.dropzoneRef.current?.open()}
                   >
-                    Upload <code> package.json </code>
+                    <span>
+                      Upload <code>package.json</code>
+                    </span>
                   </Button>
                   <Button
                     className="scan__btn"

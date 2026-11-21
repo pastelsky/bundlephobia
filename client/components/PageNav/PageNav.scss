@@ -2,6 +2,8 @@
 @import '../../../stylesheets/colors';
 
 .page-header {
+  position: relative;
+  z-index: 50;
   width: 100%;
   max-width: $layout-max-width;
   box-sizing: border-box;
@@ -174,12 +176,17 @@
 }
 
 .mcp-nav {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   position: relative;
 }
 
 .mcp-nav__trigger {
   @include font-size-xs;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  line-height: 1;
   list-style: none;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -208,13 +215,22 @@
   position: absolute;
   right: 0;
   top: calc(100% + 10px);
-  width: min(92vw, 360px);
+  width: min(92vw, 440px);
+  box-sizing: border-box;
   z-index: 9999;
-  background: var(--color-background-card);
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+  box-shadow: var(--shadow-popover, 0 10px 30px rgba(0, 0, 0, 0.16));
   padding: 12px;
+
+  @media screen and (max-width: 40em) {
+    position: fixed;
+    left: $global-spacing * 2;
+    right: $global-spacing * 2;
+    top: 64px;
+    width: auto;
+  }
 }
 
 .mcp-nav__code-wrap {
@@ -229,7 +245,7 @@
   height: 24px;
   border: 1px solid var(--color-border-subtle);
   border-radius: 6px;
-  background: var(--color-background-card);
+  background: var(--color-bg-surface);
   color: var(--color-text-primary);
   display: inline-flex;
   align-items: center;
@@ -262,7 +278,7 @@
     top: -28px;
     right: -2px;
     @include font-size-xxs;
-    background: var(--color-background-card);
+    background: var(--color-bg-surface);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border-subtle);
     border-radius: 4px;
@@ -284,10 +300,12 @@
 .mcp-nav__result {
   margin: 0;
   overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
   @include font-size-xs;
   padding: 12px;
   padding-right: 40px;
   border-radius: 6px;
-  background: var(--color-background-primary);
+  background: var(--color-bg-base);
   border: 1px solid var(--color-border-subtle);
 }
