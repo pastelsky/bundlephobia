@@ -15,7 +15,7 @@
 */1 * * * * bash /var/www/autorestart.sh >> /dev/null 2>&1
 
 # Disk + loop device cleanup — every 8 minutes with cgroups v2 low I/O & CPU limits
-*/8 * * * * systemd-run --quiet --scope -p CPUWeight=20 -p IOReadIOPSMax="/dev/vda 250" -p IOWriteIOPSMax="/dev/vda 250" -p IOReadBandwidthMax="/dev/vda 20M" -p IOWriteBandwidthMax="/dev/vda 20M" bash /var/www/disk-clean.sh
+*/8 * * * * systemd-run --quiet --scope -p CPUWeight=20 -p IOReadIOPSMax="/dev/vda 2000" -p IOWriteIOPSMax="/dev/vda 2000" -p IOReadBandwidthMax="/dev/vda 30M" -p IOWriteBandwidthMax="/dev/vda 30M" bash /var/www/disk-clean.sh
 
 # Bundlephobia webpack/build cache — every 12 hours (fast to clear, safe)
 0 */12 * * * chrt --idle 0 ionice -c 3 rm -rf /var/www/bundlephobia/node_modules/.cache
