@@ -3,6 +3,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { Octokit } from '@octokit/core'
 import { throttling } from '@octokit/plugin-throttling'
+import pRetry from 'p-retry'
 import { discoverLibraries, readState } from './index.mjs'
 import catalog from '../../utils/similar-packages.catalog.json' with { type: 'json' }
 import groups from '../../utils/similar-packages.groups.json' with { type: 'json' }
@@ -37,7 +38,16 @@ const octokit = new ThrottledOctokit({
 })
 
 const github = async (route, parameters) =>
-  (await octokit.request(route, parameters)).data
+  (
+    await pRetry(() => octokit.request(route, parameters), {
+      retries: 2,
+      minTimeout: 25_000,
+      maxTimeout: 65_000,
+      shouldRetry: ({ error }) =>
+        error?.status === 429 ||
+        /try again in \d+(?:\.\d+)?s/i.test(String(error?.message ?? '')),
+    })
+  ).data
 
 let state
 

@@ -21,9 +21,13 @@ export async function discoverHackerNewsStories(
   )
 
   const queries = [
-    'javascript OR typescript',
-    'npm OR bundler OR webassembly',
-    'react OR vue OR svelte OR browser',
+    'javascript',
+    'typescript',
+    'npm',
+    'react',
+    'vue',
+    'svelte',
+    'wasm',
   ]
 
   const stories = new Map()

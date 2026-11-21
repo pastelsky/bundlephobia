@@ -201,11 +201,15 @@ multiple curl calls or subagents rather than making sequential roundtrips. Outbo
 traffic is filtered and routed via proxy environment variables (`https_proxy`), which `curl`
 and `web_fetch` handle automatically. Avoid running inline Node scripts with native `fetch()`,
 because Node's `fetch()` does not use the proxy by default and fails with DNS resolution errors.
-Use GitHub MCP for maintainer README, API examples, commits, and releases. Do NOT treat
-GitHub `search_code` as a hard requirement for verifying candidates: GitHub Code Search has
-strict secondary rate limits (HTTP 429). Never drop strong candidates solely because
-`search_code` returned 429 — use `library-discovery.json` consumer manifests when present,
-or npm registry downloads, maintainer docs, and releases. To inspect
+Use GitHub MCP for maintainer README, API examples, commits, and releases.
+Consumer manifests in `library-discovery.json` are a discovery lead, NOT a
+mandatory verification gate for every candidate. Established counterparts found
+via npm search, HN, or releases that have strong npm downloads, an active
+maintainer GitHub repository, clear browser/isomorphic docs, and a valid
+Bundlephobia build do NOT need a verified downstream consumer manifest or a
+`search_code` call. Do NOT call GitHub `search_code` to verify counterparts
+(GitHub Code Search returns HTTP 429 on secondary rate limits and must never
+cause strong npm counterparts to be dropped). To inspect
 `utils/similar-packages.catalog.json` efficiently without paginating across multiple turns,
 inspect targeted sections or summarize category keys via jq. Record exact links read. Optional
 discovery failures must not block verified candidates.
