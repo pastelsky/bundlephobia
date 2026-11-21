@@ -6,7 +6,7 @@ const dev = false
 const config = {
   tmp: path.join(__dirname, '..', 'tmp-build'),
   MAX_WORKERS: os.cpus().length,
-  MAX_FAILURE_CACHE_ENTRIES: 2_000,
+  MAX_FAILURE_CACHE_ENTRIES: 10_000,
   // Allow the build service's five-minute deadline to abort and clean up first.
   WORKER_TIMEOUT: 5 * 60_000 + 30_000,
   DEFAULT_DEV_PORT: 5000,

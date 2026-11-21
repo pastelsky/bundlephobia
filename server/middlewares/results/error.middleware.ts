@@ -154,7 +154,7 @@ interface ErrorHandlerContext {
   force: RuntimeValue
   start: number
   packageString?: string
-  cacheFailure: (status: number) => void
+  cacheFailure: (status: number, options?: { deterministic?: boolean }) => void
   respondWithError: (status: number, response: ErrorResponse) => void
 }
 
@@ -220,6 +220,7 @@ const handleUnsupportedPackageError: BuildErrorHandler = (context, error) => {
       error.extra?.reason ?? 'unknown reason'
     }`,
   })
+  context.cacheFailure(403, { deterministic: true })
 }
 
 const handlePackageNotFoundError: BuildErrorHandler = context => {
@@ -293,7 +294,7 @@ const handleCLIBuildError: BuildErrorHandler = (context, error) => {
 
   setFatalCache(context)
   context.respondWithError(status, body.error)
-  context.cacheFailure(status)
+  context.cacheFailure(status, { deterministic: true })
 }
 
 const handleEntryPointError: BuildErrorHandler = (context, error) => {
@@ -311,7 +312,7 @@ const handleEntryPointError: BuildErrorHandler = (context, error) => {
 
   setFatalCache(context)
   context.respondWithError(status, body.error)
-  context.cacheFailure(status)
+  context.cacheFailure(status, { deterministic: true })
 }
 
 const handleMissingDependencyError: BuildErrorHandler = (context, error) => {
@@ -494,7 +495,10 @@ const errorHandler: Middleware = async (ctx, next) => {
   let packageString = ctx.state.resolved?.packageString
   let failedAttempt: Error | undefined
 
-  const cacheFailure = (status: number) => {
+  const cacheFailure = (
+    status: number,
+    options?: { deterministic?: boolean },
+  ) => {
     if (!packageString) {
       return
     }
@@ -514,7 +518,10 @@ const errorHandler: Middleware = async (ctx, next) => {
     debug('saved %s to failure cache', packageString)
     failureCache.set(
       failureCacheKey,
-      recordFailure(failureCache.get(failureCacheKey), { status }),
+      recordFailure(failureCache.get(failureCacheKey), {
+        status,
+        deterministic: options?.deterministic,
+      }),
     )
   }
 
