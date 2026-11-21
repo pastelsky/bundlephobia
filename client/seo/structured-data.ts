@@ -74,6 +74,33 @@ export function createBreadcrumbStructuredData(
   }
 }
 
+const RECOGNIZED_CODE_HOSTS = [
+  'github.com',
+  'gitlab.com',
+  'bitbucket.org',
+  'codeberg.org',
+  'sr.ht',
+  'sourceforge.net',
+] as const
+
+export function isRecognizedCodeHost(rawUrl: string): boolean {
+  try {
+    const parsed = new URL(rawUrl)
+
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return false
+    }
+
+    const hostname = parsed.hostname.toLowerCase()
+
+    return RECOGNIZED_CODE_HOSTS.some(
+      host => hostname === host || hostname.endsWith(`.${host}`),
+    )
+  } catch {
+    return false
+  }
+}
+
 export interface PackageStructuredDataOptions {
   name: string
   version?: string | null
@@ -99,7 +126,7 @@ export function createPackageStructuredData(
 
   const sameAs: string[] = []
 
-  if (repository) {
+  if (repository && isRecognizedCodeHost(repository)) {
     sameAs.push(repository)
   }
 

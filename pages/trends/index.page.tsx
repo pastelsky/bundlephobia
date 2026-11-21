@@ -734,7 +734,7 @@ export default function TrendsPage({
                                 : `https://github.com/${pack.repository}`
                             }
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer nofollow ugc"
                             aria-label={`${pkgName} on GitHub`}
                           >
                             <GithubIcon />
