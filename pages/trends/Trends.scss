@@ -156,6 +156,24 @@
     flex-wrap: wrap;
     gap: $global-spacing * 0.6;
     margin-top: $global-spacing * 1.5;
+
+    @media screen and (max-width: 40em) {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      .trends-preset,
+      .trends-search__suggestions-label {
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+    }
   }
 
   &__suggestions-label {
@@ -942,8 +960,19 @@
   transition: background 0.15s ease;
 
   @media screen and (max-width: 48em) {
+    position: relative;
     grid-template-columns: 1fr;
     gap: $global-spacing;
+
+    &__header {
+      padding-right: 34px;
+    }
+
+    &__remove {
+      position: absolute;
+      top: $global-spacing * 1.35;
+      right: 0;
+    }
   }
 
   &:hover {

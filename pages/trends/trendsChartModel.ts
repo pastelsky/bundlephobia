@@ -26,7 +26,7 @@ export const CHART_HEIGHT = 380
 
 export const INITIAL_CHART_WIDTH = 1000
 
-export const PLOT = { top: 12, right: 0, bottom: 34, left: 0 }
+export const PLOT = { top: 16, right: 16, bottom: 34, left: 52 }
 
 const MIN_MARKER_GAP = 8
 
@@ -62,6 +62,7 @@ export type SeriesAnnotation = {
   point: ChartPoint
   labelX: number
   labelY: number
+  textAnchor: 'start' | 'end'
 }
 
 export type FormattedMetricValue = { value: string; unit: string }
@@ -84,7 +85,8 @@ export function formatMetricValue(
   value: number,
   metric: TrendsMetric,
 ): FormattedMetricValue {
-  const trimZeros = (formatted: string) => formatted.replace(/\.?0+$/, '')
+  const trimZeros = (formatted: string) =>
+    formatted.includes('.') ? formatted.replace(/\.?0+$/, '') : formatted
 
   if (metric === 'size') {
     const formatted = formatSize(value)
@@ -137,7 +139,8 @@ function markerPathFor(points: ChartPoint[], radius: number) {
 }
 
 export function annotationPath(annotation: SeriesAnnotation) {
-  const targetX = annotation.labelX - 5
+  const isEnd = annotation.textAnchor === 'end'
+  const targetX = isEnd ? annotation.labelX + 5 : annotation.labelX - 5
   const targetY = annotation.labelY + 4
   const controlX = annotation.point.x + (targetX - annotation.point.x) * 0.72
 
@@ -183,12 +186,32 @@ export function buildChartModel({
   showMinorReleases: boolean
   chartWidth: number
 }) {
-  const rawSeries = packages.map((pack, index) => ({
-    name: pack.name,
-    color: TRENDS_SERIES_COLORS[index % TRENDS_SERIES_COLORS.length],
-    points: seriesForMetric(pack, metric),
-    releases: pack.releases,
-  }))
+  const rawSeries = packages.map((pack, index) => {
+    let points = seriesForMetric(pack, metric)
+
+    if (
+      metric === 'downloads' &&
+      points.length > 1 &&
+      points.some(p => p.value > 0)
+    ) {
+      let end = points.length
+
+      while (end > 1 && points[end - 1].value === 0) {
+        end--
+      }
+
+      if (end < points.length) {
+        points = points.slice(0, end)
+      }
+    }
+
+    return {
+      name: pack.name,
+      color: TRENDS_SERIES_COLORS[index % TRENDS_SERIES_COLORS.length],
+      points,
+      releases: pack.releases,
+    }
+  })
 
   const allPoints = rawSeries.flatMap(series => series.points)
 
@@ -366,8 +389,12 @@ export function buildChartModel({
       ),
     }))
     .filter(
-      (candidate): candidate is Omit<SeriesAnnotation, 'labelX' | 'labelY'> =>
-        Boolean(candidate.point),
+      (
+        candidate,
+      ): candidate is Omit<
+        SeriesAnnotation,
+        'labelX' | 'labelY' | 'textAnchor'
+      > => Boolean(candidate.point),
     )
     .sort((a, b) => a.point.y - b.point.y)
 
@@ -382,12 +409,24 @@ export function buildChartModel({
 
     previousLabelY = labelY
 
+    const approxLabelWidth = candidate.name.length * 7.5 + 16
+    const rightSpace = chartWidth - PLOT.right - candidate.point.x
+    const placeLeft = rightSpace < approxLabelWidth + 24
+
+    const labelX = placeLeft
+      ? Math.max(PLOT.left + approxLabelWidth, candidate.point.x - 36)
+      : Math.min(
+          chartWidth - PLOT.right - approxLabelWidth,
+          candidate.point.x + Math.max(42, Math.min(96, rightSpace * 0.5)),
+        )
+
+    const textAnchor: 'start' | 'end' = placeLeft ? 'end' : 'start'
+
     return {
       ...candidate,
-      labelX:
-        candidate.point.x +
-        Math.max(42, Math.min(96, (chartWidth - candidate.point.x) * 0.5)),
+      labelX,
       labelY,
+      textAnchor,
     }
   })
 
