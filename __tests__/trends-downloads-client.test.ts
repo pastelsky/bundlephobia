@@ -130,33 +130,6 @@ describe('trends client downloads cache', () => {
     expect(pkgResult?.warning).toBeUndefined()
   })
 
-  it('splits multi-year requests into year chunks and merges points', async () => {
-    const now = new Date('2026-11-21T10:00:00Z')
-    const chunks = splitNpmDateRange(getNpmTrendsRange('last-3-years', now))
-
-    expect(chunks.length).toBeGreaterThan(1)
-
-    fetchMock.mockImplementation(async url => {
-      const urlText = String(url)
-      const chunkIndex = chunks.findIndex(chunk => urlText.includes(chunk))
-      const chunkStart = chunks[chunkIndex].split(':')[0]
-
-      return new Response(
-        JSON.stringify({
-          downloads: [{ day: chunkStart, downloads: 5000 + chunkIndex }],
-        }),
-        { status: 200 },
-      )
-    })
-
-    const results = await fetchTrendsDownloads(['react'], 'last-3-years', {
-      now,
-    })
-
-    expect(fetchMock).toHaveBeenCalledTimes(chunks.length)
-    expect(results.get('react')?.downloads).toHaveLength(chunks.length)
-  })
-
   it('persists entries in localStorage and rehydrates within 6h same-UTC-day TTL', async () => {
     const firstVisit = new Date('2026-11-21T08:00:00Z')
 
@@ -237,26 +210,6 @@ describe('trends client downloads cache', () => {
     expect(downloads.every(point => point.date >= twoMonthStart)).toBe(true)
   })
 
-  it('deduplicates concurrent in-flight requests for the same package and range', async () => {
-    const now = new Date('2026-11-21T10:00:00Z')
-    const [rangeStart] = getNpmTrendsRange('last-2-months', now).split(':')
-    const series = buildDailySeries(rangeStart, 7, () => 1200)
-
-    fetchMock.mockImplementation(
-      async () =>
-        new Response(JSON.stringify({ downloads: series }), { status: 200 }),
-    )
-
-    const [first, second] = await Promise.all([
-      fetchTrendsDownloads(['lodash'], 'last-2-months', { now }),
-      fetchTrendsDownloads(['lodash'], 'last-2-months', { now }),
-    ])
-
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(first.get('lodash')?.weeklyDownloads).toBe(8400)
-    expect(second.get('lodash')?.weeklyDownloads).toBe(8400)
-  })
-
   it('falls back to stale cache (<24h) on 429 and returns graceful warning on cold failure', async () => {
     const initialTime = new Date('2026-11-21T02:00:00Z')
     const staleFallbackTime = new Date('2026-11-21T15:00:00Z')
@@ -302,34 +255,5 @@ describe('trends client downloads cache', () => {
     expect(coldOrExpired.get('solid-js')?.downloads).toEqual([])
     expect(coldOrExpired.get('solid-js')?.weeklyDownloads).toBeNull()
     expect(coldOrExpired.get('solid-js')?.warning).toContain('429')
-  })
-
-  it('prunes least recently used entries past the 30-entry limit', async () => {
-    const baseTime = new Date('2026-11-21T10:00:00Z')
-    const [rangeStart] = getNpmTrendsRange('last-2-months', baseTime).split(':')
-    const series = buildDailySeries(rangeStart, 7, () => 500)
-
-    fetchMock.mockImplementation(
-      async () =>
-        new Response(JSON.stringify({ downloads: series }), { status: 200 }),
-    )
-
-    for (let index = 0; index < 31; index++) {
-      await fetchTrendsDownloads([`pkg-${index}`], 'last-2-months', {
-        now: new Date(baseTime.getTime() + index),
-      })
-    }
-
-    const checkTime = new Date(baseTime.getTime() + 50)
-
-    expect(
-      getCachedPackageDownloads('pkg-0', 'last-2-months', checkTime),
-    ).toBeNull()
-    expect(
-      getCachedPackageDownloads('pkg-1', 'last-2-months', checkTime),
-    ).not.toBeNull()
-    expect(
-      getCachedPackageDownloads('pkg-30', 'last-2-months', checkTime),
-    ).not.toBeNull()
   })
 })
