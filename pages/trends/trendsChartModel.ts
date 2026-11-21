@@ -78,6 +78,8 @@ export function seriesForMetric(
       return pack.stars
     case 'size':
       return pack.size
+    case 'vulnerabilities':
+      return pack.vulnerabilities
   }
 }
 
@@ -95,6 +97,10 @@ export function formatMetricValue(
       value: trimZeros(formatted.size.toFixed(formatted.unit === 'B' ? 0 : 1)),
       unit: formatted.unit,
     }
+  }
+
+  if (metric === 'vulnerabilities') {
+    return { value: `${Math.round(value)}`, unit: '' }
   }
 
   if (value >= 1_000_000)
@@ -169,6 +175,42 @@ function alignToGroupStart(timestamp: number, groupBy: TrendsGroupBy) {
   return timestamp
 }
 
+function buildYScaleAndTicks(
+  metric: TrendsMetric,
+  range: { minValue: number; maxValue: number; plotHeight: number },
+) {
+  const { minValue, maxValue, plotHeight } = range
+
+  if (metric === 'vulnerabilities') {
+    const integerMax = Math.max(1, Math.ceil(maxValue))
+
+    const yScale = scaleLinear()
+      .domain([0, integerMax])
+      .nice(4)
+      .range([PLOT.top + plotHeight, PLOT.top])
+
+    const yTicks =
+      integerMax <= 4
+        ? Array.from({ length: integerMax + 1 }, (_, i) => i)
+        : yScale.ticks(4).filter(Number.isInteger)
+
+    return { yScale, yTicks }
+  }
+
+  const valuePadding = Math.max(
+    (maxValue - minValue) * 0.08,
+    maxValue * 0.02,
+    1,
+  )
+
+  const yScale = scaleLinear()
+    .domain([Math.max(0, minValue - valuePadding), maxValue + valuePadding])
+    .nice(4)
+    .range([PLOT.top + plotHeight, PLOT.top])
+
+  return { yScale, yTicks: yScale.ticks(4) }
+}
+
 export function buildChartModel({
   packages,
   metric,
@@ -226,19 +268,14 @@ export function buildChartModel({
 
   if (minValue === undefined || maxValue === undefined) return null
 
-  const valuePadding = Math.max(
-    (maxValue - minValue) * 0.08,
-    maxValue * 0.02,
-    1,
-  )
-
   const plotWidth = chartWidth - PLOT.left - PLOT.right
   const plotHeight = CHART_HEIGHT - PLOT.top - PLOT.bottom
 
-  const yScale = scaleLinear()
-    .domain([Math.max(0, minValue - valuePadding), maxValue + valuePadding])
-    .nice(4)
-    .range([PLOT.top + plotHeight, PLOT.top])
+  const { yScale, yTicks } = buildYScaleAndTicks(metric, {
+    minValue,
+    maxValue,
+    plotHeight,
+  })
 
   const xScale = scaleTime()
     .domain([new Date(minTime), new Date(maxTime)])
@@ -425,7 +462,7 @@ export function buildChartModel({
     seriesAnnotations,
     minTime,
     maxTime,
-    yTicks: yScale.ticks(4),
+    yTicks,
     xTicks: xScale.ticks(maxTickCount),
     releaseLines,
     xFor,

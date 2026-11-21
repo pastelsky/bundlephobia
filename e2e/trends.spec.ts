@@ -24,12 +24,21 @@ const trendsResponse = {
       ],
       stars: [],
       size: [],
+      vulnerabilities: [],
       releases: [],
       current: {
         weeklyDownloads: 1_440_000,
         stars: 241_000,
         size: 0,
         gzip: 6_100,
+        vulnerabilities: {
+          total: 2,
+          active: 0,
+          critical: 0,
+          high: 0,
+          moderate: 0,
+          low: 0,
+        },
       },
       warnings: [],
     },
@@ -44,12 +53,14 @@ const trendsResponse = {
       ],
       stars: [],
       size: [],
+      vulnerabilities: [],
       releases: [],
       current: {
         weeklyDownloads: 1_060_000,
         stars: 210_000,
         size: 0,
         gzip: 7_200,
+        vulnerabilities: null,
       },
       warnings: [],
     },
@@ -104,7 +115,7 @@ test('renders package trends and chart controls', async ({ page }) => {
         '.trends-card__header',
       ].map(left),
       headings: headings
-        .slice(1, 5)
+        .slice(1, 6)
         .map(element => element.getBoundingClientRect().left),
       values: values.map(element => element.getBoundingClientRect().left),
     }
@@ -240,7 +251,7 @@ test('shows progress on a newly added package until its data arrives', async ({
   await expect(page.locator('.trends-card')).toHaveCount(3)
   const lodashCard = page.locator('.trends-card').filter({ hasText: 'lodash' })
   await expect(lodashCard).toBeVisible()
-  await expect(lodashCard.locator('.trends-stat__skeleton')).toHaveCount(4)
+  await expect(lodashCard.locator('.trends-stat__skeleton')).toHaveCount(5)
 
   releaseThird?.()
   await expect(page.locator('.trends-card')).toHaveCount(3)
@@ -282,13 +293,19 @@ const metricLabels: Record<TrendsMetric, string> = {
   downloads: 'Downloads',
   stars: 'Stars',
   size: 'Size',
+  vulnerabilities: 'Vulns',
 }
 
 const ranges: TrendsRange[] = ['last-2-months', 'last-year', 'last-3-years']
 
 const groups: TrendsGroupBy[] = ['day', 'week', 'month']
 
-const metrics: TrendsMetric[] = ['downloads', 'stars', 'size']
+const metrics: TrendsMetric[] = [
+  'downloads',
+  'stars',
+  'size',
+  'vulnerabilities',
+]
 
 const responseDelays: Record<TrendsRange, number> = {
   'last-2-months': 140,
@@ -345,12 +362,24 @@ function permutationResponse(range: TrendsRange): TrendsResponse {
         value: 10_000 * (packageIndex + 1) + index * 100,
         version: `1.${index}.0`,
       })),
+      vulnerabilities: dates.map(date => ({
+        date,
+        value: packageIndex,
+      })),
       releases: [],
       current: {
         weeklyDownloads: responseCode + packageIndex,
         stars: (packageIndex + 1) * 100 + (dates.length - 1) * 10,
         size: 20_000 + packageIndex,
         gzip: 10_000 + packageIndex,
+        vulnerabilities: {
+          total: packageIndex + 1,
+          active: packageIndex,
+          critical: 0,
+          high: packageIndex,
+          moderate: 0,
+          low: 0,
+        },
       },
       warnings: [],
     })),

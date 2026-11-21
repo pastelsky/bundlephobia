@@ -6,14 +6,17 @@ import type { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { Button } from '@base-ui/react/button'
 import { Checkbox } from '@base-ui/react/checkbox'
+import { Popover } from '@base-ui/react/popover'
 import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
+import { Tooltip } from '@base-ui/react/tooltip'
 import Analytics from '../../client/analytics'
 
 import API, {
   type TrendsGroupBy,
   type TrendsMetric,
   type TrendsRange,
+  type TrendsVulnerabilitySummary,
 } from '../../client/api'
 import Layout from '../../client/components/Layout'
 import MetaTags from '../../client/components/MetaTags'
@@ -78,6 +81,11 @@ const METRICS: Array<{ id: TrendsMetric; label: string; description: string }> =
       description: 'Total repository stars',
     },
     { id: 'size', label: 'Size', description: 'Cached gzip size history' },
+    {
+      id: 'vulnerabilities',
+      label: 'Vulns',
+      description: 'Active security vulnerabilities over time (OSV.dev)',
+    },
   ]
 
 const RANGES: Array<{ id: TrendsRange; label: string }> = [
@@ -114,6 +122,17 @@ function formatSize(value: number | null) {
       formatted.size.toFixed(formatted.unit === 'B' ? 0 : 1),
     ).toString(),
     unit: formatted.unit,
+  }
+}
+
+function formatVulnerabilities(
+  summary: TrendsVulnerabilitySummary | null | undefined,
+) {
+  if (!summary) return { value: '—', unit: '' }
+
+  return {
+    value: summary.active.toLocaleString(),
+    unit: 'active',
   }
 }
 
@@ -414,6 +433,22 @@ export default function TrendsPage({
     [isComparison, packages, pageTitle, description, canonicalPath],
   )
 
+  const releaseCounts = useMemo(() => {
+    let major = 0
+    let minor = 0
+
+    for (const pkgName of packages) {
+      const pack = trendsData?.packages.find(p => p.name === pkgName)
+
+      if (!pack) continue
+
+      major += pack.releases.filter(release => release.major).length
+      minor += pack.releases.filter(release => release.minor).length
+    }
+
+    return { major, minor }
+  }, [packages, trendsData])
+
   return (
     <Layout className="trends-page">
       <MetaTags
@@ -601,46 +636,93 @@ export default function TrendsPage({
 
           <div className="trends-toolbar__group trends-toolbar__group--overlays">
             <span className="trends-toolbar__label">Overlays</span>
-            <div className="trends-overlays">
-              <label className="trends-toggle">
-                <Checkbox.Root
-                  checked={showMajorReleases}
-                  onCheckedChange={enabled =>
-                    handleReleaseOverlayChange('major_releases', enabled)
-                  }
-                  className="trends-toggle__control"
-                >
-                  <Checkbox.Indicator
-                    keepMounted
-                    className="trends-toggle__indicator"
-                  />
-                </Checkbox.Root>
-                <span className="trends-toggle__label">Major version</span>
-                <span
-                  className="trends-overlay-key trends-overlay-key--major"
+            <Popover.Root>
+              <Popover.Trigger
+                type="button"
+                className="trends-overlays-trigger"
+                aria-label="Toggle release overlays"
+              >
+                <span>Releases</span>
+                {(showMajorReleases || showMinorReleases) && (
+                  <span className="trends-overlays-trigger__badge">
+                    {(showMajorReleases ? 1 : 0) + (showMinorReleases ? 1 : 0)}
+                  </span>
+                )}
+                <svg
+                  className="trends-overlays-trigger__arrow"
+                  width="10"
+                  height="6"
+                  viewBox="0 0 10 6"
+                  fill="none"
                   aria-hidden="true"
-                />
-              </label>
-              <label className="trends-toggle">
-                <Checkbox.Root
-                  checked={showMinorReleases}
-                  onCheckedChange={enabled =>
-                    handleReleaseOverlayChange('minor_releases', enabled)
-                  }
-                  className="trends-toggle__control"
                 >
-                  <Checkbox.Indicator
-                    keepMounted
-                    className="trends-toggle__indicator"
+                  <path
+                    d="M1 1L5 5L9 1"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
-                </Checkbox.Root>
-                <span className="trends-toggle__label">Minor version</span>
-                <span
-                  className="trends-overlay-key trends-overlay-key--minor"
-                  aria-hidden="true"
-                />
-              </label>
-            </div>
+                </svg>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Positioner side="bottom" align="end" sideOffset={6}>
+                  <Popover.Popup className="trends-overlays-popup">
+                    <div className="trends-overlays-popup__header">
+                      Release markers
+                    </div>
+                    <label className="trends-toggle">
+                      <Checkbox.Root
+                        checked={showMajorReleases}
+                        onCheckedChange={enabled =>
+                          handleReleaseOverlayChange('major_releases', enabled)
+                        }
+                        className="trends-toggle__control"
+                      >
+                        <Checkbox.Indicator
+                          keepMounted
+                          className="trends-toggle__indicator"
+                        />
+                      </Checkbox.Root>
+                      <span className="trends-toggle__label">
+                        Major version{' '}
+                        <span className="trends-toggle__count">
+                          ({releaseCounts.major})
+                        </span>
+                      </span>
+                      <span
+                        className="trends-overlay-key trends-overlay-key--major"
+                        aria-hidden="true"
+                      />
+                    </label>
+                    <label className="trends-toggle">
+                      <Checkbox.Root
+                        checked={showMinorReleases}
+                        onCheckedChange={enabled =>
+                          handleReleaseOverlayChange('minor_releases', enabled)
+                        }
+                        className="trends-toggle__control"
+                      >
+                        <Checkbox.Indicator
+                          keepMounted
+                          className="trends-toggle__indicator"
+                        />
+                      </Checkbox.Root>
+                      <span className="trends-toggle__label">
+                        Minor version{' '}
+                        <span className="trends-toggle__count">
+                          ({releaseCounts.minor})
+                        </span>
+                      </span>
+                      <span
+                        className="trends-overlay-key trends-overlay-key--minor"
+                        aria-hidden="true"
+                      />
+                    </label>
+                  </Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
           </div>
         </div>
 
@@ -685,144 +767,232 @@ export default function TrendsPage({
         {packages.length > 0 && (
           <section className="trends-snapshot">
             <h2 className="trends-snapshot__heading">Snapshot</h2>
-            <div className="trends-snapshot__rows">
-              <div className="trends-snapshot__columns" aria-hidden="true">
-                <span>Package</span>
-                <span>Stars</span>
-                <span>Weekly downloads</span>
-                <span>Gzip</span>
-                <span>Minified</span>
-                <span aria-hidden="true" />
-              </div>
-              {packages.map((pkgName, index) => {
-                const pack = trendsData?.packages.find(p => p.name === pkgName)
+            <Tooltip.Provider delay={250}>
+              <div className="trends-snapshot__rows">
+                <div className="trends-snapshot__columns" aria-hidden="true">
+                  <span>Package</span>
+                  <span>Stars</span>
+                  <span>Weekly downloads</span>
+                  <span>Gzip</span>
+                  <span>Minified</span>
+                  <span>Vulns</span>
+                  <span aria-hidden="true" />
+                </div>
+                {packages.map((pkgName, index) => {
+                  const pack = trendsData?.packages.find(
+                    p => p.name === pkgName,
+                  )
 
-                return (
-                  <div key={pkgName} className="trends-card">
-                    <div className="trends-card__header">
-                      <span
-                        className="trends-card__swatch"
-                        style={{
-                          backgroundColor:
-                            TRENDS_SERIES_COLORS[
-                              index % TRENDS_SERIES_COLORS.length
-                            ],
-                        }}
-                      />
-                      <Link
-                        href={`/package/${pkgName}`}
-                        className="trends-card__name"
-                      >
-                        {pkgName}
-                      </Link>
-                      <span className="trends-card__external-links">
-                        <a
-                          className="trends-card__external-link trends-card__external-link--npm"
-                          href={`https://npmjs.com/package/${pkgName}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label={`${pkgName} on npm`}
+                  const vulnsSummary = pack?.current.vulnerabilities
+
+                  return (
+                    <div key={pkgName} className="trends-card">
+                      <div className="trends-card__header">
+                        <span
+                          className="trends-card__swatch"
+                          style={{
+                            backgroundColor:
+                              TRENDS_SERIES_COLORS[
+                                index % TRENDS_SERIES_COLORS.length
+                              ],
+                          }}
+                        />
+                        <Link
+                          href={`/package/${pkgName}`}
+                          className="trends-card__name"
                         >
-                          <NPMIcon />
-                        </a>
-                        {pack?.repository && (
+                          {pkgName}
+                        </Link>
+                        <span className="trends-card__external-links">
                           <a
-                            className="trends-card__external-link trends-card__external-link--github"
-                            href={
-                              pack.repository.startsWith('http')
-                                ? pack.repository
-                                : `https://github.com/${pack.repository}`
-                            }
+                            className="trends-card__external-link trends-card__external-link--npm"
+                            href={`https://npmjs.com/package/${pkgName}`}
                             target="_blank"
                             rel="noreferrer"
-                            aria-label={`${pkgName} on GitHub`}
+                            aria-label={`${pkgName} on npm`}
                           >
-                            <GithubIcon />
+                            <NPMIcon />
                           </a>
-                        )}
-                      </span>
+                          {pack?.repository && (
+                            <a
+                              className="trends-card__external-link trends-card__external-link--github"
+                              href={
+                                pack.repository.startsWith('http')
+                                  ? pack.repository
+                                  : `https://github.com/${pack.repository}`
+                              }
+                              target="_blank"
+                              rel="noreferrer"
+                              aria-label={`${pkgName} on GitHub`}
+                            >
+                              <GithubIcon />
+                            </a>
+                          )}
+                        </span>
+                      </div>
+                      <div className="trends-card__stats">
+                        <div className="trends-stat">
+                          <span className="trends-stat__label">Stars</span>
+                          <span className="trends-stat__value">
+                            {pack ? (
+                              <MetricValue
+                                formatted={formatCompactNumber(
+                                  pack.current.stars,
+                                )}
+                              />
+                            ) : (
+                              <span
+                                className="trends-stat__skeleton"
+                                aria-hidden="true"
+                              />
+                            )}
+                          </span>
+                        </div>
+                        <div className="trends-stat">
+                          <span className="trends-stat__label">
+                            Weekly downloads
+                          </span>
+                          <span className="trends-stat__value">
+                            {pack ? (
+                              <MetricValue
+                                formatted={formatCompactNumber(
+                                  pack.current.weeklyDownloads,
+                                )}
+                              />
+                            ) : (
+                              <span
+                                className="trends-stat__skeleton"
+                                aria-hidden="true"
+                              />
+                            )}
+                          </span>
+                        </div>
+                        <div className="trends-stat">
+                          <span className="trends-stat__label">Gzip</span>
+                          <span className="trends-stat__value">
+                            {pack ? (
+                              <MetricValue
+                                formatted={formatSize(pack.current.gzip)}
+                              />
+                            ) : (
+                              <span
+                                className="trends-stat__skeleton"
+                                aria-hidden="true"
+                              />
+                            )}
+                          </span>
+                        </div>
+                        <div className="trends-stat">
+                          <span className="trends-stat__label">Minified</span>
+                          <span className="trends-stat__value">
+                            {pack ? (
+                              <MetricValue
+                                formatted={formatSize(pack.current.size)}
+                              />
+                            ) : (
+                              <span
+                                className="trends-stat__skeleton"
+                                aria-hidden="true"
+                              />
+                            )}
+                          </span>
+                        </div>
+                        <div className="trends-stat">
+                          <span className="trends-stat__label">Vulns</span>
+                          <span className="trends-stat__value">
+                            {!pack ? (
+                              <span
+                                className="trends-stat__skeleton"
+                                aria-hidden="true"
+                              />
+                            ) : vulnsSummary ? (
+                              <Tooltip.Root>
+                                <Tooltip.Trigger
+                                  render={
+                                    <button
+                                      type="button"
+                                      className="trends-stat__metric-trigger"
+                                    >
+                                      <MetricValue
+                                        formatted={formatVulnerabilities(
+                                          vulnsSummary,
+                                        )}
+                                      />
+                                    </button>
+                                  }
+                                />
+                                <Tooltip.Portal>
+                                  <Tooltip.Positioner side="top" sideOffset={6}>
+                                    <Tooltip.Popup className="trends-tooltip-popup">
+                                      <div className="trends-tooltip-popup__header">
+                                        {pkgName} vulnerabilities
+                                      </div>
+                                      <div className="trends-tooltip-popup__row">
+                                        <span>
+                                          Active:{' '}
+                                          <strong>{vulnsSummary.active}</strong>
+                                        </span>
+                                        <span>•</span>
+                                        <span>
+                                          Resolved:{' '}
+                                          <strong>
+                                            {vulnsSummary.total -
+                                              vulnsSummary.active}
+                                          </strong>
+                                        </span>
+                                      </div>
+                                      {vulnsSummary.active > 0 ? (
+                                        <div className="trends-tooltip-popup__breakdown">
+                                          <div className="trends-tooltip-popup__subrow">
+                                            <span>Critical</span>
+                                            <span>{vulnsSummary.critical}</span>
+                                          </div>
+                                          <div className="trends-tooltip-popup__subrow">
+                                            <span>High</span>
+                                            <span>{vulnsSummary.high}</span>
+                                          </div>
+                                          <div className="trends-tooltip-popup__subrow">
+                                            <span>Moderate</span>
+                                            <span>{vulnsSummary.moderate}</span>
+                                          </div>
+                                          <div className="trends-tooltip-popup__subrow">
+                                            <span>Low</span>
+                                            <span>{vulnsSummary.low}</span>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="trends-tooltip-popup__note">
+                                          {vulnsSummary.total > 0
+                                            ? `All ${vulnsSummary.total} historical advisories resolved`
+                                            : 'No known advisories in OSV.dev'}
+                                        </div>
+                                      )}
+                                    </Tooltip.Popup>
+                                  </Tooltip.Positioner>
+                                </Tooltip.Portal>
+                              </Tooltip.Root>
+                            ) : (
+                              <MetricValue
+                                formatted={formatVulnerabilities(vulnsSummary)}
+                              />
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        className="trends-card__remove"
+                        onClick={() => handleRemovePackage(pkgName)}
+                        title={`Remove ${pkgName}`}
+                        aria-label={`Remove ${pkgName}`}
+                      >
+                        ×
+                      </Button>
                     </div>
-                    <div className="trends-card__stats">
-                      <div className="trends-stat">
-                        <span className="trends-stat__label">Stars</span>
-                        <span className="trends-stat__value">
-                          {pack ? (
-                            <MetricValue
-                              formatted={formatCompactNumber(
-                                pack.current.stars,
-                              )}
-                            />
-                          ) : (
-                            <span
-                              className="trends-stat__skeleton"
-                              aria-hidden="true"
-                            />
-                          )}
-                        </span>
-                      </div>
-                      <div className="trends-stat">
-                        <span className="trends-stat__label">
-                          Weekly downloads
-                        </span>
-                        <span className="trends-stat__value">
-                          {pack ? (
-                            <MetricValue
-                              formatted={formatCompactNumber(
-                                pack.current.weeklyDownloads,
-                              )}
-                            />
-                          ) : (
-                            <span
-                              className="trends-stat__skeleton"
-                              aria-hidden="true"
-                            />
-                          )}
-                        </span>
-                      </div>
-                      <div className="trends-stat">
-                        <span className="trends-stat__label">Gzip</span>
-                        <span className="trends-stat__value">
-                          {pack ? (
-                            <MetricValue
-                              formatted={formatSize(pack.current.gzip)}
-                            />
-                          ) : (
-                            <span
-                              className="trends-stat__skeleton"
-                              aria-hidden="true"
-                            />
-                          )}
-                        </span>
-                      </div>
-                      <div className="trends-stat">
-                        <span className="trends-stat__label">Minified</span>
-                        <span className="trends-stat__value">
-                          {pack ? (
-                            <MetricValue
-                              formatted={formatSize(pack.current.size)}
-                            />
-                          ) : (
-                            <span
-                              className="trends-stat__skeleton"
-                              aria-hidden="true"
-                            />
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      className="trends-card__remove"
-                      onClick={() => handleRemovePackage(pkgName)}
-                      title={`Remove ${pkgName}`}
-                      aria-label={`Remove ${pkgName}`}
-                    >
-                      ×
-                    </Button>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            </Tooltip.Provider>
           </section>
         )}
 

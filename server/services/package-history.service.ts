@@ -143,11 +143,14 @@ function repositoryForPackument(packument: NpmPackagePackument): string | null {
   )
 }
 
-export async function fetchPackageHistory(
+export async function fetchPackageTrendsHistory(
   packageName: string,
   options: PackageHistoryOptions,
   fetchPackument: typeof fetchPackagePackument = fetchPackagePackument,
-): Promise<PackageHistoryResponse> {
+): Promise<{
+  history: PackageHistoryResponse
+  publishDates: Record<string, string>
+}> {
   const packument = await fetchPackument(packageName)
   const publishDates = getPublishDates(packument.time)
 
@@ -172,13 +175,30 @@ export async function fetchPackageHistory(
   )
 
   return {
-    name: packageName,
-    repository,
-    versions,
-    ...releaseMetadata(packument.time, options),
-    range: {
-      from: options.from ?? null,
-      to: options.to ?? null,
+    history: {
+      name: packageName,
+      repository,
+      versions,
+      ...releaseMetadata(packument.time, options),
+      range: {
+        from: options.from ?? null,
+        to: options.to ?? null,
+      },
     },
+    publishDates,
   }
+}
+
+export async function fetchPackageHistory(
+  packageName: string,
+  options: PackageHistoryOptions,
+  fetchPackument: typeof fetchPackagePackument = fetchPackagePackument,
+): Promise<PackageHistoryResponse> {
+  const { history } = await fetchPackageTrendsHistory(
+    packageName,
+    options,
+    fetchPackument,
+  )
+
+  return history
 }
