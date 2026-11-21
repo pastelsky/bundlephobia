@@ -43,6 +43,12 @@ footer {
   justify-content: center;
   margin: auto;
 
+  @media screen and (max-width: 40em) {
+    flex-direction: column;
+    gap: $global-spacing;
+    padding: $global-spacing * 1.5 0;
+  }
+
   h2 {
     @include font-size-xs;
     color: var(--color-footer-text);
@@ -55,28 +61,36 @@ footer {
   @include font-size-xs;
 
   display: flex;
+  align-items: center;
   padding: 0;
   margin: 0 0 0 $global-spacing * 1.5;
   flex-grow: 1;
   max-width: 960px;
+  min-width: 0;
 
   @media screen and (max-width: 40em) {
     margin: 0;
+    width: 100%;
   }
 
   li {
     list-style: none;
     position: relative;
-    flex-grow: 1;
+    flex: 1 1 0;
+    min-width: 0;
     text-align: center;
     font-family: $font-family-code;
     letter-spacing: 0.5px;
 
     a {
+      display: block;
       padding: $global-spacing $global-spacing * 2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
 
       @media screen and (max-width: 48em) {
-        padding: $global-spacing $global-spacing * 0.5;
+        padding: math.div($global-spacing, 2) $global-spacing * 0.75;
       }
     }
 

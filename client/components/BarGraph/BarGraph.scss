@@ -12,7 +12,12 @@ $bar-grow-duration: 0.4s;
   flex-direction: column;
   justify-content: center;
   width: 100%;
+  max-width: 100%;
   height: $bar-graph-height;
+
+  @media screen and (max-width: 40em) {
+    overflow-x: auto;
+  }
 }
 
 .bar-graph {
@@ -34,6 +39,12 @@ $bar-grow-duration: 0.4s;
   flex-direction: column;
   animation: grow $bar-grow-duration cubic-bezier(0.305, 0.42, 0.205, 1.2);
   transform-origin: 100% 100%;
+
+  @media screen and (max-width: 40em) {
+    width: 4.5vw;
+    min-width: 12px;
+    margin: 0 2px;
+  }
 }
 
 .bar-graph__bar-symbols {
