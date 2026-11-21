@@ -55,7 +55,7 @@ describe('Tremor chart props construction and interactions', () => {
       dummyContext,
     )
 
-    expect(props.onValueChange).toBeInstanceOf(Function)
+    expect(props.onValueChange).toBeUndefined()
     expect(props.enableLegendSlider).toBe(false)
     expect(props.showLegend).toBe(false)
     expect(props.categories).toEqual(dummyContext.categories)

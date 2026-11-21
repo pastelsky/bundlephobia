@@ -14,12 +14,16 @@ export function SeriesTooltip({
 }) {
   if (!active || !payload?.length) return null
 
+  const seen = new Set<string>()
+
   const entries = payload.flatMap(item => {
+    const name = String(item.name)
     const value = Number(item.value)
 
-    return Number.isFinite(value)
-      ? [{ name: String(item.name), value, color: item.color }]
-      : []
+    if (!Number.isFinite(value) || seen.has(name)) return []
+    seen.add(name)
+
+    return [{ name, value, color: item.color }]
   })
 
   const total = entries.reduce((sum, item) => sum + item.value, 0)

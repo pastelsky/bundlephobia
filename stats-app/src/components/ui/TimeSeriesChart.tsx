@@ -72,7 +72,7 @@ export function buildChartProps(
     showLegend: false,
     categories: context.categories,
     colors: context.colors,
-    onValueChange: onValueChange ?? (() => {}),
+    onValueChange,
   }
 }
 

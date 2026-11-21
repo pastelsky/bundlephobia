@@ -1,5 +1,5 @@
 import { CHARTS, type ChartDefinition } from './charts'
-import { Activity, Cpu, Hammer, LayoutDashboard } from 'lucide-react'
+import { Activity, Cpu, Hammer, LayoutDashboard, RotateCcw } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import type { DashboardSource } from './sources'
@@ -134,10 +134,10 @@ export const PAGES: DashboardPage[] = [
   },
   {
     id: 'resources',
-    title: 'Host & workers',
-    heading: 'Host resources & PM2 workers',
+    title: 'Resources',
+    heading: 'Server resources',
     description:
-      'Server CPU, memory, disk I/O, network, and PM2 worker health.',
+      'CPU, memory, storage, disk I/O, and network usage on the production host.',
     icon: Cpu,
     source: 'resources',
     panels: [
@@ -147,12 +147,8 @@ export const PAGES: DashboardPage[] = [
       CHARTS.swap,
       CHARTS.disk,
       CHARTS.diskIo,
+      CHARTS.ioWait,
       CHARTS.network,
-      CHARTS.restarts,
-      CHARTS.pm2Memory,
-      CHARTS.pm2Cpu,
-      CHARTS.availability,
-      CHARTS.uptime,
     ],
     tabs: [
       {
@@ -166,16 +162,37 @@ export const PAGES: DashboardPage[] = [
         panels: [CHARTS.disk, CHARTS.diskIo, CHARTS.ioWait, CHARTS.network],
         breakdown: 'disk',
       },
+    ],
+  },
+  {
+    id: 'workers',
+    title: 'PM2 workers',
+    heading: 'PM2 workers',
+    description:
+      'Per-worker restarts, CPU, and memory, with worker status and uptime.',
+    icon: RotateCcw,
+    source: 'pm2',
+    panels: [
+      CHARTS.restarts,
+      CHARTS.pm2Memory,
+      CHARTS.pm2Cpu,
+      CHARTS.availability,
+      CHARTS.uptime,
+    ],
+    tabs: [
       {
-        id: 'workers',
-        title: 'PM2 workers',
-        panels: [
-          CHARTS.restarts,
-          CHARTS.pm2Memory,
-          CHARTS.pm2Cpu,
-          CHARTS.availability,
-          CHARTS.uptime,
-        ],
+        id: 'all',
+        title: 'All workers',
+      },
+      {
+        id: 'restarts',
+        title: 'Restarts & resources',
+        panels: [CHARTS.restarts, CHARTS.pm2Memory, CHARTS.pm2Cpu],
+      },
+      {
+        id: 'health',
+        title: 'Status & uptime',
+        panels: [CHARTS.availability, CHARTS.uptime],
       },
     ],
   },
@@ -183,11 +200,10 @@ export const PAGES: DashboardPage[] = [
 
 const LEGACY_ROUTES = {
   '/responses': { pageId: 'traffic', tabId: 'responses' },
-  '/workers': { pageId: 'resources', tabId: 'workers' },
 } satisfies Record<string, { pageId: string; tabId?: string }>
 
 function resolveRouteTarget(pathname: string, requestedTab: string | null) {
-  if (pathname === '/responses' || pathname === '/workers') {
+  if (pathname === '/responses') {
     const legacy = LEGACY_ROUTES[pathname]
 
     return { pageId: legacy.pageId, targetTab: requestedTab ?? legacy.tabId }
