@@ -6,7 +6,12 @@ import {
   catalogPackages,
   rankCandidates,
 } from '../index.mjs'
-import { rotate } from '../search.mjs'
+import {
+  rotate,
+  retryAfterMs,
+  withRateLimitRetry,
+  discoverHackerNewsStories,
+} from '../search.mjs'
 import { catalog, now, limits, fakeSources } from './fixtures.mjs'
 
 test('state corruption fails rather than silently allowing repeated discoveries', () => {
@@ -218,4 +223,138 @@ test('a zero delivery budget leaves every candidate unsurfaced', async () => {
 
   assert.deepEqual(result.report.candidates, [])
   assert.deepEqual(result.state.surfaced, [])
+})
+
+test('rate-limit retry respects retry-after, message delays, and maxWaitMs', async () => {
+  const slept = []
+  let attempts = 0
+
+  const value = await withRateLimitRetry(
+    async () => {
+      attempts++
+
+      if (attempts === 1) {
+        const error = new Error('try again in 12.2s')
+        error.status = 429
+        throw error
+      }
+
+      if (attempts === 2) {
+        const error = new Error('secondary rate limit')
+        error.status = 403
+        error.response = { headers: { 'retry-after': '5' } }
+        throw error
+      }
+
+      return 'ok'
+    },
+    {
+      maxRetries: 2,
+      maxWaitMs: 65_000,
+      sleep: async ms => {
+        slept.push(ms)
+      },
+    },
+  )
+
+  assert.equal(value, 'ok')
+  assert.equal(attempts, 3)
+  assert.deepEqual(slept, [12_700, 5_500])
+
+  assert.equal(
+    retryAfterMs(Object.assign(new Error('Not Found'), { status: 404 })),
+    null,
+  )
+
+  await assert.rejects(
+    withRateLimitRetry(
+      async () => {
+        const error = new Error('try again in 120s')
+        error.status = 429
+        throw error
+      },
+      { maxWaitMs: 60_000, sleep: async () => {} },
+    ),
+    /120s/,
+  )
+})
+
+test('ranking excludes build/desktop noise and caps packages per scope', () => {
+  const observation = (name, repo, stars = 1000) => ({
+    package: name,
+    repo,
+    owner: repo.split('/')[0],
+    stars,
+    runtime: true,
+  })
+
+  const ranked = rankCandidates(
+    [
+      observation('tailwindcss', 'a/app', 10000),
+      observation('tailwindcss', 'b/app', 10000),
+      observation('@tauri-apps/plugin-process', 'a/app', 10000),
+      observation('@tauri-apps/plugin-process', 'b/app', 10000),
+      observation('@codemirror/state', 'a/app', 5000),
+      observation('@codemirror/state', 'b/app', 5000),
+      observation('@codemirror/view', 'a/app', 4000),
+      observation('@codemirror/view', 'b/app', 4000),
+      observation('@codemirror/commands', 'a/app', 3000),
+      observation('@codemirror/commands', 'b/app', 3000),
+      observation('@floating-ui/dom', 'a/app', 2000),
+      observation('@floating-ui/dom', 'b/app', 2000),
+    ],
+    new Set(),
+    2,
+  )
+
+  assert.deepEqual(
+    ranked.map(item => item.package),
+    ['@codemirror/state', '@codemirror/view', '@floating-ui/dom'],
+  )
+})
+
+test('hacker news discovery queries non-Show-HN stories, deduplicates, and sorts by points', async () => {
+  const urls = []
+  const notes = []
+
+  const stories = await discoverHackerNewsStories(
+    async url => {
+      urls.push(url)
+
+      return {
+        ok: true,
+        json: async () => ({
+          hits: [
+            {
+              objectID: '1',
+              title: 'Orama 3.0',
+              url: 'https://orama.com',
+              points: 180,
+              num_comments: 40,
+              created_at: '2026-11-10T00:00:00Z',
+            },
+            {
+              objectID: '2',
+              title: 'Show HN: Tiny DOM Helper',
+              url: 'https://example.com',
+              points: 60,
+              num_comments: 12,
+              created_at: '2026-11-12T00:00:00Z',
+            },
+          ],
+        }),
+      }
+    },
+    { now, notes },
+  )
+
+  assert.equal(urls.length, 3)
+  assert.ok(
+    urls.every(url => url.includes('tags=story') && !url.includes('Show')),
+  )
+  assert.deepEqual(
+    stories.map(story => story.title),
+    ['Orama 3.0', 'Show HN: Tiny DOM Helper'],
+  )
+  assert.deepEqual(notes, [])
 })

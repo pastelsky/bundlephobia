@@ -1,7 +1,54 @@
 import { z } from 'zod'
 import validatePackageName from 'validate-npm-package-name'
 import defaults from './config.json' with { type: 'json' }
-import { findRepositories, scanRepositories, rotate } from './search.mjs'
+import {
+  findRepositories,
+  scanRepositories,
+  rotate,
+  discoverHackerNewsStories,
+} from './search.mjs'
+
+const NOISE_PACKAGES = new Set([
+  'autoprefixer',
+  'biome',
+  'electron',
+  'electron-builder',
+  'esbuild',
+  'eslint',
+  'oxfmt',
+  'oxlint',
+  'postcss',
+  'prettier',
+  'rollup',
+  'tailwindcss',
+  'ts-node',
+  'tsup',
+  'tsx',
+  'turbo',
+  'typescript',
+  'vite',
+  'webpack',
+])
+
+const NOISE_PREFIXES = [
+  '@biomejs/',
+  '@eslint/',
+  '@tailwindcss/',
+  '@tauri-apps/',
+  '@types/',
+  '@vitejs/',
+  'eslint-',
+  'prettier-',
+]
+
+export function isNoisePackage(name) {
+  const lower = name.toLowerCase()
+
+  return (
+    NOISE_PACKAGES.has(lower) ||
+    NOISE_PREFIXES.some(prefix => lower.startsWith(prefix))
+  )
+}
 
 const stateSchema = z
   .object({
@@ -34,6 +81,7 @@ export async function discoverLibraries({
   now = new Date(),
   limits = {},
   frameworks = [],
+  fetchImpl,
 }) {
   const options = { ...defaults, ...limits, frameworks }
   const state = readState(inputState)
@@ -71,6 +119,11 @@ export async function discoverLibraries({
   const eligible = rankCandidates(observations, known, options.minimumOwners)
   const candidates = eligible.slice(0, options.candidates)
 
+  const hackerNewsStories = await discoverHackerNewsStories(fetchImpl, {
+    now,
+    notes,
+  })
+
   const report = {
     observedAt: now.toISOString(),
     source: 'consumer-manifests',
@@ -86,9 +139,11 @@ export async function discoverLibraries({
         .size,
       manifestObservations: observations.length,
       eligiblePackages: eligible.length,
+      hackerNewsStories: hackerNewsStories.length,
     },
     notes,
     candidates,
+    hackerNewsStories,
     interpretation:
       'Sampled manifest declarations ranked by sum(log2(1 + maximum repository stars per runtime consumer owner)). Distinct owners do not prove independent adoption, production use or browser reachability. The research agent verifies package quality and author affiliation.',
   }
@@ -108,13 +163,23 @@ export async function discoverLibraries({
   }
 }
 
-export function rankCandidates(observations, known, minimumOwners) {
+export function rankCandidates(
+  observations,
+  known,
+  minimumOwners,
+  { maxPerScope = 2 } = {},
+) {
   const packages = Map.groupBy(
-    observations.filter(item => item.runtime && !known.has(item.package)),
+    observations.filter(
+      item =>
+        item.runtime &&
+        !known.has(item.package) &&
+        !isNoisePackage(item.package),
+    ),
     item => item.package,
   )
 
-  return Array.from(packages, ([name, declarations]) => {
+  const sorted = Array.from(packages, ([name, declarations]) => {
     const repositories = Map.groupBy(declarations, item => item.repo)
 
     const consumers = Array.from(
@@ -137,4 +202,19 @@ export function rankCandidates(observations, known, minimumOwners) {
         b.ownerCount - a.ownerCount ||
         a.package.localeCompare(b.package),
     )
+
+  if (!Number.isFinite(maxPerScope) || maxPerScope <= 0) return sorted
+
+  const scopeCounts = new Map()
+
+  return sorted.filter(candidate => {
+    if (!candidate.package.startsWith('@')) return true
+    const scope = candidate.package.slice(0, candidate.package.indexOf('/'))
+    const count = scopeCounts.get(scope) ?? 0
+
+    if (count >= maxPerScope) return false
+    scopeCounts.set(scope, count + 1)
+
+    return true
+  })
 }

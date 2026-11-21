@@ -4,6 +4,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { request } from '@octokit/request'
 import { discoverLibraries, readState } from './index.mjs'
+import { withRateLimitRetry } from './search.mjs'
 import catalog from '../../utils/similar-packages.catalog.json' with { type: 'json' }
 import groups from '../../utils/similar-packages.groups.json' with { type: 'json' }
 
@@ -36,9 +37,11 @@ const codeSearch = pThrottle({
 
 const github = async (route, parameters) =>
   (
-    await (route === 'GET /search/code' ? codeSearch : githubRequest)(
-      route,
-      parameters,
+    await withRateLimitRetry(() =>
+      (route === 'GET /search/code' ? codeSearch : githubRequest)(
+        route,
+        parameters,
+      ),
     )
   ).data
 
@@ -77,6 +80,7 @@ const result = await discoverLibraries({
   excludedPackages,
   frameworks: groups.frameworks.packages,
   state,
+  fetchImpl: fetch,
 })
 
 await mkdir(dirname(output), { recursive: true })

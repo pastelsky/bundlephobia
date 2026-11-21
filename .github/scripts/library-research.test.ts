@@ -14,11 +14,19 @@ import {
   branch,
   catalogPath,
   carryPending,
+  formatBytes,
+  formatCompactNumber,
+  formatMonthYear,
   mergeProposal,
+  parseRejectedPackages,
+  parseSelectionChecklist,
+  pruneUncheckedFromCatalog,
   publishResearch,
   readResearchSubmission,
+  renderPendingOverview,
   verifyPackages,
   type GitHubApi,
+  type PendingPackageMetrics,
   type Proposal,
 } from './library-research.ts'
 
@@ -852,4 +860,118 @@ test('the shared catalog retains the existing category contract', async () => {
     assert.ok(category.similar.length <= 6)
     assert.ok(category.tags.every(tag => Number.isInteger(tag.weight)))
   }
+})
+
+test('formats bundle sizes, counts, and dates into human-readable PR metrics', () => {
+  assert.equal(formatBytes(5_925_205), '5.93 MB')
+  assert.equal(formatBytes(476_214), '476.2 kB')
+  assert.equal(formatBytes(980), '980 B')
+  assert.equal(formatBytes(null), '—')
+
+  assert.equal(formatCompactNumber(11_646_312), '11.6M')
+  assert.equal(formatCompactNumber(128_851), '128.9k')
+  assert.equal(formatCompactNumber(797), '797')
+  assert.equal(formatCompactNumber(undefined), '—')
+
+  assert.equal(formatMonthYear('2026-11-11T10:35:00Z'), 'Nov 2026')
+  assert.equal(formatMonthYear(null), '—')
+})
+
+test('renders pretty-printed metrics table and parses interactive selection checkboxes', () => {
+  const nextCatalog: Catalog = {
+    ...baseline,
+    example: { ...baseline.example, similar: ['original', 'candidate'] },
+    'new-cat': {
+      name: 'New category',
+      tags: [{ tag: 'new', weight: 10 }],
+      similar: ['alpha', 'beta'],
+    },
+  }
+
+  const metrics = new Map<string, PendingPackageMetrics>([
+    [
+      'candidate',
+      {
+        packageName: 'candidate',
+        version: '2.1.0',
+        size: 148_515,
+        gzip: 42_736,
+        weeklyDownloads: 11_646_312,
+        githubStars: 43_200,
+        publishedAt: '2026-10-15T00:00:00Z',
+        license: 'MIT',
+      },
+    ],
+  ])
+
+  const rendered = renderPendingOverview(baseline, nextCatalog, metrics, [
+    'unwanted',
+  ])
+
+  assert.match(rendered, /148\.5 kB \/ 42\.7 kB/)
+  assert.match(rendered, /\| 11\.6M \| 43\.2k \| Oct 2026 \| MIT \|/)
+  assert.match(rendered, /- \[x\] `candidate` \(`example`\)/)
+  assert.match(rendered, /- \[x\] `alpha` \(`new-cat`\)/)
+  assert.deepEqual(parseRejectedPackages(rendered), ['unwanted'])
+
+  const edited = rendered
+    .replace('- [x] `candidate` (`example`)', '- [ ] `candidate` (`example`)')
+    .replace('- [x] `alpha` (`new-cat`)', '- [ ] `alpha` (`new-cat`)')
+
+  const parsed = parseSelectionChecklist(edited)
+
+  assert.deepEqual(parsed.checked, [{ package: 'beta', slug: 'new-cat' }])
+  assert.deepEqual(parsed.unchecked, [
+    { package: 'candidate', slug: 'example' },
+    { package: 'alpha', slug: 'new-cat' },
+  ])
+
+  const pruned = pruneUncheckedFromCatalog(
+    baseline,
+    nextCatalog,
+    parsed.unchecked,
+  )
+
+  assert.deepEqual(pruned.catalog.example.similar, ['original'])
+  assert.equal(pruned.catalog['new-cat'], undefined)
+  assert.deepEqual(pruned.removed.map(item => item.package).sort(), [
+    'alpha',
+    'beta',
+    'candidate',
+  ])
+})
+
+test('publishResearch prunes unchecked items from existing PR checklist and records them as dismissed', async () => {
+  const { api, state } = github()
+
+  await publishResearch({
+    api,
+    proposal: proposal('candidate', 'another'),
+    summary: 'Initial proposals.',
+    expectedHead: null,
+    verify: async () => {},
+  })
+
+  assert.match(state.prs[0].body, /- \[x\] `candidate` \(`example`\)/)
+  assert.match(state.prs[0].body, /- \[x\] `another` \(`example`\)/)
+
+  state.prs[0].body = state.prs[0].body.replace(
+    '- [x] `candidate` (`example`)',
+    '- [ ] `candidate` (`example`)',
+  )
+
+  const res = await publishResearch({
+    api,
+    proposal: [],
+    summary: 'Applied checklist.',
+    expectedHead: state.head,
+    verify: async () => {},
+  })
+
+  assert.equal(res.status, 'published')
+  assert.deepEqual(state.catalogs[state.head!].example.similar, [
+    'original',
+    'another',
+  ])
+  assert.deepEqual(parseRejectedPackages(state.prs[0].body), ['candidate'])
 })
