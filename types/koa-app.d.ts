@@ -1,5 +1,6 @@
 import 'koa'
 
+import type { NpmPackageManifest } from '../server/clients/npm-registry.client'
 import type {
   FailureCacheEntry,
   PackageAnalysisRequestState,
@@ -12,6 +13,7 @@ declare module 'koa' {
     id?: string
     analysis: PackageAnalysisRequestState
     resolved: ResolvedPackageState
+    packageManifest?: NpmPackageManifest
     buildResult?: PackageBuildResult
   }
 

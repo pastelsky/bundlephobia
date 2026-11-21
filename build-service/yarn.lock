@@ -2801,7 +2801,7 @@ __metadata:
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^5.12.8"
     now-logs: "npm:^0.0.7"
-    package-build-stats: "npm:9.5.10"
+    package-build-stats: "npm:9.6.0"
     safe-stable-stringify: "npm:^2.5.0"
     truncate: "npm:^3.0.0"
     zod: "npm:^4.6.7"
@@ -6919,6 +6919,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"npm-install-checks@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "npm-install-checks@npm:9.0.0"
+  dependencies:
+    semver: "npm:^7.1.1"
+  checksum: 9975e41166bf7a8bef93a571cb43f2fc24f0ba458468d490d9898c7718ce613f75c87e59a6f8244dee488a236714da095b7079c498f3eb64baab1e97bd07220f
+  languageName: node
+  linkType: hard
+
 "npm-name@npm:^8.0.0":
   version: 8.0.0
   resolution: "npm-name@npm:8.0.0"
@@ -7422,9 +7431,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-build-stats@npm:9.5.10":
-  version: 9.5.10
-  resolution: "package-build-stats@npm:9.5.10"
+"package-build-stats@npm:9.6.0":
+  version: 9.6.0
+  resolution: "package-build-stats@npm:9.6.0"
   dependencies:
     "@babel/core": "npm:^7.28.5"
     "@rspack/core": "npm:^2.3.1"
@@ -7442,6 +7451,7 @@ __metadata:
     mitt: "npm:^3.0.1"
     node-fetch: "npm:^2.7.0"
     np: "npm:^10.0.5"
+    npm-install-checks: "npm:^9.0.0"
     oxc-minify: "npm:^0.157.0"
     oxc-parser: "npm:^0.157.0"
     oxc-resolver: "npm:^11.24.2"
@@ -7451,6 +7461,7 @@ __metadata:
     pkg-entry-points: "npm:1.1.2"
     postcss: "npm:^8.4.0"
     postcss-loader: "npm:^8.2.1"
+    resolve.exports: "npm:^2.0.4"
     rimraf: "npm:^6.1.0"
     sanitize-filename: "npm:^1.6.3"
     sass: "npm:^1.69.0"
@@ -7462,7 +7473,7 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     package-stats: bin/cli.js
-  checksum: e902ab2c993d606b8b63df1d476f9a4dc489731d107558e0d3a77d01ca8b6c0e9dcb09183e1b2c7d1f719668d0c1a42fb354723a604a24406e13aae3330f3eb7
+  checksum: 10e41c92c1434f60bfd814ffb5d4fa86b70c641ebd858a40ff3da1520e531463448ef100bf559034513ae3d40d5ea8fdcdbdd2433c69c0c0b243c879ab4771cd
   languageName: node
   linkType: hard
 
@@ -8368,6 +8379,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"resolve.exports@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "resolve.exports@npm:2.0.4"
+  checksum: fd2894f770302c497e4d35f1feb5e01079003f594e62d04c12447c87da064e882a93e77d808fb9be21f4d4dbf50e13152c61514937d54b6b63b2350e3cff3505
+  languageName: node
+  linkType: hard
+
 "resolve@npm:^1.15.1":
   version: 1.22.11
   resolution: "resolve@npm:1.22.11"
@@ -8686,6 +8704,15 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 1ef3a85bd02a760c6ef76a45b8c1ce18226de40831e02a00bad78485390b98b6ccaa31046245fc63bba4a47a6a592b6c7eedc65cc47126e60489f9cc1ce3ed7e
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.1.1":
+  version: 7.8.6
+  resolution: "semver@npm:7.8.6"
+  bin:
+    semver: bin/semver.js
+  checksum: 76fd62a781a9c58464e4d4b1b9c99c404063d8133fff8a0753e66b1bd826bfb720d843664e7ab1268c0fb7134d04df9f3b8788eb2f1000c509648e0eeac03921
   languageName: node
   linkType: hard
 

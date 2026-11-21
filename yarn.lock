@@ -9947,7 +9947,7 @@ __metadata:
     dotenv-defaults: "npm:^2.0.2"
     fastify: "npm:^5.12.8"
     now-logs: "npm:^0.0.7"
-    package-build-stats: "npm:9.5.10"
+    package-build-stats: "npm:9.6.0"
     safe-stable-stringify: "npm:^2.5.0"
     truncate: "npm:^3.0.0"
     zod: "npm:^4.6.7"
@@ -10083,7 +10083,7 @@ __metadata:
     oxlint: "npm:^1.78.0"
     oxlint-tsgolint: "npm:7.0.2001"
     p-queue: "npm:^3.2.0"
-    package-build-stats: "npm:9.5.10"
+    package-build-stats: "npm:9.6.0"
     pacote: "npm:^11.3.5"
     performance-now: "npm:^2.1.0"
     postcss: "npm:^8.5.33"
@@ -19498,6 +19498,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"npm-install-checks@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "npm-install-checks@npm:9.0.0"
+  dependencies:
+    semver: "npm:^7.1.1"
+  checksum: d9d4e7f66a68511fc4a66cbf38ae41e14b1cee5190fb3470c5524f429f6b76a2bcefe51765488efa24ca63572f6fd0773b11323dae26e0db7dfae56b7ccc39e0
+  languageName: node
+  linkType: hard
+
 "npm-name@npm:^8.0.0":
   version: 8.0.0
   resolution: "npm-name@npm:8.0.0"
@@ -20429,9 +20438,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-build-stats@npm:9.5.10":
-  version: 9.5.10
-  resolution: "package-build-stats@npm:9.5.10"
+"package-build-stats@npm:9.6.0":
+  version: 9.6.0
+  resolution: "package-build-stats@npm:9.6.0"
   dependencies:
     "@babel/core": "npm:^7.28.5"
     "@rspack/core": "npm:^2.3.1"
@@ -20449,6 +20458,7 @@ __metadata:
     mitt: "npm:^3.0.1"
     node-fetch: "npm:^2.7.0"
     np: "npm:^10.0.5"
+    npm-install-checks: "npm:^9.0.0"
     oxc-minify: "npm:^0.157.0"
     oxc-parser: "npm:^0.157.0"
     oxc-resolver: "npm:^11.24.2"
@@ -20458,6 +20468,7 @@ __metadata:
     pkg-entry-points: "npm:1.1.2"
     postcss: "npm:^8.4.0"
     postcss-loader: "npm:^8.2.1"
+    resolve.exports: "npm:^2.0.4"
     rimraf: "npm:^6.1.0"
     sanitize-filename: "npm:^1.6.3"
     sass: "npm:^1.69.0"
@@ -20469,7 +20480,7 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     package-stats: bin/cli.js
-  checksum: 8095fd7d349be1b8e92c8a693f19a825731c9a622dd1efd2e2a623cda980bbb9da389bd934b3f5f6c05b8ef4ce50dec734ca577048337cbdf54ace381f4d4ebc
+  checksum: d11c01649546b939028e60aa8000424ca28d66aca9fe1541033e67df5242ee1e04ece9fb0fb11f9d5983314013780b58c2d3ab95bb9e08878b3674f6b2577bc4
   languageName: node
   linkType: hard
 
@@ -22821,6 +22832,13 @@ __metadata:
   version: 0.2.1
   resolution: "resolve-url@npm:0.2.1"
   checksum: c285182cfcddea13a12af92129ce0569be27fb0074ffaefbd3ba3da2eac2acecdfc996d435c4982a9fa2b4708640e52837c9153a5ab9255886a00b0b9e8d2a54
+  languageName: node
+  linkType: hard
+
+"resolve.exports@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "resolve.exports@npm:2.0.4"
+  checksum: 64ed3fceae664125f84900518a093f084c7b8c47c1dc915bc1e0f0505e9ea08f401423624d720d94d3b43605f1cde957160bf59c0a918af894507651b773d066
   languageName: node
   linkType: hard
 
