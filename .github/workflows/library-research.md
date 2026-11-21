@@ -66,7 +66,7 @@ pre-agent-steps:
     continue-on-error: true
     timeout-minutes: 12
     env:
-      GITHUB_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ secrets.LIBRARY_DISCOVERY_GITHUB_TOKEN || github.token }}
       NODE_USE_ENV_PROXY: '1'
     run: node packages/library-discovery/cli.mjs
 post-steps:

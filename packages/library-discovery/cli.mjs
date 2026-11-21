@@ -4,6 +4,7 @@ import { dirname } from 'node:path'
 import { Octokit } from '@octokit/core'
 import { throttling } from '@octokit/plugin-throttling'
 import pRetry from 'p-retry'
+import pThrottle from 'p-throttle'
 import { discoverLibraries, readState } from './index.mjs'
 import catalog from '../../utils/similar-packages.catalog.json' with { type: 'json' }
 import groups from '../../utils/similar-packages.groups.json' with { type: 'json' }
@@ -37,16 +38,28 @@ const octokit = new ThrottledOctokit({
   },
 })
 
+const throttledCodeSearch = pThrottle({
+  limit: 1,
+  interval: config.codeSearchIntervalMs,
+  strict: true,
+})((route, parameters) => octokit.request(route, parameters))
+
 const github = async (route, parameters) =>
   (
-    await pRetry(() => octokit.request(route, parameters), {
-      retries: 2,
-      minTimeout: 25_000,
-      maxTimeout: 65_000,
-      shouldRetry: ({ error }) =>
-        error?.status === 429 ||
-        /try again in \d+(?:\.\d+)?s/i.test(String(error?.message ?? '')),
-    })
+    await pRetry(
+      () =>
+        route === 'GET /search/code'
+          ? throttledCodeSearch(route, parameters)
+          : octokit.request(route, parameters),
+      {
+        retries: 2,
+        minTimeout: 25_000,
+        maxTimeout: 65_000,
+        shouldRetry: ({ error }) =>
+          error?.status === 429 ||
+          /try again in \d+(?:\.\d+)?s/i.test(String(error?.message ?? '')),
+      },
+    )
   ).data
 
 let state
