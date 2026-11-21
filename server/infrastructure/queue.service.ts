@@ -54,6 +54,7 @@ interface QueueJob<
   type: JobType
   maxAge: number
   priority: number
+  age: boolean
   addedTime: Date
   status: (typeof JobStatus)[keyof typeof JobStatus]
   params: TParams
@@ -73,6 +74,7 @@ interface QueueOptions {
 
 interface ProcessOptions<TResult extends RuntimeValue> {
   priority?: number
+  age?: boolean
   maxAge?: number
   onSuccess?: (result: TResult) => void
   onFailure?: (error: RuntimeValue) => void
@@ -217,7 +219,7 @@ class Queue {
 
   ageJobs(): void {
     this.jobs
-      .filter(job => job.status === JobStatus.READY)
+      .filter(job => job.status === JobStatus.READY && job.age)
       .forEach(job => {
         job.priority += 1
       })
@@ -384,6 +386,31 @@ class Queue {
     })
   }
 
+  private joinExistingJob(params: {
+    id: string
+    type: JobType
+    priority: number
+    age: boolean
+    listeners: {
+      resolve: (value: RuntimeValue) => void
+      reject: (reason?: RuntimeValue) => void
+    }
+  }): void {
+    const { id, type, priority, age, listeners } = params
+    log('job id %s already present, adding callbacks', id)
+
+    const existingJob = this.jobs.find(
+      queuedJob => queuedJob.id === id && queuedJob.type === type,
+    )
+
+    if (existingJob) {
+      existingJob.priority = Math.max(existingJob.priority, priority)
+      existingJob.age = existingJob.age || age
+    }
+
+    this.addListenersToJob(id, type, listeners)
+  }
+
   process<TResult extends RuntimeValue, TParams extends RuntimeValue>(
     ...args: ProcessArguments<TResult, TParams>
   ): Promise<TResult> {
@@ -392,6 +419,7 @@ class Queue {
 
     const {
       priority = JobPriority.LOW,
+      age = true,
       maxAge = this.options.maxAge,
       onSuccess = () => {},
       onFailure = () => {},
@@ -464,20 +492,16 @@ class Queue {
       signal?.addEventListener('abort', cancelSubscriber, { once: true })
 
       if (this.hasJob(id, type)) {
-        log('job id %s already present, adding callbacks', id)
-
-        const existingJob = this.jobs.find(
-          queuedJob => queuedJob.id === id && queuedJob.type === type,
-        )
-
-        if (existingJob) {
-          existingJob.priority = Math.max(existingJob.priority, priority)
-        }
-
-        this.addListenersToJob(id, type, {
-          // SAFETY: TResult is constrained to the runtime-value domain used by Queue.
-          resolve: successListener as (value: RuntimeValue) => void,
-          reject: failureListener,
+        this.joinExistingJob({
+          id,
+          type,
+          priority,
+          age,
+          listeners: {
+            // SAFETY: TResult is constrained to the runtime-value domain used by Queue.
+            resolve: successListener as (value: RuntimeValue) => void,
+            reject: failureListener,
+          },
         })
 
         return
@@ -498,6 +522,7 @@ class Queue {
         type,
         maxAge,
         priority,
+        age,
         addedTime: new Date(),
         status: JobStatus.READY,
         params: jobParams,

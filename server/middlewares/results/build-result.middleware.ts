@@ -8,7 +8,10 @@ import type {
 } from '@bundlephobia/service-contracts/cache'
 
 import firebaseUtils from '../../../utils/firebase.utils'
-import { getRequestPriority } from '../../../utils/server.utils'
+import {
+  getRequestAging,
+  getRequestPriority,
+} from '../../../utils/server.utils'
 import { packageAnalysisGateway } from '../../analysis'
 import { BUILD_DURATION_HEADER } from '../../clients/build-service.client'
 import logger from '../../infrastructure/logger.service'
@@ -22,6 +25,7 @@ interface BuildCache {
 export function createBuildMiddleware(cache: BuildCache): Middleware {
   return async ctx => {
     const priority = getRequestPriority(ctx)
+    const age = getRequestAging(ctx)
 
     const { scoped, name, version, description, repository, packageString } =
       ctx.state.resolved
@@ -55,6 +59,7 @@ export function createBuildMiddleware(cache: BuildCache): Middleware {
     try {
       result = await packageAnalysisGateway.analyzePackage(ctx.state.resolved, {
         priority,
+        age,
         signal: abortController.signal,
         onComplete: durationMs => {
           ctx.set(BUILD_DURATION_HEADER, String(durationMs))
