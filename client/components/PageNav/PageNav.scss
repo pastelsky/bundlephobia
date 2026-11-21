@@ -214,32 +214,32 @@
 .mcp-nav__backdrop {
   position: fixed;
   inset: 0;
-  z-index: 10000;
-  background: rgba(0, 0, 0, 0.45);
+  z-index: $popover-z-index + 10;
+  background: var(--color-backdrop);
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 72px $global-spacing * 2 $global-spacing * 2;
+  padding: ($global-spacing * 9) ($global-spacing * 2) ($global-spacing * 2);
   box-sizing: border-box;
 }
 
 .mcp-nav__popup {
   position: absolute;
   right: 0;
-  top: calc(100% + 10px);
+  top: calc(100% + #{$global-spacing * 1.25});
   width: min(92vw, 440px);
   box-sizing: border-box;
-  z-index: 9999;
+  z-index: $popover-z-index + 10;
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 10px;
-  box-shadow: var(--shadow-popover, 0 10px 30px rgba(0, 0, 0, 0.16));
-  padding: 14px;
+  border-radius: $control-border-radius-lg;
+  box-shadow: var(--shadow-popover);
+  padding: $global-spacing * 1.75;
 
   @media screen and (max-width: 40em) {
     position: static;
     width: min(calc(100vw - #{$global-spacing * 4}), 400px);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+    box-shadow: var(--shadow-popover);
   }
 }
 

@@ -84,6 +84,7 @@
   --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
   --shadow-search-box: 0 2px 6px rgba(0, 0, 0, 0.06);
   --shadow-popover: 0 10px 30px rgba(0, 0, 0, 0.16);
+  --color-backdrop: rgba(0, 0, 0, 0.45);
 
   // ── Primary button (dark pill / filled) ──────────────────────────────────
   --color-btn-bg: #212121;
@@ -220,6 +221,7 @@
   // Subtle: slightly lifted surface + gentle glow, not a solid box
   --shadow-search-box: 0 2px 12px rgba(0, 0, 0, 0.35);
   --shadow-popover: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --color-backdrop: rgba(0, 0, 0, 0.65);
 
   // Primary button (inverted in dark)
   --color-btn-bg: #e6edf3;
