@@ -38,13 +38,24 @@ export function setAmplitudeLoader(loader: AmplitudeLoader): () => void {
   }
 }
 
+const AUTOMATED_UA_PATTERN =
+  /bot|crawler|spider|headlesschrome|prerender|lighthouse/i
+
+function isAutomatedBrowser(): boolean {
+  return (
+    typeof navigator !== 'undefined' &&
+    AUTOMATED_UA_PATTERN.test(navigator.userAgent)
+  )
+}
+
 function loadAmplitude() {
   if (
     typeof window === 'undefined' ||
     process.env.NODE_ENV !== 'production' ||
     !['bundlephobia.com', 'www.bundlephobia.com'].includes(
       window.location.hostname,
-    )
+    ) ||
+    isAutomatedBrowser()
   )
     return undefined
 

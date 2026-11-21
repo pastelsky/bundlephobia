@@ -99,4 +99,36 @@ describe('Analytics', () => {
 
     expect(() => Analytics.performedScan()).not.toThrow()
   })
+
+  it('skips Amplitude initialization and tracking for crawler user agents', async () => {
+    const previousNavigator = Object.getOwnPropertyDescriptor(
+      globalThis,
+      'navigator',
+    )
+
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: {
+        userAgent:
+          'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+      },
+    })
+
+    try {
+      initializeAmplitude()
+      Analytics.pageView()
+      await new Promise(resolve => {
+        setTimeout(resolve, 0)
+      })
+
+      expect(init).not.toHaveBeenCalled()
+      expect(track).not.toHaveBeenCalled()
+    } finally {
+      if (previousNavigator) {
+        Object.defineProperty(globalThis, 'navigator', previousNavigator)
+      } else {
+        Reflect.deleteProperty(globalThis, 'navigator')
+      }
+    }
+  })
 })
