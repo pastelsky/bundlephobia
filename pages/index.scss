@@ -57,6 +57,10 @@ $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12
   @include font-size-md;
   user-select: none;
   margin-top: $global-spacing * 2;
+
+  @media screen and (max-width: 40em) {
+    margin-top: $global-spacing;
+  }
 }
 
 .logo__alt {
@@ -76,8 +80,8 @@ $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12
   height: 157px * 0.9;
 
   @media screen and (max-width: 40em) {
-    width: 137px * 0.8;
-    height: 157px * 0.8;
+    width: 137px * 0.62;
+    height: 157px * 0.62;
   }
 
   &:hover {
@@ -98,8 +102,8 @@ $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12
   width: 100%;
 
   @media screen and (max-width: 40em) {
-    margin-top: 5vh;
-    margin-bottom: 5vh;
+    margin-top: $global-spacing * 2.5;
+    margin-bottom: 0;
   }
 
   .autocomplete-input {
