@@ -27,6 +27,11 @@ import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
+import {
+  fetchTrendsDownloads,
+  getCachedPackageDownloads,
+  type PackageDownloadsResult,
+} from './trendsDownloadsClient'
 import { groupTrendsPackage } from '../../utils/trends'
 import { trendsComparisonCanonicalPath } from '../../seo/trends-comparisons'
 import {
@@ -136,6 +141,39 @@ function MetricValue({
       )}
     </>
   )
+}
+
+function mergeDownloadsIntoTrendsResponse(
+  serverRes: TrendsResponse,
+  clientDownloads: Map<string, PackageDownloadsResult>,
+): TrendsResponse {
+  return {
+    ...serverRes,
+    packages: serverRes.packages.map(pack => {
+      // Preserve server-supplied downloads when present (for instance in mocked tests)
+      if (pack.downloads.length > 0) return pack
+
+      const clientResult = clientDownloads.get(pack.name)
+
+      if (!clientResult) return pack
+
+      const warnings =
+        clientResult.warning && !pack.warnings.includes(clientResult.warning)
+          ? [...pack.warnings, clientResult.warning]
+          : pack.warnings
+
+      return {
+        ...pack,
+        downloads: clientResult.downloads,
+        current: {
+          ...pack.current,
+          weeklyDownloads:
+            pack.current.weeklyDownloads ?? clientResult.weeklyDownloads,
+        },
+        warnings,
+      }
+    }),
+  }
 }
 
 function trackTrendsLoad(
@@ -334,7 +372,7 @@ export default function TrendsPage({
     [router],
   )
 
-  // Fetch trends data
+  // Fetch server metadata/stars/size and client-side npm downloads in parallel
   useEffect(() => {
     if (packages.length === 0) {
       setLoadState({ status: 'empty', data: null })
@@ -344,6 +382,17 @@ export default function TrendsPage({
 
     let isMounted = true
     const startedAt = performance.now()
+    const downloadController = new AbortController()
+    let serverRes: TrendsResponse | null = null
+    let clientDownloads = new Map<string, PackageDownloadsResult>()
+    let downloadsSettled = false
+
+    for (const pkg of packages) {
+      const cached = getCachedPackageDownloads(pkg, range)
+
+      if (cached) clientDownloads.set(pkg, cached)
+    }
+
     // An indicator that flashes for a quick cache or network response is more
     // distracting than helpful. Keep the current chart visible until a request
     // has genuinely taken long enough to need a loading state.
@@ -359,17 +408,46 @@ export default function TrendsPage({
       }
     }, 400)
 
+    const publishIfReady = () => {
+      if (!isMounted || !serverRes) return
+
+      const merged = mergeDownloadsIntoTrendsResponse(
+        serverRes,
+        clientDownloads,
+      )
+
+      if (!downloadsSettled) {
+        setLoadState(current => ({
+          status: 'pending',
+          data: merged,
+          showLoading:
+            current.status === 'pending' ? current.showLoading : false,
+        }))
+
+        return
+      }
+
+      window.clearTimeout(loadingTimer)
+      setLoadState({ status: 'ready', data: merged, requestKey })
+      trackTrendsLoad(merged, packages.length, range, startedAt)
+    }
+
     API.getTrends(packages, range)
       .then(res => {
-        window.clearTimeout(loadingTimer)
+        if (!isMounted) return
 
-        if (isMounted) {
-          setLoadState({ status: 'ready', data: res, requestKey })
-          trackTrendsLoad(res, packages.length, range, startedAt)
+        serverRes = res
+
+        if (res.packages.every(pack => pack.downloads.length > 0)) {
+          downloadsSettled = true
+          downloadController.abort()
         }
+
+        publishIfReady()
       })
       .catch(err => {
         window.clearTimeout(loadingTimer)
+        downloadController.abort()
 
         if (isMounted) {
           setLoadState(current => ({
@@ -385,9 +463,29 @@ export default function TrendsPage({
         }
       })
 
+    fetchTrendsDownloads(packages, range, {
+      signal: downloadController.signal,
+    })
+      .then(downloadsMap => {
+        if (!isMounted || downloadsSettled) return
+
+        clientDownloads = downloadsMap
+        downloadsSettled = true
+        publishIfReady()
+      })
+      .catch(err => {
+        if (!isMounted || downloadsSettled) return
+
+        if (err instanceof Error && err.name === 'AbortError') return
+
+        downloadsSettled = true
+        publishIfReady()
+      })
+
     return () => {
       isMounted = false
       window.clearTimeout(loadingTimer)
+      downloadController.abort()
     }
   }, [packages, range, requestKey, startLoading])
 

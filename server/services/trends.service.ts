@@ -11,7 +11,6 @@ import type {
 import {
   buildGithubStarTotals,
   dateForGithubDay,
-  formatTrendsDate,
   startOfTrendsRangeDate,
 } from '../../utils/trends'
 import {
@@ -19,7 +18,6 @@ import {
   fetchGithubStarHistoryPage,
   type GithubStarHistoryRow,
 } from '../clients/github.client'
-import { fetchNpmDownloadRange } from '../clients/npm-downloads.client'
 import { fetchPackageHistory } from './package-history.service'
 
 export { buildGithubStarTotals }
@@ -51,25 +49,11 @@ const packageTrendsCache = new LRU<string, TrendsPackageSeries>({
 
 const packageTrendsRequests = new Map<string, Promise<TrendsPackageSeries>>()
 
-function isoDate(date: Date): string {
-  return formatTrendsDate(date)
-}
-
 export function getTrendsRangeStart(
   range: TrendsRange,
   now = new Date(),
 ): string {
   return startOfTrendsRangeDate(range, now)
-}
-
-export function getNpmTrendsRange(
-  range: TrendsRange,
-  now = new Date(),
-): string {
-  const end = isoDate(now)
-  const start = getTrendsRangeStart(range, now)
-
-  return `${start}:${end}`
 }
 
 function parsePackages(packages: string[]): string[] {
@@ -132,36 +116,6 @@ async function fetchGithubStars(
   }
 }
 
-async function fetchDownloads(
-  packageName: string,
-  range: TrendsRange,
-): Promise<TrendsPoint[]> {
-  const points = await fetchNpmDownloadRange(
-    packageName,
-    getNpmTrendsRange(range),
-  )
-
-  const normalized = points
-    .filter(point => /^\d{4}-\d{2}-\d{2}$/.test(point.day))
-    .map(point => ({ date: point.day, value: point.downloads }))
-
-  // npm's downloads range API returns 0 for trailing UTC days that have not yet
-  // been aggregated; drop those unaggregated tail buckets when prior days exist.
-  if (normalized.length > 1 && normalized.some(point => point.value > 0)) {
-    let end = normalized.length
-
-    while (end > 1 && normalized[end - 1].value === 0) {
-      end -= 1
-    }
-
-    if (end < normalized.length) {
-      return normalized.slice(0, end)
-    }
-  }
-
-  return normalized
-}
-
 function sizePoints(history: PackageHistoryResponse): TrendsPoint[] {
   return history.versions.flatMap(version => {
     if (!version.publishedAt || version.gzip === null) return []
@@ -185,17 +139,6 @@ function latestBuiltVersion(
     .at(-1)
 }
 
-function getSettledDownloads(
-  result: PromiseSettledResult<TrendsPoint[]>,
-  warnings: string[],
-): TrendsPoint[] {
-  if (result.status === 'fulfilled') return result.value
-
-  warnings.push('npm download history is unavailable')
-
-  return []
-}
-
 type GithubTrendResult = { points: TrendsPoint[]; current: number | null }
 
 function getSettledGithub(
@@ -215,12 +158,6 @@ async function fetchPackageTrendsSource(
 ): Promise<TrendsPackageSeries> {
   const from = getTrendsRangeStart(range)
 
-  // npm downloads do not depend on the package's release history or repository.
-  // Attach a rejection handler immediately while the history request is pending.
-  const downloadsResults = Promise.allSettled([
-    fetchDownloads(packageName, range),
-  ])
-
   const history = await fetchPackageHistory(packageName, {
     from,
     limit: 500,
@@ -228,25 +165,23 @@ async function fetchPackageTrendsSource(
 
   const warnings: string[] = []
 
-  const [[downloadsResult], [githubResult]] = await Promise.all([
-    downloadsResults,
-    Promise.allSettled([
-      history.repository
-        ? fetchGithubStars(history.repository, from)
-        : Promise.resolve({ points: [], current: null }),
-    ]),
+  const [githubResult] = await Promise.allSettled([
+    history.repository
+      ? fetchGithubStars(history.repository, from)
+      : Promise.resolve({ points: [], current: null }),
   ])
 
-  const downloads = getSettledDownloads(downloadsResult, warnings)
   const github = getSettledGithub(githubResult, warnings)
 
   const size = sizePoints(history)
   const latest = latestBuiltVersion(history.versions)
 
+  // npm downloads are fetched client-side directly from api.npmjs.org to avoid
+  // shared server IP rate-limiting (Cloudflare 429 / 1015).
   return {
     name: packageName,
     repository: history.repository,
-    downloads,
+    downloads: [],
     stars: github.points,
     size,
     releases: history.releases.map(release => ({
@@ -256,10 +191,7 @@ async function fetchPackageTrendsSource(
       minor: release.minor,
     })),
     current: {
-      weeklyDownloads:
-        downloads.length > 0
-          ? downloads.slice(-7).reduce((total, point) => total + point.value, 0)
-          : null,
+      weeklyDownloads: null,
       stars: github.current,
       size: latest?.size ?? null,
       gzip: latest?.gzip ?? null,
