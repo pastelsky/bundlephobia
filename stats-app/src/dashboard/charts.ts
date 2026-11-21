@@ -54,18 +54,19 @@ export interface ChartDefinition {
   }
 }
 
+const formatBytesPerSecond = (value: number) => `${formatBytes(value)}/s`
+
 // Each chart owns its queries, series labels, colors, and display options.
 const traffic = {
   requests: {
     id: 'requests',
     title: 'Request traffic',
-    description: 'Requests reaching the website',
-    unit: 'requests',
-    measurement: 'counter',
+    description: 'Requests per minute reaching the website',
+    unit: 'req/min',
     format: value => numberFormat.format(value),
     series: window => [
       {
-        expression: `sum(increase(haproxy_frontend_http_requests_total${frontend}[${window}]))`,
+        expression: `sum(rate(haproxy_frontend_http_requests_total${frontend}[${window}])) * 60`,
         name: 'Requests',
         color: 'orange',
       },
@@ -74,14 +75,13 @@ const traffic = {
   responses: {
     id: 'responses',
     title: 'Response health',
-    description: 'Responses grouped by HTTP status class',
-    unit: 'responses',
-    measurement: 'counter',
+    description: 'Responses per minute grouped by HTTP status class',
+    unit: 'resp/min',
     stacked: true,
     format: value => numberFormat.format(value),
     series: window => [
       {
-        expression: `sum by (code) (increase(haproxy_frontend_http_responses_total${frontend}[${window}]))`,
+        expression: `sum by (code) (rate(haproxy_frontend_http_responses_total${frontend}[${window}])) * 60`,
         groupBy: {
           label: 'code',
           categories: [
@@ -96,21 +96,44 @@ const traffic = {
       },
     ],
   },
+  errorRate: {
+    id: 'error-rate',
+    title: 'HTTP error rate',
+    description: 'Percentage of responses returning 5xx or 4xx',
+    unit: '%',
+    chart: { type: 'line', minValue: 0 },
+    format: value => `${numberFormat.format(value)}%`,
+    series: window => {
+      const total = `sum(rate(haproxy_frontend_http_responses_total${frontend}[${window}]))`
+
+      return [
+        {
+          expression: `100 * sum(rate(haproxy_frontend_http_responses_total{job="haproxy",proxy="bundlephobia_http",code="5xx"}[${window}])) / (${total} > 0)`,
+          name: '5xx %',
+          color: 'rose',
+        },
+        {
+          expression: `100 * sum(rate(haproxy_frontend_http_responses_total{job="haproxy",proxy="bundlephobia_http",code="4xx"}[${window}])) / (${total} > 0)`,
+          name: '4xx %',
+          color: 'amber',
+        },
+      ]
+    },
+  },
   bandwidth: {
     id: 'bandwidth',
     title: 'Network traffic',
-    description: 'Data sent to and received from visitors',
-    unit: 'bytes',
-    measurement: 'counter',
-    format: formatBytes,
+    description: 'Throughput sent to and received from visitors',
+    unit: 'bytes/s',
+    format: formatBytesPerSecond,
     series: window => [
       {
-        expression: `sum(increase(haproxy_frontend_bytes_out_total${frontend}[${window}]))`,
+        expression: `sum(rate(haproxy_frontend_bytes_out_total${frontend}[${window}]))`,
         name: 'Sent',
         color: 'sky',
       },
       {
-        expression: `sum(increase(haproxy_frontend_bytes_in_total${frontend}[${window}]))`,
+        expression: `sum(rate(haproxy_frontend_bytes_in_total${frontend}[${window}]))`,
         name: 'Received',
         color: 'slate',
       },
@@ -119,14 +142,14 @@ const traffic = {
   sessions: {
     id: 'sessions',
     title: 'Open connections',
-    description: 'Concurrent sessions at the public frontend',
+    description: 'Peak concurrent sessions at the public frontend',
     unit: 'sessions',
     chart: { allowDecimals: false },
     format: value => numberFormat.format(value),
-    series: () => [
+    series: window => [
       {
-        expression: `sum(haproxy_frontend_current_sessions${frontend})`,
-        name: 'Sessions',
+        expression: `sum(max_over_time(haproxy_frontend_current_sessions${frontend}[${window}]))`,
+        name: 'Peak sessions',
         color: 'slate',
       },
     ],
@@ -143,15 +166,14 @@ function outcomeChart(
   return {
     id,
     title,
-    description: 'Success and failure',
-    unit: 'attempts',
-    measurement: 'counter',
+    description: 'Success and failure rate per minute',
+    unit: 'attempts/min',
     stacked: true,
     showShare: true,
     format: value => numberFormat.format(value),
     series: window =>
       ['success', 'failure'].map(outcome => ({
-        expression: `sum(increase(${metric}{job="${job}",outcome="${outcome}"}[${window}]))`,
+        expression: `sum(rate(${metric}{job="${job}",outcome="${outcome}"}[${window}])) * 60`,
         name: outcome === 'success' ? 'Success' : 'Failure',
         color: outcome === 'success' ? 'emerald' : 'rose',
       })),
@@ -165,9 +187,10 @@ function cacheChart(percentage: boolean): ChartDefinition {
   return {
     id: percentage ? 'cache-share' : 'cache-responses',
     title: percentage ? 'Cache coverage' : 'Cache responses',
-    description: 'Successful origin responses',
-    unit: percentage ? '%' : 'responses',
-    measurement: 'counter',
+    description: percentage
+      ? 'Percentage of successful responses served from cache'
+      : 'Successful origin responses per minute',
+    unit: percentage ? '%' : 'resp/min',
     stacked: true,
     showShare: !percentage,
     format: value =>
@@ -177,12 +200,12 @@ function cacheChart(percentage: boolean): ChartDefinition {
     chart: percentage ? { maxValue: 100 } : {},
     series: window =>
       ['hit', 'miss'].map(cache => {
-        const count = `sum(increase(bundlephobia_analysis_responses_total{job="bundlephobia_application",cache="${cache}"}[${window}]))`
+        const rate = `sum(rate(bundlephobia_analysis_responses_total{job="bundlephobia_application",cache="${cache}"}[${window}]))`
 
         return {
           expression: percentage
-            ? `100 * (${count}) / sum(increase(${cacheMetric}[${window}]))`
-            : count,
+            ? `100 * (${rate}) / (sum(rate(${cacheMetric}[${window}])) > 0)`
+            : `(${rate}) * 60`,
           name: cache === 'hit' ? 'Cached' : 'Computed',
           color: cache === 'hit' ? 'emerald' : 'orange',
         }
@@ -198,7 +221,7 @@ function durationChart(
   return {
     id,
     title,
-    description: 'p50, p95 and p99 · uncached work',
+    description: 'p50, p90, p95 and p99 · uncached work',
     unit: 'seconds',
     chart: { type: 'line' },
     format: value =>
@@ -210,6 +233,7 @@ function durationChart(
     series: window =>
       [
         { quantile: 0.5, name: 'p50', color: 'sky' },
+        { quantile: 0.9, name: 'p90', color: 'amber' },
         { quantile: 0.95, name: 'p95', color: 'orange' },
         { quantile: 0.99, name: 'p99', color: 'rose' },
       ].map(({ quantile, name, color }) => ({
@@ -226,19 +250,19 @@ function queueChart(state: 'waiting' | 'running'): ChartDefinition {
     title: state === 'waiting' ? 'Queue backlog' : 'Work in progress',
     description:
       state === 'waiting'
-        ? 'Jobs waiting for a worker'
-        : 'Jobs currently running',
+        ? 'Peak jobs waiting for a worker'
+        : 'Peak jobs running concurrently',
     unit: 'jobs',
     chart: { type: 'line', allowDecimals: false },
     format: value => numberFormat.format(value),
-    series: () => [
+    series: window => [
       {
-        expression: `sum(bundlephobia_queue_jobs{job="bundlephobia_application",queue="analysis",state="${state}"})`,
+        expression: `sum(max_over_time(bundlephobia_queue_jobs{job="bundlephobia_application",queue="analysis",state="${state}"}[${window}]))`,
         name: 'Analysis',
         color: 'orange',
       },
       {
-        expression: `sum(bundlephobia_queue_jobs{job="bundlephobia_installations",queue="installations",state="${state}"})`,
+        expression: `sum(max_over_time(bundlephobia_queue_jobs{job="bundlephobia_installations",queue="installations",state="${state}"}[${window}]))`,
         name: 'Installations',
         color: 'violet',
       },
@@ -251,13 +275,13 @@ const buildRequestMetric =
 
 function buildRequestSeries(percentage: boolean): SeriesFactory {
   return window => {
-    const count = `sum by (client_family) (increase(${buildRequestMetric}[${window}]))`
+    const rate = `sum by (client_family) (rate(${buildRequestMetric}[${window}]))`
 
     return [
       {
         expression: percentage
-          ? `100 * (${count}) / ignoring(client_family) group_left sum(${count})`
-          : count,
+          ? `100 * (${rate}) / ignoring(client_family) group_left (sum(${rate}) > 0)`
+          : `(${rate}) * 60`,
         groupBy: {
           label: 'client_family',
           categories: [
@@ -292,15 +316,14 @@ function buildRequestSeries(percentage: boolean): SeriesFactory {
 const buildRequests: ChartDefinition = {
   id: 'build-requests-by-client',
   title: 'Build requests by client',
-  description: 'Uncached analysis requests · grouped by client family',
-  unit: 'requests',
-  measurement: 'counter',
+  description: 'Uncached analysis requests per minute · grouped by client',
+  unit: 'req/min',
   stacked: true,
   showShare: true,
   format: value => numberFormat.format(value),
   series: buildRequestSeries(false),
   views: [
-    { id: 'counts', title: 'Requests', series: buildRequestSeries(false) },
+    { id: 'counts', title: 'Rate', series: buildRequestSeries(false) },
     {
       id: 'share',
       title: 'Percentage',
@@ -318,15 +341,14 @@ const buildRequests: ChartDefinition = {
 const buildFailures: ChartDefinition = {
   id: 'build-failure-reasons',
   title: 'Build failure reasons',
-  description: 'Failures grouped by error code',
-  unit: 'failures',
-  measurement: 'counter',
+  description: 'Failures per minute grouped by error code',
+  unit: 'failures/min',
   stacked: true,
   showShare: true,
   format: value => numberFormat.format(value),
   series: window => [
     {
-      expression: `sum by (code) (increase(bundlephobia_build_failures_total{job="bundlephobia_builds"}[${window}]))`,
+      expression: `sum by (code) (rate(bundlephobia_build_failures_total{job="bundlephobia_builds"}[${window}])) * 60`,
       groupBy: { label: 'code' },
     },
   ],
@@ -466,16 +488,37 @@ const diskViews: ChartView[] = mounts.map(mount => ({
     })),
 }))
 
+const cpuModePercent = (mode: string, window: string) =>
+  hostHistory(
+    `100 * sum(rate(node_cpu_seconds_total{${hostJob},mode="${mode}"}[${window}])) / sum(rate(node_cpu_seconds_total{${hostJob}}[${window}]))`,
+    `100 * sum(rate(bundlephobia_host_cpu_ticks_total{${legacyHostJob},mode="${mode}"}[${window}])) / sum(rate(bundlephobia_host_cpu_ticks_total{${legacyHostJob}}[${window}]))`,
+  )
+
 const resources = {
-  cpu: {
+  hostCpu: {
     id: 'host-cpu',
-    title: 'CPU usage',
-    description: 'Busy time across all cores · excludes idle and I/O wait',
+    title: 'Host CPU usage',
+    description: 'User, system (kernel), and I/O wait across all cores',
     unit: '%',
+    stacked: true,
     chart: { minValue: 0, maxValue: 100 },
     format: value => `${numberFormat.format(value)}%`,
     series: window => [
-      { expression: cpuUsage(window), name: 'CPU', color: 'orange' },
+      {
+        expression: cpuModePercent('user', window),
+        name: 'User',
+        color: 'orange',
+      },
+      {
+        expression: cpuModePercent('system', window),
+        name: 'System',
+        color: 'rose',
+      },
+      {
+        expression: cpuModePercent('iowait', window),
+        name: 'I/O wait',
+        color: 'amber',
+      },
     ],
   },
   ioWait: {
@@ -487,10 +530,7 @@ const resources = {
     format: value => `${numberFormat.format(value)}%`,
     series: window => [
       {
-        expression: hostHistory(
-          `100 * sum(rate(node_cpu_seconds_total{${hostJob},mode="iowait"}[${window}])) / sum(rate(node_cpu_seconds_total{${hostJob}}[${window}]))`,
-          `100 * sum(rate(bundlephobia_host_cpu_ticks_total{${legacyHostJob},mode="iowait"}[${window}])) / sum(rate(bundlephobia_host_cpu_ticks_total{${legacyHostJob}}[${window}]))`,
-        ),
+        expression: cpuModePercent('iowait', window),
         name: 'I/O wait',
         color: 'amber',
       },
@@ -522,16 +562,20 @@ const resources = {
       },
     ],
   },
-  memory: {
+  hostMemory: {
     id: 'host-memory',
-    title: 'Memory usage',
+    title: 'Host memory usage',
     chart: { type: 'line' },
-    capacity: { used: 'Used', total: 'Total' },
-    description: 'RAM in use · reclaimable filesystem cache is available',
+    capacity: { used: 'Used (peak)', total: 'Total' },
+    description: 'Peak RAM in use · reclaimable filesystem cache is available',
     unit: 'bytes',
     format: formatBytes,
-    series: () => [
-      { expression: memoryUsed, name: 'Used', color: 'violet' },
+    series: window => [
+      {
+        expression: `max_over_time((${memoryUsed})[${window}:1m])`,
+        name: 'Used (peak)',
+        color: 'violet',
+      },
       {
         expression: memoryTotal,
         name: 'Total',
@@ -551,18 +595,42 @@ const resources = {
     series: diskViews[0].series,
     views: diskViews,
   },
+  diskIo: {
+    id: 'host-disk-io',
+    title: 'Disk I/O throughput',
+    description: 'Read, write, and discard throughput on vda and loop5',
+    unit: 'bytes/s',
+    chart: { type: 'line' },
+    format: formatBytesPerSecond,
+    series: window => [
+      {
+        expression: `sum(rate(node_disk_written_bytes_total{${hostJob},device=~"vda|loop5"}[${window}]))`,
+        name: 'Write',
+        color: 'orange',
+      },
+      {
+        expression: `sum(rate(node_disk_read_bytes_total{${hostJob},device=~"vda|loop5"}[${window}]))`,
+        name: 'Read',
+        color: 'sky',
+      },
+      {
+        expression: `sum(rate(node_disk_discarded_bytes_total{${hostJob},device=~"vda|loop5"}[${window}]))`,
+        name: 'Discard',
+        color: 'amber',
+      },
+    ],
+  },
   network: {
     id: 'host-network',
-    title: 'Host network traffic',
-    description: 'Interface traffic · excludes loopback and virtual bridges',
-    unit: 'bytes',
-    measurement: 'counter',
-    format: formatBytes,
+    title: 'Host network throughput',
+    description: 'Interface throughput · excludes loopback and virtual bridges',
+    unit: 'bytes/s',
+    format: formatBytesPerSecond,
     series: window =>
       ['receive', 'transmit'].map(direction => ({
         expression: hostHistory(
-          `sum(increase(node_network_${direction}_bytes_total{${hostJob}}[${window}]))`,
-          `sum(increase(bundlephobia_host_network_bytes_total{${legacyHostJob},direction="${direction}"}[${window}]))`,
+          `sum(rate(node_network_${direction}_bytes_total{${hostJob}}[${window}]))`,
+          `sum(rate(bundlephobia_host_network_bytes_total{${legacyHostJob},direction="${direction}"}[${window}]))`,
         ),
         name: direction === 'receive' ? 'Received' : 'Sent',
         color: direction === 'receive' ? 'sky' : 'orange',
@@ -573,17 +641,17 @@ const resources = {
     title: 'Swap usage',
     chart: { type: 'line' },
     capacity: {
-      used: 'Used',
+      used: 'Used (peak)',
       total: 'Total',
       emptyLabel: 'No swap configured',
     },
-    description: 'Swap space in use and total swap capacity',
+    description: 'Peak swap space in use and total swap capacity',
     unit: 'bytes',
     format: formatBytes,
-    series: () => [
+    series: window => [
       {
-        expression: swapUsed,
-        name: 'Used',
+        expression: `max_over_time((${swapUsed})[${window}:1m])`,
+        name: 'Used (peak)',
         color: 'rose',
       },
       {
@@ -615,8 +683,8 @@ const pm2 = {
   },
   availability: {
     id: 'pm2-availability',
-    title: 'Application status',
-    description: 'PM2 status for each application',
+    title: 'Worker status',
+    description: 'PM2 status for each worker process',
     unit: 'status',
     chart: { type: 'line', minValue: 0, maxValue: 4, allowDecimals: false },
     format: value =>
@@ -625,49 +693,49 @@ const pm2 = {
       ] ?? 'Unknown',
     series: () => [
       {
-        expression: `pm2_app_status{${pm2Job}}`,
-        groupBy: { label: 'app' },
+        expression: `label_join(pm2_app_status{${pm2Job}}, "worker", " #", "app", "instance")`,
+        groupBy: { label: 'worker' },
       },
     ],
   },
   uptime: {
     id: 'pm2-uptime',
-    title: 'Application uptime',
-    description: 'Time since PM2 last started each application',
+    title: 'Worker uptime',
+    description: 'Time since PM2 last started each worker process',
     unit: 'hours',
     chart: { type: 'line' },
     format: value => `${numberFormat.format(value / 3600)} h`,
     series: () => [
       {
-        expression: `pm2_app_uptime{${pm2Job}}`,
-        groupBy: { label: 'app' },
-      },
-    ],
-  },
-  cpu: {
-    id: 'pm2-cpu',
-    title: 'Worker CPU',
-    description: 'CPU utilization reported by PM2',
-    unit: '%',
-    chart: { type: 'line', minValue: 0, maxValue: 100 },
-    format: value => `${numberFormat.format(value)}%`,
-    series: () => [
-      {
-        expression: `label_join(pm2_app_pids_cpu{${pm2Job}}, "worker", " #", "app", "instance")`,
+        expression: `label_join(pm2_app_uptime{${pm2Job}}, "worker", " #", "app", "instance")`,
         groupBy: { label: 'worker' },
       },
     ],
   },
-  memory: {
+  pm2Cpu: {
+    id: 'pm2-cpu',
+    title: 'Worker CPU',
+    description: 'Peak CPU utilization per worker reported by PM2',
+    unit: '%',
+    chart: { type: 'line', minValue: 0, maxValue: 100 },
+    format: value => `${numberFormat.format(value)}%`,
+    series: window => [
+      {
+        expression: `label_join(max_over_time(pm2_app_pids_cpu{${pm2Job}}[${window}]), "worker", " #", "app", "instance")`,
+        groupBy: { label: 'worker' },
+      },
+    ],
+  },
+  pm2Memory: {
     id: 'pm2-memory',
     title: 'Worker memory',
-    description: 'Resident memory reported by PM2',
+    description: 'Peak resident memory per worker reported by PM2',
     unit: 'bytes',
     chart: { type: 'line' },
     format: formatBytes,
-    series: () => [
+    series: window => [
       {
-        expression: `label_join(pm2_app_pids_memory{${pm2Job}}, "worker", " #", "app", "instance")`,
+        expression: `label_join(max_over_time(pm2_app_pids_memory{${pm2Job}}[${window}]), "worker", " #", "app", "instance")`,
         groupBy: { label: 'worker' },
       },
     ],

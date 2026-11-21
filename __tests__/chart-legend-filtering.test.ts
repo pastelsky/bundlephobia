@@ -45,7 +45,7 @@ describe('Tremor chart props construction and interactions', () => {
     formatter: String,
   }
 
-  it('provides an onValueChange handler so Tremor enables interactive legend and series highlighting', () => {
+  it('disables Tremor built-in legend slider so TimeSeriesChart renders a single deduplicated interactive legend', () => {
     const props = buildChartProps(
       {
         data: [],
@@ -56,8 +56,8 @@ describe('Tremor chart props construction and interactions', () => {
     )
 
     expect(props.onValueChange).toBeInstanceOf(Function)
-    expect(props.enableLegendSlider).toBe(true)
-    expect(props.showLegend).toBe(true)
+    expect(props.enableLegendSlider).toBe(false)
+    expect(props.showLegend).toBe(false)
     expect(props.categories).toEqual(dummyContext.categories)
     expect(props.colors).toEqual(dummyContext.colors)
   })

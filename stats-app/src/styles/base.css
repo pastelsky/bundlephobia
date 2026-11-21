@@ -25,3 +25,8 @@
     @apply cursor-pointer;
   }
 }
+
+.recharts-tooltip-wrapper {
+  z-index: 40 !important;
+  pointer-events: none;
+}

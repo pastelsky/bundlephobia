@@ -8,7 +8,7 @@ export function Panel({
   return (
     <Card
       {...props}
-      className={`min-w-0 rounded-[10px] border-stats-border p-4 ${className}`}
+      className={`relative min-w-0 rounded-[10px] border-stats-border p-4 hover:z-10 ${className}`}
     />
   )
 }

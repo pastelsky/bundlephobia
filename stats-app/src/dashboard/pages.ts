@@ -1,15 +1,17 @@
 import { CHARTS, type ChartDefinition } from './charts'
-import {
-  Activity,
-  Cpu,
-  Hammer,
-  LayoutDashboard,
-  RotateCcw,
-  ShieldAlert,
-} from 'lucide-react'
+import { Activity, Cpu, Hammer, LayoutDashboard } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import type { DashboardSource } from './sources'
+
+export type BreakdownKind = 'responses' | 'disk'
+
+export interface DashboardTab {
+  id: string
+  title: string
+  panels?: ChartDefinition[]
+  breakdown?: BreakdownKind
+}
 
 export interface DashboardPage {
   id: string
@@ -19,77 +21,63 @@ export interface DashboardPage {
   icon: LucideIcon
   source: DashboardSource
   panels: ChartDefinition[]
-  breakdown: boolean
-  tabs: { id: string; title: string; panels?: ChartDefinition[] }[]
+  tabs: DashboardTab[]
 }
 
-// Pages reference chart objects directly; tabs may inherit the full page.
 export const PAGES: DashboardPage[] = [
   {
     id: 'overview',
     title: 'Overview',
-    heading: 'Traffic overview',
-    description: 'Requests, response health, and connections at a glance.',
+    heading: 'Production overview',
+    description:
+      'Golden signals across traffic, errors, cache, build latency, queues, and host CPU.',
     icon: LayoutDashboard,
     source: 'haproxy',
-    panels: [CHARTS.requests, CHARTS.responses],
-    breakdown: false,
+    panels: [
+      CHARTS.requests,
+      CHARTS.errorRate,
+      CHARTS.cacheShare,
+      CHARTS.buildDuration,
+      CHARTS.queueBacklog,
+      CHARTS.hostCpu,
+    ],
     tabs: [],
   },
   {
     id: 'traffic',
     title: 'Traffic',
-    heading: 'Website traffic',
-    description: 'Request volume, network traffic, and active connections.',
+    heading: 'Website traffic & reliability',
+    description:
+      'Request volume, HTTP status classes, error rates, and bandwidth.',
     icon: Activity,
     source: 'haproxy',
-    panels: [CHARTS.requests, CHARTS.bandwidth, CHARTS.sessions],
-    breakdown: false,
-    tabs: [],
-  },
-  {
-    id: 'responses',
-    title: 'Response health',
-    heading: 'Response health',
-    description: 'HTTP status classes across the public website.',
-    icon: ShieldAlert,
-    source: 'haproxy',
-    panels: [CHARTS.responses],
-    breakdown: true,
-    tabs: [],
-  },
-  {
-    id: 'resources',
-    title: 'Resources',
-    heading: 'Server resources',
-    description:
-      'CPU, memory, storage, and network usage on the production host.',
-    icon: Cpu,
-    source: 'resources',
     panels: [
-      CHARTS.cpu,
-      CHARTS.load,
-      CHARTS.memory,
-      CHARTS.disk,
-      CHARTS.ioWait,
-      CHARTS.network,
-      CHARTS.swap,
+      CHARTS.requests,
+      CHARTS.responses,
+      CHARTS.errorRate,
+      CHARTS.sessions,
     ],
-    breakdown: false,
     tabs: [
       {
-        id: 'all',
-        title: 'All resources',
+        id: 'overview',
+        title: 'Overview',
+        panels: [
+          CHARTS.requests,
+          CHARTS.responses,
+          CHARTS.errorRate,
+          CHARTS.sessions,
+        ],
       },
       {
-        id: 'compute',
-        title: 'CPU & memory',
-        panels: [CHARTS.cpu, CHARTS.load, CHARTS.memory, CHARTS.swap],
+        id: 'responses',
+        title: 'Response health',
+        panels: [CHARTS.responses, CHARTS.errorRate],
+        breakdown: 'responses',
       },
       {
-        id: 'storage',
-        title: 'Disk & network',
-        panels: [CHARTS.disk, CHARTS.ioWait, CHARTS.network],
+        id: 'bandwidth',
+        title: 'Bandwidth & sessions',
+        panels: [CHARTS.bandwidth, CHARTS.sessions],
       },
     ],
   },
@@ -97,31 +85,41 @@ export const PAGES: DashboardPage[] = [
     id: 'pipeline',
     title: 'Builds & installs',
     heading: 'Builds & installations',
-    description: 'Cache coverage, queues, outcomes, and processing time.',
+    description: 'Latency percentiles, queues, outcomes, and cache coverage.',
     icon: Hammer,
     source: 'pipeline',
     panels: [
-      CHARTS.cacheShare,
-      CHARTS.cacheResponses,
-      CHARTS.buildRequests,
-      CHARTS.builds,
-      CHARTS.buildFailures,
-      CHARTS.installs,
       CHARTS.buildDuration,
       CHARTS.installDuration,
       CHARTS.queueBacklog,
       CHARTS.queueRunning,
+      CHARTS.builds,
+      CHARTS.buildFailures,
+      CHARTS.installs,
+      CHARTS.buildRequests,
+      CHARTS.cacheShare,
+      CHARTS.cacheResponses,
     ],
-    breakdown: false,
     tabs: [
       {
-        id: 'all',
-        title: 'All activity',
+        id: 'latency',
+        title: 'Latency & queues',
+        panels: [
+          CHARTS.buildDuration,
+          CHARTS.installDuration,
+          CHARTS.queueBacklog,
+          CHARTS.queueRunning,
+        ],
       },
       {
-        id: 'queues',
-        title: 'Queues',
-        panels: [CHARTS.queueBacklog, CHARTS.queueRunning],
+        id: 'outcomes',
+        title: 'Outcomes & failures',
+        panels: [
+          CHARTS.builds,
+          CHARTS.buildFailures,
+          CHARTS.installs,
+          CHARTS.buildRequests,
+        ],
       },
       {
         id: 'cache',
@@ -129,62 +127,84 @@ export const PAGES: DashboardPage[] = [
         panels: [CHARTS.cacheShare, CHARTS.cacheResponses],
       },
       {
-        id: 'builds',
-        title: 'Builds',
-        panels: [
-          CHARTS.buildRequests,
-          CHARTS.builds,
-          CHARTS.buildFailures,
-          CHARTS.buildDuration,
-        ],
-      },
-      {
-        id: 'installs',
-        title: 'Installations',
-        panels: [CHARTS.installs, CHARTS.installDuration],
+        id: 'all',
+        title: 'All activity',
       },
     ],
   },
   {
-    id: 'workers',
-    title: 'PM2 workers',
-    heading: 'PM2 workers',
+    id: 'resources',
+    title: 'Host & workers',
+    heading: 'Host resources & PM2 workers',
     description:
-      'Per-worker restarts, CPU, and memory, with application status and uptime.',
-    icon: RotateCcw,
-    source: 'pm2',
+      'Server CPU, memory, disk I/O, network, and PM2 worker health.',
+    icon: Cpu,
+    source: 'resources',
     panels: [
+      CHARTS.hostCpu,
+      CHARTS.load,
+      CHARTS.hostMemory,
+      CHARTS.swap,
+      CHARTS.disk,
+      CHARTS.diskIo,
+      CHARTS.network,
       CHARTS.restarts,
+      CHARTS.pm2Memory,
+      CHARTS.pm2Cpu,
       CHARTS.availability,
       CHARTS.uptime,
-      CHARTS.cpu,
-      CHARTS.memory,
     ],
-    breakdown: false,
     tabs: [
-      { id: 'all', title: 'All workers' },
       {
-        id: 'restarts',
-        title: 'Restarts',
-        panels: [CHARTS.restarts],
-      },
-      {
-        id: 'health',
-        title: 'Status & uptime',
-        panels: [CHARTS.availability, CHARTS.uptime],
-      },
-      {
-        id: 'resources',
+        id: 'compute',
         title: 'CPU & memory',
-        panels: [CHARTS.cpu, CHARTS.memory],
+        panels: [CHARTS.hostCpu, CHARTS.load, CHARTS.hostMemory, CHARTS.swap],
+      },
+      {
+        id: 'storage',
+        title: 'Disk & network',
+        panels: [CHARTS.disk, CHARTS.diskIo, CHARTS.ioWait, CHARTS.network],
+        breakdown: 'disk',
+      },
+      {
+        id: 'workers',
+        title: 'PM2 workers',
+        panels: [
+          CHARTS.restarts,
+          CHARTS.pm2Memory,
+          CHARTS.pm2Cpu,
+          CHARTS.availability,
+          CHARTS.uptime,
+        ],
       },
     ],
   },
 ]
 
-export function resolvePage(pathname: string, requestedTab: string | null) {
-  const page = PAGES.find(page => pathname === `/${page.id}`) ?? PAGES[0]
-  const tab = page.tabs.find(tab => tab.id === requestedTab) ?? page.tabs[0]
+const LEGACY_ROUTES = {
+  '/responses': { pageId: 'traffic', tabId: 'responses' },
+  '/workers': { pageId: 'resources', tabId: 'workers' },
+} satisfies Record<string, { pageId: string; tabId?: string }>
 
-  return { page, tabId: tab?.id, panels: tab?.panels ?? page.panels }
+function resolveRouteTarget(pathname: string, requestedTab: string | null) {
+  if (pathname === '/responses' || pathname === '/workers') {
+    const legacy = LEGACY_ROUTES[pathname]
+
+    return { pageId: legacy.pageId, targetTab: requestedTab ?? legacy.tabId }
+  }
+
+  return { pageId: pathname.replace(/^\//, ''), targetTab: requestedTab }
+}
+
+export function resolvePage(pathname: string, requestedTab: string | null) {
+  const { pageId, targetTab } = resolveRouteTarget(pathname, requestedTab)
+  const page = PAGES.find(entry => entry.id === pageId) ?? PAGES[0]
+  const tab = page.tabs.find(entry => entry.id === targetTab) ?? page.tabs[0]
+
+  return {
+    page,
+    tabId: tab?.id,
+    panels: tab?.panels ?? page.panels,
+    breakdown: tab?.breakdown,
+  }
 }

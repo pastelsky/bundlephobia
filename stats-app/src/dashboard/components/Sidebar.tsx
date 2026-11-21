@@ -9,7 +9,7 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 flex w-[var(--sidebar-width)] flex-col bg-stats-sidebar px-4 pb-5 pt-7 text-slate-400 compact:items-center compact:px-2 compact:py-6 mobile:hidden">
+      <aside className="fixed inset-y-0 left-0 z-30 flex w-[var(--sidebar-width)] flex-col bg-stats-sidebar px-4 pb-5 pt-7 text-slate-400 compact:items-center compact:px-2 compact:py-6 mobile:hidden">
         <a
           href="/"
           className="flex items-center gap-2.5 px-2.5 pb-7 text-base font-semibold tracking-[-0.5px] text-white compact:px-0"
