@@ -97,6 +97,37 @@ describe('structured-data', () => {
 
       expect(app.sameAs).toEqual(['https://www.npmjs.com/package/no-repo-pkg'])
     })
+
+    it('excludes unrecognized external repository domains from sameAs', () => {
+      const graph = createPackageStructuredData({
+        name: 'custom-host-pkg',
+        description: 'Package with arbitrary repository URL',
+        repository: 'https://example.org/custom-repo',
+      })
+
+      const parsed = JSON.parse(JSON.stringify(graph))
+      const app = parsed['@graph'][0]
+
+      expect(app.sameAs).toEqual([
+        'https://www.npmjs.com/package/custom-host-pkg',
+      ])
+    })
+
+    it('includes recognized code hosting domains in sameAs', () => {
+      const graph = createPackageStructuredData({
+        name: 'gitlab-pkg',
+        description: 'Package hosted on GitLab',
+        repository: 'https://gitlab.com/org/gitlab-pkg',
+      })
+
+      const parsed = JSON.parse(JSON.stringify(graph))
+      const app = parsed['@graph'][0]
+
+      expect(app.sameAs).toEqual([
+        'https://gitlab.com/org/gitlab-pkg',
+        'https://www.npmjs.com/package/gitlab-pkg',
+      ])
+    })
   })
 
   describe('createBreadcrumbStructuredData', () => {

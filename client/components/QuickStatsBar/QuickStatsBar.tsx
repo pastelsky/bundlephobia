@@ -91,7 +91,7 @@ export function PackageLinks({
           className="quick-stats-bar__link"
           href={repository}
           target="_blank"
-          rel="noopener noreferrer"
+          rel="noopener noreferrer nofollow ugc"
           aria-label={`View ${name} repository`}
         >
           <GithubIcon className="quick-stats-bar__logo-icon quick-stats-bar__logo-icon--github" />

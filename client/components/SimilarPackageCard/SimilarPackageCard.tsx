@@ -124,6 +124,7 @@ export default class SimilarPackageCard extends Component<SimilarPackageCardProp
             {pack.repository && (
               <a
                 href={pack.repository}
+                rel="noopener noreferrer nofollow ugc"
                 onClick={e => {
                   e.stopPropagation()
                   window.location.href = pack.repository
