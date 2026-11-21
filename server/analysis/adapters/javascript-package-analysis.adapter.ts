@@ -182,6 +182,15 @@ export class JavaScriptPackageAnalysisAdapter implements PackageAnalysisAdapter<
       canonicalSpecifier: `${manifest.name}@${manifest.version}`,
       description,
       repository: normalizeRepositoryUrl(manifest.repository),
+      manifest: {
+        name: manifest.name,
+        version: manifest.version,
+        os: manifest.os,
+        cpu: manifest.cpu,
+        libc: manifest.libc,
+        bin: manifest.bin,
+        exports: manifest.exports,
+      },
     }
   }
 

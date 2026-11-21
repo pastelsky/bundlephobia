@@ -102,9 +102,10 @@ export function createResolvePackageMiddleware(
 
     const resolveStart = now()
 
-    const resolvedPackage = await packageAnalysisGateway.resolvePackage(
-      createJavaScriptPackageReference(resolvedPackageString),
-    )
+    const { manifest, ...resolvedPackage } =
+      await packageAnalysisGateway.resolvePackage(
+        createJavaScriptPackageReference(resolvedPackageString),
+      )
 
     const resolveEnd = now()
 
@@ -115,6 +116,7 @@ export function createResolvePackageMiddleware(
     }
 
     ctx.state.resolved = result
+    ctx.state.packageManifest = manifest
 
     debug('resolved to %s@%s', result.name, result.version)
     const time = resolveEnd - resolveStart
