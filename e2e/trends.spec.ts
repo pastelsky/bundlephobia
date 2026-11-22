@@ -69,7 +69,7 @@ test('renders package trends and chart controls', async ({ page }) => {
   )
 
   await expect(
-    page.getByRole('heading', { name: 'react vs vue bundle size & trends' }),
+    page.getByRole('heading', { name: 'react vs vue trends' }),
   ).toBeVisible()
   await expect(page.getByText('1.44', { exact: true })).toBeVisible()
   await expect(
@@ -683,19 +683,4 @@ test('renders dense daily markers without excessive SVG nodes', async ({
 
   await expect(page.locator('.trends-chart__tooltip')).toBeVisible()
   await expect(page.locator('.trends-chart__series-dot-magnet')).toHaveCount(2)
-
-  const chartExplorer = page.getByRole('slider', {
-    name: 'Explore chart dates',
-  })
-
-  await chartExplorer.focus()
-  await page.keyboard.press('Home')
-  const firstDate = await chartExplorer.getAttribute('aria-valuetext')
-  expect(firstDate).toMatch(/\d{4}-\d{2}-\d{2}, react: /)
-  await page.keyboard.press('ArrowRight')
-  await expect(chartExplorer).not.toHaveAttribute(
-    'aria-valuetext',
-    firstDate ?? '',
-  )
-  await expect(page.locator('.trends-chart__tooltip')).toBeVisible()
 })

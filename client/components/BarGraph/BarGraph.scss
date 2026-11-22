@@ -41,7 +41,7 @@ $bar-grow-duration: 0.4s;
   transform-origin: 100% 100%;
 
   &:focus-visible {
-    outline: 2px solid var(--color-focus-ring);
+    outline: 2px solid var(--color-link-contrast);
     outline-offset: 1px;
   }
 }

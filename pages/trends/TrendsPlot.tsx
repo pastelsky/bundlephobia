@@ -8,7 +8,7 @@ import {
   type buildChartModel,
   formatDateTick,
   formatMetricValue,
-  pathFor,
+  buildLinePath,
 } from './trendsChartModel'
 
 type TrendsPlotProps = {
@@ -42,7 +42,7 @@ export default memo(function TrendsPlot({
         ))}
       </defs>
       {model.yTicks.map(value => {
-        const y = model.yFor(value)
+        const y = model.scaleValue(value)
 
         return (
           <g key={value}>
@@ -73,14 +73,14 @@ export default memo(function TrendsPlot({
         <g key={tick.toISOString()}>
           <line
             className="trends-chart__axis-tick"
-            x1={model.xForDate(tick)}
-            x2={model.xForDate(tick)}
+            x1={model.scaleDate(tick)}
+            x2={model.scaleDate(tick)}
             y1={PLOT.top + model.plotHeight}
             y2={PLOT.top + model.plotHeight + 6}
           />
           <text
             className="trends-chart__axis-label trends-chart__axis-label--x"
-            x={model.xForDate(tick)}
+            x={model.scaleDate(tick)}
             y={CHART_HEIGHT - 10}
             textAnchor={
               index === 0
@@ -125,13 +125,13 @@ export default memo(function TrendsPlot({
         >
           <path
             className="trends-chart__line"
-            d={pathFor(series.points)}
+            d={buildLinePath(series.points)}
             stroke={series.color}
           />
           {series.partialPoints.length > 1 && (
             <path
               className="trends-chart__line trends-chart__line--partial"
-              d={pathFor(series.partialPoints)}
+              d={buildLinePath(series.partialPoints)}
               stroke={series.color}
             />
           )}

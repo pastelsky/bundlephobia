@@ -12,7 +12,7 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     const response = await page.goto('/trends')
     expect(response?.status()).toBe(200)
     await expect(page).toHaveTitle(
-      'Compare npm package bundle sizes, downloads & stars | Bundlephobia',
+      'npm package trends & comparisons | Bundlephobia',
     )
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
@@ -54,9 +54,7 @@ test.describe('trends SEO and discovery without JavaScript', () => {
       'href',
       'https://bundlephobia.com/trends?packages=preact~vs~react~vs~vue',
     )
-    await expect(page.locator('h1')).toHaveText(
-      'preact vs react vs vue bundle size & trends',
-    )
+    await expect(page.locator('h1')).toHaveText('preact vs react vs vue trends')
   })
 
   test('a comparison with un-sorted query param canonicalizes to sorted order', async ({
@@ -76,13 +74,13 @@ test.describe('trends SEO and discovery without JavaScript', () => {
 
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       'content',
-      'Compare npm package bundle sizes, downloads & stars | Bundlephobia',
+      'npm package trends & comparisons | Bundlephobia',
     )
     await expect(
       page.locator('meta[property="twitter:title"]'),
     ).toHaveAttribute(
       'content',
-      'Compare npm package bundle sizes, downloads & stars | Bundlephobia',
+      'npm package trends & comparisons | Bundlephobia',
     )
   })
 

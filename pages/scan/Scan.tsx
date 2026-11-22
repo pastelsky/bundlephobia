@@ -206,19 +206,12 @@ class Scan extends Component<ScanProps, ScanState> {
 
   focusNewView(prevState: ScanState) {
     if (!prevState.packages && this.state.packages) {
-      this.focusAfterPaint(this.selectionHeadingRef)
+      this.selectionHeadingRef.current?.focus({ preventScroll: true })
     }
 
     if (!prevState.isUrlFormOpen && this.state.isUrlFormOpen) {
-      this.focusAfterPaint(this.remoteUrlInputRef)
+      this.remoteUrlInputRef.current?.focus({ preventScroll: true })
     }
-  }
-
-  // Let the new view lay out before focusing an element inside it.
-  focusAfterPaint = (target: { current: HTMLElement | null }) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => target.current?.focus())
-    })
   }
 
   readPersistedScanState = (): PersistedScanState | null => {
@@ -498,7 +491,7 @@ class Scan extends Component<ScanProps, ScanState> {
       },
       () => {
         this.persistScanState()
-        this.focusAfterPaint(this.uploadButtonRef)
+        this.uploadButtonRef.current?.focus({ preventScroll: true })
       },
     )
   }
@@ -507,7 +500,7 @@ class Scan extends Component<ScanProps, ScanState> {
     this.remoteRequest?.abort()
     this.setState(
       { isUrlFormOpen: false, remoteUrlError: null, isLoadingRemoteUrl: false },
-      () => this.focusAfterPaint(this.remoteUrlButtonRef),
+      () => this.remoteUrlButtonRef.current?.focus({ preventScroll: true }),
     )
   }
 
@@ -605,7 +598,6 @@ class Scan extends Component<ScanProps, ScanState> {
     } else {
       content = (
         <div>
-          <h1 className="scan__page-title">Scan package.json</h1>
           <Dropzone
             ref={this.dropzoneRef}
             inputProps={{ 'aria-label': 'Select a package.json file' }}

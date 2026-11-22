@@ -227,13 +227,6 @@ export default function TrendsLoader() {
           // line, especially on the slower easing curves.
           const expansionDuration = randomInteger(260, 420)
           const pulseStart = contactAt
-          debugLoader('dot:schedule', {
-            group: curveIndex,
-            node: nodeIndex,
-            appearanceStart: lineOffset + node.appearanceDelay,
-            pathProgress: Number(progress.toFixed(4)),
-            contactAt: Math.round(contactAt),
-          })
           debugLoader('dot:pulse-schedule', {
             group: curveIndex,
             node: nodeIndex,
