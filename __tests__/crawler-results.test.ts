@@ -402,21 +402,16 @@ it('does not cache a negative export-size peek or start a build', async () => {
 })
 
 describe('version URL hygiene and encoded scoped redirects', () => {
-  it('emits X-Robots-Tag noindex for version-pinned URLs and omits it for canonical URLs', async () => {
+  it('emits canonical Link header without X-Robots-Tag so versioned links consolidate equity', async () => {
     cached.set('example@1.2.3', older)
-    cached.set('example@2.0.0', current)
 
     const versioned = await request('/package/example@1.2.3')
-    const canonical = await request('/package/example')
 
     expect(versioned.status).toBe(200)
-    expect(versioned.headers.get('x-robots-tag')).toBe('noindex, follow')
+    expect(versioned.headers.get('x-robots-tag')).toBeNull()
     expect(versioned.headers.get('link')).toBe(
       '<https://bundlephobia.com/package/example>; rel="canonical"',
     )
-
-    expect(canonical.status).toBe(200)
-    expect(canonical.headers.get('x-robots-tag')).toBeNull()
   })
 
   it('permanently redirects URL-encoded scoped package paths without running analysis', async () => {

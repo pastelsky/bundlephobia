@@ -215,8 +215,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
         this.fetchSimilarPackages(packageString, requestId)
 
+        const requestedVersion = parsePackageString(packageString).version
+
         const hasExplicitVersion = Boolean(
-          parsePackageString(packageString).version,
+          requestedVersion && requestedVersion !== 'latest',
         )
 
         const newPackageString = `${results.name}@${results.version}`
@@ -856,10 +858,6 @@ export const getServerSideProps = async ({
     'Link',
     `<https://bundlephobia.com/package/${name}>; rel="canonical"`,
   )
-
-  if (version) {
-    res.setHeader('X-Robots-Tag', 'noindex, follow')
-  }
 
   const isProxyClassifiedCrawler =
     req.headers['x-bundlephobia-prefer-cached'] === 'true'
