@@ -788,6 +788,10 @@ function analysisRequestHeaders(req: GetServerSidePropsContext['req']) {
   }
 }
 
+// Consolidate redundant package URL variants via 301 before calling /api/size:
+// - Explicit @latest duplicates the canonical unversioned /package/<name> page.
+// - URL-encoded scoped paths (/package/%40scope%2Fname) are crawled as separate
+//   URLs alongside /package/@scope/name, splitting signals and crawl budget.
 function getCanonicalPackageRedirect(
   rawUrl: string | undefined,
   specifier: string,
