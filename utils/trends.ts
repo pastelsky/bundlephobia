@@ -120,6 +120,23 @@ export function startOfTrendsRangeDate(
 }
 
 function bucketDate(date: string, groupBy: TrendsGroupBy): string {
+  if (groupBy === 'day') return date
+
+  // The usual inputs are calendar dates. UTC day arithmetic preserves the
+  // calendar bucket across local daylight-saving changes.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    if (groupBy === 'month') return `${date.slice(0, 7)}-01`
+
+    const weekday = new Date(date)
+
+    if (Number.isFinite(weekday.getTime())) {
+      const daysSinceMonday = (weekday.getUTCDay() + 6) % 7
+      weekday.setUTCDate(weekday.getUTCDate() - daysSinceMonday)
+
+      return formatTrendsDate(weekday)
+    }
+  }
+
   const value = parseISO(date)
 
   if (groupBy === 'month') return format(startOfMonth(value), 'yyyy-MM-dd')

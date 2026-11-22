@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom'
 import Link from 'next/link'
 import Router, { withRouter, type NextRouter } from 'next/router'
 import React, { Component } from 'react'
@@ -259,11 +260,13 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
     const updatedQuery = { ...this.props.router.query, sortMode }
     Router.replace(
       `/scan-results?${stringify(updatedQuery, { encode: false })}`,
+      undefined,
+      { shallow: true, scroll: false },
     )
 
     // SAFETY: browsers without View Transitions simply omit this optional API.
     const documentWithViewTransitions = document as Document & {
-      startViewTransition?: (update: () => Promise<void>) => {
+      startViewTransition?: (update: () => void) => {
         finished: Promise<void>
       }
     }
@@ -281,14 +284,9 @@ class ScanResults extends Component<ScanResultsProps, ScanResultsState> {
       return
     }
 
-    const transition = documentWithViewTransitions.startViewTransition(
-      () =>
-        new Promise<void>(resolve => {
-          React.startTransition(() => {
-            this.setState({ sortMode }, () => resolve())
-          })
-        }),
-    )
+    const transition = documentWithViewTransitions.startViewTransition(() => {
+      flushSync(() => this.setState({ sortMode }))
+    })
 
     transition.finished.catch(() => {})
   }

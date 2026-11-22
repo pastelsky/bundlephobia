@@ -25,6 +25,11 @@ $bar-grow-duration: 0.4s;
 
 .bar-graph__bar-group {
   position: relative;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
   height: 100%;
   margin: 0 3px;
   display: flex;
@@ -34,6 +39,11 @@ $bar-grow-duration: 0.4s;
   flex-direction: column;
   animation: grow $bar-grow-duration cubic-bezier(0.305, 0.42, 0.205, 1.2);
   transform-origin: 100% 100%;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 1px;
+  }
 }
 
 .bar-graph__bar-symbols {
@@ -150,5 +160,14 @@ $bar-grow-duration: 0.4s;
 @keyframes fade-in {
   from {
     opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-graph__bar-group,
+  .bar-graph__bar-version,
+  .bar-graph__bar-symbols,
+  .bar-graph__legend {
+    animation: none;
   }
 }

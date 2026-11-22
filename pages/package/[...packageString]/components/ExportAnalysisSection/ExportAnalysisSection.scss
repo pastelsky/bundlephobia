@@ -13,6 +13,11 @@
   display: flex;
   align-items: center;
   position: relative;
+
+  @media screen and (max-width: 48em) {
+    flex-direction: column;
+    gap: $global-spacing;
+  }
 }
 
 .export-analysis-section__progress-container {
@@ -66,7 +71,9 @@
   right: 0;
 
   @media screen and (max-width: 48em) {
-    display: none;
+    position: relative;
+    margin: 0;
+    width: min(100%, 20rem);
   }
 }
 
@@ -90,15 +97,18 @@
   @include font-size-sm;
   font-family: $font-family-code;
   padding-right: $global-spacing * 3;
-  width: 15vw;
-  transition: all 0.1s ease-in-out;
-  will-change: transform;
-  contain: strict;
+  width: clamp(10rem, 20vw, 18rem);
+  transition:
+    background-color 0.1s,
+    border-color 0.1s;
   border: 1px solid var(--color-border-subtle);
   background: var(--color-bg-secondary);
 
+  @media screen and (max-width: 48em) {
+    width: 100%;
+  }
+
   &:focus {
-    width: 23vw;
     background: var(--color-bg-base);
     border: 1px solid var(--color-border-primary);
   }
@@ -202,7 +212,14 @@
   margin-left: $global-spacing * 0.2;
 }
 
+.export-analysis-section__letter-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 .export-analysis-section__letter-heading {
+  break-after: avoid-column;
   @include font-size-md;
   margin: $global-spacing * 1.5 0 $global-spacing;
 }

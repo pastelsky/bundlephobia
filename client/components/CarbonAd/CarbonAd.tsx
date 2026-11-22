@@ -5,7 +5,7 @@ type CarbonAdProps = {
 }
 
 const CarbonAd = ({ className }: CarbonAdProps) => {
-  const containerRef = React.useRef<HTMLElement>(null)
+  const containerRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
     const container = containerRef.current
@@ -45,7 +45,7 @@ const CarbonAd = ({ className }: CarbonAdProps) => {
     }
   }, [])
 
-  return <aside ref={containerRef} className={className} />
+  return <div ref={containerRef} className={className} />
 }
 
 export default CarbonAd

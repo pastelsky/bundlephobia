@@ -6,10 +6,10 @@ interface Props {
 
 export function BarVersion({ version }: Props) {
   return (
-    <div className="bar-graph__bar-version">
-      <div>
+    <span className="bar-graph__bar-version">
+      <span>
         <span title={version}>{truncate(version, 7)}</span>
-      </div>
-    </div>
+      </span>
+    </span>
   )
 }

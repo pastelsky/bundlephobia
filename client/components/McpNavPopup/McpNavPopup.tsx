@@ -9,6 +9,12 @@ const McpNavPopup = () => {
   const [isMobile, setIsMobile] = useState(false)
   const detailsRef = useRef<HTMLDetailsElement>(null)
   const portalRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (isOpen && isMobile) closeRef.current?.focus()
+  }, [isOpen, isMobile])
 
   useEffect(() => {
     const mql = window.matchMedia('(max-width: 40em)')
@@ -40,6 +46,7 @@ const McpNavPopup = () => {
 
       if (event.key === 'Escape' && details?.open) {
         details.open = false
+        triggerRef.current?.focus()
       }
     }
 
@@ -70,6 +77,7 @@ const McpNavPopup = () => {
   const closePopup = () => {
     if (detailsRef.current) {
       detailsRef.current.open = false
+      triggerRef.current?.focus()
     }
   }
 
@@ -83,6 +91,7 @@ const McpNavPopup = () => {
         <button
           type="button"
           className="mcp-nav__close"
+          ref={closeRef}
           onClick={closePopup}
           aria-label="Close MCP setup"
         >
@@ -133,7 +142,11 @@ const McpNavPopup = () => {
         }
       }}
     >
-      <summary className="mcp-nav__trigger" aria-label="MCP setup instructions">
+      <summary
+        ref={triggerRef}
+        className="mcp-nav__trigger"
+        aria-label="MCP setup instructions"
+      >
         MCP
       </summary>
       {isOpen && isMobile && typeof document !== 'undefined'

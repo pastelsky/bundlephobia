@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 
 import { sanitizeHTML } from '../../../utils/common.utils'
 import TreeShakeIcon from '../../assets/tree-shake.svg'
@@ -101,7 +101,7 @@ export function PackageLinks({
   )
 }
 
-class QuickStatsBar extends Component<QuickStatsBarProps> {
+class QuickStatsBar extends PureComponent<QuickStatsBarProps> {
   static defaultProps = {
     description: '',
   }

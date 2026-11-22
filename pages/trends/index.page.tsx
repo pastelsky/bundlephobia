@@ -278,6 +278,15 @@ export default function TrendsPage({
   )
 
   const [inputKey, setInputKey] = useState(0)
+  const searchField = React.useRef<HTMLDivElement>(null)
+  const restoreSearchFocus = React.useRef(false)
+
+  useEffect(() => {
+    if (!restoreSearchFocus.current) return
+
+    restoreSearchFocus.current = false
+    searchField.current?.querySelector<HTMLInputElement>('input')?.focus()
+  }, [packages])
 
   const handleAddPackage = (pkg: string) => {
     const clean = pkg.trim().toLowerCase()
@@ -301,7 +310,8 @@ export default function TrendsPage({
     })
   }
 
-  const handleRemovePackage = (pkgName: string) => {
+  const handleRemovePackage = (pkgName: string, restoreFocus: boolean) => {
+    restoreSearchFocus.current = restoreFocus
     const updated = packages.filter(p => p !== pkgName)
     setPackages(updated)
     startLoading()
@@ -415,7 +425,7 @@ export default function TrendsPage({
   )
 
   return (
-    <Layout className="trends-page">
+    <Layout className="trends-page" skipTo="page-content">
       <MetaTags
         title={pageTitle}
         description={description}
@@ -424,7 +434,7 @@ export default function TrendsPage({
         structuredData={structuredData}
       />
       <PageNav />
-      <div className="trends-page__container">
+      <div className="trends-page__container" id="page-content" tabIndex={-1}>
         <header className="trends-page__header">
           <h1 className="trends-page__title">
             {isComparison ? (
@@ -480,7 +490,9 @@ export default function TrendsPage({
                 <Button
                   type="button"
                   className="trends-chip__remove"
-                  onClick={() => handleRemovePackage(pkg)}
+                  onClick={event =>
+                    handleRemovePackage(pkg, event.detail === 0)
+                  }
                   title={`Remove ${pkg}`}
                   aria-label={`Remove ${pkg}`}
                 >
@@ -490,7 +502,7 @@ export default function TrendsPage({
             ))}
 
             {packages.length < MAX_PACKAGES && (
-              <div className="trends-search__input">
+              <div className="trends-search__input" ref={searchField}>
                 <AutocompleteInput
                   key={inputKey}
                   containerClass="trends-autocomplete"
@@ -531,6 +543,7 @@ export default function TrendsPage({
             <span className="trends-toolbar__label">Metric</span>
             <ToggleGroup
               className="trends-segmented"
+              aria-label="Metric"
               value={[metric]}
               onValueChange={values => {
                 const nextMetric = values[0]
@@ -556,6 +569,7 @@ export default function TrendsPage({
             <span className="trends-toolbar__label">Range</span>
             <ToggleGroup
               className="trends-segmented trends-segmented--compact"
+              aria-label="Range"
               value={[range]}
               onValueChange={values => {
                 const nextRange = values[0]
@@ -580,6 +594,7 @@ export default function TrendsPage({
             <span className="trends-toolbar__label">Group by</span>
             <ToggleGroup
               className="trends-segmented trends-segmented--compact"
+              aria-label="Group by"
               value={[groupBy]}
               onValueChange={values => {
                 const nextGroupBy = values[0]
@@ -652,7 +667,7 @@ export default function TrendsPage({
             <div className="trends-chart-area__state trends-chart-area__state--error">
               {error}
             </div>
-          ) : loading || trendsData ? (
+          ) : isPending || trendsData ? (
             <TrendsChart
               // Keep the last resolved series mounted while an incremental
               // request is in flight; the chart can then draw the new series
@@ -675,6 +690,7 @@ export default function TrendsPage({
                 </>
               }
               loading={loading}
+              pending={isPending}
             />
           ) : (
             <div className="trends-chart-area__state">
@@ -815,7 +831,9 @@ export default function TrendsPage({
                     <Button
                       type="button"
                       className="trends-card__remove"
-                      onClick={() => handleRemovePackage(pkgName)}
+                      onClick={event =>
+                        handleRemovePackage(pkgName, event.detail === 0)
+                      }
                       title={`Remove ${pkgName}`}
                       aria-label={`Remove ${pkgName}`}
                     >

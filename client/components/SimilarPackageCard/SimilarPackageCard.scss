@@ -107,11 +107,11 @@
 }
 
 .similar-package-card__comparison--positive {
-  color: $pastel-green;
+  color: var(--color-comparison-positive);
 }
 
 .similar-package-card__comparison--negative {
-  color: $carrot-orange;
+  color: var(--color-comparison-negative);
 }
 
 .similar-package-card__comparison--similar {

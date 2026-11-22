@@ -76,9 +76,14 @@ const PageNav = ({ minimal, variant }: PageNavProps) => {
       )}
       <section className="page-header--right-section">
         {showNavigation && (
-          <ul className="page-header__quicklinks">
-            <NavigationLinks includeScan={resolvedVariant === 'full'} />
-          </ul>
+          <nav
+            className="page-header__desktop-nav"
+            aria-label="Main navigation"
+          >
+            <ul className="page-header__quicklinks">
+              <NavigationLinks includeScan={resolvedVariant === 'full'} />
+            </ul>
+          </nav>
         )}
         {showNavigation && <McpNavPopup />}
         {showNavigation && (

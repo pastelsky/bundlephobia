@@ -157,6 +157,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
   private activeQuery: string | null = null
   private searchRequestId = 0
+  private resultHeadingRef = React.createRef<HTMLHeadingElement>()
   private loadSource: PackageLoadSource = 'page_load'
 
   private isActiveSearch = (requestId: number) =>
@@ -231,8 +232,19 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
           {
             inputInitialValue: newPackageString,
             results,
+            resultsPromiseState: 'fulfilled',
           },
           () => {
+            if (!this.isActiveSearch(requestId)) return
+
+            if (source === 'history') {
+              requestAnimationFrame(() => {
+                if (this.isActiveSearch(requestId))
+                  this.resultHeadingRef.current?.focus({ preventScroll: true })
+              })
+            }
+
+            Analytics.packageResultViewed(newPackageString, source)
             this.activeQuery = nextUrlSpecifier
 
             if (
@@ -366,20 +378,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     )
   }
 
-  handleProgressDone = () => {
-    const { results } = this.state
-    const source = this.loadSource
-
-    if (!results) return
-
-    this.setState({ resultsPromiseState: 'fulfilled' }, () => {
-      Analytics.packageResultViewed(
-        `${results.name}@${results.version}`,
-        source,
-      )
-    })
-  }
-
   formatHistoricalResults = (): Reading[] => {
     const { results, historicalResults } = this.state
 
@@ -432,7 +430,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     }
 
     const packageString = `${results.name}@${reading.version}`
-    this.setState({ inputInitialValue: packageString })
     this.loadPackage(packageString, 'history')
 
     Analytics.graphBarClicked({
@@ -539,10 +536,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
     return (
       <div className="result-pending">
-        <BuildProgressIndicator
-          isDone={!!this.state.results?.version}
-          onDone={this.handleProgressDone}
-        />
+        <BuildProgressIndicator />
       </div>
     )
   }
@@ -586,7 +580,9 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
       <div className="content-split-container">
         <div className="stats-container">
           <div className="size-container">
-            <h3> Bundle Size </h3>
+            <h2 ref={this.resultHeadingRef} tabIndex={-1}>
+              Bundle Size
+            </h2>
             <div className="size-stats">
               <Stat
                 value={results.size}
@@ -601,7 +597,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
             </div>
           </div>
           <div className="time-container">
-            <h3> Download Time </h3>
+            <h2> Download Time </h2>
             <div className="time-stats">
               <Stat
                 value={getTimeFromSize(results.gzip).threeG}
@@ -646,7 +642,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const isInitialServerError = Boolean(this.props.initialError)
 
     return (
-      <div className="result-error">
+      <div className="result-error" role="alert">
         <EmptyBox className="result-error__img" />
         <h2 className="result-error__code">{errorName}</h2>
         {renderErrorMessage(errorBody, isInitialServerError)}

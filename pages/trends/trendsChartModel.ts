@@ -1,7 +1,6 @@
 /* eslint-disable max-params, anti-slop/no-array-filter-map */
 
 import { extent } from 'd3-array'
-import { path as createPath } from 'd3-path'
 import { scaleLinear, scaleTime } from 'd3-scale'
 import { curveMonotoneX, line } from 'd3-shape'
 import {
@@ -106,11 +105,13 @@ export function formatMetricValue(
   return { value: `${Math.round(value)}`, unit: '' }
 }
 
+const dateTickFormatter = new Intl.DateTimeFormat('en', {
+  month: 'short',
+  year: '2-digit',
+})
+
 export function formatDateTick(date: Date) {
-  const parts = new Intl.DateTimeFormat('en', {
-    month: 'short',
-    year: '2-digit',
-  }).formatToParts(date)
+  const parts = dateTickFormatter.formatToParts(date)
 
   const month = parts.find(part => part.type === 'month')?.value
   const year = parts.find(part => part.type === 'year')?.value
@@ -127,15 +128,19 @@ export function pathFor(points: ChartPoint[]) {
   )
 }
 
-function markerPathFor(points: ChartPoint[], radius: number) {
-  const markerPath = createPath()
+function markerPathFor(points: ChartPoint[]) {
+  // Two relative arcs describe a 1.25-unit circle. Only its starting
+  // coordinates vary, so thousands of markers can share the same commands.
+  const circle = 'a1.25 1.25 0 1 0 -2.5 0a1.25 1.25 0 1 0 2.5 0'
 
-  for (const point of points) {
-    markerPath.moveTo(point.x + radius, point.y)
-    markerPath.arc(point.x, point.y, radius, 0, Math.PI * 2)
-  }
+  return points
+    .map(point => {
+      const x = Math.round((point.x + 1.25) * 100) / 100
+      const y = Math.round(point.y * 100) / 100
 
-  return markerPath.toString()
+      return `M${x},${y}${circle}`
+    })
+    .join('')
 }
 
 export function annotationPath(annotation: SeriesAnnotation) {
@@ -206,8 +211,23 @@ export function buildChartModel({
   // the exact requested start (for example, Sep 1 for a Sep 23 request).
   const requestedMinTime = getRangeStartTimestamp(range)
 
+  // Packages share calendar dates and each plotted point is reused for
+  // the extent, scale projection, and sometimes the partial line.
+  const timestamps = new Map<string, number>()
+
+  const timestampFor = (date: string) => {
+    const existing = timestamps.get(date)
+
+    if (existing !== undefined) return existing
+
+    const timestamp = getTime(parseISO(date))
+    timestamps.set(date, timestamp)
+
+    return timestamp
+  }
+
   const pointTimes = allPoints
-    .map(point => getTime(parseISO(point.date)))
+    .map(point => timestampFor(point.date))
     .filter(Number.isFinite)
 
   if (pointTimes.length === 0) return null
@@ -244,7 +264,7 @@ export function buildChartModel({
     .domain([new Date(minTime), new Date(maxTime)])
     .range([PLOT.left, PLOT.left + plotWidth])
 
-  const xFor = (date: string) => xScale(parseISO(date))
+  const xFor = (date: string) => xScale(timestampFor(date))
   const xForDate = (date: Date) => xScale(date)
   const timestampForX = (x: number) => getTime(xScale.invert(x))
 
@@ -262,7 +282,7 @@ export function buildChartModel({
     release.major ? showMajorReleases : showMinorReleases
 
   const releaseIsInRange = (release: { date: string }) => {
-    const time = getTime(parseISO(release.date))
+    const time = timestampFor(release.date)
 
     return time >= minTime && time <= maxTime
   }
@@ -301,8 +321,7 @@ export function buildChartModel({
     if (!partialStart) return []
 
     const gap =
-      getTime(parseISO(firstPartial.date)) -
-      getTime(parseISO(partialStart.date))
+      timestampFor(firstPartial.date) - timestampFor(partialStart.date)
 
     return gap <= partialLinkThreshold(groupBy)
       ? [partialStart, ...partial].map(toChartPoint)
@@ -334,7 +353,7 @@ export function buildChartModel({
       markers: isDense ? [] : plotted,
       // One compound D3 path keeps every dense observation visible without
       // creating thousands of SVG circle nodes.
-      denseMarkerPath: isDense ? markerPathFor(plotted, 1.25) : '',
+      denseMarkerPath: isDense ? markerPathFor(plotted) : '',
       releaseMarkers: releaseMarkersFor(raw),
     }
   })

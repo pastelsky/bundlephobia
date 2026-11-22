@@ -71,8 +71,11 @@ function responseError(response: Response): Error {
       )
 }
 
-async function fetchPackageJson(url: string): Promise<ParsedPackageJson> {
-  const response = await fetch(url).catch((error: Error) => {
+async function fetchPackageJson(
+  url: string,
+  signal: AbortSignal,
+): Promise<ParsedPackageJson> {
+  const response = await fetch(url, { signal }).catch((error: Error) => {
     throw remoteFetchError(error)
   })
 
@@ -150,6 +153,15 @@ class Scan extends Component<ScanProps, ScanState> {
 
   private packageSelectionContainerRef = createRef<HTMLUListElement>()
   private dropzoneRef = createRef<Dropzone>()
+  private selectionHeadingRef = createRef<HTMLHeadingElement>()
+  private uploadButtonRef = createRef<HTMLButtonElement>()
+  private remoteUrlButtonRef = createRef<HTMLButtonElement>()
+  private remoteUrlInputRef = createRef<HTMLInputElement>()
+  private remoteRequest?: AbortController
+
+  componentWillUnmount() {
+    this.remoteRequest?.abort()
+  }
 
   componentDidMount() {
     const persistedScanState = this.readPersistedScanState()
@@ -173,7 +185,9 @@ class Scan extends Component<ScanProps, ScanState> {
     }
   }
 
-  componentDidUpdate(prevProps: ScanProps) {
+  componentDidUpdate(prevProps: ScanProps, prevState: ScanState) {
+    this.focusNewView(prevState)
+
     const currentUrl = this.props.router?.query?.url
     const prevUrl = prevProps.router?.query?.url
 
@@ -188,6 +202,23 @@ class Scan extends Component<ScanProps, ScanState> {
       this.setState({ remoteUrlInput: urlToFetch, isUrlFormOpen: true })
       this.fetchRemotePackageJson(urlToFetch)
     }
+  }
+
+  focusNewView(prevState: ScanState) {
+    if (!prevState.packages && this.state.packages) {
+      this.focusAfterPaint(this.selectionHeadingRef)
+    }
+
+    if (!prevState.isUrlFormOpen && this.state.isUrlFormOpen) {
+      this.focusAfterPaint(this.remoteUrlInputRef)
+    }
+  }
+
+  // Let the new view lay out before focusing an element inside it.
+  focusAfterPaint = (target: { current: HTMLElement | null }) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => target.current?.focus())
+    })
   }
 
   readPersistedScanState = (): PersistedScanState | null => {
@@ -323,6 +354,10 @@ class Scan extends Component<ScanProps, ScanState> {
     if (!inputUrl.trim()) return
 
     const normalizedUrl = normalizePackageJsonUrl(inputUrl)
+    this.remoteRequest?.abort()
+
+    const request = new AbortController()
+    this.remoteRequest = request
     this.setState({
       isLoadingRemoteUrl: true,
       remoteUrlError: null,
@@ -330,7 +365,9 @@ class Scan extends Component<ScanProps, ScanState> {
     })
 
     try {
-      const json = await fetchPackageJson(normalizedUrl)
+      const json = await fetchPackageJson(normalizedUrl, request.signal)
+
+      if (request.signal.aborted) return
 
       const packages = this.getParsedPackages(json)
       const unsupportedPackageNames = this.getUnsupportedPackageNames(json)
@@ -356,6 +393,8 @@ class Scan extends Component<ScanProps, ScanState> {
       )
       Analytics.scanPackageJsonDropped(packages.length)
     } catch (err: unknown) {
+      if (request.signal.aborted) return
+
       const errorMessage =
         err instanceof Error
           ? err.message
@@ -367,11 +406,16 @@ class Scan extends Component<ScanProps, ScanState> {
       })
       Analytics.scanParseError()
     }
+
+    this.remoteRequest = undefined
   }
 
   handleRemoteUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    this.fetchRemotePackageJson(this.state.remoteUrlInput)
+
+    if (!this.state.isLoadingRemoteUrl) {
+      this.fetchRemotePackageJson(this.state.remoteUrlInput)
+    }
   }
 
   handleDropAccepted = ([file]: File[]) => {
@@ -452,7 +496,18 @@ class Scan extends Component<ScanProps, ScanState> {
         remoteUrlError: null,
         isUrlFormOpen: false,
       },
-      this.persistScanState,
+      () => {
+        this.persistScanState()
+        this.focusAfterPaint(this.uploadButtonRef)
+      },
+    )
+  }
+
+  closeUrlForm = () => {
+    this.remoteRequest?.abort()
+    this.setState(
+      { isUrlFormOpen: false, remoteUrlError: null, isLoadingRemoteUrl: false },
+      () => this.focusAfterPaint(this.remoteUrlButtonRef),
     )
   }
 
@@ -491,7 +546,13 @@ class Scan extends Component<ScanProps, ScanState> {
       content = (
         <div>
           <header className="scan__selection-header">
-            <h1 className="scan__page-title"> Select packages to scan </h1>
+            <h1
+              className="scan__page-title"
+              ref={this.selectionHeadingRef}
+              tabIndex={-1}
+            >
+              Select packages to scan
+            </h1>
             <Button
               className="scan__btn"
               disabled={selectedPackages.length === 0}
@@ -544,8 +605,10 @@ class Scan extends Component<ScanProps, ScanState> {
     } else {
       content = (
         <div>
+          <h1 className="scan__page-title">Scan package.json</h1>
           <Dropzone
             ref={this.dropzoneRef}
+            inputProps={{ 'aria-label': 'Select a package.json file' }}
             className="scan__dropzone"
             onDropAccepted={this.handleDropAccepted}
             onDropRejected={this.handleDropRejected}
@@ -566,6 +629,7 @@ class Scan extends Component<ScanProps, ScanState> {
                     className="scan__btn"
                     type="button"
                     variant="primary"
+                    ref={this.uploadButtonRef}
                     onClick={() => this.dropzoneRef.current?.open()}
                   >
                     <span>
@@ -576,6 +640,7 @@ class Scan extends Component<ScanProps, ScanState> {
                     className="scan__btn"
                     type="button"
                     variant="primary"
+                    ref={this.remoteUrlButtonRef}
                     onClick={e => {
                       e.stopPropagation()
                       this.setState({
@@ -601,6 +666,11 @@ class Scan extends Component<ScanProps, ScanState> {
                   <form
                     className="scan__url-form"
                     onSubmit={this.handleRemoteUrlSubmit}
+                    onKeyDown={event => {
+                      if (event.key === 'Escape') {
+                        this.closeUrlForm()
+                      }
+                    }}
                   >
                     <input
                       type="text"
@@ -611,8 +681,8 @@ class Scan extends Component<ScanProps, ScanState> {
                       onChange={e =>
                         this.setState({ remoteUrlInput: e.target.value })
                       }
-                      disabled={isLoadingRemoteUrl}
-                      autoFocus
+                      readOnly={isLoadingRemoteUrl}
+                      ref={this.remoteUrlInputRef}
                     />
                     <Button
                       type="submit"
@@ -627,11 +697,7 @@ class Scan extends Component<ScanProps, ScanState> {
                       className="scan__url-cancel-btn"
                       onClick={e => {
                         e.stopPropagation()
-                        this.setState({
-                          isUrlFormOpen: false,
-                          remoteUrlError: null,
-                          isLoadingRemoteUrl: false,
-                        })
+                        this.closeUrlForm()
                       }}
                       label="Cancel and return to upload view"
                       variant="quiet"
@@ -641,7 +707,7 @@ class Scan extends Component<ScanProps, ScanState> {
                   </form>
 
                   {remoteUrlError && (
-                    <div className="scan__url-error-box">
+                    <div className="scan__url-error-box" role="alert">
                       <h4 className="scan__url-error-code">FetchError</h4>
                       <p className="scan__url-error-message">
                         {remoteUrlError}

@@ -8,6 +8,9 @@
 
   // Surfaces
   --color-bg-base: #ffffff;
+  --color-focus-ring: #285fba;
+  --color-comparison-positive: #27653a;
+  --color-comparison-negative: #984615;
   --color-bg-surface: #ffffff;
   --color-bg-secondary: #f8fafc;
 
@@ -51,7 +54,7 @@
 
   // ── Quick stats bar ──────────────────────────────────────────────────────
   --color-stats-bar-bg: #fbfbfc; // ≈ lighten($raven, 55%) — nearly white
-  --color-stats-bar-text: #8e959d; // ≈ lighten($raven, 15%)
+  --color-stats-bar-text: #626a75;
   --color-stats-bar-border: rgba(0, 0, 0, 0.05);
 
   // ── Announcement banner ──────────────────────────────────────────────────
@@ -94,7 +97,7 @@
 
   // ── Scan page ─────────────────────────────────────────────────────────────
   --color-scan-dropzone-border: #9ba1a9; // ≈ lighten($raven, 20%)
-  --color-scan-pkg-version: #848d97; // ≈ lighten($raven, 10%)
+  --color-scan-pkg-version: #666e78;
 
   // ── Stat / tooltip ───────────────────────────────────────────────────────
   --color-stat-text: #212121;
@@ -121,15 +124,15 @@
   --color-treemap-ellipsis: rgba(0, 0, 0, 0.35);
 
   // ── Result page ───────────────────────────────────────────────────────────
-  --color-result-heading: #848d97; // ≈ lighten($raven, 10%)
+  --color-result-heading: #666e78;
   --color-divider: #d4d7da; // ≈ lighten($raven, 50%)
   --color-error-pre-bg: rgba(102, 110, 120, 0.06);
 
   // ── History bar graph ─────────────────────────────────────────────────────
   --color-bar-disabled: #d0d3d6; // ≈ lighten($raven, 45%)
   --color-bar-disabled-hover: #bec2c6; // ≈ lighten($raven, 35%)
-  --color-bar-legend: #9ba1a9; // ≈ lighten($raven, 20%)
-  --color-bar-version: #8e959d; // ≈ lighten($raven, 15%)
+  --color-bar-legend: #666e78;
+  --color-bar-version: #666e78;
   --color-bar-version-hover: #666e78; // = $raven
   --color-bar-version-active: #3a4049; // ≈ darken($raven, 20%)
 
@@ -149,6 +152,9 @@
 
   // Surfaces
   --color-bg-base: #0d1117;
+  --color-focus-ring: #a3c7ff;
+  --color-comparison-positive: #8cdb9d;
+  --color-comparison-negative: #ffa75e;
   --color-bg-surface: #161b22;
   --color-bg-secondary: #010409;
 
@@ -214,7 +220,7 @@
   --color-footer-description: #8b949e;
   --color-footer-border: #21262d;
   --color-footer-btn-border: #8b949e;
-  --color-footer-credits: #6e7681;
+  --color-footer-credits: #78808a;
 
   // Cards & shadows
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.3);

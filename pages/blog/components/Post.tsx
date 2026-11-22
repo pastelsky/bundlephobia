@@ -74,11 +74,14 @@ const Post = ({ title, content, slug, preview, createdAt }: PostProps) => {
       ) : (
         <h1>{title}</h1>
       )}
-      <h4 className="blog-post__preview-date">
+      <time
+        className="blog-post__preview-date"
+        dateTime={new Date(createdAt).toISOString()}
+      >
         {new Intl.DateTimeFormat('en-GB', {
           dateStyle: 'long',
         }).format(new Date(createdAt))}
-      </h4>
+      </time>
       <div className="blog-post__preview-content">
         {documentToReactComponents(
           preview ? makeContentPreview(content) : content,

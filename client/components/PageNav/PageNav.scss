@@ -90,12 +90,10 @@
     text-transform: uppercase;
     letter-spacing: 0.3px;
     font-weight: $font-weight-bold;
-    opacity: 0.55;
     color: var(--color-nav-link);
-    transition: opacity 0.2s;
 
     &:hover {
-      opacity: 1;
+      color: var(--color-text-primary);
     }
   }
 
@@ -205,24 +203,22 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
   font-weight: $font-weight-bold;
-  opacity: 0.55;
   color: var(--color-nav-link);
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: opacity 0.2s;
 
   &::-webkit-details-marker {
     display: none;
   }
 
   &:hover {
-    opacity: 1;
+    color: var(--color-text-primary);
   }
 }
 
 .mcp-nav[open] > .mcp-nav__trigger {
-  opacity: 1;
+  color: var(--color-text-primary);
 }
 
 .mcp-nav__backdrop {
@@ -368,5 +364,6 @@
   padding-right: 40px;
   border-radius: 6px;
   background: var(--color-bg-base);
+  color: var(--color-text-primary);
   border: 1px solid var(--color-border-subtle);
 }

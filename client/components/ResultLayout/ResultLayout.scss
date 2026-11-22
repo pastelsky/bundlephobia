@@ -96,12 +96,10 @@
     text-transform: uppercase;
     letter-spacing: 0.3px;
     font-weight: $font-weight-bold;
-    opacity: 0.55;
     color: var(--color-nav-link);
-    transition: opacity 0.2s;
 
     &:hover {
-      opacity: 1;
+      color: var(--color-text-primary);
     }
   }
 

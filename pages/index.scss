@@ -204,3 +204,9 @@ $homepage-carbon-ad-clearance: $homepage-carbon-ad-offset + $global-spacing * 12
     transform: translate(0.55px, -1px);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .logo__skeleton {
+    animation: none;
+  }
+}

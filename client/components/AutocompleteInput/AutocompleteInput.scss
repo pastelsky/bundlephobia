@@ -255,3 +255,9 @@
     }
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .autocomplete-input__suggestions-menu {
+    animation: none;
+  }
+}

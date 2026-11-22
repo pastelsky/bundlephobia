@@ -21,7 +21,11 @@ export default function TrendsLoader() {
   const shape = initialData.shape
 
   useEffect(() => {
-    if (!containerRef.current) return
+    if (
+      !containerRef.current ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
+      return
 
     const pathElements = containerRef.current.querySelectorAll<SVGPathElement>(
       '.trends-loader__trail',
@@ -143,22 +147,6 @@ export default function TrendsLoader() {
           fadeDuration: curve.fadeDuration,
         })
 
-        lineNodes.forEach(({ node, nodeIndex }) => {
-          const appearanceStart = lineOffset + node.appearanceDelay
-          const progress = pathDistanceAtPoint(pathElements[curveIndex], node)
-
-          const contactAt =
-            drawStart + inverseEasing(progress, drawEasing) * curve.duration
-
-          debugLoader('dot:schedule', {
-            group: curveIndex,
-            node: nodeIndex,
-            appearanceStart,
-            pathProgress: Number(progress.toFixed(4)),
-            contactAt: Math.round(contactAt),
-          })
-        })
-
         lineNodes.forEach(({ node, nodeIndex }) =>
           activeAnimations.push(
             anime({
@@ -239,6 +227,13 @@ export default function TrendsLoader() {
           // line, especially on the slower easing curves.
           const expansionDuration = randomInteger(260, 420)
           const pulseStart = contactAt
+          debugLoader('dot:schedule', {
+            group: curveIndex,
+            node: nodeIndex,
+            appearanceStart: lineOffset + node.appearanceDelay,
+            pathProgress: Number(progress.toFixed(4)),
+            contactAt: Math.round(contactAt),
+          })
           debugLoader('dot:pulse-schedule', {
             group: curveIndex,
             node: nodeIndex,

@@ -68,6 +68,7 @@
 }
 
 .blog-post__preview-date {
+  display: block;
   @include font-size-sm;
   margin: 0.7rem 0 0;
   color: var(--color-blog-date);

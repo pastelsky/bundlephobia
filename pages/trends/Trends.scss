@@ -138,7 +138,10 @@
         color: var(--color-text-primary);
         caret-color: var(--color-text-primary);
         width: 100%;
-        outline: none;
+        &:focus-visible {
+          outline: 2px solid var(--color-focus-ring);
+          outline-offset: -2px;
+        }
 
         &::selection {
           background: var(--color-suggestion-highlight);
@@ -777,13 +780,16 @@
 
     &-link {
       cursor: pointer;
+      pointer-events: auto;
 
-      &:hover path {
+      &:hover path,
+      &:focus-visible path {
         opacity: 0.9;
         stroke-width: 1.4;
       }
 
-      &:hover text {
+      &:hover text,
+      &:focus-visible text {
         text-decoration: underline;
       }
     }
@@ -818,9 +824,31 @@
     background: transparent;
   }
 
+  &__explorer {
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    left: 0;
+    display: grid;
+    gap: 4px;
+    padding: 8px;
+    color: var(--color-text-primary);
+    background: var(--color-bg-base);
+
+    &:not(:focus-within) {
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+  }
+
   // Tooltip follows the compact dark balloon used by the package history view.
   &__tooltip {
     position: fixed;
+    top: 0;
+    left: 0;
     z-index: 3;
     pointer-events: none;
     background: var(--color-tooltip-bg);
@@ -1371,7 +1399,6 @@
     font-size: 10px;
     font-weight: $font-weight-light;
     text-transform: lowercase;
-    opacity: 0.6;
     line-height: 1;
   }
 }

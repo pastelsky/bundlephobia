@@ -52,10 +52,6 @@
   summary {
     text-align: center;
     color: var(--color-result-heading);
-
-    &:focus {
-      outline: none;
-    }
   }
 
   pre {
@@ -226,8 +222,8 @@
   margin-right: auto;
 }
 
-.size-container h3,
-.time-container h3 {
+.size-container h2,
+.time-container h2 {
   @include font-size-md;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -371,4 +367,10 @@
   color: var(--color-text-muted);
   margin: $global-spacing * 3 0 0 0;
   line-height: 1.2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content-container-wrap {
+    animation: none;
+  }
 }

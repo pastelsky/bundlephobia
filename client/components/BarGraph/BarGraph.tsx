@@ -69,18 +69,20 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
   }
 
   renderDisabledBar = (reading: Reading) => (
-    <div
+    <button
+      type="button"
+      aria-label={`Build version ${reading.version}`}
       key={reading.version}
       className="bar-graph__bar-group bar-graph__bar-group--disabled"
       onClick={() => this.props.onBarClick(reading)}
     >
-      <div
+      <span
         className="bar-graph__bar"
         style={{ height: `${50}%` }}
         data-balloon="Unknown | Click 👆 to build"
       />
       <BarVersion version={reading.version} />
-    </div>
+    </button>
   )
 
   renderActiveBar = (
@@ -97,15 +99,19 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
       } | Gzipped: ${formattedGzip.size.toFixed(1)}${formattedGzip.unit}`
     }
 
+    const tooltip = getTooltipMessage(reading)
+
     return (
-      <div
+      <button
+        type="button"
+        aria-label={`View version ${reading.version}. ${tooltip}`}
         onClick={() => this.props.onBarClick(reading)}
         key={reading.version}
         className="bar-graph__bar-group"
       >
-        <div className="bar-graph__bar-symbols">
+        <span className="bar-graph__bar-symbols">
           {options.isFirstTreeshakeable && (
-            <div
+            <span
               data-balloon={`ES2015 exports introduced. ${
                 reading.hasSideEffects
                   ? 'Not side-effect free yet, hence limited tree-shake ability.'
@@ -114,10 +120,10 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
               className="bar-graph__bar-symbol"
             >
               <TreeShakeIcon />
-            </div>
+            </span>
           )}
           {options.isFirstSideEffectFree && (
-            <div
+            <span
               data-balloon={`Was marked side-effect free. ${
                 reading.hasJSNext || reading.hasJSModule || reading.isModuleType
                   ? 'Supports ES2015 exports also, hence fully tree-shakeable'
@@ -126,22 +132,22 @@ export default class BarGraph extends PureComponent<BarGraphProps> {
               className="bar-graph__bar-symbol"
             >
               <SideEffectIcon />
-            </div>
+            </span>
           )}
-        </div>
+        </span>
 
-        <div
+        <span
           className="bar-graph__bar"
           style={{ height: `${(reading.size - reading.gzip) * scale}%` }}
-          data-balloon={getTooltipMessage(reading)}
+          data-balloon={tooltip}
         />
-        <div
+        <span
           className="bar-graph__bar2"
           style={{ height: `${reading.gzip * scale}%` }}
-          data-balloon={getTooltipMessage(reading)}
+          data-balloon={tooltip}
         />
         <BarVersion version={reading.version} />
-      </div>
+      </button>
     )
   }
 
