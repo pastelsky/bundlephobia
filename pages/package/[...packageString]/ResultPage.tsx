@@ -177,6 +177,10 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     }
 
     this.activeQuery = packageString
+    Analytics.packageLoadStarted(packageString, 'page_load')
+    Analytics.packageResultViewed(packageString, 'page_load')
+    this.fetchHistory(packageString, this.searchRequestId)
+    this.fetchSimilarPackages(packageString, this.searchRequestId)
   }
 
   componentDidUpdate(prevProps: ResultPageProps) {
@@ -678,13 +682,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   renderExports() {
     const { resultsPromiseState, results } = this.state
 
-    if (
-      this.props.initialResult ||
-      resultsPromiseState !== 'fulfilled' ||
-      !results
-    ) {
-      return null
-    }
+    if (resultsPromiseState !== 'fulfilled' || !results) return null
 
     return (
       <div className="content-container">
@@ -725,7 +723,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const { resultsPromiseState, results } = this.state
 
     if (
-      this.props.initialResult ||
       resultsPromiseState !== 'fulfilled' ||
       !results ||
       !parsePackageString(results.name).scoped
