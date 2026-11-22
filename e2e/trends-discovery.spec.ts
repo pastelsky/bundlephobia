@@ -27,11 +27,11 @@ test.describe('trends SEO and discovery without JavaScript', () => {
       '/trends?packages=axios~vs~ky&metric=size&range=last-3-years',
     )
     await expect(page).toHaveTitle(
-      'axios vs ky — downloads, stars & size | Bundlephobia',
+      'axios vs ky — bundle size, downloads & stars | Bundlephobia',
     )
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       'content',
-      'axios vs ky — downloads, stars & size | Bundlephobia',
+      'axios vs ky — bundle size, downloads & stars | Bundlephobia',
     )
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
@@ -44,11 +44,11 @@ test.describe('trends SEO and discovery without JavaScript', () => {
   }) => {
     await page.goto('/trends?packages=preact~vs~react~vs~vue')
     await expect(page).toHaveTitle(
-      'preact vs react vs vue — downloads, stars & size | Bundlephobia',
+      'preact vs react vs vue — bundle size, downloads & stars | Bundlephobia',
     )
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       'content',
-      'preact vs react vs vue — downloads, stars & size | Bundlephobia',
+      'preact vs react vs vue — bundle size, downloads & stars | Bundlephobia',
     )
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
@@ -165,7 +165,7 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     ]) {
       await page.goto(trendsComparisonPath(packages))
       await expect(page).toHaveTitle(
-        `${packages.join(' vs ')} — downloads, stars & size | Bundlephobia`,
+        `${packages.join(' vs ')} — bundle size, downloads & stars | Bundlephobia`,
       )
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
         'href',
