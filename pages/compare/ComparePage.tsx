@@ -39,14 +39,23 @@ export default class ComparePage extends PureComponent<
   fetchResults = (packageString: string) => {
     API.getInfo(packageString)
       .then(results => {
+        const hasExplicitVersion = Boolean(
+          parsePackageString(packageString).version,
+        )
+
         const newPackageString = `${results.name}@${results.version}`
+
+        const nextUrlSpecifier = hasExplicitVersion
+          ? newPackageString
+          : results.name
+
         this.setState(
           {
             inputInitialValue: newPackageString,
             results,
           },
           () => {
-            Router.replace(`/package/${newPackageString}`)
+            Router.replace(`/package/${nextUrlSpecifier}`)
           },
         )
       })

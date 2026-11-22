@@ -400,3 +400,41 @@ it('does not cache a negative export-size peek or start a build', async () => {
   expect(await response.json()).toMatchObject({ peekSuccess: false })
   expect(exportsBuild).not.toHaveBeenCalled()
 })
+
+describe('version URL hygiene and encoded scoped redirects', () => {
+  it('emits canonical Link header without X-Robots-Tag so versioned links consolidate equity', async () => {
+    cached.set('example@1.2.3', older)
+
+    const versioned = await request('/package/example@1.2.3')
+
+    expect(versioned.status).toBe(200)
+    expect(versioned.headers.get('x-robots-tag')).toBeNull()
+    expect(versioned.headers.get('link')).toBe(
+      '<https://bundlephobia.com/package/example>; rel="canonical"',
+    )
+  })
+
+  it('permanently redirects URL-encoded scoped package paths without running analysis', async () => {
+    const result = await getServerSideProps({
+      params: { packageString: ['@scope/example'] },
+      query: {},
+      // SAFETY: redirect branch only inspects req.url before any network call.
+      req: {
+        url: '/package/%40scope%2Fexample',
+        headers: { 'x-bundlephobia-prefer-cached': 'true' },
+      } as GetServerSidePropsContext['req'],
+      // SAFETY: redirect branch returns before touching res headers.
+      res: {} as GetServerSidePropsContext['res'],
+      resolvedUrl: '/package/%40scope%2Fexample',
+    })
+
+    expect(result).toEqual({
+      redirect: {
+        destination: '/package/@scope/example',
+        permanent: true,
+      },
+    })
+    expect(resolve).not.toHaveBeenCalled()
+    expect(build).not.toHaveBeenCalled()
+  })
+})

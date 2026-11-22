@@ -215,19 +215,30 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
         this.fetchSimilarPackages(packageString, requestId)
 
+        const requestedVersion = parsePackageString(packageString).version
+
+        const hasExplicitVersion = Boolean(
+          requestedVersion && requestedVersion !== 'latest',
+        )
+
         const newPackageString = `${results.name}@${results.version}`
+
+        const nextUrlSpecifier = hasExplicitVersion
+          ? newPackageString
+          : results.name
+
         this.setState(
           {
             inputInitialValue: newPackageString,
             results,
           },
           () => {
-            this.activeQuery = newPackageString
+            this.activeQuery = nextUrlSpecifier
 
             if (
-              getPackageStringFromRouter(this.props.router) !== newPackageString
+              getPackageStringFromRouter(this.props.router) !== nextUrlSpecifier
             ) {
-              Router.replace(`/package/${newPackageString}`)
+              Router.replace(`/package/${nextUrlSpecifier}`)
             }
           },
         )
@@ -776,6 +787,28 @@ function analysisRequestHeaders(req: GetServerSidePropsContext['req']) {
   }
 }
 
+// Consolidate redundant package URL variants via 301 before calling /api/size:
+// - Explicit @latest duplicates the canonical unversioned /package/<name> page.
+// - URL-encoded scoped paths (/package/%40scope%2Fname) are crawled as separate
+//   URLs alongside /package/@scope/name, splitting signals and crawl budget.
+function getCanonicalPackageRedirect(
+  rawUrl: string | undefined,
+  specifier: string,
+  parsed: { name: string; version: string | null },
+): string | null {
+  if (parsed.version === 'latest') {
+    return `/package/${parsed.name}`
+  }
+
+  const rawPath = (rawUrl ?? '').split('?')[0]
+
+  if (/%40|%2f/i.test(rawPath) && specifier.startsWith('@')) {
+    return `/package/${specifier}`
+  }
+
+  return null
+}
+
 function forwardAnalysisHeaders(
   headers: AxiosResponse['headers'],
   res: GetServerSidePropsContext['res'],
@@ -805,12 +838,15 @@ export const getServerSideProps = async ({
 
   const { name, version } = parsePackageString(specifier)
 
-  // Explicit @latest is redundant with the canonical package page; issue a
-  // permanent redirect so crawlers consolidate immediately.
-  if (version === 'latest') {
+  const redirectDestination = getCanonicalPackageRedirect(req.url, specifier, {
+    name,
+    version,
+  })
+
+  if (redirectDestination) {
     return {
       redirect: {
-        destination: `/package/${name}`,
+        destination: redirectDestination,
         permanent: true,
       },
     }
