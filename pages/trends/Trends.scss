@@ -104,10 +104,6 @@
           border-color 0.15s ease,
           box-shadow 0.15s ease;
 
-        &:focus-within {
-          border-color: var(--color-border-primary);
-        }
-
         &.autocomplete-input__container--menu-visible {
           border-bottom-left-radius: 0 !important;
           border-bottom-right-radius: 0 !important;
@@ -138,7 +134,10 @@
         color: var(--color-text-primary);
         caret-color: var(--color-text-primary);
         width: 100%;
-        outline: none;
+        &:focus-visible {
+          outline: 2px solid var(--color-link-contrast);
+          outline-offset: -2px;
+        }
 
         &::selection {
           background: var(--color-suggestion-highlight);
@@ -292,7 +291,7 @@
   }
 }
 
-.trends-preset {
+button.trends-preset {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--trends-control-radius) !important;
@@ -308,8 +307,8 @@
   &:hover {
     color: var(--color-text-primary);
     background: var(--color-surface-raised);
-    border-color: var(--color-text-secondary);
-    box-shadow: 0 1px 0 var(--color-border-primary);
+    border-color: var(--color-border-subtle);
+    box-shadow: 0 1px 0 var(--color-border-subtle);
   }
 }
 
@@ -777,13 +776,16 @@
 
     &-link {
       cursor: pointer;
+      pointer-events: auto;
 
-      &:hover path {
+      &:hover path,
+      &:focus-visible path {
         opacity: 0.9;
         stroke-width: 1.4;
       }
 
-      &:hover text {
+      &:hover text,
+      &:focus-visible text {
         text-decoration: underline;
       }
     }
@@ -818,9 +820,31 @@
     background: transparent;
   }
 
+  &__explorer {
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    left: 0;
+    display: grid;
+    gap: 4px;
+    padding: 8px;
+    color: var(--color-text-primary);
+    background: var(--color-bg-base);
+
+    &:not(:focus-within) {
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+  }
+
   // Tooltip follows the compact dark balloon used by the package history view.
   &__tooltip {
     position: fixed;
+    top: 0;
+    left: 0;
     z-index: 3;
     pointer-events: none;
     background: var(--color-tooltip-bg);

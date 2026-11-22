@@ -118,28 +118,23 @@ function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
   })
 
   return (
-    <ul className="export-analysis-section__list">
+    <div
+      className="export-analysis-section__list"
+      role="region"
+      aria-label="Named exports"
+      tabIndex={0}
+    >
       {Object.keys(exportDictionary)
         .sort()
         .map(letter => (
           <div className="export-analysis-section__letter-group" key={letter}>
             {shouldShowLabels && (
-              <div className="export-analysis-section__dont-break">
-                <h3 className="export-analysis-section__letter-heading">
-                  {letter}
-                </h3>
-                <ExportPill
-                  size={exportDictionary[letter][0].gzip}
-                  totalSize={totalSize}
-                  name={exportDictionary[letter][0].name}
-                  key={exportDictionary[letter][0].name}
-                  isLoading={curIndex++ < 40 && isLoading}
-                />
-              </div>
+              <h3 className="export-analysis-section__letter-heading">
+                {letter}
+              </h3>
             )}
-            {exportDictionary[letter]
-              .slice(shouldShowLabels ? 1 : 0)
-              .map(exp => (
+            <ul className="export-analysis-section__letter-list">
+              {exportDictionary[letter].map(exp => (
                 <ExportPill
                   size={exp.gzip}
                   totalSize={totalSize}
@@ -148,10 +143,11 @@ function ExportList({ exports, totalSize, isLoading }: ExportListProps) {
                   isLoading={curIndex++ < 40 && isLoading}
                 />
               ))}
+            </ul>
           </div>
         ))}
       <div className="export-analysis-section__overflow-indicator" />
-    </ul>
+    </div>
   )
 }
 
@@ -164,6 +160,7 @@ function InputExportFilter({
     <div className="export-analysis-section__filter-input-container">
       <input
         placeholder="Filter methods"
+        aria-label="Filter methods"
         className="export-analysis-section__filter-input"
         type="text"
         onChange={e => onChange(e.target.value.toLowerCase().trim())}
@@ -325,11 +322,17 @@ export default class ExportAnalysisSection extends Component<
           )}
         </div>
 
-        <ExportList
-          isLoading={analysisState === State.EXPORTS_FULFILLED}
-          totalSize={totalSize}
-          exports={matchedExports}
-        />
+        {matchedExports.length > 0 ? (
+          <ExportList
+            isLoading={analysisState === State.EXPORTS_FULFILLED}
+            totalSize={totalSize}
+            exports={matchedExports}
+          />
+        ) : (
+          <p className="export-analysis-section__subtext" role="status">
+            No matching exports
+          </p>
+        )}
       </>
     )
   }

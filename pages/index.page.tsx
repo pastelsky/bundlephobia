@@ -109,7 +109,7 @@ const Home = () => {
   }
 
   return (
-    <Layout className="homepage">
+    <Layout className="homepage" skipTo="page-content">
       <MetaTags
         title="Bundlephobia | Size of npm dependencies"
         canonicalPath=""
@@ -117,7 +117,7 @@ const Home = () => {
       />
       <div className="homepage__container">
         <PageNav minimal={true} />
-        <div className="homepage__content">
+        <div className="homepage__content" id="page-content" tabIndex={-1}>
           <Logo />
           <div className="logo">
             <span>Bundle</span>

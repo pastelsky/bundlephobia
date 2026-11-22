@@ -87,7 +87,7 @@ export function useTrendsData({
   const [loadState, setLoadState] = useState<TrendsLoadState>({
     status: 'pending',
     data: null,
-    showLoading: true,
+    showLoading: false,
   })
 
   const requestKey = JSON.stringify([packages, range])
@@ -164,7 +164,11 @@ export function useTrendsData({
       if (!downloadsSettled) {
         setLoadState(current => ({
           status: 'pending',
-          data: merged,
+          // The metadata can arrive before npm history. Keep the existing
+          // chart mounted when the interim response has no downloads yet.
+          data: merged.packages.some(pack => pack.downloads.length > 0)
+            ? merged
+            : (current.data ?? merged),
           showLoading:
             current.status === 'pending' ? current.showLoading : false,
         }))

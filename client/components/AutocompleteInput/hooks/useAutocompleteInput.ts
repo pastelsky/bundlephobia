@@ -17,23 +17,36 @@ export function useAutocompleteInput({
 }: UseAutocompleteInputArgs) {
   const [value, setValue] = React.useState(initialValue)
   const [suggestions, setSuggestions] = React.useState<PackageSuggestion[]>([])
-  const [, startTransition] = React.useTransition()
+  const suggestionRequest = React.useRef(0)
   const typedValueRef = React.useRef(initialValue)
 
   React.useEffect(() => {
     setValue(initialValue)
     typedValueRef.current = initialValue
+    suggestionRequest.current += 1
   }, [initialValue])
 
   const getSuggestions = React.useMemo(() => {
-    return debounce((query: string) => {
-      loadSuggestions(query).then(nextSuggestions => {
-        startTransition(() => {
-          setSuggestions(nextSuggestions)
-        })
-      })
+    return debounce((query: string, requestId: number) => {
+      if (suggestionRequest.current !== requestId) return
+
+      const publish = (nextSuggestions: PackageSuggestion[]) => {
+        if (suggestionRequest.current !== requestId) return
+
+        React.startTransition(() => setSuggestions(nextSuggestions))
+      }
+
+      void loadSuggestions(query).then(publish, () => publish([]))
     }, 150)
-  }, [loadSuggestions, startTransition])
+  }, [loadSuggestions])
+
+  React.useEffect(
+    () => () => {
+      suggestionRequest.current += 1
+      getSuggestions.clear()
+    },
+    [getSuggestions],
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,12 +61,11 @@ export function useAutocompleteInput({
     typedValueRef.current = nextValue
     const trimmedValue = nextValue.trim()
     const { name } = parsePackageString(trimmedValue)
+    const requestId = ++suggestionRequest.current
 
-    if (trimmedValue.length > 1) {
-      getSuggestions(name)
-    }
-
-    if (!trimmedValue) {
+    if (trimmedValue.length > 1 && name) {
+      getSuggestions(name, requestId)
+    } else {
       setSuggestions([])
     }
   }
@@ -69,6 +81,7 @@ export function useAutocompleteInput({
   const resetToInitial = React.useCallback(() => {
     setValue(initialValue)
     typedValueRef.current = initialValue
+    suggestionRequest.current += 1
     setSuggestions([])
   }, [initialValue])
 

@@ -7,7 +7,7 @@ import DigitalOceanLogo from '../../assets/digital-ocean-logo.svg'
 import { AnnouncementBanner } from '../AnnouncementBanner'
 import { WithClassName } from '../../../types'
 
-type LayoutProps = React.PropsWithChildren & WithClassName
+type LayoutProps = React.PropsWithChildren & WithClassName & { skipTo?: string }
 
 type LayoutState = {
   recentSearches: string[]
@@ -29,13 +29,18 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
   }
 
   render() {
-    const { children, className } = this.props
+    const { children, className, skipTo = 'main-content' } = this.props
     const { recentSearches } = this.state
 
     return (
-      <section className="layout">
+      <div className="layout">
+        <a className="skip-link" href={`#${skipTo}`}>
+          Skip to content
+        </a>
         <AnnouncementBanner />
-        <main className={className}>{children}</main>
+        <main id="main-content" tabIndex={-1} className={className}>
+          {children}
+        </main>
 
         <footer>
           <div className="footer__recent-search-bar">
@@ -112,7 +117,7 @@ export default class Layout extends Component<LayoutProps, LayoutState> {
             </div>
           </section>
         </footer>
-      </section>
+      </div>
     )
   }
 }

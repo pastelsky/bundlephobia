@@ -202,7 +202,14 @@
   margin-left: $global-spacing * 0.2;
 }
 
+.export-analysis-section__letter-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 .export-analysis-section__letter-heading {
+  break-after: avoid-column;
   @include font-size-md;
   margin: $global-spacing * 1.5 0 $global-spacing;
 }

@@ -2,28 +2,26 @@
 
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import anime from 'animejs'
-import { bisector } from 'd3-array'
 
 import type {
   TrendsGroupBy,
   TrendsMetric,
   TrendsPackageSeries,
-  TrendsPoint,
   TrendsRange,
 } from '../../client/api'
 import TrendsLoader from './TrendsLoader'
 import {
   CHART_HEIGHT,
+  type ChartPoint,
   INITIAL_CHART_WIDTH,
   PLOT,
-  TRENDS_SERIES_COLORS,
-  annotationPath,
   buildChartModel,
-  formatDateTick,
-  formatMetricValue,
-  pathFor,
-  seriesForMetric,
 } from './trendsChartModel'
+
+import TrendsPlot from './TrendsPlot'
+import TrendsChartExplorer from './TrendsChartExplorer'
+import TrendsChartTooltip from './TrendsChartTooltip'
+import { type Hover, buildHoverIndex, hoverAt } from './trendsChartInteraction'
 
 export { TRENDS_SERIES_COLORS } from './trendsChartModel'
 
@@ -31,8 +29,6 @@ const useIsomorphicLayoutEffect =
   typeof window === 'undefined' ? React.useEffect : useLayoutEffect
 
 const CHART_EASING = 'easeOutCubic'
-
-const DOT_MAGNET_RADIUS = 9
 
 type TrendsChartProps = {
   packages: TrendsPackageSeries[]
@@ -43,27 +39,7 @@ type TrendsChartProps = {
   showMinorReleases: boolean
   actions?: React.ReactNode
   loading?: boolean
-}
-
-function nearestPoint(points: TrendsPoint[], timestamp: number) {
-  if (points.length === 0) return null
-
-  return points[
-    bisector<TrendsPoint, number>(point => Date.parse(point.date)).center(
-      points,
-      timestamp,
-    )
-  ]
-}
-
-function nearestByX<T extends { x: number }>(points: T[], x: number) {
-  return points.reduce<T | undefined>((nearest, candidate) => {
-    if (!nearest) return candidate
-
-    return Math.abs(candidate.x - x) < Math.abs(nearest.x - x)
-      ? candidate
-      : nearest
-  }, undefined)
+  pending?: boolean
 }
 
 // The remaining branches are declarative chart layers and loading states;
@@ -78,40 +54,33 @@ export default function TrendsChart({
   showMinorReleases,
   actions,
   loading = false,
+  pending = false,
 }: TrendsChartProps) {
   const [mounted, setMounted] = useState(false)
   const [showLoader, setShowLoader] = useState(loading && packages.length === 0)
 
-  const [hover, setHover] = useState<{
-    x: number
-    cursorX: number
-    cursorY: number
-    timestamp: number
-    pointDate?: string
-  } | null>(null)
+  const [hover, setHover] = useState<Hover | null>(null)
+  const pointerFrame = useRef<number | null>(null)
+  const pointer = useRef<{ x: number; y: number } | null>(null)
 
   const chartSeriesRef = useRef<HTMLDivElement>(null)
   const loaderRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
-  const tooltipRef = useRef<HTMLDivElement>(null)
   const [chartWidth, setChartWidth] = useState(INITIAL_CHART_WIDTH)
 
   const incrementalLoading = loading && packages.length > 0
 
-  useIsomorphicLayoutEffect(() => {
+  React.useEffect(() => {
     const chart = chartSeriesRef.current
 
     if (!chart) return
 
-    const updateChartWidth = () => {
-      const nextWidth = Math.round(chart.getBoundingClientRect().width)
+    const observer = new ResizeObserver(([entry]) => {
+      const nextWidth = Math.round(entry.contentRect.width)
 
-      if (nextWidth > 0)
-        setChartWidth(current => (current === nextWidth ? current : nextWidth))
-    }
+      if (nextWidth > 0) setChartWidth(nextWidth)
+    })
 
-    updateChartWidth()
-    const observer = new ResizeObserver(updateChartWidth)
     observer.observe(chart)
 
     return () => observer.disconnect()
@@ -131,6 +100,12 @@ export default function TrendsChart({
     }
 
     if (!showLoader || !chartSeriesRef.current || !loaderRef.current) return
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setShowLoader(false)
+
+      return
+    }
 
     const chartAnimation = anime({
       targets: chartSeriesRef.current,
@@ -179,38 +154,62 @@ export default function TrendsChart({
     ],
   )
 
-  useIsomorphicLayoutEffect(() => {
-    const tooltip = tooltipRef.current
-    const svg = svgRef.current
+  const hoverIndex = useMemo(
+    () => model && buildHoverIndex(model, packages, metric),
+    [metric, model, packages],
+  )
 
-    if (!hover || !tooltip || !svg) return
+  // Cancel work queued for the old plot when the data or viewport changes.
+  useIsomorphicLayoutEffect(
+    () => () => {
+      if (pointerFrame.current !== null) {
+        cancelAnimationFrame(pointerFrame.current)
+        pointerFrame.current = null
+      }
+    },
+    [model],
+  )
 
-    const update = () => {
-      const rect = svg.getBoundingClientRect()
-      const cursorX = rect.left + (hover.cursorX / chartWidth) * rect.width
-      const cursorY = rect.top + (hover.cursorY / CHART_HEIGHT) * rect.height
-      const gap = 14
-      const maxLeft = window.innerWidth - tooltip.offsetWidth - 8
-      const left = Math.max(8, Math.min(cursorX + gap, maxLeft))
-      const below = cursorY + gap
+  const exploreDate = React.useCallback(
+    (point: ChartPoint) => {
+      const rect = svgRef.current?.getBoundingClientRect()
 
-      const top =
-        below + tooltip.offsetHeight <= window.innerHeight - 8
-          ? below
-          : Math.max(8, cursorY - tooltip.offsetHeight - gap)
+      if (!rect) return
 
-      Object.assign(tooltip.style, {
-        position: 'fixed',
-        left: `${left}px`,
-        top: `${top}px`,
+      setHover({
+        x: point.x,
+        cursorX: rect.left + (point.x / chartWidth) * rect.width,
+        cursorY: rect.top + rect.height / 2,
+        timestamp: Date.parse(point.date),
+        pointDate: point.date,
       })
-    }
+    },
+    [chartWidth],
+  )
 
-    update()
-    window.addEventListener('resize', update)
+  const clearHover = React.useCallback(() => setHover(null), [])
 
-    return () => window.removeEventListener('resize', update)
-  }, [hover, chartWidth])
+  const queueHover = (clientX: number, clientY: number) => {
+    pointer.current = { x: clientX, y: clientY }
+
+    if (pointerFrame.current !== null) return
+
+    pointerFrame.current = requestAnimationFrame(() => {
+      pointerFrame.current = null
+
+      const cursor = pointer.current
+      const svg = svgRef.current
+
+      if (!cursor || !svg || !model || !hoverIndex) return
+
+      setHover(
+        hoverAt(cursor, svg.getBoundingClientRect(), {
+          model,
+          points: hoverIndex.points,
+        }),
+      )
+    })
+  }
 
   if (!mounted) {
     return (
@@ -218,37 +217,13 @@ export default function TrendsChart({
     )
   }
 
-  const tooltipRows =
-    hover && model
-      ? packages.map((pack, index) => ({
-          name: pack.name,
-          color: TRENDS_SERIES_COLORS[index % TRENDS_SERIES_COLORS.length],
-          point: nearestPoint(
-            [
-              ...seriesForMetric(pack, metric),
-              ...(model.series[index]?.releaseMarkers || []),
-            ],
-            hover.timestamp,
-          ),
-        }))
-      : []
-
-  const tooltipAnnotations =
-    hover && model
-      ? model.releaseLines.filter(
-          annotation =>
-            Math.abs(Date.parse(annotation.date) - hover.timestamp) <=
-            Math.max((model.maxTime - model.minTime) / 80, 24 * 60 * 60 * 1000),
-        )
-      : []
-
   return (
     <div className="trends-chart">
       <div className="trends-chart__layout">
         {actions && <div className="trends-chart__actions">{actions}</div>}
         <div className="trends-chart__plot">
           <div className="trends-chart__series" ref={chartSeriesRef}>
-            {!model && !showLoader && (
+            {!model && !pending && !showLoader && (
               <div className="trends-chart__no-data" role="status">
                 <strong>No {metric} data points are available.</strong>
                 <span>Try another metric or time range.</span>
@@ -259,257 +234,41 @@ export default function TrendsChart({
                 ref={svgRef}
                 className="trends-chart__svg"
                 viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`}
-                role="img"
+                role="group"
                 aria-label={`${metric} trends chart`}
-                onMouseLeave={() => setHover(null)}
-                onMouseMove={event => {
-                  const rect = event.currentTarget.getBoundingClientRect()
-
-                  const relativeX =
-                    ((event.clientX - rect.left) / rect.width) * chartWidth
-
-                  const relativeY =
-                    ((event.clientY - rect.top) / rect.height) * CHART_HEIGHT
-
-                  const clampedX = Math.max(
-                    PLOT.left,
-                    Math.min(PLOT.left + model.plotWidth, relativeX),
-                  )
-
-                  const nearestPoint = nearestByX(
-                    model.series.flatMap(series => [
-                      ...series.points,
-                      ...series.partialMarkers,
-                      ...series.releaseMarkers,
-                    ]),
-                    clampedX,
-                  )
-
-                  const magneticPoint =
-                    nearestPoint &&
-                    Math.abs(nearestPoint.x - clampedX) <= DOT_MAGNET_RADIUS
-                      ? nearestPoint
-                      : null
-
-                  const hoverX = magneticPoint?.x ?? clampedX
-
-                  const timestamp = magneticPoint
-                    ? Date.parse(magneticPoint.date)
-                    : model.timestampForX(hoverX)
-
-                  setHover({
-                    x: hoverX,
-                    cursorX: clampedX,
-                    cursorY: relativeY,
-                    timestamp,
-                    pointDate: magneticPoint?.date,
-                  })
+                onMouseLeave={() => {
+                  pointer.current = null
+                  setHover(null)
+                }}
+                onMouseMove={event => queueHover(event.clientX, event.clientY)}
+                onPointerUp={event => {
+                  if (event.pointerType === 'touch')
+                    queueHover(event.clientX, event.clientY)
                 }}
               >
-                <defs>
-                  {model.series.map((series, index) => (
-                    <clipPath
-                      key={series.renderKey}
-                      id={`trends-series-clip-${index}`}
-                    >
-                      <rect
-                        data-series-clip
-                        className="trends-chart__series-clip"
-                        x={PLOT.left}
-                        y={PLOT.top}
-                        width={model.plotWidth}
-                        height={model.plotHeight}
-                      />
-                    </clipPath>
-                  ))}
-                </defs>
-                {model.yTicks.map(value => {
-                  const y = model.yFor(value)
-
-                  return (
-                    <g key={value}>
-                      <line
-                        className="trends-chart__grid"
-                        x1={PLOT.left}
-                        x2={PLOT.left + model.plotWidth}
-                        y1={y}
-                        y2={y}
-                      />
-                      <text
-                        className="trends-chart__axis-label"
-                        x={PLOT.left - 8}
-                        y={y + 3}
-                        textAnchor="end"
-                      >
-                        <tspan>{formatMetricValue(value, metric).value}</tspan>
-                        {formatMetricValue(value, metric).unit && (
-                          <tspan className="trends-chart__axis-unit">
-                            {formatMetricValue(value, metric).unit}
-                          </tspan>
-                        )}
-                      </text>
-                    </g>
-                  )
-                })}
-                {model.xTicks.map((tick, index) => (
-                  <g key={tick.toISOString()}>
-                    <line
-                      className="trends-chart__axis-tick"
-                      x1={model.xForDate(tick)}
-                      x2={model.xForDate(tick)}
-                      y1={PLOT.top + model.plotHeight}
-                      y2={PLOT.top + model.plotHeight + 6}
-                    />
-                    <text
-                      className="trends-chart__axis-label trends-chart__axis-label--x"
-                      x={model.xForDate(tick)}
-                      y={CHART_HEIGHT - 10}
-                      textAnchor={
-                        index === 0
-                          ? 'start'
-                          : index === model.xTicks.length - 1
-                            ? 'end'
-                            : 'middle'
-                      }
-                    >
-                      {formatDateTick(tick)}
-                    </text>
-                  </g>
-                ))}
-                <line
-                  className="trends-chart__axis"
-                  x1={PLOT.left}
-                  x2={PLOT.left + model.plotWidth}
-                  y1={PLOT.top + model.plotHeight}
-                  y2={PLOT.top + model.plotHeight}
+                <TrendsPlot
+                  model={model}
+                  metric={metric}
+                  range={range}
+                  groupBy={groupBy}
                 />
-                {model.releaseLines.map((release, index) => (
-                  <line
-                    key={`${release.date}-${release.version}-${index}`}
-                    className={
-                      release.major
-                        ? 'trends-chart__overlay trends-chart__overlay--major'
-                        : 'trends-chart__overlay trends-chart__overlay--minor'
-                    }
-                    x1={release.x}
-                    x2={release.x}
-                    y1={PLOT.top}
-                    y2={PLOT.top + model.plotHeight}
-                    stroke={release.color}
-                  />
-                ))}
-                {model.series.map((series, index) => (
-                  <g
-                    key={series.renderKey}
-                    data-chart-series
-                    data-series-name={series.name}
-                    clipPath={`url(#trends-series-clip-${index})`}
-                  >
-                    <path
-                      className="trends-chart__line"
-                      d={pathFor(series.points)}
-                      stroke={series.color}
-                    />
-                    {series.partialPoints.length > 1 && (
-                      <path
-                        className="trends-chart__line trends-chart__line--partial"
-                        d={pathFor(series.partialPoints)}
-                        stroke={series.color}
-                      />
-                    )}
-                    {series.denseMarkerPath && (
-                      <path
-                        data-series-marker-path
-                        data-point-count={series.points.length}
-                        className="trends-chart__series-marker-path"
-                        d={series.denseMarkerPath}
-                        fill={series.color}
-                      />
-                    )}
-                    {series.markers.map(point => (
+                {hover?.pointDate &&
+                  hoverIndex?.pointsByDate
+                    .get(hover.pointDate)
+                    ?.map(({ point, color, seriesIndex }) => (
                       <circle
-                        key={`${series.name}-${point.date}`}
-                        data-series-dot
-                        className="trends-chart__series-dot"
+                        key={`${seriesIndex}-${point.date}-${point.version ?? ''}`}
+                        className="trends-chart__series-dot-magnet"
+                        clipPath={`url(#trends-series-clip-${seriesIndex})`}
                         cx={point.x}
                         cy={point.y}
-                        r="2.65"
-                        fill={series.color}
-                        opacity="1"
+                        r="6"
+                        stroke={color}
+                        fill={
+                          point.placeholder ? 'var(--color-text-muted)' : 'none'
+                        }
                       />
                     ))}
-                    {series.partialMarkers.map(point => (
-                      <circle
-                        key={`${series.name}-${point.date}-partial`}
-                        data-series-dot
-                        className="trends-chart__series-dot trends-chart__series-dot--partial"
-                        cx={point.x}
-                        cy={point.y}
-                        r="2.65"
-                        fill={series.color}
-                        opacity="1"
-                      />
-                    ))}
-                    {[
-                      ...series.points,
-                      ...series.partialMarkers,
-                      ...series.releaseMarkers,
-                    ]
-                      .filter(point => hover?.pointDate === point.date)
-                      .map(point => (
-                        <circle
-                          key={`${series.name}-${point.date}-magnet`}
-                          className="trends-chart__series-dot-magnet"
-                          cx={point.x}
-                          cy={point.y}
-                          r="6"
-                          stroke={series.color}
-                          fill={
-                            point.placeholder
-                              ? 'var(--color-text-muted)'
-                              : 'none'
-                          }
-                        />
-                      ))}
-                    {series.releaseMarkers.map(point => (
-                      <circle
-                        key={`${series.name}-${point.date}-${point.version}-release`}
-                        data-series-dot
-                        data-series-name={series.name}
-                        className="trends-chart__series-dot trends-chart__series-dot--placeholder"
-                        cx={point.x}
-                        cy={point.y}
-                        r="3"
-                        fill="var(--color-text-muted)"
-                        opacity="0.85"
-                      />
-                    ))}
-                  </g>
-                ))}
-                {model.seriesAnnotations.map(annotation => (
-                  <g
-                    key={`${annotation.name}-${metric}-${range}-${groupBy}-annotation`}
-                    className="trends-chart__series-annotation"
-                  >
-                    <a
-                      href={`/package/${annotation.name}`}
-                      className="trends-chart__series-annotation-link"
-                    >
-                      <path
-                        d={annotationPath(annotation)}
-                        stroke={annotation.color}
-                      />
-                      <text
-                        x={annotation.labelX}
-                        y={annotation.labelY}
-                        textAnchor={annotation.textAnchor}
-                        fill={annotation.color}
-                      >
-                        {annotation.name}
-                      </text>
-                    </a>
-                  </g>
-                ))}
                 {hover && (
                   <line
                     className="trends-chart__hover-line"
@@ -522,71 +281,21 @@ export default function TrendsChart({
               </svg>
             )}
           </div>
-          {hover && tooltipRows.length > 0 && (
-            <div ref={tooltipRef} className="trends-chart__tooltip">
-              <div className="trends-chart__tooltip-date">
-                {new Date(hover.timestamp).toISOString().slice(0, 10)}
-              </div>
-              <div className="trends-chart__tooltip-items">
-                {tooltipRows.map(
-                  row =>
-                    row.point && (
-                      <div key={row.name} className="trends-chart__tooltip-row">
-                        <span
-                          className="trends-chart__swatch"
-                          style={{ backgroundColor: row.color }}
-                        />
-                        <span className="trends-chart__tooltip-name">
-                          {row.name}
-                          {row.point.version ? ` v${row.point.version}` : ''}
-                          {(
-                            row.point as TrendsPoint & { placeholder?: boolean }
-                          ).placeholder
-                            ? ' (size unavailable)'
-                            : row.point.partial
-                              ? ' (in progress)'
-                              : ''}
-                        </span>
-                        {(row.point as TrendsPoint & { placeholder?: boolean })
-                          .placeholder ? (
-                          <span className="trends-chart__tooltip-unit">—</span>
-                        ) : (
-                          <span className="trends-chart__tooltip-value">
-                            <span>
-                              {formatMetricValue(row.point.value, metric).value}
-                            </span>
-                            {formatMetricValue(row.point.value, metric)
-                              .unit && (
-                              <span className="trends-chart__tooltip-unit">
-                                {' '}
-                                {
-                                  formatMetricValue(row.point.value, metric)
-                                    .unit
-                                }
-                              </span>
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    ),
-                )}
-              </div>
-              {tooltipAnnotations.length > 0 && (
-                <div className="trends-chart__tooltip-markers">
-                  {tooltipAnnotations.map(annotation => (
-                    <div
-                      key={`${annotation.date}-${annotation.label}`}
-                      className="trends-chart__tooltip-marker"
-                    >
-                      <span className="trends-chart__tooltip-marker-kind">
-                        Release
-                      </span>
-                      {annotation.label}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          {hoverIndex && (
+            <TrendsChartExplorer
+              index={hoverIndex}
+              metric={metric}
+              onExplore={exploreDate}
+              onBlur={clearHover}
+            />
+          )}
+          {hover && hoverIndex && model && (
+            <TrendsChartTooltip
+              hover={hover}
+              index={hoverIndex}
+              model={model}
+              metric={metric}
+            />
           )}
           {showLoader && (
             <div

@@ -91,3 +91,23 @@ input {
     }
   }
 }
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--color-link-contrast);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 8px;
+  left: 8px;
+  padding: 8px 12px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-base);
+  transform: translateY(calc(-100% - 12px));
+
+  &:focus {
+    transform: none;
+  }
+}

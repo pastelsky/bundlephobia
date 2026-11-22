@@ -63,10 +63,6 @@
     &:hover {
       border-color: var(--color-text-muted);
     }
-
-    &:focus {
-      outline: none;
-    }
   }
 
   .scan-results__sort--selected {
@@ -166,10 +162,6 @@
 
   summary {
     text-align: left;
-
-    &:focus {
-      outline: none;
-    }
   }
 
   p {
@@ -284,5 +276,12 @@ $index-width: 4rem;
       width: auto;
       margin-left: 0;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-results__item--loading::after,
+  .scan-results__stat-container {
+    animation: none;
   }
 }

@@ -73,7 +73,7 @@ test('renders package trends and chart controls', async ({ page }) => {
   ).toBeVisible()
   await expect(page.getByText('1.44', { exact: true })).toBeVisible()
   await expect(
-    page.getByRole('img', { name: 'downloads trends chart' }),
+    page.getByRole('group', { name: 'downloads trends chart' }),
   ).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'Downloads', exact: true }),
@@ -403,7 +403,7 @@ async function assertMetric(
   await selectControl(page, metricLabels[metric])
   await expect(metricButton).toHaveAttribute('aria-pressed', 'true')
   await expect(
-    page.getByRole('img', { name: `${metric} trends chart` }),
+    page.getByRole('group', { name: `${metric} trends chart` }),
   ).toBeVisible()
 
   const expectedCounts = permutationResponse(range).packages.map(pack => {

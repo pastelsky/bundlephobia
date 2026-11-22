@@ -12,10 +12,12 @@ export default class ResultLayout extends Component<
     const { children, className } = this.props
 
     return (
-      <Layout>
+      <Layout skipTo="page-content">
         <div className={cx('page-container', className)}>
           <PageNav variant="full" />
-          <div className="page-content">{children}</div>
+          <div className="page-content" id="page-content" tabIndex={-1}>
+            {children}
+          </div>
         </div>
       </Layout>
     )

@@ -5,8 +5,8 @@ import ProgressHex from '../ProgressHex'
 const OptimisticLoadTimeout = 700
 
 type BuildProgressIndicatorProps = {
-  isDone: boolean
-  onDone: () => void
+  isDone?: boolean
+  onDone?: () => void
 }
 
 type BuildProgressIndicatorState = {
@@ -43,7 +43,7 @@ export default class BuildProgressIndicator extends Component<
   componentDidUpdate(prevProps: BuildProgressIndicatorProps) {
     if (!prevProps.isDone && this.props.isDone) {
       this.stage = 3
-      this.props.onDone()
+      this.props.onDone?.()
     }
   }
 
@@ -108,7 +108,9 @@ export default class BuildProgressIndicator extends Component<
     return (
       <div className="build-progress-indicator">
         <ProgressHex compact />
-        <p className="build-progress-indicator__text">{progressText}</p>
+        <p className="build-progress-indicator__text" role="status">
+          {progressText}
+        </p>
       </div>
     )
   }
