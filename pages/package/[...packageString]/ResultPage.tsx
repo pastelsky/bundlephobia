@@ -16,9 +16,7 @@ import BarGraph from '../../../client/components/BarGraph'
 import { type Reading } from '../../../client/components/BarGraph/BarGraph'
 import BuildProgressIndicator from '../../../client/components/BuildProgressIndicator'
 import CarbonAd from '../../../client/components/CarbonAd'
-import MetaTags, {
-  DEFAULT_DESCRIPTION_START,
-} from '../../../client/components/MetaTags'
+import MetaTags from '../../../client/components/MetaTags'
 import QuickStatsBar, {
   PackageLinks,
 } from '../../../client/components/QuickStatsBar/QuickStatsBar'
@@ -112,6 +110,26 @@ function renderErrorMessage(
       dangerouslySetInnerHTML={{ __html: sanitizeErrorHTML(message) }}
     />
   )
+}
+
+function formatByteLabel(bytes: number): string {
+  const formatted = formatSize(bytes)
+
+  return `${formatted.size.toFixed(1)} ${formatted.unit}`
+}
+
+function buildPackageMeta(
+  name: string,
+  version: string | null | undefined,
+  results: PackageBuildInfo | null,
+) {
+  const label = version ? `${name} v${version}` : name
+
+  return {
+    pageTitle: `${name} bundle size | Bundlephobia`,
+    description: `Check the minified and gzipped bundle size of ${label}, 3G/4G download times, tree-shaking, per-export costs, size history, and lighter alternatives.`,
+    fileSize: results ? formatByteLabel(results.size) : '',
+  }
 }
 
 function getInitialResultProps(response: AxiosResponse<PackageBuildInfo>) {
@@ -415,63 +433,46 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   getMetaTags = () => {
     const { router } = this.props
     const { resultsPromiseState, results } = this.state
-    let name: string
-    let version: string | null | undefined
-    let formattedSizeText = ''
-    let formattedGZIPSizeText = ''
 
-    if (resultsPromiseState === 'fulfilled' && results) {
-      name = results.name
-      version = results.version
-      const formattedSize = formatSize(results.size)
-      const formattedGZIPSize = formatSize(results.gzip)
-      formattedSizeText = `${formattedSize.size.toFixed(1)} ${
-        formattedSize.unit
-      }`
-      formattedGZIPSizeText = `${formattedGZIPSize.size.toFixed(1)} ${
-        formattedGZIPSize.unit
-      }`
-    } else {
-      const parsedPackage = parsePackageString(
-        getPackageStringFromRouter(router),
-      )
+    const fulfilledResults =
+      resultsPromiseState === 'fulfilled' ? results : null
 
-      name = parsedPackage.name
-      version = parsedPackage.version
-    }
+    const parsedPackage = fulfilledResults
+      ? { name: fulfilledResults.name, version: fulfilledResults.version }
+      : parsePackageString(getPackageStringFromRouter(router))
+
+    const { name, version } = parsedPackage
 
     const origin =
       typeof window === 'undefined'
         ? 'https://bundlephobia.com'
         : window.location.origin
 
-    const title = version ? `${name} v${version}` : name
+    const { pageTitle, description, fileSize } = buildPackageMeta(
+      name,
+      version,
+      fulfilledResults,
+    )
 
-    const description =
-      resultsPromiseState === 'fulfilled'
-        ? `Size of ${title} is ${formattedSizeText} (minified), and ${formattedGZIPSizeText} when compressed using GZIP. ${DEFAULT_DESCRIPTION_START}`
-        : `Find the size of javascript package ${title}. ${DEFAULT_DESCRIPTION_START}`
-
-    const structuredData =
-      resultsPromiseState === 'fulfilled' && results
-        ? createPackageStructuredData({
-            name,
-            version,
-            description,
-            fileSize: formattedSizeText,
-            repository: results.repository,
-            origin,
-          })
-        : undefined
+    const structuredData = fulfilledResults
+      ? createPackageStructuredData({
+          name,
+          version,
+          description,
+          fileSize,
+          repository: fulfilledResults.repository,
+          origin,
+        })
+      : undefined
 
     return (
       <MetaTags
-        title={`${title} ❘ Bundlephobia`}
+        title={pageTitle}
         image={
           origin + `/api/stats-image?name=${name}&version=${version}&wide=true`
         }
         description={description}
-        twitterDescription="Insights into npm packages"
+        twitterDescription={description}
         canonicalPath={`/package/${name}`}
         isLargeImage
         structuredData={structuredData}

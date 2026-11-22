@@ -392,12 +392,12 @@ export default function TrendsPage({
   const isComparison = hasExplicitPackages && packages.length > 0
 
   const pageTitle = isComparison
-    ? `${packages.join(' vs ')} — downloads, stars & size | Bundlephobia`
-    : 'npm package trends & comparisons | Bundlephobia'
+    ? `${packages.join(' vs ')} — bundle size, downloads & stars | Bundlephobia`
+    : 'Compare npm package bundle sizes, downloads & stars | Bundlephobia'
 
   const description = isComparison
-    ? `Compare ${packages.join(' vs ')} npm downloads, GitHub stars, and bundle size history.`
-    : 'Compare downloads, GitHub stars, and size history across packages.'
+    ? `Compare ${packages.join(' vs ')} bundle size, weekly npm downloads, and GitHub stars side by side on Bundlephobia.`
+    : 'Compare npm package bundle sizes, weekly downloads, and GitHub stars over time on Bundlephobia.'
 
   const canonicalPath = isComparison
     ? trendsComparisonCanonicalPath(packages)
@@ -440,10 +440,12 @@ export default function TrendsPage({
                     <span className="trends-page__title-pkg">{pkg}</span>
                   </React.Fragment>
                 ))}{' '}
-                <span className="trends-page__title-suffix">trends</span>
+                <span className="trends-page__title-suffix">
+                  bundle size &amp; trends
+                </span>
               </>
             ) : (
-              'Package trends'
+              'Compare npm package trends & bundle sizes'
             )}
           </h1>
           <p className="trends-page__subtitle">
