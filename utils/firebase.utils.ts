@@ -19,7 +19,7 @@ if (process.env.FIREBASE_DATABASE_URL && !firebaseSDK.apps.length) {
   })
 }
 
-interface SearchRecord {
+export interface SearchRecord {
   lastSearched: number
   name: string
   version?: string

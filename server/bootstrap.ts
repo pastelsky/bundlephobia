@@ -21,6 +21,8 @@ import { registerApiRoutes } from './routes/api.route'
 import { registerSystemRoutes } from './routes/system.route'
 import requestLoggerMiddleware from './middlewares/request-logger.middleware'
 import statsPathMiddleware from './middlewares/stats-path.middleware'
+import { createSitemapService } from './services/sitemap.service'
+import firebaseUtils from '../utils/firebase.utils'
 
 interface ServerEnvironment {
   basicAuthPassword: string
@@ -101,6 +103,28 @@ export async function startServer(): Promise<void> {
   })
 
   server.use(statsPathMiddleware)
+
+  const sitemapService = createSitemapService({
+    getRecentSearches: limit =>
+      Promise.resolve(firebaseUtils.getRecentSearches(limit)),
+  })
+
+  server.use(async (ctx, nextMiddleware) => {
+    if (ctx.method !== 'GET' || ctx.path !== '/sitemap.xml') {
+      await nextMiddleware()
+
+      return
+    }
+
+    try {
+      ctx.body = await sitemapService.getSitemapXml()
+      ctx.type = 'application/xml; charset=utf-8'
+      ctx.cacheControl = { maxAge: config.CACHE.PUBLIC_ASSETS }
+    } catch (error) {
+      logger.error('SITEMAP', error, 'Dynamic sitemap generation failed')
+      await nextMiddleware()
+    }
+  })
 
   server.use(
     serve('./client/assets/public', {
