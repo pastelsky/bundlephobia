@@ -177,10 +177,6 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     }
 
     this.activeQuery = packageString
-    Analytics.packageLoadStarted(packageString, 'page_load')
-    Analytics.packageResultViewed(packageString, 'page_load')
-    this.fetchHistory(packageString, this.searchRequestId)
-    this.fetchSimilarPackages(packageString, this.searchRequestId)
   }
 
   componentDidUpdate(prevProps: ResultPageProps) {
@@ -215,19 +211,28 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
 
         this.fetchSimilarPackages(packageString, requestId)
 
+        const hasExplicitVersion = Boolean(
+          parsePackageString(packageString).version,
+        )
+
         const newPackageString = `${results.name}@${results.version}`
+
+        const nextUrlSpecifier = hasExplicitVersion
+          ? newPackageString
+          : results.name
+
         this.setState(
           {
             inputInitialValue: newPackageString,
             results,
           },
           () => {
-            this.activeQuery = newPackageString
+            this.activeQuery = nextUrlSpecifier
 
             if (
-              getPackageStringFromRouter(this.props.router) !== newPackageString
+              getPackageStringFromRouter(this.props.router) !== nextUrlSpecifier
             ) {
-              Router.replace(`/package/${newPackageString}`)
+              Router.replace(`/package/${nextUrlSpecifier}`)
             }
           },
         )
@@ -673,7 +678,13 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
   renderExports() {
     const { resultsPromiseState, results } = this.state
 
-    if (resultsPromiseState !== 'fulfilled' || !results) return null
+    if (
+      this.props.initialResult ||
+      resultsPromiseState !== 'fulfilled' ||
+      !results
+    ) {
+      return null
+    }
 
     return (
       <div className="content-container">
@@ -714,6 +725,7 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
     const { resultsPromiseState, results } = this.state
 
     if (
+      this.props.initialResult ||
       resultsPromiseState !== 'fulfilled' ||
       !results ||
       !parsePackageString(results.name).scoped
@@ -776,6 +788,24 @@ function analysisRequestHeaders(req: GetServerSidePropsContext['req']) {
   }
 }
 
+function getCanonicalPackageRedirect(
+  rawUrl: string | undefined,
+  specifier: string,
+  parsed: { name: string; version: string | null },
+): string | null {
+  if (parsed.version === 'latest') {
+    return `/package/${parsed.name}`
+  }
+
+  const rawPath = (rawUrl ?? '').split('?')[0]
+
+  if (/%40|%2f/i.test(rawPath) && specifier.startsWith('@')) {
+    return `/package/${specifier}`
+  }
+
+  return null
+}
+
 function forwardAnalysisHeaders(
   headers: AxiosResponse['headers'],
   res: GetServerSidePropsContext['res'],
@@ -805,12 +835,15 @@ export const getServerSideProps = async ({
 
   const { name, version } = parsePackageString(specifier)
 
-  // Explicit @latest is redundant with the canonical package page; issue a
-  // permanent redirect so crawlers consolidate immediately.
-  if (version === 'latest') {
+  const redirectDestination = getCanonicalPackageRedirect(req.url, specifier, {
+    name,
+    version,
+  })
+
+  if (redirectDestination) {
     return {
       redirect: {
-        destination: `/package/${name}`,
+        destination: redirectDestination,
         permanent: true,
       },
     }
@@ -822,6 +855,10 @@ export const getServerSideProps = async ({
     'Link',
     `<https://bundlephobia.com/package/${name}>; rel="canonical"`,
   )
+
+  if (version) {
+    res.setHeader('X-Robots-Tag', 'noindex, follow')
+  }
 
   const isProxyClassifiedCrawler =
     req.headers['x-bundlephobia-prefer-cached'] === 'true'
