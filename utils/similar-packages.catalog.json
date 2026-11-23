@@ -22,7 +22,8 @@
       "clipboardy",
       "clipboard-copy",
       "copy-text-to-clipboard",
-      "clipboard-polyfill"
+      "clipboard-polyfill",
+      "copy-to-clipboard"
     ]
   },
   "css-in-js": {
