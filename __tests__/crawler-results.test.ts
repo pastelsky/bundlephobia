@@ -1,4 +1,10 @@
-import { createServer, type Server } from 'node:http'
+import {
+  createServer,
+  IncomingMessage,
+  ServerResponse,
+  type Server,
+} from 'node:http'
+import { Socket } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import Koa from 'koa'
 import Router from '@koa/router'
@@ -401,7 +407,7 @@ it('does not cache a negative export-size peek or start a build', async () => {
   expect(exportsBuild).not.toHaveBeenCalled()
 })
 
-describe('version URL hygiene and encoded scoped redirects', () => {
+describe('version URL hygiene and scoped client transitions', () => {
   it('emits canonical Link header without X-Robots-Tag so versioned links consolidate equity', async () => {
     cached.set('example@1.2.3', older)
 
@@ -414,27 +420,25 @@ describe('version URL hygiene and encoded scoped redirects', () => {
     )
   })
 
-  it('permanently redirects URL-encoded scoped package paths without running analysis', async () => {
+  it('does not redirect Next.js _next/data client navigation requests for scoped packages', async () => {
+    const req = new IncomingMessage(new Socket())
+    req.url =
+      '/_next/data/build-id/package/%40scope/example.json?packageString=%40scope&packageString=example'
+    const res = new ServerResponse(req)
+
     const result = await getServerSideProps({
-      params: { packageString: ['@scope/example'] },
-      query: {},
-      // SAFETY: redirect branch only inspects req.url before any network call.
-      req: {
-        url: '/package/%40scope%2Fexample',
-        headers: { 'x-bundlephobia-prefer-cached': 'true' },
-      } as GetServerSidePropsContext['req'],
-      // SAFETY: redirect branch returns before touching res headers.
-      res: {} as GetServerSidePropsContext['res'],
-      resolvedUrl: '/package/%40scope%2Fexample',
+      params: { packageString: ['@scope', 'example'] },
+      query: { packageString: ['@scope', 'example'] },
+      req,
+      res,
+      resolvedUrl: '/package/@scope/example',
     })
 
     expect(result).toEqual({
-      redirect: {
-        destination: '/package/@scope/example',
-        permanent: true,
-      },
+      props: { initialResult: null },
     })
-    expect(resolve).not.toHaveBeenCalled()
-    expect(build).not.toHaveBeenCalled()
+    expect(res.getHeader('Link')).toBe(
+      '<https://bundlephobia.com/package/@scope/example>; rel="canonical"',
+    )
   })
 })
