@@ -2,7 +2,9 @@ import assert from 'node:assert/strict'
 import { z } from 'zod'
 import {
   catalogSchema,
+  categoryStampsSchema,
   type Catalog,
+  type CategoryStamps,
 } from '@bundlephobia/service-contracts/recommendations'
 import test from 'node:test'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
@@ -18,12 +20,14 @@ import {
   formatCompactNumber,
   formatMonthYear,
   mergeProposal,
+  mergeProposalStamps,
   parseRejectedPackages,
   parseSelectionChecklist,
   pruneUncheckedFromCatalog,
   publishResearch,
   readResearchSubmission,
   renderPendingOverview,
+  stampsPath,
   verifyPackages,
   type GitHubApi,
   type PendingPackageMetrics,
@@ -852,13 +856,37 @@ test('the shared catalog retains the existing category contract', async () => {
     ),
   )
 
+  const stamps = categoryStampsSchema.parse(
+    JSON.parse(
+      await readFile(new URL(`../../${stampsPath}`, import.meta.url), 'utf8'),
+    ),
+  )
+
   assert.deepEqual(exported.categories, catalog)
+  assert.deepEqual(exported.categoryStamps, stamps)
   assert.ok(exported.comparisonGroups.length > 0)
 
-  for (const category of Object.values(catalog)) {
+  const catalogSlugs = Object.keys(catalog).sort()
+  const stampSlugs = Object.keys(stamps).sort()
+  assert.deepEqual(stampSlugs, catalogSlugs)
+
+  const stampSignatures = new Set<string>()
+
+  for (const [slug, category] of Object.entries(catalog)) {
     assert.ok(category.name.trim().length > 0)
     assert.ok(category.similar.length <= 6)
     assert.ok(category.tags.every(tag => Number.isInteger(tag.weight)))
+
+    const stamp = stamps[slug]
+    assert.ok(stamp, `Missing stamp for category "${slug}"`)
+
+    const signature = JSON.stringify(stamp.marks)
+
+    assert.ok(
+      !stampSignatures.has(signature),
+      `Duplicate stamp marks found in category "${category.name}"`,
+    )
+    stampSignatures.add(signature)
   }
 })
 
@@ -974,4 +1002,81 @@ test('publishResearch prunes unchecked items from existing PR checklist and reco
     'another',
   ])
   assert.deepEqual(parseRejectedPackages(state.prs[0].body), ['candidate'])
+})
+
+test('mergeProposal keeps catalog domain-only while mergeProposalStamps preserves and adds stamps', () => {
+  const existingStamp = {
+    ink: 'green' as const,
+    motion: 'tick' as const,
+    backdrop: [{ type: 'circle' as const, cx: 19.5, cy: 19.5, r: 9.5 }],
+    marks: [
+      {
+        type: 'circle' as const,
+        cx: 17,
+        cy: 17,
+        r: 9,
+        role: 'stroke' as const,
+      },
+    ],
+  }
+
+  const newStamp = {
+    ink: 'lilac' as const,
+    motion: 'float' as const,
+    backdrop: [{ type: 'circle' as const, cx: 19, cy: 19, r: 9 }],
+    marks: [
+      {
+        type: 'path' as const,
+        d: 'M16 9 L18 15 L24 17 L18 19 L16 25 L14 19 L8 17 L14 15 Z',
+        role: 'stroke' as const,
+      },
+    ],
+  }
+
+  const existingCatalog: Catalog = {
+    example: {
+      name: 'Example utilities',
+      description: 'Existing human description for example utilities.',
+      tags: [{ tag: 'example', weight: 10 }],
+      similar: ['original'],
+    },
+  }
+
+  const existingStamps: CategoryStamps = {
+    example: existingStamp,
+  }
+
+  const [existingProposal] = proposal('candidate')
+  const [newCategoryBase] = proposal('alpha', 'beta')
+
+  const combinedProposal: Proposal = [
+    existingProposal,
+    {
+      ...newCategoryBase,
+      slug: 'brand-new',
+      name: 'Brand new category',
+      description: 'Crisp one-line description for brand new category.',
+      stamp: newStamp,
+      tags: [{ tag: 'brand', weight: 10 }],
+    },
+  ]
+
+  const mergedCatalog = mergeProposal(existingCatalog, combinedProposal)
+  const mergedStamps = mergeProposalStamps(existingStamps, combinedProposal)
+
+  assert.equal(
+    mergedCatalog.example.description,
+    'Existing human description for example utilities.',
+  )
+  assert.deepEqual(mergedCatalog.example.similar, ['original', 'candidate'])
+  assert.equal('stamp' in mergedCatalog.example, false)
+
+  assert.equal(
+    mergedCatalog['brand-new'].description,
+    'Crisp one-line description for brand new category.',
+  )
+  assert.equal('stamp' in mergedCatalog['brand-new'], false)
+
+  assert.deepEqual(mergedStamps.example, existingStamp)
+  assert.deepEqual(mergedStamps['brand-new'], newStamp)
 })

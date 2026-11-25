@@ -1,6 +1,7 @@
 {
   "classname-strings": {
     "name": "Classname string construction",
+    "description": "Conditionally join CSS class names in a few hundred bytes.",
     "tags": [
       { "tag": "class", "weight": 7 },
       { "tag": "classnames", "weight": 7 },
@@ -12,6 +13,7 @@
   },
   "clipboard": {
     "name": "Clipboard Utilities",
+    "description": "Copy text and rich content to the clipboard across browsers.",
     "tags": [
       { "tag": "clipboard", "weight": 15 },
       { "tag": "copy", "weight": 3 },
@@ -27,6 +29,7 @@
   },
   "css-in-js": {
     "name": "CSS in JS libraries",
+    "description": "Write scoped component styles directly inside JavaScript.",
     "tags": [
       { "tag": "css js", "weight": 5 },
       { "tag": "styles", "weight": 5 },
@@ -36,12 +39,14 @@
     "similar": ["styled-components", "@emotion/css", "jss", "linaria"]
   },
   "color-manipulation": {
-    "name": "Color parsing and manipulation",
+    "name": "Color parsing & manipulation",
+    "description": "Convert, blend, and check contrast across color spaces.",
     "tags": [{ "tag": "color convert parse manipulate", "weight": 5 }],
     "similar": ["chroma-js", "color", "tinycolor2", "colors.js", "color2k"]
   },
   "cookie-browser": {
-    "name": "Cookie Manipulation for Browsers",
+    "name": "Browser cookie utilities",
+    "description": "Read, write, and expire browser cookies without manual parsing.",
     "tags": [
       { "tag": "cookie", "weight": 15 },
       { "tag": "manipulate", "weight": 5 },
@@ -58,7 +63,8 @@
     ]
   },
   "cookie-node": {
-    "name": "Cookie parsing and jars for Node.js",
+    "name": "Node.js cookie parsers",
+    "description": "Parse Cookie headers and manage cookie jars on the server.",
     "tags": [
       { "tag": "cookie", "weight": 15 },
       { "tag": "manipulate", "weight": 5 },
@@ -70,6 +76,7 @@
   },
   "browser-2d-game-engine": {
     "name": "Browser 2D game engines",
+    "description": "Sprites, physics loops, and canvas rendering for 2D games.",
     "tags": [
       { "tag": "game engine", "weight": 15 },
       { "tag": "2d", "weight": 7 },
@@ -80,7 +87,8 @@
     "similar": ["melonjs", "excalibur", "phaser"]
   },
   "date-nlp": {
-    "name": "Natural language date-time utilities",
+    "name": "Natural language date-time",
+    "description": "Turn phrases like \"next Friday at 3pm\" into real Date objects.",
     "tags": [
       { "tag": "date", "weight": 7 },
       { "tag": "time", "weight": 7 },
@@ -95,6 +103,7 @@
   },
   "deep-equality": {
     "name": "Deep Equality Check",
+    "description": "Fast recursive equality checks for nested objects and arrays.",
     "tags": [
       { "tag": "deep equal", "weight": 5 },
       { "tag": "object", "weight": 3 },
@@ -111,6 +120,7 @@
   },
   "drag-and-drop": {
     "name": "Drag & Drop Libraries",
+    "description": "Sortable lists, kanban boards, and pointer-driven drag grids.",
     "tags": [
       { "tag": "drag drop", "weight": 5 },
       { "tag": "sort", "weight": 3 },
@@ -126,7 +136,8 @@
     ]
   },
   "dom-capture": {
-    "name": "DOM screenshot and image capture",
+    "name": "DOM screenshot capture",
+    "description": "Turn live DOM nodes and canvases into PNG or SVG snapshots.",
     "tags": [
       { "tag": "screenshot", "weight": 15 },
       { "tag": "capture", "weight": 7 },
@@ -143,6 +154,7 @@
   },
   "excel-parsers": {
     "name": "Excel file readers",
+    "description": "Parse spreadsheets and workbooks into structured JavaScript rows.",
     "tags": [
       { "tag": "excel", "weight": 7 },
       { "tag": "read", "weight": 5 },
@@ -153,6 +165,7 @@
   },
   "excel-export-browser": {
     "name": "Browser spreadsheet export",
+    "description": "Generate and download .xlsx and CSV spreadsheets client-side.",
     "tags": [
       { "tag": "export", "weight": 15 },
       { "tag": "excel", "weight": 7 },
@@ -165,7 +178,8 @@
     "similar": ["excellentexport", "write-excel-file", "export-from-json"]
   },
   "finite-state-machine": {
-    "name": "Finite state machine libraries",
+    "name": "Finite state machines",
+    "description": "Model complex UI flows with explicit states and transitions.",
     "tags": [
       { "tag": "state machine", "weight": 15 },
       { "tag": "finite state", "weight": 7 },
@@ -177,6 +191,7 @@
   },
   "full-text-search": {
     "name": "Text search",
+    "description": "Fast fuzzy and full-text search indexes in the browser.",
     "tags": [
       { "tag": "search", "weight": 5 },
       { "tag": "solr", "weight": 7 },
@@ -187,6 +202,7 @@
   },
   "fetch-polyfill": {
     "name": "Fetch polyfills",
+    "description": "Drop-in Fetch API polyfills for older browsers and runtimes.",
     "tags": [
       { "tag": "fetch", "weight": 7 },
       { "tag": "polyfill", "weight": 5 },
@@ -197,7 +213,8 @@
     "similar": ["whatwg-fetch", "node-fetch", "unfetch", "make-fetch-happen"]
   },
   "general-purpose-date-time": {
-    "name": "General purpose date-time utilities",
+    "name": "Date & time utilities",
+    "description": "Parse, format, and shift dates across timezones.",
     "tags": [
       { "tag": "date", "weight": 7 },
       { "tag": "time", "weight": 7 },
@@ -209,6 +226,7 @@
   },
   "general-purpose-3d": {
     "name": "General purpose 3D libraries",
+    "description": "WebGL scenes, shaders, and interactive 3D worlds in the browser.",
     "tags": [
       { "tag": "3d", "weight": 15 },
       { "tag": "webgl", "weight": 15 },
@@ -217,7 +235,8 @@
     "similar": ["ogl", "playcanvas", "three", "babylonjs"]
   },
   "general-purpose-animation": {
-    "name": "General purpose animation libraries",
+    "name": "Animation libraries",
+    "description": "Springs, timelines, and smooth motion for DOM and SVG.",
     "tags": [
       { "tag": "animation", "weight": 7 },
       { "tag": "tween", "weight": 5 },
@@ -232,7 +251,8 @@
     "similar": ["gsap", "animejs", "velocity-animate", "popmotion", "motion"]
   },
   "general-purpose-charting": {
-    "name": "General purpose Charting libraries",
+    "name": "Charting libraries",
+    "description": "Interactive bar, line, and canvas charts for data visualization.",
     "tags": [
       { "tag": "dom", "weight": 3 },
       { "tag": "visualization", "weight": 7 },
@@ -253,6 +273,7 @@
   },
   "graphql-client": {
     "name": "GraphQL Clients",
+    "description": "Query, cache, and normalize GraphQL APIs in frontend apps.",
     "tags": [
       { "tag": "graphql", "weight": 7 },
       { "tag": "client", "weight": 3 },
@@ -263,6 +284,7 @@
   },
   "html-sanitization": {
     "name": "HTML Sanitization",
+    "description": "Strip unsafe tags and scripts to prevent XSS in user HTML.",
     "tags": [
       { "tag": "html", "weight": 5 },
       { "tag": "dom", "weight": 5 },
@@ -277,6 +299,7 @@
   },
   "input-masking": {
     "name": "Input masking and formatting",
+    "description": "Format credit cards, dates, and phone inputs as users type.",
     "tags": [
       { "tag": "mask", "weight": 15 },
       { "tag": "input", "weight": 7 },
@@ -287,6 +310,7 @@
   },
   "i18n": {
     "name": "Internationalization",
+    "description": "Translate strings, plurals, and locales across your app.",
     "tags": [
       { "tag": "i18n", "weight": 7 },
       { "tag": "intl", "weight": 7 },
@@ -296,7 +320,8 @@
     "similar": ["fbt", "globalize", "i18next", "node-polyglot", "@lingui/core"]
   },
   "node-http-request": {
-    "name": "HTTP client libraries for Node.js",
+    "name": "Node.js HTTP clients",
+    "description": "Ergonomic HTTP clients with retries and streams for Node.js.",
     "tags": [
       { "tag": "http", "weight": 5 },
       { "tag": "get", "weight": 5 },
@@ -311,7 +336,8 @@
     "similar": ["wretch", "ofetch", "axios", "got", "undici"]
   },
   "browser-http-request": {
-    "name": "HTTP client libraries for Browser",
+    "name": "Browser HTTP clients",
+    "description": "Fetch data cleanly with retries, timeouts, and interceptors.",
     "tags": [
       { "tag": "http", "weight": 5 },
       { "tag": "get", "weight": 5 },
@@ -327,6 +353,7 @@
   },
   "icu-message-fromatter": {
     "name": "ICU message string formatters",
+    "description": "Format plurals, gender, and localized ICU message strings.",
     "tags": [
       { "tag": "icu", "weight": 7 },
       { "tag": "message", "weight": 5 },
@@ -339,6 +366,7 @@
   },
   "image-color-extraction": {
     "name": "Image color extraction",
+    "description": "Pull dominant palettes and accent swatches from images.",
     "tags": [
       { "tag": "color", "weight": 7 },
       { "tag": "image", "weight": 7 },
@@ -351,6 +379,7 @@
   },
   "immutable-data-structures": {
     "name": "Immutable Data",
+    "description": "Update nested state safely without mutating the original data.",
     "tags": [
       { "tag": "immutable", "weight": 7 },
       { "tag": "persistent", "weight": 5 },
@@ -365,6 +394,7 @@
   },
   "lazy-load-content": {
     "name": "Lazy Loading Content",
+    "description": "Defer off-screen images and iframes until they enter view.",
     "tags": [
       { "tag": "lazy", "weight": 5 },
       { "tag": "load", "weight": 5 },
@@ -377,6 +407,7 @@
   },
   "markdown-parser": {
     "name": "Markdown parsers",
+    "description": "Compile Markdown into clean HTML or syntax trees.",
     "tags": [
       { "tag": "markdown", "weight": 7 },
       { "tag": "parse", "weight": 5 },
@@ -389,6 +420,7 @@
   },
   "memoization": {
     "name": "Memoization",
+    "description": "Cache expensive function calls by their input arguments.",
     "tags": [
       { "tag": "memoize", "weight": 7 },
       { "tag": "cache", "weight": 5 },
@@ -403,7 +435,8 @@
     ]
   },
   "number-manipulation": {
-    "name": "Number and Currency Formatting",
+    "name": "Number & currency formatting",
+    "description": "Format currencies, decimals, and compact numbers cleanly.",
     "tags": [
       { "tag": "format", "weight": 5 },
       { "tag": "manipulate", "weight": 5 },
@@ -415,6 +448,7 @@
   },
   "pdf-generator": {
     "name": "Client-side PDF Creation",
+    "description": "Create, style, and download PDF documents directly in JavaScript.",
     "tags": [
       { "tag": "pdf", "weight": 7 },
       { "tag": "generate", "weight": 3 },
@@ -433,7 +467,8 @@
     ]
   },
   "phone-number": {
-    "name": "Phone number parsing, validation and formatting",
+    "name": "Phone number parsing",
+    "description": "Parse, validate, and format international phone numbers.",
     "tags": [
       { "tag": "phone", "weight": 15 },
       { "tag": "telephone", "weight": 7 },
@@ -450,6 +485,7 @@
   },
   "promise-polyfill": {
     "name": "Promise polyfills",
+    "description": "Lightweight ES6 Promise polyfills for legacy environments.",
     "tags": [
       { "tag": "promise", "weight": 7 },
       { "tag": "polyfill", "weight": 3 },
@@ -467,6 +503,7 @@
   },
   "react-animation": {
     "name": "React based animation",
+    "description": "Declarative spring physics and layout transitions for React.",
     "tags": [
       { "tag": "animation", "weight": 7 },
       { "tag": "transform", "weight": 5 },
@@ -475,7 +512,8 @@
     "similar": ["react-spring", "framer-motion"]
   },
   "react-autocomplete": {
-    "name": "React based autocomplete components",
+    "name": "React autocomplete inputs",
+    "description": "Accessible comboboxes, typeaheads, and multi-select inputs.",
     "tags": [
       { "tag": "react", "weight": 5 },
       { "tag": "autocomplete", "weight": 5 },
@@ -485,7 +523,8 @@
     "similar": ["react-autosuggest", "downshift", "react-select"]
   },
   "react-head-meta": {
-    "name": "React based meta tags management",
+    "name": "React meta tag management",
+    "description": "Manage document titles, Open Graph tags, and head metadata.",
     "tags": [
       { "tag": "react", "weight": 5 },
       { "tag": "head", "weight": 3 },
@@ -497,6 +536,7 @@
   },
   "react-hooks": {
     "name": "React hook collections",
+    "description": "Curated collections of reusable browser and state hooks.",
     "tags": [
       { "tag": "react", "weight": 5 },
       { "tag": "hooks", "weight": 15 },
@@ -506,7 +546,8 @@
     "similar": ["@react-hookz/web", "react-use", "ahooks", "usehooks-ts"]
   },
   "react-i18n": {
-    "name": "React based internationalization",
+    "name": "React internationalization",
+    "description": "Locale routing, message formatting, and translation hooks.",
     "tags": [
       { "tag": "react", "weight": 5 },
       { "tag": "i18n", "weight": 7 },
@@ -523,7 +564,8 @@
     ]
   },
   "react-form": {
-    "name": "React based form builders & validators",
+    "name": "React forms & validation",
+    "description": "Manage form state, validation schemas, and field arrays.",
     "tags": [
       { "tag": "react", "weight": 5 },
       { "tag": "redux", "weight": 3 },
@@ -541,6 +583,7 @@
   },
   "react-charting": {
     "name": "React charting components",
+    "description": "Composable React components for responsive data charts.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "chart", "weight": 15 },
@@ -552,6 +595,7 @@
   },
   "react-inline-svg": {
     "name": "React inline SVG loaders",
+    "description": "Load and render remote or local SVGs inline in React.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "svg", "weight": 15 },
@@ -562,7 +606,8 @@
     "similar": ["react-inlinesvg", "react-svg"]
   },
   "react-native-charting": {
-    "name": "React Native charting components",
+    "name": "React Native charting",
+    "description": "Touch-friendly native charts built for React Native apps.",
     "tags": [
       { "tag": "react native", "weight": 15 },
       { "tag": "chart", "weight": 15 },
@@ -577,6 +622,7 @@
   },
   "react-range-slider": {
     "name": "React range slider components",
+    "description": "Accessible single and dual-thumb sliders for numeric ranges.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "range", "weight": 7 },
@@ -588,6 +634,7 @@
   },
   "react-tooltip": {
     "name": "React tooltip components",
+    "description": "Positioned floating tooltips with smart viewport collision.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "tooltip", "weight": 15 },
@@ -598,6 +645,7 @@
   },
   "schema-validation": {
     "name": "Runtime schema validation",
+    "description": "Validate untrusted payloads with runtime type inference.",
     "tags": [
       { "tag": "JSON", "weight": 3 },
       { "tag": "object", "weight": 3 },
@@ -612,6 +660,7 @@
   },
   "querystring-parser": {
     "name": "Query String Parsers",
+    "description": "Serialize and parse nested URL query parameters reliably.",
     "tags": [
       { "tag": "query string", "weight": 5 },
       { "tag": "querystring", "weight": 7 },
@@ -627,6 +676,7 @@
   },
   "rich-text-editors": {
     "name": "Rich Text Editors",
+    "description": "Extensible WYSIWYG and block editors for rich documents.",
     "tags": [
       {
         "tag": "richtext rich text editor WYSIWYG contenteditable",
@@ -644,6 +694,7 @@
   },
   "site-tour": {
     "name": "Site Tours",
+    "description": "Step-by-step onboarding spotlights and product walkthroughs.",
     "tags": [
       { "tag": "walkthrough", "weight": 5 },
       { "tag": "focus", "weight": 3 },
@@ -654,6 +705,7 @@
   },
   "state-management": {
     "name": "State management libraries",
+    "description": "Predictable global stores, atoms, and reactive proxies.",
     "tags": [
       { "tag": "state", "weight": 7 },
       { "tag": "management", "weight": 7 },
@@ -672,7 +724,8 @@
     ]
   },
   "slider": {
-    "name": "General purpose sliders & carousels",
+    "name": "Sliders & carousels",
+    "description": "Touch-friendly carousels and smooth swipeable galleries.",
     "tags": [
       { "tag": "touch swipe", "weight": 3 },
       { "tag": "carousel", "weight": 5 },
@@ -688,6 +741,7 @@
   },
   "templating": {
     "name": "General purpose templating",
+    "description": "Render HTML and text from lightweight template strings.",
     "tags": [
       { "tag": "template", "weight": 5 },
       { "tag": "logic", "weight": 3 },
@@ -698,6 +752,7 @@
   },
   "tree-data-structures": {
     "name": "Tree data structures",
+    "description": "Balanced binary, red-black, and suffix trees for fast lookups.",
     "tags": [
       { "tag": "tree", "weight": 7 },
       { "tag": "graph", "weight": 3 },
@@ -708,6 +763,7 @@
   },
   "url-manipulation": {
     "name": "URL parsing and manipulation",
+    "description": "Parse, normalize, and safely join URLs and paths.",
     "tags": [
       { "tag": "url", "weight": 7 },
       { "tag": "parse", "weight": 5 },
@@ -722,6 +778,7 @@
   },
   "virtual-dom": {
     "name": "Virtual DOM libraries",
+    "description": "Minimal virtual DOM diffing and reactive template engines.",
     "tags": [
       { "tag": "virtual", "weight": 7 },
       { "tag": "dom", "weight": 7 },
@@ -731,6 +788,7 @@
   },
   "vue-carousel": {
     "name": "Vue JS Sliders & Carousels",
+    "description": "Responsive touch sliders and carousels built for Vue.",
     "tags": [
       { "tag": "vue", "weight": 7 },
       { "tag": "touch swipe", "weight": 3 },
@@ -745,7 +803,8 @@
     ]
   },
   "general-purpose-utilities": {
-    "name": "General purpose JavaScript utilities",
+    "name": "JavaScript utility libraries",
+    "description": "Battle-tested helpers for arrays, objects, and functions.",
     "tags": [
       { "tag": "utility", "weight": 15 },
       { "tag": "utilities", "weight": 15 },
@@ -764,6 +823,7 @@
   },
   "unique-id": {
     "name": "Unique identifier generation",
+    "description": "Collision-resistant UUIDs, ULIDs, and compact random IDs.",
     "tags": [
       { "tag": "uuid", "weight": 15 },
       { "tag": "identifier", "weight": 7 },
@@ -774,7 +834,8 @@
     "similar": ["uuid", "nanoid", "ulid", "@paralleldrive/cuid2"]
   },
   "react-server-state": {
-    "name": "React server-state fetching and caching",
+    "name": "React server-state fetching",
+    "description": "Fetch, cache, and synchronize async server data automatically.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "query", "weight": 7 },
@@ -786,6 +847,7 @@
   },
   "react-routing": {
     "name": "React client-side routing",
+    "description": "Type-safe client-side routes, loaders, and nested layouts.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "router", "weight": 15 },
@@ -801,7 +863,8 @@
     ]
   },
   "react-virtualization": {
-    "name": "React list and grid virtualization",
+    "name": "React list virtualization",
+    "description": "Render tens of thousands of rows smoothly by windowing.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "virtual", "weight": 15 },
@@ -820,6 +883,7 @@
   },
   "react-icons": {
     "name": "React SVG icon libraries",
+    "description": "Crisp tree-shakeable SVG icon sets packaged for React.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "icon", "weight": 15 },
@@ -836,6 +900,7 @@
   },
   "react-toast": {
     "name": "React toast notifications",
+    "description": "Stackable, non-blocking toast notifications for React apps.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "toast", "weight": 15 },
@@ -846,6 +911,7 @@
   },
   "react-drag-and-drop": {
     "name": "React drag and drop",
+    "description": "Accessible drag-and-drop hooks and sortable lists for React.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "drag drop", "weight": 15 },
@@ -857,6 +923,7 @@
   },
   "react-data-grid": {
     "name": "React data grid components",
+    "description": "High-performance virtualized tables with sorting and editing.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "data grid", "weight": 15 },
@@ -867,7 +934,8 @@
     "similar": ["ag-grid-react", "react-data-grid", "@mui/x-data-grid"]
   },
   "browser-key-value-storage": {
-    "name": "Browser asynchronous key-value storage",
+    "name": "Browser key-value storage",
+    "description": "Simple async key-value persistence backed by browser storage.",
     "tags": [
       { "tag": "indexeddb", "weight": 15 },
       { "tag": "storage", "weight": 7 },
@@ -878,7 +946,8 @@
     "similar": ["localforage", "idb-keyval"]
   },
   "zip-archives": {
-    "name": "ZIP archive creation and extraction",
+    "name": "ZIP archive utilities",
+    "description": "Compress and extract ZIP archives directly in JavaScript.",
     "tags": [
       { "tag": "zip", "weight": 15 },
       { "tag": "unzip", "weight": 15 },
@@ -890,6 +959,7 @@
   },
   "event-emitter": {
     "name": "JavaScript event emitters",
+    "description": "Tiny pub/sub event buses for decoupled app communication.",
     "tags": [
       { "tag": "event", "weight": 7 },
       { "tag": "emitter", "weight": 15 },
@@ -900,7 +970,8 @@
     "similar": ["mitt", "eventemitter3", "nanoevents"]
   },
   "react-headless-ui": {
-    "name": "React headless UI component libraries",
+    "name": "React headless UI libraries",
+    "description": "Unstyled, accessible UI primitives you style completely yourself.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "headless", "weight": 15 },
@@ -912,6 +983,7 @@
   },
   "vue-state-management": {
     "name": "Vue state management",
+    "description": "Modular reactive stores and devtools integration for Vue.",
     "tags": [
       { "tag": "vue", "weight": 7 },
       { "tag": "state", "weight": 7 },
@@ -921,7 +993,8 @@
     "similar": ["pinia", "vuex"]
   },
   "protocol-buffers": {
-    "name": "Protocol Buffers serialization",
+    "name": "Protocol Buffers",
+    "description": "Encode and decode compact binary Protocol Buffer schemas.",
     "tags": [
       { "tag": "protobuf", "weight": 20 },
       { "tag": "protocol buffers", "weight": 15 },
@@ -931,6 +1004,7 @@
   },
   "react-component-libraries": {
     "name": "React component libraries",
+    "description": "Full-featured React UI kits with theming and design tokens.",
     "tags": [
       { "tag": "react", "weight": 7 },
       { "tag": "components", "weight": 10 },
@@ -941,6 +1015,7 @@
   },
   "code-editors": {
     "name": "Browser code editors",
+    "description": "Embeddable syntax-highlighted code editors for the browser.",
     "tags": [
       { "tag": "editor", "weight": 15 },
       { "tag": "code", "weight": 10 },
@@ -952,6 +1027,7 @@
   },
   "generative-ai-sdks": {
     "name": "Generative AI API clients",
+    "description": "Official SDKs for streaming text, tools, and multimodal LLMs.",
     "tags": [
       { "tag": "generative ai", "weight": 15 },
       { "tag": "llm", "weight": 15 },
@@ -961,7 +1037,8 @@
     "similar": ["@google/genai", "openai", "@anthropic-ai/sdk"]
   },
   "javascript-bundlers": {
-    "name": "JavaScript and TypeScript bundlers",
+    "name": "JavaScript & TS bundlers",
+    "description": "Fast Rust-powered bundlers for JavaScript and TypeScript.",
     "tags": [
       { "tag": "bundler", "weight": 15 },
       { "tag": "bundle", "weight": 12 },
@@ -974,6 +1051,7 @@
   },
   "browser-indexeddb": {
     "name": "Browser IndexedDB wrappers",
+    "description": "Ergonomic wrappers over IndexedDB for structured local storage.",
     "tags": [
       { "tag": "indexeddb", "weight": 15 },
       { "tag": "browser", "weight": 10 },
@@ -984,7 +1062,8 @@
     "similar": ["idb", "dexie"]
   },
   "browser-sqlite": {
-    "name": "SQLite databases for the browser",
+    "name": "Browser SQLite databases",
+    "description": "Run full SQLite queries locally in the browser via WebAssembly.",
     "tags": [
       { "tag": "sqlite", "weight": 15 },
       { "tag": "browser database", "weight": 10 },
@@ -995,6 +1074,7 @@
   },
   "temporal-polyfills": {
     "name": "Temporal API polyfills",
+    "description": "Modern TC39 Temporal calendar and timezone APIs today.",
     "tags": [
       { "tag": "temporal", "weight": 15 },
       { "tag": "polyfill", "weight": 10 },
@@ -1003,7 +1083,8 @@
     "similar": ["temporal-polyfill", "@js-temporal/polyfill"]
   },
   "browser-webauthn-clients": {
-    "name": "Browser passkey and WebAuthn clients",
+    "name": "Browser passkey & WebAuthn",
+    "description": "Passwordless login with passkeys, biometrics, and WebAuthn.",
     "tags": [
       { "tag": "webauthn", "weight": 15 },
       { "tag": "passkey", "weight": 12 },
@@ -1013,7 +1094,8 @@
     "similar": ["@simplewebauthn/browser", "@passwordless-id/webauthn"]
   },
   "interactive-browser-maps": {
-    "name": "Interactive browser map libraries",
+    "name": "Interactive browser maps",
+    "description": "Zoomable vector and tile maps with markers and GeoJSON.",
     "tags": [
       { "tag": "interactive maps", "weight": 15 },
       { "tag": "web mapping", "weight": 12 },
@@ -1022,7 +1104,8 @@
     "similar": ["leaflet", "maplibre-gl", "ol"]
   },
   "interactive-browser-graphs": {
-    "name": "Interactive browser graph visualization",
+    "name": "Browser graph visualization",
+    "description": "Render interactive node graphs, networks, and diagrams.",
     "tags": [
       { "tag": "graph visualization", "weight": 15 },
       { "tag": "network visualization", "weight": 14 },

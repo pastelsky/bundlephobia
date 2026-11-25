@@ -238,7 +238,13 @@ Keep at most six packages per category, twelve additions and five categories per
 run. Each category proposal contains:
 
 - slug: existing category key, or a descriptive kebab-case key
-- name: user-facing purpose-level category name
+- name: concise user-facing purpose-level category name (ideally <= 28 characters so cards never truncate)
+- description: required for new categories; a crisp one-line human description of what the libraries do (<= 90 characters, plain language). Omit for existing categories, whose description is preserved.
+- stamp: required for new categories (persisted separately to `utils/similar-packages.stamps.json` keyed by `slug`); draw a **brand-new, unique Risograph stamp** (never copy/reuse an existing category's stamp) matching `categoryStampSchema` in `packages/service-contracts/src/recommendations.contract.ts`:
+  - `ink`: semantically chosen from `STAMP_INKS` (`blue`, `green`, `neptune`, `dandelion`, `orange`, `lilac`, `coral`).
+  - `motion`: semantically chosen from `STAMP_MOTIONS` (`tick`, `glide`, `float`, `bounce`, `wiggle`, `pulse`, `register`) to match the icon's physical metaphor.
+  - `backdrop`: 1..6 pastel ink marks (`circle`, `rect`, `ellipse`, `polygon`, `path`) on a `36x36` viewBox, offset `(+2, +2)` from the foreground's visual center of mass so it hugs the artwork cleanly.
+  - `marks`: 1..16 crisp foreground vector primitives centered optically around `(17, 17)` within `[7..27]` using soft rounded corners (`rx: 3` for frames, `rx: 1.5` for inner blocks; avoid raw 90° polygon corners) and `role: "cutout"` / `"cutout-stroke"` halos whenever a secondary badge/arrow overlaps a primary mark so strokes never merge. Omit `stamp` for existing categories, whose stamp is preserved.
 - tags: required only for new categories; array of {tag: matching keyword(s), weight: integer 1..15}. Omit for existing categories, whose tags are preserved.
 - reason: why these are interchangeable for a concrete task (at least 60 characters)
 - recommendations: array of {package: exact npm name, repository: owner/repo,
