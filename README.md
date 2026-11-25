@@ -36,6 +36,7 @@
 - Size in browser - As seen on package searches at [yarnpkg.com](https://yarnpkg.com)
 - [bundlephobia-cli](https://github.com/AdrieanKhisbe/bundle-phobia-cli) - A Command Line client for bundlephobia
 - [importcost](https://atom.io/packages/importcost) - An Atom plugin to display size of imported packages
+- [bundlephobia VSCode extension](https://marketplace.visualstudio.com/items?itemName=crewsycrews.bundlephobia-support&ssr=false#overview) - Add functionality to check specific package size and scan your project's `package.json`
 - [JS Bundle Size Cross-Browser Extension](https://github.com/vicrazumov/js-bundle-size) - Chrome and Firefox extension automatically adding package size to the github and npm pages.
 - [npmcharts.com](https://npmcharts.com/compare/bundle-phobia-cli) - bundle size stats at top of page
 - [Rollpkg](https://github.com/rafgraph/rollpkg) - A build tool to create packages with Rollup and TypeScript
