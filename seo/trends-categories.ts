@@ -1,9 +1,12 @@
-import { categories } from '../utils/similarPackages'
+import type { CategoryStamp } from '@bundlephobia/service-contracts/recommendations'
+import { categories, categoryStamps } from '../utils/similarPackages'
 import { trendsComparisonCanonicalPath } from './trends-comparisons'
 
 export type TrendsCategory = {
   id: string
   title: string
+  description?: string
+  stamp?: CategoryStamp
   packages: string[]
   popularPairs: Array<[string, string]>
 }
@@ -27,6 +30,8 @@ export const TRENDS_CATEGORIES: TrendsCategory[] = Object.entries(categories)
   .map(([id, category]) => ({
     id,
     title: category.name,
+    description: category.description,
+    stamp: categoryStamps[id],
     packages: category.similar,
     popularPairs: derivePairs(category.similar),
   }))

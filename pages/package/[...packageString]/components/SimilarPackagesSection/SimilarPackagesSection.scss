@@ -1,6 +1,10 @@
 @import '../../../../../stylesheets/variables';
 @import '../../../../../stylesheets/colors';
 
+.similar-packages-section {
+  width: 100%;
+}
+
 .similar-packages-section__list {
   display: flex;
   flex-wrap: wrap;
@@ -9,34 +13,44 @@
 }
 
 .similar-packages-section__heading {
-  margin-bottom: 0;
+  margin-bottom: $global-spacing * 1.6;
 }
 
-.similar-packages-section__subheading {
-  @include font-size-sm;
+.similar-packages-section__bar {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: $global-spacing * 1.5;
-  color: var(--color-text-muted);
-  margin: $global-spacing 0 ($global-spacing * 2);
-  line-height: 1.5;
+  gap: $global-spacing $global-spacing * 2;
+  margin-bottom: $global-spacing;
+}
+
+.similar-packages-section__category-name {
+  @include font-size-sm;
+  font-weight: $font-weight-bold;
+  color: var(--color-text-primary);
+  line-height: 1.3;
 }
 
 .similar-packages-section__compare {
-  color: inherit;
-  border-left: 1px solid var(--color-border-primary);
-  padding-left: $global-spacing * 1.5;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  @include font-size-xs;
+  font-weight: $font-weight-bold;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color $motion-fast;
 
   &:hover {
     color: var(--color-text-primary);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--color-icon-hover);
-    outline-offset: 2px;
+    outline: $focus-ring-width solid var(--color-link);
+    outline-offset: $focus-ring-offset;
+    border-radius: 3px;
   }
 }

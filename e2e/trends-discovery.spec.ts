@@ -27,11 +27,11 @@ test.describe('trends SEO and discovery without JavaScript', () => {
       '/trends?packages=axios~vs~ky&metric=size&range=last-3-years',
     )
     await expect(page).toHaveTitle(
-      'axios vs ky — bundle size, downloads & stars | Bundlephobia',
+      'axios vs ky — downloads, stars & size | Bundlephobia',
     )
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       'content',
-      'axios vs ky — bundle size, downloads & stars | Bundlephobia',
+      'axios vs ky — downloads, stars & size | Bundlephobia',
     )
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
@@ -44,11 +44,11 @@ test.describe('trends SEO and discovery without JavaScript', () => {
   }) => {
     await page.goto('/trends?packages=preact~vs~react~vs~vue')
     await expect(page).toHaveTitle(
-      'preact vs react vs vue — bundle size, downloads & stars | Bundlephobia',
+      'preact vs react vs vue — downloads, stars & size | Bundlephobia',
     )
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       'content',
-      'preact vs react vs vue — bundle size, downloads & stars | Bundlephobia',
+      'preact vs react vs vue — downloads, stars & size | Bundlephobia',
     )
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
@@ -92,9 +92,10 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     await expect(
       page.getByRole('heading', { name: 'Popular comparisons by category' }),
     ).toBeVisible()
-    await expect(page.locator('.trends-category-card').first()).toBeVisible()
+    await expect(page.locator('.trends-bento__spotlight')).toBeVisible()
+    await expect(page.locator('.trends-bento__card')).toHaveCount(4)
 
-    const compareLink = page.locator('.trends-category-card__pair-pill').first()
+    const compareLink = page.locator('.trends-bento__token').first()
 
     await expect(compareLink).toHaveAttribute('href', /^\/trends\?packages=/)
   })
@@ -165,7 +166,7 @@ test.describe('trends SEO and discovery without JavaScript', () => {
     ]) {
       await page.goto(trendsComparisonPath(packages))
       await expect(page).toHaveTitle(
-        `${packages.join(' vs ')} — bundle size, downloads & stars | Bundlephobia`,
+        `${packages.join(' vs ')} — downloads, stars & size | Bundlephobia`,
       )
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
         'href',
