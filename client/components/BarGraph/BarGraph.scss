@@ -20,7 +20,8 @@ $bar-grow-duration: 0.4s;
   padding-bottom: 6vh;
   display: flex;
   margin: 0;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow-x: auto;
 }
 
 .bar-graph__bar-group {
