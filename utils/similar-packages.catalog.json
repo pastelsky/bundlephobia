@@ -3,26 +3,11 @@
     "name": "Classname string construction",
     "description": "Conditionally join CSS class names in a few hundred bytes.",
     "tags": [
-      {
-        "tag": "class",
-        "weight": 7
-      },
-      {
-        "tag": "classnames",
-        "weight": 7
-      },
-      {
-        "tag": "string",
-        "weight": 3
-      },
-      {
-        "tag": "construct",
-        "weight": 3
-      },
-      {
-        "tag": "conditional",
-        "weight": 3
-      }
+      { "tag": "class", "weight": 7 },
+      { "tag": "classnames", "weight": 7 },
+      { "tag": "string", "weight": 3 },
+      { "tag": "construct", "weight": 3 },
+      { "tag": "conditional", "weight": 3 }
     ],
     "similar": ["clsx", "classnames", "classcat", "classix"]
   },
@@ -30,18 +15,9 @@
     "name": "Clipboard Utilities",
     "description": "Copy text and rich content to the clipboard across browsers.",
     "tags": [
-      {
-        "tag": "clipboard",
-        "weight": 15
-      },
-      {
-        "tag": "copy",
-        "weight": 3
-      },
-      {
-        "tag": "cut",
-        "weight": 3
-      }
+      { "tag": "clipboard", "weight": 15 },
+      { "tag": "copy", "weight": 3 },
+      { "tag": "cut", "weight": 3 }
     ],
     "similar": [
       "clipboard",
@@ -55,64 +31,29 @@
     "name": "CSS in JS libraries",
     "description": "Write scoped component styles directly inside JavaScript.",
     "tags": [
-      {
-        "tag": "css js",
-        "weight": 5
-      },
-      {
-        "tag": "styles",
-        "weight": 5
-      },
-      {
-        "tag": "inline",
-        "weight": 5
-      },
-      {
-        "tag": "in",
-        "weight": 3
-      }
+      { "tag": "css js", "weight": 5 },
+      { "tag": "styles", "weight": 5 },
+      { "tag": "inline", "weight": 5 },
+      { "tag": "in", "weight": 3 }
     ],
     "similar": ["styled-components", "@emotion/css", "jss", "linaria"]
   },
   "color-manipulation": {
     "name": "Color parsing & manipulation",
     "description": "Convert, blend, and check contrast across color spaces.",
-    "tags": [
-      {
-        "tag": "color convert parse manipulate",
-        "weight": 5
-      }
-    ],
+    "tags": [{ "tag": "color convert parse manipulate", "weight": 5 }],
     "similar": ["chroma-js", "color", "tinycolor2", "colors.js", "color2k"]
   },
   "cookie-browser": {
     "name": "Browser cookie utilities",
     "description": "Read, write, and expire browser cookies without manual parsing.",
     "tags": [
-      {
-        "tag": "cookie",
-        "weight": 15
-      },
-      {
-        "tag": "manipulate",
-        "weight": 5
-      },
-      {
-        "tag": "parse",
-        "weight": 3
-      },
-      {
-        "tag": "parser",
-        "weight": 3
-      },
-      {
-        "tag": "browser",
-        "weight": 5
-      },
-      {
-        "tag": "document",
-        "weight": 5
-      }
+      { "tag": "cookie", "weight": 15 },
+      { "tag": "manipulate", "weight": 5 },
+      { "tag": "parse", "weight": 3 },
+      { "tag": "parser", "weight": 3 },
+      { "tag": "browser", "weight": 5 },
+      { "tag": "document", "weight": 5 }
     ],
     "similar": [
       "js-cookie",
@@ -125,26 +66,11 @@
     "name": "Node.js cookie parsers",
     "description": "Parse Cookie headers and manage cookie jars on the server.",
     "tags": [
-      {
-        "tag": "cookie",
-        "weight": 15
-      },
-      {
-        "tag": "manipulate",
-        "weight": 5
-      },
-      {
-        "tag": "parse",
-        "weight": 3
-      },
-      {
-        "tag": "parser",
-        "weight": 3
-      },
-      {
-        "tag": "node",
-        "weight": 5
-      }
+      { "tag": "cookie", "weight": 15 },
+      { "tag": "manipulate", "weight": 5 },
+      { "tag": "parse", "weight": 3 },
+      { "tag": "parser", "weight": 3 },
+      { "tag": "node", "weight": 5 }
     ],
     "similar": ["cookie", "tough-cookie"]
   },
@@ -152,26 +78,11 @@
     "name": "Browser 2D game engines",
     "description": "Sprites, physics loops, and canvas rendering for 2D games.",
     "tags": [
-      {
-        "tag": "game engine",
-        "weight": 15
-      },
-      {
-        "tag": "2d",
-        "weight": 7
-      },
-      {
-        "tag": "canvas",
-        "weight": 5
-      },
-      {
-        "tag": "webgl",
-        "weight": 5
-      },
-      {
-        "tag": "browser",
-        "weight": 5
-      }
+      { "tag": "game engine", "weight": 15 },
+      { "tag": "2d", "weight": 7 },
+      { "tag": "canvas", "weight": 5 },
+      { "tag": "webgl", "weight": 5 },
+      { "tag": "browser", "weight": 5 }
     ],
     "similar": ["melonjs", "excalibur", "phaser"]
   },
@@ -179,38 +90,14 @@
     "name": "Natural language date-time",
     "description": "Turn phrases like \"next Friday at 3pm\" into real Date objects.",
     "tags": [
-      {
-        "tag": "date",
-        "weight": 7
-      },
-      {
-        "tag": "time",
-        "weight": 7
-      },
-      {
-        "tag": "parse",
-        "weight": 3
-      },
-      {
-        "tag": "parser",
-        "weight": 3
-      },
-      {
-        "tag": "nlp",
-        "weight": 7
-      },
-      {
-        "tag": "natural language",
-        "weight": 7
-      },
-      {
-        "tag": "format",
-        "weight": 3
-      },
-      {
-        "tag": "human",
-        "weight": 3
-      }
+      { "tag": "date", "weight": 7 },
+      { "tag": "time", "weight": 7 },
+      { "tag": "parse", "weight": 3 },
+      { "tag": "parser", "weight": 3 },
+      { "tag": "nlp", "weight": 7 },
+      { "tag": "natural language", "weight": 7 },
+      { "tag": "format", "weight": 3 },
+      { "tag": "human", "weight": 3 }
     ],
     "similar": ["chrono-node", "its-a-date", "parse-messy-time"]
   },
@@ -218,22 +105,10 @@
     "name": "Deep Equality Check",
     "description": "Fast recursive equality checks for nested objects and arrays.",
     "tags": [
-      {
-        "tag": "deep equal",
-        "weight": 5
-      },
-      {
-        "tag": "object",
-        "weight": 3
-      },
-      {
-        "tag": "compare",
-        "weight": 5
-      },
-      {
-        "tag": "isequal",
-        "weight": 7
-      }
+      { "tag": "deep equal", "weight": 5 },
+      { "tag": "object", "weight": 3 },
+      { "tag": "compare", "weight": 5 },
+      { "tag": "isequal", "weight": 7 }
     ],
     "similar": [
       "dequal",
@@ -247,18 +122,9 @@
     "name": "Drag & Drop Libraries",
     "description": "Sortable lists, kanban boards, and pointer-driven drag grids.",
     "tags": [
-      {
-        "tag": "drag drop",
-        "weight": 5
-      },
-      {
-        "tag": "sort",
-        "weight": 3
-      },
-      {
-        "tag": "order",
-        "weight": 3
-      }
+      { "tag": "drag drop", "weight": 5 },
+      { "tag": "sort", "weight": 3 },
+      { "tag": "order", "weight": 3 }
     ],
     "similar": [
       "@shopify/draggable",
@@ -273,26 +139,11 @@
     "name": "DOM screenshot capture",
     "description": "Turn live DOM nodes and canvases into PNG or SVG snapshots.",
     "tags": [
-      {
-        "tag": "screenshot",
-        "weight": 15
-      },
-      {
-        "tag": "capture",
-        "weight": 7
-      },
-      {
-        "tag": "dom",
-        "weight": 7
-      },
-      {
-        "tag": "image",
-        "weight": 5
-      },
-      {
-        "tag": "canvas",
-        "weight": 3
-      }
+      { "tag": "screenshot", "weight": 15 },
+      { "tag": "capture", "weight": 7 },
+      { "tag": "dom", "weight": 7 },
+      { "tag": "image", "weight": 5 },
+      { "tag": "canvas", "weight": 3 }
     ],
     "similar": [
       "dom-to-image-more",
@@ -305,22 +156,10 @@
     "name": "Excel file readers",
     "description": "Parse spreadsheets and workbooks into structured JavaScript rows.",
     "tags": [
-      {
-        "tag": "excel",
-        "weight": 7
-      },
-      {
-        "tag": "read",
-        "weight": 5
-      },
-      {
-        "tag": "parse",
-        "weight": 5
-      },
-      {
-        "tag": "import",
-        "weight": 3
-      }
+      { "tag": "excel", "weight": 7 },
+      { "tag": "read", "weight": 5 },
+      { "tag": "parse", "weight": 5 },
+      { "tag": "import", "weight": 3 }
     ],
     "similar": ["read-excel-file", "xlsx", "exceljs"]
   },
@@ -328,34 +167,13 @@
     "name": "Browser spreadsheet export",
     "description": "Generate and download .xlsx and CSV spreadsheets client-side.",
     "tags": [
-      {
-        "tag": "export",
-        "weight": 15
-      },
-      {
-        "tag": "excel",
-        "weight": 7
-      },
-      {
-        "tag": "spreadsheet",
-        "weight": 7
-      },
-      {
-        "tag": "xlsx",
-        "weight": 7
-      },
-      {
-        "tag": "csv",
-        "weight": 3
-      },
-      {
-        "tag": "browser",
-        "weight": 5
-      },
-      {
-        "tag": "table",
-        "weight": 5
-      }
+      { "tag": "export", "weight": 15 },
+      { "tag": "excel", "weight": 7 },
+      { "tag": "spreadsheet", "weight": 7 },
+      { "tag": "xlsx", "weight": 7 },
+      { "tag": "csv", "weight": 3 },
+      { "tag": "browser", "weight": 5 },
+      { "tag": "table", "weight": 5 }
     ],
     "similar": ["excellentexport", "write-excel-file", "export-from-json"]
   },
@@ -363,26 +181,11 @@
     "name": "Finite state machines",
     "description": "Model complex UI flows with explicit states and transitions.",
     "tags": [
-      {
-        "tag": "state machine",
-        "weight": 15
-      },
-      {
-        "tag": "finite state",
-        "weight": 7
-      },
-      {
-        "tag": "statechart",
-        "weight": 7
-      },
-      {
-        "tag": "fsm",
-        "weight": 7
-      },
-      {
-        "tag": "actor",
-        "weight": 3
-      }
+      { "tag": "state machine", "weight": 15 },
+      { "tag": "finite state", "weight": 7 },
+      { "tag": "statechart", "weight": 7 },
+      { "tag": "fsm", "weight": 7 },
+      { "tag": "actor", "weight": 3 }
     ],
     "similar": ["robot3", "xstate", "@zag-js/core"]
   },
@@ -390,22 +193,10 @@
     "name": "Text search",
     "description": "Fast fuzzy and full-text search indexes in the browser.",
     "tags": [
-      {
-        "tag": "search",
-        "weight": 5
-      },
-      {
-        "tag": "solr",
-        "weight": 7
-      },
-      {
-        "tag": "fuzzy",
-        "weight": 5
-      },
-      {
-        "tag": "text",
-        "weight": 5
-      }
+      { "tag": "search", "weight": 5 },
+      { "tag": "solr", "weight": 7 },
+      { "tag": "fuzzy", "weight": 5 },
+      { "tag": "text", "weight": 5 }
     ],
     "similar": ["minisearch", "flexsearch", "fuse.js", "lunr", "@orama/orama"]
   },
@@ -413,26 +204,11 @@
     "name": "Fetch polyfills",
     "description": "Drop-in Fetch API polyfills for older browsers and runtimes.",
     "tags": [
-      {
-        "tag": "fetch",
-        "weight": 7
-      },
-      {
-        "tag": "polyfill",
-        "weight": 5
-      },
-      {
-        "tag": "xhr",
-        "weight": 5
-      },
-      {
-        "tag": "http",
-        "weight": 3
-      },
-      {
-        "tag": "request",
-        "weight": 3
-      }
+      { "tag": "fetch", "weight": 7 },
+      { "tag": "polyfill", "weight": 5 },
+      { "tag": "xhr", "weight": 5 },
+      { "tag": "http", "weight": 3 },
+      { "tag": "request", "weight": 3 }
     ],
     "similar": ["whatwg-fetch", "node-fetch", "unfetch", "make-fetch-happen"]
   },
@@ -440,26 +216,11 @@
     "name": "Date & time utilities",
     "description": "Parse, format, and shift dates across timezones.",
     "tags": [
-      {
-        "tag": "date",
-        "weight": 7
-      },
-      {
-        "tag": "time",
-        "weight": 7
-      },
-      {
-        "tag": "parse",
-        "weight": 3
-      },
-      {
-        "tag": "parser",
-        "weight": 3
-      },
-      {
-        "tag": "format",
-        "weight": 3
-      }
+      { "tag": "date", "weight": 7 },
+      { "tag": "time", "weight": 7 },
+      { "tag": "parse", "weight": 3 },
+      { "tag": "parser", "weight": 3 },
+      { "tag": "format", "weight": 3 }
     ],
     "similar": ["@formkit/tempo", "moment", "luxon", "dayjs", "date-fns"]
   },
@@ -467,18 +228,9 @@
     "name": "General purpose 3D libraries",
     "description": "WebGL scenes, shaders, and interactive 3D worlds in the browser.",
     "tags": [
-      {
-        "tag": "3d",
-        "weight": 15
-      },
-      {
-        "tag": "webgl",
-        "weight": 15
-      },
-      {
-        "tag": "gl",
-        "weight": 7
-      }
+      { "tag": "3d", "weight": 15 },
+      { "tag": "webgl", "weight": 15 },
+      { "tag": "gl", "weight": 7 }
     ],
     "similar": ["ogl", "playcanvas", "three", "babylonjs"]
   },
@@ -486,42 +238,15 @@
     "name": "Animation libraries",
     "description": "Springs, timelines, and smooth motion for DOM and SVG.",
     "tags": [
-      {
-        "tag": "animation",
-        "weight": 7
-      },
-      {
-        "tag": "tween",
-        "weight": 5
-      },
-      {
-        "tag": "easing",
-        "weight": 3
-      },
-      {
-        "tag": "morph",
-        "weight": 3
-      },
-      {
-        "tag": "transform",
-        "weight": 5
-      },
-      {
-        "tag": "motion",
-        "weight": 5
-      },
-      {
-        "tag": "svg",
-        "weight": 3
-      },
-      {
-        "tag": "physics",
-        "weight": 3
-      },
-      {
-        "tag": "dom",
-        "weight": 3
-      }
+      { "tag": "animation", "weight": 7 },
+      { "tag": "tween", "weight": 5 },
+      { "tag": "easing", "weight": 3 },
+      { "tag": "morph", "weight": 3 },
+      { "tag": "transform", "weight": 5 },
+      { "tag": "motion", "weight": 5 },
+      { "tag": "svg", "weight": 3 },
+      { "tag": "physics", "weight": 3 },
+      { "tag": "dom", "weight": 3 }
     ],
     "similar": ["gsap", "animejs", "velocity-animate", "popmotion", "motion"]
   },
@@ -529,34 +254,13 @@
     "name": "Charting libraries",
     "description": "Interactive bar, line, and canvas charts for data visualization.",
     "tags": [
-      {
-        "tag": "dom",
-        "weight": 3
-      },
-      {
-        "tag": "visualization",
-        "weight": 7
-      },
-      {
-        "tag": "dataviz",
-        "weight": 7
-      },
-      {
-        "tag": "svg",
-        "weight": 1
-      },
-      {
-        "tag": "canvas",
-        "weight": 3
-      },
-      {
-        "tag": "charts",
-        "weight": 15
-      },
-      {
-        "tag": "data",
-        "weight": 3
-      }
+      { "tag": "dom", "weight": 3 },
+      { "tag": "visualization", "weight": 7 },
+      { "tag": "dataviz", "weight": 7 },
+      { "tag": "svg", "weight": 1 },
+      { "tag": "canvas", "weight": 3 },
+      { "tag": "charts", "weight": 15 },
+      { "tag": "data", "weight": 3 }
     ],
     "similar": [
       "ag-charts-community",
@@ -571,22 +275,10 @@
     "name": "GraphQL Clients",
     "description": "Query, cache, and normalize GraphQL APIs in frontend apps.",
     "tags": [
-      {
-        "tag": "graphql",
-        "weight": 7
-      },
-      {
-        "tag": "client",
-        "weight": 3
-      },
-      {
-        "tag": "js",
-        "weight": 3
-      },
-      {
-        "tag": "javascript",
-        "weight": 3
-      }
+      { "tag": "graphql", "weight": 7 },
+      { "tag": "client", "weight": 3 },
+      { "tag": "js", "weight": 3 },
+      { "tag": "javascript", "weight": 3 }
     ],
     "similar": ["@apollo/client", "graphql-request", "relay-runtime", "urql"]
   },
@@ -594,38 +286,14 @@
     "name": "HTML Sanitization",
     "description": "Strip unsafe tags and scripts to prevent XSS in user HTML.",
     "tags": [
-      {
-        "tag": "html",
-        "weight": 5
-      },
-      {
-        "tag": "dom",
-        "weight": 5
-      },
-      {
-        "tag": "sanitize",
-        "weight": 7
-      },
-      {
-        "tag": "untrusted",
-        "weight": 1
-      },
-      {
-        "tag": "escape",
-        "weight": 3
-      },
-      {
-        "tag": "filter",
-        "weight": 5
-      },
-      {
-        "tag": "xss",
-        "weight": 7
-      },
-      {
-        "tag": "whitelist",
-        "weight": 1
-      }
+      { "tag": "html", "weight": 5 },
+      { "tag": "dom", "weight": 5 },
+      { "tag": "sanitize", "weight": 7 },
+      { "tag": "untrusted", "weight": 1 },
+      { "tag": "escape", "weight": 3 },
+      { "tag": "filter", "weight": 5 },
+      { "tag": "xss", "weight": 7 },
+      { "tag": "whitelist", "weight": 1 }
     ],
     "similar": ["sanitize-html", "xss", "dompurify", "sanitizer"]
   },
@@ -633,22 +301,10 @@
     "name": "Input masking and formatting",
     "description": "Format credit cards, dates, and phone inputs as users type.",
     "tags": [
-      {
-        "tag": "mask",
-        "weight": 15
-      },
-      {
-        "tag": "input",
-        "weight": 7
-      },
-      {
-        "tag": "format",
-        "weight": 5
-      },
-      {
-        "tag": "pattern",
-        "weight": 3
-      }
+      { "tag": "mask", "weight": 15 },
+      { "tag": "input", "weight": 7 },
+      { "tag": "format", "weight": 5 },
+      { "tag": "pattern", "weight": 3 }
     ],
     "similar": ["maska", "@maskito/core", "imask", "inputmask"]
   },
@@ -656,22 +312,10 @@
     "name": "Internationalization",
     "description": "Translate strings, plurals, and locales across your app.",
     "tags": [
-      {
-        "tag": "i18n",
-        "weight": 7
-      },
-      {
-        "tag": "intl",
-        "weight": 7
-      },
-      {
-        "tag": "internation",
-        "weight": 7
-      },
-      {
-        "tag": "language",
-        "weight": 3
-      }
+      { "tag": "i18n", "weight": 7 },
+      { "tag": "intl", "weight": 7 },
+      { "tag": "internation", "weight": 7 },
+      { "tag": "language", "weight": 3 }
     ],
     "similar": ["fbt", "globalize", "i18next", "node-polyglot", "@lingui/core"]
   },
@@ -679,42 +323,15 @@
     "name": "Node.js HTTP clients",
     "description": "Ergonomic HTTP clients with retries and streams for Node.js.",
     "tags": [
-      {
-        "tag": "http",
-        "weight": 5
-      },
-      {
-        "tag": "get",
-        "weight": 5
-      },
-      {
-        "tag": "post",
-        "weight": 5
-      },
-      {
-        "tag": "ajax",
-        "weight": 7
-      },
-      {
-        "tag": "url",
-        "weight": 1
-      },
-      {
-        "tag": "request",
-        "weight": 7
-      },
-      {
-        "tag": "agent",
-        "weight": 3
-      },
-      {
-        "tag": "xhr",
-        "weight": 5
-      },
-      {
-        "tag": "node node.js",
-        "weight": 5
-      }
+      { "tag": "http", "weight": 5 },
+      { "tag": "get", "weight": 5 },
+      { "tag": "post", "weight": 5 },
+      { "tag": "ajax", "weight": 7 },
+      { "tag": "url", "weight": 1 },
+      { "tag": "request", "weight": 7 },
+      { "tag": "agent", "weight": 3 },
+      { "tag": "xhr", "weight": 5 },
+      { "tag": "node node.js", "weight": 5 }
     ],
     "similar": ["wretch", "ofetch", "axios", "got", "undici"]
   },
@@ -722,42 +339,15 @@
     "name": "Browser HTTP clients",
     "description": "Fetch data cleanly with retries, timeouts, and interceptors.",
     "tags": [
-      {
-        "tag": "http",
-        "weight": 5
-      },
-      {
-        "tag": "get",
-        "weight": 5
-      },
-      {
-        "tag": "post",
-        "weight": 5
-      },
-      {
-        "tag": "ajax",
-        "weight": 7
-      },
-      {
-        "tag": "url",
-        "weight": 1
-      },
-      {
-        "tag": "request",
-        "weight": 7
-      },
-      {
-        "tag": "agent",
-        "weight": 3
-      },
-      {
-        "tag": "xhr",
-        "weight": 5
-      },
-      {
-        "tag": "browser",
-        "weight": 5
-      }
+      { "tag": "http", "weight": 5 },
+      { "tag": "get", "weight": 5 },
+      { "tag": "post", "weight": 5 },
+      { "tag": "ajax", "weight": 7 },
+      { "tag": "url", "weight": 1 },
+      { "tag": "request", "weight": 7 },
+      { "tag": "agent", "weight": 3 },
+      { "tag": "xhr", "weight": 5 },
+      { "tag": "browser", "weight": 5 }
     ],
     "similar": ["axios", "ky", "xior", "superagent", "redaxios", "ofetch"]
   },
@@ -765,30 +355,12 @@
     "name": "ICU message string formatters",
     "description": "Format plurals, gender, and localized ICU message strings.",
     "tags": [
-      {
-        "tag": "icu",
-        "weight": 7
-      },
-      {
-        "tag": "message",
-        "weight": 5
-      },
-      {
-        "tag": "format",
-        "weight": 3
-      },
-      {
-        "tag": "plural",
-        "weight": 3
-      },
-      {
-        "tag": "gender",
-        "weight": 3
-      },
-      {
-        "tag": "parse",
-        "weight": 1
-      }
+      { "tag": "icu", "weight": 7 },
+      { "tag": "message", "weight": 5 },
+      { "tag": "format", "weight": 3 },
+      { "tag": "plural", "weight": 3 },
+      { "tag": "gender", "weight": 3 },
+      { "tag": "parse", "weight": 1 }
     ],
     "similar": ["messageformat", "intl-messageformat"]
   },
@@ -796,30 +368,12 @@
     "name": "Image color extraction",
     "description": "Pull dominant palettes and accent swatches from images.",
     "tags": [
-      {
-        "tag": "color",
-        "weight": 7
-      },
-      {
-        "tag": "image",
-        "weight": 7
-      },
-      {
-        "tag": "extract",
-        "weight": 7
-      },
-      {
-        "tag": "dominant",
-        "weight": 7
-      },
-      {
-        "tag": "palette",
-        "weight": 7
-      },
-      {
-        "tag": "pixels",
-        "weight": 3
-      }
+      { "tag": "color", "weight": 7 },
+      { "tag": "image", "weight": 7 },
+      { "tag": "extract", "weight": 7 },
+      { "tag": "dominant", "weight": 7 },
+      { "tag": "palette", "weight": 7 },
+      { "tag": "pixels", "weight": 3 }
     ],
     "similar": ["extract-colors", "node-vibrant"]
   },
@@ -827,38 +381,14 @@
     "name": "Immutable Data",
     "description": "Update nested state safely without mutating the original data.",
     "tags": [
-      {
-        "tag": "immutable",
-        "weight": 7
-      },
-      {
-        "tag": "persistent",
-        "weight": 5
-      },
-      {
-        "tag": "functional",
-        "weight": 3
-      },
-      {
-        "tag": "collection",
-        "weight": 5
-      },
-      {
-        "tag": "structure",
-        "weight": 5
-      },
-      {
-        "tag": "tree",
-        "weight": 3
-      },
-      {
-        "tag": "freeze",
-        "weight": 3
-      },
-      {
-        "tag": "cursor",
-        "weight": 3
-      }
+      { "tag": "immutable", "weight": 7 },
+      { "tag": "persistent", "weight": 5 },
+      { "tag": "functional", "weight": 3 },
+      { "tag": "collection", "weight": 5 },
+      { "tag": "structure", "weight": 5 },
+      { "tag": "tree", "weight": 3 },
+      { "tag": "freeze", "weight": 3 },
+      { "tag": "cursor", "weight": 3 }
     ],
     "similar": ["immer", "immutable", "immutability-helper"]
   },
@@ -866,30 +396,12 @@
     "name": "Lazy Loading Content",
     "description": "Defer off-screen images and iframes until they enter view.",
     "tags": [
-      {
-        "tag": "lazy",
-        "weight": 5
-      },
-      {
-        "tag": "load",
-        "weight": 5
-      },
-      {
-        "tag": "lazyload",
-        "weight": 7
-      },
-      {
-        "tag": "image",
-        "weight": 5
-      },
-      {
-        "tag": "iframe",
-        "weight": 3
-      },
-      {
-        "tag": "video",
-        "weight": 3
-      }
+      { "tag": "lazy", "weight": 5 },
+      { "tag": "load", "weight": 5 },
+      { "tag": "lazyload", "weight": 7 },
+      { "tag": "image", "weight": 5 },
+      { "tag": "iframe", "weight": 3 },
+      { "tag": "video", "weight": 3 }
     ],
     "similar": ["lazysizes", "lozad", "vanilla-lazyload"]
   },
@@ -897,30 +409,12 @@
     "name": "Markdown parsers",
     "description": "Compile Markdown into clean HTML or syntax trees.",
     "tags": [
-      {
-        "tag": "markdown",
-        "weight": 7
-      },
-      {
-        "tag": "parse",
-        "weight": 5
-      },
-      {
-        "tag": "parser",
-        "weight": 5
-      },
-      {
-        "tag": "ast",
-        "weight": 3
-      },
-      {
-        "tag": "abstract syntax tree",
-        "weight": 3
-      },
-      {
-        "tag": "md",
-        "weight": 7
-      }
+      { "tag": "markdown", "weight": 7 },
+      { "tag": "parse", "weight": 5 },
+      { "tag": "parser", "weight": 5 },
+      { "tag": "ast", "weight": 3 },
+      { "tag": "abstract syntax tree", "weight": 3 },
+      { "tag": "md", "weight": 7 }
     ],
     "similar": ["marked", "markdown-it", "showdown", "micromark"]
   },
@@ -928,18 +422,9 @@
     "name": "Memoization",
     "description": "Cache expensive function calls by their input arguments.",
     "tags": [
-      {
-        "tag": "memoize",
-        "weight": 7
-      },
-      {
-        "tag": "cache",
-        "weight": 5
-      },
-      {
-        "tag": "performance",
-        "weight": 3
-      }
+      { "tag": "memoize", "weight": 7 },
+      { "tag": "cache", "weight": 5 },
+      { "tag": "performance", "weight": 3 }
     ],
     "similar": [
       "memoize",
@@ -953,26 +438,11 @@
     "name": "Number & currency formatting",
     "description": "Format currencies, decimals, and compact numbers cleanly.",
     "tags": [
-      {
-        "tag": "format",
-        "weight": 5
-      },
-      {
-        "tag": "manipulate",
-        "weight": 5
-      },
-      {
-        "tag": "currency",
-        "weight": 7
-      },
-      {
-        "tag": "money",
-        "weight": 7
-      },
-      {
-        "tag": "number",
-        "weight": 7
-      }
+      { "tag": "format", "weight": 5 },
+      { "tag": "manipulate", "weight": 5 },
+      { "tag": "currency", "weight": 7 },
+      { "tag": "money", "weight": 7 },
+      { "tag": "number", "weight": 7 }
     ],
     "similar": ["numeral", "numbro", "accounting", "currency.js", "dinero.js"]
   },
@@ -980,30 +450,12 @@
     "name": "Client-side PDF Creation",
     "description": "Create, style, and download PDF documents directly in JavaScript.",
     "tags": [
-      {
-        "tag": "pdf",
-        "weight": 7
-      },
-      {
-        "tag": "generate",
-        "weight": 3
-      },
-      {
-        "tag": "create",
-        "weight": 3
-      },
-      {
-        "tag": "document",
-        "weight": 3
-      },
-      {
-        "tag": "client",
-        "weight": 5
-      },
-      {
-        "tag": "browser",
-        "weight": 5
-      }
+      { "tag": "pdf", "weight": 7 },
+      { "tag": "generate", "weight": 3 },
+      { "tag": "create", "weight": 3 },
+      { "tag": "document", "weight": 3 },
+      { "tag": "client", "weight": 5 },
+      { "tag": "browser", "weight": 5 }
     ],
     "similar": [
       "@pdfme/generator",
@@ -1018,26 +470,11 @@
     "name": "Phone number parsing",
     "description": "Parse, validate, and format international phone numbers.",
     "tags": [
-      {
-        "tag": "phone",
-        "weight": 15
-      },
-      {
-        "tag": "telephone",
-        "weight": 7
-      },
-      {
-        "tag": "number",
-        "weight": 5
-      },
-      {
-        "tag": "validate",
-        "weight": 3
-      },
-      {
-        "tag": "format",
-        "weight": 3
-      }
+      { "tag": "phone", "weight": 15 },
+      { "tag": "telephone", "weight": 7 },
+      { "tag": "number", "weight": 5 },
+      { "tag": "validate", "weight": 3 },
+      { "tag": "format", "weight": 3 }
     ],
     "similar": [
       "phone",
@@ -1050,30 +487,12 @@
     "name": "Promise polyfills",
     "description": "Lightweight ES6 Promise polyfills for legacy environments.",
     "tags": [
-      {
-        "tag": "promise",
-        "weight": 7
-      },
-      {
-        "tag": "polyfill",
-        "weight": 3
-      },
-      {
-        "tag": "es6",
-        "weight": 3
-      },
-      {
-        "tag": "aplus",
-        "weight": 7
-      },
-      {
-        "tag": "async",
-        "weight": 3
-      },
-      {
-        "tag": "implementation",
-        "weight": 3
-      }
+      { "tag": "promise", "weight": 7 },
+      { "tag": "polyfill", "weight": 3 },
+      { "tag": "es6", "weight": 3 },
+      { "tag": "aplus", "weight": 7 },
+      { "tag": "async", "weight": 3 },
+      { "tag": "implementation", "weight": 3 }
     ],
     "similar": [
       "promise",
@@ -1086,18 +505,9 @@
     "name": "React based animation",
     "description": "Declarative spring physics and layout transitions for React.",
     "tags": [
-      {
-        "tag": "animation",
-        "weight": 7
-      },
-      {
-        "tag": "transform",
-        "weight": 5
-      },
-      {
-        "tag": "motion",
-        "weight": 5
-      }
+      { "tag": "animation", "weight": 7 },
+      { "tag": "transform", "weight": 5 },
+      { "tag": "motion", "weight": 5 }
     ],
     "similar": ["react-spring", "framer-motion"]
   },
@@ -1105,22 +515,10 @@
     "name": "React autocomplete inputs",
     "description": "Accessible comboboxes, typeaheads, and multi-select inputs.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 5
-      },
-      {
-        "tag": "autocomplete",
-        "weight": 5
-      },
-      {
-        "tag": "autosuggest",
-        "weight": 5
-      },
-      {
-        "tag": "typeahead",
-        "weight": 5
-      }
+      { "tag": "react", "weight": 5 },
+      { "tag": "autocomplete", "weight": 5 },
+      { "tag": "autosuggest", "weight": 5 },
+      { "tag": "typeahead", "weight": 5 }
     ],
     "similar": ["react-autosuggest", "downshift", "react-select"]
   },
@@ -1128,26 +526,11 @@
     "name": "React meta tag management",
     "description": "Manage document titles, Open Graph tags, and head metadata.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 5
-      },
-      {
-        "tag": "head",
-        "weight": 3
-      },
-      {
-        "tag": "document",
-        "weight": 3
-      },
-      {
-        "tag": "title",
-        "weight": 3
-      },
-      {
-        "tag": "meta tags",
-        "weight": 3
-      }
+      { "tag": "react", "weight": 5 },
+      { "tag": "head", "weight": 3 },
+      { "tag": "document", "weight": 3 },
+      { "tag": "title", "weight": 3 },
+      { "tag": "meta tags", "weight": 3 }
     ],
     "similar": ["react-helmet-async", "react-meta-tags", "react-document-title"]
   },
@@ -1155,22 +538,10 @@
     "name": "React hook collections",
     "description": "Curated collections of reusable browser and state hooks.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 5
-      },
-      {
-        "tag": "hooks",
-        "weight": 15
-      },
-      {
-        "tag": "hook",
-        "weight": 7
-      },
-      {
-        "tag": "utilities",
-        "weight": 5
-      }
+      { "tag": "react", "weight": 5 },
+      { "tag": "hooks", "weight": 15 },
+      { "tag": "hook", "weight": 7 },
+      { "tag": "utilities", "weight": 5 }
     ],
     "similar": ["@react-hookz/web", "react-use", "ahooks", "usehooks-ts"]
   },
@@ -1178,22 +549,10 @@
     "name": "React internationalization",
     "description": "Locale routing, message formatting, and translation hooks.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 5
-      },
-      {
-        "tag": "i18n",
-        "weight": 7
-      },
-      {
-        "tag": "intl",
-        "weight": 7
-      },
-      {
-        "tag": "internation",
-        "weight": 7
-      }
+      { "tag": "react", "weight": 5 },
+      { "tag": "i18n", "weight": 7 },
+      { "tag": "intl", "weight": 7 },
+      { "tag": "internation", "weight": 7 }
     ],
     "similar": [
       "next-intl",
@@ -1208,22 +567,10 @@
     "name": "React forms & validation",
     "description": "Manage form state, validation schemas, and field arrays.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 5
-      },
-      {
-        "tag": "redux",
-        "weight": 3
-      },
-      {
-        "tag": "form",
-        "weight": 7
-      },
-      {
-        "tag": "validate",
-        "weight": 1
-      }
+      { "tag": "react", "weight": 5 },
+      { "tag": "redux", "weight": 3 },
+      { "tag": "form", "weight": 7 },
+      { "tag": "validate", "weight": 1 }
     ],
     "similar": [
       "formik",
@@ -1238,26 +585,11 @@
     "name": "React charting components",
     "description": "Composable React components for responsive data charts.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "chart",
-        "weight": 15
-      },
-      {
-        "tag": "visualization",
-        "weight": 7
-      },
-      {
-        "tag": "dataviz",
-        "weight": 7
-      },
-      {
-        "tag": "svg",
-        "weight": 3
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "chart", "weight": 15 },
+      { "tag": "visualization", "weight": 7 },
+      { "tag": "dataviz", "weight": 7 },
+      { "tag": "svg", "weight": 3 }
     ],
     "similar": ["recharts", "react-chartjs-2", "victory"]
   },
@@ -1265,26 +597,11 @@
     "name": "React inline SVG loaders",
     "description": "Load and render remote or local SVGs inline in React.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "svg",
-        "weight": 15
-      },
-      {
-        "tag": "inline",
-        "weight": 15
-      },
-      {
-        "tag": "inject",
-        "weight": 7
-      },
-      {
-        "tag": "loader",
-        "weight": 5
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "svg", "weight": 15 },
+      { "tag": "inline", "weight": 15 },
+      { "tag": "inject", "weight": 7 },
+      { "tag": "loader", "weight": 5 }
     ],
     "similar": ["react-inlinesvg", "react-svg"]
   },
@@ -1292,22 +609,10 @@
     "name": "React Native charting",
     "description": "Touch-friendly native charts built for React Native apps.",
     "tags": [
-      {
-        "tag": "react native",
-        "weight": 15
-      },
-      {
-        "tag": "chart",
-        "weight": 15
-      },
-      {
-        "tag": "visualization",
-        "weight": 7
-      },
-      {
-        "tag": "mobile",
-        "weight": 5
-      }
+      { "tag": "react native", "weight": 15 },
+      { "tag": "chart", "weight": 15 },
+      { "tag": "visualization", "weight": 7 },
+      { "tag": "mobile", "weight": 5 }
     ],
     "similar": [
       "victory-native",
@@ -1319,26 +624,11 @@
     "name": "React range slider components",
     "description": "Accessible single and dual-thumb sliders for numeric ranges.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "range",
-        "weight": 7
-      },
-      {
-        "tag": "slider",
-        "weight": 15
-      },
-      {
-        "tag": "input",
-        "weight": 7
-      },
-      {
-        "tag": "handle",
-        "weight": 3
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "range", "weight": 7 },
+      { "tag": "slider", "weight": 15 },
+      { "tag": "input", "weight": 7 },
+      { "tag": "handle", "weight": 3 }
     ],
     "similar": ["rc-slider", "react-range", "react-slider"]
   },
@@ -1346,22 +636,10 @@
     "name": "React tooltip components",
     "description": "Positioned floating tooltips with smart viewport collision.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "tooltip",
-        "weight": 15
-      },
-      {
-        "tag": "popover",
-        "weight": 3
-      },
-      {
-        "tag": "hover",
-        "weight": 5
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "tooltip", "weight": 15 },
+      { "tag": "popover", "weight": 3 },
+      { "tag": "hover", "weight": 5 }
     ],
     "similar": ["react-tooltip", "@radix-ui/react-tooltip", "rc-tooltip"]
   },
@@ -1369,38 +647,14 @@
     "name": "Runtime schema validation",
     "description": "Validate untrusted payloads with runtime type inference.",
     "tags": [
-      {
-        "tag": "JSON",
-        "weight": 3
-      },
-      {
-        "tag": "object",
-        "weight": 3
-      },
-      {
-        "tag": "schema",
-        "weight": 5
-      },
-      {
-        "tag": "validator",
-        "weight": 7
-      },
-      {
-        "tag": "JSON",
-        "weight": 5
-      },
-      {
-        "tag": "assert",
-        "weight": 1
-      },
-      {
-        "tag": "check",
-        "weight": 1
-      },
-      {
-        "tag": "structure",
-        "weight": 3
-      }
+      { "tag": "JSON", "weight": 3 },
+      { "tag": "object", "weight": 3 },
+      { "tag": "schema", "weight": 5 },
+      { "tag": "validator", "weight": 7 },
+      { "tag": "JSON", "weight": 5 },
+      { "tag": "assert", "weight": 1 },
+      { "tag": "check", "weight": 1 },
+      { "tag": "structure", "weight": 3 }
     ],
     "similar": ["@sinclair/typebox", "valibot", "ajv", "yup", "zod", "arktype"]
   },
@@ -1408,42 +662,15 @@
     "name": "Query String Parsers",
     "description": "Serialize and parse nested URL query parameters reliably.",
     "tags": [
-      {
-        "tag": "query string",
-        "weight": 5
-      },
-      {
-        "tag": "querystring",
-        "weight": 7
-      },
-      {
-        "tag": "parse",
-        "weight": 3
-      },
-      {
-        "tag": "parser",
-        "weight": 3
-      },
-      {
-        "tag": "url",
-        "weight": 3
-      },
-      {
-        "tag": "search params",
-        "weight": 3
-      },
-      {
-        "tag": "qs",
-        "weight": 3
-      },
-      {
-        "tag": "parameter",
-        "weight": 5
-      },
-      {
-        "tag": "params",
-        "weight": 5
-      }
+      { "tag": "query string", "weight": 5 },
+      { "tag": "querystring", "weight": 7 },
+      { "tag": "parse", "weight": 3 },
+      { "tag": "parser", "weight": 3 },
+      { "tag": "url", "weight": 3 },
+      { "tag": "search params", "weight": 3 },
+      { "tag": "qs", "weight": 3 },
+      { "tag": "parameter", "weight": 5 },
+      { "tag": "params", "weight": 5 }
     ],
     "similar": ["qs", "query-string", "querystringify", "querystring"]
   },
@@ -1469,22 +696,10 @@
     "name": "Site Tours",
     "description": "Step-by-step onboarding spotlights and product walkthroughs.",
     "tags": [
-      {
-        "tag": "walkthrough",
-        "weight": 5
-      },
-      {
-        "tag": "focus",
-        "weight": 3
-      },
-      {
-        "tag": "tour",
-        "weight": 5
-      },
-      {
-        "tag": "guide",
-        "weight": 5
-      }
+      { "tag": "walkthrough", "weight": 5 },
+      { "tag": "focus", "weight": 3 },
+      { "tag": "tour", "weight": 5 },
+      { "tag": "guide", "weight": 5 }
     ],
     "similar": ["intro.js", "hopscotch", "driver.js"]
   },
@@ -1492,30 +707,12 @@
     "name": "State management libraries",
     "description": "Predictable global stores, atoms, and reactive proxies.",
     "tags": [
-      {
-        "tag": "state",
-        "weight": 7
-      },
-      {
-        "tag": "management",
-        "weight": 7
-      },
-      {
-        "tag": "store",
-        "weight": 5
-      },
-      {
-        "tag": "react",
-        "weight": 3
-      },
-      {
-        "tag": "observable",
-        "weight": 3
-      },
-      {
-        "tag": "atom",
-        "weight": 3
-      }
+      { "tag": "state", "weight": 7 },
+      { "tag": "management", "weight": 7 },
+      { "tag": "store", "weight": 5 },
+      { "tag": "react", "weight": 3 },
+      { "tag": "observable", "weight": 3 },
+      { "tag": "atom", "weight": 3 }
     ],
     "similar": [
       "valtio",
@@ -1530,18 +727,9 @@
     "name": "Sliders & carousels",
     "description": "Touch-friendly carousels and smooth swipeable galleries.",
     "tags": [
-      {
-        "tag": "touch swipe",
-        "weight": 3
-      },
-      {
-        "tag": "carousel",
-        "weight": 5
-      },
-      {
-        "tag": "slider",
-        "weight": 5
-      }
+      { "tag": "touch swipe", "weight": 3 },
+      { "tag": "carousel", "weight": 5 },
+      { "tag": "slider", "weight": 5 }
     ],
     "similar": [
       "embla-carousel",
@@ -1555,22 +743,10 @@
     "name": "General purpose templating",
     "description": "Render HTML and text from lightweight template strings.",
     "tags": [
-      {
-        "tag": "template",
-        "weight": 5
-      },
-      {
-        "tag": "logic",
-        "weight": 3
-      },
-      {
-        "tag": "render",
-        "weight": 5
-      },
-      {
-        "tag": "html",
-        "weight": 1
-      }
+      { "tag": "template", "weight": 5 },
+      { "tag": "logic", "weight": 3 },
+      { "tag": "render", "weight": 5 },
+      { "tag": "html", "weight": 1 }
     ],
     "similar": ["mustache", "handlebars", "pug", "nunjucks"]
   },
@@ -1578,22 +754,10 @@
     "name": "Tree data structures",
     "description": "Balanced binary, red-black, and suffix trees for fast lookups.",
     "tags": [
-      {
-        "tag": "tree",
-        "weight": 7
-      },
-      {
-        "tag": "graph",
-        "weight": 3
-      },
-      {
-        "tag": "node",
-        "weight": 1
-      },
-      {
-        "tag": "data structure",
-        "weight": 3
-      }
+      { "tag": "tree", "weight": 7 },
+      { "tag": "graph", "weight": 3 },
+      { "tag": "node", "weight": 1 },
+      { "tag": "data structure", "weight": 3 }
     ],
     "similar": ["functional-red-black-tree", "suffix-tree", "bin-tree"]
   },
@@ -1601,38 +765,14 @@
     "name": "URL parsing and manipulation",
     "description": "Parse, normalize, and safely join URLs and paths.",
     "tags": [
-      {
-        "tag": "url",
-        "weight": 7
-      },
-      {
-        "tag": "parse",
-        "weight": 5
-      },
-      {
-        "tag": "hostname",
-        "weight": 5
-      },
-      {
-        "tag": "domain",
-        "weight": 5
-      },
-      {
-        "tag": "path",
-        "weight": 5
-      },
-      {
-        "tag": "query",
-        "weight": 5
-      },
-      {
-        "tag": "scheme",
-        "weight": 5
-      },
-      {
-        "tag": "string",
-        "weight": 1
-      }
+      { "tag": "url", "weight": 7 },
+      { "tag": "parse", "weight": 5 },
+      { "tag": "hostname", "weight": 5 },
+      { "tag": "domain", "weight": 5 },
+      { "tag": "path", "weight": 5 },
+      { "tag": "query", "weight": 5 },
+      { "tag": "scheme", "weight": 5 },
+      { "tag": "string", "weight": 1 }
     ],
     "similar": ["url-parse", "normalize-url", "normalize-path"]
   },
@@ -1640,18 +780,9 @@
     "name": "Virtual DOM libraries",
     "description": "Minimal virtual DOM diffing and reactive template engines.",
     "tags": [
-      {
-        "tag": "virtual",
-        "weight": 7
-      },
-      {
-        "tag": "dom",
-        "weight": 7
-      },
-      {
-        "tag": "render",
-        "weight": 5
-      }
+      { "tag": "virtual", "weight": 7 },
+      { "tag": "dom", "weight": 7 },
+      { "tag": "render", "weight": 5 }
     ],
     "similar": ["hyperhtml", "snabbdom", "virtual-dom"]
   },
@@ -1659,22 +790,10 @@
     "name": "Vue JS Sliders & Carousels",
     "description": "Responsive touch sliders and carousels built for Vue.",
     "tags": [
-      {
-        "tag": "vue",
-        "weight": 7
-      },
-      {
-        "tag": "touch swipe",
-        "weight": 3
-      },
-      {
-        "tag": "carousel",
-        "weight": 5
-      },
-      {
-        "tag": "slider",
-        "weight": 5
-      }
+      { "tag": "vue", "weight": 7 },
+      { "tag": "touch swipe", "weight": 3 },
+      { "tag": "carousel", "weight": 5 },
+      { "tag": "slider", "weight": 5 }
     ],
     "similar": [
       "vue-awesome-swiper",
@@ -1687,26 +806,11 @@
     "name": "JavaScript utility libraries",
     "description": "Battle-tested helpers for arrays, objects, and functions.",
     "tags": [
-      {
-        "tag": "utility",
-        "weight": 15
-      },
-      {
-        "tag": "utilities",
-        "weight": 15
-      },
-      {
-        "tag": "lodash",
-        "weight": 7
-      },
-      {
-        "tag": "functional",
-        "weight": 5
-      },
-      {
-        "tag": "collection",
-        "weight": 5
-      }
+      { "tag": "utility", "weight": 15 },
+      { "tag": "utilities", "weight": 15 },
+      { "tag": "lodash", "weight": 7 },
+      { "tag": "functional", "weight": 5 },
+      { "tag": "collection", "weight": 5 }
     ],
     "similar": [
       "lodash",
@@ -1721,26 +825,11 @@
     "name": "Unique identifier generation",
     "description": "Collision-resistant UUIDs, ULIDs, and compact random IDs.",
     "tags": [
-      {
-        "tag": "uuid",
-        "weight": 15
-      },
-      {
-        "tag": "identifier",
-        "weight": 7
-      },
-      {
-        "tag": "unique",
-        "weight": 7
-      },
-      {
-        "tag": "id",
-        "weight": 5
-      },
-      {
-        "tag": "random",
-        "weight": 3
-      }
+      { "tag": "uuid", "weight": 15 },
+      { "tag": "identifier", "weight": 7 },
+      { "tag": "unique", "weight": 7 },
+      { "tag": "id", "weight": 5 },
+      { "tag": "random", "weight": 3 }
     ],
     "similar": ["uuid", "nanoid", "ulid", "@paralleldrive/cuid2"]
   },
@@ -1748,26 +837,11 @@
     "name": "React server-state fetching",
     "description": "Fetch, cache, and synchronize async server data automatically.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "query",
-        "weight": 7
-      },
-      {
-        "tag": "fetch",
-        "weight": 7
-      },
-      {
-        "tag": "cache",
-        "weight": 7
-      },
-      {
-        "tag": "server state",
-        "weight": 15
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "query", "weight": 7 },
+      { "tag": "fetch", "weight": 7 },
+      { "tag": "cache", "weight": 7 },
+      { "tag": "server state", "weight": 15 }
     ],
     "similar": ["@tanstack/react-query", "swr"]
   },
@@ -1775,26 +849,11 @@
     "name": "React client-side routing",
     "description": "Type-safe client-side routes, loaders, and nested layouts.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "router",
-        "weight": 15
-      },
-      {
-        "tag": "routing",
-        "weight": 15
-      },
-      {
-        "tag": "navigation",
-        "weight": 5
-      },
-      {
-        "tag": "route",
-        "weight": 7
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "router", "weight": 15 },
+      { "tag": "routing", "weight": 15 },
+      { "tag": "navigation", "weight": 5 },
+      { "tag": "route", "weight": 7 }
     ],
     "similar": [
       "react-router-dom",
@@ -1807,30 +866,12 @@
     "name": "React list virtualization",
     "description": "Render tens of thousands of rows smoothly by windowing.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "virtual",
-        "weight": 15
-      },
-      {
-        "tag": "virtualization",
-        "weight": 15
-      },
-      {
-        "tag": "window",
-        "weight": 5
-      },
-      {
-        "tag": "list",
-        "weight": 5
-      },
-      {
-        "tag": "scroll",
-        "weight": 5
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "virtual", "weight": 15 },
+      { "tag": "virtualization", "weight": 15 },
+      { "tag": "window", "weight": 5 },
+      { "tag": "list", "weight": 5 },
+      { "tag": "scroll", "weight": 5 }
     ],
     "similar": [
       "@tanstack/react-virtual",
@@ -1844,22 +885,10 @@
     "name": "React SVG icon libraries",
     "description": "Crisp tree-shakeable SVG icon sets packaged for React.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "icon",
-        "weight": 15
-      },
-      {
-        "tag": "icons",
-        "weight": 15
-      },
-      {
-        "tag": "svg",
-        "weight": 7
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "icon", "weight": 15 },
+      { "tag": "icons", "weight": 15 },
+      { "tag": "svg", "weight": 7 }
     ],
     "similar": [
       "lucide-react",
@@ -1873,22 +902,10 @@
     "name": "React toast notifications",
     "description": "Stackable, non-blocking toast notifications for React apps.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "toast",
-        "weight": 15
-      },
-      {
-        "tag": "notification",
-        "weight": 7
-      },
-      {
-        "tag": "snackbar",
-        "weight": 15
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "toast", "weight": 15 },
+      { "tag": "notification", "weight": 7 },
+      { "tag": "snackbar", "weight": 15 }
     ],
     "similar": ["sonner", "react-hot-toast", "react-toastify", "notistack"]
   },
@@ -1896,26 +913,11 @@
     "name": "React drag and drop",
     "description": "Accessible drag-and-drop hooks and sortable lists for React.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "drag drop",
-        "weight": 15
-      },
-      {
-        "tag": "dnd",
-        "weight": 15
-      },
-      {
-        "tag": "sortable",
-        "weight": 7
-      },
-      {
-        "tag": "draggable",
-        "weight": 5
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "drag drop", "weight": 15 },
+      { "tag": "dnd", "weight": 15 },
+      { "tag": "sortable", "weight": 7 },
+      { "tag": "draggable", "weight": 5 }
     ],
     "similar": ["@dnd-kit/core", "@hello-pangea/dnd", "react-dnd"]
   },
@@ -1923,26 +925,11 @@
     "name": "React data grid components",
     "description": "High-performance virtualized tables with sorting and editing.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "data grid",
-        "weight": 15
-      },
-      {
-        "tag": "datagrid",
-        "weight": 15
-      },
-      {
-        "tag": "table",
-        "weight": 7
-      },
-      {
-        "tag": "spreadsheet",
-        "weight": 5
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "data grid", "weight": 15 },
+      { "tag": "datagrid", "weight": 15 },
+      { "tag": "table", "weight": 7 },
+      { "tag": "spreadsheet", "weight": 5 }
     ],
     "similar": ["ag-grid-react", "react-data-grid", "@mui/x-data-grid"]
   },
@@ -1950,26 +937,11 @@
     "name": "Browser key-value storage",
     "description": "Simple async key-value persistence backed by browser storage.",
     "tags": [
-      {
-        "tag": "indexeddb",
-        "weight": 15
-      },
-      {
-        "tag": "storage",
-        "weight": 7
-      },
-      {
-        "tag": "key value",
-        "weight": 7
-      },
-      {
-        "tag": "offline",
-        "weight": 5
-      },
-      {
-        "tag": "async",
-        "weight": 3
-      }
+      { "tag": "indexeddb", "weight": 15 },
+      { "tag": "storage", "weight": 7 },
+      { "tag": "key value", "weight": 7 },
+      { "tag": "offline", "weight": 5 },
+      { "tag": "async", "weight": 3 }
     ],
     "similar": ["localforage", "idb-keyval"]
   },
@@ -1977,26 +949,11 @@
     "name": "ZIP archive utilities",
     "description": "Compress and extract ZIP archives directly in JavaScript.",
     "tags": [
-      {
-        "tag": "zip",
-        "weight": 15
-      },
-      {
-        "tag": "unzip",
-        "weight": 15
-      },
-      {
-        "tag": "archive",
-        "weight": 7
-      },
-      {
-        "tag": "compress",
-        "weight": 5
-      },
-      {
-        "tag": "extract",
-        "weight": 5
-      }
+      { "tag": "zip", "weight": 15 },
+      { "tag": "unzip", "weight": 15 },
+      { "tag": "archive", "weight": 7 },
+      { "tag": "compress", "weight": 5 },
+      { "tag": "extract", "weight": 5 }
     ],
     "similar": ["jszip", "fflate", "@zip.js/zip.js"]
   },
@@ -2004,26 +961,11 @@
     "name": "JavaScript event emitters",
     "description": "Tiny pub/sub event buses for decoupled app communication.",
     "tags": [
-      {
-        "tag": "event",
-        "weight": 7
-      },
-      {
-        "tag": "emitter",
-        "weight": 15
-      },
-      {
-        "tag": "eventemitter",
-        "weight": 15
-      },
-      {
-        "tag": "pubsub",
-        "weight": 7
-      },
-      {
-        "tag": "listener",
-        "weight": 5
-      }
+      { "tag": "event", "weight": 7 },
+      { "tag": "emitter", "weight": 15 },
+      { "tag": "eventemitter", "weight": 15 },
+      { "tag": "pubsub", "weight": 7 },
+      { "tag": "listener", "weight": 5 }
     ],
     "similar": ["mitt", "eventemitter3", "nanoevents"]
   },
@@ -2031,26 +973,11 @@
     "name": "React headless UI libraries",
     "description": "Unstyled, accessible UI primitives you style completely yourself.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "headless",
-        "weight": 15
-      },
-      {
-        "tag": "unstyled",
-        "weight": 7
-      },
-      {
-        "tag": "accessible",
-        "weight": 5
-      },
-      {
-        "tag": "component",
-        "weight": 3
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "headless", "weight": 15 },
+      { "tag": "unstyled", "weight": 7 },
+      { "tag": "accessible", "weight": 5 },
+      { "tag": "component", "weight": 3 }
     ],
     "similar": ["@base-ui/react", "@headlessui/react", "radix-ui"]
   },
@@ -2058,22 +985,10 @@
     "name": "Vue state management",
     "description": "Modular reactive stores and devtools integration for Vue.",
     "tags": [
-      {
-        "tag": "vue",
-        "weight": 7
-      },
-      {
-        "tag": "state",
-        "weight": 7
-      },
-      {
-        "tag": "store",
-        "weight": 7
-      },
-      {
-        "tag": "management",
-        "weight": 7
-      }
+      { "tag": "vue", "weight": 7 },
+      { "tag": "state", "weight": 7 },
+      { "tag": "store", "weight": 7 },
+      { "tag": "management", "weight": 7 }
     ],
     "similar": ["pinia", "vuex"]
   },
@@ -2081,18 +996,9 @@
     "name": "Protocol Buffers",
     "description": "Encode and decode compact binary Protocol Buffer schemas.",
     "tags": [
-      {
-        "tag": "protobuf",
-        "weight": 20
-      },
-      {
-        "tag": "protocol buffers",
-        "weight": 15
-      },
-      {
-        "tag": "serialization",
-        "weight": 5
-      }
+      { "tag": "protobuf", "weight": 20 },
+      { "tag": "protocol buffers", "weight": 15 },
+      { "tag": "serialization", "weight": 5 }
     ],
     "similar": ["@bufbuild/protobuf", "protobufjs"]
   },
@@ -2100,22 +1006,10 @@
     "name": "React component libraries",
     "description": "Full-featured React UI kits with theming and design tokens.",
     "tags": [
-      {
-        "tag": "react",
-        "weight": 7
-      },
-      {
-        "tag": "components",
-        "weight": 10
-      },
-      {
-        "tag": "ui",
-        "weight": 15
-      },
-      {
-        "tag": "design system",
-        "weight": 7
-      }
+      { "tag": "react", "weight": 7 },
+      { "tag": "components", "weight": 10 },
+      { "tag": "ui", "weight": 15 },
+      { "tag": "design system", "weight": 7 }
     ],
     "similar": ["@mui/material", "antd", "@mantine/core", "@chakra-ui/react"]
   },
@@ -2123,26 +1017,11 @@
     "name": "Browser code editors",
     "description": "Embeddable syntax-highlighted code editors for the browser.",
     "tags": [
-      {
-        "tag": "editor",
-        "weight": 15
-      },
-      {
-        "tag": "code",
-        "weight": 10
-      },
-      {
-        "tag": "syntax",
-        "weight": 7
-      },
-      {
-        "tag": "monaco",
-        "weight": 20
-      },
-      {
-        "tag": "codemirror",
-        "weight": 20
-      }
+      { "tag": "editor", "weight": 15 },
+      { "tag": "code", "weight": 10 },
+      { "tag": "syntax", "weight": 7 },
+      { "tag": "monaco", "weight": 20 },
+      { "tag": "codemirror", "weight": 20 }
     ],
     "similar": ["monaco-editor", "codemirror", "ace-builds"]
   },
@@ -2150,22 +1029,10 @@
     "name": "Generative AI API clients",
     "description": "Official SDKs for streaming text, tools, and multimodal LLMs.",
     "tags": [
-      {
-        "tag": "generative ai",
-        "weight": 15
-      },
-      {
-        "tag": "llm",
-        "weight": 15
-      },
-      {
-        "tag": "genai",
-        "weight": 15
-      },
-      {
-        "tag": "sdk",
-        "weight": 5
-      }
+      { "tag": "generative ai", "weight": 15 },
+      { "tag": "llm", "weight": 15 },
+      { "tag": "genai", "weight": 15 },
+      { "tag": "sdk", "weight": 5 }
     ],
     "similar": ["@google/genai", "openai", "@anthropic-ai/sdk"]
   },
@@ -2173,30 +1040,12 @@
     "name": "JavaScript & TS bundlers",
     "description": "Fast Rust-powered bundlers for JavaScript and TypeScript.",
     "tags": [
-      {
-        "tag": "bundler",
-        "weight": 15
-      },
-      {
-        "tag": "bundle",
-        "weight": 12
-      },
-      {
-        "tag": "javascript",
-        "weight": 7
-      },
-      {
-        "tag": "typescript",
-        "weight": 7
-      },
-      {
-        "tag": "build",
-        "weight": 5
-      },
-      {
-        "tag": "web",
-        "weight": 5
-      }
+      { "tag": "bundler", "weight": 15 },
+      { "tag": "bundle", "weight": 12 },
+      { "tag": "javascript", "weight": 7 },
+      { "tag": "typescript", "weight": 7 },
+      { "tag": "build", "weight": 5 },
+      { "tag": "web", "weight": 5 }
     ],
     "similar": ["rolldown", "@rspack/core"]
   },
@@ -2204,26 +1053,11 @@
     "name": "Browser IndexedDB wrappers",
     "description": "Ergonomic wrappers over IndexedDB for structured local storage.",
     "tags": [
-      {
-        "tag": "indexeddb",
-        "weight": 15
-      },
-      {
-        "tag": "browser",
-        "weight": 10
-      },
-      {
-        "tag": "database",
-        "weight": 9
-      },
-      {
-        "tag": "storage",
-        "weight": 7
-      },
-      {
-        "tag": "offline",
-        "weight": 4
-      }
+      { "tag": "indexeddb", "weight": 15 },
+      { "tag": "browser", "weight": 10 },
+      { "tag": "database", "weight": 9 },
+      { "tag": "storage", "weight": 7 },
+      { "tag": "offline", "weight": 4 }
     ],
     "similar": ["idb", "dexie"]
   },
@@ -2231,22 +1065,10 @@
     "name": "Browser SQLite databases",
     "description": "Run full SQLite queries locally in the browser via WebAssembly.",
     "tags": [
-      {
-        "tag": "sqlite",
-        "weight": 15
-      },
-      {
-        "tag": "browser database",
-        "weight": 10
-      },
-      {
-        "tag": "wasm",
-        "weight": 7
-      },
-      {
-        "tag": "opfs",
-        "weight": 5
-      }
+      { "tag": "sqlite", "weight": 15 },
+      { "tag": "browser database", "weight": 10 },
+      { "tag": "wasm", "weight": 7 },
+      { "tag": "opfs", "weight": 5 }
     ],
     "similar": ["@sqlite.org/sqlite-wasm", "@journeyapps/wa-sqlite", "sql.js"]
   },
@@ -2254,18 +1076,9 @@
     "name": "Temporal API polyfills",
     "description": "Modern TC39 Temporal calendar and timezone APIs today.",
     "tags": [
-      {
-        "tag": "temporal",
-        "weight": 15
-      },
-      {
-        "tag": "polyfill",
-        "weight": 10
-      },
-      {
-        "tag": "date time",
-        "weight": 7
-      }
+      { "tag": "temporal", "weight": 15 },
+      { "tag": "polyfill", "weight": 10 },
+      { "tag": "date time", "weight": 7 }
     ],
     "similar": ["temporal-polyfill", "@js-temporal/polyfill"]
   },
@@ -2273,22 +1086,10 @@
     "name": "Browser passkey & WebAuthn",
     "description": "Passwordless login with passkeys, biometrics, and WebAuthn.",
     "tags": [
-      {
-        "tag": "webauthn",
-        "weight": 15
-      },
-      {
-        "tag": "passkey",
-        "weight": 12
-      },
-      {
-        "tag": "authentication",
-        "weight": 7
-      },
-      {
-        "tag": "credentials",
-        "weight": 5
-      }
+      { "tag": "webauthn", "weight": 15 },
+      { "tag": "passkey", "weight": 12 },
+      { "tag": "authentication", "weight": 7 },
+      { "tag": "credentials", "weight": 5 }
     ],
     "similar": ["@simplewebauthn/browser", "@passwordless-id/webauthn"]
   },
@@ -2296,18 +1097,9 @@
     "name": "Interactive browser maps",
     "description": "Zoomable vector and tile maps with markers and GeoJSON.",
     "tags": [
-      {
-        "tag": "interactive maps",
-        "weight": 15
-      },
-      {
-        "tag": "web mapping",
-        "weight": 12
-      },
-      {
-        "tag": "geospatial",
-        "weight": 8
-      }
+      { "tag": "interactive maps", "weight": 15 },
+      { "tag": "web mapping", "weight": 12 },
+      { "tag": "geospatial", "weight": 8 }
     ],
     "similar": ["leaflet", "maplibre-gl", "ol"]
   },
@@ -2315,22 +1107,10 @@
     "name": "Browser graph visualization",
     "description": "Render interactive node graphs, networks, and diagrams.",
     "tags": [
-      {
-        "tag": "graph visualization",
-        "weight": 15
-      },
-      {
-        "tag": "network visualization",
-        "weight": 14
-      },
-      {
-        "tag": "graph theory",
-        "weight": 10
-      },
-      {
-        "tag": "nodes and edges",
-        "weight": 8
-      }
+      { "tag": "graph visualization", "weight": 15 },
+      { "tag": "network visualization", "weight": 14 },
+      { "tag": "graph theory", "weight": 10 },
+      { "tag": "nodes and edges", "weight": 8 }
     ],
     "similar": ["cytoscape", "sigma", "vis-network"]
   }
