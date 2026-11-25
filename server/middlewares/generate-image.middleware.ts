@@ -47,26 +47,33 @@ async function resolveImageVersion(name: string, version?: string) {
   return (await packageAnalysisGateway.resolvePackage(reference)).version
 }
 
+function parseStringQueryParam(value: ParsedQuery[string]): string | undefined {
+  return Object.prototype.toString.call(value) === '[object String]'
+    ? String(value)
+    : undefined
+}
+
+function parseVersionQueryParam(
+  value: ParsedQuery[string],
+): string | undefined {
+  const version = parseStringQueryParam(value)?.trim()
+
+  if (!version || version === 'null' || version === 'undefined') {
+    return undefined
+  }
+
+  return version
+}
+
 async function getStatsImage(query: ParsedQuery, cache: StatsImageCache) {
-  const parsedName =
-    Object.prototype.toString.call(query.name) === '[object String]'
-      ? String(query.name)
-      : undefined
+  const parsedName = parseStringQueryParam(query.name)
 
   if (!parsedName) throw new Error('name query parameter is required')
 
-  const rawTheme =
-    Object.prototype.toString.call(query.theme) === '[object String]'
-      ? String(query.theme)
-      : undefined
-
+  const rawTheme = parseStringQueryParam(query.theme)
   const theme = isThemeName(rawTheme) ? rawTheme : undefined
   const wide = query.wide === 'true'
-
-  const version =
-    Object.prototype.toString.call(query.version) === '[object String]'
-      ? String(query.version)
-      : undefined
+  const version = parseVersionQueryParam(query.version)
 
   const resolvedVersion = await resolveImageVersion(parsedName, version)
 

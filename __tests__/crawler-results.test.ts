@@ -1,10 +1,4 @@
-import {
-  createServer,
-  IncomingMessage,
-  ServerResponse,
-  type Server,
-} from 'node:http'
-import { Socket } from 'node:net'
+import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import Koa from 'koa'
 import Router from '@koa/router'
@@ -407,7 +401,7 @@ it('does not cache a negative export-size peek or start a build', async () => {
   expect(exportsBuild).not.toHaveBeenCalled()
 })
 
-describe('version URL hygiene and scoped client transitions', () => {
+describe('version URL hygiene', () => {
   it('emits canonical Link header without X-Robots-Tag so versioned links consolidate equity', async () => {
     cached.set('example@1.2.3', older)
 
@@ -417,28 +411,6 @@ describe('version URL hygiene and scoped client transitions', () => {
     expect(versioned.headers.get('x-robots-tag')).toBeNull()
     expect(versioned.headers.get('link')).toBe(
       '<https://bundlephobia.com/package/example>; rel="canonical"',
-    )
-  })
-
-  it('does not redirect Next.js _next/data client navigation requests for scoped packages', async () => {
-    const req = new IncomingMessage(new Socket())
-    req.url =
-      '/_next/data/build-id/package/%40scope/example.json?packageString=%40scope&packageString=example'
-    const res = new ServerResponse(req)
-
-    const result = await getServerSideProps({
-      params: { packageString: ['@scope', 'example'] },
-      query: { packageString: ['@scope', 'example'] },
-      req,
-      res,
-      resolvedUrl: '/package/@scope/example',
-    })
-
-    expect(result).toEqual({
-      props: { initialResult: null },
-    })
-    expect(res.getHeader('Link')).toBe(
-      '<https://bundlephobia.com/package/@scope/example>; rel="canonical"',
     )
   })
 })

@@ -473,12 +473,16 @@ class ResultPage extends PureComponent<ResultPageProps, ResultPageState> {
         })
       : undefined
 
+    const statsImageParams = new URLSearchParams({ name, wide: 'true' })
+
+    if (version) {
+      statsImageParams.set('version', version)
+    }
+
     return (
       <MetaTags
         title={pageTitle}
-        image={
-          origin + `/api/stats-image?name=${name}&version=${version}&wide=true`
-        }
+        image={`${origin}/api/stats-image?${statsImageParams.toString()}`}
         description={description}
         twitterDescription={description}
         canonicalPath={`/package/${name}`}

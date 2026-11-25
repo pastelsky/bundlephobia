@@ -43,11 +43,9 @@ export function createCacheHandlers<T>({
       const parsedResult = parseResult(result)
 
       if (parsedResult === null) {
-        request.log.error({ label, key }, 'Invalid cached result')
+        request.log.warn({ label, key }, 'Ignoring invalid cached result')
 
-        return reply.code(500).send({
-          error: { code: 'INVALID_CACHE_RESULT' },
-        })
+        return reply.code(404).send()
       }
 
       return reply.code(200).send(parsedResult)
