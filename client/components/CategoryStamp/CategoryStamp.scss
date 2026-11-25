@@ -1,0 +1,136 @@
+// ─── Risograph Stamp Component & Semantic Motion Archetypes ──────────────────
+.trends-stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-text-primary);
+  transform: rotate(-4deg);
+
+  svg {
+    display: block;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  &__ink-layer,
+  &__line-layer {
+    transform-origin: 18px 18px;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .trends-bento__spotlight:hover,
+  .trends-bento__card:hover {
+    .trends-stamp {
+      transform: rotate(0deg);
+    }
+
+    // 1. Register: ink snaps tightly toward foreground registration
+    .trends-stamp--register {
+      .trends-stamp__ink-layer {
+        transform: translate(-1.3px, -1.3px);
+      }
+
+      .trends-stamp__line-layer {
+        transform: translate(0.4px, -0.4px);
+      }
+    }
+
+    // 2. Tick: crisp spring rotation (clocks, keys, compass, globe)
+    .trends-stamp--tick {
+      .trends-stamp__ink-layer {
+        transform: translate(-0.8px, -0.8px);
+      }
+
+      .trends-stamp__line-layer {
+        transform: rotate(12deg);
+        transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+    }
+
+    // 3. Glide: directional nudge with subtle ink lag (bezier, arrows, sliders)
+    .trends-stamp--glide {
+      .trends-stamp__ink-layer {
+        transform: translate(-0.8px, 0.6px);
+      }
+
+      .trends-stamp__line-layer {
+        transform: translate(1.6px, -0.6px);
+      }
+    }
+
+    // 4. Float: buoyant lift off a grounded pastel shadow (cloud, sparkles, pin, 3D)
+    .trends-stamp--float {
+      .trends-stamp__ink-layer {
+        transform: translate(0.4px, 1px) scale(0.95);
+      }
+
+      .trends-stamp__line-layer {
+        transform: translateY(-2px);
+      }
+    }
+
+    // 5. Bounce: elastic tactile pop (charts, springs, blocks, drag grip)
+    .trends-stamp--bounce {
+      .trends-stamp__ink-layer {
+        transform: translate(-1px, -1px);
+      }
+
+      .trends-stamp__line-layer {
+        transform: scale(1.07);
+        transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+    }
+
+    // 6. Wiggle: subtle one-shot micro-wiggle (phone, hook, eyedropper, wrench)
+    .trends-stamp--wiggle {
+      .trends-stamp__ink-layer {
+        transform: translate(-0.8px, -0.8px);
+      }
+
+      .trends-stamp__line-layer {
+        animation: stamp-wiggle 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+    }
+
+    // 7. Pulse: crisp focus + subtle pastel halo bloom (network, graphql, search)
+    .trends-stamp--pulse {
+      .trends-stamp__ink-layer {
+        transform: scale(1.08);
+      }
+
+      .trends-stamp__line-layer {
+        transform: scale(1.04);
+      }
+    }
+  }
+}
+
+@keyframes stamp-wiggle {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  28% {
+    transform: rotate(-6deg);
+  }
+
+  60% {
+    transform: rotate(4.5deg);
+  }
+
+  82% {
+    transform: rotate(-1.5deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}

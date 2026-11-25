@@ -1,0 +1,387 @@
+// ─── Popular comparisons by category (bento + risograph stamps) ──────────────
+
+.trends-bento {
+  --bento-spotlight-bg: #f4f8fd;
+  --bento-spotlight-border: #d2e0f0;
+  --bento-spotlight-dot: #c9d9ec;
+  --bento-spotlight-meta: #4b6787;
+  --bento-spotlight-token-bg: #ffffff;
+  --bento-spotlight-token-border: #d5e2f1;
+  --bento-spotlight-token-border-hover: #9bb7d9;
+  --bento-token-border: #e3eaf2;
+  --bento-token-border-hover: #c5d2e1;
+  --stamp-cutout: var(--color-bg-base);
+
+  margin-top: $global-spacing * 5;
+
+  [data-theme='dark'] & {
+    --bento-spotlight-bg: #101824;
+    --bento-spotlight-border: #23344d;
+    --bento-spotlight-dot: #1d2d44;
+    --bento-spotlight-meta: #7ea1c9;
+    --bento-spotlight-token-bg: #152030;
+    --bento-spotlight-token-border: #263a56;
+    --bento-spotlight-token-border-hover: #496a96;
+    --bento-token-border: #232c38;
+    --bento-token-border-hover: #384659;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $global-spacing;
+    margin-bottom: $global-spacing * 1.5;
+  }
+
+  &__heading {
+    margin: 0;
+    @include font-size-xs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+  }
+
+  // Spotlight (5 cols) + 2×2 deck (7 cols)
+  &__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: $global-spacing * 1.5;
+
+    @media screen and (max-width: 56em) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__spotlight {
+    --stamp-cutout: var(--bento-spotlight-bg);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: $global-spacing;
+    padding: ($global-spacing * 1.8) ($global-spacing * 2);
+    border: 1px solid var(--bento-spotlight-border);
+    border-radius: var(--trends-control-radius);
+    background-color: var(--bento-spotlight-bg);
+    background-image: radial-gradient(
+      var(--bento-spotlight-dot) 1px,
+      transparent 1px
+    );
+    background-size: 16px 16px;
+
+    // Hue-harmonized Spotlight ramps keyed to the Spotlight category's ink
+    &[data-ink='green'] {
+      --bento-spotlight-bg: #f4faf4;
+      --bento-spotlight-border: #cfe5d0;
+      --bento-spotlight-dot: #c3dec5;
+      --bento-spotlight-meta: #456b47;
+      --bento-spotlight-token-border: #d1e6d2;
+      --bento-spotlight-token-border-hover: #9bc49d;
+    }
+
+    &[data-ink='neptune'] {
+      --bento-spotlight-bg: #f3faf9;
+      --bento-spotlight-border: #cae2df;
+      --bento-spotlight-dot: #bddad7;
+      --bento-spotlight-meta: #3d6a65;
+      --bento-spotlight-token-border: #cce3e0;
+      --bento-spotlight-token-border-hover: #8fc0ba;
+    }
+
+    &[data-ink='dandelion'] {
+      --bento-spotlight-bg: #fdfaf0;
+      --bento-spotlight-border: #eae0be;
+      --bento-spotlight-dot: #e0d3a8;
+      --bento-spotlight-meta: #786227;
+      --bento-spotlight-token-border: #ece2c2;
+      --bento-spotlight-token-border-hover: #cbb778;
+    }
+
+    &[data-ink='orange'] {
+      --bento-spotlight-bg: #fef6f3;
+      --bento-spotlight-border: #f0d6cc;
+      --bento-spotlight-dot: #e7c7bb;
+      --bento-spotlight-meta: #83503e;
+      --bento-spotlight-token-border: #f1d8ce;
+      --bento-spotlight-token-border-hover: #d8a28f;
+    }
+
+    &[data-ink='lilac'] {
+      --bento-spotlight-bg: #faf5fc;
+      --bento-spotlight-border: #e2cfe7;
+      --bento-spotlight-dot: #d7bfde;
+      --bento-spotlight-meta: #6b4973;
+      --bento-spotlight-token-border: #e4d2e9;
+      --bento-spotlight-token-border-hover: #be9ac7;
+    }
+
+    &[data-ink='coral'] {
+      --bento-spotlight-bg: #fdf5f8;
+      --bento-spotlight-border: #ecd2dc;
+      --bento-spotlight-dot: #e3c2cf;
+      --bento-spotlight-meta: #7e485b;
+      --bento-spotlight-token-border: #eed4de;
+      --bento-spotlight-token-border-hover: #d19cb0;
+    }
+
+    [data-theme='dark'] &[data-ink='green'] {
+      --bento-spotlight-bg: #0f1b13;
+      --bento-spotlight-border: #213d2a;
+      --bento-spotlight-dot: #1b3423;
+      --bento-spotlight-meta: #81b88a;
+      --bento-spotlight-token-bg: #142419;
+      --bento-spotlight-token-border: #254530;
+      --bento-spotlight-token-border-hover: #467b56;
+    }
+
+    [data-theme='dark'] &[data-ink='neptune'] {
+      --bento-spotlight-bg: #0e1a1a;
+      --bento-spotlight-border: #1e3b3a;
+      --bento-spotlight-dot: #183231;
+      --bento-spotlight-meta: #7ab8b4;
+      --bento-spotlight-token-bg: #132323;
+      --bento-spotlight-token-border: #224342;
+      --bento-spotlight-token-border-hover: #427a78;
+    }
+
+    [data-theme='dark'] &[data-ink='dandelion'] {
+      --bento-spotlight-bg: #1b180e;
+      --bento-spotlight-border: #3d351d;
+      --bento-spotlight-dot: #332c18;
+      --bento-spotlight-meta: #c9b26c;
+      --bento-spotlight-token-bg: #231f13;
+      --bento-spotlight-token-border: #463c22;
+      --bento-spotlight-token-border-hover: #7c6b3d;
+    }
+
+    [data-theme='dark'] &[data-ink='orange'] {
+      --bento-spotlight-bg: #1c1310;
+      --bento-spotlight-border: #422921;
+      --bento-spotlight-dot: #36221b;
+      --bento-spotlight-meta: #cf9682;
+      --bento-spotlight-token-bg: #251915;
+      --bento-spotlight-token-border: #4b2f26;
+      --bento-spotlight-token-border-hover: #865545;
+    }
+
+    [data-theme='dark'] &[data-ink='lilac'] {
+      --bento-spotlight-bg: #18111d;
+      --bento-spotlight-border: #382545;
+      --bento-spotlight-dot: #2e1e39;
+      --bento-spotlight-meta: #ba91c9;
+      --bento-spotlight-token-bg: #201726;
+      --bento-spotlight-token-border: #412b4f;
+      --bento-spotlight-token-border-hover: #74508c;
+    }
+
+    [data-theme='dark'] &[data-ink='coral'] {
+      --bento-spotlight-bg: #1c1116;
+      --bento-spotlight-border: #422431;
+      --bento-spotlight-dot: #361d28;
+      --bento-spotlight-meta: #cf8ca6;
+      --bento-spotlight-token-bg: #25171d;
+      --bento-spotlight-token-border: #4c2a39;
+      --bento-spotlight-token-border-hover: #874e66;
+    }
+  }
+
+  &__spotlight-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $global-spacing;
+  }
+
+  &__eyebrow {
+    @include font-size-xxs;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--bento-spotlight-meta);
+  }
+
+  &__count {
+    font-family: $font-family-code;
+    @include font-size-xxs;
+    color: var(--bento-spotlight-meta);
+  }
+
+  &__spotlight-head {
+    display: flex;
+    align-items: center;
+    gap: $global-spacing * 0.9;
+  }
+
+  &__spotlight-title {
+    margin: 0;
+    @include font-size-md;
+    font-weight: $font-weight-bold;
+    color: var(--color-text-primary);
+    line-height: 1.25;
+  }
+
+  &__desc {
+    margin: 0;
+    @include font-size-xs;
+    color: var(--color-text-muted);
+    line-height: 1.45;
+
+    &--spotlight {
+      color: var(--color-text-secondary);
+    }
+  }
+
+  &__spotlight-cta {
+    align-self: flex-start;
+    margin-top: $global-spacing * 0.4;
+    text-decoration: none;
+  }
+
+  &__deck {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $global-spacing * 1.5;
+
+    @media screen and (max-width: 38em) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__more-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: $global-spacing * 1.5;
+    margin-top: $global-spacing * 1.5;
+
+    @media screen and (max-width: 56em) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media screen and (max-width: 38em) {
+      grid-template-columns: 1fr;
+    }
+
+    .trends-bento__card {
+      @media (prefers-reduced-motion: no-preference) {
+        animation: trends-bento-reveal 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+    }
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: $global-spacing * 0.7;
+    padding: ($global-spacing * 1.4) ($global-spacing * 1.6);
+    background: var(--color-bg-base);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--trends-control-radius);
+    transition: border-color $motion-fast;
+
+    &:hover {
+      border-color: var(--color-border-primary);
+    }
+  }
+
+  &__card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $global-spacing;
+  }
+
+  &__card-title-group {
+    display: flex;
+    align-items: center;
+    gap: $global-spacing * 0.65;
+    min-width: 0;
+  }
+
+  &__card-title {
+    margin: 0;
+    @include font-size-xs;
+    font-weight: $font-weight-bold;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__compare-all {
+    @include font-size-xxs;
+    font-weight: $font-weight-bold;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color $motion-fast;
+
+    &:hover {
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $global-spacing * 0.5;
+    margin-top: $global-spacing * 0.2;
+  }
+
+  &__token {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 ($global-spacing * 0.8);
+    border: 1px solid var(--bento-token-border);
+    border-radius: 5px;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    font-family: $font-family-code;
+    @include font-size-xxs;
+    text-decoration: none;
+    transition:
+      border-color $motion-fast,
+      color $motion-fast,
+      background $motion-fast;
+
+    &:hover {
+      border-color: var(--bento-token-border-hover);
+      background: var(--color-bg-base);
+      color: var(--color-text-primary);
+    }
+
+    &--lg {
+      height: 28px;
+      padding: 0 $global-spacing;
+      @include font-size-xs;
+      background: var(--bento-spotlight-token-bg);
+      border-color: var(--bento-spotlight-token-border);
+
+      &:hover {
+        border-color: var(--bento-spotlight-token-border-hover);
+        background: var(--bento-spotlight-token-bg);
+      }
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: $global-spacing;
+    margin-top: $global-spacing * 1.6;
+  }
+}
+
+@keyframes trends-bento-reveal {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}

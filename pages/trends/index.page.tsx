@@ -25,6 +25,7 @@ import GithubIcon from '../../client/assets/github-logo.svg'
 import NPMIcon from '../../client/assets/npm-logo.svg'
 import { getTrendsRecommendations } from '../../utils/trendsRecommendations'
 import TrendsChart, { TRENDS_SERIES_COLORS } from './TrendsChart'
+import TrendsCategories from './TrendsCategories'
 import { loadRelatedPackageSuggestions } from './trendsAutocomplete'
 import { useTrendsData } from './useTrendsData'
 import { groupTrendsPackage } from '../../utils/trends'
@@ -32,7 +33,6 @@ import { trendsComparisonCanonicalPath } from '../../seo/trends-comparisons'
 import {
   TRENDS_CATEGORIES,
   getRandomCategories,
-  getCategoryCompareAllPath,
   type TrendsCategory,
 } from '../../seo/trends-categories'
 
@@ -847,55 +847,10 @@ export default function TrendsPage({
         )}
 
         {/* ─── Explore Comparisons by Category ─── */}
-        <section
-          className="trends-categories"
-          aria-labelledby="trends-categories-heading"
-        >
-          <div className="trends-categories__header">
-            <h2
-              id="trends-categories-heading"
-              className="trends-categories__title"
-            >
-              Popular comparisons by category
-            </h2>
-          </div>
-          <div className="trends-categories__grid">
-            {sampledCategories.map(category => (
-              <div key={category.id} className="trends-category-card">
-                <div className="trends-category-card__header">
-                  <h3 className="trends-category-card__name">
-                    {category.title}
-                  </h3>
-                  <Link
-                    href={getCategoryCompareAllPath(category)}
-                    className="trends-category-card__compare-all"
-                    title={`Compare all ${category.title} packages`}
-                  >
-                    Compare all →
-                  </Link>
-                </div>
-                <div className="trends-category-card__pairs">
-                  {category.popularPairs.slice(0, 2).map(([a, b]) => {
-                    const pairPath = trendsComparisonCanonicalPath([a, b])
-
-                    return (
-                      <Link
-                        key={`${a}-vs-${b}`}
-                        href={pairPath}
-                        className="trends-category-card__pair-pill"
-                        title={`Compare ${a} vs ${b}`}
-                      >
-                        <span>{a}</span>
-                        <span className="trends-category-card__vs">vs</span>
-                        <span>{b}</span>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <TrendsCategories
+          sampledCategories={sampledCategories}
+          allCategories={TRENDS_CATEGORIES}
+        />
       </div>
     </Layout>
   )
