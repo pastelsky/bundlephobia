@@ -240,7 +240,7 @@ run. Each category proposal contains:
 - slug: existing category key, or a descriptive kebab-case key
 - name: concise user-facing purpose-level category name (ideally <= 28 characters so cards never truncate)
 - description: required for new categories; a crisp one-line human description of what the libraries do (<= 90 characters, plain language). Omit for existing categories, whose description is preserved.
-- stamp: required for new categories; draw a **brand-new, unique Risograph stamp** (never copy/reuse an existing category's stamp) matching `categoryStampSchema` in `packages/service-contracts/src/recommendations.contract.ts`:
+- stamp: required for new categories (persisted separately to `utils/similar-packages.stamps.json` keyed by `slug`); draw a **brand-new, unique Risograph stamp** (never copy/reuse an existing category's stamp) matching `categoryStampSchema` in `packages/service-contracts/src/recommendations.contract.ts`:
   - `ink`: semantically chosen from `STAMP_INKS` (`blue`, `green`, `neptune`, `dandelion`, `orange`, `lilac`, `coral`).
   - `motion`: semantically chosen from `STAMP_MOTIONS` (`tick`, `glide`, `float`, `bounce`, `wiggle`, `pulse`, `register`) to match the icon's physical metaphor.
   - `backdrop`: 1..6 pastel ink marks (`circle`, `rect`, `ellipse`, `polygon`, `path`) on a `36x36` viewBox, offset `(+2, +2)` from the foreground's visual center of mass so it hugs the artwork cleanly.

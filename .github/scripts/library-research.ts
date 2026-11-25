@@ -8,7 +8,9 @@ import { isDeepStrictEqual } from 'node:util'
 import {
   catalogSchema,
   categoryStampSchema,
+  categoryStampsSchema,
   type Catalog,
+  type CategoryStamps,
 } from '@bundlephobia/service-contracts/recommendations'
 import {
   collectBundleSize,
@@ -22,6 +24,8 @@ import {
 export const branch = 'codex/library-catalog'
 
 export const catalogPath = 'utils/similar-packages.catalog.json'
+
+export const stampsPath = 'utils/similar-packages.stamps.json'
 
 const fail = (message: string): never => {
   throw new Error(message)
@@ -201,7 +205,6 @@ export function mergeProposal(catalog: Catalog, proposal: Proposal): Catalog {
 
     if (existing && same(similar, existing.similar)) continue
     const description = existing?.description ?? category.description
-    const stamp = existing?.stamp ?? category.stamp
 
     const nextCategory: Catalog[string] = {
       name: existing?.name ?? category.name,
@@ -211,9 +214,22 @@ export function mergeProposal(catalog: Catalog, proposal: Proposal): Catalog {
 
     if (description) nextCategory.description = description
 
-    if (stamp) nextCategory.stamp = stamp
-
     result[category.slug] = nextCategory
+  }
+
+  return result
+}
+
+export function mergeProposalStamps(
+  stamps: CategoryStamps,
+  proposal: Proposal,
+): CategoryStamps {
+  const result = structuredClone(stamps)
+
+  for (const category of validateProposal(proposal)) {
+    if (!result[category.slug] && category.stamp) {
+      result[category.slug] = category.stamp
+    }
   }
 
   return result
@@ -688,9 +704,32 @@ export async function publishResearch({
     )
   }
 
-  const base = await readCatalog(baseRef.object.sha)
+  const hasProposedStamps = proposal.some(category => Boolean(category.stamp))
+
+  const readStamps = async (sha: string): Promise<CategoryStamps> => {
+    const raw = await api(`/contents/${stampsPath}?ref=${sha}`, {
+      optional: true,
+    })
+
+    if (!raw) return {}
+
+    const file = z.object({ content: z.string() }).parse(raw)
+
+    return categoryStampsSchema.parse(
+      JSON.parse(Buffer.from(file.content, 'base64').toString('utf8')),
+    )
+  }
+
+  const [base, baseStamps] = await Promise.all([
+    readCatalog(baseRef.object.sha),
+    hasProposedStamps
+      ? readStamps(baseRef.object.sha)
+      : Promise.resolve<CategoryStamps>({}),
+  ])
+
   let current = base
   let snapshot = base
+  let currentStamps = baseStamps
 
   if (headRef && !prs[0]?.merged_at) {
     const comparison = z
@@ -704,17 +743,23 @@ export async function publishResearch({
 
     if (
       comparison.files?.length >= 300 ||
-      comparison.files?.some(file => file.filename !== catalogPath)
+      comparison.files?.some(
+        file => file.filename !== catalogPath && file.filename !== stampsPath,
+      )
     )
       fail('Research branch contains non-catalog changes')
 
-    const [ancestor, pending] = await Promise.all([
+    const [ancestor, pending, pendingStamps] = await Promise.all([
       readCatalog(comparison.merge_base_commit.sha),
       readCatalog(headRef.object.sha),
+      hasProposedStamps
+        ? readStamps(headRef.object.sha)
+        : Promise.resolve<CategoryStamps>({}),
     ])
 
     current = carryPending(base, ancestor, pending)
     snapshot = pending
+    currentStamps = { ...baseStamps, ...pendingStamps }
   }
 
   let pr = open[0]
@@ -756,8 +801,13 @@ export async function publishResearch({
         fail(`New package requires research evidence: ${name}`)
   }
 
+  const stamps = mergeProposalStamps(currentStamps, proposal)
+
   await verify(proposal)
-  const changed = prunedRejected.length > 0 || !same(current, catalog)
+  const stampsChanged = !same(currentStamps, stamps)
+
+  const changed =
+    prunedRejected.length > 0 || !same(current, catalog) || stampsChanged
 
   if (!changed && !open[0] && same(base, catalog))
     return { status: 'no changes' }
@@ -828,14 +878,46 @@ export async function publishResearch({
       }),
     )
 
+    const treeEntries = [
+      { path: catalogPath, mode: '100644', type: 'blob', sha: blob.sha },
+    ]
+
+    if (stampsChanged) {
+      const stampsBlob = shaSchema.parse(
+        await api('/git/blobs', {
+          method: 'POST',
+          body: {
+            content: execFileSync(
+              'corepack',
+              [
+                'yarn',
+                'workspace',
+                '@bundlephobia/recommendation-automation',
+                'format',
+                '--stdin-filepath',
+                `../${stampsPath}`,
+              ],
+              { input: JSON.stringify(stamps), encoding: 'utf8' },
+            ),
+            encoding: 'utf-8',
+          },
+        }),
+      )
+
+      treeEntries.push({
+        path: stampsPath,
+        mode: '100644',
+        type: 'blob',
+        sha: stampsBlob.sha,
+      })
+    }
+
     const tree = shaSchema.parse(
       await api('/git/trees', {
         method: 'POST',
         body: {
           base_tree: baseCommit.tree.sha,
-          tree: [
-            { path: catalogPath, mode: '100644', type: 'blob', sha: blob.sha },
-          ],
+          tree: treeEntries,
         },
       }),
     )

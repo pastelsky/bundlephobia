@@ -121,10 +121,13 @@ export type StampMark = z.infer<typeof stampMarkSchema>
 
 export type CategoryStamp = z.infer<typeof categoryStampSchema>
 
+export const categoryStampsSchema = z.record(z.string(), categoryStampSchema)
+
+export type CategoryStamps = z.infer<typeof categoryStampsSchema>
+
 export const categorySchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1).max(160).optional(),
-  stamp: categoryStampSchema.optional(),
   tags: z.array(z.object({ tag: z.string(), weight: z.number().int() })),
   similar: z.array(z.string()).max(6),
 })
