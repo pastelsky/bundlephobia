@@ -855,10 +855,22 @@ test('the shared catalog retains the existing category contract', async () => {
   assert.deepEqual(exported.categories, catalog)
   assert.ok(exported.comparisonGroups.length > 0)
 
+  const stampSignatures = new Set<string>()
+
   for (const category of Object.values(catalog)) {
     assert.ok(category.name.trim().length > 0)
     assert.ok(category.similar.length <= 6)
     assert.ok(category.tags.every(tag => Number.isInteger(tag.weight)))
+
+    if (category.stamp) {
+      const signature = JSON.stringify(category.stamp.marks)
+
+      assert.ok(
+        !stampSignatures.has(signature),
+        `Duplicate stamp marks found in category "${category.name}"`,
+      )
+      stampSignatures.add(signature)
+    }
   }
 })
 
@@ -974,4 +986,72 @@ test('publishResearch prunes unchecked items from existing PR checklist and reco
     'another',
   ])
   assert.deepEqual(parseRejectedPackages(state.prs[0].body), ['candidate'])
+})
+
+test('mergeProposal preserves existing description and stamp and persists them on new categories', () => {
+  const existingStamp = {
+    ink: 'green' as const,
+    motion: 'tick' as const,
+    backdrop: [{ type: 'circle' as const, cx: 19.5, cy: 19.5, r: 9.5 }],
+    marks: [
+      {
+        type: 'circle' as const,
+        cx: 17,
+        cy: 17,
+        r: 9,
+        role: 'stroke' as const,
+      },
+    ],
+  }
+
+  const newStamp = {
+    ink: 'lilac' as const,
+    motion: 'float' as const,
+    backdrop: [{ type: 'circle' as const, cx: 19, cy: 19, r: 9 }],
+    marks: [
+      {
+        type: 'path' as const,
+        d: 'M16 9 L18 15 L24 17 L18 19 L16 25 L14 19 L8 17 L14 15 Z',
+        role: 'stroke' as const,
+      },
+    ],
+  }
+
+  const existingCatalog: Catalog = {
+    example: {
+      name: 'Example utilities',
+      description: 'Existing human description for example utilities.',
+      stamp: existingStamp,
+      tags: [{ tag: 'example', weight: 10 }],
+      similar: ['original'],
+    },
+  }
+
+  const [existingProposal] = proposal('candidate')
+  const [newCategoryBase] = proposal('alpha', 'beta')
+
+  const merged = mergeProposal(existingCatalog, [
+    existingProposal,
+    {
+      ...newCategoryBase,
+      slug: 'brand-new',
+      name: 'Brand new category',
+      description: 'Crisp one-line description for brand new category.',
+      stamp: newStamp,
+      tags: [{ tag: 'brand', weight: 10 }],
+    },
+  ])
+
+  assert.equal(
+    merged.example.description,
+    'Existing human description for example utilities.',
+  )
+  assert.deepEqual(merged.example.stamp, existingStamp)
+  assert.deepEqual(merged.example.similar, ['original', 'candidate'])
+
+  assert.equal(
+    merged['brand-new'].description,
+    'Crisp one-line description for brand new category.',
+  )
+  assert.deepEqual(merged['brand-new'].stamp, newStamp)
 })

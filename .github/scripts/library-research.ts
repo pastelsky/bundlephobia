@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { isDeepStrictEqual } from 'node:util'
 import {
   catalogSchema,
+  categoryStampSchema,
   type Catalog,
 } from '@bundlephobia/service-contracts/recommendations'
 import {
@@ -66,6 +67,8 @@ const proposalSchema = z
         .regex(/^[a-z][a-z0-9-]{1,79}$/)
         .refine(value => !['constructor', 'prototype'].includes(value)),
       name: researchText(),
+      description: researchText(10).max(160).optional(),
+      stamp: categoryStampSchema.optional(),
       tags: z
         .array(
           z.object({
@@ -197,11 +200,20 @@ export function mergeProposal(catalog: Catalog, proposal: Proposal): Catalog {
       )
 
     if (existing && same(similar, existing.similar)) continue
-    result[category.slug] = {
+    const description = existing?.description ?? category.description
+    const stamp = existing?.stamp ?? category.stamp
+
+    const nextCategory: Catalog[string] = {
       name: existing?.name ?? category.name,
       tags,
       similar,
     }
+
+    if (description) nextCategory.description = description
+
+    if (stamp) nextCategory.stamp = stamp
+
+    result[category.slug] = nextCategory
   }
 
   return result
