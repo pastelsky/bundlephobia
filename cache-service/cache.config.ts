@@ -7,6 +7,15 @@ export interface CacheRepositoryConfig {
   memoryMax: number
 }
 
+function parsePositiveIntEnv(
+  value: string | undefined,
+  fallback: number,
+): number {
+  const parsed = Number(value)
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+}
+
 const packageReadKey = process.env.FIREBASE_READ_KEY || 'modules-v3'
 
 const exportsReadKey = process.env.FIREBASE_READ_KEY_EXPORTS || 'exports-v3'
@@ -15,21 +24,17 @@ export const cacheConfig = {
   package: {
     readKey: packageReadKey,
     writeKey: process.env.FIREBASE_WRITE_KEY || 'modules-v3',
-    fallbackReadKey:
-      packageReadKey === 'modules-v3' &&
-      !process.env.DISABLE_FIREBASE_V2_FALLBACK
-        ? 'modules-v2'
-        : undefined,
-    memoryMax: 3000,
+    memoryMax: parsePositiveIntEnv(
+      process.env.CACHE_MEMORY_MAX_PACKAGES,
+      50_000,
+    ),
   },
   exports: {
     readKey: exportsReadKey,
     writeKey: process.env.FIREBASE_WRITE_KEY_EXPORTS || 'exports-v3',
-    fallbackReadKey:
-      exportsReadKey === 'exports-v3' &&
-      !process.env.DISABLE_FIREBASE_V2_FALLBACK
-        ? 'exports'
-        : undefined,
-    memoryMax: 1500,
+    memoryMax: parsePositiveIntEnv(
+      process.env.CACHE_MEMORY_MAX_EXPORTS,
+      20_000,
+    ),
   },
 } as const satisfies Record<'package' | 'exports', CacheRepositoryConfig>

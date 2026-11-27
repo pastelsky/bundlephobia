@@ -14,7 +14,7 @@ import type { CacheRepositoryConfig } from './cache.config.ts'
 
 const debug = createDebug('bp:cache')
 
-const latestBuiltCacheTtlMs = 60_000
+const latestBuiltCacheTtlMs = 10 * 60_000
 
 export interface CacheRepository {
   get(key: CacheKey): Promise<CacheEntry | null>
@@ -54,11 +54,77 @@ export function createCacheRepository(
     return pending
   }
 
+  async function fetchShallowVersionKeys(
+    root: string,
+    name: string,
+  ): Promise<string[] | null> {
+    const refUrl = packageRef(root, name).toString()
+
+    try {
+      const response = await fetch(`${refUrl}.json?shallow=true`)
+
+      if (!response.ok) return null
+
+      const data: unknown = await response.json()
+
+      if (Object.prototype.toString.call(data) !== '[object Object]') {
+        return []
+      }
+
+      // SAFETY: Firebase RTDB ?shallow=true returns a plain JSON object keyed by child key.
+      return Object.keys(data as Record<string, true>)
+    } catch {
+      return null
+    }
+  }
+
+  async function readExactEntry(
+    root: string,
+    key: CacheKey,
+  ): Promise<CacheEntry | null> {
+    const snapshot = await packageRef(root, key.name)
+      .child(encodeFirebaseKey(key.version))
+      .once('value')
+
+    const value = snapshot.val()
+
+    if (value === null) return null
+
+    if (!isCacheEntry(value)) {
+      throw new Error(`Invalid cache entry in Firebase root ${root}`)
+    }
+
+    return value
+  }
+
   async function loadLatestBuilt(
     root: string,
     name: string,
   ): Promise<CacheEntry | null> {
-    // Existing histories are small; avoid a second persistent index/write path.
+    // Use shallow=true so we only download version keys instead of every full snapshot.
+    const shallowKeys = await fetchShallowVersionKeys(root, name)
+
+    if (shallowKeys !== null) {
+      const newest = latestBuiltVersion(shallowKeys)
+
+      if (!newest) return null
+
+      const exactKey = cacheKey({ name, version: newest })
+      const cachedExact = memoryCache.get(exactKey)
+
+      if (cachedExact !== undefined) {
+        return cachedExact
+      }
+
+      const entry = await readExactEntry(root, { name, version: newest })
+
+      if (entry !== null) {
+        memoryCache.set(exactKey, entry)
+      }
+
+      return entry
+    }
+
     const snapshot = await packageRef(root, name).once('value')
     const versions: string[] = []
 
@@ -86,23 +152,7 @@ export function createCacheRepository(
     if (key.version === LATEST_BUILT_CACHE_VERSION)
       return latestBuilt(root, key.name)
 
-    const snapshot = await firebase
-      .database()
-      .ref()
-      .child(root)
-      .child(encodeFirebaseKey(key.name))
-      .child(encodeFirebaseKey(key.version))
-      .once('value')
-
-    const value = snapshot.val()
-
-    if (value === null) return null
-
-    if (!isCacheEntry(value)) {
-      throw new Error(`Invalid cache entry in Firebase root ${root}`)
-    }
-
-    return value
+    return readExactEntry(root, key)
   }
 
   return {
