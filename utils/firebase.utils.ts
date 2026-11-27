@@ -9,7 +9,27 @@ import { decodeFirebaseKey, encodeFirebaseKey } from './index'
 
 const debug = createDebug('bp:firebase-util')
 
-const FIREBASE_READ_KEY = process.env.FIREBASE_READ_KEY || 'modules-v2'
+const FIREBASE_READ_KEY = process.env.FIREBASE_READ_KEY || 'modules-v3'
+
+const HISTORY_CACHE_TTL_MS = 5 * 60_000
+
+const HISTORY_CACHE_MAX = 2000
+
+interface HistoryLruCache {
+  get(key: string): PackageHistory | undefined
+  set(key: string, value: PackageHistory): void
+}
+
+// SAFETY: the pinned lru-cache@6 module implements this constructor contract.
+const LruCacheCtor = require('lru-cache') as new (options: {
+  max: number
+  maxAge: number
+}) => HistoryLruCache
+
+const packageHistoryCache = new LruCacheCtor({
+  max: HISTORY_CACHE_MAX,
+  maxAge: HISTORY_CACHE_TTL_MS,
+})
 
 if (process.env.FIREBASE_DATABASE_URL && !firebaseSDK.apps.length) {
   firebaseSDK.initializeApp({
@@ -31,33 +51,6 @@ type PackageHistory = Record<string, PackageBuildInfoSnapshot>
 interface AlgoliaPackageResponse {
   version: string
   versions: Record<string, string>
-}
-
-async function readPackageHistoryWithFallback(
-  getHistoryFromKey: (key: string) => Promise<PackageHistory | null>,
-): Promise<PackageHistory | null> {
-  const result = await getHistoryFromKey(FIREBASE_READ_KEY)
-
-  if (result) {
-    debug('package history from %s', FIREBASE_READ_KEY)
-
-    return result
-  }
-
-  if (
-    FIREBASE_READ_KEY !== 'modules-v3' ||
-    process.env.DISABLE_FIREBASE_V2_FALLBACK
-  ) {
-    return null
-  }
-
-  const fallback = await getHistoryFromKey('modules-v2')
-
-  if (fallback) {
-    debug('package history from modules-v2 (fallback)')
-  }
-
-  return fallback
 }
 
 function selectPackageHistoryVersions(
@@ -102,29 +95,27 @@ class FirebaseUtils {
     }
 
     const searches = this.firebase.database().ref().child('searches-v2')
+
+    interface SearchUpdatePayload {
+      lastSearched: number
+      name: string
+      count: object
+      version?: string
+    }
+
+    const payload: SearchUpdatePayload = {
+      lastSearched: Date.now(),
+      name: packageInfo.name,
+      count: firebaseSDK.database.ServerValue.increment(1),
+    }
+
+    if (packageInfo.version !== undefined) {
+      payload.version = packageInfo.version
+    }
+
     void searches
       .child(encodeFirebaseKey(name))
-      .once('value')
-      .then(snapshot => {
-        // SAFETY: searches-v2 values are written as SearchRecord entries.
-        return snapshot.val() as SearchRecord | null
-      })
-      .then(result => {
-        if (result) {
-          return searches.child(encodeFirebaseKey(name)).update({
-            lastSearched: Date.now(),
-            name: packageInfo.name,
-            count: result.count + 1,
-          })
-        }
-
-        return searches.child(encodeFirebaseKey(name)).set({
-          lastSearched: Date.now(),
-          name: packageInfo.name,
-          version: packageInfo.version,
-          count: 1,
-        })
-      })
+      .update(payload)
       .catch(error => console.log(error))
   }
 
@@ -141,20 +132,11 @@ class FirebaseUtils {
     const packageHistory: PackageHistory = {}
     const firebase = this.firebase
 
-    const getHistoryFromKey = async (key: string) => {
-      const ref = firebase
-        .database()
-        .ref()
-        .child(key)
-        .child(encodeFirebaseKey(name))
-
-      return ref.once('value').then(snapshot => {
-        // SAFETY: modules-v2 and modules-v3 history values are package snapshots.
-        return snapshot.val() as PackageHistory | null
-      })
-    }
-
-    const firebasePromise = readPackageHistoryWithFallback(getHistoryFromKey)
+    const pkgRef = firebase
+      .database()
+      .ref()
+      .child(FIREBASE_READ_KEY)
+      .child(encodeFirebaseKey(name))
 
     const yarnPromise = axios.get<AlgoliaPackageResponse>(
       `https://${
@@ -169,36 +151,69 @@ class FirebaseUtils {
       },
     )
 
-    let firebaseHistory: PackageHistory | null
-    let versions: string[]
+    let firebaseHistory: PackageHistory | null = null
+    let limitedVersions: string[]
 
     try {
-      const [firebaseResult, yarnInfo] = await Promise.all([
-        firebasePromise,
-        yarnPromise,
-      ])
-
-      firebaseHistory = firebaseResult
+      const yarnInfo = await yarnPromise
       yarnInfo.data.versions = {
         [yarnInfo.data.version]: '',
         ...yarnInfo.data.versions,
       }
-      versions = Object.keys(yarnInfo.data.versions)
+      const versions = Object.keys(yarnInfo.data.versions)
+      limitedVersions = selectPackageHistoryVersions(
+        versions,
+        limit,
+        includeVersion,
+      )
+
+      debug('last npm %d %s versions %o', limit, name, limitedVersions)
+
+      const cacheKey = `${FIREBASE_READ_KEY}:${name}:${limitedVersions.join(',')}`
+      const cached = packageHistoryCache.get(cacheKey)
+
+      if (cached) {
+        debug('package history cache hit %s', name)
+
+        return cached
+      }
+
+      const entries = await Promise.all(
+        limitedVersions.map(async version => {
+          const encodedVersion = encodeFirebaseKey(version)
+          const snapshot = await pkgRef.child(encodedVersion).once('value')
+
+          // SAFETY: Firebase modules-v3 stores PackageBuildInfoSnapshot entries per version.
+          const snapshotValue = snapshot.val() as PackageBuildInfoSnapshot | null
+
+          return [version, snapshotValue ?? {}] as const
+        }),
+      )
+
+      entries.forEach(([version, snapshotValue]) => {
+        packageHistory[version] = snapshotValue
+      })
+
+      packageHistoryCache.set(cacheKey, packageHistory)
+
+      return packageHistory
     } catch (error) {
       console.error(error)
-      firebaseHistory = await firebasePromise
-      versions = Object.keys(firebaseHistory || {}).map(version =>
+      const snapshot = await pkgRef.once('value')
+
+      // SAFETY: modules-v3 package nodes map encoded version keys to PackageBuildInfoSnapshot.
+      firebaseHistory = snapshot.val() as PackageHistory | null
+
+      const versions = Object.keys(firebaseHistory || {}).map(version =>
         decodeFirebaseKey(version),
       )
+
+      limitedVersions = selectPackageHistoryVersions(
+        versions,
+        limit,
+        includeVersion,
+      )
     }
-
-    const limitedVersions = selectPackageHistoryVersions(
-      versions,
-      limit,
-      includeVersion,
-    )
-
-    debug('last npm %d %s versions %o', limit, name, limitedVersions)
 
     limitedVersions.forEach(version => {
       packageHistory[version] = {}
