@@ -26,4 +26,7 @@
 # Sync Google crawler IP ranges for HAProxy verification — daily at 04:00 UTC (reloads only if ranges changed)
 0 4 * * * (node /var/www/bundlephobia/operations/haproxy/scripts/sync-google-crawlers.js --if-changed && systemctl reload haproxy) >> /var/log/haproxy-google-sync.log 2>&1
 
+# Prune stale Firebase RTDB `searches-v2` keys (>360 days) — weekly on Sunday at 03:30 UTC
+30 3 * * 0 node /var/www/bundlephobia/operations/firebase/prune-searches.js >> /var/log/firebase-prune.log 2>&1
+
 
