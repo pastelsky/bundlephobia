@@ -11,26 +11,6 @@ const debug = createDebug('bp:firebase-util')
 
 const FIREBASE_READ_KEY = process.env.FIREBASE_READ_KEY || 'modules-v3'
 
-const HISTORY_CACHE_TTL_MS = 5 * 60_000
-
-const HISTORY_CACHE_MAX = 2000
-
-interface HistoryLruCache {
-  get(key: string): PackageHistory | undefined
-  set(key: string, value: PackageHistory): void
-}
-
-// SAFETY: the pinned lru-cache@6 module implements this constructor contract.
-const LruCacheCtor = require('lru-cache') as new (options: {
-  max: number
-  maxAge: number
-}) => HistoryLruCache
-
-const packageHistoryCache = new LruCacheCtor({
-  max: HISTORY_CACHE_MAX,
-  maxAge: HISTORY_CACHE_TTL_MS,
-})
-
 if (process.env.FIREBASE_DATABASE_URL && !firebaseSDK.apps.length) {
   firebaseSDK.initializeApp({
     apiKey: process.env.FIREBASE_API_KEY,
@@ -129,109 +109,81 @@ class FirebaseUtils {
     }
 
     debug('package history %s', name)
-    const packageHistory: PackageHistory = {}
-    const firebase = this.firebase
 
-    const pkgRef = firebase
+    const pkgRef = this.firebase
       .database()
       .ref()
       .child(FIREBASE_READ_KEY)
       .child(encodeFirebaseKey(name))
 
-    const yarnPromise = axios.get<AlgoliaPackageResponse>(
-      `https://${
-        process.env.ALGOLIA_APP_ID
-      }-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(name)}`,
-      {
-        params: {
-          'x-algolia-agent': 'bundlephobia',
-          'x-algolia-application-id': process.env.ALGOLIA_APP_ID,
-          'x-algolia-api-key': process.env.ALGOLIA_API_KEY,
-        },
-      },
-    )
-
-    let firebaseHistory: PackageHistory | null = null
-    let limitedVersions: string[]
-
     try {
-      const yarnInfo = await yarnPromise
-      yarnInfo.data.versions = {
+      const yarnInfo = await axios.get<AlgoliaPackageResponse>(
+        `https://${
+          process.env.ALGOLIA_APP_ID
+        }-dsn.algolia.net/1/indexes/npm-search/${encodeURIComponent(name)}`,
+        {
+          params: {
+            'x-algolia-agent': 'bundlephobia',
+            'x-algolia-application-id': process.env.ALGOLIA_APP_ID,
+            'x-algolia-api-key': process.env.ALGOLIA_API_KEY,
+          },
+        },
+      )
+
+      const allVersions = Object.keys({
         [yarnInfo.data.version]: '',
         ...yarnInfo.data.versions,
-      }
-      const versions = Object.keys(yarnInfo.data.versions)
-      limitedVersions = selectPackageHistoryVersions(
-        versions,
+      })
+
+      const limitedVersions = selectPackageHistoryVersions(
+        allVersions,
         limit,
         includeVersion,
       )
 
       debug('last npm %d %s versions %o', limit, name, limitedVersions)
 
-      const cacheKey = `${FIREBASE_READ_KEY}:${name}:${limitedVersions.join(',')}`
-      const cached = packageHistoryCache.get(cacheKey)
-
-      if (cached) {
-        debug('package history cache hit %s', name)
-
-        return cached
-      }
-
       const entries = await Promise.all(
         limitedVersions.map(async version => {
-          const encodedVersion = encodeFirebaseKey(version)
-          const snapshot = await pkgRef.child(encodedVersion).once('value')
+          const snapshot = await pkgRef
+            .child(encodeFirebaseKey(version))
+            .once('value')
 
           // SAFETY: Firebase modules-v3 stores PackageBuildInfoSnapshot entries per version.
-          const snapshotValue = snapshot.val() as PackageBuildInfoSnapshot | null
+          const snapshotValue =
+            snapshot.val() as PackageBuildInfoSnapshot | null
 
           return [version, snapshotValue ?? {}] as const
         }),
       )
 
-      entries.forEach(([version, snapshotValue]) => {
-        packageHistory[version] = snapshotValue
-      })
-
-      packageHistoryCache.set(cacheKey, packageHistory)
-
-      return packageHistory
+      return Object.fromEntries(entries)
     } catch (error) {
       console.error(error)
       const snapshot = await pkgRef.once('value')
 
       // SAFETY: modules-v3 package nodes map encoded version keys to PackageBuildInfoSnapshot.
-      firebaseHistory = snapshot.val() as PackageHistory | null
+      const firebaseHistory = snapshot.val() as PackageHistory | null
 
       const versions = Object.keys(firebaseHistory || {}).map(version =>
         decodeFirebaseKey(version),
       )
 
-      limitedVersions = selectPackageHistoryVersions(
+      const limitedVersions = selectPackageHistoryVersions(
         versions,
         limit,
         includeVersion,
       )
-    }
 
-    limitedVersions.forEach(version => {
-      packageHistory[version] = {}
-    })
+      const packageHistory: PackageHistory = {}
 
-    if (!firebaseHistory) {
+      limitedVersions.forEach(version => {
+        packageHistory[version] =
+          firebaseHistory?.[encodeFirebaseKey(version)] ?? {}
+      })
+
       return packageHistory
     }
-
-    Object.keys(firebaseHistory).forEach(version => {
-      const decodedVersion = decodeFirebaseKey(version)
-
-      if (limitedVersions.includes(decodedVersion)) {
-        packageHistory[decodedVersion] = firebaseHistory?.[version] ?? {}
-      }
-    })
-
-    return packageHistory
   }
 
   getRecentSearches(limit = 10): Promise<Record<string, SearchRecord>> | {} {

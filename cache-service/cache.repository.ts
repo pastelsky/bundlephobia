@@ -78,6 +78,25 @@ export function createCacheRepository(
     }
   }
 
+  async function readExactEntry(
+    root: string,
+    key: CacheKey,
+  ): Promise<CacheEntry | null> {
+    const snapshot = await packageRef(root, key.name)
+      .child(encodeFirebaseKey(key.version))
+      .once('value')
+
+    const value = snapshot.val()
+
+    if (value === null) return null
+
+    if (!isCacheEntry(value)) {
+      throw new Error(`Invalid cache entry in Firebase root ${root}`)
+    }
+
+    return value
+  }
+
   async function loadLatestBuilt(
     root: string,
     name: string,
@@ -97,20 +116,13 @@ export function createCacheRepository(
         return cachedExact
       }
 
-      const snapshot = await packageRef(root, name)
-        .child(encodeFirebaseKey(newest))
-        .once('value')
+      const entry = await readExactEntry(root, { name, version: newest })
 
-      const value = snapshot.val()
+      if (entry !== null) {
+        memoryCache.set(exactKey, entry)
+      }
 
-      if (value === null) return null
-
-      if (!isCacheEntry(value))
-        throw new Error(`Invalid cache entry in Firebase root ${root}`)
-
-      memoryCache.set(exactKey, value)
-
-      return value
+      return entry
     }
 
     const snapshot = await packageRef(root, name).once('value')
@@ -140,23 +152,7 @@ export function createCacheRepository(
     if (key.version === LATEST_BUILT_CACHE_VERSION)
       return latestBuilt(root, key.name)
 
-    const snapshot = await firebase
-      .database()
-      .ref()
-      .child(root)
-      .child(encodeFirebaseKey(key.name))
-      .child(encodeFirebaseKey(key.version))
-      .once('value')
-
-    const value = snapshot.val()
-
-    if (value === null) return null
-
-    if (!isCacheEntry(value)) {
-      throw new Error(`Invalid cache entry in Firebase root ${root}`)
-    }
-
-    return value
+    return readExactEntry(root, key)
   }
 
   return {
