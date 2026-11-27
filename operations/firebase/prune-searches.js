@@ -5,7 +5,7 @@
  * index in small bounded batches so outgoing bandwidth stays minimal.
  *
  * Usage:
- *   node operations/firebase/prune-searches.js [--dry-run] [--retention-days 90] [--batch-size 500] [--max-batches 200]
+ *   node operations/firebase/prune-searches.js [--dry-run] [--retention-days 360] [--batch-size 500] [--max-batches 200]
  */
 
 const { parseArgs } = require('node:util')
@@ -16,7 +16,7 @@ const firebase = require('firebase/app')
 
 require('firebase/database')
 
-const DEFAULT_RETENTION_DAYS = 90
+const DEFAULT_RETENTION_DAYS = 360
 
 const DEFAULT_BATCH_SIZE = 500
 
